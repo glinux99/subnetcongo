@@ -57,7 +57,7 @@ use App\Http\Controllers\ZoneController;
 */
 
 Route::get('/', function () {
-    return Inertia::render('SalesReports');
+    return Inertia::render(component: 'Web/About');
 });
 
 // Route::get('/dashboard', function () {
