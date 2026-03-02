@@ -13,7 +13,7 @@
 
           <Link href="/" class="flex items-center gap-3 group cursor-pointer">
             <div class="relative overflow-hidden rounded-lg transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110 shadow-lg bg-white p-1">
-              <img src="https://subnetcongo.net/assets/img/logo.png" alt="SubnetCongo" class="h-10 md:h-14 w-auto object-contain" />
+              <img src="https://subnetcongo.net/assets/media/logos/logo.png" alt="SubnetCongo" class="h-10 md:h-14 w-auto object-contain" />
             </div>
           </Link>
         </div>
@@ -65,7 +65,7 @@
         <transition name="drawer-left">
             <div v-if="isMenuOpen" class="absolute left-0 top-0 h-full w-[300px] sm:w-[400px] bg-white shadow-2xl pointer-events-auto flex flex-col">
                 <div class="p-8 flex justify-between items-center border-b border-slate-50 bg-slate-50/50">
-                    <img src="https://subnetcongo.net/assets/img/logo.png" class="h-10 w-auto" />
+                    <img src="https://subnetcongo.net/assets/media/logos/logo.png" class="h-10 w-auto" />
                     <button @click="isMenuOpen = false" class="w-12 h-12 flex items-center justify-center rounded-lg bg-white text-slate-400 hover:text-red-500 shadow-sm transition-all border border-slate-100">
                         <i class="pi pi-times"></i>
                     </button>
@@ -123,7 +123,7 @@
             <!-- Grille Footer -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
                 <div class="space-y-8">
-                    <img src="https://subnetcongo.net/assets/img/logo.png" class="h-12 w-auto brightness-200" />
+                    <img src="https://subnetcongo.net/assets/media/logos/logo.png" class="h-12 w-auto brightness-200" />
                     <p class="text-slate-400 font-medium leading-relaxed italic">Leader panafricain basé à Goma, combinant infrastructure réseau et centre de formation d'élite.</p>
                     <div class="flex gap-3">
                         <a v-for="s in ['facebook', 'linkedin', 'instagram', 'whatsapp']" :key="s" href="#" class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-300 hover:bg-[#003399] transition-all">
@@ -182,11 +182,12 @@ const isMenuOpen = ref(false);
 
 // Navigation
 const navLinks = [
-    { name: 'Accueil', href: '/', icon: 'pi-home' },
-    { name: 'À Propos', href: '/about', icon: 'pi-info-circle' },
-    { name: 'Academy', href: '/academy', icon: 'pi-graduation-cap', submenu: ['Cisco CCNA', 'Cyber-Sécurité', 'Cloud Computing'] },
-    { name: 'Génie Civil', href: '/genie-civil', icon: 'pi-cog' },
-    { name: 'Contact', href: '/contact', icon: 'pi-envelope' }
+    { name: 'Accueil', href: route('landing'), icon: 'pi-home' },
+    { name: 'À Propos', href: route('about'), icon: 'pi-info-circle' },
+    // { name: 'Academy', href: '/academy', icon: 'pi-graduation-cap', submenu: ['Cisco CCNA', 'Cyber-Sécurité', 'Cloud Computing'] },
+    { name: 'Academy', href: route('academy'), icon: 'pi-graduation-cap'},
+    { name: 'Génie Civil', href: '#', icon: 'pi-cog' },
+    { name: 'Contact', href: route('contact'), icon: 'pi-envelope' }
 ];
 
 const footerLinks = [

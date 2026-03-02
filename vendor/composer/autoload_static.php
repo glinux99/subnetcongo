@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInita66035b56a948f7945b3cb5033014944
+class ComposerStaticInit5ca0fa5954229bebcc9b5c50b20551b7
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -759,9 +759,8 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
     public static $classMap = array (
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
-        'App\\Http\\Controllers\\ActivityController' => __DIR__ . '/../..' . '/app/Http/Controllers/ActivityController.php',
         'App\\Http\\Controllers\\AgendaController' => __DIR__ . '/../..' . '/app/Http/Controllers/AgendaController.php',
-        'App\\Http\\Controllers\\AnalyticController' => __DIR__ . '/../..' . '/app/Http/Controllers/AnalyticController.php',
+        'App\\Http\\Controllers\\Api\\ActivityApiController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/ActivityApiController.php',
         'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
         'App\\Http\\Controllers\\Auth\\ConfirmablePasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ConfirmablePasswordController.php',
         'App\\Http\\Controllers\\Auth\\EmailVerificationNotificationController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/EmailVerificationNotificationController.php',
@@ -772,59 +771,17 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
         'App\\Http\\Controllers\\Auth\\RegisteredUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisteredUserController.php',
         'App\\Http\\Controllers\\Auth\\SocialiteController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/SocialiteController.php',
         'App\\Http\\Controllers\\Auth\\VerifyEmailController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/VerifyEmailController.php',
-        'App\\Http\\Controllers\\ConnectionController' => __DIR__ . '/../..' . '/app/Http/Controllers/ConnectionController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
-        'App\\Http\\Controllers\\DashboardController' => __DIR__ . '/../..' . '/app/Http/Controllers/DashboardController.php',
-        'App\\Http\\Controllers\\EmployeeController' => __DIR__ . '/../..' . '/app/Http/Controllers/EmployeeController.php',
-        'App\\Http\\Controllers\\EnginController' => __DIR__ . '/../..' . '/app/Http/Controllers/EnginController.php',
-        'App\\Http\\Controllers\\EquipmentCharacteristicController' => __DIR__ . '/../..' . '/app/Http/Controllers/EquipmentCharacteristicController.php',
-        'App\\Http\\Controllers\\EquipmentController' => __DIR__ . '/../..' . '/app/Http/Controllers/EquipmentController.php',
-        'App\\Http\\Controllers\\EquipmentMovementController' => __DIR__ . '/../..' . '/app/Http/Controllers/EquipmentMovementController.php',
-        'App\\Http\\Controllers\\EquipmentTypeController' => __DIR__ . '/../..' . '/app/Http/Controllers/EquipmentTypeController.php',
-        'App\\Http\\Controllers\\ExpensesController' => __DIR__ . '/../..' . '/app/Http/Controllers/ExpensesController.php',
-        'App\\Http\\Controllers\\InstructionAnswerController' => __DIR__ . '/../..' . '/app/Http/Controllers/InstructionAnswerController.php',
-        'App\\Http\\Controllers\\InstructionTemplateController' => __DIR__ . '/../..' . '/app/Http/Controllers/InstructionTemplateController.php',
-        'App\\Http\\Controllers\\InterventionRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/InterventionRequestController.php',
-        'App\\Http\\Controllers\\KeypadController' => __DIR__ . '/../..' . '/app/Http/Controllers/KeypadController.php',
-        'App\\Http\\Controllers\\LabelCharacteristicController' => __DIR__ . '/../..' . '/app/Http/Controllers/LabelCharacteristicController.php',
-        'App\\Http\\Controllers\\LabelController' => __DIR__ . '/../..' . '/app/Http/Controllers/LabelController.php',
-        'App\\Http\\Controllers\\LeaveController' => __DIR__ . '/../..' . '/app/Http/Controllers/LeaveController.php',
         'App\\Http\\Controllers\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/LoginController.php',
-        'App\\Http\\Controllers\\MaintenanceController' => __DIR__ . '/../..' . '/app/Http/Controllers/MaintenanceController.php',
-        'App\\Http\\Controllers\\MaintenanceRecordController' => __DIR__ . '/../..' . '/app/Http/Controllers/MaintenanceRecordController.php',
-        'App\\Http\\Controllers\\MeterController' => __DIR__ . '/../..' . '/app/Http/Controllers/MeterController.php',
-        'App\\Http\\Controllers\\NetworkConnectionController' => __DIR__ . '/../..' . '/app/Http/Controllers/NetworkConnectionController.php',
-        'App\\Http\\Controllers\\NetworkController' => __DIR__ . '/../..' . '/app/Http/Controllers/NetworkController.php',
-        'App\\Http\\Controllers\\NetworkLabelController' => __DIR__ . '/../..' . '/app/Http/Controllers/NetworkLabelController.php',
-        'App\\Http\\Controllers\\NetworkNodeController' => __DIR__ . '/../..' . '/app/Http/Controllers/NetworkNodeController.php',
-        'App\\Http\\Controllers\\NetworkNodeEquipmentCharactersticController' => __DIR__ . '/../..' . '/app/Http/Controllers/NetworkNodeEquipmentCharactersticController.php',
-        'App\\Http\\Controllers\\PaymentController' => __DIR__ . '/../..' . '/app/Http/Controllers/PaymentController.php',
         'App\\Http\\Controllers\\PermissionController' => __DIR__ . '/../..' . '/app/Http/Controllers/PermissionController.php',
-        'App\\Http\\Controllers\\PresenceController' => __DIR__ . '/../..' . '/app/Http/Controllers/PresenceController.php',
         'App\\Http\\Controllers\\ProfileController' => __DIR__ . '/../..' . '/app/Http/Controllers/ProfileController.php',
-        'App\\Http\\Controllers\\RegionController' => __DIR__ . '/../..' . '/app/Http/Controllers/RegionController.php',
-        'App\\Http\\Controllers\\ReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/ReportController.php',
-        'App\\Http\\Controllers\\ReportTemplateController' => __DIR__ . '/../..' . '/app/Http/Controllers/ReportTemplateController.php',
         'App\\Http\\Controllers\\RoleController' => __DIR__ . '/../..' . '/app/Http/Controllers/RoleController.php',
-        'App\\Http\\Controllers\\SealController' => __DIR__ . '/../..' . '/app/Http/Controllers/SealController.php',
-        'App\\Http\\Controllers\\ServiceOrderController' => __DIR__ . '/../..' . '/app/Http/Controllers/ServiceOrderController.php',
         'App\\Http\\Controllers\\SettingController' => __DIR__ . '/../..' . '/app/Http/Controllers/SettingController.php',
-        'App\\Http\\Controllers\\SparePartCharacteristicController' => __DIR__ . '/../..' . '/app/Http/Controllers/SparePartCharacteristicController.php',
-        'App\\Http\\Controllers\\SparePartController' => __DIR__ . '/../..' . '/app/Http/Controllers/SparePartController.php',
-        'App\\Http\\Controllers\\SparePartMovementController' => __DIR__ . '/../..' . '/app/Http/Controllers/SparePartMovementController.php',
-        'App\\Http\\Controllers\\SparePartTaskController' => __DIR__ . '/../..' . '/app/Http/Controllers/SparePartTaskController.php',
-        'App\\Http\\Controllers\\StockMovementController' => __DIR__ . '/../..' . '/app/Http/Controllers/StockMovementController.php',
-        'App\\Http\\Controllers\\SupplierController' => __DIR__ . '/../..' . '/app/Http/Controllers/SupplierController.php',
-        'App\\Http\\Controllers\\TaskController' => __DIR__ . '/../..' . '/app/Http/Controllers/TaskController.php',
-        'App\\Http\\Controllers\\TeamController' => __DIR__ . '/../..' . '/app/Http/Controllers/TeamController.php',
-        'App\\Http\\Controllers\\TeamUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/TeamUserController.php',
-        'App\\Http\\Controllers\\TechnicianController' => __DIR__ . '/../..' . '/app/Http/Controllers/TechnicianController.php',
-        'App\\Http\\Controllers\\UnityController' => __DIR__ . '/../..' . '/app/Http/Controllers/UnityController.php',
         'App\\Http\\Controllers\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/UserController.php',
-        'App\\Http\\Controllers\\WorkOrderController' => __DIR__ . '/../..' . '/app/Http/Controllers/WorkOrderController.php',
-        'App\\Http\\Controllers\\ZoneController' => __DIR__ . '/../..' . '/app/Http/Controllers/ZoneController.php',
+        'App\\Http\\Controllers\\WebSettingController' => __DIR__ . '/../..' . '/app/Http/Controllers/WebSettingController.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\Authenticate' => __DIR__ . '/../..' . '/app/Http/Middleware/Authenticate.php',
+        'App\\Http\\Middleware\\CheckSessionInDatabase' => __DIR__ . '/../..' . '/app/Http/Middleware/CheckSessionInDatabase.php',
         'App\\Http\\Middleware\\EncryptCookies' => __DIR__ . '/../..' . '/app/Http/Middleware/EncryptCookies.php',
         'App\\Http\\Middleware\\HandleInertiaRequests' => __DIR__ . '/../..' . '/app/Http/Middleware/HandleInertiaRequests.php',
         'App\\Http\\Middleware\\PreventRequestsDuringMaintenance' => __DIR__ . '/../..' . '/app/Http/Middleware/PreventRequestsDuringMaintenance.php',
@@ -846,6 +803,12 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
         'App\\Http\\Requests\\UserStoreRequest' => __DIR__ . '/../..' . '/app/Http/Requests/UserStoreRequest.php',
         'App\\Http\\Requests\\UserUpdateRequest' => __DIR__ . '/../..' . '/app/Http/Requests/UserUpdateRequest.php',
         'App\\Imports\\ConnectionsImport' => __DIR__ . '/../..' . '/app/Imports/ConnectionsImport.php',
+        'App\\Imports\\InterventionRequestImport' => __DIR__ . '/../..' . '/app/Imports/InterventionRequestImport.php',
+        'App\\Imports\\MeterImport' => __DIR__ . '/../..' . '/app/Imports/MeterImport.php',
+        'App\\Imports\\SparePartImport' => __DIR__ . '/../..' . '/app/Imports/SparePartImport.php',
+        'App\\Imports\\TechnicianImport' => __DIR__ . '/../..' . '/app/Imports/TechnicianImport.php',
+        'App\\Imports\\UserImport' => __DIR__ . '/../..' . '/app/Imports/UserImport.php',
+        'App\\Listeners\\LoginAttemptListener' => __DIR__ . '/../..' . '/app/Listeners/LoginAttemptListener.php',
         'App\\Models\\Activity' => __DIR__ . '/../..' . '/app/Models/Activity.php',
         'App\\Models\\ActivityEquipment' => __DIR__ . '/../..' . '/app/Models/ActivityEquipment.php',
         'App\\Models\\ActivityInstruction' => __DIR__ . '/../..' . '/app/Models/ActivityInstruction.php',
@@ -872,6 +835,7 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
         'App\\Models\\MaintenanceInstruction' => __DIR__ . '/../..' . '/app/Models/MaintenanceInstruction.php',
         'App\\Models\\MaintenanceRecord' => __DIR__ . '/../..' . '/app/Models/MaintenanceRecord.php',
         'App\\Models\\MaintenanceSchedule' => __DIR__ . '/../..' . '/app/Models/MaintenanceSchedule.php',
+        'App\\Models\\MaintenanceStatusHistory' => __DIR__ . '/../..' . '/app/Models/MaintenanceStatusHistory.php',
         'App\\Models\\Meter' => __DIR__ . '/../..' . '/app/Models/Meter.php',
         'App\\Models\\Network' => __DIR__ . '/../..' . '/app/Models/Network.php',
         'App\\Models\\NetworkConnection' => __DIR__ . '/../..' . '/app/Models/NetworkConnection.php',
@@ -890,6 +854,7 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
         'App\\Models\\SparePart' => __DIR__ . '/../..' . '/app/Models/SparePart.php',
         'App\\Models\\SparePartActivity' => __DIR__ . '/../..' . '/app/Models/SparePartActivity.php',
         'App\\Models\\SparePartCharacteristic' => __DIR__ . '/../..' . '/app/Models/SparePartCharacteristic.php',
+        'App\\Models\\SparePartConnection' => __DIR__ . '/../..' . '/app/Models/SparePartConnection.php',
         'App\\Models\\SparePartMovement' => __DIR__ . '/../..' . '/app/Models/SparePartMovement.php',
         'App\\Models\\SparePartTask' => __DIR__ . '/../..' . '/app/Models/SparePartTask.php',
         'App\\Models\\StockMovement' => __DIR__ . '/../..' . '/app/Models/StockMovement.php',
@@ -902,6 +867,7 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
         'App\\Models\\TeamUser' => __DIR__ . '/../..' . '/app/Models/TeamUser.php',
         'App\\Models\\Unity' => __DIR__ . '/../..' . '/app/Models/Unity.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
+        'App\\Models\\WebSetting' => __DIR__ . '/../..' . '/app/Models/WebSetting.php',
         'App\\Models\\WorkOrder' => __DIR__ . '/../..' . '/app/Models/WorkOrder.php',
         'App\\Models\\Zone' => __DIR__ . '/../..' . '/app/Models/Zone.php',
         'App\\Observers\\InstructionAnswerObserver' => __DIR__ . '/../..' . '/app/Observers/InstructionAnswerObserver.php',
@@ -9455,10 +9421,10 @@ class ComposerStaticInita66035b56a948f7945b3cb5033014944
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInita66035b56a948f7945b3cb5033014944::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInita66035b56a948f7945b3cb5033014944::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInita66035b56a948f7945b3cb5033014944::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInita66035b56a948f7945b3cb5033014944::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit5ca0fa5954229bebcc9b5c50b20551b7::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit5ca0fa5954229bebcc9b5c50b20551b7::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit5ca0fa5954229bebcc9b5c50b20551b7::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit5ca0fa5954229bebcc9b5c50b20551b7::$classMap;
 
         }, null, ClassLoader::class);
     }

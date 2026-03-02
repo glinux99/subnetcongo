@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
             ZoneSeeder::class,
             EquipmentTypeSeeder::class,
             // 1. D'abord les dépendances (Permission, Role, User, Region)
-            PermissionSeeder::class,
             RoleSeeder::class,
             UserSeeder::class,
             // 3. Enfin les équipements (qui utilisent tout ce qui est au-dessus)
