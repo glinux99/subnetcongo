@@ -106,9 +106,9 @@ class SocialiteController extends Controller
             return redirect()->intended('/dashboard');
 
         } catch (\Exception $e) {
-            return $e;
+
             // Handle exceptions, e.g., user denied access
-            return redirect('/login')->with('error', 'Une erreur est survenue lors de l\'authentification.');
+            return redirect('/login')->with('error', 'Une erreur est survenue lors de l\'authentification. ' . $e->getMessage());
         }
     }
 }

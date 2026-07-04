@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\Api\ActivityApiController;
 use App\Http\Controllers\ConnectionController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\InterventionRequestController;
@@ -10,6 +9,7 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TechnicianController;
+use App\Http\Controllers\User\CohortController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,13 +25,11 @@ use Illuminate\Support\Facades\Route;
 */
  // Correction de la route API Resource
 
-Route::post('/bulk-destroy', [EquipmentController ::class, 'bulkDestroy'])->name('equipments.bulkdestroy');
-Route::post('/activities/bulk-store', [ActivityController::class, 'bulkStore'])->name('activities.bulkStore');
-Route::put('/interventions/{intervention}/validate', [InterventionRequestController::class, 'validateIntervention'])->name('interventions.validate');
-Route::get('quantum/models', [ReportController::class, 'getModels']);
-Route::get('quantumx/models', [ReportController::class, 'fetchData']);
 
-Route::apiResource("maintenancesx", ActivityApiController::class);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware('auth:web')->prefix('users')->name('api.users.')->group(function () {
+    Route::get('cohorts/{cohort}', [CohortController::class, 'show'])->name('cohorts.show');
 });

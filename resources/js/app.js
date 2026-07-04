@@ -1,6 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
-
+import axios from 'axios';
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -39,7 +39,8 @@ const MyCustomPreset = definePreset (Aura, {
         }
     }
 });
-
+axios.defaults.withCredentials = true; // <- Obligatoire
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 // 2. Configurer i18n avec les messages importés
 const i18n = createI18n({
     legacy: false, // Important pour le mode Composition API

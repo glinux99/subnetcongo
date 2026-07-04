@@ -495,11 +495,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- --- FOOTER ANALYTICS --- -->
-            <footer class="mt-12 text-center text-slate-400 py-10 border-t border-slate-100">
-                <p class="text-xs font-bold uppercase tracking-[0.3em] mb-2">SubnetCongo Analytics Engine v4.0</p>
-                <p class="text-[10px] font-medium italic">Dernière synchronisation des données : {{ new Date().toLocaleString() }}</p>
-            </footer>
+
         </div>
     </AppLayout>
 </template>

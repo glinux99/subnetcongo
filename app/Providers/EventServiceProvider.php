@@ -22,9 +22,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        InstructionAnswer::class => [
-            InstructionAnswerObserver::class,
-        ],
+
     ];
 
     /**
@@ -41,7 +39,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        InstructionAnswer::observe(InstructionAnswerObserver::class);
+
     }
 
     /**

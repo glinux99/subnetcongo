@@ -14,6 +14,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\Region;
 use App\Models\Zone;
 use Spatie\MediaLibrary\HasMedia;
+use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\InteractsWithMedia;
 class User extends Authenticatable implements HasMedia
 {
@@ -32,12 +34,12 @@ class User extends Authenticatable implements HasMedia
         'provider_id',
         'fonction',
         'numero',
-        'region_id',
-        'pointure',
-        'size',
         'profile_photo', // This field is likely for a direct path, consider using Spatie Media Library for file uploads
         'hourly_rate', // Added for DashboardController's labor cost calculation
-        'zone_id'
+        'status',
+        'phone',
+        'cohort_id',
+        'country',
 
     ];
 
@@ -69,6 +71,15 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->hasMany(Login::class);
     }
+
+    /**
+     * Get the sessions for the user (Laravel database session driver).
+     */
+    public function sessions()
+    {
+        return $this->hasMany(Session::class);
+    }
+
     public function getCreatedAtAttribute()
     {
         return date('d-m-Y H:i', strtotime($this->attributes['created_at']));
@@ -112,6 +123,22 @@ public function teams()
 }
 
 /**
+ * Get the chat groups the user belongs to.
+ */
+public function chatGroups()
+{
+    return $this->belongsToMany(ChatGroup::class, 'chat_group_user', 'user_id', 'chat_group_id')->withTimestamps();
+}
+
+/**
+ * Get the extended profile for the user.
+ */
+public function profile()
+{
+    return $this->hasOne(Profile::class);
+}
+
+/**
  * Accessor: profile_photo_url from Spatie Media (collection 'avatar').
  */
 public function getProfilePhotoUrlAttribute(): ?string
@@ -129,6 +156,299 @@ public function getProfilePhotoUrlAttribute(): ?string
 public function activities(): HasMany
 {
     return $this->hasMany(Activity::class, 'user_id');
+}
+
+/**
+ * Get the settings for the user.
+ * Note: This assumes a 'user_id' foreign key exists on the 'settings' table.
+ *
+ * @return \Illuminate\Database\Eloquent\Relations\HasMany
+ */
+public function settings(): HasMany
+{
+    return $this->hasMany(Setting::class);
+}
+
+// ===================================================================
+// E-LEARNING RELATIONSHIPS
+// ===================================================================
+
+/**
+ * Get all cohorts the user belongs to.
+ */
+public function cohorts()
+{
+    return $this->belongsToMany(Cohort::class, 'cohort_user', 'user_id', 'cohort_id')->withTimestamps();
+}
+
+/**
+ * Get the latest cohort the user belongs to.
+ */
+public function cohort(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+{
+    return $this->belongsTo(Cohort::class);
+}
+
+/**
+ * Get courses taught by this user (as instructor).
+ */
+public function taughtCourses(): HasMany
+{
+    return $this->hasMany(Course::class, 'instructor_id');
+}
+
+    /**
+     * Alias for enrolledCourses or taughtCourses depending on context.
+     */
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'instructor_id');
+    }
+
+/**
+ * Get enrollments for this user (as student).
+ */
+public function enrollments(): HasMany
+{
+    return $this->hasMany(Enrollment::class);
+}
+
+/**
+ * Get courses enrolled by this user.
+ */
+public function enrolledCourses()
+{
+    return $this->belongsToMany(Course::class, 'enrollments')
+        ->withPivot('progress_percent', 'enrolled_at', 'completed_at')
+        ->withTimestamps();
+}
+
+/**
+ * Get learning paths the user is enrolled in.
+ */
+public function learningPaths()
+{
+    return $this->belongsToMany(LearningPath::class, 'learning_path_user')
+        ->withPivot('progress', 'enrolled_at', 'completed_at')
+        ->withTimestamps();
+}
+
+/**
+ * Get progress records for this user.
+ */
+public function progress(): HasMany
+{
+    return $this->hasMany(UserProgress::class);
+}
+
+/**
+ * Get exam attempts for this user.
+ */
+public function examAttempts(): HasMany
+{
+    return $this->hasMany(ExamAttempt::class);
+}
+
+/**
+ * Get exam results for this user.
+ */
+public function examResults(): HasMany
+{
+    return $this->hasMany(ExamResult::class);
+}
+
+/**
+ * Get certificates earned by this user.
+ */
+public function certificates(): HasMany
+{
+    return $this->hasMany(Certificate::class);
+}
+
+/**
+ * Get reviews written by this user.
+ */
+public function reviews(): HasMany
+{
+    return $this->hasMany(Review::class);
+}
+
+/**
+ * Get assignment submissions for this user.
+ */
+public function submissions(): HasMany
+{
+    return $this->hasMany(Submission::class);
+}
+
+// ===================================================================
+// E-LEARNING SCOPES
+// ===================================================================
+
+/**
+ * Scope to get users who are students.
+ */
+public function scopeStudents($query)
+{
+    return $query->role('student');
+}
+
+/**
+ * Scope to get users who are instructors.
+ */
+public function scopeInstructors($query)
+{
+    return $query->role('instructor');
+}
+
+/**
+ * Scope to get users who are both instructors and admins.
+ */
+public function scopeAdmins($query)
+{
+    return $query->role('admin');
+}
+
+// ===================================================================
+// E-LEARNING METHODS
+// ===================================================================
+
+/**
+ * Check if user is a student.
+ */
+public function isStudent(): bool
+{
+    return $this->hasRole('student');
+}
+
+/**
+ * Check if user is an instructor.
+ */
+public function isInstructor(): bool
+{
+    return $this->hasRole('instructor');
+}
+
+/**
+ * Check if user is an admin.
+ */
+public function isAdmin(): bool
+{
+    return $this->hasRole('admin');
+}
+
+/**
+ * Enroll user in a course.
+ */
+public function enrollIn(Course $course, array $pivotData = []): Enrollment
+{
+    $enrollment = $this->enrollments()->firstOrCreate(
+        ['course_id' => $course->id],
+        array_merge([
+            'status' => Enrollment::STATUS_ACTIVE,
+            'progress_percent' => 0,
+            'enrolled_at' => now(),
+        ], $pivotData)
+    );
+
+    return $enrollment;
+}
+
+/**
+ * Check if user is enrolled in a course.
+ */
+public function isEnrolledIn(Course $course): bool
+{
+    return $this->enrollments()
+        ->where('course_id', $course->id)
+        ->whereIn('status', [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_COMPLETED])
+        ->exists();
+}
+
+/**
+ * Get progress for a specific course.
+ */
+public function getProgressFor(Course $course): ?Enrollment
+{
+    return $this->enrollments()
+        ->where('course_id', $course->id)
+        ->first();
+}
+
+/**
+ * Get completed courses count.
+ */
+public function getCompletedCoursesCountAttribute(): int
+{
+    return $this->enrollments()
+        ->where('status', Enrollment::STATUS_COMPLETED)
+        ->count();
+}
+
+/**
+ * Get total learning time in seconds.
+ */
+public function getTotalLearningTimeAttribute(): int
+{
+    return $this->progress()->sum('time_spent_seconds');
+}
+
+/**
+ * Get formatted total learning time.
+ */
+public function getFormattedTotalLearningTimeAttribute(): string
+{
+    $seconds = $this->total_learning_time;
+    $hours = floor($seconds / 3600);
+    $minutes = floor(($seconds % 3600) / 60);
+
+    if ($hours > 0) {
+        return "{$hours}h {$minutes}m";
+    }
+
+    return "{$minutes}m";
+}
+
+/**
+ * Get average progress across all enrollments.
+ */
+public function getAverageProgressAttribute(): float
+{
+    return $this->enrollments()->avg('progress_percent') ?? 0;
+}
+
+/**
+ * Check if user has completed a course.
+ */
+public function hasCompleted(Course $course): bool
+{
+    $enrollment = $this->getProgressFor($course);
+    return $enrollment && $enrollment->isCompleted();
+}
+
+/**
+ * Get certificates count.
+ */
+public function getCertificatesCountAttribute(): int
+{
+    return $this->certificates()->count();
+}
+
+/**
+ * Get statistics for this user.
+ */
+public function getLearningStatsAttribute(): array
+{
+    return [
+        'enrolled_courses' => $this->enrollments()->count(),
+        'completed_courses' => $this->completed_courses_count,
+        'in_progress_courses' => $this->enrollments()->InProgress()->count(),
+        'average_progress' => round($this->average_progress, 1),
+        'total_learning_time' => $this->formatted_total_learning_time,
+        'certificates' => $this->certificates_count,
+        'exam_attempts' => $this->examAttempts()->count(),
+        'passed_exams' => $this->examResults()->where('passed', true)->count(),
+    ];
 }
 
 }

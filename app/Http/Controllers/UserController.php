@@ -64,6 +64,18 @@ class UserController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show(User $user)
+    {
+        $user->load(['roles', 'region', 'media']);
+
+        return Inertia::render('User/Show', [
+            'user' => $user,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

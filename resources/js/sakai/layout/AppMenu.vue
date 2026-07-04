@@ -10,8 +10,14 @@ const model = ref([
         label: 'Tableau de Bord',
         items: [
             { label: 'Vue d\'ensemble', icon: 'pi pi-fw pi-home', to: '/dashboard' },
-            { label: 'Analytique Temps Réel', icon: 'pi pi-fw pi-chart-line', to: '/analytics' },
-            { label: 'Rapports de Ventes', icon: 'pi pi-fw pi-wallet', to: '/sales-reports' }
+            {
+                label: 'Analytique',
+                icon: 'pi pi-fw pi-chart-line',
+                items: [{ label: 'Rapports Étudiants', icon: 'pi pi-fw pi-users', to: route('student-reports.index') }]
+            },
+            { label: 'Rapports de Ventes', icon: 'pi pi-fw pi-wallet',
+            // to: '/sales-reports'
+        }
         ]
     },
     {
@@ -22,7 +28,7 @@ const model = ref([
                 icon: 'pi pi-fw pi-book',
                 items: [
                     { label: 'Tous les Cours', icon: 'pi pi-fw pi-list', to: '/courses' },
-                    { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file-pdf', to: '/modules' },
+                    { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file-pdf', to: route('modules.index') },
                     { label: 'Parcours (Paths)', icon: 'pi pi-fw pi-map', to: '/learning-paths' },
                     { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-video', to: '/media-library' }
                 ]
@@ -32,8 +38,9 @@ const model = ref([
                 icon: 'pi pi-fw pi-check-circle',
                 items: [
                     { label: 'Quiz & Tests', icon: 'pi pi-fw pi-pencil', to: '/exams' },
+                    { label: 'Mes examens', icon: 'pi pi-fw pi-pencil', to: '/my-exams' },
                     { label: 'Banque de Questions', icon: 'pi pi-fw pi-database', to: '/questions' },
-                    { label: 'Corrections', icon: 'pi pi-fw pi-user-edit', to: '/grading' },
+                    // { label: 'Corrections', icon: 'pi pi-fw pi-user-edit', to: route('gradings.index') },
                     { label: 'Certificats', icon: 'pi pi-fw pi-verified', to: '/certificates' }
                 ]
             },
@@ -47,22 +54,38 @@ const model = ref([
                 label: 'Gestion CMS',
                 icon: 'pi pi-fw pi-desktop',
                 items: [
-                    { label: 'Pages Statiques', icon: 'pi pi-fw pi-clone', to: '/web/pages' },
-                    { label: 'Articles de Blog', icon: 'pi pi-fw pi-align-left', to: '/web/blog' },
-                    { label: 'Menus & Navigation', icon: 'pi pi-fw pi-bars', to: '/web/menus' },
-                    { label: 'Témoignages (Reviews)', icon: 'pi pi-fw pi-star', to: '/web/testimonials' }
+                    { label: 'Pages Statiques', icon: 'pi pi-fw pi-clone',
+                    //  to: '/web/pages'
+                    },
+                    { label: 'Articles de Blog', icon: 'pi pi-fw pi-align-left',
+                    // to: '/web/blog'
+                },
+                    { label: 'Menus & Navigation', icon: 'pi pi-fw pi-bars',
+                    // to: '/web/menus'
+                },
+                    { label: 'Témoignages (Reviews)', icon: 'pi pi-fw pi-star',
+                    //  to: '/web/testimonials'
+                    }
                 ]
             },
             {
                 label: 'Apparence & Design',
                 icon: 'pi pi-fw pi-palette',
                 items: [
-                    { label: 'Thèmes & Couleurs', icon: 'pi pi-fw pi-image', to: '/web/theme' },
-                    { label: 'Éditeur Widgets', icon: 'pi pi-fw pi-th-large', to: '/web/widgets' },
-                    { label: 'SEO & Meta-tags', icon: 'pi pi-fw pi-search-plus', to: '/web/seo' }
+                    { label: 'Thèmes & Couleurs', icon: 'pi pi-fw pi-image',
+                    //  to: '/web/theme'
+                     },
+                    { label: 'Éditeur Widgets', icon: 'pi pi-fw pi-th-large',
+                    //  to: '/web/widgets'
+                    },
+                    { label: 'SEO & Meta-tags', icon: 'pi pi-fw pi-search-plus',
+                    //  to: '/web/seo'
+                     }
                 ]
             },
-            { label: 'Fichiers Publics', icon: 'pi pi-fw pi-folder-open', to: '/web/assets' }
+            { label: 'Fichiers Publics', icon: 'pi pi-fw pi-folder-open',
+            // to: '/web/assets'
+         }
         ]
     },
     {
@@ -78,10 +101,18 @@ const model = ref([
     {
         label: 'Marketing & Ventes',
         items: [
-            { label: 'Campagnes Emailing', icon: 'pi pi-fw pi-send', to: '/marketing/emails' },
-            { label: 'Coupons de réduction', icon: 'pi pi-fw pi-percentage', to: '/marketing/coupons' },
-            { label: 'Affiliation', icon: 'pi pi-fw pi-share-alt', to: '/marketing/affiliates' },
-            { label: 'Abonnements & Plans', icon: 'pi pi-fw pi-credit-card', to: '/billing/subscriptions' }
+            { label: 'Campagnes Emailing', icon: 'pi pi-fw pi-send',
+            // to: '/marketing/emails'
+        },
+            { label: 'Coupons de réduction', icon: 'pi pi-fw pi-percentage',
+            // to: '/marketing/coupons'
+        },
+            { label: 'Affiliation', icon: 'pi pi-fw pi-share-alt',
+            //  to: '/marketing/affiliates'
+            },
+            { label: 'Abonnements & Plans', icon: 'pi pi-fw pi-credit-card',
+            //  to: '/billing/subscriptions'
+             }
         ]
     },
     {
@@ -96,10 +127,18 @@ const model = ref([
                     { label: 'Logs d\'audit', icon: 'pi pi-fw pi-history', to: '/system/logs' }
                 ]
             },
-            { label: 'Paramètres Généraux', icon: 'pi pi-fw pi-cog', to: '/system/settings' },
-            { label: 'Passerelles de Paiement', icon: 'pi pi-fw pi-dollar', to: '/system/payments' },
-            { label: 'Traductions (i18n)', icon: 'pi pi-fw pi-globe', to: '/system/languages' },
-            { label: 'Maintenance Serveur', icon: 'pi pi-fw pi-server', to: '/system/server' }
+            { label: 'Paramètres Généraux', icon: 'pi pi-fw pi-cog',
+            // to: '/system/settings'
+         },
+            { label: 'Passerelles de Paiement', icon: 'pi pi-fw pi-dollar',
+            //  to: '/system/payments'
+             },
+            { label: 'Traductions (i18n)', icon: 'pi pi-fw pi-globe',
+            // to: '/system/languages'
+        },
+            { label: 'Maintenance Serveur', icon: 'pi pi-fw pi-server',
+            //  to: '/system/server'
+            }
         ]
     }
 ]);
