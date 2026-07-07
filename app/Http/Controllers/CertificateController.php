@@ -316,7 +316,7 @@ class CertificateController extends Controller
 
             $pdf->setPaper('a4', $certificate->template->orientation ?? 'landscape');
             $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
-
+           // return  $certificate;
             return $pdf->download("Certificat_{$certificate->certificate_code}.pdf");
 
         } catch (Exception $e) {

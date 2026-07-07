@@ -1,13 +1,10 @@
 <script setup>
 /**
  * ======================================================================================
- * SUBNETCONGO LMS - CERTIFICATE ARCHITECT & TRUST CENTER v12.0.0
+ * SUBNETCONGO LMS - QUANTUM ENGINE STUDIO (ULTIMATE PRO EDITION)
  * ======================================================================================
- * Module de pilotage de la valeur académique et d'édition de diplômes.
- * Synchronisé avec CertificateController (Laravel).
- *
- * @author  SubnetCongo Framework Division
- * @module  Credentialing/TrustCenter
+ * Éditeur visuel avancé de diplômes.
+ * Supporte : Drag & Drop complet, Images custom, Opacité, Styles Texte Avancés, Z-Index.
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
@@ -17,10 +14,8 @@ import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
-// Composants PrimeVue (inchangés)
+// Composants PrimeVue
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -29,13 +24,10 @@ import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Sidebar from 'primevue/sidebar';
-import FileUpload from 'primevue/fileupload';
 import ColorPicker from 'primevue/colorpicker';
 import Slider from 'primevue/slider';
 import InputSwitch from 'primevue/inputswitch';
 import Divider from 'primevue/divider';
-import Accordion from 'primevue/accordion';
-import AccordionTab from 'primevue/accordiontab';
 import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
@@ -46,51 +38,40 @@ import Chart from 'primevue/chart';
 import Message from 'primevue/message';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Timeline from 'primevue/timeline';
-import Tooltip from 'primevue/tooltip';
-import OverlayPanel from 'primevue/overlaypanel';
-import MultiSelect from 'primevue/multiselect';
+import SelectButton from 'primevue/selectbutton';
+import InputNumber from 'primevue/inputnumber';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
 import Textarea from 'primevue/textarea';
 
-// ======================================================================================
-// PROPS INERTIA (reçues depuis CertificateController@index)
-// ======================================================================================
 const props = defineProps({
     certificates: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
     templates: { type: Array, default: () => [] },
     courses: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({ total_issued: 0, success_rate: 0, avg_score: 0, revocation_rate: 0 }) },
     filters: { type: Object, default: () => ({}) },
-     meta: {
+    meta: {
         type: Object,
-        default: () => ({ fonts: ['Montserrat', 'Playfair Display', 'Roboto', 'Open Sans', 'Courier Prime'] })
+        default: () => ({ fonts: ['Montserrat', 'Playfair Display', 'Roboto', 'Open Sans', 'Courier Prime', 'Arial', 'Times New Roman'] })
     }
 });
 
-// ======================================================================================
-// SERVICES & ÉTATS GLOBAUX
-// ======================================================================================
 const toast = useToast();
 const confirm = useConfirm();
 const loading = ref(true);
 const searchLoading = ref(false);
 
-const activeMainTab = ref('log'); // 'log' ou 'templates'
-const expandedRows = ref([]);
-const selectedCertificates = ref([]);
-
-// Modals & Sidebars
+const activeMainTab = ref('log');
 const designerDialog = ref(false);
 const revocationDialog = ref(false);
 const bulkIssuanceDialog = ref(false);
-const analyticsSidebar = ref(false);
-
 const isSaving = ref(false);
-const isGeneratingPdf = ref(false);
 
-// ======================================================================================
-// FILTRAGE RÉACTIF (recherche et filtres)
-// ======================================================================================
+// Refs pour les inputs File Globaux (Fond, Logo Officiel, Signature Officielle)
+const logoUploader = ref(null);
+const sigUploader = ref(null);
+const bgUploader = ref(null);
+
 const serverFilters = reactive({
     search: props.filters.search || '',
     status: props.filters.status || null,
@@ -100,366 +81,157 @@ const serverFilters = reactive({
 watch(serverFilters, debounce(() => {
     searchLoading.value = true;
     router.get(route('certificates.index'), serverFilters, {
-        preserveState: true,
-        preserveScroll: true,
-        replace: true,
+        preserveState: true, preserveScroll: true, replace: true,
         onFinish: () => searchLoading.value = false
     });
 }, 400));
 
 // ======================================================================================
-// FORMULAIRES INERTIA (useForm)
+// CONFIGURATION DU DESIGNER (ÉTAT & MOTEUR)
 // ======================================================================================
 
-/** Formulaire du Designer Visuel (création / mise à jour d'un template) */
-// --- ÉTAT DU FORMULAIRE ---
+const defaultFilters = () => ({ brightness: 100, contrast: 100, saturate: 100, grayscale: 0, hueRotate: 0, invert: false, blur: 0 });
 
-const activeDragKey = ref('');
-const dragStartY = ref(0);
-const elementStartTop = ref(0);
-const defaultFilters = () => ({
-    brightness: 100,
-    contrast: 100,
-    saturate: 100,
-    grayscale: 0,
-    hueRotate: 0,
-    invert: false,
-    blur: 0
-});
 const templateForm = reactive({
-    name: "Certificat de Réussite Prestige",
+    id: null,
+    name: "Modèle Pro",
     orientation: 'landscape',
     background_color: '#ffffff',
-    bg_opacity: 100,
-    text_color: '#1e293b',
-    border_color: '#c5a059', // Doré
+    border_color: '#dc2626',
     border_width: 25,
     primary_font: 'Montserrat',
     accent_font: 'Playfair Display',
-     bg_filters: {
-        blur: 0,
-        brightness: 100,
-        contrast: 100,
-        grayscale: 0,
-        hueRotate: 0
-    },
-    // Media
-    show_logo: true,
-    logo_file: null,
-    logo_scale: 15,
-    logo_top: 10,
-
-    show_background: false,
-    background_image_file: null,
-    background_opacity: 15,
-
-    show_signature: true,
-    signature_file: null,
-
+    text_color: '#1e293b',
     show_qr: true,
+    show_signature: true,
 
-    // Deletion flags
+    // Fichiers d'upload backend
+    logo_file: null,
+    signature_file: null,
+    background_image_file: null,
+
+    // Flags de suppression
     delete_logo: false,
-    delete_background: false,
     delete_signature: false,
+    delete_background: false,
 
-    elements: [
-        {
-            id: 'el_title',
-            type: 'text',
-            name: 'Titre Principal',
-            content: "CERTIFICAT DE RÉUSSITE",
-            x: 300, y: 150, width: 500, rotation: 0,
-            filters: defaultFilters(),
-            style: { fontSize: 48, color: '#ffffff', fontFamily: 'Montserrat', fontWeight: '900', letterSpacing: 8, textAlign: 'center' }
-        },
-        {
-            id: 'el_subtitle',
-            type: 'text',
-            name: 'Sous-Titre',
-            content: "Ceci est décerné avec les honneurs à",
-            x: 350, y: 320, width: 400, rotation: 0,
-            filters: defaultFilters(),
-            style: { fontSize: 18, color: '#ffffff', fontFamily: 'Montserrat', fontWeight: '400', letterSpacing: 2, textAlign: 'center' }
-        }
-    ]
+    bg_opacity: 100,
+    bg_filters: defaultFilters(),
+    elements: [] // Contient Textes, Images customs, Logo, Signature, QR
 });
 
-// --- PREVIEWS (BASE64) ---
-const logoPreview = ref(null);
 const backgroundPreview = ref(null);
+const logoPreview = ref(null);
 const signaturePreview = ref(null);
 
-// --- LOGIQUE DRAG & DROP ---
-const onDragStart = (event, key) => {
-    activeDragKey.value = key;
-    dragStartY.value = event.clientY;
-    elementStartTop.value = templateForm.elements[key].top;
-
-    // Ajouter une classe au body pour éviter la sélection de texte pendant le drag
-    document.body.style.userSelect = 'none';
-};
-
-const onDragMove = (event) => {
-    if (!activeDragKey.value) return;
-
-    const canvas = document.getElementById('certificate-canvas');
-    const canvasRect = canvas.getBoundingClientRect();
-
-    // Calcul du delta en pixels
-    const deltaY = event.clientY - dragStartY.value;
-
-    // Conversion du delta pixels en pourcentage par rapport à la hauteur du canvas
-    const deltaPercentage = (deltaY / canvasRect.height) * 100;
-
-    // Mise à jour de la position avec limites (0-95%)
-    let newTop = elementStartTop.value + deltaPercentage;
-    templateForm.elements[activeDragKey.value].top = Math.min(Math.max(0, newTop), 95).toFixed(2);
-};
-
-const onDragEnd = () => {
-    activeDragKey.ref = null;
-    document.body.style.userSelect = 'auto';
-};
-
-// --- GESTION DES FICHIERS ---
-const onLogoSelect = (event) => {
-    const file = event.files[0];
-    templateForm.logo_file = file;
-    templateForm.delete_logo = false;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        logoPreview.value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-};
-
-const onBackgroundSelect = (event) => {
-    const file = event.files[0];
-    templateForm.background_image_file = file;
-    templateForm.delete_background = false;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        backgroundPreview.value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-};
-
-const onSignatureSelect = (event) => {
-    const file = event.files[0];
-    templateForm.signature_file = file;
-    templateForm.delete_signature = false;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        signaturePreview.value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-};
-
-// --- STYLES CALCULÉS ---
-const canvasStyle = computed(() => {
-    const isLandscape = templateForm.orientation === 'landscape';
-    // Ratio A4 (1.414)
-    const baseWidth = isLandscape ? 1120 : 792;
-    const baseHeight = isLandscape ? 792 : 1120;
-
-    return {
-        width: `${baseWidth}px`,
-        height: `${baseHeight}px`,
-        minWidth: `${baseWidth}px`,
-        minHeight: `${baseHeight}px`
-    };
-});
-
-const borderStyle = computed(() => {
-    const margin = 30;
-    return {
-        top: `${margin}px`,
-        left: `${margin}px`,
-        right: `${margin}px`,
-        bottom: `${margin}px`,
-        border: `${templateForm.border_width}px solid ${templateForm.border_color}`,
-        outline: `2px solid ${templateForm.border_color}`,
-        outlineOffset: '8px'
-    };
-});
-
-const getElementStyle = (el, isTitle = false) => {
-    return {
-        fontSize: `${el.size}px`,
-        letterSpacing: `${el.letter_spacing}px`,
-        fontFamily: isTitle ? templateForm.accent_font : 'inherit',
-        fontWeight: isTitle ? '900' : 'normal',
-        lineHeight: '1.4'
-    };
-};
-
-const getElementName = (key) => {
-    const names = { title: 'Titre', subtitle: 'Sous-Titre', body: 'Corps de texte' };
-    return names[key] || key;
-};
-
-
-/**
- * ======================================================================================
- * QUANTUM ENGINE LOGIC : SYNC & DYNAMICS
- * ======================================================================================
- */
-
-// --- ÉTATS MOTEUR QUANTUM ---
+// Variables du moteur Drag & Drop
 const canvasZoom = ref(60);
 const selectedElementId = ref(null);
 const draggingElementId = ref(null);
 const dragOffset = reactive({ x: 0, y: 0 });
 
-// Filtres par défaut pour les nouveaux éléments images
+// ======================================================================================
+// BLUEPRINT (MODÈLE DE BASE AU CHARGEMENT)
+// ======================================================================================
+const loadBlueprintDesign = () => {
+    templateForm.name = "Diplôme Excellence SubnetCongo";
+    templateForm.border_color = '#b91c1c';
+    templateForm.border_width = 30;
+    templateForm.orientation = 'landscape';
+    templateForm.background_color = '#ffffff';
+    templateForm.primary_font = 'Montserrat';
+    templateForm.text_color = '#1e293b';
+    templateForm.bg_opacity = 100;
 
-
-// --- COMPUTED : QUANTUM STYLE ENGINE ---
-
-/** Style du conteneur principal A4 */
-const quantumCanvasStyle = computed(() => {
-    const isLandscape = templateForm.orientation === 'landscape';
-    const width = isLandscape ? 1120 : 792;
-    const height = isLandscape ? 792 : 1120;
-
-    return {
-        width: `${width}px`,
-        height: `${height}px`,
-        transform: `scale(${canvasZoom.value / 100})`,
-        backgroundColor: templateForm.background_color,
-        transition: draggingElementId.value ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-    };
-});
-
-/** Générateur de filtres CSS matriciels */
-const quantumFilterStyle = (filters) => {
-    if (!filters) return {};
-    return {
-        filter: `
-            brightness(${filters.brightness}%)
-            contrast(${filters.contrast}%)
-            grayscale(${filters.grayscale}%)
-            saturate(${filters.saturate ?? 100}%)
-            hue-rotate(${filters.hueRotate}deg)
-            invert(${filters.invert ? 100 : 0}%)
-            blur(${filters.blur || 0}px)
-        `.replace(/\s+/g, ' ')
-    };
+    templateForm.elements = [
+        { id: 'el_title', type: 'text', name: 'Titre Principal', content: 'CERTIFICAT D\'ACHÈVEMENT', x: 160, y: 170, width: 800, height: null, rotation: 0, opacity: 100, filters: defaultFilters(), style: { fontSize: 48, color: '#b91c1c', fontFamily: 'Montserrat', fontWeight: '900', fontStyle: 'normal', textDecoration: 'none', letterSpacing: 2, textAlign: 'center', lineHeight: 1.2 } },
+        { id: 'el_subtitle', type: 'text', name: 'Mention', content: 'Décerné avec la mention : {{MENTION}}', x: 360, y: 260, width: 400, height: null, rotation: 0, opacity: 100, filters: defaultFilters(), style: { fontSize: 14, color: '#475569', fontFamily: 'Montserrat', fontWeight: '400', fontStyle: 'normal', textDecoration: 'none', letterSpacing: 0, textAlign: 'center', lineHeight: 1.2 } },
+        { id: 'el_student', type: 'text', name: 'Apprenant (Variable)', content: '{{NOM_APPRENANT}}', x: 260, y: 300, width: 600, height: null, rotation: 0, opacity: 100, filters: defaultFilters(), style: { fontSize: 56, color: '#dc2626', fontFamily: 'Playfair Display', fontStyle: 'italic', fontWeight: '700', textDecoration: 'none', letterSpacing: 0, textAlign: 'center', lineHeight: 1.2 } },
+        { id: 'el_body', type: 'text', name: 'Description (Variable)', content: 'Pour avoir complété avec succès le programme : {{NOM_FORMATION}}.', x: 210, y: 410, width: 700, height: null, rotation: 0, opacity: 100, filters: defaultFilters(), style: { fontSize: 16, color: '#475569', fontFamily: 'Montserrat', fontWeight: '400', fontStyle: 'normal', textDecoration: 'none', letterSpacing: 0, textAlign: 'center', lineHeight: 1.6 } },
+        { id: 'el_logo_off', type: 'logo', name: 'Logo Institution', content: null, x: 480, y: 50, width: 160, height: 100, rotation: 0, opacity: 100, filters: defaultFilters() },
+        { id: 'el_sig_off', type: 'signature', name: 'Signature Officielle', content: null, x: 100, y: 580, width: 200, height: 100, rotation: 0, opacity: 100, filters: defaultFilters() },
+        { id: 'el_qr_off', type: 'qr', name: 'Sceau QR Code', content: 'QR_CODE_PLACEHOLDER', x: 510, y: 560, width: 100, height: 100, rotation: 0, opacity: 100, filters: defaultFilters() }
+    ];
 };
 
-/** Style dynamique d'un élément (Positionnement & Géométrie) */
-const quantumElementStyle = (el) => {
-    const isActive = selectedElementId.value === el.id;
-    const zIndex = Array.isArray(templateForm.elements)
-        ? templateForm.elements.indexOf(el) + 10
-        : 10;
-    return {
-        left: `${el.x}px`,
-        top: `${el.y}px`,
-        width: el.width ? `${el.width}px` : 'auto',
-        height: el.height ? `${el.height}px` : 'auto',
-        transform: `rotate(${el.rotation || 0}deg)`,
-        zIndex: zIndex,
-        cursor: draggingElementId.value === el.id ? 'grabbing' : 'grab',
-        outline: isActive ? '2px solid #6366f1' : 'none',
-        transition: draggingElementId.value === el.id ? 'none' : 'box-shadow 0.2s ease'
-    };
+const openDesigner = (template = null) => {
+    selectedElementId.value = null;
+    backgroundPreview.value = null;
+    logoPreview.value = null;
+    signaturePreview.value = null;
+
+    if (template && template.id) {
+        const t = cloneDeep(template);
+        templateForm.id = t.id;
+        templateForm.name = t.name;
+        templateForm.background_color = t.background_color ? `#${t.background_color.replace('#', '')}` : '#ffffff';
+        templateForm.border_color = t.border_color ? `#${t.border_color.replace('#', '')}` : '#dc2626';
+        templateForm.border_width = t.border_width || 0;
+        templateForm.orientation = t.orientation || 'landscape';
+        templateForm.primary_font = t.primary_font || 'Montserrat';
+        templateForm.accent_font = t.accent_font || 'Playfair Display';
+        templateForm.text_color = t.text_color ? `#${t.text_color.replace('#', '')}` : '#1e293b';
+        templateForm.show_qr = t.show_qr ?? true;
+        templateForm.show_signature = t.show_signature ?? true;
+        templateForm.bg_opacity = t.bg_opacity ?? 100;
+
+        backgroundPreview.value = t.background_url || null;
+        logoPreview.value = t.logo_url || null;
+        signaturePreview.value = t.signature_url || null;
+
+        // Charger éléments avec assignation des previews et vérification de la variable opacity
+        const loadedElements = Array.isArray(t.elements) ? cloneDeep(t.elements) : [];
+        loadedElements.forEach(el => {
+            if (el.type === 'logo') el.content = logoPreview.value;
+            if (el.type === 'signature') el.content = signaturePreview.value;
+            if (el.opacity === undefined) el.opacity = 100; // Retrocompatibilité
+        });
+        templateForm.elements = loadedElements;
+
+    } else {
+        templateForm.id = null;
+        loadBlueprintDesign();
+    }
+
+    templateForm.delete_background = false;
+    templateForm.delete_logo = false;
+    templateForm.delete_signature = false;
+    designerDialog.value = true;
 };
 
-/** Style spécifique pour les blocs de texte */
-const quantumTextStyle = (el) => ({
-    fontSize: `${el.style.fontSize}px`,
-    color: el.style.color,
-    fontFamily: el.style.fontFamily,
-    letterSpacing: `${el.style.letterSpacing}px`,
-    fontWeight: el.style.fontWeight,
-    fontStyle: el.style.fontStyle,
-    textTransform: el.style.textTransform,
-    textDecoration: el.style.textDecoration,
-    textAlign: el.style.textAlign,
-    lineHeight: el.style.lineHeight || 1.2
-});
+// ======================================================================================
+// SYSTÈME DE GESTION DES CALQUES (Z-INDEX)
+// ======================================================================================
 
-// --- ACTIONS : GESTION DES ÉLÉMENTS ---
+const moveLayer = (elId, direction) => {
+    const index = templateForm.elements.findIndex(e => e.id === elId);
+    if (index < 0) return;
 
-/** Ajout d'un nouvel élément sur le canvas */
-const addElement = (type, variant = 'standard') => {
-    const newId = `quantum_${Date.now()}`;
-    const newElement = {
-        id: newId,
-        type: type,
-        name: `${type.toUpperCase()} Element`,
-        x: 100,
-        y: 100,
-        width: type === 'text' ? 400 : 200,
-        rotation: 0,
-        content: variant === 'h1' ? 'TITRE DE DISTINCTION' : (type === 'text' ? 'Nouveau bloc de texte' : ''),
-        filters: defaultFilters(),
-        style: type === 'text' ? {
-            fontSize: variant === 'h1' ? 48 : 18,
-            color: templateForm.text_color,
-            fontFamily: templateForm.primary_font,
-            fontWeight: variant === 'h1' ? '900' : '400',
-            letterSpacing: 0,
-            textAlign: 'center',
-            textTransform: variant === 'h1' ? 'uppercase' : 'none'
-        } : {}
-    };
+    const el = templateForm.elements.splice(index, 1)[0];
 
-    templateForm.elements.push(newElement);
-    selectedElementId.value = newId;
-};
-
-/** Duplication d'un élément existant */
-const duplicateElement = (el) => {
-    const clone = cloneDeep(el);
-    clone.id = `quantum_copy_${Date.now()}`;
-    clone.x += 30;
-    clone.y += 30;
-    templateForm.elements.push(clone);
-    selectedElementId.value = clone.id;
-};
-
-/** Suppression d'un élément */
-const removeElement = (id) => {
-    const index = templateForm.elements.findIndex(e => e.id === id);
-    if (index !== -1) {
-        templateForm.elements.splice(index, 1);
-        if (selectedElementId.value === id) selectedElementId.value = null;
+    if (direction === 'up') {
+        templateForm.elements.splice(Math.min(index + 1, templateForm.elements.length), 0, el);
+    } else if (direction === 'down') {
+        templateForm.elements.splice(Math.max(index - 1, 0), 0, el);
+    } else if (direction === 'front') {
+        templateForm.elements.push(el);
+    } else if (direction === 'back') {
+        templateForm.elements.unshift(el);
     }
 };
 
-/** Toggle des styles (Bold, Italic, Uppercase) */
-const toggleStyle = (el, prop, val1, val2) => {
-    el.style[prop] = el.style[prop] === val1 ? val2 : val1;
-};
-
-/** Gestion des calques (Monter/Descendre) */
-const reorderLayer = (el, direction) => {
-    const idx = templateForm.elements.indexOf(el);
-    if (direction === 'up' && idx < templateForm.elements.length - 1) {
-        const temp = templateForm.elements[idx + 1];
-        templateForm.elements[idx + 1] = templateForm.elements[idx];
-        templateForm.elements[idx] = temp;
-    } else if (direction === 'down' && idx > 0) {
-        const temp = templateForm.elements[idx - 1];
-        templateForm.elements[idx - 1] = templateForm.elements[idx];
-        templateForm.elements[idx] = temp;
-    }
-};
-
-// --- LOGIQUE DRAG & DROP QUANTUM ---
+// ======================================================================================
+// SYSTÈME DE DRAG & DROP (MOTEUR)
+// ======================================================================================
 
 const startElementDrag = (event, el) => {
     selectedElementId.value = el.id;
     draggingElementId.value = el.id;
-
     const canvas = document.getElementById('snc-quantum-canvas');
     const rect = canvas.getBoundingClientRect();
     const zoom = canvasZoom.value / 100;
 
-    // Calculer l'offset pour que la souris ne "saute" pas au centre
+    // Offset permet d'attraper l'élément là où la souris a cliqué
     dragOffset.x = (event.clientX - rect.left) / zoom - el.x;
     dragOffset.y = (event.clientY - rect.top) / zoom - el.y;
 
@@ -469,1887 +241,1346 @@ const startElementDrag = (event, el) => {
 
 const handleGlobalDrag = (event) => {
     if (!draggingElementId.value) return;
-
     const el = templateForm.elements.find(e => e.id === draggingElementId.value);
+    if (!el) return;
+
     const canvas = document.getElementById('snc-quantum-canvas');
     const rect = canvas.getBoundingClientRect();
     const zoom = canvasZoom.value / 100;
 
-    // Calculer les nouvelles coordonnées avec le facteur de zoom
     el.x = Math.round((event.clientX - rect.left) / zoom - dragOffset.x);
     el.y = Math.round((event.clientY - rect.top) / zoom - dragOffset.y);
 };
 
-
-
-// --- GESTION DES MÉDIAS (UPLOAD & FILTRES) ---
-
-const uploadAsset = (event, type) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const content = e.target.result;
-        if (type === 'background') {
-            backgroundPreview.value = content;
-            templateForm.background_image_file = file;
-        } else {
-            // Créer un nouvel élément image sur le canvas
-            const newId = `quantum_img_${Date.now()}`;
-            templateForm.elements.push({
-                id: newId,
-                type: 'image',
-                name: type === 'logo' ? 'Institution Logo' : 'Signature',
-                content: content,
-                x: 100, y: 100, width: 200, height: 100,
-                rotation: 0,
-                filters: defaultFilters()
-            });
-            selectedElementId.value = newId;
-        }
-    };
-    reader.readAsDataURL(file);
+const stopGlobalDrag = () => {
+    draggingElementId.value = null;
+    document.removeEventListener('mousemove', handleGlobalDrag);
+    document.removeEventListener('mouseup', stopGlobalDrag);
 };
 
-/** Synchronisation du texte en temps réel via contenteditable */
+// ======================================================================================
+// STYLES COMPUTÉS ET FONCTIONS D'ÉDITION (TEXTE & OPACITÉ)
+// ======================================================================================
+
+const quantumCanvasStyle = computed(() => {
+    const width = templateForm.orientation === 'landscape' ? 1120 : 792;
+    const height = templateForm.orientation === 'landscape' ? 792 : 1120;
+    return {
+        width: `${width}px`,
+        height: `${height}px`,
+        transform: `scale(${canvasZoom.value / 100})`,
+        backgroundColor: templateForm.background_color
+    };
+});
+
+const quantumElementStyle = (el) => {
+    // L'ordre dans le tableau détermine le Z-Index naturel (comme dans Photoshop)
+    const zIndex = templateForm.elements.findIndex(e => e.id === el.id) + 10;
+    return {
+        position: 'absolute',
+        left: `${el.x}px`,
+        top: `${el.y}px`,
+        width: el.width ? `${el.width}px` : 'auto',
+        height: el.height ? `${el.height}px` : 'auto',
+        transform: `rotate(${el.rotation || 0}deg)`,
+        opacity: el.opacity !== undefined ? el.opacity / 100 : 1,
+        zIndex: zIndex,
+        cursor: draggingElementId.value === el.id ? 'grabbing' : 'grab',
+        outline: selectedElementId.value === el.id ? '2px dashed #dc2626' : 'none'
+    };
+};
+
+const quantumTextStyle = (el) => ({
+    fontSize: `${el.style.fontSize}px`,
+    color: el.style.color,
+    fontFamily: el.style.fontFamily,
+    letterSpacing: `${el.style.letterSpacing}px`,
+    fontWeight: el.style.fontWeight,
+    fontStyle: el.style.fontStyle,
+    textDecoration: el.style.textDecoration || 'none',
+    textAlign: el.style.textAlign,
+    lineHeight: el.style.lineHeight || 1.2
+});
+
+const quantumFilterStyle = (filters) => {
+    if (!filters) return {};
+    return {
+        filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) grayscale(${filters.grayscale}%) saturate(${filters.saturate ?? 100}%) hue-rotate(${filters.hueRotate}deg) invert(${filters.invert ? 100 : 0}%) blur(${filters.blur || 0}px)`
+    };
+};
+
+// Formater le texte (Gras, Italique, Souligné)
+const toggleTextStyle = (el, prop, activeVal, defaultVal) => {
+    if (el.type !== 'text') return;
+    el.style[prop] = el.style[prop] === activeVal ? defaultVal : activeVal;
+};
+
 const handleTextEdit = (event, el) => {
     el.content = event.target.innerText;
 };
 
-/** Basculer l'orientation du canvas */
-const toggleOrientation = () => {
-    templateForm.orientation = templateForm.orientation === 'landscape' ? 'portrait' : 'landscape';
-    toast.add({ severity: 'info', summary: 'Orientation', detail: `Canevas basculé en mode ${templateForm.orientation}`, life: 2000 });
-};
-
-const getElementIcon = (type) => {
-    const icons = { text: 'pi-align-left', image: 'pi-image', qr: 'pi-qrcode' };
-    return icons[type] || 'pi-box';
-};
-
-/** Sélection de l'élément actif */
-const selectedElement = computed(() => {
-    // return templateForm.elements.find(e => e.id === selectedElementId.value) || null;
-    return  null;
-});
-
-// --- SYNC AVEC BACKEND ---
-
-/** Écrase saveTemplate pour gérer le tableau d'éléments JSON */
-const publishQuantumDesign = () => {
-    isSaving.value = true;
-
-    // On prépare une copie propre pour l'envoi
-    const payload = cloneDeep(templateForm);
-    payload.background_color = payload.background_color.replace('#', '');
-    payload.border_color = payload.border_color.replace('#', '');
-    payload.text_color = payload.text_color.replace('#', '');
-
-    // Inertia gère le multipart/form-data automatiquement avec useForm ou router.post
-    router.post(route('certificates.templates.store'), payload, {
-        forceFormData: true,
-        onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Quantum Sync', detail: 'Design publié avec succès.' });
-            designerDialog.value = false;
-        },
-        onFinish: () => isSaving.value = false
-    });
-};
-
-/** Formulaire d'émission en masse */
-const bulkIssueForm = useForm({
-    course_id: null,
-    template_id: null,
-    notify_users: true
-});
-
-/** Formulaire de révocation */
-const revocationForm = useForm({
-    id: null,
-    reason: '',
-    confirm_action: false
-});
-
 // ======================================================================================
-// LOGIQUE MÉTIER : TEMPLATE DESIGNER
+// AJOUT ET GESTION DES ÉLÉMENTS (INCLUANT L'UPLOAD D'IMAGES CUSTOM)
 // ======================================================================================
 
-/** Ouvre le designer pour créer ou éditer un template */
-const openDesigner = (template = null) => {
-    // Reset file inputs and flags for both new and edit
-    templateForm.logo_file = null;
-    templateForm.background_image_file = null;
-    templateForm.signature_file = null;
-    templateForm.delete_logo = false;
-    templateForm.delete_background = false;
-    templateForm.delete_signature = false;
+const addElement = (type, variant = 'standard', content = null) => {
+    const newEl = {
+        id: `el_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        type,
+        name: type === 'text' ? 'Nouveau Texte' : (type === 'image' ? 'Image Custom' : type),
+        content: content || (type === 'text' ? 'Modifiez ce texte' : null),
+        x: 100, y: 100,
+        width: type === 'text' ? 400 : 200,
+        height: type === 'text' ? null : 200,
+        rotation: 0,
+        opacity: 100, // Nouvelle propriété d'opacité universelle
+        filters: defaultFilters(),
+        style: type === 'text' ? {
+            fontSize: variant === 'h1' ? 48 : 16,
+            color: templateForm.text_color,
+            fontFamily: templateForm.primary_font,
+            fontWeight: variant === 'h1' ? '900' : '400',
+            fontStyle: 'normal',
+            textDecoration: 'none',
+            textAlign: 'left',
+            letterSpacing: 0,
+            lineHeight: 1.2
+        } : {}
+    };
+    templateForm.elements.push(newEl);
+    selectedElementId.value = newEl.id;
+};
 
-    if (template && template.id) { // Check for template.id to ensure it's an existing template
-        // Reset previews
-        logoPreview.value = template.logo_url || null;
-        backgroundPreview.value = template.background_url || null;
-        signaturePreview.value = template.signature_url || null;
-        const t = cloneDeep(template);
-        templateForm.id = t.id;
-        templateForm.name = t.name;
-        // Les couleurs sont stockées sans # dans la BDD, mais le front les utilise avec #
-        templateForm.background_color = t.background_color ? `#${t.background_color.replace('#', '')}` : '#ffffff';
-        templateForm.border_color = t.border_color ? `#${t.border_color.replace('#', '')}` : '#4f46e5';
-        templateForm.border_width = t.border_width;
-        templateForm.primary_font = t.primary_font;
-        templateForm.accent_font = t.accent_font || 'Playfair Display';
-        templateForm.text_color = t.text_color ? `#${t.text_color.replace('#', '')}` : '#1e293b';
-        templateForm.show_qr = t.show_qr ?? true;
-        templateForm.show_signature = t.show_signature ?? true;
-        templateForm.logo_pos = t.logo_pos || 'center';
-        templateForm.orientation = t.orientation || 'landscape';
-        templateForm.bg_opacity = t.bg_opacity ?? 100;
-        templateForm.logo_scale = t.logo_scale ?? 15;
-        templateForm.bg_filters = t.bg_filters ? cloneDeep(t.bg_filters) : defaultFilters();
-        templateForm.logo_top = t.logo_top ?? 10;
-        templateForm.elements = t.elements ? cloneDeep(t.elements) : templateForm.elements; // Deep clone elements for reactivity
-    } else {
-        // Valeurs par défaut pour un nouveau template
-        templateForm.id = null;
-        templateForm.name = '';
-        templateForm.background_color = '#ffffff';
-        templateForm.border_color = '#4f46e5';
-        templateForm.border_width = 10;
-        templateForm.primary_font = 'Montserrat';
-        templateForm.accent_font = 'Playfair Display';
-        templateForm.text_color = '#1e293b';
-        templateForm.show_qr = true;
-        templateForm.show_signature = true;
-        templateForm.logo_pos = 'center';
-        templateForm.orientation = 'landscape';
-        templateForm.bg_opacity = 100;
-        templateForm.logo_scale = 15;
-        templateForm.logo_top = 10;
-        templateForm.elements = {
-            title: { text: 'CERTIFICAT DE RÉUSSITE', size: 48, top: 25, letter_spacing: 8, color: null },
-            subtitle: { text: 'Ceci est décerné avec les honneurs à', size: 18, top: 40, letter_spacing: 2, color: null },
-            // Default body text for new templates
-            body: { text: 'Pour avoir complété avec succès le programme :', size: 14, top: 60, letter_spacing: 0 }
+// Fonction spéciale pour Uploader n'importe quelle image directement sur le canevas
+const addCustomImage = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            addElement('image', 'standard', ev.target.result);
         };
-        // Clear previews for new template
-        logoPreview.value = null;
-        backgroundPreview.value = null;
-        signaturePreview.value = null;
-    }
-
-    designerDialog.value = true;
+        reader.readAsDataURL(file);
+    };
+    input.click();
 };
 
-/** Sauvegarde le template (création ou mise à jour) */
+const removeElement = (id) => {
+    templateForm.elements = templateForm.elements.filter(e => e.id !== id);
+    if (selectedElementId.value === id) selectedElementId.value = null;
+};
+
+const duplicateElement = (el) => {
+    const clone = cloneDeep(el);
+    clone.id = `copy_${Date.now()}`;
+    clone.x += 30;
+    clone.y += 30;
+    templateForm.elements.push(clone);
+    selectedElementId.value = clone.id;
+};
+
+// ======================================================================================
+// GESTION DES UPLOADS OFFICIELS (FOND, LOGO, SIGNATURE) ET SYNCHRONISATION
+// ======================================================================================
+
+const handleFileUpload = (event, type) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+        if (type === 'bg') {
+            backgroundPreview.value = e.target.result;
+            templateForm.background_image_file = file;
+            templateForm.delete_background = false;
+        }
+        if (type === 'logo') {
+            logoPreview.value = e.target.result;
+            templateForm.logo_file = file;
+            templateForm.delete_logo = false;
+            let logoEl = templateForm.elements.find(el => el.type === 'logo');
+            if (logoEl) logoEl.content = e.target.result;
+            else templateForm.elements.push({ id: `el_logo_${Date.now()}`, type: 'logo', name: 'Logo Institution', content: e.target.result, x: 50, y: 50, width: 150, height: 100, rotation: 0, opacity: 100, filters: defaultFilters() });
+        }
+        if (type === 'sig') {
+            signaturePreview.value = e.target.result;
+            templateForm.signature_file = file;
+            templateForm.delete_signature = false;
+            templateForm.show_signature = true;
+            let sigEl = templateForm.elements.find(el => el.type === 'signature');
+            if (sigEl) sigEl.content = e.target.result;
+            else templateForm.elements.push({ id: `el_sig_${Date.now()}`, type: 'signature', name: 'Signature Officielle', content: e.target.result, x: 100, y: 600, width: 200, height: 100, rotation: 0, opacity: 100, filters: defaultFilters() });
+        }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = null;
+};
+
+const clearFile = (type) => {
+    if (type === 'bg') { backgroundPreview.value = null; templateForm.background_image_file = null; templateForm.delete_background = true; }
+    if (type === 'logo') {
+        logoPreview.value = null; templateForm.logo_file = null; templateForm.delete_logo = true;
+        let logoEl = templateForm.elements.find(el => el.type === 'logo');
+        if (logoEl) logoEl.content = null;
+    }
+    if (type === 'sig') {
+        signaturePreview.value = null; templateForm.signature_file = null; templateForm.delete_signature = true;
+        let sigEl = templateForm.elements.find(el => el.type === 'signature');
+        if (sigEl) sigEl.content = null;
+    }
+};
+
+// ======================================================================================
+// SAUVEGARDE & COMMUNICATION BACKEND
+// ======================================================================================
+
 const saveTemplate = () => {
     if (!templateForm.name.trim()) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Le nom du modèle est obligatoire.', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Le nom est obligatoire.', life: 3000 });
         return;
     }
-
-    const form = useForm(templateForm); // Create a useForm instance from the reactive object
-
     isSaving.value = true;
     const isUpdate = !!templateForm.id;
-    const url = isUpdate
-        ? route('certificates.templates.update', { template: templateForm.id })
-        : route('certificates.templates.store');
+    const url = isUpdate ? route('certificates.templates.update', { template: templateForm.id }) : route('certificates.templates.store');
 
-    // Transform data before sending
-    form.transform((data) => ({
-        ...data,
-        background_color: data.background_color.replace('#', ''),
-        border_color: data.border_color.replace('#', ''),
-        text_color: data.text_color.replace('#', ''),
-        // Ensure elements are stringified if they are objects
-        elements: data.elements, // Laravel will handle JSON encoding/decoding
-        // Remove id if it's an update, as it's in the URL
-        ...(isUpdate && { id: undefined })
-    })).post(url, {
-        preserveScroll: true,
-        forceFormData: true,
-        onSuccess: () => {
-            // Reset the form after successful submission
-            form.reset();
-            toast.add({ severity: 'success', summary: 'Template Sauvegardé', detail: 'Le design est prêt à être utilisé.', life: 4000 });
-            designerDialog.value = false;
-            // Recharger la page pour rafraîchir la liste des templates
-            router.reload({ only: ['templates'] });
-        },
-        onError: (errors) => {
-            console.error(errors);
-            toast.add({ severity: 'error', summary: 'Erreur Serveur', detail: 'Impossible de sauvegarder le template.', life: 5000 });
-        },
-        onFinish: () => { isSaving.value = false; }
-    });
-};
+    const payload = {
+        ...templateForm,
+        background_color: templateForm.background_color.replace('#', ''),
+        border_color: templateForm.border_color.replace('#', ''),
+        text_color: templateForm.text_color.replace('#', ''),
+        elements: JSON.stringify(templateForm.elements)
+    };
+    if (isUpdate) delete payload.id;
 
-/** Génère un aperçu PDF du template en cours de design via html2canvas */
-const previewPDF = async () => {
-    const canvasElement = document.getElementById('certificate-canvas');
-    if (!canvasElement) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Élément de canevas introuvable.', life: 3000 });
-        return;
-    }
-
-    isGeneratingPdf.value = true;
-    toast.add({ severity: 'info', summary: 'Génération PDF', detail: 'Préparation de l\'aperçu en cours...', life: 4000 });
-
-    try {
-        const canvas = await html2canvas(canvasElement, {
-            scale: 3, // Augmenter la résolution pour une meilleure qualité
-            useCORS: true,
-            backgroundColor: null, // Le fond est déjà dans le div
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-
-        const orientation = templateForm.orientation; // 'landscape' or 'portrait'
-        const pdf = new jsPDF({
-            orientation: orientation,
-            unit: 'mm',
-            format: 'a4'
-        });
-
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-        const filename = `${templateForm.name.replace(/\s+/g, '_')}_preview.pdf`;
-        pdf.save(filename);
-
-    } catch (error) {
-        console.error("Erreur lors de la génération du PDF:", error);
-        toast.add({ severity: 'error', summary: 'Erreur PDF', detail: 'Impossible de générer l\'aperçu PDF.', life: 5000 });
-    } finally {
-        isGeneratingPdf.value = false;
-    }
-};
-
-/** Duplication d'un template */
-const duplicateTemplate = (template) => {
-    const newTemplate = cloneDeep(template);
-    newTemplate.id = null;
-    newTemplate.name = `${template.name} - Copie`;
-    newTemplate.is_default = false;
-
-    // Ouvre le designer avec les données pré-remplies du template dupliqué
-    openDesigner(newTemplate);
-
-    toast.add({ severity: 'info', summary: 'Modèle Dupliqué', detail: 'Le design a été copié. Vous pouvez maintenant le modifier et l\'enregistrer.', life: 5000 });
-};
-
-/** Suppression d'un template */
-const deleteTemplate = (id) => {
-    confirm.require({
-        message: 'Supprimer ce modèle de certificat ? Les certificats déjà émis ne seront pas affectés (ils sont figés en PDF).',
-        header: 'Suppression de Modèle',
-        icon: 'pi pi-trash',
-        acceptClass: 'p-button-danger',
-        accept: () => {
-            router.delete(route('certificates.templates.destroy', { template: id }), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.add({ severity: 'success', summary: 'Supprimé', detail: 'Modèle retiré de la galerie.', life: 3000 });
-                },
-                onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de supprimer ce modèle (peut-être utilisé).', life: 4000 })
-            });
-        }
-    });
-};
-
-// ======================================================================================
-// LOGIQUE MÉTIER : ÉMISSION & RÉVOCATION
-// ======================================================================================
-
-/** Ouvre le dialogue d'émission massive */
-const openBulkIssuance = () => {
-    bulkIssueForm.reset();
-    bulkIssuanceDialog.value = true;
-};
-
-/** Soumet la demande d'émission massive */
-const submitBulkIssuance = () => {
-    if (!bulkIssueForm.course_id || !bulkIssueForm.template_id) {
-        toast.add({ severity: 'warn', summary: 'Champs manquants', detail: 'Veuillez sélectionner une formation et un modèle.', life: 3000 });
-        return;
-    }
-
-    isSaving.value = true;
-    bulkIssueForm.post(route('certificates.bulkIssue'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Génération en cours', detail: 'Les certificats sont générés en arrière-plan.', life: 5000 });
-            bulkIssuanceDialog.value = false;
-            // Recharger la liste des certificats
-            router.reload({ only: ['certificates', 'stats'] });
-        },
-        onError: (err) => {
-            toast.add({ severity: 'error', summary: 'Erreur', detail: err?.response?.data?.message || 'Échec de la génération massive.', life: 5000 });
-        },
+    router.post(url, payload, {
+        preserveScroll: true, forceFormData: true,
+        onSuccess: () => { toast.add({ severity: 'success', summary: 'Succès', detail: 'Modèle sauvegardé avec succès.' }); designerDialog.value = false; },
+        onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Vérifiez les données saisies.' }),
         onFinish: () => isSaving.value = false
     });
 };
 
-/** Ouvre le dialogue de révocation pour un certificat */
-const handleRevocation = (cert) => {
-    revocationForm.reset();
-    revocationForm.id = cert.id;
-    revocationForm.reason = '';
-    revocationForm.confirm_action = false;
-    revocationDialog.value = true;
+const duplicateTemplate = (template) => {
+    const newTemplate = cloneDeep(template);
+    newTemplate.id = null; newTemplate.name = `${template.name} - Copie`;
+    openDesigner(newTemplate);
 };
 
-/** Soumet la révocation */
-const submitRevocation = () => {
-    if (!revocationForm.reason.trim() || !revocationForm.confirm_action) {
-        toast.add({ severity: 'warn', summary: 'Formulaire incomplet', detail: 'Motif et confirmation requis.', life: 3000 });
-        return;
-    }
-
-    // Utiliser la route de révocation définie dans web.php (certificates.revoke)
-    router.post(route('certificates.revoke', { certificate: revocationForm.id }), {
-        reason: revocationForm.reason,
-        _method: 'DELETE' // ou POST avec méthode spoofing – le contrôleur attend DELETE
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.add({ severity: 'warn', summary: 'Diplôme Invalidé', detail: 'La révocation a été enregistrée.', life: 5000 });
-            revocationDialog.value = false;
-            router.reload({ only: ['certificates', 'stats'] });
-        },
-        onError: (err) => {
-            toast.add({ severity: 'error', summary: 'Erreur', detail: err?.response?.data?.message || 'Impossible de révoquer.', life: 4000 });
-        }
+const deleteTemplate = (id) => {
+    confirm.require({
+        message: 'Voulez-vous vraiment supprimer ce modèle ?', header: 'Suppression', icon: 'pi pi-trash', acceptClass: 'p-button-danger',
+        accept: () => router.delete(route('certificates.templates.destroy', { template: id }))
     });
 };
 
-/** Téléchargement du PDF */
-const downloadPdf = (id) => {
-    // Ouvrir dans un nouvel onglet pour déclencher le téléchargement
-    window.open(route('certificates.download', { certificate: id }), '_blank');
+// ... [Logique d'Émission Bulk & Révocation] ...
+const bulkIssueForm = useForm({ course_id: null, template_id: null, notify_users: true });
+const revocationForm = useForm({ id: null, reason: '', confirm_action: false });
+
+const openBulkIssuance = () => { bulkIssueForm.reset(); bulkIssuanceDialog.value = true; };
+const submitBulkIssuance = () => {
+    if (!bulkIssueForm.course_id || !bulkIssueForm.template_id) return;
+    isSaving.value = true;
+    bulkIssueForm.post(route('certificates.bulkIssue'), {
+        onSuccess: () => { toast.add({ severity: 'success', summary: 'Génération lancée' }); bulkIssuanceDialog.value = false; },
+        onFinish: () => isSaving.value = false
+    });
 };
 
-/** Ouvre le lien de vérification public */
-const openVerificationLink = (hash) => {
-    // Ouvre le lien dans un nouvel onglet
-    window.open(route('certificates.verify.public', { hash: hash }), '_blank');
+const handleRevocation = (cert) => { revocationForm.reset(); revocationForm.id = cert.id; revocationDialog.value = true; };
+const submitRevocation = () => {
+    if (!revocationForm.reason || !revocationForm.confirm_action) return;
+    router.post(route('certificates.revoke', { certificate: revocationForm.id }), { reason: revocationForm.reason, _method: 'DELETE' }, {
+        onSuccess: () => { toast.add({ severity: 'warn', summary: 'Révoqué' }); revocationDialog.value = false; }
+    });
 };
 
-// ======================================================================================
-// UTILITAIRES D'AFFICHAGE
-// ======================================================================================
+const downloadPdf = (id) => window.open(route('certificates.download', { certificate: id }), '_blank');
+const openVerificationLink = (hash) => window.open(route('certificates.verify.public', { hash: hash }), '_blank');
+const selectedElement = computed(() => templateForm.elements.find(e => e.id === selectedElementId.value) || null);
+const getStatusSeverity = (status) => ({ Active: { sev: 'success', label: 'Valide', icon: 'pi-verified' }, Revoked: { sev: 'danger', label: 'Révoqué', icon: 'pi-shield-slash' }, Expired: { sev: 'warning', label: 'Expiré', icon: 'pi-clock' } })[status] || { sev: 'info', label: status, icon: 'pi-info-circle' };
 
-/** Style dynamique pour l'aperçu du canvas */
-// const canvasStyle = computed(() => ({
-//     backgroundColor: templateForm.background_color,
-//     color: templateForm.text_color,
-//     fontFamily: templateForm.primary_font,
-//     position: 'relative',
-//     overflow: 'hidden',
-//     width: '842px',
-//     height: '595px',
-// }));
-
-const canvasBorderStyle = computed(() => ({
-    position: 'absolute',
-    top: '20px', left: '20px', right: '20px', bottom: '20px',
-    border: `${templateForm.border_width}px solid ${templateForm.border_color}`,
-    pointerEvents: 'none'
-}));
-
-const getStatusSeverity = (status) => {
-    const map = {
-        Active: { sev: 'success', label: 'Valide & Certifié', icon: 'pi-verified' },
-        Revoked: { sev: 'danger', label: 'Révoqué', icon: 'pi-shield-slash' },
-        Expired: { sev: 'warning', label: 'Expiré', icon: 'pi-clock' }
-    };
-    return map[status] || { sev: 'info', label: status, icon: 'pi-info-circle' };
-};
-
-// Chart data (statiques ou calculés selon les props)
-const trendChartData = reactive({
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
-    datasets: [{
-        label: 'Diplômes Délivrés',
-        data: [12, 19, 45, 32, 85, 42],
-        borderColor: '#6366f1',
-        backgroundColor: 'rgba(99, 102, 241, 0.05)',
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2
-    }]
-});
-
-const chartOptions = {
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-        x: { grid: { display: false } },
-        y: { grid: { borderDash: [5, 5], color: '#f1f5f9' }, beginAtZero: true }
-    }
-};
-const stopGlobalDrag = () => {
-  draggingElementId.value = null;
-  document.removeEventListener('mousemove', handleGlobalDrag);
-  document.removeEventListener('mouseup', stopGlobalDrag);
-};
-// Pagination manuelle (si besoin)
-const onPage = (event) => {
-    router.get(route('certificates.index'), {
-        ...serverFilters,
-        page: event.page + 1,
-        per_page: event.rows
-    }, { preserveState: true });
-};
-// Ajouter un élément à la position du clic sur le canvas
-const addElementAtPosition = (event) => {
-  const canvas = document.getElementById('snc-quantum-canvas');
-  if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
-  const zoom = canvasZoom.value / 100;
-  const x = (event.clientX - rect.left) / zoom;
-  const y = (event.clientY - rect.top) / zoom;
-
-  const newId = `quantum_${Date.now()}`;
-  const newElement = {
-    id: newId,
-    type: 'text',
-    name: 'Nouveau texte',
-    content: 'Texte libre',
-    x: Math.round(x),
-    y: Math.round(y),
-    width: 300,
-    rotation: 0,
-    filters: defaultFilters(),
-    style: {
-      fontSize: 18,
-      color: templateForm.text_color,
-      fontFamily: templateForm.primary_font,
-      fontWeight: '400',
-      letterSpacing: 0,
-      textAlign: 'left',
-      textTransform: 'none',
-    },
-  };
-
-  templateForm.elements.push(newElement);
-  selectedElementId.value = newId;
-};
-// ======================================================================================
-// CYCLE DE VIE
-// ======================================================================================
-onMounted(() => {
-    setTimeout(() => loading.value = false, 800);
-});
+onMounted(() => setTimeout(() => loading.value = false, 800));
 </script>
-
 <template>
     <AppLayout>
-        <Head title="Ingénierie de Certification | LMS Enterprise" />
+        <Head title="Ingénierie de Certification | SubnetCongo LMS" />
         <Toast position="top-right" />
         <ConfirmDialog />
 
-        <div class="min-h-screen bg-slate-50/50 p-4 md:p-8 lg:p-10 font-sans pb-24">
+        <!-- ============================================================================== -->
+        <!-- TABLEAU DE BORD PRINCIPAL (HORS ÉDITEUR)                                       -->
+        <!-- ============================================================================== -->
+        <div class="min-h-screen bg-slate-50 p-4 md:p-8 lg:p-10 font-sans pb-24">
 
-            <!-- ============================================================================== -->
-            <!-- HEADER ET NAVIGATION GLOBALE                                                   -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Certification & Diplômes', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
+            <!-- EN-TÊTE DU MODULE -->
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                <div class="space-y-4 w-full xl:w-auto">
+                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Trust Center & Diplômes', class: 'font-bold text-red-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
                     <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Trust Center & Diplômes
-                            <Badge value="Blockchain Sync" severity="success" class="text-[10px] bg-emerald-100 text-emerald-700 border border-emerald-200"></Badge>
+                        <h1 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tight flex items-center gap-4">
+                            Trust Center
+                            <Badge value="Blockchain Ready" severity="success" class="text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1"></Badge>
                         </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Gérez la valeur académique de votre institution. Concevez des diplômes HD, délivrez-les en masse, et garantissez leur intégrité via des hashs cryptographiques.
+                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-3 leading-relaxed font-medium">
+                            Pilotez la valeur académique de votre institution. Le <strong>Quantum Engine</strong> vous permet de concevoir des diplômes HD avec un placement libre (Drag & Drop) des variables, QR Codes, et Signatures.
                         </p>
                     </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Analytique d'Émission" icon="pi pi-chart-line" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm font-medium w-full sm:w-auto" @click="analyticsSidebar = true" />
-                    <Button label="Délivrer en masse" icon="pi pi-send" class="p-button-primary shadow-md shadow-indigo-500/20 font-bold px-6 w-full sm:w-auto" @click="openBulkIssuance" />
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                    <Button label="Audit Log" icon="pi pi-history" class="p-button-outlined p-button-secondary bg-slate-50 text-slate-700 border-slate-200 shadow-sm font-bold w-full sm:w-auto px-6 py-3 rounded-xl hover:bg-slate-100 transition-all" />
+                    <Button label="Délivrer en masse" icon="pi pi-send" class="bg-red-600 hover:bg-red-700 border-none shadow-lg shadow-red-500/30 font-bold px-8 py-3 w-full sm:w-auto text-white rounded-xl transition-all hover:-translate-y-0.5" @click="openBulkIssuance" />
                 </div>
             </div>
 
-            <!-- ============================================================================== -->
-            <!-- KPI DASHBOARD                                                                  -->
-            <!-- ============================================================================== -->
+            <!-- KPI DASHBOARD -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-copy text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Délivrés</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.total_issued || 2450 }}</h3>
-                        <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">+12%</span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md flex flex-col justify-between">
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-red-300 hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out opacity-50"></div>
                     <div class="relative z-10">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-chart-pie text-sm"></i></div>
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Tx. Obtention</p>
-                            </div>
-                            <span class="text-lg font-black text-emerald-600">{{ props.stats?.success_rate || 78 }}%</span>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shadow-sm border border-red-200"><i class="pi pi-copy text-lg"></i></div>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Délivrés</p>
+                        </div>
+                        <div class="flex items-end gap-3">
+                            <h3 class="text-5xl font-black text-slate-800 tracking-tighter">{{ props.stats?.total_issued || '2,450' }}</h3>
+                            <span class="text-sm font-bold text-emerald-500 mb-1 flex items-center"><i class="pi pi-arrow-up text-[10px] mr-1"></i>12%</span>
                         </div>
                     </div>
-                    <ProgressBar :value="props.stats?.success_rate || 78" :showValue="false" class="h-2 mt-2 bg-slate-100 rounded-full" color="#10b981"></ProgressBar>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-eye text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Vérifications Publiques</p>
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm border border-emerald-200"><i class="pi pi-chart-pie text-lg"></i></div>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Taux de Réussite</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between items-end mb-2">
+                            <h3 class="text-4xl font-black text-slate-800 tracking-tighter">{{ props.stats?.success_rate || 78 }}%</h3>
+                            <span class="text-xs text-slate-400 font-medium mb-1">Moyenne globale</span>
+                        </div>
+                        <ProgressBar :value="props.stats?.success_rate || 78" :showValue="false" class="h-2 bg-slate-100 rounded-full" color="#10b981"></ProgressBar>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm border border-blue-200"><i class="pi pi-globe text-lg"></i></div>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Vérifications Web</p>
                     </div>
                     <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">14.2k</h3>
-                        <span class="text-xs text-slate-400 font-medium">Vues recruteurs</span>
+                        <h3 class="text-5xl font-black text-slate-800 tracking-tighter">14.2k</h3>
+                        <span class="text-xs text-slate-400 font-medium bg-slate-100 px-2 py-1 rounded-md">Vues employeurs</span>
                     </div>
                 </div>
 
-                <div class="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-rose-500 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4 relative z-10">
-                        <div class="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center"><i class="pi pi-shield-slash text-sm"></i></div>
+                <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-lg hover:border-rose-500 transition-all duration-300 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
+                    <div class="flex items-center gap-3 mb-6 relative z-10">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30"><i class="pi pi-shield-slash text-lg"></i></div>
                         <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Titres Révoqués</p>
                     </div>
-                    <h3 class="text-4xl font-black text-white relative z-10">{{ props.stats?.revocation_rate || 14 }}</h3>
-                    <i class="pi pi-shield absolute -right-4 -bottom-4 text-[80px] text-white/5 group-hover:scale-110 transition-transform"></i>
+                    <h3 class="text-5xl font-black text-white tracking-tighter relative z-10">{{ props.stats?.revocation_rate || 14 }}</h3>
+                    <i class="pi pi-ban absolute -right-6 -bottom-6 text-[100px] text-white/5 group-hover:scale-110 group-hover:text-rose-500/10 transition-all duration-500"></i>
                 </div>
             </div>
 
-            <!-- ============================================================================== -->
-            <!-- DUAL VIEW : TABS (JOURNAL vs TEMPLATES)                                        -->
-            <!-- ============================================================================== -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
-
-                <!-- Tab Menu (Custom B2B Style) -->
-                <div class="flex border-b border-slate-200 bg-slate-50/50 px-4 pt-4">
-                    <button @click="activeMainTab = 'log'" class="px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors" :class="activeMainTab === 'log' ? 'border-indigo-600 text-indigo-700 bg-white rounded-t-lg' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 rounded-t-lg'">
-                        <i class="pi pi-list"></i> Journal des Émissions
+            <!-- SYSTÈME D'ONGLETS PRINCIPAL -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+                <div class="flex border-b border-slate-100 bg-slate-50/80 px-6 pt-4 gap-2">
+                    <button @click="activeMainTab = 'log'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'log' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
+                        <i class="pi pi-list"></i> Registre des Émissions
                     </button>
-                    <button @click="activeMainTab = 'templates'" class="px-6 py-3 font-bold text-sm flex items-center gap-2 border-b-2 transition-colors" :class="activeMainTab === 'templates' ? 'border-indigo-600 text-indigo-700 bg-white rounded-t-lg' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 rounded-t-lg'">
-                        <i class="pi pi-palette"></i> Galerie des Modèles (Design)
+                    <button @click="activeMainTab = 'templates'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'templates' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
+                        <i class="pi pi-palette"></i> Studio de Création (Modèles)
                     </button>
                 </div>
 
                 <!-- ========================================================================== -->
-                <!-- VUE 1 : JOURNAL DES ÉMISSIONS (DATATABLE)                                  -->
+                <!-- VUE 1 : REGISTRE DES ÉMISSIONS (DATATABLE)                                 -->
                 <!-- ========================================================================== -->
                 <div v-show="activeMainTab === 'log'">
-                    <!-- Toolbar de filtre -->
-                    <div class="border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 bg-white">
+                    <div class="border-b border-slate-100 p-6 flex flex-col lg:flex-row justify-between items-center gap-4 bg-white">
                         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="serverFilters.search" placeholder="Recherche par Hash, Nom..." class="w-full sm:w-80 border-slate-200 font-medium bg-slate-50" />
+                                <InputText v-model="serverFilters.search" placeholder="Rechercher un apprenant, un Hash..." class="w-full sm:w-80 border-slate-200 font-medium bg-slate-50 rounded-xl" />
                             </IconField>
-
-                            <Dropdown v-model="serverFilters.status" :options="['Active', 'Revoked', 'Expired']" placeholder="Tous les états" class="w-48 border-slate-200 font-medium bg-slate-50" showClear>
+                            <Dropdown v-model="serverFilters.status" :options="['Active', 'Revoked', 'Expired']" placeholder="État du certificat" class="w-56 border-slate-200 font-medium bg-slate-50 rounded-xl" showClear>
                                 <template #option="slotProps">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 font-bold">
                                         <i :class="`pi ${getStatusSeverity(slotProps.option).icon} text-${getStatusSeverity(slotProps.option).sev}-500`"></i>
                                         <span>{{ getStatusSeverity(slotProps.option).label }}</span>
                                     </div>
                                 </template>
                             </Dropdown>
-
-                            <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par Formation" class="w-56 border-slate-200 font-medium bg-slate-50" showClear filter />
                         </div>
-
                         <div class="flex items-center gap-2">
-                            <Button icon="pi pi-download" label="Export CSV" class="p-button-secondary p-button-outlined bg-white shadow-sm font-bold" />
+                            <Button icon="pi pi-file-excel" label="Export XLS" class="p-button-secondary p-button-outlined bg-white shadow-sm font-bold rounded-xl" />
                             <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
                         </div>
                     </div>
 
-                    <!-- DataTable -->
-                    <DataTable
-                        v-model:selection="selectedCertificates"
-                        v-model:expandedRows="expandedRows"
-                        :value="props.certificates.data"
-                        dataKey="id"
-                        :paginator="true"
-                        :rows="props.certificates.per_page"
-                        :totalRecords="props.certificates.total"
-                        @page="onPage"
-                        lazy
-                        :loading="loading || searchLoading"
-                        class="p-datatable-custom border-none"
-                        rowHover
-                        stripedRows
-                    >
+                    <DataTable :value="props.certificates.data" dataKey="id" :paginator="true" :rows="10" :totalRecords="props.certificates.total" lazy class="p-datatable-custom border-none" stripedRows rowHover>
                         <template #empty>
-                            <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
-                                <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
-                                    <i class="pi pi-verified text-5xl text-slate-300"></i>
+                            <div class="flex flex-col items-center justify-center p-24 text-slate-500 bg-white">
+                                <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
+                                    <i class="pi pi-verified text-6xl text-slate-300"></i>
                                 </div>
-                                <h3 class="text-xl font-bold text-slate-800 mb-2">Aucun diplôme émis</h3>
-                                <p class="text-sm text-center text-slate-500">Les certificats délivrés aux apprenants apparaîtront ici.</p>
+                                <h3 class="text-2xl font-black text-slate-800 mb-2">Aucun diplôme délivré</h3>
+                                <p class="text-base text-center text-slate-500">Les certificats générés pour vos apprenants s'afficheront ici avec leur empreinte cryptographique.</p>
                             </div>
                         </template>
 
-                        <Column expander style="width: 3rem; background-color: #f8fafc;" />
-
-                        <Column field="certificate_code" header="Identifiant Trust" style="min-width: 14rem; background-color: #f8fafc;">
+                        <Column field="certificate_code" header="Identifiant Trust">
                             <template #body="{ data }">
-                                <div class="flex flex-col gap-1 py-2">
-                                    <span class="font-mono text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 w-fit">{{ data.certificate_code }}</span>
-                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1" v-tooltip.top="data.verification_hash">
-                                        <i class="pi pi-key"></i> SHA-256: {{ data.verification_hash?.substring(0, 12) }}...
+                                <div class="flex flex-col gap-1 py-3">
+                                    <span class="font-mono text-sm font-black text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-100 w-fit tracking-wider">{{ data.certificate_code }}</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-1" v-tooltip.top="data.verification_hash">
+                                        <i class="pi pi-lock text-slate-300"></i> SHA256: {{ data.verification_hash?.substring(0, 16) }}...
                                     </span>
                                 </div>
                             </template>
                         </Column>
-
-                        <Column field="user.name" header="Récipiendaire" style="min-width: 18rem; background-color: #f8fafc;">
+                        <Column field="user.name" header="Récipiendaire">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-3">
-                                    <Avatar :image="data.user.avatar" shape="circle" size="large" class="shadow-sm border border-slate-200" />
+                                <div class="flex items-center gap-4">
+                                    <Avatar :image="data.user.avatar" shape="circle" size="xlarge" class="shadow-sm border-2 border-white ring-1 ring-slate-200" />
                                     <div>
-                                        <div class="font-bold text-slate-800 text-sm">{{ data.user.name }}</div>
-                                        <div class="text-xs text-slate-500">{{ data.user.email }}</div>
+                                        <div class="font-black text-slate-800 text-sm mb-0.5">{{ data.user.name }}</div>
+                                        <div class="text-xs text-slate-500 font-medium">{{ data.user.email }}</div>
                                     </div>
                                 </div>
                             </template>
                         </Column>
-
-                        <Column field="course.title" header="Titre & Score" style="min-width: 16rem; background-color: #f8fafc;">
+                        <Column field="course.title" header="Formation & Délivrance">
                             <template #body="{ data }">
-                                <div class="flex flex-col gap-1">
+                                <div class="flex flex-col gap-2">
                                     <span class="font-bold text-slate-700 text-sm line-clamp-1">{{ data.course.title }}</span>
                                     <div class="flex items-center gap-2">
-                                        <Badge :value="`Score: ${data.score}%`" severity="secondary" class="text-[9px] bg-slate-100 text-slate-600 border border-slate-200"></Badge>
-                                        <span class="text-[10px] text-slate-400 font-medium"><i class="pi pi-calendar text-[9px] mr-0.5"></i> Émis le {{ data.issued_at }}</span>
+                                        <Badge :value="`Score: ${data.score}%`" severity="secondary" class="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5"></Badge>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"><i class="pi pi-calendar text-[10px] mr-1"></i> {{ data.issued_at }}</span>
                                     </div>
                                 </div>
                             </template>
                         </Column>
-
-                        <Column field="status" header="Validité" style="background-color: #f8fafc;">
+                        <Column field="status" header="Statut">
                             <template #body="{ data }">
-                                <Tag :severity="getStatusSeverity(data.status).sev" :icon="getStatusSeverity(data.status).icon" :value="getStatusSeverity(data.status).label" class="text-[10px] font-bold px-2 py-1 uppercase tracking-wider border" :class="`border-${getStatusSeverity(data.status).sev}-200 bg-${getStatusSeverity(data.status).sev}-50 text-${getStatusSeverity(data.status).sev}-700`" />
+                                <Tag :severity="getStatusSeverity(data.status).sev" :icon="getStatusSeverity(data.status).icon" :value="getStatusSeverity(data.status).label" class="text-[10px] font-black px-3 py-1.5 uppercase tracking-widest border rounded-lg" :class="`border-${getStatusSeverity(data.status).sev}-200 bg-${getStatusSeverity(data.status).sev}-50 text-${getStatusSeverity(data.status).sev}-700`" />
                             </template>
                         </Column>
-
-                        <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+                        <Column header="Actions" alignFrozen="right" style="text-align: right; min-width: 12rem;">
                             <template #body="{ data }">
-                                <div class="flex justify-end gap-1">
-                                    <Button icon="pi pi-file-pdf" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100" v-tooltip.top="'Télécharger PDF'" @click="downloadPdf(data.id)" />
-                                    <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="'Lien Public de Vérification'" @click="openVerificationLink(data.verification_hash)" />
-                                    <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" v-tooltip.top="'Révoquer le titre'" @click="handleRevocation(data)" />
+                                <div class="flex justify-end gap-2">
+                                    <Button icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100 w-10 h-10" v-tooltip.top="'Télécharger PDF HD'" @click="downloadPdf(data.id)" />
+                                    <Button icon="pi pi-share-alt" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600 w-10 h-10" v-tooltip.top="'Lien Public / Partage'" @click="openVerificationLink(data.verification_hash)" />
+                                    <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50 hover:text-rose-600 w-10 h-10" v-tooltip.top="'Révoquer le diplôme'" @click="handleRevocation(data)" />
                                 </div>
                             </template>
                         </Column>
-
-                        <!-- LIGNE EXPANSIVE (Audit & Historique de Vérification) -->
-                        <template #expansion="{ data }">
-                            <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-
-                                    <!-- Meta Information (Blockchain/Hash) -->
-                                    <div class="space-y-4">
-                                        <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-database text-indigo-500"></i> Métadonnées d'Intégrité</h4>
-
-                                        <div v-if="data.status === 'Revoked'" class="bg-rose-50 p-4 rounded-xl border border-rose-200 mb-4">
-                                            <p class="text-xs font-bold text-rose-800 uppercase tracking-widest mb-1 flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> Motif de Révocation</p>
-                                            <p class="text-sm text-rose-700 font-medium">{{ data.revocation_reason }}</p>
-                                        </div>
-
-                                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                                            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                                                <span class="text-xs font-bold text-slate-500 uppercase">Empreinte SHA-256</span>
-                                                <span class="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded truncate max-w-[200px]" v-tooltip.top="data.verification_hash">{{ data.verification_hash }}</span>
-                                            </div>
-                                            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                                                <span class="text-xs font-bold text-slate-500 uppercase">Modèle utilisé</span>
-                                                <span class="text-sm font-bold text-slate-700">{{ data.template.name }}</span>
-                                            </div>
-                                            <div class="flex justify-between items-center">
-                                                <span class="text-xs font-bold text-slate-500 uppercase">Vues Publiques</span>
-                                                <span class="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{{ data.verifications_count }} vues</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Timeline de l'Audit Log -->
-                                    <div>
-                                        <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-list text-indigo-500"></i> Audit Log (Traçabilité)</h4>
-                                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                                            <Timeline :value="data.audit_log" class="custom-timeline">
-                                                <template #marker="slotProps">
-                                                    <span class="flex items-center justify-center w-6 h-6 rounded-full text-white shadow-sm" :style="{ backgroundColor: slotProps.item.color }">
-                                                        <i :class="slotProps.item.icon" class="text-[10px]"></i>
-                                                    </span>
-                                                </template>
-                                                <template #content="slotProps">
-                                                    <div class="ml-3 mb-6">
-                                                        <div class="text-sm font-bold text-slate-700">{{ slotProps.item.event }}</div>
-                                                        <div class="text-[10px] font-mono text-slate-400 mt-1"><i class="pi pi-clock mr-1"></i>{{ slotProps.item.date }}</div>
-                                                    </div>
-                                                </template>
-                                            </Timeline>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
                     </DataTable>
                 </div>
 
                 <!-- ========================================================================== -->
-                <!-- VUE 2 : GALERIE DES TEMPLATES (VISUAL DESIGNER)                            -->
+                <!-- VUE 2 : GALERIE DES MODÈLES (STUDIO)                                       -->
                 <!-- ========================================================================== -->
-                <div v-show="activeMainTab === 'templates'" class="p-6 bg-slate-50/50">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold text-slate-800">Modèles Visuels Disponibles</h3>
-                        <Button label="Créer un Modèle" icon="pi pi-palette" class="p-button-outlined p-button-indigo bg-white font-bold shadow-sm" @click="openDesigner(null)" />
+                <div v-show="activeMainTab === 'templates'" class="p-8 bg-slate-50/50">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800">Galerie de Modèles</h3>
+                            <p class="text-sm text-slate-500 mt-1">Gérez l'identité visuelle de vos diplômes.</p>
+                        </div>
+                        <Button label="Forger un Nouveau Modèle" icon="pi pi-sparkles" class="bg-red-600 hover:bg-red-700 border-none font-bold text-white shadow-lg shadow-red-500/30 px-6 py-3 rounded-xl transition-transform hover:-translate-y-1" @click="openDesigner(null)" />
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <!-- Boucle sur les templates -->
-                        <div v-for="template in templates" :key="template.id" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group hover:border-indigo-300 hover:shadow-md transition-all flex flex-col">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
 
-                            <!-- Mini Preview (Canvas Mock) -->
-                            <div class="h-40 bg-slate-100 flex items-center justify-center p-4 border-b border-slate-100 relative overflow-hidden" :style="{ backgroundColor: `#${template.background_color}` }">
-                                <!-- Fake Border -->
-                                <div class="absolute inset-2" :style="{ border: `${template.border_width / 2}px solid #${template.border_color}` }"></div>
-                                <div class="text-center relative z-10" :style="{ color: `#${template.text_color}` }">
-                                    <div class="font-black text-sm mb-1" :style="{ fontFamily: template.accent_font }">{{ template.elements.title.text }}</div>
-                                    <div class="w-16 h-0.5 bg-current mx-auto opacity-30 mb-2"></div>
-                                    <div class="text-[8px] uppercase tracking-widest opacity-80">{{ template.elements.subtitle.text }}</div>
+                        <!-- CARTE : AJOUTER -->
+                        <div class="bg-transparent border-2 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center p-8 min-h-[320px] cursor-pointer hover:bg-red-50/50 hover:border-red-400 hover:shadow-lg transition-all duration-300 group" @click="openDesigner(null)">
+                            <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-200 group-hover:text-red-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                <i class="pi pi-plus text-3xl"></i>
+                            </div>
+                            <h4 class="font-black text-lg text-slate-700 group-hover:text-red-700 text-center">Création depuis Zéro</h4>
+                            <p class="text-xs text-slate-500 mt-3 text-center px-4 leading-relaxed font-medium">Lancez le Quantum Engine pour un design pixel-perfect avec variables dynamiques.</p>
+                        </div>
+
+                        <!-- BOUCLE DES TEMPLATES EXISTANTS -->
+                        <div v-for="template in templates" :key="template.id" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group hover:border-red-400 hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+
+                            <!-- Miniatura CSS -->
+                            <div class="h-48 bg-slate-100 flex items-center justify-center p-6 relative overflow-hidden transition-transform duration-500 group-hover:scale-105" :style="{ backgroundColor: `#${template.background_color?.replace('#','')}` }">
+                                <!-- Trame de fond -->
+                                <div class="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8cGF0aCBkPSJNMCAwaDh2OEgwaC04eiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==')]"></div>
+
+                                <div class="absolute inset-3 rounded-lg shadow-sm" :style="{ border: `${template.border_width / 3}px solid #${template.border_color?.replace('#','')}` }"></div>
+                                <div class="text-center relative z-10 w-full px-8">
+                                    <div class="font-black text-lg mb-2 tracking-widest uppercase" :style="{ color: `#${template.text_color?.replace('#','')}`, fontFamily: template.primary_font }">CERTIFICAT</div>
+                                    <div class="w-full h-px opacity-20 mb-3" :style="{ backgroundColor: `#${template.text_color?.replace('#','')}` }"></div>
+                                    <div class="w-3/4 mx-auto h-2 rounded-full opacity-10 mb-2" :style="{ backgroundColor: `#${template.text_color?.replace('#','')}` }"></div>
+                                    <div class="w-1/2 mx-auto h-2 rounded-full opacity-10" :style="{ backgroundColor: `#${template.text_color?.replace('#','')}` }"></div>
                                 </div>
                             </div>
 
-                            <div class="p-5 flex-1 flex flex-col justify-between">
+                            <div class="p-6 flex-1 flex flex-col justify-between bg-white relative z-20">
                                 <div>
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h4 class="font-bold text-slate-800 truncate pr-2">{{ template.name }}</h4>
-                                        <Badge v-if="template.is_default" value="Défaut" severity="success" class="text-[9px]" />
+                                    <div class="flex justify-between items-start mb-3">
+                                        <h4 class="font-black text-lg text-slate-800 line-clamp-1 pr-2" :title="template.name">{{ template.name }}</h4>
+                                        <Badge v-if="template.is_default" value="Défaut" severity="success" class="text-[9px] px-2" />
                                     </div>
-                                    <div class="flex gap-2 text-xs text-slate-500 font-medium mb-4">
-                                        <span class="bg-slate-100 px-2 py-1 rounded border border-slate-200 uppercase tracking-wider text-[9px]">{{ template.orientation === 'landscape' ? 'Paysage' : 'Portrait' }}</span>
-                                        <span class="bg-slate-100 px-2 py-1 rounded border border-slate-200 uppercase tracking-wider text-[9px]">{{ template.primary_font }}</span>
+                                    <div class="flex flex-wrap gap-2 text-xs text-slate-500 font-bold mb-4">
+                                        <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 uppercase tracking-widest text-[9px] flex items-center gap-1"><i :class="template.orientation === 'landscape' ? 'pi pi-image' : 'pi pi-file'"></i> {{ template.orientation }}</span>
+                                        <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 text-[10px]">{{ template.elements?.length || 0 }} calques</span>
                                     </div>
                                 </div>
 
-                                <div class="flex justify-between items-center pt-4 border-t border-slate-100">
-                                    <div class="flex items-center gap-2">
-                                        <Button icon="pi pi-pencil" class="p-button-rounded p-button-info p-button-sm shadow-xl" v-tooltip.top="'Éditer le design'" @click="openDesigner(template)" />
-                                        <Button icon="pi pi-copy" class="p-button-rounded p-button-secondary p-button-sm shadow-xl bg-white text-slate-700" v-tooltip.top="'Dupliquer'" @click="duplicateTemplate(template)" />
-                                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm p-0 w-8 h-8 rounded-full hover:bg-rose-50" @click="deleteTemplate(template.id)" />
+                                <div class="flex justify-between items-center pt-5 border-t border-slate-100">
+                                    <Button label="Éditer le design" icon="pi pi-pencil" class="p-button-outlined text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400 font-bold w-full mr-2 rounded-xl" @click="openDesigner(template)" />
+                                    <div class="flex gap-1">
+                                        <Button icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded w-10 h-10 hover:bg-slate-100 text-slate-400 hover:text-slate-700" v-tooltip.top="'Dupliquer ce modèle'" @click="duplicateTemplate(template)" />
+                                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded w-10 h-10 hover:bg-rose-50 text-slate-300 hover:text-rose-500" v-tooltip.top="'Supprimer définitivement'" @click="deleteTemplate(template.id)" />
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Add New Card -->
-                        <div class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center p-8 min-h-[250px] cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-colors group" @click="openDesigner(null)">
-                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-200 group-hover:text-indigo-600 group-hover:scale-110 transition-transform">
-                                <i class="pi pi-plus text-2xl"></i>
-                            </div>
-                            <h4 class="font-bold text-slate-700 group-hover:text-indigo-700">Forger un nouveau design</h4>
-                            <p class="text-xs text-slate-500 mt-2 text-center">Créez un template visuel unique pour vos certifications.</p>
+        <!-- ============================================================================== -->
+        <!-- THE QUANTUM ENGINE : FULLSCREEN VISUAL DESIGNER (DARK MODE SAAS)               -->
+        <!-- ============================================================================== -->
+        <Dialog v-model:visible="designerDialog" modal :closable="false" :draggable="false" :style="{ width: '100vw', height: '100vh', maxHeight: '100vh', margin: 0 }" contentClass="p-0 flex flex-col overflow-hidden bg-[#0c0c0e]" headerClass="hidden" class="m-0 rounded-none shadow-none SNC-Quantum-Engine" blockScroll>
+
+            <!-- ---------------------------------------------------------------------- -->
+            <!-- TOP NAVBAR (App Bar)                                                   -->
+            <!-- ---------------------------------------------------------------------- -->
+            <nav class="flex-none h-[72px] bg-[#121215] border-b border-white/5 flex items-center justify-between px-6 z-[300] shadow-2xl relative">
+
+                <!-- Left: Branding & Meta -->
+                <div class="flex items-center gap-6 w-1/3">
+                    <button @click="designerDialog = false" class="w-11 h-11 rounded-xl bg-white/5 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all duration-300 border border-white/5 hover:border-red-500 group" v-tooltip.bottom="'Quitter le studio'">
+                        <i class="pi pi-arrow-left text-white/50 group-hover:text-white"></i>
+                    </button>
+                    <div class="h-8 w-px bg-white/10"></div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2 group cursor-text">
+                            <InputText v-model="templateForm.name" class="bg-transparent border-none text-white font-black text-lg p-0 focus:ring-0 w-64 placeholder:text-white/20 transition-colors hover:text-red-100" placeholder="Nom du modèle..." />
+                            <i class="pi pi-pencil text-white/20 text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span class="text-[9px] text-emerald-400/70 font-mono tracking-widest uppercase">SubnetCongo Engine v4.0</span>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- ============================================================================== -->
-        <!-- DIALOG : CERTIFICATE DESIGNER (WORKSPACE SPLIT PANE)                           -->
-        <!-- ============================================================================== -->
-       <!-- ============================================================================== -->
-<!-- DIALOG : CERTIFICATE VISUAL DESIGNER (CANVA-STYLE)                             -->
-<!-- ============================================================================== -->
-  <Dialog
-    v-model:visible="designerDialog"
-    modal
-    :closable="false"
-    :draggable="false"
-    :style="{ width: '100vw', height: '100vh', maxHeight: '100vh' }"
-    contentClass="p-0 flex flex-col overflow-hidden bg-[#050608]"
-    headerClass="hidden"
-    class="m-0 rounded-none shadow-none SNC-Quantum-Engine"
-  >
-    <!--
-      ===========================================================================================
-      QUANTUM NAVIGATION BAR : TOP-LEVEL CONTROLS
-      ===========================================================================================
-    -->
-    <nav class="flex-none h-[75px] bg-[#0d0f16] border-b border-white/5 flex items-center justify-between px-8 z-[200] shadow-2xl">
-      <!-- Section Gauche : Logo & Branding -->
-      <div class="flex items-center gap-8">
-        <div class="flex items-center gap-4 group cursor-pointer" @click="designerDialog = false">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
-            <i class="pi pi-chevron-left text-white text-lg"></i>
-          </div>
-          <div class="flex flex-col">
-            <span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] leading-none mb-1">Quantum Studio</span>
-            <span class="text-xs font-bold text-white/40 uppercase tracking-widest">Back to Dashboard</span>
-          </div>
-        </div>
-
-        <div class="h-8 w-px bg-white/10"></div>
-
-        <!-- Nom du Projet Dynamique -->
-        <div class="flex flex-col">
-          <div class="flex items-center gap-2">
-            <InputText
-              v-model="templateForm.name"
-              class="bg-transparent border-none text-white font-black text-xl p-0 focus:ring-0 w-80 placeholder:text-white/10"
-              placeholder="Sans titre - Certificat Quantum"
-            />
-            <i class="pi pi-pencil text-white/20 text-xs"></i>
-          </div>
-          <div class="flex items-center gap-2 mt-1">
-            <Badge value="V4.2.0" severity="info" class="quantum-badge-xs"></Badge>
-            <span class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Auto-save: Enabled</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section Centrale : Quick Actions -->
-      <div class="hidden lg:flex items-center gap-3 bg-white/5 p-1.5 rounded-2xl border border-white/5 shadow-inner">
-        <Button icon="pi pi-undo" class="p-button-text p-button-sm text-white/60 hover:text-white hover:bg-white/5" v-tooltip.bottom="'Undo (Ctrl+Z)'" />
-        <Button icon="pi pi-redo" class="p-button-text p-button-sm text-white/60 hover:text-white hover:bg-white/5" v-tooltip.bottom="'Redo (Ctrl+Y)'" />
-        <div class="w-px h-4 bg-white/10"></div>
-        <div class="flex items-center gap-4 px-3">
-          <i class="pi pi-search text-white/20 text-xs"></i>
-          <Slider v-model="canvasZoom" :min="10" :max="250" class="w-40 quantum-slider-cyan" />
-          <span class="text-[10px] font-mono text-cyan-400 w-10">{{ canvasZoom }}%</span>
-        </div>
-        <div class="w-px h-4 bg-white/10"></div>
-        <Button icon="pi pi- clone" class="p-button-text p-button-sm text-white/60 hover:text-white" v-tooltip.bottom="'Duplicate Layout'" />
-      </div>
-
-      <!-- Section Droite : Finalisation -->
-      <div class="flex items-center gap-4">
-        <div class="flex flex-col items-end pr-4 border-r border-white/10 mr-2">
-          <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Quantum Engine</span>
-          <span class="text-[9px] text-white/30 font-bold uppercase">Ready for 600 DPI Export</span>
-        </div>
-
-        <Button
-          icon="pi pi-eye"
-          label="Simulation"
-          class="p-button-text text-white/80 hover:bg-white/5 font-bold px-6 rounded-xl border border-white/10"
-        />
-
-        <Button
-          label="Publish Quantum Design"
-          icon="pi pi-bolt"
-          class="quantum-btn-glow bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 border-none font-black px-8 rounded-xl h-12 transition-all transform hover:scale-105"
-          @click="saveTemplate"
-          :loading="isSaving"
-        />
-      </div>
-    </nav>
-
-    <div class="flex-1 flex overflow-hidden">
-      <!--
-        ===========================================================================================
-        LEFT SIDEBAR : ASSETS, COMPONENTS & NEURAL LAYERS
-        ===========================================================================================
-      -->
-      <aside class="w-[380px] flex-none bg-[#090b11] border-r border-white/5 flex flex-col z-[150] shadow-2xl">
-        <TabView class="quantum-sidebar-tabs">
-          <!-- TAB 1 : INSERTION D'ELEMENTS -->
-          <TabPanel>
-            <template #header>
-              <div class="flex flex-col items-center gap-1">
-                <i class="pi pi-plus-circle text-lg"></i>
-                <span class="text-[8px] font-black uppercase tracking-tighter">Assets</span>
-              </div>
-            </template>
-
-            <div class="p-6 space-y-10 custom-scrollbar overflow-y-auto max-h-[calc(100vh-160px)]">
-              <!-- Section : Typographie Dynamique -->
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Neural Typography</span>
-                  <i class="pi pi-info-circle text-white/10 text-xs"></i>
-                </div>
-                <div class="grid grid-cols-1 gap-3">
-                  <div @click="addElement('text', 'h1')" class="quantum-asset-card group">
-                    <div class="flex items-center gap-4">
-                      <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-xl font-black text-white group-hover:bg-indigo-500 transition-colors">T</div>
-                      <div class="flex flex-col">
-                        <span class="text-sm font-bold text-white/80">Titre de Distinction</span>
-                        <span class="text-[9px] text-white/30 uppercase font-black">Headline Quantum</span>
-                      </div>
+                <!-- Center: Zoom & View Controls -->
+                <div class="hidden lg:flex items-center justify-center w-1/3">
+                    <div class="flex items-center gap-2 bg-[#1a1a1f] p-1.5 rounded-xl border border-white/5 shadow-inner">
+                        <Button icon="pi pi-minus" class="p-button-text p-button-rounded text-white/40 hover:text-white hover:bg-white/5 w-8 h-8 p-0" @click="canvasZoom = Math.max(10, canvasZoom - 10)" />
+                        <Slider v-model="canvasZoom" :min="10" :max="300" class="w-40 red-slider mx-2" />
+                        <Button icon="pi pi-plus" class="p-button-text p-button-rounded text-white/40 hover:text-white hover:bg-white/5 w-8 h-8 p-0" @click="canvasZoom = Math.min(300, canvasZoom + 10)" />
+                        <div class="w-px h-5 bg-white/10 mx-1"></div>
+                        <div class="w-14 text-center">
+                            <span class="text-xs font-mono font-bold text-red-400">{{ canvasZoom }}%</span>
+                        </div>
+                        <Button icon="pi pi-expand" class="p-button-text p-button-rounded text-white/40 hover:text-white hover:bg-white/5 w-8 h-8 p-0 ml-1" @click="canvasZoom = 60" v-tooltip.bottom="'Ajuster à l\'écran'" />
                     </div>
-                  </div>
-                  <div @click="addElement('text', 'body')" class="quantum-asset-card group">
-                    <div class="flex items-center gap-4">
-                      <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-sm font-medium text-white group-hover:bg-violet-500 transition-colors">Abc</div>
-                      <div class="flex flex-col">
-                        <span class="text-sm font-bold text-white/80">Bloc de Narration</span>
-                        <span class="text-[9px] text-white/30 uppercase font-black">Body / Description</span>
-                      </div>
+                </div>
+
+                <!-- Right: Actions -->
+                <div class="flex items-center justify-end gap-4 w-1/3">
+                    <Button label="Aperçu HD" icon="pi pi-eye" class="p-button-text text-white/70 hover:text-white hover:bg-white/5 font-bold px-4 rounded-xl" />
+                    <Button label="Sauvegarder le Modèle" icon="pi pi-cloud-upload" class="bg-red-600 hover:bg-red-500 border-none font-bold px-8 py-3 rounded-xl text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-0.5" @click="saveTemplate" :loading="isSaving" />
+                </div>
+            </nav>
+
+            <div class="flex-1 flex overflow-hidden relative">
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- LEFT SIDEBAR : TOOLBOX, ASSETS & LAYERS                                -->
+                <!-- ---------------------------------------------------------------------- -->
+                <aside class="w-[340px] flex-none bg-[#141418] border-r border-white/5 flex flex-col z-[200] shadow-2xl relative">
+                    <TabView class="quantum-tabs h-full flex flex-col w-full">
+
+                        <!-- TAB 1 : INSERTION & VARIABLES -->
+                        <TabPanel>
+                            <template #header><div class="flex flex-col items-center gap-1 w-full py-1"><i class="pi pi-box text-lg"></i><span class="text-[9px] uppercase tracking-widest">Outils</span></div></template>
+
+                            <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar h-[calc(100vh-140px)] pb-32">
+
+                                <!-- Typographie Base -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <div class="h-px bg-white/10 flex-1"></div>
+                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Typographie</span>
+                                        <div class="h-px bg-white/10 flex-1"></div>
+                                    </div>
+                                    <button @click="addElement('text', 'h1')" class="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#1a1a1f] hover:bg-red-600/10 border border-white/5 hover:border-red-500/30 transition-all group text-left shadow-sm">
+                                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                                            <i class="pi pi-heading text-xl text-white/50 group-hover:text-red-400"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-white">Gros Titre</div>
+                                            <div class="text-[10px] text-white/40 mt-0.5">Pour le nom du diplôme</div>
+                                        </div>
+                                    </button>
+                                    <button @click="addElement('text', 'body')" class="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#1a1a1f] hover:bg-white/5 border border-white/5 transition-all group text-left shadow-sm">
+                                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                                            <i class="pi pi-align-left text-xl text-white/50"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-white">Corps de texte</div>
+                                            <div class="text-[10px] text-white/40 mt-0.5">Paragraphes et mentions</div>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <!-- Données Dynamiques (Variables) -->
+                                <div class="space-y-4">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <div class="h-px bg-white/10 flex-1"></div>
+                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-1"><i class="pi pi-database text-[8px]"></i> Variables Auto</span>
+                                        <div class="h-px bg-white/10 flex-1"></div>
+                                    </div>
+                                    <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4 shadow-inner">
+                                        <p class="text-[10px] text-white/60 mb-4 leading-relaxed font-medium">Glissez ou tapez ces tags dans vos textes. Le système les remplacera lors de l'émission.</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{NOM_APPRENANT}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{NOM_FORMATION}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{DATE}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{CERTIFICATE_ID}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{MENTION}" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Médias Libres -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <div class="h-px bg-white/10 flex-1"></div>
+                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Médias</span>
+                                        <div class="h-px bg-white/10 flex-1"></div>
+                                    </div>
+                                    <button @click="addElement('image')" class="w-full flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-[#1a1a1f] hover:bg-white/5 border border-dashed border-white/20 transition-all text-center">
+                                        <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                            <i class="pi pi-image text-2xl text-white/40"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold text-white mb-1">Image Personnalisée</div>
+                                            <div class="text-[9px] text-white/40">Ajouter tampons, logos partenaires...</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        <!-- TAB 2 : GESTION DES CALQUES -->
+                        <TabPanel>
+                            <template #header><div class="flex flex-col items-center gap-1 w-full py-1"><i class="pi pi-clone text-lg"></i><span class="text-[9px] uppercase tracking-widest">Calques</span></div></template>
+
+                            <div class="p-4 space-y-1 overflow-y-auto custom-scrollbar h-[calc(100vh-140px)]">
+                                <div class="flex justify-between items-center px-2 mb-4 mt-2">
+                                    <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Ordre d'affichage (Z-Index)</span>
+                                    <Badge :value="templateForm.elements.length" class="bg-white/10 text-white/60 border-none text-[9px]" />
+                                </div>
+
+                                <!-- Liste des calques -->
+                                <div v-for="el in templateForm.elements" :key="el.id"
+                                     @click="selectedElementId = el.id"
+                                     class="flex items-center justify-between p-3 rounded-xl cursor-pointer group transition-all border border-transparent"
+                                     :class="selectedElementId === el.id ? 'bg-red-600/10 border-red-500/30 shadow-inner' : 'hover:bg-[#1a1a1f]'">
+
+                                    <div class="flex items-center gap-4 overflow-hidden w-full">
+                                        <i class="pi pi-bars text-white/10 group-hover:text-white/30 cursor-grab text-xs"></i>
+                                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-none">
+                                            <i :class="{
+                                                'pi pi-font text-blue-400': el.type === 'text',
+                                                'pi pi-image text-purple-400': el.type === 'image',
+                                                'pi pi-shield text-emerald-400': el.type === 'logo',
+                                                'pi pi-pencil text-amber-400': el.type === 'signature',
+                                                'pi pi-qrcode text-slate-400': el.type === 'qr'
+                                            }" class="text-sm"></i>
+                                        </div>
+                                        <div class="flex flex-col overflow-hidden w-full pr-2">
+                                            <span class="text-xs font-bold text-white truncate w-full" :class="{'text-red-400': selectedElementId === el.id}">{{ el.name || el.type }}</span>
+                                            <span v-if="el.type==='text'" class="text-[9px] text-white/40 truncate w-full">{{ el.content }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions Rapides Calque -->
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button v-if="el.type !== 'qr' && el.type !== 'logo' && el.type !== 'signature'" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors" @click.stop="duplicateElement(el)" v-tooltip.top="'Dupliquer'">
+                                            <i class="pi pi-copy text-[10px]"></i>
+                                        </button>
+                                        <button v-if="el.type !== 'qr' && el.type !== 'logo' && el.type !== 'signature'" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400/50 hover:text-red-400 transition-colors" @click.stop="removeElement(el.id)" v-tooltip.top="'Supprimer'">
+                                            <i class="pi pi-trash text-[10px]"></i>
+                                        </button>
+                                        <i v-else class="pi pi-lock text-[10px] text-white/20 px-2" v-tooltip.top="'Géré via paramètres globaux'"></i>
+                                    </div>
+                                </div>
+
+                                <div v-if="templateForm.elements.length === 0" class="flex flex-col items-center justify-center p-10 text-center">
+                                    <i class="pi pi-inbox text-3xl text-white/10 mb-3"></i>
+                                    <p class="text-xs text-white/30">Aucun élément sur le canevas.</p>
+                                </div>
+                            </div>
+                        </TabPanel>
+                    </TabView>
+                </aside>
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- CENTER WORKSPACE : THE CANVAS (Infinite Grid)                          -->
+                <!-- ---------------------------------------------------------------------- -->
+                <main class="flex-1 relative overflow-hidden flex items-center justify-center p-10 quantum-grid" @dblclick.self="addElementAtPosition">
+
+                    <!-- Rulers (Esthétique Logiciel) -->
+                    <div class="absolute top-0 left-[340px] right-[400px] h-6 bg-[#0f0f13] border-b border-white/5 flex items-end overflow-hidden z-10 opacity-50 pointer-events-none">
+                        <div v-for="n in 50" :key="'x'+n" class="border-l border-white/10 h-2 w-[100px] flex-none relative">
+                            <span class="absolute -top-4 -left-1 text-[8px] font-mono text-white/30">{{ (n-1)*100 }}</span>
+                        </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Section : Images & Sceaux -->
-              <div class="space-y-4">
-                <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Visual Identities</span>
-                <div class="grid grid-cols-2 gap-3">
-                  <div @click="$refs.logoUploader.click()" class="quantum-upload-zone group">
-                    <input type="file" ref="logoUploader" hidden @change="uploadAsset($event, 'logo')" />
-                    <i class="pi pi-shield text-2xl text-indigo-400 group-hover:scale-125 transition-transform"></i>
-                    <span class="text-[10px] font-bold text-white/60 uppercase mt-2">Logo Master</span>
-                  </div>
-                  <div @click="$refs.sigUploader.click()" class="quantum-upload-zone group">
-                    <input type="file" ref="sigUploader" hidden @change="uploadAsset($event, 'signature')" />
-                    <i class="pi pi-pencil text-2xl text-violet-400 group-hover:scale-125 transition-transform"></i>
-                    <span class="text-[10px] font-bold text-white/60 uppercase mt-2">Signature</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Section : Background Patterns & Overlays -->
-              <div class="space-y-4">
-                <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Quantum Overlays</span>
-                <div class="grid grid-cols-3 gap-2">
-                  <div v-for="n in 9" :key="n" class="aspect-square rounded-lg bg-white/5 border border-white/5 hover:border-indigo-500 cursor-pointer overflow-hidden group">
-                    <div class="w-full h-full bg-gradient-to-br from-white/10 to-transparent group-hover:scale-110 transition-transform"></div>
-                  </div>
-                </div>
-                <Button label="Browse Texture Library" class="p-button-text p-button-sm w-full text-[10px] font-black text-indigo-400" />
-              </div>
-
-              <!-- Section : Sécurité Blockchain -->
-              <div class="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl space-y-4 shadow-2xl">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-                    <i class="pi pi-qrcode text-white"></i>
-                  </div>
-                  <span class="text-[10px] font-black text-white uppercase tracking-widest">Smart QR Seal</span>
-                </div>
-                <p class="text-[9px] text-white/50 leading-relaxed font-medium">
-                  Intègre un identifiant unique vérifiable sur la blockchain SubnetCongo Trust.
-                </p>
-                <Button @click="addElement('qr', 'standard')" label="Générer le Sceau" class="p-button-sm w-full bg-indigo-600 border-none font-black text-[9px] uppercase" />
-              </div>
-            </div>
-          </TabPanel>
-
-          <!-- TAB 2 : GESTION DES CALQUES (LAYERS) -->
-          <TabPanel>
-            <template #header>
-              <div class="flex flex-col items-center gap-1">
-                <i class="pi pi-clone text-lg"></i>
-                <span class="text-[8px] font-black uppercase tracking-tighter">Layers</span>
-              </div>
-            </template>
-            <div class="p-4 space-y-2">
-              <div class="flex items-center justify-between mb-4 px-2">
-                <span class="text-[10px] font-black text-white/20 uppercase tracking-widest">Layer Stack</span>
-                <span class="text-[10px] font-bold text-indigo-400">{{ templateForm.elements.length }} Elements</span>
-              </div>
-
-              <draggable v-model="templateForm.elements" item-key="id" handle=".handle">
-                <template #item="{element}">
-                  <div
-                    class="quantum-layer-item group"
-                    :class="{'is-active': selectedElementId === element.id}"
-                    @click="selectedElementId = element.id"
-                  >
-                    <div class="flex items-center gap-3 flex-1">
-                      <i class="pi pi-bars handle cursor-grab text-white/10 hover:text-white/40"></i>
-                      <div class="w-8 h-8 rounded bg-white/5 flex items-center justify-center">
-                        <i :class="getElementIcon(element.type)" class="text-[10px] text-white/40"></i>
-                      </div>
-                      <span class="text-xs font-bold text-white/70 truncate w-32">{{ element.name || element.content }}</span>
+                    <div class="absolute top-[72px] left-[340px] bottom-0 w-6 bg-[#0f0f13] border-r border-white/5 flex flex-col items-end overflow-hidden z-10 opacity-50 pointer-events-none">
+                        <div v-for="n in 50" :key="'y'+n" class="border-t border-white/10 w-2 h-[100px] flex-none relative">
+                            <span class="absolute -top-2 left-1 text-[8px] font-mono text-white/30 rotate-90">{{ (n-1)*100 }}</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button icon="pi pi-eye" class="p-button-text p-button-xs text-white/40" />
-                      <Button icon="pi pi-lock" class="p-button-text p-button-xs text-white/40" />
-                      <Button @click.stop="removeElement(element.id)" icon="pi pi-trash" class="p-button-text p-button-xs text-red-400/60" />
+
+                    <!-- THE PHYSICAL DOCUMENT (A4) -->
+                    <div id="snc-quantum-canvas" class="relative bg-white shadow-[0_20px_100px_rgba(0,0,0,0.8)] origin-center ring-1 ring-white/10 transition-transform duration-300 ease-out" :style="quantumCanvasStyle">
+
+                        <!-- Layer 0: Background Generation -->
+                        <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                            <!-- Background Image (Upload) -->
+                            <img v-if="backgroundPreview || templateForm.background_url" :src="backgroundPreview || templateForm.background_url" class="absolute inset-0 w-full h-full object-cover transition-opacity" :style="[quantumFilterStyle(templateForm.bg_filters), { opacity: templateForm.bg_opacity / 100 }]" />
+                            <!-- Base Color -->
+                            <div class="absolute inset-0 mix-blend-multiply" :style="{ backgroundColor: `#${templateForm.background_color.replace('#','')}`, opacity: (100 - (backgroundPreview ? templateForm.bg_opacity : 0)) / 100 }"></div>
+                        </div>
+
+                        <!-- Layer 1: Master Border -->
+                        <div v-if="templateForm.border_width > 0" class="absolute pointer-events-none z-10" :style="{ top: '40px', left: '40px', right: '40px', bottom: '40px', border: `${templateForm.border_width}px solid #${templateForm.border_color.replace('#','')}` }"></div>
+
+                        <!-- Layer 2: Draggable Quantum Elements -->
+                        <div v-for="el in templateForm.elements" :key="el.id"
+                             class="absolute z-20 group quantum-element"
+                             :class="{ 'is-selected': selectedElementId === el.id, 'is-dragging': draggingElementId === el.id }"
+                             :style="quantumElementStyle(el)"
+                             @mousedown.stop="startElementDrag($event, el)">
+
+                            <!-- Bounding Box (Visible on selection) -->
+                            <div v-if="selectedElementId === el.id" class="absolute -inset-1.5 border-2 border-red-500 pointer-events-none z-30">
+                                <!-- Resize Nodes (Visual aesthetics for UI) -->
+                                <div class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
+                                <div class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
+                                <div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
+                                <div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
+                            </div>
+
+                            <!-- Element Core Wrapper -->
+                            <div class="w-full h-full relative overflow-visible flex items-center justify-center">
+
+                                <!-- Render: TEXT -->
+                                <div v-if="el.type === 'text'" class="w-full h-full outline-none whitespace-pre-wrap select-text break-words" contenteditable="true" @input="handleTextEdit($event, el)" :style="quantumTextStyle(el)" spellcheck="false" title="Double-cliquez pour éditer">{{ el.content }}</div>
+
+                                <!-- Render: LOGO -->
+                                <div v-if="el.type === 'logo'" class="w-full h-full pointer-events-none flex items-center justify-center">
+                                    <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
+                                    <div v-else class="w-full h-full bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 rounded-xl">
+                                        <i class="pi pi-shield text-4xl mb-2"></i><span class="text-xs font-bold uppercase tracking-widest text-center px-2">Espace<br>Logo Officiel</span>
+                                    </div>
+                                </div>
+
+                                <!-- Render: SIGNATURE -->
+                                <div v-if="el.type === 'signature'" class="w-full h-full pointer-events-none flex items-center justify-center">
+                                    <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
+                                    <div v-else class="w-full h-full bg-slate-100/50 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 rounded-xl">
+                                        <i class="pi pi-pencil text-3xl mb-2"></i><span class="text-[10px] font-bold uppercase tracking-widest">Espace Signature</span>
+                                    </div>
+                                </div>
+
+                                <!-- Render: QR CODE -->
+                                <div v-if="el.type === 'qr'" class="w-full h-full pointer-events-none bg-white p-3 border border-slate-200 flex items-center justify-center shadow-sm">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TrustCenterValidation" class="w-full h-full object-contain opacity-80" />
+                                </div>
+
+                                <!-- Render: CUSTOM IMAGE -->
+                                <div v-if="el.type === 'image'" class="w-full h-full pointer-events-none flex items-center justify-center">
+                                    <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
+                                    <div v-else class="w-full h-full bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center text-indigo-300">
+                                        <i class="pi pi-image text-3xl mb-1"></i><span class="text-[8px] font-bold uppercase">Image Libre</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                </template>
-              </draggable>
+                </main>
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- RIGHT SIDEBAR : THE INSPECTOR (Deep Property Editing)                  -->
+                <!-- ---------------------------------------------------------------------- -->
+                <aside class="w-[400px] flex-none bg-[#141418] border-l border-white/5 flex flex-col z-[200] shadow-2xl relative">
+
+                    <!-- Inspector Header -->
+                    <div class="p-5 border-b border-white/5 bg-[#1a1a1f] flex justify-between items-center sticky top-0 z-20">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                                <i class="pi pi-sliders-h text-red-400 text-sm"></i>
+                            </div>
+                            <span class="text-xs font-black text-white uppercase tracking-widest">
+                                {{ selectedElementId ? 'Propriétés Élément' : 'Document Master' }}
+                            </span>
+                        </div>
+                        <button v-if="selectedElementId" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors" @click="selectedElementId = null" v-tooltip.left="'Désélectionner'">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Inspector Body (Scrollable) -->
+                    <div class="flex-1 overflow-y-auto custom-scrollbar">
+
+                        <!-- ========================================================== -->
+                        <!-- 🔴 CONTEXTE 1 : DOCUMENT GLOBAL (Si rien n'est sélectionné)-->
+                        <!-- ========================================================== -->
+                        <div v-if="!selectedElementId" class="p-6 space-y-10 pb-40">
+
+                            <!-- BLOCK: Format & Géométrie -->
+                            <section>
+                                <div class="flex items-center gap-3 mb-5">
+                                    <i class="pi pi-file text-white/30 text-sm"></i>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Géométrie</h4>
+                                </div>
+                                <div class="space-y-4 bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-[10px] text-white/60 font-bold">Orientation du Canevas</label>
+                                        <SelectButton v-model="templateForm.orientation" :options="[{l:'Paysage (A4)', v:'landscape'}, {l:'Portrait (A4)', v:'portrait'}]" optionLabel="l" optionValue="v" class="w-full q-select-btn" />
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 pt-2">
+                                        <div class="flex flex-col gap-1">
+                                            <span class="text-[9px] text-white/40 uppercase">Largeur (px)</span>
+                                            <div class="px-3 py-2 bg-black/20 rounded-lg text-white/60 font-mono text-xs border border-white/5">{{ templateForm.orientation === 'landscape' ? 1120 : 792 }}</div>
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="text-[9px] text-white/40 uppercase">Hauteur (px)</span>
+                                            <div class="px-3 py-2 bg-black/20 rounded-lg text-white/60 font-mono text-xs border border-white/5">{{ templateForm.orientation === 'landscape' ? 792 : 1120 }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <Divider class="border-white/5" />
+
+                            <!-- BLOCK: Design Global (Fond & Bordure) -->
+                            <section>
+                                <div class="flex items-center gap-3 mb-5">
+                                    <i class="pi pi-palette text-white/30 text-sm"></i>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Apparence Générale</h4>
+                                </div>
+                                <div class="space-y-4">
+
+                                    <!-- Bordure -->
+                                    <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-4">
+                                        <h5 class="text-[10px] text-white font-bold uppercase tracking-widest border-b border-white/10 pb-2 mb-4">Cadre & Bordure</h5>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-white/70 font-medium">Couleur Master</span>
+                                            <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
+                                                <ColorPicker v-model="templateForm.border_color" />
+                                                <span class="text-[10px] font-mono text-white/50 w-16 uppercase">{{ templateForm.border_color }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2 pt-2">
+                                            <div class="flex justify-between items-center text-[10px]">
+                                                <span class="text-white/70">Épaisseur</span>
+                                                <span class="text-red-400 font-mono font-bold bg-red-500/10 px-2 py-0.5 rounded">{{ templateForm.border_width }} px</span>
+                                            </div>
+                                            <Slider v-model="templateForm.border_width" :min="0" :max="150" class="red-slider" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Fond (Couleur & Image) -->
+                                    <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-4">
+                                        <h5 class="text-[10px] text-white font-bold uppercase tracking-widest border-b border-white/10 pb-2 mb-4">Arrière-plan</h5>
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-xs text-white/70 font-medium">Teinte de Base</span>
+                                            <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
+                                                <ColorPicker v-model="templateForm.background_color" />
+                                                <span class="text-[10px] font-mono text-white/50 w-16 uppercase">{{ templateForm.background_color }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <span class="text-[10px] text-white/50 block">Texture / Image HD</span>
+                                            <input type="file" ref="bgUploader" hidden @change="(e) => handleFileUpload(e, 'bg')" accept="image/*" />
+
+                                            <div v-if="backgroundPreview || templateForm.background_url" class="relative w-full h-24 rounded-xl overflow-hidden border border-white/10 group">
+                                                <img :src="backgroundPreview || templateForm.background_url" class="w-full h-full object-cover" />
+                                                <div class="absolute inset-0 bg-black/60 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                                                    <button class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors" @click="$refs.bgUploader.click()" v-tooltip.top="'Remplacer'"><i class="pi pi-sync"></i></button>
+                                                    <button class="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500 text-white flex items-center justify-center transition-colors" @click="clearFile('bg')" v-tooltip.top="'Supprimer'"><i class="pi pi-trash"></i></button>
+                                                </div>
+                                            </div>
+                                            <button v-else @click="$refs.bgUploader.click()" class="w-full py-4 rounded-xl border border-dashed border-white/20 text-xs text-white/50 hover:text-white hover:border-white/50 hover:bg-white/5 transition-all flex flex-col items-center gap-2">
+                                                <i class="pi pi-cloud-upload text-xl"></i> Uploader un Pattern
+                                            </button>
+                                        </div>
+
+                                        <div class="space-y-2 pt-2" v-if="backgroundPreview || templateForm.background_url">
+                                            <div class="flex justify-between items-center text-[10px]">
+                                                <span class="text-white/70">Opacité de l'image</span>
+                                                <span class="text-white font-mono">{{ templateForm.bg_opacity }}%</span>
+                                            </div>
+                                            <Slider v-model="templateForm.bg_opacity" :min="0" :max="100" class="red-slider" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <Divider class="border-white/5" />
+
+                            <!-- BLOCK: Chartes Graphique Textes -->
+                            <section>
+                                <div class="flex items-center gap-3 mb-5">
+                                    <i class="pi pi-language text-white/30 text-sm"></i>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Charte Typographique</h4>
+                                </div>
+                                <div class="space-y-4 bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] text-white/60 font-bold">Police Principale (Corps)</label>
+                                        <Dropdown v-model="templateForm.primary_font" :options="props.meta.fonts" class="w-full q-dropdown" placeholder="Sélectionner une police">
+                                            <template #value="slotProps"><span :style="{fontFamily: slotProps.value}">{{slotProps.value}}</span></template>
+                                            <template #option="slotProps"><span :style="{fontFamily: slotProps.option}">{{slotProps.option}}</span></template>
+                                        </Dropdown>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] text-white/60 font-bold">Police Secondaire (Titres)</label>
+                                        <Dropdown v-model="templateForm.accent_font" :options="props.meta.fonts" class="w-full q-dropdown" placeholder="Sélectionner une police">
+                                            <template #value="slotProps"><span :style="{fontFamily: slotProps.value}">{{slotProps.value}}</span></template>
+                                            <template #option="slotProps"><span :style="{fontFamily: slotProps.option}">{{slotProps.option}}</span></template>
+                                        </Dropdown>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-3 border-t border-white/5">
+                                        <span class="text-xs text-white/70 font-medium">Couleur Texte Défaut</span>
+                                        <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
+                                            <ColorPicker v-model="templateForm.text_color" />
+                                            <span class="text-[10px] font-mono text-white/50 w-16 uppercase">{{ templateForm.text_color }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <Divider class="border-white/5" />
+
+                            <!-- BLOCK: Gestion des Sceaux (Uploads & Toggles) -->
+                            <section>
+                                <div class="flex items-center gap-3 mb-5">
+                                    <i class="pi pi-verified text-white/30 text-sm"></i>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Identité & Sceaux</h4>
+                                </div>
+                                <div class="space-y-4">
+
+                                    <!-- Inputs cachés -->
+                                    <input type="file" ref="logoUploader" hidden @change="(e) => handleFileUpload(e, 'logo')" accept="image/*" />
+                                    <input type="file" ref="sigUploader" hidden @change="(e) => handleFileUpload(e, 'sig')" accept="image/*" />
+
+                                    <!-- Logo Institution -->
+                                    <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest">Logo Principal</h5>
+                                            <Badge v-if="logoPreview || templateForm.logo_url" value="Inclus" severity="success" class="text-[8px] bg-emerald-500/20 text-emerald-400 border-none" />
+                                        </div>
+                                        <div v-if="!(logoPreview || templateForm.logo_url) || templateForm.delete_logo" class="flex flex-col items-center gap-3">
+                                            <button @click="$refs.logoUploader.click()" class="w-full py-4 rounded-xl border border-dashed border-white/20 text-xs text-white/50 hover:text-white hover:bg-white/5 transition-all"><i class="pi pi-upload mr-2"></i> Sélectionner le fichier</button>
+                                        </div>
+                                        <div v-else class="flex flex-col gap-3">
+                                            <div class="h-20 w-full bg-white/5 rounded-xl border border-white/10 p-2 flex items-center justify-center relative group">
+                                                <img :src="logoPreview || templateForm.logo_url" class="h-full object-contain" />
+                                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl backdrop-blur-sm">
+                                                    <button class="w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500 text-white flex items-center justify-center transition-colors" @click="clearFile('logo')"><i class="pi pi-trash text-xs"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Signature Autorité -->
+                                    <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest">Signature Master</h5>
+                                            <InputSwitch v-model="templateForm.show_signature" class="scale-75" />
+                                        </div>
+                                        <div v-if="templateForm.show_signature">
+                                            <div v-if="!(signaturePreview || templateForm.signature_url) || templateForm.delete_signature" class="flex flex-col items-center gap-3 mt-3">
+                                                <button @click="$refs.sigUploader.click()" class="w-full py-3 rounded-xl border border-dashed border-white/20 text-[10px] text-white/50 hover:text-white hover:bg-white/5 transition-all"><i class="pi pi-upload mr-2"></i> Fichier Signature (PNG/Transparent)</button>
+                                            </div>
+                                            <div v-else class="mt-3 h-16 w-full bg-white/5 rounded-xl border border-white/10 p-2 flex items-center justify-center relative group">
+                                                <img :src="signaturePreview || templateForm.signature_url" class="h-full object-contain filter invert opacity-80" />
+                                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl backdrop-blur-sm">
+                                                    <button class="w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500 text-white flex items-center justify-center transition-colors" @click="clearFile('sig')"><i class="pi pi-trash text-xs"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- QR Code System -->
+                                    <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+                                        <div>
+                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest mb-1">Blockchain QR Seal</h5>
+                                            <p class="text-[9px] text-white/40 leading-tight">Génère un lien de vérification unique sur le diplôme.</p>
+                                        </div>
+                                        <InputSwitch v-model="templateForm.show_qr" />
+                                    </div>
+
+                                </div>
+                            </section>
+
+                        </div>
+
+                        <!-- ========================================================== -->
+                        <!-- 🔵 CONTEXTE 2 : ÉLÉMENT SÉLECTIONNÉ                        -->
+                        <!-- ========================================================== -->
+                        <div v-else class="p-6 space-y-8 pb-40">
+
+                            <!-- Header Contextuel -->
+                            <div class="bg-gradient-to-br from-red-600/20 to-transparent border border-red-500/30 rounded-2xl p-4 flex gap-4 shadow-inner relative overflow-hidden">
+                                <div class="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center flex-none border border-red-500/30">
+                                    <i :class="{
+                                        'pi pi-font text-xl': selectedElement.type === 'text',
+                                        'pi pi-image text-xl': selectedElement.type === 'image',
+                                        'pi pi-shield text-xl': selectedElement.type === 'logo',
+                                        'pi pi-pencil text-xl': selectedElement.type === 'signature',
+                                        'pi pi-qrcode text-xl': selectedElement.type === 'qr'
+                                    }"></i>
+                                </div>
+                                <div class="flex flex-col w-full">
+                                    <span class="text-[8px] text-red-300 font-black uppercase tracking-widest mb-0.5 opacity-80">Calque / {{ selectedElement.type }}</span>
+                                    <InputText v-model="selectedElement.name" class="bg-transparent border-none text-white font-bold text-sm p-0 focus:ring-0 w-full placeholder:text-white/20" placeholder="Nom du calque..." />
+                                </div>
+                                <i class="pi pi-cog absolute -right-4 -bottom-4 text-[60px] text-red-500/5"></i>
+                            </div>
+
+                            <!-- BLOCK: Transformation & Géométrie -->
+                            <section class="space-y-4">
+                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Transformations</h4>
+                                <div class="grid grid-cols-2 gap-3 bg-[#1a1a1f] p-4 rounded-2xl border border-white/5">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Axe X</label>
+                                        <InputNumber v-model="selectedElement.x" class="q-input-number" suffix=" px" :useGrouping="false" />
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Axe Y</label>
+                                        <InputNumber v-model="selectedElement.y" class="q-input-number" suffix=" px" :useGrouping="false" />
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 mt-2">
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Largeur</label>
+                                        <InputNumber v-model="selectedElement.width" class="q-input-number" suffix=" px" :useGrouping="false" />
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 mt-2">
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Hauteur</label>
+                                        <InputNumber v-if="selectedElement.type !== 'text'" v-model="selectedElement.height" class="q-input-number" suffix=" px" :useGrouping="false" />
+                                        <div v-else class="h-[38px] bg-black/10 rounded-lg flex items-center px-3 border border-white/5 text-white/30 text-[10px] cursor-not-allowed">Auto (Texte)</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <Divider class="border-white/5" />
+
+                            <!-- BLOCK: Spécifique TEXTE -->
+                            <section v-if="selectedElement.type === 'text'" class="space-y-6">
+                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Stylisation Typographique</h4>
+
+                                <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-5">
+
+                                    <!-- Famille de police -->
+                                    <div class="space-y-2">
+                                        <label class="text-[10px] text-white/60 font-bold">Police de caractères</label>
+                                        <Dropdown v-model="selectedElement.style.fontFamily" :options="props.meta.fonts" class="w-full q-dropdown">
+                                            <template #value="slotProps"><span :style="{fontFamily: slotProps.value}">{{slotProps.value}}</span></template>
+                                            <template #option="slotProps"><span :style="{fontFamily: slotProps.option}">{{slotProps.option}}</span></template>
+                                        </Dropdown>
+                                    </div>
+
+                                    <!-- Tailles -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="flex flex-col gap-1.5">
+                                            <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Taille (Size)</label>
+                                            <InputNumber v-model="selectedElement.style.fontSize" class="q-input-number" suffix=" px" />
+                                        </div>
+                                        <div class="flex flex-col gap-1.5">
+                                            <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Espacement</label>
+                                            <InputNumber v-model="selectedElement.style.letterSpacing" class="q-input-number" suffix=" px" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Couleur -->
+                                    <div class="flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/5">
+                                        <span class="text-xs text-white/70 font-medium">Couleur Remplissage</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-mono text-white/50 uppercase">{{ selectedElement.style.color }}</span>
+                                            <ColorPicker v-model="selectedElement.style.color" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Alignement & Formatage Avancé -->
+                                    <div class="space-y-3 pt-2">
+                                        <label class="text-[10px] text-white/60 font-bold">Formatage</label>
+
+                                        <!-- Alignement -->
+                                        <div class="flex bg-black/20 rounded-xl overflow-hidden border border-white/10 p-1 gap-1">
+                                            <button @click="selectedElement.style.textAlign = 'left'" class="flex-1 py-2 rounded-lg hover:bg-white/10 text-white/60 transition-colors" :class="{'bg-red-600 text-white shadow-md': selectedElement.style.textAlign === 'left'}"><i class="pi pi-align-left text-sm"></i></button>
+                                            <button @click="selectedElement.style.textAlign = 'center'" class="flex-1 py-2 rounded-lg hover:bg-white/10 text-white/60 transition-colors" :class="{'bg-red-600 text-white shadow-md': selectedElement.style.textAlign === 'center'}"><i class="pi pi-align-center text-sm"></i></button>
+                                            <button @click="selectedElement.style.textAlign = 'right'" class="flex-1 py-2 rounded-lg hover:bg-white/10 text-white/60 transition-colors" :class="{'bg-red-600 text-white shadow-md': selectedElement.style.textAlign === 'right'}"><i class="pi pi-align-right text-sm"></i></button>
+                                        </div>
+
+                                        <!-- Poids et Style -->
+                                        <div class="flex gap-2">
+                                            <button @click="selectedElement.style.fontWeight = selectedElement.style.fontWeight === '900' ? '400' : '900'" class="flex-1 py-2 rounded-xl border transition-all text-sm font-serif" :class="selectedElement.style.fontWeight === '900' ? 'bg-white/10 border-white/20 text-white font-black' : 'bg-transparent border-white/5 text-white/40 hover:bg-white/5'">B</button>
+                                            <button @click="selectedElement.style.fontStyle = selectedElement.style.fontStyle === 'italic' ? 'normal' : 'italic'" class="flex-1 py-2 rounded-xl border transition-all text-sm font-serif italic" :class="selectedElement.style.fontStyle === 'italic' ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/5 text-white/40 hover:bg-white/5'">I</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- BLOCK: Spécifique IMAGE / LOGO / SIG -->
+                            <section v-if="['image', 'logo', 'signature'].includes(selectedElement.type)" class="space-y-6">
+                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Traitements d'Image</h4>
+
+                                <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-5">
+                                    <div v-if="selectedElement.type === 'image'" class="space-y-2">
+                                        <input type="file" ref="customImgUploader" hidden @change="(e) => {
+                                            const file = e.target.files[0];
+                                            if(!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => selectedElement.content = ev.target.result;
+                                            reader.readAsDataURL(file);
+                                        }" accept="image/*" />
+                                        <button @click="$refs.customImgUploader.click()" class="w-full py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white transition-all"><i class="pi pi-sync mr-2"></i> Remplacer l'image</button>
+                                    </div>
+
+                                    <!-- Filtres CSS -->
+                                    <div class="space-y-4 pt-2">
+                                        <label class="text-[10px] text-white/60 font-bold border-b border-white/10 pb-2 block">Matrice de filtres</label>
+
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">Luminosité</span><span class="font-mono text-red-400">{{ selectedElement.filters.brightness }}%</span></div>
+                                            <Slider v-model="selectedElement.filters.brightness" :min="0" :max="200" class="red-slider h-1" />
+                                        </div>
+                                        <div class="space-y-2 pt-2">
+                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">Contraste</span><span class="font-mono text-red-400">{{ selectedElement.filters.contrast }}%</span></div>
+                                            <Slider v-model="selectedElement.filters.contrast" :min="0" :max="200" class="red-slider h-1" />
+                                        </div>
+                                        <div class="space-y-2 pt-2">
+                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">Niveaux de gris</span><span class="font-mono text-red-400">{{ selectedElement.filters.grayscale }}%</span></div>
+                                            <Slider v-model="selectedElement.filters.grayscale" :min="0" :max="100" class="red-slider h-1" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Actions de Calque (Communes) -->
+                            <section v-if="!['logo', 'signature', 'qr'].includes(selectedElement.type)">
+                                <Divider class="border-white/5" />
+                                <div class="grid grid-cols-2 gap-3">
+                                    <Button label="Dupliquer" icon="pi pi-copy" class="p-button-outlined p-button-secondary text-white/70 border-white/20 hover:bg-white/10 rounded-xl" @click="duplicateElement(selectedElement)" />
+                                    <Button label="Supprimer" icon="pi pi-trash" class="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl" @click="removeElement(selectedElement.id)" />
+                                </div>
+                            </section>
+                            <section v-else>
+                                <Message severity="info" :closable="false" class="bg-blue-500/10 border-blue-500/20 text-blue-300 text-xs">Cet élément est natif au modèle. Vous pouvez le désactiver depuis les paramètres globaux du document.</Message>
+                            </section>
+
+                        </div>
+                    </div>
+                </aside>
             </div>
-          </TabPanel>
-
-          <!-- TAB 3 : HISTORIQUE -->
-          <TabPanel>
-            <template #header>
-              <div class="flex flex-col items-center gap-1">
-                <i class="pi pi-history text-lg"></i>
-                <span class="text-[8px] font-black uppercase tracking-tighter">History</span>
-              </div>
-            </template>
-            <div class="p-6 text-center space-y-4">
-              <i class="pi pi-clock text-4xl text-white/5"></i>
-              <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">No recent changes recorded</p>
-            </div>
-          </TabPanel>
-        </TabView>
-      </aside>
-
-      <!--
-        ===========================================================================================
-        CENTER WORKSPACE : THE QUANTUM CANVAS VIEWPORT
-        ===========================================================================================
-      -->
-      <main
-        class="flex-1 relative overflow-hidden bg-[#050608] flex items-center justify-center p-20 quantum-infinite-grid"
-  @dblclick="addElementAtPosition"
-      >
-        <!-- Floating Canvas Toolbar -->
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#11141d]/80 backdrop-blur-2xl border border-white/5 p-2 rounded-2xl z-[100] shadow-2xl">
-          <div class="flex items-center gap-1">
-            <Button icon="pi pi-search-minus" @click="canvasZoom -= 10" class="p-button-text text-white/60" />
-            <span class="text-[10px] font-mono text-white/80 w-12 text-center">{{ canvasZoom }}%</span>
-            <Button icon="pi pi-search-plus" @click="canvasZoom += 10" class="p-button-text text-white/60" />
-          </div>
-          <div class="w-px h-4 bg-white/10 mx-2"></div>
-          <Button icon="pi pi-expand" @click="canvasZoom = 100" class="p-button-text text-white/60" v-tooltip="'Fit to Screen'" />
-          <Button icon="pi pi-desktop" @click="toggleOrientation" class="p-button-text text-white/60" v-tooltip="'Toggle Orientation'" />
-          <div class="w-px h-4 bg-white/10 mx-2"></div>
-          <Button icon="pi pi-refresh" class="p-button-text text-indigo-400" v-tooltip="'Reset Canvas'" />
-        </div>
-
-        <!-- Rulers (Optionnel pour l'UX Quantum) -->
-        <div class="absolute top-0 left-[20px] right-0 h-5 bg-white/5 border-b border-white/10 text-[8px] font-mono text-white/20 flex items-center">
-          <div v-for="n in 20" :key="n" class="border-l border-white/10 h-full w-[100px] flex items-end pb-0.5 pl-1">{{ (n-1)*100 }}</div>
-        </div>
-        <div class="absolute left-0 top-[20px] bottom-0 w-5 bg-white/5 border-r border-white/10 text-[8px] font-mono text-white/20 flex flex-col items-center">
-          <div v-for="n in 20" :key="n" class="border-t border-white/10 w-full h-[100px] flex items-center justify-center rotate-90">{{ (n-1)*100 }}</div>
-        </div>
-
-        <!--
-          *****************************************************************************************
-          THE MASTER DOCUMENT (A4 PHYSICAL BOUNDS)
-          *****************************************************************************************
-        -->
-        <div
-          id="snc-quantum-canvas"
-          class="relative transition-shadow duration-700 bg-white shadow-[0_0_150px_rgba(0,0,0,0.8)] origin-center overflow-hidden"
-          :style="quantumCanvasStyle"
-        >
-          <!-- Layer 1 : Background Media -->
-          <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <img
-              v-if="backgroundPreview"
-              :src="backgroundPreview"
-              class="w-full h-full object-cover"
-              :style="quantumFilterStyle(templateForm.bg_filters)"
-            />
-            <!-- Quantum Mesh Gradients (SaaS Aesthetics) -->
-            <div class="absolute inset-0 quantum-mesh-gradient" :style="{ opacity: templateForm.bg_opacity / 100 }"></div>
-            <!-- Custom Color Overlay -->
-            <div class="absolute inset-0" :style="{ background: templateForm.background_color, mixBlendMode: 'multiply', opacity: 0.2 }"></div>
-          </div>
-
-          <!-- Layer 2 : Decorative Border -->
-          <div
-            v-if="templateForm.border_width > 0"
-            class="absolute pointer-events-none z-50 border-double transition-all duration-500"
-            :style="{
-              top: '40px', left: '40px', right: '40px', bottom: '40px',
-              border: `${templateForm.border_width}px double ${templateForm.border_color}`,
-              opacity: 0.7
-            }"
-          ></div>
-
-          <!-- Layer 3 : Interactive Elements Loop (Drag and Drop Area) -->
-          <div
-            v-for="(el, idx) in templateForm.elements"
-            :key="el.id"
-            class="absolute quantum-draggable-container group"
-            :class="{
-              'is-selected': selectedElementId === el.id,
-              'is-dragging': draggingElementId === el.id
-            }"
-            :style="quantumElementStyle(el)"
-            @mousedown.stop="startElementDrag($event, el)"
-          >
-            <!-- Control Handles (Visible only on selected) -->
-            <div v-if="selectedElementId === el.id" class="absolute -inset-2 border-2 border-indigo-500 quantum-drag-frame rounded-sm pointer-events-none">
-              <div class="absolute -top-1 -left-1 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full pointer-events-auto cursor-nw-resize"></div>
-              <div class="absolute -top-1 -right-1 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full pointer-events-auto cursor-ne-resize"></div>
-              <div class="absolute -bottom-1 -left-1 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full pointer-events-auto cursor-sw-resize"></div>
-              <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-white border-2 border-indigo-500 rounded-full pointer-events-auto cursor-se-resize"></div>
-              <!-- Rotation Handle -->
-              <div class="absolute -top-8 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center pointer-events-auto cursor-grab shadow-xl">
-                 <i class="pi pi-refresh text-white text-[8px]"></i>
-              </div>
-            </div>
-
-            <!-- Content Rendering Logic -->
-            <div class="w-full h-full relative overflow-visible">
-
-              <!-- TYPE: TEXT -->
-              <div v-if="el.type === 'text'"
-                class="w-full h-full outline-none focus:outline-none whitespace-pre-wrap select-text"
-                contenteditable="true"
-                @input="handleTextEdit($event, el)"
-                :style="quantumTextStyle(el)"
-              >
-                {{ el.content }}
-              </div>
-
-              <!-- TYPE: IMAGE (LOGO / SIGNATURE) -->
-              <div v-if="el.type === 'image'" class="w-full h-full select-none pointer-events-none">
-                <img
-                  :src="el.content"
-                  class="w-full h-full object-contain"
-                  :style="quantumFilterStyle(el.filters)"
-                />
-              </div>
-
-              <!-- TYPE: QR CODE -->
-              <div v-if="el.type === 'qr'" class="w-full h-full bg-white p-2 border shadow-sm">
-                <div class="w-full h-full bg-slate-100 flex items-center justify-center">
-                  <i class="pi pi-qrcode text-4xl text-slate-800"></i>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Contextual Quick Action Menu -->
-            <div v-if="selectedElementId === el.id" class="absolute -bottom-14 left-1/2 -translate-x-1/2 bg-[#1a1f2e] border border-white/10 rounded-xl px-4 py-2 flex items-center gap-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button icon="pi pi-clone" class="p-button-text p-button-sm text-white/50" v-tooltip="'Clone'" @click="duplicateElement(el)" />
-              <div class="w-px h-3 bg-white/10"></div>
-              <Button icon="pi pi-lock" class="p-button-text p-button-sm text-white/50" />
-              <Button icon="pi pi-trash" class="p-button-text p-button-sm text-red-400" @click="removeElement(el.id)" />
-            </div>
-          </div>
-
-          <!-- Layer 4 : Overlays (Grain, Static, etc.) -->
-          <div class="absolute inset-0 pointer-events-none z-[100] opacity-[0.03] mix-blend-overlay quantum-grain"></div>
-
-        </div>
-      </main>
-
-      <!--
-        ===========================================================================================
-        RIGHT SIDEBAR : PROPERTY INSPECTOR & NEURAL STYLING
-        ===========================================================================================
-      -->
-      <aside class="w-[400px] flex-none bg-[#090b11] border-l border-white/5 flex flex-col z-[150] shadow-2xl overflow-y-auto custom-scrollbar">
-        <!-- HEADER INSPECTOR -->
-        <div class="p-6 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-              <i class="pi pi-sliders-h text-indigo-400 text-xs"></i>
-            </div>
-            <h3 class="text-xs font-black text-white/80 uppercase tracking-widest italic">
-              {{ selectedElementId ? 'Element Inspector' : 'Document Global' }}
-            </h3>
-          </div>
-          <Button v-if="selectedElementId" @click="selectedElementId = null" icon="pi pi-times" class="p-button-text p-button-xs text-white/20 hover:text-white" />
-        </div>
-
-        <!--
-          -----------------------------------------------------------------------------------------
-          CONTEXT 1 : DOCUMENT GLOBAL PROPERTIES (When nothing is selected)
-          -----------------------------------------------------------------------------------------
-        -->
-        <div v-if="!selectedElementId" class="p-8 space-y-10 pb-40">
-
-          <!-- Section : Géométrie Master -->
-          <div class="space-y-6">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-file text-[10px]"></i> Page Geometry
-            </span>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="quantum-property-group">
-                <label class="quantum-label">Orientation</label>
-                <SelectButton v-model="templateForm.orientation" :options="[{l:'A4 Paysage', v:'landscape'}, {l:'A4 Portrait', v:'portrait'}]" optionLabel="l" optionValue="v" class="quantum-select-sm" />
-              </div>
-              <div class="quantum-property-group">
-                <label class="quantum-label">Unit System</label>
-                <Dropdown disabled placeholder="Pixels (DPI 300)" class="quantum-dropdown-sm" />
-              </div>
-            </div>
-          </div>
-
-          <Divider class="border-white/5" />
-
-          <!-- Section : Deep Background Configuration -->
-          <div class="space-y-6">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-palette text-[10px]"></i> Neural Background
-            </span>
-
-            <!-- Background Image Upload -->
-            <div class="space-y-4">
-              <label class="quantum-label">Master Texture</label>
-              <div class="p-4 rounded-2xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center gap-4 group hover:border-indigo-500 transition-colors cursor-pointer" @click="$refs.bgUploader.click()">
-                <input type="file" ref="bgUploader" hidden @change="handleBgUpload" />
-                <div v-if="!backgroundPreview" class="flex flex-col items-center gap-2">
-                  <i class="pi pi-cloud-upload text-2xl text-white/10"></i>
-                  <span class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Select HD Asset</span>
-                </div>
-                <div v-else class="relative w-full h-32 rounded-xl overflow-hidden shadow-2xl">
-                  <img :src="backgroundPreview" class="w-full h-full object-cover" />
-                  <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[10px] font-black text-white uppercase tracking-widest">Replace Asset</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Background FX Sliders -->
-            <div class="space-y-6 p-6 rounded-3xl bg-white/[0.02] border border-white/5">
-              <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                  <label class="text-[9px] font-black text-white/40 uppercase tracking-widest italic">Base Tint</label>
-                  <ColorPicker v-model="templateForm.background_color" />
-                </div>
-                <div class="space-y-2">
-                  <div class="flex justify-between">
-                    <label class="text-[9px] font-black text-white/40 uppercase tracking-widest italic">Tint Opacity</label>
-                    <span class="text-[10px] font-mono text-indigo-400">{{ templateForm.bg_opacity }}%</span>
-                  </div>
-                  <Slider v-model="templateForm.bg_opacity" :min="0" :max="100" class="quantum-slider-xs" />
-                </div>
-                <div class="space-y-2">
-                  <div class="flex justify-between">
-                    <label class="text-[9px] font-black text-white/40 uppercase tracking-widest italic">Filter Blur</label>
-                    <span class="text-[10px] font-mono text-indigo-400">{{ templateForm.bg_filters.blur }}px</span>
-                  </div>
-                  <Slider v-model="templateForm.bg_filters.blur" :min="0" :max="50" class="quantum-slider-xs" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Divider class="border-white/5" />
-
-          <!-- Section : Master Borders -->
-          <div class="space-y-6">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-box text-[10px]"></i> Frame Aesthetics
-            </span>
-            <div class="space-y-6">
-               <div class="flex items-center gap-4">
-                  <ColorPicker v-model="templateForm.border_color" />
-                  <InputText v-model="templateForm.border_color" class="quantum-input-sm uppercase font-mono text-indigo-400" />
-               </div>
-               <div class="space-y-2">
-                  <div class="flex justify-between">
-                    <label class="text-[9px] font-black text-white/40 uppercase tracking-widest italic">Frame Thickness</label>
-                    <span class="text-[10px] font-mono text-indigo-400">{{ templateForm.border_width }}px</span>
-                  </div>
-                  <Slider v-model="templateForm.border_width" :min="0" :max="100" class="quantum-slider-xs" />
-               </div>
-            </div>
-          </div>
-        </div>
-
-        <!--
-          -----------------------------------------------------------------------------------------
-          CONTEXT 2 : ELEMENT PROPERTIES (When an element is selected)
-          -----------------------------------------------------------------------------------------
-        -->
-        <div v-else class="p-8 space-y-10 pb-40">
-
-          <!-- Element Identity -->
-          <div class="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10 flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center shadow-lg">
-               <i :class="getElementIcon(selectedElement.type)" class="text-white text-xl"></i>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Entity Type: {{ selectedElement.type }}</span>
-              <InputText v-model="selectedElement.name" class="bg-transparent border-none text-white font-black text-sm p-0 focus:ring-0" placeholder="Nom du calque..." />
-            </div>
-          </div>
-
-          <!-- Section : Geometry Transform -->
-          <div class="space-y-6">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-directions text-[10px]"></i> Neural Transform
-            </span>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="quantum-property-group">
-                <label class="quantum-label">Axis X (Offset)</label>
-                <InputNumber v-model="selectedElement.x" showButtons class="quantum-number-sm" suffix=" px" />
-              </div>
-              <div class="quantum-property-group">
-                <label class="quantum-label">Axis Y (Offset)</label>
-                <InputNumber v-model="selectedElement.y" showButtons class="quantum-number-sm" suffix=" px" />
-              </div>
-              <div class="quantum-property-group">
-                <label class="quantum-label">Width</label>
-                <InputNumber v-model="selectedElement.width" showButtons class="quantum-number-sm" suffix=" px" />
-              </div>
-              <div class="quantum-property-group">
-                <label class="quantum-label">Rotation</label>
-                <InputNumber v-model="selectedElement.rotation" showButtons class="quantum-number-sm" suffix=" °" :min="-360" :max="360" />
-              </div>
-            </div>
-          </div>
-
-          <Divider class="border-white/5" />
-
-          <!-- Section Contextuelle : TEXT STYLING -->
-          <div v-if="selectedElement.type === 'text'" class="space-y-8">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-pencil text-[10px]"></i> Typeface Calibration
-            </span>
-
-            <div class="space-y-6">
-              <!-- Font Family Selector -->
-              <div class="quantum-property-group">
-                <label class="quantum-label">Neural Font Family</label>
-                <Dropdown
-                  v-model="selectedElement.style.fontFamily"
-                  :options="props.meta.fonts"
-                  class="quantum-dropdown-sm"
-                  placeholder="Select Quantum Font"
-                >
-                  <template #option="slotProps">
-                    <div :style="{ fontFamily: slotProps.option }" class="text-sm">{{ slotProps.option }}</div>
-                  </template>
-                </Dropdown>
-              </div>
-
-              <!-- Typography Grid -->
-              <div class="grid grid-cols-2 gap-4">
-                <div class="quantum-property-group">
-                   <label class="quantum-label">Scale (Size)</label>
-                   <InputNumber v-model="selectedElement.style.fontSize" class="quantum-number-sm" suffix=" px" />
-                </div>
-                <div class="quantum-property-group">
-                   <label class="quantum-label">Kerning</label>
-                   <InputNumber v-model="selectedElement.style.letterSpacing" class="quantum-number-sm" suffix=" px" />
-                </div>
-              </div>
-
-              <!-- Color & Opacity -->
-              <div class="grid grid-cols-1 gap-4">
-                <div class="quantum-property-group">
-                  <label class="quantum-label">Base Color</label>
-                  <div class="flex items-center gap-4 bg-white/5 p-3 rounded-2xl">
-                    <ColorPicker v-model="selectedElement.style.color" />
-                    <InputText v-model="selectedElement.style.color" class="quantum-input-sm uppercase font-mono" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Advanced Formatting -->
-              <div class="space-y-4">
-                <label class="quantum-label">Advanced Logic</label>
-                <div class="flex flex-wrap gap-2">
-                  <button @click="toggleStyle(selectedElement, 'fontWeight', '900', '400')" class="quantum-format-btn" :class="{'active': selectedElement.style.fontWeight === '900'}"><i class="pi pi-bold"></i></button>
-                  <button @click="toggleStyle(selectedElement, 'fontStyle', 'italic', 'normal')" class="quantum-format-btn" :class="{'active': selectedElement.style.fontStyle === 'italic'}"><i class="pi pi-italic"></i></button>
-                  <button @click="toggleStyle(selectedElement, 'textTransform', 'uppercase', 'none')" class="quantum-format-btn" :class="{'active': selectedElement.style.textTransform === 'uppercase'}"><i class="pi pi-sort-alpha-up"></i></button>
-                  <button @click="toggleStyle(selectedElement, 'textDecoration', 'underline', 'none')" class="quantum-format-btn" :class="{'active': selectedElement.style.textDecoration === 'underline'}"><i class="pi pi-minus"></i></button>
-                </div>
-                <div class="flex gap-2">
-                  <SelectButton v-model="selectedElement.style.textAlign" :options="[{l:'pi pi-align-left', v:'left'},{l:'pi pi-align-center', v:'center'},{l:'pi pi-align-right', v:'right'}]" optionLabel="l" optionValue="v" class="quantum-select-sm flex-1">
-                    <template #option="slotProps">
-                      <i :class="slotProps.option.l"></i>
-                    </template>
-                  </SelectButton>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section Contextuelle : IMAGE FILTERS (LOGO / SIG / BG) -->
-          <div v-if="selectedElement.type === 'image' || selectedElement.type === 'logo'" class="space-y-8">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-filter text-[10px]"></i> Quantum FX Matrix
-            </span>
-
-            <div class="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-8">
-              <!-- Brightness -->
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <label class="text-[9px] font-black text-white/40 uppercase tracking-widest">Brightness</label>
-                  <span class="text-[10px] font-mono text-indigo-400">{{ selectedElement.filters.brightness }}%</span>
-                </div>
-                <Slider v-model="selectedElement.filters.brightness" :min="0" :max="200" class="quantum-slider-xs" />
-              </div>
-              <!-- Contrast -->
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <label class="text-[9px] font-black text-white/40 uppercase tracking-widest">Contrast</label>
-                  <span class="text-[10px] font-mono text-indigo-400">{{ selectedElement.filters.contrast }}%</span>
-                </div>
-                <Slider v-model="selectedElement.filters.contrast" :min="0" :max="200" class="quantum-slider-xs" />
-              </div>
-              <!-- Grayscale -->
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <label class="text-[9px] font-black text-white/40 uppercase tracking-widest">Grayscale</label>
-                  <span class="text-[10px] font-mono text-indigo-400">{{ selectedElement.filters.grayscale }}%</span>
-                </div>
-                <Slider v-model="selectedElement.filters.grayscale" :min="0" :max="100" class="quantum-slider-xs" />
-              </div>
-              <!-- Hue-Rotate (Color Shifting) -->
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <label class="text-[9px] font-black text-white/40 uppercase tracking-widest">Hue Rotation</label>
-                  <span class="text-[10px] font-mono text-indigo-400">{{ selectedElement.filters.hueRotate }}°</span>
-                </div>
-                <Slider v-model="selectedElement.filters.hueRotate" :min="0" :max="360" class="quantum-slider-xs" />
-              </div>
-              <!-- Invert -->
-              <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
-                <span class="text-[9px] font-black text-white/40 uppercase tracking-widest">Negative Inversion</span>
-                <InputSwitch v-model="selectedElement.filters.invert" class="scale-75" />
-              </div>
-            </div>
-          </div>
-
-          <Divider class="border-white/5" />
-
-          <!-- Layer Depth & Controls -->
-          <div class="space-y-6">
-            <span class="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i class="pi pi-sort-alt text-[10px]"></i> Depth Management
-            </span>
-            <div class="flex gap-2">
-              <Button @click="reorderLayer(selectedElement, 'up')" icon="pi pi-arrow-up" label="Bring Forward" class="p-button-outlined p-button-sm flex-1 text-[10px] uppercase font-black" />
-              <Button @click="reorderLayer(selectedElement, 'down')" icon="pi pi-arrow-down" label="Send Backward" class="p-button-outlined p-button-sm flex-1 text-[10px] uppercase font-black" />
-            </div>
-            <Button @click="removeElement(selectedElement.id)" icon="pi pi-trash" label="Delete Element" class="p-button-danger p-button-text w-full text-[10px] uppercase font-black" />
-          </div>
-        </div>
-      </aside>
-    </div>
-
-    <!--
-      ===========================================================================================
-      FOOTER STATUS BAR
-      ===========================================================================================
-    -->
-    <footer class="flex-none h-8 bg-[#0d0f16] border-t border-white/5 px-6 flex items-center justify-between z-[200]">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2">
-          <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span class="text-[9px] font-bold text-white/40 uppercase tracking-widest italic">Live Engine Sync</span>
-        </div>
-        <div class="w-px h-3 bg-white/10"></div>
-        <span class="text-[9px] font-mono text-white/20">COORD: [X: {{ selectedElement?.x || 0 }}, Y: {{ selectedElement?.y || 0 }}]</span>
-      </div>
-      <div class="flex items-center gap-6 text-[9px] font-bold uppercase tracking-widest text-white/30">
-        <span>SubnetCongo B2B Credentialing Division</span>
-        <span>Environment: Production v4.0</span>
-      </div>
-    </footer>
-  </Dialog>
-
-        <!-- ============================================================================== -->
-        <!-- DIALOG : RÉVOCATION (ALERT STRICT)                                             -->
-        <!-- ============================================================================== -->
-        <Dialog v-model:visible="revocationDialog" modal header="Protocole de Révocation" :style="{width: '500px'}" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
-            <div class="p-8 text-center">
-                <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-rose-100">
-                    <i class="pi pi-shield-slash text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-black text-slate-800 mb-2 uppercase">Action Irréversible</h3>
-                <p class="text-slate-500 text-sm mb-8 leading-relaxed">
-                    La révocation invalidera immédiatement ce certificat sur le vérificateur public. Le Hash restera dans la base pour audit.
-                </p>
-
-                <div class="text-left space-y-2 mb-8">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-widest">Motif de la révocation <span class="text-rose-500">*</span></label>
-                    <Textarea v-model="revocationForm.reason" rows="3" placeholder="Ex: Fraude avérée, erreur d'attribution..." class="w-full rounded-xl p-3 border-slate-300" />
-                </div>
-
-                <div class="flex items-center justify-center gap-3 bg-white p-4 rounded-xl border border-slate-200">
-                    <InputSwitch v-model="revocationForm.confirm_action" />
-                    <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Je confirme l'invalidation</span>
-                </div>
-            </div>
-            <template #footer>
-                <div class="flex justify-between gap-4 p-5 border-t border-slate-200 bg-white">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="revocationDialog = false" />
-                    <Button label="Révoquer le Titre" icon="pi pi-check" :disabled="!revocationForm.confirm_action" class="p-button-danger px-6 font-bold shadow-md" @click="submitRevocation" />
-                </div>
-            </template>
         </Dialog>
 
         <!-- ============================================================================== -->
-        <!-- DIALOG : ÉMISSION EN MASSE (BULK ISSUANCE)                                     -->
+        <!-- DIALOGUES SECONDAIRES (Émission Massive & Révocation)                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="bulkIssuanceDialog" modal header="Délivrance de Diplômes en Masse" :style="{width: '600px'}" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
-            <div class="p-8 space-y-6">
-                <Message severity="info" :closable="false" class="mb-4">
-                    Sélectionnez une formation terminée. Le système générera automatiquement les certificats pour tous les étudiants ayant validé l'évaluation finale.
-                </Message>
+        <Dialog v-model:visible="bulkIssuanceDialog" modal header="Moteur d'Émission Massive" :style="{width: '650px'}" class="rounded-3xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+            <div class="p-8 space-y-8">
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-slate-700">Programme de formation <span class="text-rose-500">*</span></label>
-                    <Dropdown v-model="bulkIssueForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Sélectionnez un cours..." class="w-full bg-white border-slate-300" filter />
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-slate-700">Modèle de certificat à appliquer <span class="text-rose-500">*</span></label>
-                    <Dropdown v-model="bulkIssueForm.template_id" :options="templates" optionLabel="name" optionValue="id" placeholder="Sélectionnez un design..." class="w-full bg-white border-slate-300" />
-                </div>
-
-                <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm mt-4">
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex gap-4 items-start">
+                    <i class="pi pi-info-circle text-blue-500 text-xl mt-0.5"></i>
                     <div>
-                        <div class="text-sm font-bold text-slate-700">Envoyer les emails de félicitations</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Notifie instantanément les récipiendaires avec leur PDF en pièce jointe.</div>
+                        <h4 class="text-sm font-bold text-blue-900 mb-1">Processus Automatisé</h4>
+                        <p class="text-xs text-blue-700/80 leading-relaxed">Sélectionnez un programme. Le système générera les PDF HD, insérera les variables, hachera les documents sur la blockchain et notifiera les étudiants éligibles en un seul clic.</p>
                     </div>
-                    <InputSwitch v-model="bulkIssueForm.notify_users" />
+                </div>
+
+                <div class="space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="space-y-3">
+                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Programme de Formation <span class="text-red-500">*</span></label>
+                        <Dropdown v-model="bulkIssueForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Rechercher une formation finalisée..." class="w-full bg-slate-50 border-slate-200 rounded-xl" filter>
+                            <template #option="slotProps">
+                                <div class="flex items-center gap-3 py-1">
+                                    <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
+                                    <span class="font-bold text-slate-700">{{ slotProps.option.title }}</span>
+                                </div>
+                            </template>
+                        </Dropdown>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Matrice Visuelle (Modèle) <span class="text-red-500">*</span></label>
+                        <Dropdown v-model="bulkIssueForm.template_id" :options="templates" optionLabel="name" optionValue="id" placeholder="Sélectionner le design du diplôme..." class="w-full bg-slate-50 border-slate-200 rounded-xl">
+                            <template #option="slotProps">
+                                <div class="flex items-center gap-3 py-1">
+                                    <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center" :style="{ backgroundColor: `#${slotProps.option.background_color?.replace('#','')}` }">
+                                        <div class="w-4 h-3 border" :style="{ borderColor: `#${slotProps.option.border_color?.replace('#','')}` }"></div>
+                                    </div>
+                                    <span class="font-bold text-slate-700">{{ slotProps.option.name }}</span>
+                                </div>
+                            </template>
+                        </Dropdown>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-colors cursor-pointer" @click="bulkIssueForm.notify_users = !bulkIssueForm.notify_users">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center"><i class="pi pi-envelope text-lg"></i></div>
+                        <div>
+                            <div class="text-sm font-black text-slate-800">Notification Push & Email</div>
+                            <div class="text-xs text-slate-500 mt-0.5">Envoyer instantanément le diplôme aux étudiants.</div>
+                        </div>
+                    </div>
+                    <InputSwitch v-model="bulkIssueForm.notify_users" @click.stop />
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-end gap-4 p-5 border-t border-slate-200 bg-white">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="bulkIssuanceDialog = false" />
-                    <Button label="Lancer la Génération" icon="pi pi-cog" class="p-button-primary px-6 font-bold shadow-md" @click="submitBulkIssuance" :loading="isSaving" />
+                <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
+                    <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="bulkIssuanceDialog = false" />
+                    <Button label="Lancer l'Ingénierie" icon="pi pi-bolt" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20" @click="submitBulkIssuance" :loading="isSaving" />
                 </div>
             </template>
         </Dialog>
 
-        <!-- ============================================================================== -->
-        <!-- SIDEBAR : STATISTIQUES (ANALYTICS)                                             -->
-        <!-- ============================================================================== -->
-        <Sidebar v-model:visible="analyticsSidebar" position="right" class="w-full md:w-[500px] p-sidebar-custom">
-            <template #header>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-chart-bar text-xl"></i></div>
-                    <h2 class="text-xl font-bold text-slate-800">Analytique d'Émission</h2>
+        <Dialog v-model:visible="revocationDialog" modal header="Protocole de Révocation" :style="{width: '550px'}" class="rounded-3xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+            <div class="p-8 text-center flex flex-col items-center">
+                <div class="w-24 h-24 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-rose-100 relative">
+                    <div class="absolute inset-0 rounded-full border-2 border-rose-500 border-dashed animate-[spin_10s_linear_infinite] opacity-20"></div>
+                    <i class="pi pi-shield-slash text-4xl relative z-10"></i>
+                </div>
+
+                <h3 class="text-2xl font-black text-slate-900 mb-3 tracking-tight">Révocation Irréversible</h3>
+                <p class="text-slate-500 text-sm mb-8 px-4 leading-relaxed">
+                    Cette action détruira la validité de ce certificat sur le vérificateur public de la blockchain. Le fichier PDF restera en possession de l'étudiant mais sera marqué comme <strong>frauduleux ou annulé</strong> lors d'un scan.
+                </p>
+
+                <div class="w-full text-left space-y-3 mb-8 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <label class="block text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                        <i class="pi pi-align-left text-rose-400"></i> Motif Officiel de Révocation <span class="text-rose-500">*</span>
+                    </label>
+                    <Textarea v-model="revocationForm.reason" rows="3" placeholder="Ex: Fraude lors de l'examen final, erreur administrative..." class="w-full rounded-xl p-3 border-slate-200 bg-slate-50 focus:bg-white transition-colors text-sm" />
+                </div>
+
+                <div class="w-full flex items-center justify-between p-5 rounded-2xl border transition-colors cursor-pointer" :class="revocationForm.confirm_action ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-200'" @click="revocationForm.confirm_action = !revocationForm.confirm_action">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full" :class="revocationForm.confirm_action ? 'bg-rose-500 animate-pulse' : 'bg-slate-300'"></div>
+                        <span class="text-sm font-bold transition-colors" :class="revocationForm.confirm_action ? 'text-rose-700' : 'text-slate-600'">Je confirme l'invalidation définitive</span>
+                    </div>
+                    <InputSwitch v-model="revocationForm.confirm_action" @click.stop />
+                </div>
+            </div>
+            <template #footer>
+                <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
+                    <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="revocationDialog = false" />
+                    <Button label="Confirmer la Révocation" icon="pi pi-exclamation-triangle" :disabled="!revocationForm.confirm_action" class="bg-rose-600 hover:bg-rose-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-rose-500/20 transition-all disabled:opacity-50 disabled:hover:bg-rose-600" @click="submitRevocation" />
                 </div>
             </template>
-            <div class="p-6 space-y-8">
-
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Tendances des 6 derniers mois</h4>
-                    <Chart type="line" :data="trendChartData" :options="chartOptions" class="h-48" />
-                </div>
-
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 bg-slate-50">
-                        <h4 class="text-sm font-bold text-slate-800">Top Formations Certifiantes</h4>
-                    </div>
-                    <div class="p-0">
-                        <table class="w-full text-left text-sm">
-                            <tbody class="divide-y divide-slate-100">
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-5 py-3 font-medium text-slate-700">Développement Web Fullstack</td>
-                                    <td class="px-5 py-3 text-right font-bold text-indigo-600">845</td>
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-5 py-3 font-medium text-slate-700">UI/UX Design Avancé</td>
-                                    <td class="px-5 py-3 text-right font-bold text-indigo-600">432</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <Button label="Exporter le rapport d'audit (PDF)" icon="pi pi-download" class="p-button-outlined p-button-secondary w-full font-bold bg-white" />
-            </div>
-        </Sidebar>
+        </Dialog>
 
     </AppLayout>
 </template>
 
 <style scoped>
-/* Scrollbar personnalisée SaaS */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 20px;
-}
-.custom-scrollbar:hover::-webkit-scrollbar-thumb {
-    background-color: #94a3b8;
+/* ========================================================================= */
+/* CSS THEME ROUGE - SUBNETCONGO QUANTUM ENGINE (SAAS ENTERPRISE LEVEL)      */
+/* ========================================================================= */
+
+.SNC-Quantum-Engine {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Pattern sombre pour l'arrière-plan du designer */
-.pattern-grid-dark {
-    background-image: radial-gradient(#334155 1px, transparent 0);
-    background-size: 24px 24px;
-}
-
-/* Customisation PrimeVue DataTable B2B */
-:deep(.p-datatable-custom .p-datatable-thead > tr > th) {
-    background-color: #f8fafc;
-    color: #64748b;
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 1.25rem 1rem;
-    border-bottom: 2px solid #e2e8f0;
-}
-:deep(.p-datatable-custom .p-datatable-tbody > tr) {
-    transition: background-color 0.2s ease;
-}
-:deep(.p-datatable-custom .p-datatable-tbody > tr:hover) {
-    background-color: #f8fafc !important;
-}
-
-/* Custom Timeline (Audit Row Expansion) */
-:deep(.custom-timeline .p-timeline-event-opposite) {
-    display: none;
-}
-:deep(.custom-timeline .p-timeline-event-content) {
-    width: 100%;
-}
-
-/* Overrides UI Forms */
-:deep(.p-inputtext), :deep(.p-dropdown), :deep(.p-inputnumber-input) {
-    border-radius: 0.75rem;
-    border-color: #e2e8f0;
-}
-:deep(.p-inputtext:enabled:focus), :deep(.p-dropdown:not(.p-disabled).p-focus) {
-    border-color: #818cf8;
-    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.1);
-}
-
-/* Accordion Custom for Designer */
-:deep(.custom-accordion .p-accordion-header .p-accordion-header-link) {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    margin-bottom: 0.5rem;
-    font-weight: 800;
-    font-size: 0.875rem;
-    color: #334155;
-}
-:deep(.custom-accordion .p-accordion-content) {
-    padding: 0;
-    border: none;
-    background: transparent;
-}
-/*
-===========================================================================================
-QUANTUM ENGINE : CORE DESIGN SYSTEM STYLES
-===========================================================================================
-*/
-
-/* Arrière-plan infini avec grille de précision */
-.quantum-infinite-grid {
-    background-color: #050608;
+/* Grille infinie avec fondu sur les bords */
+.quantum-grid {
+    background-color: #0c0c0e;
     background-image:
-        linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
-    background-size: 50px 50px;
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: center center;
 }
 
-/* Dégradé de maillage SaaS Quantum */
-.quantum-mesh-gradient {
-    background-image:
-        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-    filter: blur(40px);
+/* Animations des éléments sélectionnées (Respirations subtiles) */
+.quantum-element {
+    transition: box-shadow 0.2s ease, outline 0.1s ease;
 }
-
-/* Effet de grain Quantum (Texture de papier/film) */
-.quantum-grain {
-    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
-    filter: contrast(150%) brightness(1000%);
-}
-
-/*
-===========================================================================================
-CANVAS & DRAG-AND-DROP VISUALS
-===========================================================================================
-*/
-
-.quantum-draggable-container {
-    transition: box-shadow 0.2s ease, transform 0.1s ease;
-    user-select: none;
-}
-
-.quantum-draggable-container:hover {
-    outline: 1px dashed rgba(99, 102, 241, 0.5);
-    outline-offset: 4px;
-}
-
-.quantum-draggable-container.is-selected {
-    z-index: 1000 !important;
-}
-
-.quantum-draggable-container.is-dragging {
+.quantum-element.is-dragging {
     opacity: 0.8;
-    filter: brightness(1.1);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    z-index: 999 !important;
 }
 
-/* Boutons de formatage Quantum */
-.quantum-format-btn {
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+/* Scrollbars personnalisées (Dark Mode Webkit) */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+.custom-scrollbar:hover::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); }
+
+/* Customisation profonde PrimeVue pour s'intégrer au Dark Mode sans ruiner le Light Mode de l'app */
+:deep(.quantum-tabs .p-tabview-nav) { background: transparent; border-bottom: 1px solid rgba(255,255,255,0.05); }
+:deep(.quantum-tabs .p-tabview-nav li .p-tabview-nav-link) { background: transparent; color: rgba(255,255,255,0.4); border: none; border-bottom: 2px solid transparent; padding: 1rem 0; margin: 0 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem; transition: all 0.3s ease; }
+:deep(.quantum-tabs .p-tabview-nav li:hover .p-tabview-nav-link) { color: rgba(255,255,255,0.8); background: transparent; }
+:deep(.quantum-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link) { color: #f87171; border-bottom-color: #ef4444; }
+:deep(.quantum-tabs .p-tabview-panels) { background: transparent; padding: 0; }
+
+/* Sliders Rouges (Volume/Taille) */
+:deep(.red-slider .p-slider-range) { background-color: #ef4444; }
+:deep(.red-slider .p-slider-handle) { border: 2px solid #ef4444; background: #fff; box-shadow: 0 0 10px rgba(239,68,68,0.5); transition: transform 0.1s; }
+:deep(.red-slider .p-slider-handle:hover) { transform: scale(1.2); }
+
+/* Inputs Text/Number Sombres */
+:deep(.q-input-number .p-inputtext) {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+:deep(.q-input-number .p-inputtext:focus) { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
+
+/* Dropdowns Sombres */
+:deep(.q-dropdown) { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; }
+:deep(.q-dropdown:not(.p-disabled).p-focus) { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
+:deep(.q-dropdown .p-dropdown-label) { color: white; font-size: 0.8rem; padding: 0.6rem 0.75rem; }
+:deep(.q-dropdown .p-dropdown-trigger) { color: rgba(255,255,255,0.4); width: 2.5rem; }
+
+/* SelectButtons (Boutons groupés Paysage/Portrait) */
+:deep(.q-select-btn .p-button) {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.6rem 1rem;
     transition: all 0.2s ease;
 }
+:deep(.q-select-btn .p-button:not(.p-disabled):hover) { background-color: rgba(255, 255, 255, 0.05); color: white; }
+:deep(.q-select-btn .p-button.p-highlight) { background-color: #dc2626; color: white; border-color: #dc2626; z-index: 1; }
 
-.quantum-format-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
+/* ColorPicker Overlay Tuning */
+:deep(.p-colorpicker-preview) { border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.2); width: 1.5rem; height: 1.5rem; }
 
-.quantum-format-btn.active {
-    background: #6366f1;
-    color: white;
-    border-color: #818cf8;
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-}
-
-/*
-===========================================================================================
-SIDEBAR TABVIEW CUSTOMIZATION (DARK THEME)
-===========================================================================================
-*/
-
-:deep(.quantum-sidebar-tabs .p-tabview-nav) {
-    background: transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    justify-content: center;
-}
-
-:deep(.quantum-sidebar-tabs .p-tabview-nav li .p-tabview-nav-link) {
-    background: transparent !important;
-    border-color: transparent !important;
-    color: rgba(255, 255, 255, 0.3) !important;
-    padding: 1.5rem 1rem !important;
-    transition: all 0.3s ease;
-}
-
-:deep(.quantum-sidebar-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-    color: #6366f1 !important;
-    border-bottom-color: #6366f1 !important;
-}
-
-:deep(.quantum-sidebar-tabs .p-tabview-panels) {
-    background: transparent !important;
-    padding: 0;
-}
-
-/*
-===========================================================================================
-QUANTUM PROPERTY INPUTS (Sliders, SelectButtons, Badges)
-===========================================================================================
-*/
-
-.quantum-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 900;
-    color: rgba(255, 255, 255, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 0.75rem;
-}
-
-.quantum-asset-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1.25rem;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.quantum-asset-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: #6366f1;
-    transform: translateY(-2px);
-}
-
-.quantum-upload-zone {
-    background: rgba(255, 255, 255, 0.02);
-    border: 2px dashed rgba(255, 255, 255, 0.05);
-    border-radius: 1.5rem;
-    padding: 2rem 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.quantum-upload-zone:hover {
-    background: rgba(99, 102, 241, 0.05);
-    border-color: #6366f1;
-}
-
-/* Sliders Néons */
-:deep(.quantum-slider-xs .p-slider-range) {
-    background: #6366f1 !important;
-}
-
-:deep(.quantum-slider-xs .p-slider-handle) {
-    background: #ffffff !important;
-    border: 2px solid #6366f1 !important;
-    width: 14px !important;
-    height: 14px !important;
-    margin-top: -5px !important;
-}
-
-/*
-===========================================================================================
-LAYER LIST (CALQUES)
-===========================================================================================
-*/
-
-.quantum-layer-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.01);
-    border: 1px solid transparent;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.quantum-layer-item:hover {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.quantum-layer-item.is-active {
-    background: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.3);
-}
-
-/* Bouton Quantum avec lueur (glow) */
-.quantum-btn-glow {
-    box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
-}
-
-.quantum-btn-glow:hover {
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
-}
-
-/* Animation de scan/pulsation pour le QR */
-@keyframes quantum-pulse {
-    0% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.5; }
-}
-
-.quantum-badge-xs {
-    font-size: 8px !important;
-    padding: 0.15rem 0.4rem !important;
-    font-weight: 900 !important;
-}
+/* Utilitaires spécifiques */
+.cursor-copy { cursor: copy; }
 </style>

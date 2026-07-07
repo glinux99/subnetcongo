@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Certificat - {{ $certificate->certificate_code }}</title>
+    <title>Certificat - {{ $certificate->certificate_code ?? 'Preview' }}</title>
 
     @php
+        // Définir la variable $template à partir de l'objet $certificate
+        $template = $certificate->template;
+
         /**
-         * 1. PARSING ET NETTOYAGE DES DONNÉES
+         * =========================================================================
+         * 1. PARSING SÉCURISÉ DU TEMPLATE (QUANTUM ENGINE)
+         * =========================================================================
          */
+
         if (!function_exists('safeColor')) {
             function safeColor($color, $default = '#000000') {
                 if (empty($color)) return $default;
@@ -16,292 +22,218 @@
             }
         }
 
-        // Configuration du Template (Styles globaux)
-        $bgColor     = safeColor($template->background_color ?? '#ffffff');
-        $bgOpacity   = ($template->bg_opacity ?? 100) / 100;
-        $borderColor = safeColor($template->border_color ?? '#c5a059');
-        $textColor   = safeColor($template->text_color ?? '#1e293b');
-        $borderWidth = $template->border_width ?? 20;
+        // Configuration Globale du document
         $orientation = $template->orientation ?? 'landscape';
+        $canvasWidth  = $orientation === 'landscape' ? 1120 : 792;
+        $canvasHeight = $orientation === 'landscape' ? 792 : 1120;
 
-        // Polices
-        $primaryFont = $template->primary_font ?? 'Helvetica';
-        $accentFont  = $template->accent_font ?? 'Times-Bold';
+        $bgColor     = safeColor($template->background_color ?? '#ffffff');
+        $borderWidth = isset($template->border_width) ? (int)$template->border_width : 0;
+        $borderColor = safeColor($template->border_color ?? '#dc2626');
 
-        // Extraction de la configuration des éléments (JSON decodé en array)
-        // On fusionne avec des valeurs par défaut au cas où
-        $elements = $config ?? [];
+        /**
+         * DÉCODAGE DOUBLE DU JSON (Correction de l'échappement BDD)
+         */
+        $elements = [];
+        $rawElements = $template->config ?? '[]';
 
-        $title    = $elements['title']    ?? ['text' => 'CERTIFICAT', 'size' => 40, 'top' => 25, 'letter_spacing' => 0, 'align' => 'center'];
-        $subtitle = $elements['subtitle'] ?? ['text' => 'Décerné à', 'size' => 18, 'top' => 40, 'letter_spacing' => 0];
-        $body     = $elements['body']     ?? ['text' => 'Pour la réussite de', 'size' => 16, 'top' => 65, 'letter_spacing' => 0];
+        if (is_string($rawElements)) {
+            $elements = json_decode($rawElements, true);
+            // Si Laravel a échappé le JSON (la chaîne commence par "[{"), on refait un décode
+            if (is_string($elements)) {
+                $elements = json_decode($elements, true);
+            }
+        } else if (is_array($rawElements)) {
+            $elements = $rawElements;
+        }
 
-        // Données dynamiques
-        $studentName = $certificate->metadata['student_name_at_issue'] ?? ($user->name ?? 'Étudiant');
-        $courseTitle = $certificate->metadata['course_title_at_issue'] ?? ($course->title ?? 'Formation');
+        if (!is_array($elements)) {
+            $elements = [];
+        }
+
+        /**
+         * =========================================================================
+         * 2. SYSTÈME DE VARIABLES DYNAMIQUES (Remplacement de {{...}})
+         * =========================================================================
+         */
+        $metadata = [];
+        if (isset($certificate->metadata)) {
+            if (is_string($certificate->metadata)) {
+                $metadata = json_decode($certificate->metadata, true) ?? [];
+            } elseif (is_array($certificate->metadata)) {
+                $metadata = $certificate->metadata;
+            }
+        }
+
+        $vars = [
+            '{{NOM_APPRENANT}}'  => $metadata['student_name_at_issue'] ?? ($certificate->user->name ?? 'Nom de l\'Apprenant'),
+            '{{NOM_FORMATION}}'  => $metadata['course_title_at_issue'] ?? ($certificate->course->title ?? 'Titre de la Formation'),
+            '{{CERTIFICATE_ID}}' => $certificate->certificate_code ?? 'XXXX-XXXX-XXXX',
+            '{{DATE}}'           => isset($certificate->issued_at) ? \Carbon\Carbon::parse($certificate->issued_at)->format('d/m/Y') : date('d/m/Y'),
+            '{{MENTION}}'        => $metadata['mention'] ?? 'Excellence'
+        ];
+
+        function parseVariables($text, $vars) {
+            if(empty($text)) return '';
+            return str_replace(array_keys($vars), array_values($vars), $text);
+        }
     @endphp
 
     <style>
         /**
-         * 2. CONFIGURATION DE LA PAGE
+         * =========================================================================
+         * 3. CSS DOMPDF (MAPPÉ SUR LES PIXELS DU FRONTEND)
+         * =========================================================================
          */
         @page {
+            size: {{ $canvasWidth }}px {{ $canvasHeight }}px;
             margin: 0;
-            size: a4 {{ $orientation }};
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: '{{ $primaryFont }}', sans-serif;
-            background-color: #FFFFFF; /* Fond de base pour DomPDF */
-        }
-
-        /* Calque de couleur de fond avec opacité */
-        .bg-color-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            width: {{ $canvasWidth }}px;
+            height: {{ $canvasHeight }}px;
             background-color: {{ $bgColor }};
-            opacity: {{ $bgOpacity }};
-            z-index: -10;
-        }
-
-        /* Image de fond (Filigrane) */
-        .background-image-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -20;
-            opacity: {{ ($template->background_opacity ?? 20) / 100 }};
-        }
-        .background-image-layer img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .certificate-wrapper {
             position: relative;
+            overflow: hidden;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+        }
+
+        /* Image de Fond */
+        .bg-image {
+            position: absolute;
+            top: 0; left: 0;
+            width: {{ $canvasWidth }}px;
+            height: {{ $canvasHeight }}px;
+            z-index: 1;
+            opacity: {{ isset($template->bg_opacity) ? ($template->bg_opacity / 100) : 1 }};
+        }
+
+        /* Bordure master */
+        .master-border {
+            position: absolute;
+            top: 30px; left: 30px;
+            width: {{ $canvasWidth - 60 - ($borderWidth * 2) }}px;
+            height: {{ $canvasHeight - 60 - ($borderWidth * 2) }}px;
+            border: {{ $borderWidth }}px solid {{ $borderColor }};
+            z-index: 5;
+            box-sizing: border-box;
+        }
+
+        /* Conteneur Absolu (Drag & Drop) */
+        .quantum-element {
+            position: absolute;
+            box-sizing: border-box;
+        }
+
+        .quantum-element img {
             width: 100%;
             height: 100%;
-            box-sizing: border-box;
         }
-
-        /* 3. BORDURES */
-        .main-border {
-            position: absolute;
-            top: 30px; left: 30px; right: 30px; bottom: 30px;
-            border: {{ $borderWidth }}px solid {{ $borderColor }};
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        /* 4. LOGO */
-        .logo-box {
-            position: absolute;
-            top: {{ $template->logo_top ?? 10 }}%;
-            width: 100%;
-            text-align: center;
-            z-index: 50;
-        }
-        .logo-box img {
-            width: {{ $template->logo_scale ?? 15 }}%;
-            max-width: 300px;
-        }
-
-        /* 5. TEXTES DYNAMIQUES (Positions basées sur le designer) */
-        .text-container {
-            position: absolute;
-            width: 100%;
-            text-align: {{ $title['align'] ?? 'center' }};
-            left: 0;
-            z-index: 60;
-            padding: 0 10%;
-            box-sizing: border-box;
-        }
-
-        .title-style {
-            font-family: '{{ $accentFont }}', serif;
-            font-size: {{ $title['size'] }}px;
-            color: {{ safeColor($title['color'] ?? $textColor) }};
-            letter-spacing: {{ $title['letter_spacing'] }}px;
-            text-transform: uppercase;
-        }
-
-        .subtitle-style {
-            font-size: {{ $subtitle['size'] }}px;
-            color: {{ safeColor($subtitle['color'] ?? $textColor) }};
-            letter-spacing: {{ $subtitle['letter_spacing'] ?? 0 }}px;
-            font-weight: bold;
-        }
-
-        .body-style {
-            font-size: {{ $body['size'] }}px;
-            color: {{ safeColor($body['color'] ?? $textColor) }};
-            line-height: 1.6;
-        }
-
-        .recipient-name {
-            position: absolute;
-            top: 48%;
-            width: 100%;
-            text-align: center;
-            font-size: 54px;
-            font-weight: 900;
-            font-family: '{{ $accentFont }}', serif;
-            text-transform: uppercase;
-            color: {{ $textColor }};
-            z-index: 70;
-        }
-
-        .course-highlight {
-            margin-top: 15px;
-            font-weight: 900;
-            color: {{ $borderColor }};
-            font-style: italic;
-            font-size: {{ $body['size'] + 4 }}px;
-        }
-
-        /* 6. FOOTER (Signatures, QR, Sceau) */
-        .footer-section {
-            position: absolute;
-            bottom: 60px;
-            left: 80px;
-            right: 80px;
-            height: 140px;
-            z-index: 80;
-        }
-
-        .footer-column {
-            float: left;
-            width: 33.33%;
-            text-align: center;
-        }
-
-        .signature-wrap {
-            height: 80px;
-            vertical-align: bottom;
-            border-bottom: 2px solid {{ $textColor }};
-            margin-bottom: 10px;
-        }
-
-        .signature-img {
-            max-height: 70px;
-            max-width: 200px;
-        }
-
-        .qr-wrap img {
-            width: 90px;
-            height: 90px;
-            border: 3px solid {{ $borderColor }};
-            background-color: white;
-            padding: 3px;
-        }
-
-        .seal-wrap {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto;
-            border: 5px double {{ $borderColor }};
-            border-radius: 50%;
-            background: white;
-            line-height: 90px;
-        }
-
-        .label-footer {
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: {{ $textColor }};
-            letter-spacing: 1px;
-        }
-
-        .clear { clear: both; }
     </style>
 </head>
 <body>
 
-    <div class="certificate-wrapper">
+    <!-- 1. IMAGE DE FOND GLOBALE -->
+    @if(isset($background_image) && !empty($background_image))
+        <img src="{{ $background_image }}" class="bg-image" alt="Background">
+    @endif
 
-        <!-- CALQUES DE FOND -->
-        @if(isset($background_image) && $background_image)
-            <div class="background-image-layer">
-                <img src="{{ $background_image }}">
-            </div>
-        @endif
-        <div class="bg-color-layer"></div>
+    <!-- 2. BORDURE DÉCORATIVE -->
+    @if($borderWidth > 0)
+        <div class="master-border"></div>
+    @endif
 
-        <!-- BORDURE -->
-        <div class="main-border"></div>
-
-        <!-- LOGO -->
-        @if($template->show_logo && isset($logo))
-            <div class="logo-box">
-                <img src="{{ $logo }}">
-            </div>
-        @endif
-
-        <!-- TITRE -->
-        <div class="text-container" style="top: {{ $title['top'] }}%;">
-            <div class="title-style">{{ $title['text'] }}</div>
+    <!-- ALERTE SI LE DÉCODAGE JSON ÉCHOUE -->
+    @if(empty($elements))
+        <div style="position: absolute; top: 45%; left: 0; width: 100%; text-align: center; color: red; font-size: 24px; font-weight: bold; z-index: 999;">
+            MODELE VIERGE OU ERREUR DE DONNÉES.<br>
+            <span style="font-size: 16px; color: black;">Assurez-vous d'avoir sauvegardé les éléments dans le Studio.</span>
         </div>
+    @endif
 
-        <!-- SOUS-TITRE -->
-        <div class="text-container" style="top: {{ $subtitle['top'] }}%;">
-            <div class="subtitle-style">{{ $subtitle['text'] }}</div>
-        </div>
+    <!-- 3. BOUCLE DE RENDU DU STUDIO (LE COEUR DU SYSTÈME) -->
+    @foreach($elements as $index => $el)
+        @php
+            // Gestion des coordonnées et des tailles (on gère le "null" de la BDD)
+            $x = isset($el['x']) ? (float)$el['x'] : 0;
+            $y = isset($el['y']) ? (float)$el['y'] : 0;
 
-        <!-- NOM DE L'ÉTUDIANT (POSITION FIXE CENTRALE) -->
-        <div class="recipient-name">
-            <span style="border-bottom: 4px solid {{ $borderColor }}; padding-bottom: 5px;">
-                {{ $studentName }}
-            </span>
-        </div>
+            $w = (isset($el['width']) && $el['width'] !== null) ? $el['width'] . 'px' : '100%';
+            $h = (isset($el['height']) && $el['height'] !== null) ? $el['height'] . 'px' : 'auto';
 
-        <!-- CORPS DU TEXTE -->
-        <div class="text-container" style="top: {{ $body['top'] }}%;">
-            <div class="body-style">
-                {{ $body['text'] }}
-                <div class="course-highlight">{{ $courseTitle }}</div>
-            </div>
-        </div>
+            $opacity = isset($el['opacity']) ? ($el['opacity'] / 100) : 1;
+            $zIndex  = 10 + $index;
 
-        <!-- PIED DE PAGE -->
-        <div class="footer-section">
+            /**
+             * LOGIQUE DES IMAGES (Logo, Signatures, Images Custom)
+             * Le front peut envoyer l'image directement en Base64 dans "content"
+             */
+            $imgContent = null;
+            if (in_array($el['type'], ['logo', 'signature', 'image'])) {
+                // 1. On cherche d'abord si l'image est dans le JSON (Glissée via le Studio)
+                if (!empty($el['content']) && strpos($el['content'], 'data:image') === 0) {
+                    $imgContent = $el['content'];
+                }
+                // 2. Sinon, on utilise l'upload classique du backend comme solution de secours
+                elseif ($el['type'] === 'logo' && !empty($logo)) {
+                    $imgContent = $logo;
+                }
+                elseif ($el['type'] === 'signature' && !empty($signature)) {
+                    $imgContent = $signature;
+                }
+            }
+        @endphp
 
-            <!-- Signature -->
-            <div class="footer-column">
-                @if($template->show_signature)
-                    <div class="signature-wrap">
-                        @if(isset($signature))
-                            <img src="{{ $signature }}" class="signature-img">
-                        @endif
-                    </div>
-                    <div class="label-footer">Directeur de l'Académie</div>
-                @endif
-            </div>
+        <!-- Le conteneur du calque -->
+        <div class="quantum-element" style="left: {{ $x }}px; top: {{ $y }}px; width: {{ $w }}; height: {{ $h }}; z-index: {{ $zIndex }}; opacity: {{ $opacity }};">
 
-            <!-- Sceau Central -->
-            <div class="footer-column">
-                <div class="seal-wrap">
-                   <span style="font-size: 40px; color: {{ $borderColor }}">★</span>
+            <!-- ========= RENDU : TEXTE ========= -->
+            @if($el['type'] === 'text')
+                @php
+                    $style = $el['style'] ?? [];
+                    $fs    = $style['fontSize'] ?? 16;
+                    $color = safeColor($style['color'] ?? '#000000');
+                    $ff    = $style['fontFamily'] ?? 'Helvetica';
+                    $fw    = $style['fontWeight'] ?? 'normal';
+                    $fst   = $style['fontStyle'] ?? 'normal';
+                    $align = $style['textAlign'] ?? 'left';
+                    $ls    = $style['letterSpacing'] ?? 0;
+                    $lh    = $style['lineHeight'] ?? 1.2;
+                    $decor = $style['textDecoration'] ?? 'none';
+
+                    // On remplace les {{VARIABLES}}
+                    $content = parseVariables($el['content'] ?? '', $vars);
+                @endphp
+                <div style="font-size: {{ $fs }}px; color: {{ $color }}; font-family: '{{ $ff }}', sans-serif; font-weight: {{ $fw }}; font-style: {{ $fst }}; text-align: {{ $align }}; letter-spacing: {{ $ls }}px; text-decoration: {{ $decor }}; line-height: {{ $lh }};">
+                    {!! nl2br(e($content)) !!}
                 </div>
-                <div class="label-footer" style="margin-top: 10px;">Sceau d'Excellence</div>
-            </div>
 
-            <!-- QR Code -->
-            <div class="footer-column">
-                @if($template->show_qr && isset($qr_code))
-                    <div class="qr-wrap">
-                        <img src="{{ $qr_code }}">
-                    </div>
-                    <div class="label-footer" style="font-size: 8px; margin-top: 5px;">Vérification : {{ $certificate->certificate_code }}</div>
+            <!-- ========= RENDU : IMAGES, LOGO, SIGNATURE ========= -->
+            @elseif(in_array($el['type'], ['logo', 'signature', 'image']))
+                @if(!empty($imgContent))
+                    <img src="{{ $imgContent }}">
                 @endif
-            </div>
 
-            <div class="clear"></div>
+            <!-- ========= RENDU : QR CODE ========= -->
+            @elseif($el['type'] === 'qr')
+                @if(isset($qr_code) && !empty($qr_code))
+                    <div style="text-align: center;">
+                        <div style="background-color: #ffffff; padding: 5px; box-sizing: border-box; display: inline-block; width: 100%;">
+                            <img src="{{ $qr_code }}" style="width: 100%; height: auto; display: block;">
+                        </div>
+                        <div style="font-family: 'Helvetica', sans-serif; font-size: 8px; color: #333; margin-top: 4px; letter-spacing: 0.5px;">
+                            ID: {{ $certificate->certificate_code }}
+                        </div>
+                    </div>
+                @endif
+
+            @endif
+
         </div>
-
-    </div>
+    @endforeach
 
 </body>
 </html>
