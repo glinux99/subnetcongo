@@ -390,6 +390,49 @@ class CertificateController extends Controller
     }
 
     /**
+     * Met à jour un certificat existant.
+     * Permet de modifier le score, le statut, la date d'expiration, etc.
+     */
+    public function update(Request $request, Certificate $certificate)
+    {
+              $validated = $request->validate([
+            'score'       => 'nullable|numeric|min:0|max:100',
+            'status'      => ['required', Rule::in([self::STATUS_ACTIVE, self::STATUS_REVOKED, self::STATUS_EXPIRED, self::STATUS_DRAFT])],
+            'expires_at'  => 'nullable|date|after_or_equal:issued_at',
+            'metadata'    => 'nullable|array', // Pour des métadonnées additionnelles
+            'revocation_reason' => 'nullable|string|min:10', // Requis si le statut est REVOKED
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $oldValues = $certificate->getOriginal(); // Capture les anciennes valeurs pour l'audit
+
+            $certificate->fill($validated);
+
+            // Logique spécifique pour le changement de statut vers REVOKED
+            if ($certificate->isDirty('status') && $certificate->status === self::STATUS_REVOKED) {
+                if (empty($validated['revocation_reason'])) {
+                    return back()->with('error', 'Une raison est requise pour révoquer un certificat via la mise à jour.');
+                }
+                $certificate->revoked_at = now();
+                $certificate->revoked_by = Auth::id() ?? 1;
+            }
+
+            $certificate->save();
+
+            $this->logActivity('CERTIFICATE_UPDATED', $certificate, $oldValues, $certificate->getChanges());
+            DB::commit();
+
+            return back()->with('success', "Le certificat #{$certificate->certificate_code} a été mis à jour avec succès.");
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("SNC_CERT_UPDATE_FAIL: " . $e->getMessage());
+            return $e;
+            return back()->with('error', "Erreur critique lors de la mise à jour : " . $e->getMessage());
+        }
+    }
+
+    /**
      * Émission massive pour toute une cohorte (ex: Fin de Bootcamp).
      */
     public function bulkIssue(Request $request)
@@ -565,7 +608,7 @@ class CertificateController extends Controller
 
         // 1. Cas : Hash invalide ou certificat inexistant
         if (!$certificate) {
-            return Inertia::render('Public/VerifyCertificate', ['status' => 'invalid', 'message' => 'Ce hash ne correspond à aucun document valide dans notre registre.']);
+            return Inertia::render('VerifyCertificate', ['status' => 'invalid', 'message' => 'Ce hash ne correspond à aucun document valide dans notre registre.']);
         }
 
         // 2. Enregistrement de la tentative de vérification (Audit pour statistiques)
@@ -577,7 +620,7 @@ class CertificateController extends Controller
         ]);
 
         // 3. Formatage de la réponse publique
-        return Inertia::render('Public/VerifyCertificate', [
+        return Inertia::render('VerifyCertificate', [
             'status'      => 'valid',
             'certificate' => [
                 'id'           => $certificate->certificate_code,

@@ -43,6 +43,7 @@ import InputNumber from 'primevue/inputnumber';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Textarea from 'primevue/textarea';
+import Calendar from 'primevue/calendar';
 
 const props = defineProps({
     certificates: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
@@ -65,6 +66,7 @@ const activeMainTab = ref('log');
 const designerDialog = ref(false);
 const revocationDialog = ref(false);
 const bulkIssuanceDialog = ref(false);
+const expirationDialog = ref(false);
 const isSaving = ref(false);
 
 // Refs pour les inputs File Globaux (Fond, Logo Officiel, Signature Officielle)
@@ -477,8 +479,9 @@ const deleteTemplate = (id) => {
 };
 
 // ... [Logique d'Émission Bulk & Révocation] ...
-const bulkIssueForm = useForm({ course_id: null, template_id: null, notify_users: true });
+const bulkIssueForm = useForm({ course_id: null, template_id: null, notify_users: true, expires_at: null });
 const revocationForm = useForm({ id: null, reason: '', confirm_action: false });
+const expirationForm = useForm({ id: null, expires_at: null, status: null });
 
 const openBulkIssuance = () => { bulkIssueForm.reset(); bulkIssuanceDialog.value = true; };
 const submitBulkIssuance = () => {
@@ -492,9 +495,57 @@ const submitBulkIssuance = () => {
 
 const handleRevocation = (cert) => { revocationForm.reset(); revocationForm.id = cert.id; revocationDialog.value = true; };
 const submitRevocation = () => {
-    if (!revocationForm.reason || !revocationForm.confirm_action) return;
-    router.post(route('certificates.revoke', { certificate: revocationForm.id }), { reason: revocationForm.reason, _method: 'DELETE' }, {
-        onSuccess: () => { toast.add({ severity: 'warn', summary: 'Révoqué' }); revocationDialog.value = false; }
+    if (!revocationForm.reason || !revocationForm.confirm_action) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez fournir une raison et confirmer l\'action.', life: 3000 });
+        return;
+    }
+    router.put(route('certificates.update', { certificate: revocationForm.id }), {
+        status: 'Revoked',
+        revocation_reason: revocationForm.reason,
+    }, {
+        onSuccess: () => {
+            toast.add({ severity: 'warn', summary: 'Révoqué', detail: 'Le certificat a été révoqué avec succès.' });
+            revocationDialog.value = false;
+        },
+        onError: (errors) => {
+            let detail = 'Une erreur est survenue lors de la révocation.';
+            if (errors.revocation_reason) {
+                detail = errors.revocation_reason;
+            } else if (errors.status) {
+                detail = errors.status;
+            } else if (Object.keys(errors).length > 0) {
+                detail = Object.values(errors).join(' ');
+            }
+            toast.add({ severity: 'error', summary: 'Erreur', detail: detail, life: 5000 });
+        }
+    });
+};
+
+const openExpirationDialog = (cert) => {
+    expirationForm.reset();
+    expirationForm.id = cert.id;
+    expirationForm.status = cert.status;
+    expirationForm.expires_at = cert.expires_at ? new Date(cert.expires_at) : null;
+    expirationDialog.value = true;
+};
+
+const submitExpiration = () => {
+    const expirationDate = new Date(expirationForm.expires_at).setHours(0,0,0,0);
+    const today = new Date().setHours(0,0,0,0);
+    expirationForm.status =expirationDate <= today ? 'Expired' : "Active";
+    if (!expirationForm.id || !expirationForm.expires_at) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez sélectionner une date.', life: 3000 });
+        return;
+    }
+    router.put(route('certificates.update', { certificate: expirationForm.id }), expirationForm, {
+        onSuccess: () => {
+            toast.add({ severity: 'success', summary: 'Succès', detail: 'Date d\'expiration définie.' });
+            expirationDialog.value = false;
+        },
+        onError: (errors) => {
+            const errorDetail = Object.values(errors).flat().join(' ; ') || 'Une erreur est survenue.';
+            toast.add({ severity: 'error', summary: 'Erreur', detail: errorDetail, life: 5000 });
+        }
     });
 };
 
@@ -679,6 +730,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div class="flex justify-end gap-2">
                                     <Button icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100 w-10 h-10" v-tooltip.top="'Télécharger PDF HD'" @click="downloadPdf(data.id)" />
                                     <Button icon="pi pi-share-alt" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600 w-10 h-10" v-tooltip.top="'Lien Public / Partage'" @click="openVerificationLink(data.verification_hash)" />
+                                    <Button v-if="data.status === 'Active'" icon="pi pi-calendar-times" class="p-button-text p-button-warning p-button-rounded hover:bg-amber-50 hover:text-amber-600 w-10 h-10" v-tooltip.top="'Définir une date d\'expiration'" @click="openExpirationDialog(data)" />
                                     <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50 hover:text-rose-600 w-10 h-10" v-tooltip.top="'Révoquer le diplôme'" @click="handleRevocation(data)" />
                                 </div>
                             </template>
@@ -1427,6 +1479,11 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
 
                     <div class="space-y-3">
+                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Date d'expiration (Optionnel)</label>
+                        <Calendar v-model="bulkIssueForm.expires_at" dateFormat="dd/mm/yy" showIcon class="w-full" inputClass="rounded-xl bg-slate-50 border-slate-200" placeholder="Laissez vide pour aucune expiration" />
+                    </div>
+
+                    <div class="space-y-3">
                         <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Matrice Visuelle (Modèle) <span class="text-red-500">*</span></label>
                         <Dropdown v-model="bulkIssueForm.template_id" :options="templates" optionLabel="name" optionValue="id" placeholder="Sélectionner le design du diplôme..." class="w-full bg-slate-50 border-slate-200 rounded-xl">
                             <template #option="slotProps">
@@ -1456,6 +1513,31 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
                     <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="bulkIssuanceDialog = false" />
                     <Button label="Lancer l'Ingénierie" icon="pi pi-bolt" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20" @click="submitBulkIssuance" :loading="isSaving" />
+                </div>
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="expirationDialog" modal header="Définir une Date d'Expiration" :style="{width: '450px'}" class="rounded-3xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+            <div class="p-8 space-y-6">
+                <div class="flex items-start gap-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                    <i class="pi pi-exclamation-triangle text-amber-500 text-xl mt-1"></i>
+                    <div>
+                        <h4 class="font-bold text-amber-900 text-sm mb-1">Impact de l'action</h4>
+                        <p class="text-xs text-amber-800 leading-relaxed">
+                            Une fois la date d'expiration passée, le certificat sera marqué comme "Expiré" sur le vérificateur public. Cette action est réversible en supprimant la date.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="expiration-date" class="text-xs font-black text-slate-800 uppercase tracking-widest">Date d'expiration</label>
+                    <Calendar id="expiration-date" v-model="expirationForm.expires_at" dateFormat="dd/mm/yy" showIcon class="w-full" inputClass="rounded-xl bg-white border-slate-200" />
+                </div>
+            </div>
+            <template #footer>
+                <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
+                    <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="expirationDialog = false" />
+                    <Button label="Confirmer l'Expiration" icon="pi pi-check" class="bg-amber-500 hover:bg-amber-600 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-amber-500/20" @click="submitExpiration" :loading="expirationForm.processing" />
                 </div>
             </template>
         </Dialog>
