@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Exam;
 use App\Models\Question;
 use App\Models\ExamAttempt;
+use App\Models\Submission;
 use App\Models\ExamResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -327,6 +328,21 @@ public function index()
                 'is_passed' => $hasManualGrading ? false : $isPassed, // On ne peut pas réussir tant que la correction manuelle n'est pas faite
                 'passed_at' => !$hasManualGrading && $isPassed ? now() : null,
                 'feedback' => $hasManualGrading ? "Votre examen a été soumis et est en attente de correction pour les questions ouvertes." : ($isPassed ? "Félicitations, vous avez réussi !" : "Vous n'avez pas atteint le seuil de réussite."),
+            ]);
+
+            // NOUVEAU : Créer une soumission pour le relevé de notes (StudentReportController)
+            Submission::create([
+                'user_id' => $attempt->user_id,
+                'course_id' => $exam->course_id,
+                'assignment_id' => $exam->id, // L'examen est l'équivalent du devoir ici
+                'status' => $hasManualGrading ? 'pending_review' : 'graded',
+                'content' => json_encode($userAnswers),
+                'submitted_at' => $attempt->completed_at,
+                'is_graded' => !$hasManualGrading,
+                'grade' => $scorePercentage,
+                'feedback_text' => $result->feedback,
+                'graded_at' => $hasManualGrading ? null : now(),
+                'graded_by' => $hasManualGrading ? null : 1, // ID de l'utilisateur "Système" pour l'auto-correction
             ]);
 
             return redirect()->route('exams.results', $result->id);
