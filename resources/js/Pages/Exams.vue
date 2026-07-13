@@ -664,7 +664,7 @@ onMounted(() => {
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
                                 <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> Durée : <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
-                                <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-emerald-500"></i> Validation : <strong class="text-emerald-700">{{ data.passing_score }}%</strong></span>
+                                <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-emerald-500"></i> Validation : <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
                             </div>
                         </template>
                     </Column>

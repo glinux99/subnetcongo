@@ -132,10 +132,10 @@ const lineChartOptions = {
 
 // 2. Graphique Radar des compétences (Nouveau)
 const radarChartData = computed(() => ({
-    labels: props.skillsData?.labels || ['Prog.', 'Réseau', 'Sécurité', 'Cloud', 'BDD', 'Web'],
+    labels: props.skillsData?.labels || [],
     datasets: [{
         label: 'Niveau de maîtrise',
-        data: props.skillsData?.scores || [80, 65, 90, 75, 85, 95],
+        data: props.skillsData?.scores || [],
         backgroundColor: 'rgba(16, 185, 129, 0.2)', // Emerald 500
         borderColor: '#10B981',
         pointBackgroundColor: '#10B981',

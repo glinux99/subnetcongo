@@ -313,12 +313,12 @@ const quantumFilterStyle = (filters) => {
 
 // Formater le texte (Gras, Italique, Souligné)
 const toggleTextStyle = (el, prop, activeVal, defaultVal) => {
-    if (el.type !== 'text') return;
+    if (!el || el.type !== 'text') return;
     el.style[prop] = el.style[prop] === activeVal ? defaultVal : activeVal;
 };
 
 const handleTextEdit = (event, el) => {
-    el.content = event.target.innerText;
+    el.content = event.target.innerHTML;
 };
 
 // ======================================================================================
@@ -1038,7 +1038,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <div class="w-full h-full relative overflow-visible flex items-center justify-center">
 
                                 <!-- Render: TEXT -->
-                                <div v-if="el.type === 'text'" class="w-full h-full outline-none whitespace-pre-wrap select-text break-words" contenteditable="true" @input="handleTextEdit($event, el)" :style="quantumTextStyle(el)" spellcheck="false" title="Double-cliquez pour éditer">{{ el.content }}</div>
+                                <div v-if="el.type === 'text'" class="w-full h-full outline-none whitespace-pre-wrap select-text break-words" contenteditable="true" @blur="handleTextEdit($event, el)" :style="quantumTextStyle(el)" spellcheck="false" title="Double-cliquez pour éditer" v-html="el.content"></div>
 
                                 <!-- Render: LOGO -->
                                 <div v-if="el.type === 'logo'" class="w-full h-full pointer-events-none flex items-center justify-center">

@@ -147,6 +147,9 @@ const savingCategory = ref(false);
 
 const openCategoryDialog = () => {
     categoryForm.reset();
+    if (serverFilters.category_id) {
+        categoryForm.parent_id = serverFilters.category_id;
+    }
     categoryDialog.value = true;
 };
 
@@ -236,6 +239,9 @@ const openNew = () => {
     courseForm.id = null;
     courseForm.sections = [];
     courseForm.seo_metadata = { title: '', description: '', keywords: '', og_image: null };
+    if (serverFilters.category_id) {
+        courseForm.category_id = serverFilters.category_id;
+    }
     activeEditorTab.value = 'general';
     lastSavedAt.value = null;
     courseDialog.value = true;
@@ -362,17 +368,123 @@ const confirmArchive = (id) => {
     });
 };
 
-const confirmBulkDelete = () => {
+const confirmBulkArchive = () => {
     confirm.require({
-        message: `Vous êtes sur le point de supprimer DÉFINITIVEMENT ${selectedCourses.value.length} cours. Cette action est irréversible. Continuer ?`,
-        header: 'Suppression destructrice en masse',
-        icon: 'pi pi-ban',
-        acceptClass: 'p-button-danger',
-        acceptLabel: 'Supprimer définitivement',
+        message: `Vous êtes sur le point d'archiver ${selectedCourses.value.length} cours. Confirmer ?`,
+        header: 'Archivage en masse',
+        icon: 'pi pi-box',
+        acceptClass: 'p-button-warning',
+        acceptLabel: 'Oui, archiver',
         rejectLabel: 'Annuler',
         accept: () => {
-            toast.add({ severity: 'success', summary: 'Opération réussie', detail: 'Les cours sélectionnés ont été purgés.', life: 3000 });
-            selectedCourses.value = [];
+            const courseIds = selectedCourses.value.map(c => c.id);
+            router.post(route('courses.bulk-destroy'), {
+                ids: courseIds
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.add({ severity: 'success', summary: 'Opération réussie', detail: 'Les cours sélectionnés ont été archivés.', life: 3000 });
+                    selectedCourses.value = [];
+                }
+            });
+        }
+    });
+};
+
+const confirmBulkRestore = () => {
+    confirm.require({
+        message: `Vous êtes sur le point de restaurer ${selectedCourses.value.length} cours. Ils seront placés dans les brouillons. Confirmer ?`,
+        header: 'Restauration en masse',
+        icon: 'pi pi-undo',
+        acceptClass: 'p-button-success',
+        acceptLabel: 'Oui, restaurer',
+        rejectLabel: 'Annuler',
+        accept: () => {
+            const courseIds = selectedCourses.value.map(c => c.id);
+            router.post(route('courses.bulk-restore'), {
+                ids: courseIds
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.add({ severity: 'success', summary: 'Opération réussie', detail: 'Les cours sélectionnés ont été restaurés.', life: 3000 });
+                    selectedCourses.value = [];
+                }
+            });
+        }
+    });
+};
+
+const cloneCourse = (course) => {
+    confirm.require({
+        message: `Voulez-vous vraiment cloner le cours "${course.title}" ? Une copie sera créée en tant que brouillon.`,
+        header: 'Clonage de cours',
+        icon: 'pi pi-copy',
+        acceptClass: 'p-button-info',
+        acceptLabel: 'Oui, cloner',
+        rejectLabel: 'Annuler',
+        accept: () => {
+            router.post(route('courses.duplicate', course.id), {}, {
+                preserveScroll: true,
+                onSuccess: () => toast.add({ severity: 'success', summary: 'Clonage réussi', detail: 'Le cours a été dupliqué.', life: 3000 }),
+                onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Le clonage a échoué.', life: 3000 })
+            });
+        }
+    });
+};
+
+const restoreCourse = (courseId) => {
+    confirm.require({
+        message: 'Restaurer ce cours le placera dans vos brouillons. Voulez-vous continuer ?',
+        header: 'Restaurer le cours',
+        icon: 'pi pi-undo',
+        acceptClass: 'p-button-success',
+        acceptLabel: 'Oui, restaurer',
+        rejectLabel: 'Annuler',
+        accept: () => {
+            router.post(route('courses.restore', courseId), {}, {
+                preserveScroll: true,
+                onSuccess: () => toast.add({ severity: 'success', summary: 'Restauré', detail: 'Le cours est de nouveau un brouillon.', life: 3000 })
+            });
+        }
+    });
+};
+
+const confirmPurge = (course) => {
+    confirm.require({
+        message: `Vous êtes sur le point de supprimer DÉFINITIVEMENT le cours "${course.title}" et toutes ses données (inscriptions, leçons, etc.). Cette action est irréversible. Continuer ?`,
+        header: 'Suppression Définitive',
+        icon: 'pi pi-ban',
+        acceptClass: 'p-button-danger',
+        acceptLabel: 'Oui, supprimer définitivement',
+        rejectLabel: 'Annuler',
+        accept: () => {
+            router.delete(route('courses.purge', course.id), {
+                preserveScroll: true,
+                onError: (errors) => {
+                    const errorMessage = Object.values(errors).flat().join(' ') || 'Une erreur est survenue.';
+                    toast.add({ severity: 'error', summary: 'Échec de la suppression', detail: errorMessage, life: 5000 });
+                }
+            });
+        }
+    });
+};
+
+const confirmBulkPurge = () => {
+    confirm.require({
+        message: `Vous êtes sur le point de supprimer DÉFINITIVEMENT ${selectedCourses.value.length} cours archivés. Cette action est irréversible. Continuer ?`,
+        header: 'Suppression Définitive en Masse',
+        icon: 'pi pi-ban',
+        acceptClass: 'p-button-danger',
+        acceptLabel: 'Oui, purger la sélection',
+        rejectLabel: 'Annuler',
+        accept: () => {
+            const courseIds = selectedCourses.value.map(c => c.id);
+            router.post(route('courses.bulk-purge'), { ids: courseIds }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    selectedCourses.value = [];
+                }
+            });
         }
     });
 };
@@ -483,6 +595,16 @@ const enrichedCourses = computed(() => {
 const seoPreviewTitle = computed(() => {
     const title = courseForm.seo_metadata.title || courseForm.title;
     return title ? (title.length > 60 ? title.substring(0, 60) + '...' : title) : 'Titre optimisé de votre formation';
+});
+
+const anySelectedNotArchived = computed(() => {
+    if (!selectedCourses.value || selectedCourses.value.length === 0) return false;
+    return selectedCourses.value.some(course => course.status !== 'archived');
+});
+
+const allSelectedAreArchived = computed(() => {
+    if (!selectedCourses.value || selectedCourses.value.length === 0) return false;
+    return selectedCourses.value.every(course => course.status === 'archived');
 });
 
 const seoPreviewDesc = computed(() => {
@@ -717,7 +839,9 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
-                        <Button v-if="selectedCourses.length > 0" icon="pi pi-trash" :label="`Supprimer (${selectedCourses.length})`" class="p-button-danger p-button-outlined shadow-sm" @click="confirmBulkDelete" />
+                        <Button v-if="selectedCourses.length > 0 && anySelectedNotArchived" icon="pi pi-box" :label="`Archiver (${selectedCourses.length})`" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
+                        <Button v-if="selectedCourses.length > 0 && allSelectedAreArchived" icon="pi pi-undo" :label="`Restaurer (${selectedCourses.length})`" class="p-button-success p-button-outlined shadow-sm" @click="confirmBulkRestore" />
+                        <Button v-if="selectedCourses.length > 0 && allSelectedAreArchived" icon="pi pi-ban" :label="`Purger (${selectedCourses.length})`" class="p-button-danger p-button-outlined shadow-sm" @click="confirmBulkPurge" />
                         <Button icon="pi pi-download" label="Export" class="p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm hidden sm:flex" v-tooltip.top="'Générer un rapport CSV/Excel'" />
                         <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser les données'" />
                     </div>
@@ -850,9 +974,12 @@ onBeforeUnmount(() => {
                     <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Éditer le curriculum'" @click="editCourse(data)" />
+                                <Button v-if="data.status !== 'archived'" icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Éditer le curriculum'" @click="editCourse(data)" />
+                                <Button v-if="data.status !== 'archived'" icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-purple-600 hover:bg-purple-50" v-tooltip.top="'Cloner le cours'" @click="cloneCourse(data)" />
                                 <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Aperçu Public du cours'" />
-                                <Button icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Archiver le cours'" @click="confirmArchive(data.id)" />
+                                <Button v-if="data.status !== 'archived'" icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Archiver le cours'" @click="confirmArchive(data.id)" />
+                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="'Restaurer le cours'" @click="restoreCourse(data.id)" />
+                                <Button v-if="data.status === 'archived'" icon="pi pi-ban" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Suppression Définitive'" @click="confirmPurge(data)" />
                             </div>
                         </template>
                     </Column>

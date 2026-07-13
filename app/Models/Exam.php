@@ -293,7 +293,7 @@ class Exam extends Model
     public function userPassed(User $user): bool
     {
         $bestResult = $this->getBestResultFor($user);
-        return $bestResult && $bestResult->score_percent >= $this->pass_percentage;
+        return $bestResult && $bestResult->score_percent >= $this->passing_score;
     }
     // app/Models/Exam.php
 

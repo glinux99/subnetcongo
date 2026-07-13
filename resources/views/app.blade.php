@@ -46,7 +46,7 @@
             "logo": "https://subnetcongo.net/assets/media/logos/logo.png",
             "contactPoint": {
                 "@type": "ContactPoint",
-                "telephone": "+243970912428",
+                "telephone": "+243 973 359 648",
                 "contactType": "customer service",
                 "areaServed": "CD",
                 "availableLanguage": ["French", "English"]

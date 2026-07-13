@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exam;
+use App\Models\Assignment;
 use App\Models\Question;
 use App\Models\ExamAttempt;
 use App\Models\Submission;
@@ -330,11 +331,28 @@ public function index()
                 'feedback' => $hasManualGrading ? "Votre examen a été soumis et est en attente de correction pour les questions ouvertes." : ($isPassed ? "Félicitations, vous avez réussi !" : "Vous n'avez pas atteint le seuil de réussite."),
             ]);
 
+            // NOUVEAU : Créer ou retrouver un "Assignment" correspondant à l'examen.
+            // Cela permet de lier le résultat de l'examen à un devoir dans le carnet de notes.
+            $assignment = Assignment::where('settings->exam_id', $exam->id)->first();
+
+            if (!$assignment) {
+                $assignment = Assignment::create([
+                    'course_id'   => $exam->course_id,
+                    'title'       => $exam->title,
+                    'description' => "Soumission pour l'examen : " . $exam->title,
+                    'max_points'  => $totalPointsPossible,
+                    'due_at'      => $exam->available_until,
+                    'type'        => 'Examen', // Un type pour différencier des devoirs classiques
+                    'settings'    => ['exam_id' => $exam->id],
+                ]);
+            }
+
             // NOUVEAU : Créer une soumission pour le relevé de notes (StudentReportController)
             Submission::create([
                 'user_id' => $attempt->user_id,
                 'course_id' => $exam->course_id,
-                'assignment_id' => $exam->id, // L'examen est l'équivalent du devoir ici
+               // L'examen n'est pas un devoir au sens strict de la FK, donc null pour éviter la violation de contrainte
+                'assignment_id' => $assignment->id,
                 'status' => $hasManualGrading ? 'pending_review' : 'graded',
                 'content' => json_encode($userAnswers),
                 'submitted_at' => $attempt->completed_at,

@@ -76,7 +76,7 @@ const offices = [
   {
     city: "Goma (Siège Social)",
     address: "N° 0001, Avenue Des Touristes, Quartier les Volcans",
-    phone: "+243 970 912 428",
+    phone: "+243 973 359 648",
     email: "goma@subnetcongo.net",
     image: "https://images.unsplash.com/photo-1596463059283-da257325bee8?q=80&w=2070"
   },
@@ -167,7 +167,7 @@ const quickFaqs = [
                     <h4 class="text-3xl font-black italic">Canal WhatsApp</h4>
                     <p class="text-blue-100/70 font-medium leading-relaxed">Besoin d'une réponse instantanée ? Discutez en direct avec nos ingénieurs.</p>
                     <a href="https://wa.me/243970912428" target="_blank" class="inline-flex items-center gap-4 bg-[#25D366] px-8 py-4 rounded-lg font-black text-white hover:scale-105 transition-all shadow-lg">
-                        <i class="pi pi-whatsapp text-lg"></i> +243 970 912 428
+                        <i class="pi pi-whatsapp text-lg"></i> +243 973 359 648
                     </a>
                 </div>
                 <i class="pi pi-whatsapp absolute -right-10 -bottom-10 text-[15rem] opacity-5 group-hover:rotate-12 transition-transform duration-700"></i>

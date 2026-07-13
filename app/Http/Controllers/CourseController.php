@@ -177,7 +177,23 @@ class CourseController extends Controller
     public function destroy(Course $course)
     {
         $course->update(['status' => self::STATUS_ARCHIVED]);
+        Cache::forget('snc_executive_stats');
         return back()->with('success', 'Le cours a été archivé. Les apprenants actuels y conservent l\'accès.');
+    }
+
+    /**
+     * Restaure un cours archivé vers l'état brouillon.
+     */
+    public function restore(Course $course)
+    {
+        if ($course->status !== self::STATUS_ARCHIVED) {
+            return back()->with('error', 'Ce cours n\'est pas archivé.');
+        }
+
+        $course->update(['status' => self::STATUS_DRAFT]);
+        Cache::forget('snc_executive_stats');
+
+        return back()->with('success', 'Le cours a été restauré et est maintenant disponible comme brouillon.');
     }
 
     /**
@@ -185,10 +201,16 @@ class CourseController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
-        $request->validate([
+
+      try {
+          $request->validate([
             'ids'   => 'required|array',
             'ids.*' => 'exists:courses,id'
         ]);
+      } catch (\Throwable $th) {
+        //throw $th;
+        return $th;
+      }
 
         DB::beginTransaction();
         try {
@@ -201,8 +223,27 @@ class CourseController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("[LMS] Échec Bulk Archive: " . $e->getMessage());
+           return $e;
             return back()->with('error', 'Erreur lors de l\'archivage de masse.');
         }
+    }
+
+    /**
+     * Restaure plusieurs cours archivés en masse.
+     */
+    public function bulkRestore(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:courses,id'
+        ]);
+
+        Course::whereIn('id', $request->ids)
+            ->where('status', self::STATUS_ARCHIVED)
+            ->update(['status' => self::STATUS_DRAFT]);
+
+        Cache::forget('snc_executive_stats');
+        return back()->with('success', count($request->ids) . ' cours ont été restaurés avec succès.');
     }
 
     /**

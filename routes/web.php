@@ -118,6 +118,10 @@ Route::middleware(['auth'])->group(function () {
 
     // 2. Gestion E-learning
     Route::resource('courses', CourseController::class);
+    Route::post('courses/{course}/duplicate', [CourseController::class, 'duplicate'])->name('courses.duplicate');
+    Route::post('courses/bulk-destroy', [CourseController::class, 'bulkDestroy'])->name('courses.bulk-destroy');
+    Route::post('courses/{course}/restore', [CourseController::class, 'restore'])->name('courses.restore');
+    Route::post('courses/bulk-restore', [CourseController::class, 'bulkRestore'])->name('courses.bulk-restore');
     Route::resource('modules', ModuleController::class);
     Route::post('learning-paths/{learningPath}/enroll-mass', [LearningPathController::class, 'enrollMass'])->name('learning-paths.enroll-mass');
     Route::post('learning-paths/{learningPath}/enroll-student', [LearningPathController::class, 'enrollStudent'])->name('learning-paths.enroll-student');

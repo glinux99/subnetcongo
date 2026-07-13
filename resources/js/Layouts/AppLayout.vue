@@ -41,7 +41,7 @@
         <div class="flex items-center gap-3">
           <div class="hidden xl:flex flex-col items-end mr-4 text-right">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Besoin d'aide ?</span>
-            <span :class="['text-sm font-black leading-none transition-colors', scrolled ? 'text-[#003399]' : 'text-white']">+243 970 912 428</span>
+            <span :class="['text-sm font-black leading-none transition-colors', scrolled ? 'text-[#003399]' : 'text-white']">+243 973 359 648</span>
           </div>
 
           <button class="hidden md:flex items-center gap-2 px-5 py-3 text-sm font-black text-[#003399] bg-white/90 hover:bg-white rounded-lg transition-all shadow-sm">
