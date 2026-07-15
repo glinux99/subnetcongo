@@ -230,7 +230,12 @@ class DashboardController extends Controller
     private function getAvailableFilters(): array
     {
         return Cache::remember('snc_available_filters', $this->cacheTTL * 24, function () {
-            $years = Order::select(DB::raw('YEAR(created_at) as year'))
+            $driver = DB::connection()->getDriverName();
+            $yearExpression = $driver === 'sqlite'
+                ? "strftime('%Y', created_at)"
+                : "YEAR(created_at)";
+
+            $years = Order::select(DB::raw($yearExpression . ' as year'))
                 ->distinct()
                 ->orderByDesc('year')
                 ->pluck('year')
@@ -453,12 +458,15 @@ class DashboardController extends Controller
      */
     private function getMonthlyAggregation(string $modelClass, int $year, string $dateColumn = 'created_at'): array
     {
+        $driver = DB::connection()->getDriverName();
+        $monthExpression = $driver === 'sqlite' ? "cast(strftime('%m', {$dateColumn}) as integer)" : "MONTH({$dateColumn})";
+
         $results = $modelClass::select(
-            DB::raw('MONTH(' . $dateColumn . ') as month'),
+            DB::raw($monthExpression . ' as month'),
             DB::raw('count(id) as total')
         )
         ->whereYear($dateColumn, $year)
-        ->groupBy(DB::raw('MONTH(' . $dateColumn . ')'))
+        ->groupBy(DB::raw($monthExpression))
         ->orderBy('month')
         ->pluck('total', 'month')
         ->toArray();

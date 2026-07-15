@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Certificate;
 use App\Models\User;
 use App\Models\Course; // Ajouté pour le filtre des cours
 use App\Models\Submission;
@@ -278,18 +279,32 @@ class StudentReportController extends Controller
             });
         }
 
-        // 4. Filtre par performance (Nécessite la clause HAVING sur l'agrégation)
+        // 4. Filtre par performance.
         if ($request->filled('performance')) {
-            // Note: withAvg est déjà appelé dans l'index, nous utilisons l'alias
-            $query->having('avg_score', '!=', null);
+            $performance = $request->performance;
 
-            if ($request->performance === 'high') {
-                $query->having('avg_score', '>=', 80);
-            } elseif ($request->performance === 'low') {
-                $query->having('avg_score', '<', 50);
-            } elseif ($request->performance === 'mid') {
-                $query->havingBetween('avg_score', [50, 79.99]);
-            }
+            // La clause `having()` sur un alias de sous-requête n'est pas supportée par SQLite.
+            // Nous la remplaçons par une sous-requête dans la clause `where()`, ce qui est plus portable
+            // et fonctionne sur MySQL, PostgreSQL, et SQLite.
+            $query->where(function ($q) use ($performance) {
+                $subQuery = Submission::selectRaw('avg(grade)')
+                    ->whereColumn('submissions.user_id', 'users.id')
+                    ->whereNotNull('grade');
+
+                if ($performance === 'high') {
+                    $q->where($subQuery, '>=', 80);
+                } elseif ($performance === 'low') {
+                    $q->where($subQuery, '<', 50);
+                } elseif ($performance === 'mid') {
+                    // Utiliser whereRaw pour le between avec une sous-requête
+                    $q->whereRaw('(?) BETWEEN ? AND ?', [$subQuery, 50, 79.99]);
+                }
+            });
+
+            // On s'assure aussi que l'étudiant a au moins une soumission notée.
+            $query->whereHas('submissions', function ($q) {
+                $q->whereNotNull('grade');
+            });
         }
     }
 
@@ -302,22 +317,24 @@ class StudentReportController extends Controller
         $baseQuery = $this->getBaseStudentQuery();
 
         // Étudiants actifs dans les 24h
-        $activeNow = (clone $baseQuery)
-            ->where('last_activity', '>=', now()->subHours(24))
-            ->count();
+        $activeNow = (clone $baseQuery)->where('last_activity', '>=', now()->subHours(24))->count();
 
         // Score moyen global (Moyenne des moyennes)
         $avgScore = Submission::avg('grade');
 
         // Étudiants en danger (Moyenne < 50%)
-        $atRisk = (clone $baseQuery)
-            ->withAvg('submissions', 'grade')
-            ->having('submissions_avg_grade', '<', 50)
-            ->count();
+        // Correction pour compatibilité avec SQLite, MySQL, PostgreSQL, etc.
+        // Utilise whereHas avec une sous-requête groupée pour calculer la moyenne et filtrer.
+        $atRisk = (clone $baseQuery)->whereHas('submissions', function ($query) {
+            $query->select('user_id', DB::raw('AVG(grade) as average_grade'))
+                  ->whereNotNull('grade') // S'assurer que seules les soumissions notées sont prises en compte
+                  ->groupBy('user_id')
+                  ->having('average_grade', '<', 50);
+        })->count();
 
         // Remplacer Certificate par votre vrai modèle si existant, sinon count des users ayant tout validé
         // $certifications = Certificate::count();
-        $certifications = 124; // Valeur d'exemple en attendant votre modèle
+        $certifications = Certificate::count(); // Valeur d'exemple en attendant votre modèle
 
         return [
             'avg_score'            => $avgScore ? round($avgScore, 1) : null,

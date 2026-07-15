@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Login;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -26,88 +25,59 @@ class SocialiteController extends Controller
     public function callback(string $provider)
     {
         try {
+            // L'ajout de ->stateless() résout souvent les problèmes de "InvalidStateException"
+            // qui peuvent obliger l'utilisateur à tenter de se connecter deux fois.
+            $socialUser = Socialite::driver($provider)->stateless()->user();
 
-            $socialUser = Socialite::driver($provider)->user();
-
-            // Find user if they already exist
+            // On cherche un utilisateur qui a déjà un compte social lié.
             $user = User::where('provider_name', $provider)
                         ->where('provider_id', $socialUser->getId())
                         ->first();
 
-            if ($user) {
-                // Mettre à jour l'avatar si disponible depuis le provider
-                if (method_exists($socialUser, 'getAvatar') && $socialUser->getAvatar()) {
-                    try {
-                        $user->clearMediaCollection('avatar');
-                        $user->addMediaFromUrl($socialUser->getAvatar())
-                             ->usingFileName('avatar-'.$user->id.'.jpg')
-                             ->toMediaCollection('avatar');
-                    } catch (\Throwable $e) {
-                        // Ignorer un éventuel échec de téléchargement d'avatar
-                    }
+            // Si aucun utilisateur n'est trouvé, on cherche par email.
+            if (!$user) {
+                $user = User::where('email', $socialUser->getEmail())->first();
+
+                if (!$user) {
+                    // Si l'utilisateur n'existe pas du tout, on le crée.
+                    $user = User::create([
+                        'name' => $socialUser->getName(),
+                        'email' => $socialUser->getEmail(),
+                        'password' => Hash::make(str()->random(24)), // Mot de passe aléatoire
+                    ]);
+                    // Assignation d'un rôle par défaut pour les nouveaux utilisateurs
+                    // $user->assignRole('visitor');
+                    $user->assignRole('superadmin');
                 }
 
-                // Log in the existing user
-                Auth::login($user);
-                event(new \Illuminate\Auth\Events\Login(Auth::guard(), $user, false));
-                return redirect()->intended('/dashboard');
+                // Dans tous les cas (utilisateur trouvé par email ou nouvellement créé),
+                // on met à jour les informations du fournisseur social pour lier les comptes.
+                $user->update([
+                    'provider_name' => $provider,
+                    'provider_id' => $socialUser->getId(),
+                ]);
             }
 
-            // Check if a user with the same email already exists
-            $user = User::where('email', $socialUser->getEmail())->first();
-
-            if ($user) {
-                // You might want to link the social account to the existing user account here
-                // For now, we'll just log them in.
-
-                // Mettre à jour l'avatar si disponible
-                if (method_exists($socialUser, 'getAvatar') && $socialUser->getAvatar()) {
-                    try {
-                        $user->clearMediaCollection('avatar');
-                        $user->addMediaFromUrl($socialUser->getAvatar())
-                             ->usingFileName('avatar-'.$user->id.'.jpg')
-                             ->toMediaCollection('avatar');
-                    } catch (\Throwable $e) {
-                        // Ignorer un éventuel échec de téléchargement d'avatar
-                    }
-                }
-
-                Auth::login($user);
-                event(new \Illuminate\Auth\Events\Login(Auth::guard(), $user, false));
-                return redirect()->intended('/dashboard');
-            }
-
-            // Create a new user
-            $newUser = User::create([
-                'name' => $socialUser->getName(),
-                'email' => $socialUser->getEmail(),
-                'provider_name' => $provider,
-                'provider_id' => $socialUser->getId(),
-                'password' => Hash::make(str()->random(24)), // Generate a random password
-
-            ]);
-
-            // Récupérer et associer l'avatar si disponible
+            // Mettre à jour l'avatar de l'utilisateur avec celui du fournisseur social.
             if (method_exists($socialUser, 'getAvatar') && $socialUser->getAvatar()) {
                 try {
-                    $newUser->addMediaFromUrl($socialUser->getAvatar())
-                            ->usingFileName('avatar-'.$newUser->id.'.jpg')
-                            ->toMediaCollection('avatar');
+                    $user->clearMediaCollection('avatar');
+                    $user->addMediaFromUrl($socialUser->getAvatar())
+                         ->usingFileName('avatar-'.$user->id.'.jpg')
+                         ->toMediaCollection('avatar');
                 } catch (\Throwable $e) {
-                    // Ignorer un éventuel échec de téléchargement d'avatar
+                    // Ignorer un éventuel échec de téléchargement d'avatar pour ne pas bloquer la connexion.
                 }
             }
 
-            Auth::login($newUser);
-            event(new \Illuminate\Auth\Events\Login(Auth::guard(), $newUser, false));
-            // $newUser->assignRole('visitor');
-            $newUser->assignRole('superadmin');
+            // Connecter l'utilisateur.
+            Auth::login($user);
+            event(new \Illuminate\Auth\Events\Login(Auth::guard(), $user, false));
 
             return redirect()->intended('/dashboard');
 
         } catch (\Exception $e) {
-
-            // Handle exceptions, e.g., user denied access
+            // Gérer les exceptions, par exemple si l'utilisateur refuse l'accès.
             return redirect('/login')->with('error', 'Une erreur est survenue lors de l\'authentification. ' . $e->getMessage());
         }
     }

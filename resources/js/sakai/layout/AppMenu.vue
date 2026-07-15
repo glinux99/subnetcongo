@@ -30,7 +30,7 @@ const model = ref([
                     { label: 'Tous les Cours', icon: 'pi pi-fw pi-list', to: '/courses' },
                     { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file-pdf', to: route('modules.index') },
                     { label: 'Parcours (Paths)', icon: 'pi pi-fw pi-map', to: '/learning-paths' },
-                    { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-video', to: '/media-library' }
+                   // { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-video', to: '/media-library' }
                 ]
             },
             {
