@@ -184,6 +184,7 @@ const isMenuOpen = ref(false);
 const navLinks = [
     { name: 'Accueil', href: route('landing'), icon: 'pi-home' },
     { name: 'À Propos', href: route('about'), icon: 'pi-info-circle' },
+    { name: 'Réalisations', href: route('realizations'), icon: 'pi-info-circle' },
     // { name: 'Academy', href: '/academy', icon: 'pi-graduation-cap', submenu: ['Cisco CCNA', 'Cyber-Sécurité', 'Cloud Computing'] },
     { name: 'Academy', href: route('academy'), icon: 'pi-graduation-cap'},
     { name: 'Génie Civil', href: '#', icon: 'pi-cog' },

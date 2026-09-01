@@ -26,6 +26,10 @@ class WebSettingController extends Controller
         return Inertia::render('Web/Contact');
     }
 
+     public function realizations()
+    {
+        return Inertia::render('Web/Realizations');
+    }
     /**
      * Affiche la page "À propos".
      */

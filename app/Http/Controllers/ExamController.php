@@ -90,6 +90,7 @@ class ExamController extends Controller
             'password'         => 'nullable|string|max:255',
             'available_from'   => 'nullable|date',
             'available_until'  => 'nullable|date|after_or_equal:available_from',
+
         ]);
 
         DB::beginTransaction();
@@ -135,6 +136,7 @@ class ExamController extends Controller
             return back()->with('success', 'L\'évaluation a été enregistrée avec succès.');
         } catch (Exception $e) {
             DB::rollBack();
+
             Log::error("SNC_EXAM_SAVE_ERR: " . $e->getMessage());
             return back()->with('error', 'Erreur critique : ' . $e->getMessage());
         }

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Lancer les Seeders statiques
         $this->call([
+            CategorySeeder::class,
             RoleSeeder::class,      // Gère les rôles et permissions (créé au début)
             UserSeeder::class,      // Crée l'admin, les profs et les élèves
             SettingSeeder::class,   // Paramètres du site

@@ -295,6 +295,7 @@ const importQuestionFromBank = (q) => {
  */
 const saveExam = (status = 'Active') => {
     examForm.status = status;
+    examForm.is_published =   examForm.status == 'Active' ? true : false
     isSaving.value = true;
 
     // Détermination de la méthode HTTP et de la route

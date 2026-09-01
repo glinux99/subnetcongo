@@ -2,507 +2,480 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Course, Category, User, Module, Lesson, Enrollment, Order, Review};
+/**
+ * ======================================================================================
+ * SUBNETCONGO LMS - ARCHITECTE PÉDAGOGIQUE & COURSE ENGINE v14.0
+ * ======================================================================================
+ * 
+ * Ce contrôleur est le coeur du système de gestion des connaissances (LMS).
+ * Il orchestre la création de cursus complexes, la gestion des médias sur disque dédié,
+ * et la synchronisation polymorphique des ressources de support.
+ *
+ * FONCTIONNALITÉS :
+ * - Gestion du Curriculum (Sections -> Leçons)
+ * - Bibliothèque de Ressources (Polymorphique)
+ * - Moteur d'Asset Management (Disque 'media')
+ * - Dashboard Analytics Intégré
+ * - Actions de masse (Bulk Operations)
+ * - Clonage de parcours (Deep Copy)
+ */
+
+use App\Models\{Course, Category, User, Module, Lesson, Enrollment, Order, Review, Resource, AuditLog};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Storage, Cache, Log, Redirect};
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Carbon\Carbon;
 use Exception;
 
 class CourseController extends Controller
 {
-    // Constantes d'état de publication
+    // --- CONSTANTES DE CONFIGURATION ---
     public const STATUS_DRAFT     = 'draft';
     public const STATUS_PENDING   = 'pending';
     public const STATUS_PUBLISHED = 'published';
     public const STATUS_ARCHIVED  = 'archived';
 
-    // Constantes de niveaux
     public const LEVEL_BEGINNER     = 'beginner';
     public const LEVEL_INTERMEDIATE = 'intermediate';
     public const LEVEL_ADVANCED     = 'advanced';
     public const LEVEL_ALL          = 'all';
 
+    protected string $disk = 'media'; // Utilisation forcée du disque média
+
     /**
-     * Affiche le catalogue principal et prépare les données pour la Datatable Vue.
+     * --------------------------------------------------------------------------
+     * 1. INDEX : GESTION DU PATRIMOINE PÉDAGOGIQUE
+     * --------------------------------------------------------------------------
      */
     public function index(Request $request)
     {
-        $query = Course::with([
+        try {
+            $query = Course::with([
                 'instructor:id,name,avatar',
                 'category:id,name',
+                'resources', // Chargement des documents joints
                 'sections' => function($q) {
-                    $q->orderBy('order')->with(['lessons' => function($l) {
-                        $l->orderBy('order');
-                    }]);
+                    $q->orderBy('order')->with(['lessons' => fn($l) => $l->orderBy('order')]);
                 }
             ])
-            ->withCount(['students', 'lessons', 'reviews']);
+            ->withCount(['students', 'lessons', 'reviews', 'resources']);
 
-        // Recherche textuelle avancée
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('slug', 'like', "%{$search}%")
-                  ->orWhere('short_info', 'like', "%{$search}%")
-                  ->orWhereHas('instructor', fn($i) => $i->where('name', 'like', "%{$search}%"));
-            });
-        }
+            // --- FILTRAGE AVANCÉ ---
+            if ($request->filled('search')) {
+                $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('id', 'like', "%{$search}%")
+                      ->orWhereHas('instructor', fn($i) => $i->where('name', 'like', "%{$search}%"));
+                });
+            }
 
-        // Filtres stricts
-        $query->when($request->status, fn($q, $s) => $q->where('status', $s));
-        $query->when($request->category_id, fn($q, $id) => $q->where('category_id', $id));
-        $query->when($request->level, fn($q, $l) => $q->where('level', $l));
+            $query->when($request->status, fn($q, $s) => $q->where('status', $s));
+            $query->when($request->category_id, fn($q, $id) => $q->where('category_id', $id));
+            $query->when($request->level, fn($q, $l) => $q->where('level', $l));
 
-        // Tri dynamique
-        $sortField = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_direction', 'desc');
-        if (in_array($sortField, ['title', 'price', 'students_count', 'is_featured', 'created_at', 'status'])) {
+            // --- TRI DYNAMIQUE ---
+            $sortField = $request->input('sort_by', 'created_at');
+            $sortOrder = $request->input('sort_direction', 'desc');
             $query->orderBy($sortField, $sortOrder);
+
+            $courses = $query->paginate((int) $request->input('per_page', 10))->withQueryString();
+
+            // Transformation des URLs pour le frontend
+            $courses->getCollection()->transform(function ($course) {
+                $course->thumbnail_path = $course->thumbnail_path 
+                    ?? null;
+                return $course;
+            });
+         
+            return Inertia::render('Courses', [
+                'courses'      => $courses,
+                'stats'        => $this->getAdvancedStats(),
+                'filters'      => $request->only(['search', 'status', 'category_id', 'level']),
+                'categories'   => Category::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+                'levels'       => $this->getLevelsForUI(),
+                'instructors'  => User::role('instructor')->get(['id', 'name', 'avatar']),
+                'meta'         => $this->getFinancialMeta(),
+            ]);
+
+        } catch (Exception $e) {
+            Log::error("[LMS] Index Error: " . $e->getMessage());
+           
+            return back()->with('error', "Impossible de charger le catalogue.");
         }
-
-        $courses = $query->paginate((int) $request->input('per_page', 10))->withQueryString();
-
-        // Formatage de l'URL de la vignette pour le Front-end
-        $courses->getCollection()->transform(function ($course) {
-            $course->thumbnail_path = $course->thumbnail_path ? Storage::disk(config('app.disk'))->url($course->thumbnail_path) : null;
-            return $course;
-        });
-        return Inertia::render('Courses', [
-            'courses'      => $courses,
-            'stats'        => $this->buildExecutiveStats(),
-            'filters'      => $request->only(['search', 'status', 'category_id', 'level', 'sort_by', 'sort_direction']),
-            'categories'   => Category::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'levels'       => $this->getLevelsForSelect(),
-            'instructors'  => User::role('instructor')->get(['id', 'name', 'avatar'])->toArray(),
-            'meta'         => [
-                'total_revenue'   => Order::where('status', 'paid')->sum('amount') ?? 0,
-                'avg_rating'      => round(Review::where('is_approved', true)->avg('rating') ?? 0, 1),
-                'completion_rate' => round(Enrollment::avg('progress_percent') ?? 0, 1),
-            ],
-        ]);
     }
 
     /**
-     * Store: Création d'un nouveau cours depuis l'éditeur (Course Architect).
+     * --------------------------------------------------------------------------
+     * 2. STORE : FORGER UN NOUVEAU PARCOURS
+     * --------------------------------------------------------------------------
      */
     public function store(Request $request)
     {
-
-        $this->sanitizeFormData($request);
-        $validated = $this->performValidation($request);
+        $this->prepareAndSanitize($request);
+        $validated = $this->validateCourseRequest($request);
 
         DB::beginTransaction();
         try {
-            $data = collect($validated)->except(['sections', 'thumbnail'])->toArray();
-            $data['slug'] = $this->generateUniqueSlug($validated['title'] ?? 'nouveau-cours');
-            $data['created_by'] = Auth::id();
-            $data['status'] = $validated['status'] ?? self::STATUS_DRAFT;
+            // Création de l'entité de base
+            $courseData = collect($validated)->except(['sections', 'thumbnail', 'resources'])->toArray();
+            $courseData['slug'] = $this->makeUniqueSlug($validated['title']);
+            $courseData['created_by'] = Auth::id();
 
-            $course = new Course();
-            $course->fill($data);
+            $course = Course::create($courseData);
 
+            // Gestion de l'image à la une (Thumbnail)
             if ($request->hasFile('thumbnail')) {
-                $course->thumbnail_path = $this->handleAssetUpload($request->file('thumbnail'), 'thumbnails');
+                $course->update([
+                    'thumbnail_path' => $this->uploadAsset($request->file('thumbnail'), 'thumbnails')
+                ]);
             }
 
-            $course->save();
-
-            // Synchro du constructeur de Curriculum
+            // Sync de l'arbre pédagogique
             if (!empty($validated['sections'])) {
-                $this->syncSections($course, $validated['sections']);
+                $this->syncCurriculum($course, $validated['sections']);
             }
 
+            // Sync des documents et fichiers (Ressources)
+            if (!empty($validated['resources'])) {
+                $this->syncCourseResources($course, $validated['resources']);
+            }
+
+            $this->logAction('COURSE_CREATED', "Nouveau cours '{$course->title}' créé par ".Auth::user()->name);
+            
             DB::commit();
             Cache::forget('snc_executive_stats');
 
-            return Redirect::route('courses.index')->with('success', "Le cours '{$course->title}' a été forger avec succès.");
+            return Redirect::route('courses.index')->with('success', "Le parcours pédagogique a été forgé avec succès.");
 
         } catch (Exception $e) {
             DB::rollBack();
-            return $e;
-            Log::error("[LMS] Échec création cours: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return back()->with('error', 'Erreur critique lors de la sauvegarde du cours.')->withInput();
+            Log::error("[LMS] Store Failure: " . $e->getMessage());
+            return back()->with('error', "Erreur critique : " . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * Update: Mise à jour intégrale d'un cours existant et de son curriculum.
+     * --------------------------------------------------------------------------
+     * 3. UPDATE : MODERNISER UN CURSUS
+     * --------------------------------------------------------------------------
      */
     public function update(Request $request, Course $course)
     {
-        $this->sanitizeFormData($request);
-        $validated = $this->performValidation($request, $course->id);
-        // return $validated;
+        $this->prepareAndSanitize($request);
+        $validated = $this->validateCourseRequest($request, $course->id);
+
         DB::beginTransaction();
         try {
-            // Regénération du slug si le titre a changé et qu'aucun slug n'est forcé
+            // Update du slug si titre modifié
             if ($course->title !== $validated['title'] && empty($validated['slug'])) {
-                $validated['slug'] = $this->generateUniqueSlug($validated['title']);
+                $validated['slug'] = $this->makeUniqueSlug($validated['title']);
             }
 
-            // Gestion propre de l'Asset (Thumbnail)
+            // Remplacement de la vignette
             if ($request->hasFile('thumbnail')) {
-                if ($course->thumbnail_path && Storage::disk(config('app.disk'))->exists($course->thumbnail_path)) {
-                    Storage::disk(config('app.disk'))->delete($course->thumbnail_path);
+                if ($course->thumbnail_path) {
+                    Storage::disk($this->disk)->delete($course->thumbnail_path);
                 }
-                $validated['thumbnail_path'] = $this->handleAssetUpload($request->file('thumbnail'), 'thumbnails');
+                $validated['thumbnail_path'] = $this->uploadAsset($request->file('thumbnail'), 'thumbnails');
             }
 
-            // Exclure les relations et le fichier avant l'update direct
-            $data = collect($validated)->except(['sections', 'thumbnail'])->toArray();
+            // Mise à jour des données atomiques
+            $course->update(collect($validated)->except(['sections', 'thumbnail', 'resources'])->toArray());
 
-            $course->update($data);
+            // Synchronisation récursive
+            $this->syncCurriculum($course, $validated['sections'] ?? []);
+            $this->syncCourseResources($course, $validated['resources'] ?? []);
 
-            // Synchronisation intelligente de l'arbre (Modules -> Leçons)
-            if (isset($validated['sections'])) {
-                $this->syncSections($course, $validated['sections']);
-            }
+            $this->logAction('COURSE_UPDATED', "Le cours ID #{$course->id} a été mis à jour.");
 
             DB::commit();
-            return back()->with('success', 'Curriculum mis à jour et synchronisé avec succès.');
+            return back()->with('success', "Les modifications ont été synchronisées avec succès.");
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("[LMS] Échec mise à jour cours ID {$course->id}: " . $e->getMessage());
-            return back()->with('error', 'Échec de la mise à jour des données pédagogiques.')->withInput();
+            Log::error("[LMS] Update Failure ID {$course->id}: " . $e->getMessage());
+            return back()->with('error', "Échec de la mise à jour : " . $e->getMessage());
         }
     }
 
     /**
-     * Archive un cours (Soft delete métier).
+     * --------------------------------------------------------------------------
+     * 4. RESOURCE ENGINE : SYNCHRO POLYMORPHIQUE
+     * --------------------------------------------------------------------------
      */
-    public function destroy(Course $course)
+    private function syncCourseResources($course, array $resourcesData)
     {
-        $course->update(['status' => self::STATUS_ARCHIVED]);
-        Cache::forget('snc_executive_stats');
-        return back()->with('success', 'Le cours a été archivé. Les apprenants actuels y conservent l\'accès.');
+        $currentIds = $course->resources()->pluck('id')->toArray();
+        $keptIds = [];
+
+        foreach ($resourcesData as $res) {
+            // Cas 1 : Nouveau fichier à uploader
+            if (isset($res['is_new']) && $res['is_new'] && isset($res['file'])) {
+                $file = $res['file'];
+                $path = $file->store('courses/attachments', $this->disk);
+
+                $newRes = $course->resources()->create([
+                    'title'       => $res['title'] ?? $file->getClientOriginalName(),
+                    'path'        => $path,
+                    'file_type'   => strtoupper($file->getClientOriginalExtension()),
+                    'mime_type'   => $file->getMimeType(),
+                    'size'        => $file->getSize(),
+                    'uploaded_by' => Auth::id(),
+                ]);
+                $keptIds[] = $newRes->id;
+            } 
+            // Cas 2 : Mise à jour du titre d'un fichier existant
+            elseif (isset($res['id']) && is_numeric($res['id'])) {
+                $existing = Resource::find($res['id']);
+                if ($existing) {
+                    $existing->update(['title' => $res['title']]);
+                    $keptIds[] = $existing->id;
+                }
+            }
+        }
+
+        // Cas 3 : Suppression des fichiers retirés de la liste
+        $toDelete = array_diff($currentIds, $keptIds);
+        foreach ($toDelete as $id) {
+            $resToDelete = Resource::find($id);
+            if ($resToDelete) {
+                Storage::disk($this->disk)->delete($resToDelete->path);
+                $resToDelete->delete();
+            }
+        }
     }
 
     /**
-     * Restaure un cours archivé vers l'état brouillon.
+     * --------------------------------------------------------------------------
+     * 5. CURRICULUM ENGINE : SECTIONS & LESSONS
+     * --------------------------------------------------------------------------
      */
-    public function restore(Course $course)
+    private function syncCurriculum(Course $course, array $sections)
+    {
+        $existingSectionIds = $course->sections()->pluck('id')->toArray();
+        $keptSectionIds = [];
+
+        foreach ($sections as $index => $sData) {
+            $section = isset($sData['id']) && is_numeric($sData['id'])
+                ? $course->sections()->find($sData['id'])
+                : $course->sections()->create(['title' => $sData['title'], 'order' => $index + 1]);
+
+            if ($section) {
+                $section->update(['title' => $sData['title'], 'order' => $index + 1]);
+                $keptSectionIds[] = $section->id;
+                
+                // Synchronisation des leçons à l'intérieur
+                $this->syncLessons($section, $sData['lessons'] ?? []);
+            }
+        }
+
+        // Suppression des sections disparues
+        $course->sections()->whereIn('id', array_diff($existingSectionIds, $keptSectionIds))->delete();
+    }
+
+    private function syncLessons(Module $section, array $lessons)
+    {
+        $existingLessonIds = $section->lessons()->pluck('id')->toArray();
+        $keptLessonIds = [];
+
+        foreach ($lessons as $index => $lData) {
+            $payload = [
+                'title'            => $lData['title'],
+                'type'             => $lData['type'] ?? 'video',
+                'is_free_preview'  => filter_var($lData['is_free'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'duration_minutes' => $lData['duration_minutes'] ?? 0,
+                'order'            => $index + 1,
+                'slug'             => Str::slug($lData['title']) . '-' . Str::random(4)
+            ];
+
+            $lesson = isset($lData['id']) && is_numeric($lData['id'])
+                ? $section->lessons()->find($lData['id'])
+                : $section->lessons()->create($payload);
+
+            if ($lesson) {
+                $lesson->update($payload);
+                $keptLessonIds[] = $lesson->id;
+            }
+        }
+
+        $section->lessons()->whereIn('id', array_diff($existingLessonIds, $keptLessonIds))->delete();
+    }
+
+    /**
+     * --------------------------------------------------------------------------
+     * 6. BULK & DESTRUCTION : OPÉRATIONS DE NETTOYAGE
+     * --------------------------------------------------------------------------
+     */
+    public function bulkArchive(Request $request)
+    {
+        $request->validate(['ids' => 'required|array']);
+        Course::whereIn('id', $request->ids)->update(['status' => self::STATUS_ARCHIVED]);
+        return back()->with('success', "Archivage de masse réussi.");
+    }
+
+    public function purge(Course $course)
     {
         if ($course->status !== self::STATUS_ARCHIVED) {
-            return back()->with('error', 'Ce cours n\'est pas archivé.');
+            return back()->with('error', "Seul un cours archivé peut être purgé.");
         }
-
-        $course->update(['status' => self::STATUS_DRAFT]);
-        Cache::forget('snc_executive_stats');
-
-        return back()->with('success', 'Le cours a été restauré et est maintenant disponible comme brouillon.');
-    }
-
-    /**
-     * Suppression en masse (Bulk Action depuis la DataTable).
-     */
-    public function bulkDestroy(Request $request)
-    {
-
-      try {
-          $request->validate([
-            'ids'   => 'required|array',
-            'ids.*' => 'exists:courses,id'
-        ]);
-      } catch (\Throwable $th) {
-        //throw $th;
-        return $th;
-      }
 
         DB::beginTransaction();
         try {
-            // Au lieu de supprimer (qui casserait les commandes/certificats), on archive.
-            Course::whereIn('id', $request->ids)->update(['status' => self::STATUS_ARCHIVED]);
-            DB::commit();
+            // Nettoyage des fichiers physiques
+            if ($course->thumbnail_path) Storage::disk($this->disk)->delete($course->thumbnail_path);
+            
+            foreach($course->resources as $res) {
+                Storage::disk($this->disk)->delete($res->path);
+            }
 
-            Cache::forget('snc_executive_stats');
-            return back()->with('success', count($request->ids) . ' cours ont été archivés avec succès.');
+            $course->delete(); // Hard delete
+            DB::commit();
+            return back()->with('success', "Le parcours et ses médias ont été effacés du serveur.");
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("[LMS] Échec Bulk Archive: " . $e->getMessage());
-           return $e;
-            return back()->with('error', 'Erreur lors de l\'archivage de masse.');
+            return back()->with('error', "Erreur lors de la purge.");
         }
     }
 
     /**
-     * Restaure plusieurs cours archivés en masse.
-     */
-    public function bulkRestore(Request $request)
-    {
-        $request->validate([
-            'ids'   => 'required|array',
-            'ids.*' => 'exists:courses,id'
-        ]);
-
-        Course::whereIn('id', $request->ids)
-            ->where('status', self::STATUS_ARCHIVED)
-            ->update(['status' => self::STATUS_DRAFT]);
-
-        Cache::forget('snc_executive_stats');
-        return back()->with('success', count($request->ids) . ' cours ont été restaurés avec succès.');
-    }
-
-    /**
-     * Duplique un cours et l'intégralité de sa structure pédagogique.
+     * --------------------------------------------------------------------------
+     * 7. DEEP CLONING : DUPLICATION D'EXPERTISE
+     * --------------------------------------------------------------------------
      */
     public function duplicate(Course $course)
     {
         DB::beginTransaction();
         try {
-            $newCourse = $course->replicate();
-            $newCourse->title = $course->title . ' (Copie)';
-            $newCourse->slug  = $this->generateUniqueSlug($newCourse->title);
-            $newCourse->status = self::STATUS_DRAFT;
-            $newCourse->created_at = now();
-            $newCourse->save();
+            $clone = $course->replicate();
+            $clone->title = $course->title . " (Copie)";
+            $clone->slug = $this->makeUniqueSlug($clone->title);
+            $clone->status = self::STATUS_DRAFT;
+            $clone->save();
 
+            // Clonage des sections et leçons
             foreach ($course->sections as $section) {
                 $newSection = $section->replicate();
-                $newSection->course_id = $newCourse->id;
+                $newSection->course_id = $clone->id;
                 $newSection->save();
 
                 foreach ($section->lessons as $lesson) {
                     $newLesson = $lesson->replicate();
-                    $newLesson->module_id = $newSection->id; // ou section_id selon votre BDD
-                    $newLesson->slug = $lesson->slug . '-' . Str::lower(Str::random(6));
+                    $newLesson->module_id = $newSection->id;
                     $newLesson->save();
                 }
             }
 
             DB::commit();
-            return back()->with('success', 'Le cours a été cloné avec succès dans vos brouillons.');
+            return back()->with('success', "Parcours dupliqué avec succès.");
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("[LMS] Échec clonage cours ID {$course->id}: " . $e->getMessage());
-            return back()->with('error', 'Impossible de dupliquer ce cours.');
-        }
-    }
-
-    // =========================================================================
-    // MÉTHODES PRIVÉES DE LOGIQUE MÉTIER
-    // =========================================================================
-
-    /**
-     * Nettoie les données du formulaire provenant d'Inertia/Vue (FormData).
-     */
-    private function sanitizeFormData(Request $request): void
-    {
-        // Conversion des strings Javascript 'true'/'false' en booléens natifs PHP
-        $booleans = ['is_featured', 'requires_enrollment', 'certificate_enabled'];
-        foreach ($booleans as $field) {
-            if ($request->has($field)) {
-                $request->merge([$field => filter_var($request->input($field), FILTER_VALIDATE_BOOLEAN)]);
-            }
-        }
-
-        // Décodage des objets JSON envoyés via FormData (multipart/form-data stringifie le JSON)
-        $jsons = ['sections', 'seo_metadata', 'tags'];
-        foreach ($jsons as $field) {
-            if ($request->has($field) && is_string($request->input($field))) {
-                $decoded = json_decode($request->input($field), true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $request->merge([$field => $decoded]);
-                }
-            }
+            return back()->with('error', "Échec du clonage.");
         }
     }
 
     /**
-     * Validation exhaustive du Course Architect (Informations, SEO, Sections, Leçons).
+     * --------------------------------------------------------------------------
+     * 8. HELPERS : LOGIQUE INTERNE & DATA UI
+     * --------------------------------------------------------------------------
      */
-    private function performValidation(Request $request, $courseId = null): array
+    private function prepareAndSanitize(Request $request): void
     {
-        $rules = [
-            'title'               => 'required|string|min:3|max:150',
-            'slug'                => ['nullable', 'string', Rule::unique('courses')->ignore($courseId)],
-            'description'         => 'nullable|string',
-            'short_info'          => 'nullable|string|max:255',
+        // Convertir les chaînes "true"/"false" de FormData en booléens réels
+        $fields = ['is_featured', 'requires_enrollment', 'certificate_enabled'];
+        foreach ($fields as $f) {
+            if ($request->has($f)) $request->merge([$f => filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN)]);
+        }
+
+        // Décoder les JSON envoyés par l'UI (Inertia/Vue)
+        $jsons = ['sections', 'seo_metadata', 'tags', 'resources'];
+        foreach ($jsons as $f) {
+            if ($request->has($f) && is_string($request->input($f))) {
+                $decoded = json_decode($request->input($f), true);
+                if (json_last_error() === JSON_ERROR_NONE) $request->merge([$f => $decoded]);
+            }
+        }
+    }
+
+    private function validateCourseRequest(Request $request, $id = null): array
+    {
+        return $request->validate([
+            'title'               => 'required|string|max:150',
             'instructor_id'       => 'required|exists:users,id',
             'category_id'         => 'required|exists:categories,id',
             'level'               => ['required', Rule::in([self::LEVEL_BEGINNER, self::LEVEL_INTERMEDIATE, self::LEVEL_ADVANCED, self::LEVEL_ALL])],
             'price'               => 'required|numeric|min:0',
             'promo_price'         => 'nullable|numeric|min:0|lt:price',
-            'status'              => ['nullable', Rule::in([self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_PUBLISHED, self::STATUS_ARCHIVED])],
-            'thumbnail'           => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
-            'preview_video_url'   => 'nullable|url|max:255',
-            'estimated_duration'  => 'nullable|numeric|min:0',
-            'prerequisites'       => 'nullable|string',
-            'is_featured'         => 'boolean',
+            'description'         => 'nullable|string',
+            'short_info'          => 'nullable|string|max:255',
+            'status'              => 'nullable|string',
+            'thumbnail'           => 'nullable|file|image|max:2048',
+            'sections'            => 'nullable|array',
+            'resources'           => 'nullable|array',
+            'seo_metadata'        => 'nullable|array',
+            'tags'                => 'nullable|array',
             'requires_enrollment' => 'boolean',
             'certificate_enabled' => 'boolean',
-            'tags'                => 'nullable|array',
-
-            // Meta SEO
-            'seo_metadata'             => 'nullable|array',
-            'seo_metadata.title'       => 'nullable|string|max:150',
-            'seo_metadata.description' => 'nullable|string|max:255',
-            'seo_metadata.keywords'    => 'nullable|string|max:255',
-
-            // Arbre du Curriculum (Modules)
-            'sections'                       => 'nullable|array',
-            'sections.*.id'                  => 'nullable',
-            'sections.*.title'               => 'required|string|max:150',
-            'sections.*.description'         => 'nullable|string',
-            'sections.*.status'              => 'nullable|string',
-            'sections.*.order'               => 'required|integer',
-
-            // Arbre du Curriculum (Leçons contenues dans les modules)
-            'sections.*.lessons'             => 'nullable|array',
-            'sections.*.lessons.*.id'        => 'nullable',
-            'sections.*.lessons.*.title'     => 'required|string|max:150',
-            'sections.*.lessons.*.type'      => 'nullable|string|in:video,document,quiz,assignment', // Ajout assignment
-            'sections.*.lessons.*.is_free'   => 'boolean',
-            'sections.*.lessons.*.order'     => 'required|integer',
-            'sections.*.lessons.*.duration_minutes' => 'nullable|integer|min:0', // Depuis l'UI Vue
-            'sections.*.lessons.*.video_url' => 'nullable|url',
-        ];
-
-        return $request->validate($rules);
+            'is_featured'         => 'boolean',
+        ]);
     }
 
-    /**
-     * Synchronise les modules (Sections). Gère la création, mise à jour et suppression en cascade.
-     */
-    private function syncSections(Course $course, array $sectionsData)
+    private function uploadAsset($file, $folder): string
     {
-        $existingSectionIds = $course->sections()->pluck('id')->toArray();
-        $keptSectionIds = [];
-
-        foreach ($sectionsData as $index => $sData) {
-            $section = null;
-            // Différencier un ID réel (en BDD) d'un ID temporaire généré par VueJS (ex: 'sec_170...')
-            $isExisting = isset($sData['id']) && is_numeric($sData['id']);
-
-            if ($isExisting) {
-                $section = $course->sections()->find($sData['id']);
-            }
-
-            if ($section) {
-                $section->update([
-                    'title'       => $sData['title'],
-                    'description' => $sData['description'] ?? null,
-                    'order'       => $index + 1,
-                ]);
-                $keptSectionIds[] = $section->id;
-            } else {
-                $section = $course->sections()->create([
-                    'title'       => $sData['title'],
-                    'description' => $sData['description'] ?? null,
-                    'order'       => $index + 1,
-                ]);
-                $keptSectionIds[] = $section->id;
-            }
-
-            // Sync des leçons dans ce module
-            if (isset($sData['lessons']) && is_array($sData['lessons'])) {
-                $this->syncLessons($section, $sData['lessons']);
-            } else {
-                // Si aucune leçon envoyée, on purge les anciennes leçons du module
-                $section->lessons()->delete();
-            }
-        }
-
-        // Purge des modules qui ont été retirés via l'UI
-        $sectionsToDelete = array_diff($existingSectionIds, $keptSectionIds);
-        if (!empty($sectionsToDelete)) {
-            $course->sections()->whereIn('id', $sectionsToDelete)->delete();
-        }
+        $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        return $file->storeAs("lms/{$folder}", $filename, $this->disk);
     }
 
-    /**
-     * Synchronise les leçons d'un module spécifique.
-     */
-    private function syncLessons(Module $section, array $lessonsData)
-    {
-        $existingLessonIds = $section->lessons()->pluck('id')->toArray();
-        $keptLessonIds = [];
-
-        foreach ($lessonsData as $index => $lData) {
-            $lesson = null;
-            // ID temporaire Vue: 'les_170...', ID réel: 42
-            $isExisting = isset($lData['id']) && is_numeric($lData['id']);
-
-            if ($isExisting) {
-                $lesson = $section->lessons()->find($lData['id']);
-            }
-
-            $payload = [
-                'title'            => $lData['title'],
-                'type'             => $lData['type'] ?? 'video',
-                'slug'             => Str::slug($lData['title']),
-                'video_url'        => $lData['video_url'] ?? null,
-                'is_free_preview'  => filter_var($lData['is_free'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'duration_minutes' => $lData['duration_minutes'] ?? 0,
-                'order'            => $index + 1,
-            ];
-
-            if ($lesson) {
-                $lesson->update($payload);
-                $keptLessonIds[] = $lesson->id;
-            } else {
-                $newLesson = $section->lessons()->create($payload);
-                $keptLessonIds[] = $newLesson->id;
-            }
-        }
-
-        // Purge des leçons retirées via l'UI
-        $lessonsToDelete = array_diff($existingLessonIds, $keptLessonIds);
-        if (!empty($lessonsToDelete)) {
-            $section->lessons()->whereIn('id', $lessonsToDelete)->delete();
-        }
-    }
-
-    /**
-     * Génère un slug unique pour le cours.
-     */
-    private function generateUniqueSlug(string $title): string
+    private function makeUniqueSlug(string $title): string
     {
         $slug = Str::slug($title);
-        $original = $slug;
+        $base = $slug;
         $count = 1;
         while (Course::where('slug', $slug)->exists()) {
-            $slug = $original . '-' . $count++;
+            $slug = $base . '-' . $count++;
         }
         return $slug;
     }
 
-    /**
-     * Logique d'upload pour les images/vidéos.
-     */
-    private function handleAssetUpload($file, $folder): string
-    {
-        $name = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        return $file->storeAs("lms/{$folder}", $name, config('app.disk'));
-    }
-
-    /**
-     * KPI mis en cache pour les performances du Dashboard.
-     */
-    private function buildExecutiveStats(): array
-    {
-        return Cache::remember('snc_executive_stats', 3600, function () {
-            return [
-                'total_courses'   => Course::where('status', '!=', self::STATUS_ARCHIVED)->count(),
-                'total_students'  => Enrollment::distinct('user_id')->count('user_id'),
-                'active_instructors' => Course::distinct('instructor_id')->count('instructor_id'),
-            ];
-        });
-    }
-
-    /**
-     * Fournisseur des données statiques pour les dropdowns.
-     */
-    private function getLevelsForSelect(): array
+    private function getAdvancedStats(): array
     {
         return [
-            ['label' => 'Débutant (Bases)',        'value' => self::LEVEL_BEGINNER],
-            ['label' => 'Intermédiaire (Avancé)',  'value' => self::LEVEL_INTERMEDIATE],
-            ['label' => 'Expert (Maîtrise)',       'value' => self::LEVEL_ADVANCED],
-            ['label' => 'Tous niveaux (Général)',  'value' => self::LEVEL_ALL],
+            'total_courses'   => Course::where('status', '!=', self::STATUS_ARCHIVED)->count(),
+            'total_students'  => Enrollment::distinct('user_id')->count('user_id'),
+            'total_modules'   => Module::count(),
+            'total_resources' => Resource::count(),
         ];
+    }
+
+    private function getFinancialMeta(): array
+    {
+        return [
+            'total_revenue'   => Order::where('status', 'paid')->sum('amount'),
+            'avg_rating'      => round(Review::where('is_approved', true)->avg('rating') ?? 0, 1),
+            'completion_rate' => round(Enrollment::avg('progress_percent') ?? 0, 1),
+        ];
+    }
+
+    private function getLevelsForUI(): array
+    {
+        return [
+            ['label' => 'Débutant', 'value' => self::LEVEL_BEGINNER, 'icon' => 'pi pi-star'],
+            ['label' => 'Intermédiaire', 'value' => self::LEVEL_INTERMEDIATE, 'icon' => 'pi pi-bolt'],
+            ['label' => 'Expert', 'value' => self::LEVEL_ADVANCED, 'icon' => 'pi pi-verified'],
+            ['label' => 'Général', 'value' => self::LEVEL_ALL, 'icon' => 'pi pi-users'],
+        ];
+    }
+
+    private function logAction(string $event, string $desc): void
+    {
+        AuditLog::create([
+            'user_id'     => Auth::id(),
+            'event_name'  => $event,
+            'description' => $desc,
+            'ip_address'  => request()->ip(),
+            'level'       => 'info'
+        ]);
     }
 }

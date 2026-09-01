@@ -107,10 +107,37 @@ const editorMenu = ref([
     { id: 'general', label: 'Informations Générales', description: 'Titre, description, prix', icon: 'pi pi-id-card' },
     { id: 'media', label: 'Médias & Assets', description: 'Vignette, vidéo promo', icon: 'pi pi-image' },
     { id: 'curriculum', label: 'Curriculum & Modules', description: 'Leçons, quiz, ressources', icon: 'pi pi-sitemap' },
+        { id: 'resources', label: 'Ressources', icon: 'pi pi-paperclip', description: 'Documents et fichiers joints' }, // NO
     { id: 'seo', label: 'Optimisation SEO', description: 'Moteurs de recherche & sociaux', icon: 'pi pi-google' },
     { id: 'settings', label: 'Paramètres Avancés', description: 'Certificats, accès, prérequis', icon: 'pi pi-cog' }
 ]);
 const activeEditorTab = ref('general');
+// 3. Méthodes pour gérer les ressources
+const addResource = () => {
+    courseForm.resources.push({
+        id: null,
+        title: '',
+        file: null,
+        size: null,
+        type: null,
+        is_new: true
+    });
+};
+
+const removeResource = (index) => {
+    courseForm.resources.splice(index, 1);
+};
+
+const onResourceSelect = (event, index) => {
+    const file = event.files[0];
+    if (file) {
+        courseForm.resources[index].file = file;
+        courseForm.resources[index].title = courseForm.resources[index].title || file.name.split('.').slice(0, -1).join('.');
+        courseForm.resources[index].size = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        courseForm.resources[index].type = file.name.split('.').pop().toUpperCase();
+    }
+};
+
 
 // ======================================================================================
 // FILTRAGE RÉACTIF
@@ -207,7 +234,8 @@ const courseForm = useForm({
     requires_enrollment: true,
     certificate_enabled: false,
     prerequisites: '',
-    estimated_duration: 0
+    estimated_duration: 0,
+    resources : []
 });
 
 // ======================================================================================
@@ -249,47 +277,52 @@ const openNew = () => {
 
 const editCourse = (data) => {
     courseForm.clearErrors();
-
-    // Deep clone pour éviter de muter les props
     const courseData = cloneDeep(data);
 
+    // Chargement des données simples
     courseForm.id = courseData.id;
     courseForm.title = courseData.title;
     courseForm.slug = courseData.slug;
     courseForm.description = courseData.description || '';
     courseForm.short_info = courseData.short_info || '';
-    courseForm.instructor_id = courseData.instructor_id || null;
-    courseForm.category_id = courseData.category_id || null;
+    courseForm.instructor_id = courseData.instructor_id;
+    courseForm.category_id = courseData.category_id;
     courseForm.level = courseData.level || 'beginner';
     courseForm.price = parseFloat(courseData.price) || 0;
     courseForm.promo_price = courseData.promo_price ? parseFloat(courseData.promo_price) : null;
     courseForm.status = courseData.status || 'draft';
-    courseForm.thumbnail = courseData.thumbnail_path || null;
+    courseForm.thumbnail = courseData.thumbnail_path;
     courseForm.preview_video_url = courseData.preview_video_url || '';
     courseForm.tags = courseData.tags || [];
-    courseForm.seo_metadata = courseData.seo_metadata || { title: '', description: '', keywords: '', og_image: null };
+    courseForm.seo_metadata = courseData.seo_metadata || { title: '', description: '', keywords: '' };
     courseForm.sections = courseData.sections || [];
-    courseForm.is_featured = courseData.is_featured || false;
+    courseForm.is_featured = !!courseData.is_featured;
     courseForm.requires_enrollment = courseData.requires_enrollment ?? true;
-    courseForm.certificate_enabled = courseData.certificate_enabled || false;
+    courseForm.certificate_enabled = !!courseData.certificate_enabled;
     courseForm.prerequisites = courseData.prerequisites || '';
     courseForm.estimated_duration = courseData.estimated_duration || 0;
 
+    // --- CORRECTION : Chargement des Ressources existantes ---
+    courseForm.resources = (courseData.resources || []).map(res => ({
+        id: res.id,
+        title: res.title,
+        file: null, // Pas de nouveau fichier au chargement
+        size: res.human_size, // Utilise l'accesseur du modèle
+        type: res.file_type,
+        full_url: res.full_url, // URL complète pour prévisualisation
+        is_new: false // Important pour le contrôleur Laravel
+    }));
+
     activeEditorTab.value = 'general';
-    lastSavedAt.value = new Date();
     courseDialog.value = true;
 
-    // Injection forcée du contenu HTML dans Quill pour l'édition
+    // Initialisation Quill Editor
     nextTick(() => {
         setTimeout(() => {
             if (editorRef.value && editorRef.value.quill) {
-                const htmlContent = courseData.description || '';
-                const delta = editorRef.value.quill.clipboard.convert({
-                    html: htmlContent
-                });
-                editorRef.value.quill.setContents(delta, 'silent');
+                editorRef.value.quill.root.innerHTML = courseForm.description;
             }
-        }, 100);
+        }, 200);
     });
 };
 
@@ -669,7 +702,63 @@ const thumbnailUrl = computed(() => {
 
   return ''
 })
+const viewResource = (url) => {
+    window.open(url, '_blank');
+};
 
+/**
+ * Forcer le téléchargement d'une ressource
+ */
+const downloadResource = (url) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', ''); // Force le téléchargement
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+/**
+ * Remplacer un fichier existant (Reset de l'état pour afficher l'upload)
+ */
+const replaceFile = (index) => {
+    const resource = courseForm.resources[index];
+    resource.file = null;
+    resource.full_url = null;
+    resource.is_new = true; // On repasse en mode "Nouveau" pour l'upload
+};
+
+/**
+ * Confirmation de suppression
+ */
+const confirmRemoveResource = (index) => {
+    const res = courseForm.resources[index];
+    
+    confirm.require({
+        message: `Voulez-vous vraiment supprimer la ressource "${res.title || 'ce document'}" ? Cette action est irréversible.`,
+        header: 'Confirmation de suppression',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => {
+            removeResource(index);
+            toast.add({ severity: 'info', summary: 'Supprimé', detail: 'La ressource a été retirée de la liste.', life: 3000 });
+        }
+    });
+};
+
+/**
+ * Helper : Icones dynamiques par extension
+ */
+const getFileIcon = (type) => {
+    if (!type) return 'pi pi-file';
+    const t = type.toUpperCase();
+    if (t === 'PDF') return 'pi pi-file-pdf text-rose-500';
+    if (['ZIP', 'RAR', '7Z'].includes(t)) return 'pi pi-box text-amber-500';
+    if (['JPG', 'PNG', 'WEBP', 'JPEG'].includes(t)) return 'pi pi-image text-emerald-500';
+    if (['DOC', 'DOCX'].includes(t)) return 'pi pi-file-word text-blue-500';
+    if (['XLS', 'XLSX', 'CSV'].includes(t)) return 'pi pi-file-excel text-green-600';
+    return 'pi pi-file text-slate-400';
+};
 // Gestion de la sélection du fichier
 const onThumbnailSelect = (event) => {
   const file = event.files[0]
@@ -976,9 +1065,11 @@ onBeforeUnmount(() => {
                             <div class="flex justify-end gap-1">
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Éditer le curriculum'" @click="editCourse(data)" />
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-purple-600 hover:bg-purple-50" v-tooltip.top="'Cloner le cours'" @click="cloneCourse(data)" />
-                                <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Aperçu Public du cours'" />
+                                <!-- <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Aperçu Public du cours'" /> -->
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Archiver le cours'" @click="confirmArchive(data.id)" />
-                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="'Restaurer le cours'" @click="restoreCourse(data.id)" />
+                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="'Restaurer le cours'" @click="restoreCourse(data.id)" >
+  <template v-slot:loadingicon="slotProps"></template>
+</Button>
                                 <Button v-if="data.status === 'archived'" icon="pi pi-ban" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Suppression Définitive'" @click="confirmPurge(data)" />
                             </div>
                         </template>
@@ -1347,7 +1438,7 @@ onBeforeUnmount(() => {
           <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>Poids maximum :</strong> 2 Mo (optimisation automatique à l'upload).</li>
         </ul>
       </div>
-
+<!--       
       <div class="pt-2">
         <FileUpload
           mode="basic"
@@ -1359,7 +1450,7 @@ onBeforeUnmount(() => {
           class="p-button-outlined p-button-secondary w-full border-dashed border-2 font-bold hover:bg-slate-50 py-3"
           auto
         />
-      </div>
+      </div> -->
 
                                 </div>
                             </div>
@@ -1522,6 +1613,101 @@ onBeforeUnmount(() => {
                         <!-- ========================================== -->
                         <!-- TAB 4 : OPTIMISATION SEO & DECOUVERABILITÉ -->
                         <!-- ========================================== -->
+                         <!-- ========================================== -->
+<!-- TAB 4 : RESSOURCES & DOCUMENTS ATTACHÉS    -->
+<!-- ========================================== -->
+<div v-show="activeEditorTab === 'resources'" class="space-y-8" role="tabpanel">
+
+    <!-- HEADER & ACTION -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+            <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                <i class="pi pi-paperclip text-indigo-600"></i> Bibliothèque de Ressources
+            </h3>
+            <p class="text-sm text-slate-500 mt-1 max-w-xl">
+                Gérez les documents d'accompagnement. Les fichiers sont stockés de manière sécurisée sur le disque média.
+            </p>
+        </div>
+        <Button label="Joindre un nouveau fichier" icon="pi pi-plus" class="p-button-primary shadow-md font-bold" @click="addResource" />
+    </div>
+
+    <!-- LISTE DES RESSOURCES -->
+    <div v-if="courseForm.resources.length > 0" class="grid grid-cols-1 gap-4 pb-10">
+        <div v-for="(res, rIdx) in courseForm.resources" :key="rIdx"
+             class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-all flex flex-col lg:flex-row items-center gap-6 group relative">
+                
+            <!-- Badge d'état (Nouveau vs Existant) -->
+            <div class="absolute -top-2 -left-2">
+                <Tag v-if="res.is_new" value="Nouveau" severity="success" class="text-[8px] uppercase px-2 shadow-sm" />
+                <Tag v-else value="En ligne" severity="info" class="text-[8px] uppercase px-2 shadow-sm" />
+            </div>
+
+            <!-- Icone Dynamique basée sur le type -->
+            <div class="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 flex-shrink-0 group-hover:bg-indigo-50 transition-colors shadow-inner">
+                <i :class="[getFileIcon(res.file_type || res.type), 'text-3xl']"></i>
+            </div>
+
+            <!-- Configuration de la ressource -->
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <!-- Titre (Modifiable dans les deux cas) -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom de la ressource</label>
+                    <InputText v-model="res.title" class="w-full font-bold text-slate-700 bg-slate-50 border-transparent focus:bg-white p-3 rounded-xl" placeholder="Titre du document..." />
+                </div>
+
+                <!-- Gestion du fichier -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fichier source</label>
+                    
+                    <!-- Cas 1 : Aucune sélection (Nouveau) -->
+                    <div v-if="!res.file && !res.full_url" class="w-full">
+                        <FileUpload mode="basic" chooseLabel="Choisir un fichier local" @select="onResourceSelect($event, rIdx)" auto class="p-button-sm p-button-secondary w-full border-dashed border-2" />
+                    </div>
+
+                    <!-- Cas 2 : Fichier présent (Local ou Serveur) -->
+                    <div v-else class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div class="flex flex-col overflow-hidden">
+                            <span class="text-xs font-black text-slate-700 truncate max-w-[200px]">
+                                {{ res.file ? res.file.name : 'Document déjà hébergé' }}
+                            </span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                {{ res.human_size || (res.file ? (res.file.size / 1024 / 1024).toFixed(2) + ' MB' : 'Taille inconnue') }}
+                            </span>
+                        </div>
+                        
+                        <!-- Actions sur le fichier -->
+                        <div class="flex items-center gap-2">
+                            <!-- Visualiser (Si PDF ou Image) -->
+                            <Button v-if="res.full_url" icon="pi pi-eye" class="p-button-text p-button-secondary p-button-sm w-8 h-8" v-tooltip.top="'Visualiser'" @click="viewResource(res.full_url)" />
+                            
+                            <!-- Télécharger -->
+                            <Button v-if="res.full_url" icon="pi pi-download" class="p-button-text p-button-info p-button-sm w-8 h-8" v-tooltip.top="'Télécharger'" @click="downloadResource(res.full_url)" />
+                            
+                            <!-- Remplacer -->
+                            <Button icon="pi pi-refresh" class="p-button-text p-button-warning p-button-sm w-8 h-8" v-tooltip.top="'Remplacer le fichier'" @click="replaceFile(rIdx)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton Suppression (CRUD: Delete) -->
+            <div class="flex-shrink-0 pt-4 lg:pt-0">
+                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded bg-white border border-slate-100 hover:bg-rose-50 shadow-sm" @click="confirmRemoveResource(rIdx)" v-tooltip.left="'Supprimer définitivement'" />
+            </div>
+        </div>
+    </div>
+
+    <!-- ÉTAT VIDE -->
+    <div v-else class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-200 text-center flex flex-col items-center justify-center min-h-[400px]">
+        <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
+            <i class="pi pi-paperclip text-4xl"></i>
+        </div>
+      
+        <h4 class="text-xl font-black text-slate-800 mb-2">Votre bibliothèque est vide</h4>
+        <p class="text-slate-500 text-sm max-w-sm mx-auto mb-8">Centralisez ici tous les supports de cours : Guides PDF, ressources ZIP, fichiers de configuration, etc.</p>
+        <Button label="Ajouter ma première ressource" icon="pi pi-plus" class="p-button-primary p-button-lg font-bold shadow-lg" @click="addResource" />
+    </div>
+</div>
                         <div v-show="activeEditorTab === 'seo'" class="space-y-8" role="tabpanel">
 
                             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 flex gap-4 items-start shadow-sm">

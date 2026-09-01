@@ -25,6 +25,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\RealizationController;
 use App\Http\Controllers\SalesReportController;
 use App\Models\Permission;
 use App\Models\Role;
@@ -46,7 +47,7 @@ Route::get('/', [WebSettingController::class, 'landing'])->name('landing');
 Route::get('/contact', [WebSettingController::class, 'contact'])->name('contact');
 Route::get('/about', [WebSettingController::class, 'about'])->name('about');
 Route::get('/academy', [WebSettingController::class, 'academy'])->name('academy');
-
+Route::get('realizations', [WebSettingController::class, 'realizations'])->name('realizations');
 Route::post('/contact', [WebSettingController::class, 'store'])->name('contact.store');
 
 // Route::get('/dashboard', function () {
@@ -118,6 +119,7 @@ Route::middleware(['auth'])->group(function () {
 
     // 2. Gestion E-learning
     Route::resource('courses', CourseController::class);
+
     Route::post('courses/{course}/duplicate', [CourseController::class, 'duplicate'])->name('courses.duplicate');
     Route::post('courses/bulk-destroy', [CourseController::class, 'bulkDestroy'])->name('courses.bulk-destroy');
     Route::post('courses/{course}/restore', [CourseController::class, 'restore'])->name('courses.restore');

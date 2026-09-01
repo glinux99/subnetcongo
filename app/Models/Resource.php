@@ -2,58 +2,64 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Resource extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
-        'lesson_id',
-        'name',
+        'resourceable_id',
+        'resourceable_type',
+        'title',
+        'slug',
         'path',
+        'file_type',
         'mime_type',
         'size',
+        'is_active',
+        'is_external',
+        'sort_order',
+        'uploaded_by',
+        'download_count',
+        'access_level'
     ];
 
+    protected $appends = ['full_url', 'human_size'];
+
     /**
-     * Get the lesson that owns the resource.
+     * RELATION POLYMORPHIQUE
      */
-    public function lesson(): BelongsTo
+    public function resourceable(): MorphTo
     {
-        return $this->belongsTo(Lesson::class);
+        return $this->morphTo();
     }
 
     /**
-     * Get the full URL for the resource file.
+     * ACCESSEUR : URL complète du fichier
      */
-    protected function url(): Attribute
+    public function getFullUrlAttribute(): string
     {
-        return Attribute::make(
-            get: fn () => $this->path ? Storage::disk('media')->url($this->path) : null,
-        );
+        if ($this->is_external) {
+            return $this->path;
+        }
+        return Storage::disk('media')->url($this->path);
     }
 
     /**
-     * Get the human-readable size of the file.
+     * ACCESSEUR : Taille lisible (ex: 2.4 MB)
+     * Correspond au champ 'size' que vous utilisez dans votre JS
      */
-    public function getFormattedSizeAttribute(): string
+    public function getHumanSizeAttribute(): string
     {
+        $bytes = $this->size;
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $bytes = max($this->size, 0);
-        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-        $pow = min($pow, count($units) - 1);
-        $bytes /= pow(1024, $pow);
-
-        return round($bytes, 2) . ' ' . $units[$pow];
+        for ($i = 0; $bytes > 1024; $i++) {
+            $bytes /= 1024;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
     }
 }
