@@ -18,6 +18,11 @@ return new class extends Migration
             $table->foreignId('module_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
             $table->integer('seconds_spent')->default(0);
+            $table->integer('progress_percent')->default(0);
+            $table->integer('time_spent_seconds')->default(0);
+            $table->timestamp('last_accessed_at')->nullable();
+            
+            
             $table->boolean('is_completed')->default(false);
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

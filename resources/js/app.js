@@ -10,6 +10,7 @@ import Aura from '@primevue/themes/aura';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
+import Tooltip from 'primevue/tooltip';
 
 import '@/sakai/assets/styles.scss';
 import '@/sakai/assets/tailwind.css';
@@ -75,6 +76,7 @@ createInertiaApp({
             .use(i18n)
             .use(ToastService)
             .use(ConfirmationService)
+            .directive('tooltip', Tooltip)
             .mixin({
                 methods: {
                     can: function (permissions) {

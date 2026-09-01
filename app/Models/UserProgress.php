@@ -23,6 +23,7 @@ class UserProgress extends Model
         'completed_at',
         'time_spent_seconds',
         'notes',
+        'last_accessed_at'
     ];
 
     /**

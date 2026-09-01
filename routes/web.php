@@ -174,6 +174,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/results/{result}', [ExamAttemptController::class, 'results'])->name('exams.results');
     Route::get('/exams/{exam}/audit-logs', [ExamController::class, 'logActivity'])->name('exams.audit-logs');
     Route::get('/my-exams', [ExamAttemptController::class, 'index'])->name('exams.learner.index');
+
+    // ===== STUDENT EXPERIENCE ROUTES (Apprenant) =====
+    Route::prefix('student')->name('student.')->group(function () {
+        // Mes cours
+        Route::get('/my-courses', [App\Http\Controllers\Student\StudentController::class, 'myCourses'])->name('my-courses');
+        // Mes certificats
+        Route::get('/certificates', [App\Http\Controllers\Student\StudentController::class, 'certificates'])->name('certificates');
+        // Ma progression
+        Route::get('/progress', [App\Http\Controllers\Student\StudentController::class, 'progress'])->name('progress');
+        // Player de leçon
+        Route::get('/courses/{course}/lessons/{lesson}', [App\Http\Controllers\Student\StudentController::class, 'lessonPlayer'])->name('lesson-player');
+        // Téléchargement de ressources
+        Route::get('/resources/{resource}/download', [App\Http\Controllers\Student\StudentController::class, 'resourceDownload'])->name('resources.download');
+    });
     // 4. Communauté & Étudiants
     Route::prefix('users')->name('users.')->group(function () {
         Route::resource('students', App\Http\Controllers\User\StudentController::class);

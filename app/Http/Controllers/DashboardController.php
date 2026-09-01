@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 /**
  * ======================================================================================
- * SUBNETCONGO LMS - EXECUTIVE ANALYTICS & INFRASTRUCTURE ENGINE v13.5
+ * SUBNETCONGO LMS - EXECUTIVE ANALYTICS & INFRASTRUCTURE ENGINE v13.6
  * ======================================================================================
  *
  * DESCRIPTION :
@@ -12,41 +12,41 @@ namespace App\Http\Controllers;
  * l'agrégation massive de données, les calculs de tendances par IA statistique,
  * et le monitoring temps réel de l'infrastructure hybride (Windows/Linux).
  *
- * ARCHITECTURE :
- * - Platform-Agnostic Infrastructure Monitor (Win/Linux)
- * - Advanced Statistical Engine (Regression, Variance, Z-Score)
- * - Multi-Layer Caching Strategy
- * - Massive Data Streamer (Chunked Exports)
- * - Pedagogical Intelligence Metrics
+ * CHANGELOG v13.6 (corrections) :
+ * - studentDashboard() : requête vidéos réécrite (l'ancienne générait du SQL invalide),
+ *   dédoublonnage des icônes de timeline, colonne de temps passé unifiée,
+ *   rang et streak réellement calculés (avant : valeurs bidon), garde-fous null
+ *   sur les enrollments orphelins (cours supprimé).
+ * - index() : gestion d'erreur corrigée (code mort supprimé, plus de fuite de message
+ *   brut en production).
+ * - Nettoyage : imports et méthodes mortes supprimés.
  *
- * @version     13.5.0 (Enterprise Gold Edition)
+ * @version     13.6.0 (Enterprise Gold Edition)
  * @author      SubnetCongo R&D Division
  * @license     Proprietary - SubnetCongo
  */
 
 use App\Models\User;
 use App\Models\Course;
-use App\Models\Order;
 use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\ExamAttempt;
 use App\Models\Certificate;
+use App\Http\Controllers\CertificateController as CertificateEngine;
+use App\Models\Exam;
 use App\Models\Lesson;
 use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\Payment;
-use App\Models\Module;
 use App\Models\UserProgress;
+use App\Models\Resource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
@@ -69,7 +69,7 @@ class DashboardController extends Controller
         'amber' => '#F59E0B',
         'slate' => '#1E293B',
         'blue' => '#3B82F6',
-        'violet' => '#8B5CF6'
+        'violet' => '#8B5CF6',
     ];
 
     /**
@@ -77,7 +77,7 @@ class DashboardController extends Controller
      * 1. MÉTHODE PRINCIPALE : INDEX
      * --------------------------------------------------------------------------
      */
-        public function index(Request $request)
+    public function index(Request $request)
     {
         try {
             $user = Auth::user();
@@ -94,150 +94,358 @@ class DashboardController extends Controller
 
             // Fallback si aucun rôle
             return redirect()->route('login')->with('error', 'Accès restreint.');
+        } catch (\Throwable $e) {
+            // \Throwable (pas seulement \Exception) : capture aussi les TypeError,
+            // par ex. un accès à une relation nulle non protégée.
+            Log::error('Dashboard Engine Failure: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
-        } catch (\Exception $e) {
-            Log::error("Dashboard Engine Failure: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return $e->getMessage();
-            return Inertia::render('Errors/DashboardError', ['error' => $e->getMessage()]);
+            return Inertia::render('Errors/DashboardError', [
+                // Le détail technique ne part jamais vers le client en production.
+                'error' => config('app.debug')
+                    ? $e->getMessage()
+                    : "Une erreur est survenue lors du chargement du tableau de bord.",
+            ]);
         }
     }
 
     /**
      * --------------------------------------------------------------------------
-     * 1. DASHBOARD ÉTUDIANT (LOGIQUE APPRENANT)
+     * 2. DASHBOARD ÉTUDIANT (LOGIQUE APPRENANT)
      * --------------------------------------------------------------------------
      */
     private function studentDashboard(User $user)
     {
         // Récupération des cours inscrits avec progression réelle
         $enrollments = Enrollment::where('user_id', $user->id)
-            ->with(['course' => function($q) {
-                $q->select('id', 'title', 'thumbnail_path', 'instructor_id')
+            ->with(['course' => function ($q) {
+                $q->select('id', 'title', 'thumbnail_path', 'instructor_id', 'level')
                   ->with('instructor:id,name');
             }])
             ->get();
 
-        $myCourses = $enrollments->map(function($en) {
-            return [
-                'id' => $en->course->id,
-                'title' => $en->course->title,
-                'instructor' => $en->course->instructor->name ?? 'SubnetCongo',
-                'progress' => $en->progress_percent,
-                'last_accessed' => $en->updated_at->diffForHumans(),
-                'image' => $en->course->thumbnail_path,
-                // On cherche la prochaine leçon non terminée
-                'next_lesson' => $this->getNextLessonTitle($en->course_id, Auth::id())
-            ];
-        });
+        // On ignore les inscriptions orphelines (cours supprimé depuis) pour éviter
+        // un crash sur $en->course->id quand $en->course est null.
+        $myCourses = $enrollments
+            ->filter(fn ($en) => $en->course !== null)
+            ->map(function ($en) use ($user) {
+                $next = $this->getNextLesson($en->course_id, $user->id);
+                $lessonsTotal = Lesson::whereHas('module', fn ($q) => $q->where('course_id', $en->course_id))->count();
+                $lessonsDone = UserProgress::where('user_id', $user->id)
+                    ->where('course_id', $en->course_id)
+                    ->where('progress_percent', '>=', 100)
+                    ->count();
 
-        // Calcul des XP et Streaks (Simulation basée sur les activités)
-        $xp = UserProgress::where('user_id', $user->id)->where('is_completed', true)->count() * 50;
-        $certificatesCount = Certificate::where('user_id', $user->id)->count();
+                return [
+                    'id' => $en->course->id,
+                    'title' => $en->course->title,
+                    'instructor' => $en->course->instructor->name ?? 'SubnetCongo',
+                    'progress' => (float) $en->progress_percent,
+                    'last_accessed' => $en->updated_at?->diffForHumans(),
+                    'image' => $en->course->thumbnail_path,
+                    'level' => $en->course->level ?? 'all',
+                    'lessons_done' => $lessonsDone,
+                    'lessons_total' => $lessonsTotal,
+                    // Objet complet (id + title + type) pour le player de leçon
+                    'next_lesson' => $next,
+                ];
+            })
+            ->values();
+
+        // Calcul des XP et Streaks
+        $xp = UserProgress::where('user_id', $user->id)
+            ->where('progress_percent', '>=', 100)
+            ->count() * 50;
+
+        $certificatesCount = Certificate::where('user_id', $user->id)
+            ->where('status', CertificateEngine::STATUS_ACTIVE)
+            ->count();
+
+        // ── Certificats (liste enrichie pour le panneau Certificats) ──
+        $certificates = Certificate::with('course:id,title,thumbnail_path')
+            ->where('user_id', $user->id)
+            ->where('status', CertificateEngine::STATUS_ACTIVE)
+            ->orderByDesc('issued_at')
+            ->get()
+            ->map(fn (Certificate $cert) => [
+                'id' => $cert->id,
+                'course_id' => $cert->course_id,
+                'course_title' => $cert->course?->title ?? 'Cours retiré',
+                'course_image' => $cert->course?->thumbnail_path,
+                'score' => (float) $cert->score,
+                'issued_at' => $cert->issued_at?->format('d/m/Y'),
+                'certificate_code' => $cert->certificate_code,
+                'download_url' => route('certificates.download', $cert->id),
+            ])
+            ->values();
+
+        // ── Examens à venir (publiés, actifs, dans la fenêtre de disponibilité) ──
+        $enrolledCourseIds = $enrollments->pluck('course_id')->filter()->values()->all();
+
+        $upcomingExams = Exam::with('course:id,title')
+            ->where('is_published', true)
+            ->where('status', Exam::STATUS_ACTIVE)
+            ->where(function ($q) use ($enrolledCourseIds) {
+                $q->whereIn('course_id', $enrolledCourseIds)
+                  ->orWhereNull('course_id');
+            })
+            ->whereDoesntHave('attempts', function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->whereIn('status', [ExamAttempt::STATUS_IN_PROGRESS, ExamAttempt::STATUS_COMPLETED]);
+            })
+            ->orderBy('available_from')
+            ->limit(8)
+            ->get()
+            ->map(fn (Exam $exam) => [
+                'id' => $exam->id,
+                'title' => $exam->title,
+                'course_id' => $exam->course_id,
+                'course_title' => $exam->course?->title ?? 'Examen global',
+                'duration_min' => (int) ($exam->time_limit_minutes ?? $exam->duration_minutes ?? 0),
+                'questions_count' => $exam->questions()->count(),
+                'status' => $exam->isAvailable() ? 'ready' : 'locked',
+                'scheduled_at' => $exam->available_from?->toIso8601String(),
+            ])
+            ->values();
+
+        // ── Examens en cours (à reprendre) ──
+        $inProgressExams = ExamAttempt::with(['exam.course:id,title'])
+            ->where('user_id', $user->id)
+            ->where('status', ExamAttempt::STATUS_IN_PROGRESS)
+            ->orderByDesc('started_at')
+            ->limit(4)
+            ->get()
+            ->map(fn (ExamAttempt $attempt) => [
+                'id' => $attempt->exam_id,
+                'title' => $attempt->exam?->title ?? 'Examen',
+                'course_title' => $attempt->exam?->course?->title ?? '—',
+                'attempt_uuid' => $attempt->uuid,
+                'remaining_seconds' => max(0, ($attempt->exam?->time_limit_minutes ?? 0) * 60 - $attempt->time_spent_seconds),
+            ])
+            ->values();
+
+        // ── Ressources (supports + vidéos) pour chaque cours inscrit ──
+        $courseResources = $this->getCourseResourcesFor($enrolledCourseIds);
 
         return Inertia::render('DashboardS', [
+            // Généralement déjà partagé globalement par HandleInertiaRequests ;
+            // explicité ici par sécurité pour ne jamais dépendre du middleware partagé.
+            'auth' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'profile_photo_url' => $user->profile_photo_url ?? null,
+                ],
+            ],
             'meta' => [
                 'greeting' => 'Bonjour',
-                'message' => $myCourses->count() > 0 ? "Continuez vos efforts, vous progressez bien !" : "Bienvenue ! Trouvez votre premier cours pour commencer.",
+                'message' => $myCourses->count() > 0
+                    ? 'Continuez vos efforts, vous progressez bien !'
+                    : 'Bienvenue ! Trouvez votre premier cours pour commencer.',
             ],
             'stats' => [
                 'xp' => $xp,
                 'streak' => $this->calculateLoginStreak($user->id),
                 'certificates' => $certificatesCount,
-                'hours_studied' => round(UserProgress::where('user_id', $user->id)->sum('seconds_spent'), 1),
+                'hours_studied' => round(UserProgress::where('user_id', $user->id)->sum('time_spent_seconds') / 3600, 1),
                 'rank' => $this->getStudentRank($user->id, $xp),
-                'completion_rate' => $enrollments->avg('progress_percent') ?? 0
+                'completion_rate' => round($enrollments->avg('progress_percent') ?? 0, 1),
             ],
             'myCourses' => $myCourses,
             'activityChart' => $this->getStudentActivityHistory($user->id),
             'recentActivities' => $this->getStudentRecentTimeline($user->id),
-            'leaderboard' => $this->computeGamificationRankings() // Top 10 global
+            'leaderboard' => $this->computeGamificationRankings(),
+            'certificates' => $certificates,
+            'upcomingExams' => $upcomingExams,
+            'inProgressExams' => $inProgressExams,
+            'courseResources' => $courseResources,
         ]);
     }
-    private function getNextLessonTitle($courseId, $userId)
+
+    /**
+     * Construit { [course_id]: { materials: [], videos: [] } } pour un set de cours.
+     * Toujours initialisé pour éviter les clés manquantes côté front (getResources()).
+     */
+    private function getCourseResourcesFor(array $courseIds): array
     {
-        // On récupère la première leçon du cours qui n'est pas marquée comme complétée dans user_progress
-        $completedLessonIds = UserProgress::where('user_id', $userId)
-            ->where('is_completed', true)
+        $courseResources = [];
+
+        if (empty($courseIds)) {
+            return $courseResources;
+        }
+
+        foreach ($courseIds as $cid) {
+            $courseResources[$cid] = ['materials' => [], 'videos' => []];
+        }
+
+        $materials = Resource::where('resourceable_type', Course::class)
+            ->whereIn('resourceable_id', $courseIds)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'resourceable_id', 'title', 'file_type', 'mime_type', 'size']);
+
+        foreach ($materials as $m) {
+            $courseResources[$m->resourceable_id]['materials'][] = [
+                'id' => $m->id,
+                'title' => $m->title,
+                'type' => $m->file_type,
+                'size' => (int) $m->size,
+                'mime_type' => $m->mime_type,
+                'download_url' => route('student.resources.download', $m->id),
+            ];
+        }
+
+        // NOTE : l'ancienne requête utilisait whereIn(DB::raw('(SELECT ...)'), ...) —
+        // Eloquent attend un nom de colonne en 1er argument, pas une sous-requête brute
+        // combinée de cette façon (ça générait du SQL invalide). Remplacé par un join.
+        $videos = Lesson::query()
+            ->select('lessons.id', 'lessons.title', 'lessons.video_url', 'lessons.duration_minutes', 'modules.course_id')
+            ->join('modules', 'modules.id', '=', 'lessons.module_id')
+            ->whereIn('modules.course_id', $courseIds)
+            ->where('lessons.type', Lesson::TYPE_VIDEO)
+            ->orderBy('lessons.order')
+            ->get();
+
+        foreach ($videos as $v) {
+            $courseResources[$v->course_id]['videos'][] = [
+                'id' => $v->id,
+                'lesson_id' => $v->id,
+                'title' => $v->title,
+                'url' => $v->video_url,
+                'duration' => ($v->duration_minutes ?? 0) * 60,
+                'thumbnail' => null,
+            ];
+        }
+
+        return $courseResources;
+    }
+
+    /**
+     * Retourne la prochaine leçon non terminée (objet complet) ou null.
+     */
+    private function getNextLesson(int $courseId, int $userId): ?array
+    {
+        $completedIds = UserProgress::where('user_id', $userId)
+            ->where('progress_percent', '>=', 100)
             ->pluck('lesson_id');
 
-        $nextLesson = DB::table('lessons')
+        $next = DB::table('lessons')
             ->join('modules', 'lessons.module_id', '=', 'modules.id')
             ->where('modules.course_id', $courseId)
-            ->whereNotIn('lessons.id', $completedLessonIds)
-            ->orderBy('modules.order', 'asc')
-            ->orderBy('lessons.order', 'asc')
-            ->first(['lessons.title']);
+            ->whereNotIn('lessons.id', $completedIds)
+            ->orderBy('modules.order')
+            ->orderBy('lessons.order')
+            ->first(['lessons.id', 'lessons.title', 'lessons.type']);
 
-        return $nextLesson->title ?? 'Cours terminé !';
+        return $next ? [
+            'id' => $next->id,
+            'title' => $next->title,
+            'type' => $next->type,
+        ] : null;
     }
 
-    private function calculateLoginStreak($userId)
+    /**
+     * Calcule le nombre de jours consécutifs (streak) de connexion.
+     * Avant : comptait juste le nombre total de logins sur 30 jours (aucune notion
+     * de "consécutif"). Ici on remonte jour par jour depuis aujourd'hui (ou hier,
+     * si l'utilisateur ne s'est pas encore connecté aujourd'hui) tant que la chaîne
+     * n'est pas rompue.
+     */
+    private function calculateLoginStreak(int $userId): int
     {
-        // Calcul simplifié des jours consécutifs via AuditLog
-        return AuditLog::where('user_id', $userId)
+        $loginDates = AuditLog::where('user_id', $userId)
             ->where('event_name', 'LOGIN')
-            ->distinct()
-            ->where('created_at', '>=', now()->subDays(30))
+            ->where('created_at', '>=', now()->subDays(90))
+            ->pluck('created_at')
+            ->map(fn ($dt) => Carbon::parse($dt)->toDateString())
+            ->unique()
+            ->values();
+
+        if ($loginDates->isEmpty()) {
+            return 0;
+        }
+
+        $cursor = Carbon::today();
+        if (! $loginDates->contains($cursor->toDateString())) {
+            $cursor->subDay(); // le streak reste "actif" si pas encore connecté aujourd'hui
+        }
+
+        $streak = 0;
+        while ($loginDates->contains($cursor->toDateString())) {
+            $streak++;
+            $cursor->subDay();
+        }
+
+        return $streak;
+    }
+
+    /**
+     * Calcule le rang réel de l'étudiant par rapport aux autres, basé sur l'XP.
+     * Avant : retournait simplement le nombre total d'étudiants, sans lien avec $xp.
+     */
+    private function getStudentRank(int $userId, int $xp): int
+    {
+        $studentsWithMoreXp = UserProgress::query()
+            ->select('user_id', DB::raw('COUNT(*) * 50 as xp_total'))
+            ->where('progress_percent', '>=', 100)
+            ->groupBy('user_id')
+            ->havingRaw('COUNT(*) * 50 > ?', [$xp])
+            ->get()
             ->count();
+
+        return $studentsWithMoreXp + 1;
     }
 
-    private function getStudentRank($userId, $xp)
+    /**
+     * Historique d'assiduité (heures d'étude par jour, 7 derniers jours).
+     * Avant : sommait la colonne `seconds_spent` (incohérente avec `time_spent_seconds`
+     * utilisée ailleurs) et renvoyait des secondes brutes alors que le graphique
+     * affiche "Heures d'étude". Corrigé + labels de jours en français.
+     */
+    private function getStudentActivityHistory(int $userId): array
     {
-        // Position par rapport aux autres élèves basés sur l'XP total
-        return User::role('student')->count(); // À affiner avec une requête de rang SQL
+        $labels = collect(range(6, 0))->map(
+            fn ($i) => Carbon::now()->subDays($i)->locale('fr')->isoFormat('ddd')
+        )->values();
+
+        $data = collect(range(6, 0))->map(function ($i) use ($userId) {
+            $seconds = UserProgress::where('user_id', $userId)
+                ->whereDate('updated_at', Carbon::now()->subDays($i))
+                ->sum('time_spent_seconds');
+
+            return round($seconds / 3600, 1);
+        })->values();
+
+        return ['labels' => $labels->all(), 'data' => $data->all()];
     }
 
-    private function getStudentActivityHistory($userId)
-    {
-        // Récupère les minutes passées par jour sur les 7 derniers jours
-        $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->format('D'));
-        $data = collect(range(6, 0))->map(function($i) use ($userId) {
-            return UserProgress::where('user_id', $userId)
-                ->whereDate('updated_at', now()->subDays($i))
-                ->sum('seconds_spent'); // Converti en heures
-        });
-
-        return ['labels' => $days, 'data' => $data];
-    }
-
-    private function getStudentRecentTimeline($userId)
+    /**
+     * Flux d'activité récente pour la timeline.
+     * Avant : 'icon' => 'pi pi-check' — le composant Vue préfixe déjà par "pi ",
+     * ce qui produisait la classe invalide "pi pi pi-check". Corrigé.
+     */
+    private function getStudentRecentTimeline(int $userId): array
     {
         return AuditLog::where('user_id', $userId)
             ->latest()
             ->take(5)
             ->get()
-            ->map(fn($log) => [
+            ->map(fn ($log) => [
                 'event' => $log->event_name,
                 'detail' => $log->description,
                 'time' => $log->created_at->diffForHumans(),
-                'type' => $log->level, // info, success, etc
-                'icon' => $log->event_name === 'LESSON_COMPLETED' ? 'pi pi-check' : 'pi pi-info'
-            ]);
+                'type' => $log->level ?? 'info', // success | info | warning
+                'icon' => $log->event_name === 'LESSON_COMPLETED' ? 'pi-check' : 'pi-info-circle',
+            ])
+            ->values()
+            ->toArray();
     }
 
     /**
      * --------------------------------------------------------------------------
-     * 4. MÉTHODES D'INFRASTRUCTURE (ADMIN SIDE - MULTI-OS)
+     * 3. MÉTHODES D'INFRASTRUCTURE (ADMIN SIDE - MULTI-OS)
      * --------------------------------------------------------------------------
      */
-
-    private function getDbLatency()
-    {
-        $start = microtime(true);
-        DB::select('SELECT 1');
-        return round((microtime(true) - $start) * 1000, 2);
-    }
-
-    private function getLinuxRamUsage()
-    {
-        $free = shell_exec('free');
-        if (!$free) return 0;
-        $free = (string)trim($free);
-        $free_arr = explode("\n", $free);
-        $mem = array_filter(explode(" ", $free_arr[1]));
-        $mem = array_merge($mem);
-        return round(($mem[2] / $mem[1]) * 100);
-    }
     private function adminDashboard(Request $request)
     {
         $filters = [
@@ -247,7 +455,6 @@ class DashboardController extends Controller
             'search' => $request->input('search', ''),
         ];
 
-        // On enregistre l'audit
         $this->logActivity('ADMIN_DASHBOARD_VIEW', 'Consultation des rapports de direction');
 
         return Inertia::render('Dashboard', [
@@ -259,14 +466,9 @@ class DashboardController extends Controller
             'leaderboard' => $this->computeGamificationRankings(),
             'activities' => $this->fetchRecentAuditTrail(),
             'supportStatus' => $this->getSupportMetrics(),
-            'infra' => $this->getRealTimeInfrastructureStatus() // Détection Windows/Linux intégrée
+            'infra' => $this->getRealTimeInfrastructureStatus(),
         ]);
     }
-    /**
-     * --------------------------------------------------------------------------
-     * 2. MOTEUR D'INFRASTRUCTURE (WINDOWS & LINUX)
-     * --------------------------------------------------------------------------
-     */
 
     /**
      * Récupère le statut réel du serveur en s'adaptant à l'OS.
@@ -274,13 +476,9 @@ class DashboardController extends Controller
     private function getRealTimeInfrastructureStatus(): array
     {
         return Cache::remember(self::CACHE_KEY_INFRA, 30, function () {
-            $os = PHP_OS_FAMILY; // Windows, Linux, Darwin, etc.
-
-            if ($os === 'Windows') {
-                return $this->getWindowsMetrics();
-            }
-
-            return $this->getLinuxMetrics();
+            return PHP_OS_FAMILY === 'Windows'
+                ? $this->getWindowsMetrics()
+                : $this->getLinuxMetrics();
         });
     }
 
@@ -290,27 +488,23 @@ class DashboardController extends Controller
     private function getWindowsMetrics(): array
     {
         try {
-            // CPU Usage via WMIC
-            $cpuCmd = 'wmic cpu get loadpercentage /value';
-            $cpuOutput = shell_exec($cpuCmd);
-            preg_match('/LoadPercentage=(\d+)/', $cpuOutput, $matches);
-            $cpu = isset($matches[1]) ? (int)$matches[1] : rand(10, 30);
+            $cpuOutput = shell_exec('wmic cpu get loadpercentage /value');
+            preg_match('/LoadPercentage=(\d+)/', (string) $cpuOutput, $matches);
+            $cpu = isset($matches[1]) ? (int) $matches[1] : rand(10, 30);
 
-            // RAM Usage via systeminfo
             $freeMem = shell_exec('wmic OS get FreePhysicalMemory /Value');
             $totalMem = shell_exec('wmic OS get TotalVisibleMemorySize /Value');
-            preg_match('/FreePhysicalMemory=(\d+)/', $freeMem, $mFree);
-            preg_match('/TotalVisibleMemorySize=(\d+)/', $totalMem, $mTotal);
+            preg_match('/FreePhysicalMemory=(\d+)/', (string) $freeMem, $mFree);
+            preg_match('/TotalVisibleMemorySize=(\d+)/', (string) $totalMem, $mTotal);
 
             $ram = 0;
-            if (isset($mFree[1]) && isset($mTotal[1])) {
+            if (isset($mFree[1], $mTotal[1]) && (int) $mTotal[1] > 0) {
                 $ram = round(100 - (($mFree[1] / $mTotal[1]) * 100));
             }
 
-            // Disk Usage
-            $diskFree = disk_free_space("C:");
-            $diskTotal = disk_total_space("C:");
-            $diskUsage = round(100 - (($diskFree / $diskTotal) * 100));
+            $diskFree = disk_free_space('C:');
+            $diskTotal = disk_total_space('C:');
+            $diskUsage = $diskTotal > 0 ? round(100 - (($diskFree / $diskTotal) * 100)) : 0;
 
             return [
                 'platform' => 'Windows (Development)',
@@ -319,9 +513,9 @@ class DashboardController extends Controller
                 'disk' => $diskUsage,
                 'db_latency' => $this->measureDbLatency(),
                 'status' => $cpu < 85 ? 'Optimal' : 'Surchargé',
-                'uptime' => 'N/A sur Windows dev'
+                'uptime' => 'N/A sur Windows dev',
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->getMockMetrics('Erreur Win Metrics: ' . $e->getMessage());
         }
     }
@@ -332,23 +526,14 @@ class DashboardController extends Controller
     private function getLinuxMetrics(): array
     {
         try {
-            // CPU Load
             $load = sys_getloadavg();
-            $cpu = round($load[0] * 100 / 4); // Basé sur 4 coeurs, à adapter
+            $cpu = round($load[0] * 100 / 4); // basé sur 4 coeurs, à adapter si besoin
 
-            // RAM via /proc/meminfo ou free
-            $free = shell_exec('free');
-            $free = (string)trim($free);
-            $free_arr = explode("\n", $free);
-            $mem = explode(" ", $free_arr[1]);
-            $mem = array_filter($mem);
-            $mem = array_merge($mem);
-            $ram = round(($mem[2] / $mem[1]) * 100);
+            $ram = $this->getLinuxRamUsage();
 
-            // Disk
-            $diskFree = disk_free_space("/");
-            $diskTotal = disk_total_space("/");
-            $diskUsage = round(100 - (($diskFree / $diskTotal) * 100));
+            $diskFree = disk_free_space('/');
+            $diskTotal = disk_total_space('/');
+            $diskUsage = $diskTotal > 0 ? round(100 - (($diskFree / $diskTotal) * 100)) : 0;
 
             return [
                 'platform' => 'Linux (Production)',
@@ -357,15 +542,37 @@ class DashboardController extends Controller
                 'disk' => $diskUsage,
                 'db_latency' => $this->measureDbLatency(),
                 'status' => $cpu < 80 ? 'Optimal' : 'Attention',
-                'uptime' => shell_exec('uptime -p')
+                'uptime' => trim((string) shell_exec('uptime -p')),
             ];
-        } catch (\Exception $e) {
-            return $this->getMockMetrics('Erreur Linux Metrics');
+        } catch (\Throwable $e) {
+            return $this->getMockMetrics('Erreur Linux Metrics: ' . $e->getMessage());
         }
     }
 
     /**
-     * Mesure la latence réelle de la DB (Round trip)
+     * Utilisation RAM sous Linux via `free`. Extrait dans sa propre méthode pour
+     * être réutilisable (avant : dupliqué en ligne dans getLinuxMetrics() ET dans
+     * une méthode getLinuxRamUsage() jamais appelée).
+     */
+    private function getLinuxRamUsage(): int
+    {
+        $free = trim((string) shell_exec('free'));
+        if (! $free) {
+            return 0;
+        }
+
+        $lines = explode("\n", $free);
+        $mem = array_values(array_filter(explode(' ', $lines[1] ?? '')));
+
+        if (count($mem) < 3 || (float) $mem[1] === 0.0) {
+            return 0;
+        }
+
+        return (int) round(($mem[2] / $mem[1]) * 100);
+    }
+
+    /**
+     * Mesure la latence réelle de la DB (round trip).
      */
     private function measureDbLatency(): float
     {
@@ -376,17 +583,15 @@ class DashboardController extends Controller
 
     /**
      * --------------------------------------------------------------------------
-     * 3. MOTEUR ANALYTIQUE (MATHÉMATIQUES & STATS)
+     * 4. MOTEUR ANALYTIQUE (MATHÉMATIQUES & STATS)
      * --------------------------------------------------------------------------
-     */
-
-    /**
-     * Calcule le taux de désabonnement (Churn Rate) des 30 derniers jours
      */
     private function calculateChurnRate(): float
     {
         $totalStart = User::students()->where('created_at', '<', now()->subDays(30))->count();
-        if ($totalStart === 0) return 0.0;
+        if ($totalStart === 0) {
+            return 0.0;
+        }
 
         $inactives = User::students()
             ->where('last_login_at', '<', now()->subDays(30))
@@ -396,31 +601,30 @@ class DashboardController extends Controller
     }
 
     /**
-     * Calcul de la prédiction de revenus (Régression Linéaire simple)
-     * Prédit le revenu du mois prochain basé sur les 6 derniers mois.
+     * Prédiction de revenus (régression linéaire simple) sur les 6 derniers mois.
      */
     private function predictNextMonthRevenue(): float
     {
-        $data = collect(range(5, 0))->map(function($i) {
+        $data = collect(range(5, 0))->map(function ($i) {
             $date = now()->subMonths($i);
             return Payment::whereMonth('created_at', $date->month)
-                          ->whereYear('created_at', $date->year)
-                          ->sum('amount');
+                ->whereYear('created_at', $date->year)
+                ->sum('amount');
         });
 
         $n = $data->count();
-        $sumX = collect(range(0, $n-1))->sum();
+        $sumX = collect(range(0, $n - 1))->sum();
         $sumY = $data->sum();
-        $sumXY = $data->map(fn($y, $x) => $x * $y)->sum();
-        $sumX2 = collect(range(0, $n-1))->map(fn($x) => $x * $x)->sum();
+        $sumXY = $data->map(fn ($y, $x) => $x * $y)->sum();
+        $sumX2 = collect(range(0, $n - 1))->map(fn ($x) => $x * $x)->sum();
 
         $denominator = ($n * $sumX2) - ($sumX * $sumX);
-        if ($denominator == 0) return $data->last();
+        if ($denominator == 0) {
+            return (float) $data->last();
+        }
 
         $slope = (($n * $sumXY) - ($sumX * $sumY)) / $denominator;
         $intercept = ($sumY - ($slope * $sumX)) / $n;
-
-        // Prédiction pour le mois n+1
         $prediction = $intercept + ($slope * $n);
 
         return round(max(0, $prediction), 2);
@@ -428,119 +632,88 @@ class DashboardController extends Controller
 
     /**
      * --------------------------------------------------------------------------
-     * 4. GESTION DES KPIS ET DONNÉES FINANCIÈRES
+     * 5. GESTION DES KPIS ET DONNÉES FINANCIÈRES
      * --------------------------------------------------------------------------
      */
-
     private function calculateExecutiveKPIs(array $filters): array
     {
-        return Cache::remember('kpi_v13_'.serialize($filters), 600, function() use ($filters) {
+        return Cache::remember('kpi_v13_' . serialize($filters), 600, function () use ($filters) {
             $targetYear = $filters['year'];
 
-            // Inscriptions
             $studentsCount = User::students()->count();
             $newStudentsThisMonth = User::students()
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count();
 
-            // Finance
             $revenue = Payment::whereYear('created_at', $targetYear)->sum('amount');
             $prevYearRevenue = Payment::whereYear('created_at', $targetYear - 1)->sum('amount');
             $growth = $prevYearRevenue > 0 ? (($revenue - $prevYearRevenue) / $prevYearRevenue) * 100 : 100;
 
-            // Pédagogie
             $completionRate = $this->getGlobalCompletionRate();
 
             return [
                 'students' => [
                     'total' => $studentsCount,
                     'new_month' => $newStudentsThisMonth,
-                    'churn' => $this->calculateChurnRate()
+                    'churn' => $this->calculateChurnRate(),
                 ],
                 'revenue' => [
                     'total' => round($revenue, 2),
                     'predicted' => $this->predictNextMonthRevenue(),
                     'growth' => round($growth, 1),
                     'target' => 2500000,
-                    'progress' => round(($revenue / 2500000) * 100, 1)
+                    'progress' => round(($revenue / 2500000) * 100, 1),
                 ],
                 'academic' => [
                     'completion' => $completionRate,
                     'avg_score' => $this->getGlobalAverageExamScore(),
-                    'certificates_issued' => Certificate::count()
+                    'certificates_issued' => Certificate::count(),
                 ],
-               'infra_summary' => [
-    'server_load' => $this->safeGetSystemLoad(),
-    'errors_24h' => AuditLog::where('level', 'error')
-                            ->where('created_at', '>', now()->subDay())
-                            ->count()
-],
+                'infra_summary' => [
+                    'server_load' => $this->safeGetSystemLoad(),
+                    'errors_24h' => AuditLog::where('level', 'error')
+                        ->where('created_at', '>', now()->subDay())
+                        ->count(),
+                ],
             ];
         });
     }
-/**
- * Méthode sécurisée pour récupérer la charge CPU
- */
-private function getSystemLoad(): float
-{
-    // 1. Vérifie si on est sur Linux et si la fonction existe
-    if (function_exists('sys_getloadavg')) {
-        $load = \sys_getloadavg(); // Le \ force la recherche en dehors du namespace
-        return isset($load[0]) ? round($load[0] * 10, 1) : 0.0;
-    }
 
-    // 2. Si on est sur Windows (votre cas actuel en DEV)
-    if (PHP_OS_FAMILY === 'Windows') {
-        try {
-            // Tentative via WMIC (Commande Windows)
-            $output = shell_exec('wmic cpu get loadpercentage /value');
-            if ($output) {
-                preg_match('/LoadPercentage=(\d+)/', $output, $matches);
-                return isset($matches[1]) ? (float)$matches[1] : rand(5, 15);
-            }
-        } catch (\Exception $e) {
-            return (float)rand(5, 15); // Fallback si shell_exec est désactivé
+    /**
+     * Récupère la charge CPU de manière sécurisée (Linux natif ou WMIC sous Windows,
+     * avec repli si shell_exec est désactivé).
+     * NOTE : l'ancien fichier avait deux méthodes quasi identiques pour ça
+     * (getSystemLoad et safeGetSystemLoad) — seule celle-ci est appelée, l'autre
+     * était du code mort et a été supprimée.
+     */
+    private function safeGetSystemLoad(): float
+    {
+        if (function_exists('sys_getloadavg')) {
+            $load = sys_getloadavg();
+            return isset($load[0]) ? (float) $load[0] : 0.0;
         }
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            try {
+                $output = shell_exec('wmic cpu get loadpercentage /value');
+                if ($output) {
+                    preg_match('/LoadPercentage=(\d+)/', $output, $matches);
+                    return isset($matches[1]) ? (float) $matches[1] : 0.0;
+                }
+            } catch (\Throwable $e) {
+                return (float) rand(5, 15); // shell_exec bloqué : petite charge simulée pour l'affichage
+            }
+        }
+
+        return 0.0;
     }
 
-    return 0.0; // Par défaut
-}
     /**
      * --------------------------------------------------------------------------
-     * 5. COMPILATION DES GRAPHIQUES (DATAVIZ)
+     * 6. COMPILATION DES GRAPHIQUES (DATAVIZ)
      * --------------------------------------------------------------------------
      */
-/**
- * Récupère la charge système de manière sécurisée (Compatible Windows & Linux)
- *
- * @return float
- */
-private function safeGetSystemLoad(): float
-{
-    // Tentative pour Linux (Production)
-    if (function_exists('sys_getloadavg')) {
-        $load = \sys_getloadavg();
-        return isset($load[0]) ? (float)$load[0] : 0.0;
-    }
-
-    // Tentative pour Windows (Votre environnement de DEV)
-    if (PHP_OS_FAMILY === 'Windows') {
-        try {
-            // On utilise WMIC pour récupérer la charge réelle sous Windows
-            $output = shell_exec('wmic cpu get loadpercentage /value');
-            if ($output) {
-                preg_match('/LoadPercentage=(\d+)/', $output, $matches);
-                return isset($matches[1]) ? (float)$matches[1] : 0.0;
-            }
-        } catch (\Exception $e) {
-            // Si shell_exec est bloqué, on simule une petite charge pour le design
-            return (float)rand(5, 15);
-        }
-    }
-
-    return 0.0;
-}
     private function compileAdvancedChartData(array $filters): array
     {
         return [
@@ -548,38 +721,39 @@ private function safeGetSystemLoad(): float
             'enrollment_distribution' => $this->getEnrollmentDistributionData(),
             'skills_radar' => $this->getSkillsRadarData(),
             'hourly_activity' => $this->getHourlyActivityHeatmap(),
-            'retention_cohort' => $this->getRetentionCohortData()
+            'retention_cohort' => $this->getRetentionCohortData(),
         ];
     }
-      private function getEnrollmentDistributionData(): array
+
+    private function getEnrollmentDistributionData(): array
     {
-        return Cache::remember('snc_enrollment_dist', 3600, function() {
-            // On récupère les catégories avec le compte des inscriptions via les cours
-            $categories = Category::withCount(['courses as enrollments_count' => function($query) {
+        return Cache::remember('snc_enrollment_dist', 3600, function () {
+            $categories = Category::withCount(['courses as enrollments_count' => function ($query) {
                 $query->join('enrollments', 'courses.id', '=', 'enrollments.course_id')
-                      ->select(DB::raw('count(enrollments.id)'));
+                    ->select(DB::raw('count(enrollments.id)'));
             }])
-            ->orderByDesc('enrollments_count')
-            ->limit(5)
-            ->get();
+                ->orderByDesc('enrollments_count')
+                ->limit(5)
+                ->get();
 
             return [
                 'labels' => $categories->pluck('name')->toArray(),
-                'data'   => $categories->pluck('enrollments_count')->toArray()
+                'data' => $categories->pluck('enrollments_count')->toArray(),
             ];
         });
     }
+
     private function getRevenueChartData(int $year): array
     {
         $months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-        $currentYear = collect(range(1, 12))->map(function($m) use ($year) {
-            return Payment::whereYear('created_at', $year)->whereMonth('created_at', $m)->sum('amount');
-        });
+        $currentYear = collect(range(1, 12))->map(
+            fn ($m) => Payment::whereYear('created_at', $year)->whereMonth('created_at', $m)->sum('amount')
+        );
 
-        $lastYear = collect(range(1, 12))->map(function($m) use ($year) {
-            return Payment::whereYear('created_at', $year - 1)->whereMonth('created_at', $m)->sum('amount');
-        });
+        $lastYear = collect(range(1, 12))->map(
+            fn ($m) => Payment::whereYear('created_at', $year - 1)->whereMonth('created_at', $m)->sum('amount')
+        );
 
         return [
             'labels' => $months,
@@ -590,22 +764,22 @@ private function safeGetSystemLoad(): float
                     'backgroundColor' => 'rgba(99, 102, 241, 0.1)',
                     'data' => $currentYear,
                     'fill' => true,
-                    'tension' => 0.4
+                    'tension' => 0.4,
                 ],
                 [
-                    'label' => "Année " . ($year - 1),
+                    'label' => 'Année ' . ($year - 1),
                     'borderColor' => $this->palette['slate'],
                     'borderDash' => [5, 5],
                     'data' => $lastYear,
                     'fill' => false,
-                    'tension' => 0.4
-                ]
-            ]
+                    'tension' => 0.4,
+                ],
+            ],
         ];
     }
 
     /**
-     * Radar des compétences basé sur les catégories de cours
+     * Radar des compétences basé sur les catégories de cours.
      */
     private function getSkillsRadarData(): array
     {
@@ -622,19 +796,19 @@ private function safeGetSystemLoad(): float
                 [
                     'label' => 'Inscriptions Apprenants',
                     'borderColor' => $this->palette['emerald'],
-                    // Simulation ou calcul réel basé sur les inscriptions par catégorie
-                    'data' => $categories->map(fn($c) => Enrollment::whereHas('course', fn($q) => $q->where('category_id', $c->id))->count() / 10),
-                ]
-            ]
+                    'data' => $categories->map(
+                        fn ($c) => Enrollment::whereHas('course', fn ($q) => $q->where('category_id', $c->id))->count() / 10
+                    ),
+                ],
+            ],
         ];
     }
 
     /**
      * --------------------------------------------------------------------------
-     * 6. GESTION DES COHORTES ET DATATABLE (BIG DATA)
+     * 7. GESTION DES COHORTES ET DATATABLE (BIG DATA)
      * --------------------------------------------------------------------------
      */
-
     private function getDetailedCohorts(array $filters): array
     {
         $query = Course::with(['category', 'creator'])
@@ -645,38 +819,36 @@ private function safeGetSystemLoad(): float
             $query->where('category_id', $filters['category']);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where('title', 'like', '%' . $filters['search'] . '%');
         }
 
         return $query->orderByDesc('enrollments_count')
             ->paginate(15)
-            ->through(function($course) {
-                return [
-                    'id' => $course->id,
-                    'title' => $course->title,
-                    'category' => $course->category->name ?? 'N/A',
-                    'instructor' => $course->creator->name ?? 'Subnet',
-                    'students' => $course->enrollments_count,
-                    'lessons' => $course->lessons_count,
-                    'revenue' => round($course->total_income ?? 0, 2),
-                    'avg_progress' => $this->getCourseAverageProgress($course->id),
-                    'status' => $course->status,
-                    'tags' => $course->tags
-                ];
-            })->toArray();
+            ->through(fn ($course) => [
+                'id' => $course->id,
+                'title' => $course->title,
+                'category' => $course->category->name ?? 'N/A',
+                'instructor' => $course->creator->name ?? 'Subnet',
+                'students' => $course->enrollments_count,
+                'lessons' => $course->lessons_count,
+                'revenue' => round($course->total_income ?? 0, 2),
+                'avg_progress' => $this->getCourseAverageProgress($course->id),
+                'status' => $course->status,
+                'tags' => $course->tags,
+            ])
+            ->toArray();
     }
 
     /**
      * --------------------------------------------------------------------------
-     * 7. MÉTHODES D'EXPORTATION MASSIVE (CHUNKED)
+     * 8. MÉTHODES D'EXPORTATION MASSIVE (CHUNKED)
      * --------------------------------------------------------------------------
      */
-
     public function exportMassiveData(Request $request): StreamedResponse
     {
         $type = $request->input('type', 'enrollments');
-        $filename = "SNC_Export_{$type}_" . now()->format('Ymd_His') . ".csv";
+        $filename = "SNC_Export_{$type}_" . now()->format('Ymd_His') . '.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -689,10 +861,8 @@ private function safeGetSystemLoad(): float
         return response()->stream(function () use ($type) {
             $handle = fopen('php://output', 'w');
 
-            // BOM pour Excel
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM pour Excel
 
-            // Headers selon le type
             if ($type === 'enrollments') {
                 fputcsv($handle, ['ID', 'Étudiant', 'Cours', 'Date Inscription', 'Progression (%)', 'Statut']);
 
@@ -704,7 +874,7 @@ private function safeGetSystemLoad(): float
                             $row->course->title ?? 'N/A',
                             $row->created_at->format('d/m/Y'),
                             $row->progress_percent,
-                            $row->status
+                            $row->status,
                         ]);
                     }
                 });
@@ -719,7 +889,7 @@ private function safeGetSystemLoad(): float
                             $row->user->name ?? 'Système',
                             $row->amount,
                             $row->transaction_id,
-                            $row->status
+                            $row->status,
                         ]);
                     }
                 });
@@ -731,14 +901,15 @@ private function safeGetSystemLoad(): float
 
     /**
      * --------------------------------------------------------------------------
-     * 8. UTILITAIRES PRIVÉS ET CALCULS SECONDAIRES
+     * 9. UTILITAIRES PRIVÉS ET CALCULS SECONDAIRES
      * --------------------------------------------------------------------------
      */
-
     private function getGlobalCompletionRate(): float
     {
         $total = Enrollment::count();
-        if ($total === 0) return 0.0;
+        if ($total === 0) {
+            return 0.0;
+        }
 
         $completed = Enrollment::where('status', 'completed')->count();
         return round(($completed / $total) * 100, 2);
@@ -751,7 +922,7 @@ private function safeGetSystemLoad(): float
 
     private function getCourseAverageProgress(int $courseId): int
     {
-        return (int) Enrollment::where('course_id', $courseId)->avg('progress_percent') ?? 0;
+        return (int) (Enrollment::where('course_id', $courseId)->avg('progress_percent') ?? 0);
     }
 
     private function fetchAvailableFilters(): array
@@ -761,9 +932,9 @@ private function safeGetSystemLoad(): float
             'months' => [
                 1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
                 5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
-                9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre'
+                9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
             ],
-            'categories' => Category::select('id', 'name')->get()->toArray()
+            'categories' => Category::select('id', 'name')->get()->toArray(),
         ];
     }
 
@@ -771,39 +942,43 @@ private function safeGetSystemLoad(): float
     {
         return [
             'app_name' => 'SubnetCongo Enterprise LMS',
-            'version' => '13.5.0-Gold',
+            'version' => '13.6.0-Gold',
             'environment' => app()->environment(),
             'php_version' => PHP_VERSION,
             'server_time' => now()->toDateTimeString(),
-            'greeting' => $this->getGreeting()
+            'greeting' => $this->getGreeting(),
         ];
     }
 
     private function getGreeting(): string
     {
         $hour = now()->hour;
-        if ($hour < 12) return "Bonjour, Excellence.";
-        if ($hour < 18) return "Bon après-midi, Administrateur.";
-        return "Bonsoir, Prêt pour le rapport nocturne ?";
+        if ($hour < 12) {
+            return 'Bonjour, Excellence.';
+        }
+        if ($hour < 18) {
+            return 'Bon après-midi, Administrateur.';
+        }
+        return 'Bonsoir, Prêt pour le rapport nocturne ?';
     }
 
     private function computeGamificationRankings(): array
     {
-        // Algorithme de ranking SNC : Inscriptions + Complétion + Scores Examens
         return User::students()
             ->withCount('certificates')
             ->orderByDesc('certificates_count')
             ->take(10)
             ->get()
-            ->map(function($user, $index) {
-                return [
-                    'rank' => $index + 1,
-                    'name' => $user->name,
-                    'avatar' => $user->avatar_url ?? "https://ui-avatars.com/api/?name=" . urlencode($user->name),
-                    'score' => $user->certificates_count * 100,
-                    'trend' => rand(0, 1) ? 'up' : 'down'
-                ];
-            })->toArray();
+            ->map(fn ($user, $index) => [
+                'rank' => $index + 1,
+                'name' => $user->name,
+                'avatar' => $user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->name),
+                'score' => $user->certificates_count * 100,
+                // TODO : la tendance est aléatoire faute d'historique de rang persistant ;
+                // à remplacer par une vraie comparaison avec le rang de la semaine passée.
+                'trend' => rand(0, 1) ? 'up' : 'down',
+            ])
+            ->toArray();
     }
 
     private function fetchRecentAuditTrail(): array
@@ -812,16 +987,15 @@ private function safeGetSystemLoad(): float
             ->latest()
             ->take(20)
             ->get()
-            ->map(function($log) {
-                return [
-                    'id' => $log->id,
-                    'user' => $log->user->name ?? 'Système',
-                    'action' => $log->event_name,
-                    'description' => $log->description,
-                    'time' => $log->created_at->diffForHumans(),
-                    'type' => $log->level // success, error, info, warning
-                ];
-            })->toArray();
+            ->map(fn ($log) => [
+                'id' => $log->id,
+                'user' => $log->user->name ?? 'Système',
+                'action' => $log->event_name,
+                'description' => $log->description,
+                'time' => $log->created_at->diffForHumans(),
+                'type' => $log->level, // success, error, info, warning
+            ])
+            ->toArray();
     }
 
     private function getSupportMetrics(): array
@@ -830,16 +1004,17 @@ private function safeGetSystemLoad(): float
             'open_tickets' => Ticket::where('status', 'open')->count(),
             'avg_response_time' => '1.2h',
             'satisfaction_rate' => '94%',
-            'recent_tickets' => Ticket::latest()->take(5)->get(['id', 'subject', 'priority', 'status'])
+            'recent_tickets' => Ticket::latest()->take(5)->get(['id', 'subject', 'priority', 'status']),
         ];
     }
 
     /**
-     * Système de secours pour les métriques en cas d'erreur fatale
+     * Système de secours pour les métriques en cas d'erreur fatale.
      */
     private function getMockMetrics(string $error): array
     {
-        Log::critical("Infrastructure Metrics Error: " . $error);
+        Log::critical('Infrastructure Metrics Error: ' . $error);
+
         return [
             'platform' => 'Unknown (Error Fallback)',
             'cpu' => 0,
@@ -847,7 +1022,7 @@ private function safeGetSystemLoad(): float
             'disk' => 0,
             'db_latency' => 0,
             'status' => 'Indisponible',
-            'error' => $error
+            'error' => $error,
         ];
     }
 
@@ -859,12 +1034,12 @@ private function safeGetSystemLoad(): float
             'description' => $description,
             'level' => 'info',
             'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent()
+            'user_agent' => request()->userAgent(),
         ]);
     }
 
     /**
-     * Maintenance : Purge du cache analytique
+     * Maintenance : purge du cache analytique.
      */
     public function purgeCache()
     {
@@ -876,33 +1051,31 @@ private function safeGetSystemLoad(): float
     }
 
     /**
-     * Analyse de l'activité horaire (Heatmap Data)
+     * Analyse de l'activité horaire (heatmap).
+     * TODO : données actuellement simulées (rand) — à remplacer par une vraie requête
+     * sur la table des sessions/connexions quand le schéma sera confirmé.
      */
     private function getHourlyActivityHeatmap(): array
     {
-        // Simule/Calcule les connexions par heure sur une semaine
         $data = [];
         for ($day = 0; $day < 7; $day++) {
             for ($hour = 0; $hour < 24; $hour++) {
-                $data[] = [
-                    'day' => $day,
-                    'hour' => $hour,
-                    'value' => rand(10, 100) // Remplacer par DB::table('sessions')...
-                ];
+                $data[] = ['day' => $day, 'hour' => $hour, 'value' => rand(10, 100)];
             }
         }
         return $data;
     }
 
     /**
-     * Analyse de rétention par cohorte
+     * Analyse de rétention par cohorte.
+     * TODO : valeurs actuellement statiques — à remplacer par un vrai calcul de
+     * rétention mensuelle par cohorte d'inscription.
      */
     private function getRetentionCohortData(): array
     {
-        // Logique complexe pour calculer combien d'élèves de Janvier sont encore là en Juin
         return [
             'months' => ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'],
-            'rates' => [100, 85, 72, 68, 60, 55]
+            'rates' => [100, 85, 72, 68, 60, 55],
         ];
     }
 }
