@@ -238,7 +238,7 @@ class Exam extends Model
      */
     public function getAverageScoreAttribute()
     {
-        return $this->results()->avg('score_percent') ?? 0;
+        return $this->results()->avg('score_percentage') ?? 0;
     }
 
     /**
@@ -250,7 +250,7 @@ class Exam extends Model
         if ($total === 0) {
             return 0;
         }
-        $passed = $this->results()->where('passed', true)->count();
+        $passed = $this->results()->where('is_passed', true)->count();
         return round(($passed / $total) * 100, 1);
     }
 
@@ -283,7 +283,7 @@ class Exam extends Model
     {
         return $this->results()
             ->where('user_id', $user->id)
-            ->orderBy('score_percent', 'desc')
+            ->orderBy('score_percentage', 'desc')
             ->first();
     }
 
@@ -293,16 +293,6 @@ class Exam extends Model
     public function userPassed(User $user): bool
     {
         $bestResult = $this->getBestResultFor($user);
-        return $bestResult && $bestResult->score_percent >= $this->passing_score;
+        return $bestResult && (float) $bestResult->score_percentage >= (float) $this->pass_percentage;
     }
-    // app/Models/Exam.php
-
-
-// app/Models/Question.php
-public function exam()
-{
-    return $this->belongsTo(Exam::class);
-}
-
-
 }

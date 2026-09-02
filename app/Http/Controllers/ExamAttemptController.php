@@ -80,8 +80,6 @@ public function index()
         // 4. Charger les questions (sans les réponses correctes pour la sécurité)
         $questions = Question::where('exam_id', $exam->id)
             ->with(['options' => function($query) {
-                $query->select('id', 'question_id', 'option_text', 'order');
-                // Eager load all potential fields needed for processing
                 $query->select('id', 'question_id', 'option_text', 'order', 'is_match_source', 'match_id');
             }])
             ->orderBy('order')
@@ -134,7 +132,6 @@ public function index()
             return redirect()->route('exams.take', $exam->id)->with('info', 'Vous avez déjà une tentative en cours.');
         }
         if (!$exam->userHasAttemptsRemaining($user)) {
-            return response()->json(['message' => 'Limite atteinte'], 403);
             return redirect()->route('exams.learner.index')->with('error', 'Vous avez atteint la limite de tentatives pour cet examen.');
         }
 
@@ -143,10 +140,12 @@ public function index()
             'exam_id' => $exam->id,
             'started_at' => now(),
             'status' => ExamAttempt::STATUS_IN_PROGRESS,
-            'time_left' => $exam->duration_minutes * 60, // Initialiser le temps restant
+            'time_left' => $exam->duration_minutes * 60, // Initialiser le temps restant (secondes)
+            'time_spent_seconds' => 0,
             'answers' => [],
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
+            'proctoring_data' => [],
         ]);
 
         return redirect()->route('exams.take', $exam->id);
@@ -164,11 +163,9 @@ public function index()
         }
 
         $attempt->update([
-            'answers' => $request->answers,
-            'time_spent_seconds' => $request->time_spent ?? $attempt->time_spent_seconds,
-            'time_spent_seconds' => $request->input('time_spent', $attempt->time_spent_seconds),
+            'answers' => $request->answers ?? $attempt->answers,
+            'time_spent_seconds' => (int) ($request->input('time_spent', $attempt->time_spent_seconds ?? 0)),
             'time_left' => $request->input('time_left', $attempt->time_left),
-            // Fusionner les métadonnées de proctoring
             'proctoring_data' => array_merge($attempt->proctoring_data ?? [], $request->input('metadata', [])),
         ]);
 
@@ -312,10 +309,9 @@ public function index()
                 'completed_at' => now(),
                 'raw_score' => $pointsEarned,
                 'answers' => $userAnswers,
-                'time_spent_seconds' => $request->input('time_spent'),
+                'time_spent_seconds' => (int) $request->input('time_spent', $attempt->time_spent_seconds ?? 0),
+                'time_left' => 0,
                 'proctoring_data' => $mergedLogs,
-                'proctoring_data' => $mergedLogs, // Enregistre les logs de proctoring
-                'time_left' => 0, // Le temps est écoulé
             ]);
 
             // 2. Créer le résultat officiel

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,      // Crée l'admin, les profs et les élèves
             SettingSeeder::class,   // Paramètres du site
             LanguageSeeder::class,  // Langues
+            PaymentGatewaySettingSeeder::class, // Stripe/PayPal/Orange Money/M-Pesa/Airtel Money
         ]);
 
         $this->command->info('Rôles, Utilisateurs et Configurations créés !');

@@ -15,6 +15,7 @@ return new class extends Migration
         $table->id();
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
         $table->string('referral_code')->unique();
+        $table->string('status')->nullable();
         $table->decimal('commission_rate', 5, 2)->default(10.00); // 10%
         $table->decimal('total_earnings', 10, 2)->default(0.00);
         $table->decimal('unpaid_earnings', 10, 2)->default(0.00);

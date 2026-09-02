@@ -311,86 +311,92 @@ watch(() => props.stats?.completion_rate, (v) => {
         <Head title="Mon tableau de bord" />
         <Toast />
 
-        <div class="min-h-screen bg-[#F5F6FA] pb-24 font-sans text-[#12172B]">
+        <div class="min-h-screen bg-slate-50 font-sans pb-10">
 
             <!-- ═══════════════════════════════════════════════════
-                 HEADER
+                 HEADER GLOBAL — DARK ENTERPRISE
             ═══════════════════════════════════════════════════ -->
-            <header class="bg-white border-b border-[#E4E7F0] sticky top-0 z-40">
-                <div class="max-w-[1600px] mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex items-center gap-4 w-full md:w-auto">
-                        <div class="relative shrink-0">
+            <div class="bg-slate-900 pt-8 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-xl border-b border-slate-800">
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+
+                <div class="max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="flex items-center gap-5">
+                        <div class="relative">
                             <Avatar
                                 :label="auth?.user?.name?.charAt(0)?.toUpperCase()"
                                 :image="auth?.user?.profile_photo_url"
                                 shape="circle"
                                 size="large"
-                                class="border-2 border-[#E4E7F0] bg-[#EEF1FF] text-[#3E5EFF] font-semibold"
+                                class="w-16 h-16 border-2 border-white/10 ring-2 ring-indigo-500/30 bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-2xl font-black"
                             />
-                            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#2FBF71] border-2 border-white rounded-full" aria-hidden="true"></span>
+                            <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full" aria-hidden="true"></span>
                         </div>
-                        <div class="min-w-0">
-                            <h1 class="text-xl font-semibold text-[#12172B] tracking-tight leading-tight truncate font-display">
-                                {{ meta?.greeting || 'Bonjour' }}, {{ auth?.user?.name?.split(' ')[0] }}
-                            </h1>
-                            <p class="text-sm text-[#6B7280] mt-0.5 truncate">
-                                {{ meta?.message || 'Reprenons où vous en étiez.' }}
-                            </p>
+                        <div>
+                            <div class="flex items-center gap-3 mb-1 flex-wrap">
+                                <h1 class="text-3xl font-black text-white tracking-tight">
+                                    {{ meta?.greeting || 'Bonjour' }}, {{ auth?.user?.name?.split(' ')[0] }} <span class="inline-block animate-pulse">👋</span>
+                                </h1>
+                                <Tag value="Apprenant" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                            </div>
+                            <p class="text-slate-400 font-medium text-sm">{{ meta?.message || 'Reprenons où vous en étiez.' }}</p>
                         </div>
                     </div>
 
-                    <!-- Nav rapide -->
-                    <nav class="flex items-center gap-1.5 flex-wrap justify-center" aria-label="Navigation rapide">
-                        <Link :href="route('student.my-courses')" class="quick-nav-link">
-                            <i class="pi pi-book text-sm" aria-hidden="true"></i> Mes cours
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <Link :href="route('student.my-courses')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-book text-sm"></i> Mes cours
                         </Link>
-                        <Link :href="route('exams.learner.index')" class="quick-nav-link">
-                            <i class="pi pi-pencil text-sm" aria-hidden="true"></i> Examens
+                        <Link :href="route('exams.learner.index')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-pencil text-sm"></i> Examens
                         </Link>
-                        <Link :href="route('student.certificates')" class="quick-nav-link">
-                            <i class="pi pi-verified text-sm" aria-hidden="true"></i> Certificats
+                        <Link :href="route('student.certificates')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-verified text-sm"></i> Certificats
                         </Link>
-                        <Link :href="route('student.progress')" class="quick-nav-link">
-                            <i class="pi pi-chart-line text-sm" aria-hidden="true"></i> Progression
+                        <Link :href="route('student.progress')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-chart-line text-sm"></i> Progression
                         </Link>
-
-                        <!-- XP & Streak -->
-                        <div class="flex items-stretch bg-[#12172B] rounded-lg overflow-hidden ml-2 font-mono text-sm">
+                        <div class="flex items-stretch bg-white/5 backdrop-blur-md rounded-xl overflow-hidden border border-white/10 font-mono text-sm">
                             <div class="flex items-center gap-2 px-3.5 py-2 border-r border-white/10" v-tooltip.bottom="'Points d\'expérience'">
-                                <i class="pi pi-bolt text-[#F2A93B] text-xs" aria-hidden="true"></i>
+                                <i class="pi pi-bolt text-amber-400 text-xs"></i>
                                 <span class="text-white font-semibold">{{ stats?.xp ?? 0 }}</span>
                                 <span class="text-white/40 text-[11px]">xp</span>
                             </div>
                             <div class="flex items-center gap-2 px-3.5 py-2" v-tooltip.bottom="'Jours consécutifs'">
-                                <i class="pi pi-calendar text-[#17B8A6] text-xs" aria-hidden="true"></i>
+                                <i class="pi pi-calendar text-emerald-400 text-xs"></i>
                                 <span class="text-white font-semibold">{{ stats?.streak ?? 0 }}</span>
                                 <span class="text-white/40 text-[11px]">jours</span>
                             </div>
                         </div>
-                    </nav>
-                </div>
-            </header>
-
-            <div class="max-w-[1600px] mx-auto px-6 mt-8">
-
-                <!-- ═══════════════════════════════════════════════════
-                     ÉTAT DE CHARGEMENT
-                ═══════════════════════════════════════════════════ -->
-                <div v-if="isLoading" class="space-y-8" aria-busy="true" aria-label="Chargement du tableau de bord">
-                    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
-                        <Skeleton v-for="n in 6" :key="n" height="88px" borderRadius="12px" />
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        <div class="lg:col-span-8 space-y-8">
-                            <Skeleton height="340px" borderRadius="16px" />
-                            <Skeleton height="220px" borderRadius="16px" />
-                        </div>
-                        <div class="lg:col-span-4 space-y-6">
-                            <Skeleton height="260px" borderRadius="16px" />
-                            <Skeleton height="200px" borderRadius="16px" />
-                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 MAIN — WHITE FLOATING CARD
+            ═══════════════════════════════════════════════════ -->
+            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
+
+            <!-- ═══════════════════════════════════════════════════
+                 ÉTAT DE CHARGEMENT
+            ═══════════════════════════════════════════════════ -->
+            <div v-if="isLoading" class="space-y-8" aria-busy="true" aria-label="Chargement du tableau de bord">
+                <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                    <Skeleton v-for="n in 6" :key="n" height="88px" borderRadius="12px" />
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div class="lg:col-span-8 space-y-8">
+                        <Skeleton height="340px" borderRadius="16px" />
+                        <Skeleton height="220px" borderRadius="16px" />
+                    </div>
+                    <div class="lg:col-span-4 space-y-6">
+                        <Skeleton height="260px" borderRadius="16px" />
+                        <Skeleton height="200px" borderRadius="16px" />
+                    </div>
+                </div>
+            </div>
 
                 <template v-else>
 
@@ -399,29 +405,27 @@ watch(() => props.stats?.completion_rate, (v) => {
                 ═══════════════════════════════════════════════════ -->
                 <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
                     <template v-for="stat in [
-                        { label: 'Cours inscrits', val: myCourses?.length ?? 0, icon: 'pi-book', href: route('student.my-courses') },
-                        { label: 'Supports', val: totalMaterials, icon: 'pi-file', action: 'materials' },
-                        { label: 'Vidéos', val: totalVideos, icon: 'pi-video', action: 'materials' },
-                        { label: 'Certificats', val: stats?.certificates ?? 0, icon: 'pi-verified', href: route('student.certificates') },
-                        { label: 'Heures d\'étude', val: (stats?.hours_studied ?? 0) + 'h', icon: 'pi-clock', href: route('student.progress') },
-                        { label: 'Rang', val: '#' + (stats?.rank ?? '—'), icon: 'pi-trophy', href: '#' }
+                        { label: 'Cours inscrits', val: myCourses?.length ?? 0, icon: 'pi-book', border: 'hover:border-indigo-300', iconBg: 'bg-indigo-50', iconText: 'text-indigo-600', href: route('student.my-courses') },
+                        { label: 'Supports', val: totalMaterials, icon: 'pi-file', border: 'hover:border-blue-300', iconBg: 'bg-blue-50', iconText: 'text-blue-600', action: 'materials' },
+                        { label: 'Vidéos', val: totalVideos, icon: 'pi-video', border: 'hover:border-rose-300', iconBg: 'bg-rose-50', iconText: 'text-rose-500', action: 'materials' },
+                        { label: 'Certificats', val: stats?.certificates ?? 0, icon: 'pi-verified', border: 'hover:border-emerald-300', iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', href: route('student.certificates') },
+                        { label: 'Heures d\'étude', val: (stats?.hours_studied ?? 0) + 'h', icon: 'pi-clock', border: 'hover:border-amber-300', iconBg: 'bg-amber-50', iconText: 'text-amber-500', href: route('student.progress') },
+                        { label: 'Rang', val: '#' + (stats?.rank ?? '—'), icon: 'pi-trophy', border: 'hover:border-violet-300', iconBg: 'bg-violet-50', iconText: 'text-violet-600', href: '#' }
                     ]" :key="stat.label">
-                        <Link v-if="stat.href" :href="stat.href" class="kpi-card group">
-                            <span class="kpi-icon"><i :class="`pi ${stat.icon}`" aria-hidden="true"></i></span>
-                            <span class="min-w-0">
-                                <span class="block text-xs text-[#6B7280]">{{ stat.label }}</span>
-                                <span class="block text-xl font-semibold font-mono tabular-nums">{{ stat.val }}</span>
-                            </span>
-                        </Link>
-                        <button v-else type="button"
-                                @click="stat.action === 'materials' && continueLearning && openCourseHub(continueLearning)"
-                                class="kpi-card group text-left w-full">
-                            <span class="kpi-icon"><i :class="`pi ${stat.icon}`" aria-hidden="true"></i></span>
-                            <span class="min-w-0">
-                                <span class="block text-xs text-[#6B7280]">{{ stat.label }}</span>
-                                <span class="block text-xl font-semibold font-mono tabular-nums">{{ stat.val }}</span>
-                            </span>
-                        </button>
+                        <component :is="stat.href ? 'Link' : 'button'"
+                                   :href="stat.href"
+                                   @click="stat.action === 'materials' && continueLearning && openCourseHub(continueLearning)"
+                                   :class="`group bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between min-h-[110px] ${stat.border} transition-colors text-left`">
+                            <div class="flex justify-between items-start mb-3">
+                                <div :class="`w-11 h-11 ${stat.iconBg} ${stat.iconText} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`">
+                                    <i :class="`pi ${stat.icon} text-lg`" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ stat.label }}</h4>
+                                <h2 class="text-3xl font-black text-slate-800 font-mono tabular-nums">{{ stat.val }}</h2>
+                            </div>
+                        </component>
                     </template>
                 </div>
 
@@ -434,136 +438,130 @@ watch(() => props.stats?.completion_rate, (v) => {
                     <div class="lg:col-span-8 space-y-8">
 
                         <!-- HERO : REPRENDRE LE COURS -->
-                        <div v-if="continueLearning" class="hero-panel">
-                            <div class="hero-grid" aria-hidden="true"></div>
+                        <div v-if="continueLearning" class="bg-slate-900 rounded-3xl relative overflow-hidden shadow-xl border border-slate-800">
+                            <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+                            <div class="absolute bottom-0 left-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none"></div>
 
-                            <div class="relative z-10 p-8 flex flex-col gap-6">
+                            <div class="relative z-10 p-7 flex flex-col gap-5">
                                 <div class="flex items-center justify-between flex-wrap gap-3">
-                                    <span class="inline-flex items-center gap-2 text-[11px] font-medium text-white/60">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-[#2FBF71]" aria-hidden="true"></span>
-                                        Dernier accès&nbsp;: {{ continueLearning.last_accessed || '—' }}
+                                    <span class="inline-flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        Dernier accès : {{ continueLearning.last_accessed || '—' }}
                                     </span>
-                                    <Tag value="En cours" class="!bg-[#3E5EFF] !border-none !text-white !text-[11px] !font-medium" />
+                                    <Tag value="En cours" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                                 </div>
 
                                 <div class="flex items-start gap-5 flex-wrap md:flex-nowrap">
                                     <div v-if="getImageUrl(continueLearning.image || continueLearning.thumbnail)"
-                                         class="hidden sm:block w-20 h-20 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/10">
+                                         class="hidden sm:block w-20 h-20 rounded-2xl overflow-hidden shrink-0 ring-1 ring-white/10">
                                         <img :src="getImageUrl(continueLearning.image || continueLearning.thumbnail)"
                                              :alt="continueLearning.title" class="w-full h-full object-cover" />
                                     </div>
                                     <div class="min-w-0">
-                                        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight leading-snug text-white font-display">
+                                        <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
                                             {{ continueLearning.title }}
                                         </h2>
-                                        <p class="text-sm text-white/50 mt-1">{{ continueLearning.instructor }}</p>
+                                        <p class="text-sm text-slate-400 mt-1 font-medium">{{ continueLearning.instructor }}</p>
                                     </div>
                                 </div>
 
-                                <div class="max-w-lg bg-white/[0.06] rounded-xl border border-white/10 p-5">
+                                <div class="bg-white/[0.04] backdrop-blur-md rounded-2xl border border-white/10 p-5">
                                     <div class="flex justify-between items-start gap-4 mb-3">
                                         <div class="min-w-0">
-                                            <p class="text-xs text-white/45 mb-1">Prochaine étape</p>
-                                            <p class="text-sm font-medium text-white truncate">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Prochaine étape</p>
+                                            <p class="text-sm font-bold text-white truncate">
                                                 {{ continueLearning.next_lesson?.title ?? continueLearning.next_lesson ?? 'Cours terminé' }}
                                             </p>
                                         </div>
-                                        <span class="text-2xl font-semibold font-mono text-white shrink-0">{{ Math.round(continueLearning.progress ?? 0) }}%</span>
+                                        <span class="text-3xl font-black text-white shrink-0 font-mono">{{ Math.round(continueLearning.progress ?? 0) }}%</span>
                                     </div>
                                     <ProgressBar
                                         :value="continueLearning.progress ?? 0"
                                         :showValue="false"
                                         style="height: 6px"
-                                        class="bg-white/10 rounded-full overflow-hidden [&_.p-progressbar-value]:bg-[#3E5EFF]"
+                                        class="bg-white/10 rounded-full overflow-hidden [&_.p-progressbar-value]:bg-gradient-to-r [&_.p-progressbar-value]:from-indigo-500 [&_.p-progressbar-value]:to-purple-500"
                                     />
                                 </div>
 
                                 <div class="flex gap-2.5 flex-wrap">
                                     <Link v-if="getLessonPlayerUrl(continueLearning)" :href="getLessonPlayerUrl(continueLearning)">
-                                        <Button label="Reprendre la leçon" icon="pi pi-play"
-                                                class="!bg-[#3E5EFF] !border-none !rounded-lg !font-medium !px-5 !py-2.5 !text-sm hover:!bg-[#3450DB]" />
+                                        <Button label="Reprendre la leçon" icon="pi pi-play" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3 shadow-lg shadow-indigo-500/30" />
                                     </Link>
-                                    <Button label="Ressources" icon="pi pi-folder-open"
-                                            class="!bg-white/10 !border !border-white/15 !text-white !rounded-lg !font-medium !px-4 !py-2.5 !text-sm hover:!bg-white/15"
-                                            @click="openCourseHub(continueLearning)" />
+                                    <Button label="Ressources" icon="pi pi-folder-open" class="!bg-white/10 hover:!bg-white/15 !border !border-white/15 !text-white !rounded-xl !font-bold !text-xs !px-4 !py-3" @click="openCourseHub(continueLearning)" />
                                     <Link :href="route('student.my-courses')">
-                                        <Button label="Tous mes cours" icon="pi pi-th-large"
-                                                class="!bg-transparent !border !border-white/15 !text-white/70 !rounded-lg !font-medium !px-4 !py-2.5 !text-sm hover:!bg-white/5" />
+                                        <Button label="Tous mes cours" icon="pi pi-th-large" class="!bg-transparent hover:!bg-white/5 !border !border-white/15 !text-slate-300 !rounded-xl !font-bold !text-xs !px-4 !py-3" />
                                     </Link>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Aucun cours inscrit -->
-                        <div v-else class="bg-white border border-dashed border-[#D7DCE8] rounded-2xl p-14 text-center">
-                            <i class="pi pi-folder-open text-4xl text-[#C7CDDB] mb-4 block" aria-hidden="true"></i>
-                            <h3 class="text-lg font-semibold text-[#12172B] mb-1.5 font-display">Aucune formation en cours</h3>
-                            <p class="text-[#6B7280] text-sm mb-6">Vous n'avez pas encore de cours. Explorez le catalogue pour commencer.</p>
+                        <div v-else class="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center">
+                            <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i class="pi pi-folder-open text-3xl text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-slate-800 mb-2">Aucune formation en cours</h3>
+                            <p class="text-slate-500 text-sm mb-6">Vous n'avez pas encore de cours. Explorez le catalogue pour commencer.</p>
                             <Link :href="route('student.my-courses')">
-                                <Button label="Découvrir les formations" icon="pi pi-arrow-right" iconPos="right"
-                                        class="!bg-[#3E5EFF] !border-none !rounded-lg !font-medium !text-sm" />
+                                <Button label="Découvrir les formations" icon="pi pi-arrow-right" iconPos="right" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3" />
                             </Link>
                         </div>
 
                         <!-- EXAMENS -->
                         <section v-if="(upcomingExams?.length || inProgressExams?.length) > 0"
-                                 class="bg-white rounded-2xl border border-[#E4E7F0] overflow-hidden">
-                            <div class="flex justify-between items-center px-6 py-4 border-b border-[#E4E7F0]">
-                                <h2 class="text-base font-semibold text-[#12172B] flex items-center gap-2.5 font-display">
-                                    <span class="w-1 h-5 bg-[#F2A93B] rounded-full" aria-hidden="true"></span>
+                                 class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100">
+                                <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center">
+                                        <i class="pi pi-pencil text-lg"></i>
+                                    </div>
                                     Examens
                                 </h2>
-                                <Link :href="route('exams.learner.index')" class="text-xs font-medium text-[#3E5EFF] hover:underline">
-                                    Tout voir
+                                <Link :href="route('exams.learner.index')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">
+                                    Tout voir →
                                 </Link>
                             </div>
 
-                            <div v-if="inProgressExams?.length" class="p-6 bg-[#FEF9F0] border-b border-[#F5E6CB]">
-                                <p class="text-xs font-medium text-[#8A6A1F] mb-3 flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 bg-[#F2A93B] rounded-full" aria-hidden="true"></span>
+                            <div v-if="inProgressExams?.length" class="p-6 bg-amber-50/40 border-b border-amber-100">
+                                <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
                                     Reprendre où vous étiez
                                 </p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div v-for="exam in inProgressExams" :key="exam.attempt_uuid"
-                                         class="bg-white border border-[#F0DFB8] rounded-xl p-4 flex items-center justify-between gap-4">
+                                         class="bg-white border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <div class="w-9 h-9 bg-[#FEF3DD] text-[#B8841E] rounded-lg flex items-center justify-center shrink-0">
-                                                <i class="pi pi-pencil text-sm" aria-hidden="true"></i>
+                                            <div class="w-10 h-10 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
+                                                <i class="pi pi-pencil text-sm"></i>
                                             </div>
                                             <div class="min-w-0">
-                                                <p class="text-sm font-medium text-[#12172B] truncate">{{ exam.title }}</p>
-                                                <p class="text-xs text-[#8A93A6] truncate">{{ exam.course_title }}</p>
+                                                <p class="text-sm font-black text-slate-800 truncate">{{ exam.title }}</p>
+                                                <p class="text-xs text-slate-500 truncate font-medium">{{ exam.course_title }}</p>
                                             </div>
                                         </div>
-                                        <Button label="Reprendre" icon="pi pi-play" size="small"
-                                                class="!bg-[#F2A93B] !border-none !text-white !font-medium !text-xs shrink-0"
-                                                @click="resumeExam(exam)" />
+                                        <Button label="Reprendre" icon="pi pi-play" size="small" class="!bg-amber-500 hover:!bg-amber-600 !border-none !text-white !font-black !uppercase !tracking-widest !text-[10px] !px-4 !py-2.5 shrink-0" @click="resumeExam(exam)" />
                                     </div>
                                 </div>
                             </div>
 
                             <div v-if="upcomingExams?.length" class="p-6">
-                                <p class="text-xs font-medium text-[#6B7280] mb-3">À passer</p>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">À passer</p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div v-for="exam in upcomingExams" :key="exam.id"
-                                         class="bg-[#FAFBFD] hover:bg-white border border-[#E4E7F0] hover:border-[#C7D2FE] rounded-xl p-4 transition-colors">
+                                         class="bg-slate-50/50 hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-2xl p-4 transition-all group">
                                         <div class="flex justify-between items-start mb-3 gap-2">
                                             <div class="min-w-0">
-                                                <p class="text-sm font-medium text-[#12172B] truncate">{{ exam.title }}</p>
-                                                <p class="text-xs text-[#8A93A6] truncate">{{ exam.course_title }}</p>
+                                                <p class="text-sm font-black text-slate-800 truncate">{{ exam.title }}</p>
+                                                <p class="text-xs text-slate-500 truncate font-medium">{{ exam.course_title }}</p>
                                             </div>
-                                            <Tag :value="examStatusLabel(exam.status)"
-                                                 :severity="exam.status === 'ready' ? 'success' : 'info'" class="!text-[10px] shrink-0" />
+                                            <Tag :value="examStatusLabel(exam.status)" :severity="exam.status === 'ready' ? 'success' : 'info'" class="!text-[10px] !font-black !uppercase !tracking-widest shrink-0" />
                                         </div>
-                                        <div class="flex items-center gap-4 text-xs text-[#6B7280] font-mono mb-3 flex-wrap">
-                                            <span class="flex items-center gap-1"><i class="pi pi-clock text-[10px]" aria-hidden="true"></i>{{ exam.duration_min }}min</span>
-                                            <span class="flex items-center gap-1"><i class="pi pi-list text-[10px]" aria-hidden="true"></i>{{ exam.questions_count }}q</span>
-                                            <span class="flex items-center gap-1"><i class="pi pi-calendar text-[10px]" aria-hidden="true"></i>{{ formatExamDate(exam.scheduled_at) }}</span>
+                                        <div class="flex items-center gap-4 text-xs text-slate-500 font-mono mb-3 flex-wrap">
+                                            <span class="flex items-center gap-1.5"><i class="pi pi-clock text-[10px]"></i>{{ exam.duration_min }}min</span>
+                                            <span class="flex items-center gap-1.5"><i class="pi pi-list text-[10px]"></i>{{ exam.questions_count }}q</span>
+                                            <span class="flex items-center gap-1.5"><i class="pi pi-calendar text-[10px]"></i>{{ formatExamDate(exam.scheduled_at) }}</span>
                                         </div>
-                                        <Button label="Démarrer l'examen" icon="pi pi-arrow-right" iconPos="right" size="small"
-                                                class="!bg-[#12172B] w-full !border-none !font-medium !text-xs"
-                                                :disabled="exam.status === 'locked'"
-                                                @click="startExam(exam)" />
+                                        <Button label="Démarrer l'examen" icon="pi pi-arrow-right" iconPos="right" size="small" class="!bg-slate-900 hover:!bg-slate-800 w-full !border-none !font-black !uppercase !tracking-widest !text-[10px] !py-2.5" :disabled="exam.status === 'locked'" @click="startExam(exam)" />
                                     </div>
                                 </div>
                             </div>
@@ -572,46 +570,42 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <!-- AUTRES COURS -->
                         <section v-if="otherCourses.length > 0">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-base font-semibold text-[#12172B] flex items-center gap-2.5 font-display">
-                                    <span class="w-1 h-5 bg-[#3E5EFF] rounded-full" aria-hidden="true"></span>
+                                <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                        <i class="pi pi-book text-lg"></i>
+                                    </div>
                                     Autres formations
                                 </h2>
-                                <Link :href="route('student.my-courses')" class="text-xs font-medium text-[#3E5EFF] hover:underline">
-                                    Tout voir
+                                <Link :href="route('student.my-courses')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">
+                                    Tout voir →
                                 </Link>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div v-for="course in otherCourses" :key="course.id"
-                                     class="bg-white p-4 rounded-xl border border-[#E4E7F0] hover:border-[#C7D2FE] transition-colors group relative">
+                                     class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all group relative">
                                     <div class="flex gap-4">
-                                        <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#EEF1FF] flex items-center justify-center">
+                                        <div class="w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-indigo-50 flex items-center justify-center">
                                             <img v-if="getImageUrl(course.image || course.thumbnail)"
                                                  :src="getImageUrl(course.image || course.thumbnail)" :alt="course.title"
                                                  class="w-full h-full object-cover" />
-                                            <i v-else class="pi pi-book text-[#3E5EFF] text-xl" aria-hidden="true"></i>
+                                            <i v-else class="pi pi-book text-indigo-500 text-xl"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <Tag :value="getLevelLabel(course.level)" severity="secondary" class="!text-[10px] mb-1.5" />
-                                            <h4 class="font-medium text-[#12172B] text-sm leading-tight mb-0.5 truncate" :title="course.title">
-                                                {{ course.title }}
-                                            </h4>
-                                            <p class="text-xs text-[#8A93A6] mb-2.5 truncate">{{ course.instructor }}</p>
+                                            <Tag :value="getLevelLabel(course.level)" severity="secondary" class="!text-[10px] !font-black !uppercase !tracking-widest mb-1.5" />
+                                            <h4 class="font-black text-slate-800 text-sm leading-tight mb-0.5 truncate" :title="course.title">{{ course.title }}</h4>
+                                            <p class="text-xs text-slate-500 mb-2.5 truncate font-medium">{{ course.instructor }}</p>
                                             <div class="space-y-1">
                                                 <div class="flex justify-between text-xs font-mono">
-                                                    <span class="text-[#8A93A6]">Progression</span>
-                                                    <span class="font-medium" :style="`color:${getProgressColor(course.progress)}`">{{ Math.round(course.progress ?? 0) }}%</span>
+                                                    <span class="text-slate-400">Progression</span>
+                                                    <span class="font-black" :style="`color:${getProgressColor(course.progress)}`">{{ Math.round(course.progress ?? 0) }}%</span>
                                                 </div>
-                                                <ProgressBar :value="course.progress ?? 0" :showValue="false" style="height: 4px"
-                                                             class="bg-[#EDEFF5] rounded-full overflow-hidden"
-                                                             :style="`--p-progressbar-value-background:${getProgressColor(course.progress)}`" />
+                                                <ProgressBar :value="course.progress ?? 0" :showValue="false" style="height: 4px" class="bg-slate-100 rounded-full overflow-hidden" :style="`--p-progressbar-value-background:${getProgressColor(course.progress)}`" />
                                             </div>
                                         </div>
                                     </div>
                                     <div class="mt-3 flex gap-2 relative z-20">
-                                        <Button v-if="getLessonPlayerUrl(course)" label="Continuer" icon="pi pi-play" size="small"
-                                                class="!bg-[#3E5EFF] !border-none !font-medium !text-xs"
-                                                @click.stop="router.visit(getLessonPlayerUrl(course))" />
-                                        <Button label="Supports" icon="pi pi-download" size="small" outlined
+                                        <Button v-if="getLessonPlayerUrl(course)" label="Continuer" icon="pi pi-play" size="small" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !font-black !uppercase !tracking-widest !text-[10px] !px-4 !py-2.5" @click.stop="router.visit(getLessonPlayerUrl(course))" />
+                                        <Button label="Supports" icon="pi pi-download" size="small" outlined class="!border-slate-200 !text-slate-600 !font-bold !text-[10px] !uppercase !tracking-widest !px-3 !py-2.5" @click.stop="openCourseHub(course)" />
                                                 class="!font-medium !text-xs !border-[#D7DCE8] !text-[#475569]"
                                                 @click.stop="openCourseHub(course)" />
                                     </div>
@@ -622,11 +616,16 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </section>
 
                         <!-- ASSIDUITÉ -->
-                        <div class="bg-white rounded-2xl p-6 border border-[#E4E7F0]">
-                            <h2 class="text-base font-semibold text-[#12172B] mb-5 flex items-center gap-2.5 font-display">
-                                <span class="w-1 h-5 bg-[#17B8A6] rounded-full" aria-hidden="true"></span>
-                                Assiduité — 7 derniers jours
-                            </h2>
+                        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                            <div class="flex justify-between items-center mb-5">
+                                <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                                        <i class="pi pi-chart-line text-lg"></i>
+                                    </div>
+                                    Assiduité
+                                </h2>
+                                <Tag value="7 Jours" class="!bg-slate-100 !text-slate-600 !border-none !text-[10px] !font-black !uppercase !tracking-widest" />
+                            </div>
                             <div class="h-48 w-full">
                                 <Chart type="line" :data="activityData" :options="chartOptions" class="h-full" />
                             </div>
@@ -637,60 +636,58 @@ watch(() => props.stats?.completion_rate, (v) => {
                     <aside class="lg:col-span-4 space-y-6">
 
                         <!-- MAÎTRISE GLOBALE -->
-                        <div class="bg-white rounded-2xl p-7 border border-[#E4E7F0] text-center">
-                            <h3 class="text-sm font-medium text-[#6B7280] mb-5">Maîtrise globale</h3>
+                        <div class="bg-white rounded-3xl p-7 border border-slate-200 shadow-sm text-center">
+                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Maîtrise globale</h3>
                             <div class="flex justify-center mb-5">
                                 <Knob
                                     v-model="completionRate"
                                     :size="150"
-                                    valueColor="#3E5EFF"
-                                    rangeColor="#EDEFF5"
+                                    valueColor="#6366f1"
+                                    rangeColor="#F1F5F9"
                                     :strokeWidth="10"
                                     :readonly="true"
                                     valueTemplate="{value}%"
                                 />
                             </div>
-                            <div class="flex justify-center divide-x divide-[#E4E7F0]">
+                            <div class="flex justify-center divide-x divide-slate-100">
                                 <div class="px-6">
-                                    <p class="text-lg font-semibold font-mono">{{ stats?.certificates ?? 0 }}</p>
-                                    <p class="text-xs text-[#8A93A6]">Certificats</p>
+                                    <p class="text-2xl font-black font-mono text-slate-800">{{ stats?.certificates ?? 0 }}</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Certificats</p>
                                 </div>
                                 <div class="px-6">
-                                    <p class="text-lg font-semibold font-mono">{{ stats?.hours_studied ?? 0 }}h</p>
-                                    <p class="text-xs text-[#8A93A6]">Heures</p>
+                                    <p class="text-2xl font-black font-mono text-slate-800">{{ stats?.hours_studied ?? 0 }}h</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Heures</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- PROGRESSION PAR COURS -->
-                        <div v-if="courseProgressBreakdown.length > 0" class="bg-white rounded-2xl p-6 border border-[#E4E7F0]">
+                        <div v-if="courseProgressBreakdown.length > 0" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-semibold text-[#12172B] font-display">Progression par cours</h3>
-                                <Link :href="route('student.progress')" class="text-xs font-medium text-[#3E5EFF] hover:underline">
-                                    Détails
-                                </Link>
+                                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Progression par cours</h3>
+                                <Link :href="route('student.progress')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Détails →</Link>
                             </div>
                             <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 <div v-for="c in courseProgressBreakdown" :key="c.id" class="flex items-center gap-3">
-                                    <div class="relative w-9 h-9 shrink-0">
-                                        <svg viewBox="0 0 36 36" class="w-9 h-9 -rotate-90" aria-hidden="true">
-                                            <path class="text-[#EDEFF5]" stroke-width="4" stroke="currentColor" fill="none"
+                                    <div class="relative w-10 h-10 shrink-0">
+                                        <svg viewBox="0 0 36 36" class="w-10 h-10 -rotate-90" aria-hidden="true">
+                                            <path class="text-slate-100" stroke-width="4" stroke="currentColor" fill="none"
                                                   d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                             <path :stroke="getProgressColor(c.progress)" stroke-width="4" stroke-linecap="round" fill="none"
                                                   :stroke-dasharray="`${c.progress}, 100`"
                                                   d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                         </svg>
-                                        <span class="absolute inset-0 flex items-center justify-center text-[9px] font-mono font-medium">
+                                        <span class="absolute inset-0 flex items-center justify-center text-[9px] font-mono font-black text-slate-700">
                                             {{ c.progress }}
                                         </span>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-medium text-[#12172B] truncate" :title="c.title">{{ c.title }}</p>
-                                        <p class="text-[11px] text-[#8A93A6]">
+                                        <p class="text-xs font-black text-slate-800 truncate" :title="c.title">{{ c.title }}</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                                             <span v-if="c.status === 'completed'">Terminé</span>
                                             <span v-else-if="c.status === 'advanced'">Avancé</span>
                                             <span v-else>En cours</span>
-                                            <span v-if="c.lessonsTotal"> · {{ c.lessonsDone }}/{{ c.lessonsTotal }} leçons</span>
+                                            <span v-if="c.lessonsTotal"> · {{ c.lessonsDone }}/{{ c.lessonsTotal }}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -699,123 +696,122 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                         <!-- RÉPARTITION PAR NIVEAU -->
                         <div v-if="Object.values(skillDistribution).some(v => v > 0)"
-                             class="bg-white rounded-2xl p-6 border border-[#E4E7F0]">
-                            <h3 class="text-sm font-semibold text-[#12172B] mb-4 font-display">Répartition par niveau</h3>
+                             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Répartition par niveau</h3>
                             <div class="h-40">
                                 <Chart type="doughnut" :data="skillChartData" :options="doughnutOptions" class="h-full" />
                             </div>
                         </div>
 
                         <!-- CERTIFICATS -->
-                        <div v-if="allCertificates.length > 0" class="bg-[#12172B] rounded-2xl p-6 text-white">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-semibold flex items-center gap-2 font-display">
-                                    <i class="pi pi-verified text-[#F2A93B]" aria-hidden="true"></i> Mes certificats
-                                </h3>
-                                <Link :href="route('student.certificates')" class="text-xs font-medium text-white/60 hover:text-white">
-                                    Tout voir
-                                </Link>
-                            </div>
-                            <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                                <div v-for="cert in allCertificates" :key="cert.id"
-                                     class="bg-white/[0.06] hover:bg-white/10 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3 transition-colors">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-8 h-8 bg-[#F2A93B] text-[#12172B] rounded-lg flex items-center justify-center shrink-0">
-                                            <i class="pi pi-award text-sm" aria-hidden="true"></i>
+                        <div v-if="allCertificates.length > 0" class="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden">
+                            <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-[60px]"></div>
+                            <div class="relative z-10">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-sm font-black flex items-center gap-2 uppercase tracking-widest">
+                                        <i class="pi pi-verified text-amber-400"></i> Mes certificats
+                                    </h3>
+                                    <Link :href="route('student.certificates')" class="text-[10px] font-black text-amber-400 uppercase tracking-widest hover:underline">Tout voir →</Link>
+                                </div>
+                                <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                                    <div v-for="cert in allCertificates" :key="cert.id"
+                                         class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <div class="w-9 h-9 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center shrink-0">
+                                                <i class="pi pi-award text-sm"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-xs font-black truncate">{{ cert.course_title }}</p>
+                                                <p class="text-[10px] text-slate-400 font-mono uppercase tracking-widest">{{ cert.score }}% · {{ cert.issued_at }}</p>
+                                            </div>
                                         </div>
-                                        <div class="min-w-0">
-                                            <p class="text-xs font-medium truncate">{{ cert.course_title }}</p>
-                                            <p class="text-[11px] text-white/45 font-mono">
-                                                {{ cert.score }}% · {{ cert.issued_at }}
-                                            </p>
-                                        </div>
+                                        <button v-tooltip.left="'Télécharger le PDF'"
+                                                class="w-9 h-9 bg-amber-500 text-slate-900 rounded-xl flex items-center justify-center shrink-0 hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/30"
+                                                @click="downloadCertificate(cert)"
+                                                :aria-label="`Télécharger le certificat ${cert.course_title}`">
+                                            <i class="pi pi-download text-sm"></i>
+                                        </button>
                                     </div>
-                                    <button v-tooltip.left="'Télécharger le PDF'"
-                                            class="w-8 h-8 bg-white text-[#12172B] rounded-lg flex items-center justify-center shrink-0 hover:bg-white/90 transition-colors"
-                                            @click="downloadCertificate(cert)"
-                                            :aria-label="`Télécharger le certificat ${cert.course_title}`">
-                                        <i class="pi pi-download text-sm" aria-hidden="true"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- ACCÈS RAPIDE -->
-                        <div class="bg-white rounded-2xl p-5 border border-[#E4E7F0]">
-                            <h3 class="text-sm font-semibold text-[#12172B] mb-2 font-display">Accès rapide</h3>
-                            <nav class="space-y-0.5">
-                                <Link :href="route('student.my-courses')" class="quick-access-link">
-                                    <i class="pi pi-book text-[#3E5EFF] w-5 text-center" aria-hidden="true"></i>
-                                    Mes formations
-                                    <i class="pi pi-chevron-right text-[#C7CDDB] text-xs ml-auto" aria-hidden="true"></i>
+                        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3">Accès rapide</h3>
+                            <nav class="space-y-1">
+                                <Link :href="route('student.my-courses')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
+                                    <span class="text-xs font-bold text-slate-700">Mes formations</span>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-indigo-500"></i>
                                 </Link>
-                                <Link :href="route('exams.learner.index')" class="quick-access-link">
-                                    <i class="pi pi-pencil text-[#F2A93B] w-5 text-center" aria-hidden="true"></i>
-                                    Passer un examen
-                                    <i class="pi pi-chevron-right text-[#C7CDDB] text-xs ml-auto" aria-hidden="true"></i>
+                                <Link :href="route('exams.learner.index')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center"><i class="pi pi-pencil text-xs"></i></div>
+                                    <span class="text-xs font-bold text-slate-700">Passer un examen</span>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-amber-500"></i>
                                 </Link>
-                                <Link :href="route('student.certificates')" class="quick-access-link">
-                                    <i class="pi pi-verified text-[#2FBF71] w-5 text-center" aria-hidden="true"></i>
-                                    Mes certificats
-                                    <i class="pi pi-chevron-right text-[#C7CDDB] text-xs ml-auto" aria-hidden="true"></i>
+                                <Link :href="route('student.certificates')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center"><i class="pi pi-verified text-xs"></i></div>
+                                    <span class="text-xs font-bold text-slate-700">Mes certificats</span>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-emerald-500"></i>
                                 </Link>
-                                <Link :href="route('student.progress')" class="quick-access-link">
-                                    <i class="pi pi-chart-line text-[#17B8A6] w-5 text-center" aria-hidden="true"></i>
-                                    Ma progression
-                                    <i class="pi pi-chevron-right text-[#C7CDDB] text-xs ml-auto" aria-hidden="true"></i>
+                                <Link :href="route('student.progress')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-8 h-8 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center"><i class="pi pi-chart-line text-xs"></i></div>
+                                    <span class="text-xs font-bold text-slate-700">Ma progression</span>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-emerald-500"></i>
                                 </Link>
                             </nav>
                         </div>
 
                         <!-- CLASSEMENT -->
-                        <div v-if="leaderboard && leaderboard.length > 0" class="bg-white rounded-2xl p-6 border border-[#E4E7F0]">
-                            <h3 class="text-sm font-semibold text-[#12172B] mb-4 flex items-center gap-2 font-display">
-                                <i class="pi pi-trophy text-[#F2A93B]" aria-hidden="true"></i> Classement
+                        <div v-if="leaderboard && leaderboard.length > 0" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <div class="w-8 h-8 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center"><i class="pi pi-trophy text-xs"></i></div>
+                                Classement
                             </h3>
-                            <ol class="space-y-1">
+                            <ol class="space-y-1.5">
                                 <li v-for="(student, idx) in leaderboard" :key="idx"
-                                     class="flex items-center justify-between p-2.5 rounded-lg hover:bg-[#F5F6FA] transition-colors">
+                                    class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
                                     <div class="flex items-center gap-3">
-                                        <span class="text-xs font-mono text-[#8A93A6] w-4 text-center">{{ student.rank }}</span>
-                                        <Avatar :label="student.name?.charAt(0)" :image="getImageUrl(student.avatar)"
-                                                shape="circle" size="small" />
+                                        <span class="text-xs font-mono font-black text-slate-400 w-5 text-center">#{{ student.rank }}</span>
+                                        <Avatar :label="student.name?.charAt(0)" :image="getImageUrl(student.avatar)" shape="circle" size="small" />
                                         <div>
-                                            <p class="text-xs font-medium text-[#12172B]">{{ student.name }}</p>
-                                            <span class="inline-flex items-center gap-1 text-[10px] text-[#8A93A6]">
-                                                <i :class="`pi pi-arrow-${student.trend === 'up' ? 'up text-[#2FBF71]' : 'down text-[#E0585F]'} text-[8px]`" aria-hidden="true"></i>
+                                            <p class="text-xs font-black text-slate-800">{{ student.name }}</p>
+                                            <span class="inline-flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                                <i :class="`pi pi-arrow-${student.trend === 'up' ? 'up text-emerald-500' : 'down text-rose-500'} text-[8px]`"></i>
                                                 variation
                                             </span>
                                         </div>
                                     </div>
-                                    <Badge :value="student.score + ' xp'" class="!bg-[#EEF1FF] !text-[#3E5EFF] font-mono !text-[10px]" />
+                                    <Badge :value="student.score + ' xp'" class="!bg-indigo-50 !text-indigo-600 font-mono !text-[10px] !font-black" />
                                 </li>
                             </ol>
                         </div>
 
                         <!-- ACTIVITÉ -->
-                        <div v-if="recentActivities && recentActivities.length > 0" class="bg-white rounded-2xl p-6 border border-[#E4E7F0]">
-                            <h3 class="text-sm font-semibold text-[#12172B] mb-4 flex items-center justify-between font-display">
+                        <div v-if="recentActivities && recentActivities.length > 0" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center justify-between">
                                 Activité récente
-                                <span class="w-1.5 h-1.5 bg-[#2FBF71] rounded-full" aria-hidden="true"></span>
+                                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                             </h3>
                             <Timeline :value="recentActivities" class="custom-timeline">
                                 <template #marker="slotProps">
                                     <span
-                                        class="flex w-7 h-7 items-center justify-center text-white rounded-lg"
+                                        class="flex w-8 h-8 items-center justify-center text-white rounded-xl shadow-md"
                                         :class="{
-                                            'bg-[#2FBF71]': slotProps.item.type === 'success',
-                                            'bg-[#3E5EFF]': slotProps.item.type === 'info',
-                                            'bg-[#F2A93B]': slotProps.item.type === 'warning',
-                                            'bg-[#B8BFCE]': !['success','info','warning'].includes(slotProps.item.type)
+                                            'bg-emerald-500 shadow-emerald-500/30': slotProps.item.type === 'success',
+                                            'bg-indigo-500 shadow-indigo-500/30': slotProps.item.type === 'info',
+                                            'bg-amber-500 shadow-amber-500/30': slotProps.item.type === 'warning',
+                                            'bg-slate-400': !['success','info','warning'].includes(slotProps.item.type)
                                         }">
-                                        <i :class="`pi ${slotProps.item.icon || 'pi-info-circle'} text-xs`" aria-hidden="true"></i>
+                                        <i :class="`pi ${slotProps.item.icon || 'pi-info-circle'} text-xs`"></i>
                                     </span>
                                 </template>
                                 <template #content="slotProps">
                                     <div class="mb-5 ml-3">
-                                        <p class="text-xs font-medium text-[#12172B] leading-snug">{{ slotProps.item.event }}</p>
-                                        <p class="text-[11px] text-[#8A93A6] mt-0.5 line-clamp-2">{{ slotProps.item.detail }}</p>
-                                        <span class="text-[11px] font-mono text-[#3E5EFF]">{{ slotProps.item.time }}</span>
+                                        <p class="text-xs font-black text-slate-800 leading-snug">{{ slotProps.item.event }}</p>
+                                        <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{{ slotProps.item.detail }}</p>
+                                        <span class="text-[10px] font-mono text-indigo-600 font-black uppercase tracking-widest">{{ slotProps.item.time }}</span>
                                     </div>
                                 </template>
                             </Timeline>
@@ -827,7 +823,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                 </template>
             </div>
         </div>
-
+    </div>
     </AppLayout>
 </template>
 

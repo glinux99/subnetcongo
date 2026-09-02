@@ -2395,5 +2395,45 @@
             "cancel": "Cancel",
             "delete": "Delete"
         }
-    }
+    },
+
+  "marketplace": {
+    "title": "MARKETPLACE",
+    "search_placeholder": "What do you want to learn today?",
+    "filters": "Filters",
+    "category": "Category",
+    "level": "Level",
+    "price": "Price",
+    "free": "Free",
+    "paid": "Paid",
+    "apply": "Apply",
+    "add_to_cart": "Add to cart",
+    "continue": "Continue",
+    "enrolled": "Enrolled",
+    "cart": "Cart",
+    "my_cart": "My cart",
+    "checkout": "Checkout",
+    "subtotal": "Subtotal",
+    "taxes": "Taxes",
+    "total": "Total",
+    "empty_cart": "Your cart is empty",
+    "explore": "Explore marketplace",
+    "billing_info": "Billing information",
+    "full_name": "Full name",
+    "email": "Email",
+    "country": "Country",
+    "payment_method": "Payment method",
+    "phone_number": "Phone number (Mobile Money)",
+    "phone_placeholder": "+243 81 234 5678",
+    "pay_now": "Pay now",
+    "secure_payment": "Secure SSL payment",
+    "confirm_phone_title": "Confirm on your phone",
+    "verifying": "Verifying...",
+    "i_confirmed": "I confirmed",
+    "order_confirmed": "Order confirmed!",
+    "order_number": "Order number",
+    "status": "Status",
+    "my_courses": "My courses",
+    "keep_shopping": "Keep shopping"
+  }
 }

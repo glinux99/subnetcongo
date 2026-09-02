@@ -43,6 +43,7 @@ const MyCustomPreset = definePreset (Aura, {
 });
 axios.defaults.withCredentials = true; // <- Obligatoire
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios = axios;
 // 2. Configurer i18n avec les messages importés
 const i18n = createI18n({
     legacy: false, // Important pour le mode Composition API

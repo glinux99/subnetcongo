@@ -21,7 +21,11 @@ use App\Models\User;
 use App\Models\AuditLog;
 use App\Models\LiveAttendance;
 use App\Models\Recording;
-use App\Models\CourseEnrollment;
+use App\Models\Enrollment;
+use App\Services\Video\ZoomService;
+use App\Services\Video\GoogleMeetService;
+use App\Services\Video\BbbService;
+use App\Services\Video\JitsiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Redirect, Storage, Log, Cache, Notification, Http, Mail};
 use Illuminate\Support\Str;
@@ -121,29 +125,24 @@ class LiveSessionController extends Controller
      */
    public function store(Request $request)
 {
-   try {
-     $validated = $this->validateSession($request);
-   } catch (\Throwable $th) {
-    //throw
-    return $th;
-   }
+    $validated = $this->validateSession($request);
 
     DB::beginTransaction();
     try {
         $apiMeetingData = $this->createMeetingOnProvider($validated);
 
         $session = new LiveSession();
-        $session->fill(collect($validated)->except('settings')->toArray());
+        $session->fill(collect($validated)->except(['settings'])->toArray());
         $session->meeting_id  = $apiMeetingData['id'];
         $session->meeting_url = $apiMeetingData['join_url'];
         $session->host_url    = $apiMeetingData['start_url'] ?? null;
-        $session->passcode    = $apiMeetingData['password'] ?? $validated['passcode'];
+        $session->passcode    = $apiMeetingData['password'] ?? $validated['passcode'] ?? null;
         $session->status      = self::STATUS_SCHEDULED;
         $session->created_by  = Auth::id();
-        $session->metadata    = json_encode([               // ← encodage JSON
+        $session->metadata    = [
             'provider_response' => $apiMeetingData,
-            'settings'          => $this->normalizeSettings($request->input('settings', []))
-        ]);
+            'settings' => $this->normalizeSettings($request->input('settings', [])),
+        ];
         $session->save();
 
         $this->scheduleNotifications($session);
@@ -153,15 +152,14 @@ class LiveSessionController extends Controller
         return Redirect::route('live-sessions.index')->with('success', 'Session planifiée.');
     } catch (Exception $e) {
         DB::rollBack();
-        return $e;
-        Log::error("SNC_LIVE_STORE_FAIL: " . $e->getMessage());
-        return back()->with('error', $e->getMessage())->withInput();
+        Log::error("SNC_LIVE_STORE_FAIL: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+        return back()->with('error', 'Erreur lors de la création : ' . $e->getMessage())->withInput();
     }
 }
 
-    /**
-     * Mise à jour d'une session existante.
-     */
+/**
+ * Mise à jour d'une session existante.
+ */
     public function update(Request $request, LiveSession $liveSession)
     {
         // Vérifier les droits : instructeur assigné ou admin
@@ -246,13 +244,13 @@ class LiveSessionController extends Controller
         $user = Auth::user();
 
         // 3.1 Vérifier l'inscription au cours
-        if (!$user->isEnrolledIn($liveSession->course_id)) {
+        if (!Enrollment::where('user_id', $user->id)->where('course_id', $liveSession->course_id)->exists()) {
             return back()->with('error', "Vous devez être inscrit au cours '{$liveSession->course->title}' pour rejoindre.");
         }
 
         // 3.2 Enregistrer la présence initiale
         LiveAttendance::updateOrCreate(
-            ['session_id' => $liveSession->id, 'user_id' => $user->id],
+            ['live_session_id' => $liveSession->id, 'user_id' => $user->id],
             ['joined_at' => now(), 'ip_address' => request()->ip(), 'user_agent' => request()->userAgent()]
         );
 
@@ -268,7 +266,7 @@ class LiveSessionController extends Controller
      */
     public function heartbeat(Request $request, LiveSession $liveSession)
     {
-        $attendance = LiveAttendance::where('session_id', $liveSession->id)
+        $attendance = LiveAttendance::where('live_session_id', $liveSession->id)
             ->where('user_id', Auth::id())
             ->first();
 
@@ -296,7 +294,7 @@ class LiveSessionController extends Controller
 
         // 4.2 Statistiques de présence
         $stats = [
-            'total_registered' => CourseEnrollment::where('course_id', $liveSession->course_id)->count(),
+            'total_registered' => Enrollment::where('course_id', $liveSession->course_id)->count(),
             'actual_attendees' => $liveSession->attendees()->count(),
             'average_time' => $liveSession->attendees()->avg('seconds_spent') ?? 0,
             'peak_participants' => $this->getPeakParticipants($liveSession->id)
@@ -386,11 +384,11 @@ class LiveSessionController extends Controller
     private function createMeetingOnProvider(array $data): array
     {
         return match ($data['provider']) {
-            self::PROVIDER_ZOOM  => $this->zoomApiService()->createMeeting($data),
-            self::PROVIDER_BBB   => $this->bbbApiService()->createMeeting($data),
-            self::PROVIDER_MEET  => $this->googleMeetService()->createMeeting($data),
-            self::PROVIDER_JITSI => $this->generateJitsiMeeting($data),
-            default => throw new Exception("Fournisseur non supporté.")
+            self::PROVIDER_ZOOM  => app(ZoomService::class)->createMeeting($data),
+            self::PROVIDER_BBB   => app(BbbService::class)->createMeeting($data),
+            self::PROVIDER_MEET  => app(GoogleMeetService::class)->createMeeting($data),
+            self::PROVIDER_JITSI => app(JitsiService::class)->createMeeting($data),
+            default => throw new Exception("Fournisseur non supporté : {$data['provider']}"),
         };
     }
 
@@ -400,11 +398,11 @@ class LiveSessionController extends Controller
     private function updateMeetingOnProvider(LiveSession $session, array $data): array
     {
         return match ($data['provider']) {
-            self::PROVIDER_ZOOM  => $this->zoomApiService()->updateMeeting($session->meeting_id, $data),
-            self::PROVIDER_BBB   => $this->bbbApiService()->updateMeeting($session->meeting_id, $data),
-            self::PROVIDER_MEET  => $this->googleMeetService()->updateMeeting($session->meeting_id, $data),
-            self::PROVIDER_JITSI => $this->generateJitsiMeeting($data), // Jitsi ne conserve pas de meeting_id permanent
-            default => throw new Exception("Fournisseur non supporté.")
+            self::PROVIDER_ZOOM  => app(ZoomService::class)->updateMeeting($session->meeting_id, $data),
+            self::PROVIDER_BBB   => app(BbbService::class)->updateMeeting($session->meeting_id, $data),
+            self::PROVIDER_MEET  => app(GoogleMeetService::class)->updateMeeting($session->meeting_id, $data),
+            self::PROVIDER_JITSI => app(JitsiService::class)->updateMeeting($session->meeting_id, $data),
+            default => throw new Exception("Fournisseur non supporté."),
         };
     }
 
@@ -413,104 +411,17 @@ class LiveSessionController extends Controller
      */
     private function deleteMeetingOnProvider(LiveSession $session): void
     {
-        match ($session->provider) {
-            self::PROVIDER_ZOOM => $this->zoomApiService()->deleteMeeting($session->meeting_id),
-            self::PROVIDER_BBB  => $this->bbbApiService()->deleteMeeting($session->meeting_id),
-            self::PROVIDER_MEET => $this->googleMeetService()->deleteMeeting($session->meeting_id),
-            default => null // Jitsi ne nécessite pas de suppression
-        };
-    }
-
-    /**
-     * Service Zoom (simulation avec logique réelle commentée).
-     */
-    private function zoomApiService()
-    {
-        return new class {
-            public function createMeeting($data) {
-                // Exemple réel :
-                // $response = Http::withToken($this->getAccessToken())
-                //     ->post('https://api.zoom.us/v2/users/me/meetings', [...]);
-                // return $response->json();
-                return [
-                    'id' => rand(100000000, 999999999),
-                    'join_url' => "https://zoom.us/j/" . Str::random(10),
-                    'start_url' => "https://zoom.us/s/" . Str::random(10),
-                    'password' => Str::random(8)
-                ];
-            }
-            public function updateMeeting($meetingId, $data) {
-                return [
-                    'id' => $meetingId,
-                    'join_url' => "https://zoom.us/j/" . Str::random(10),
-                    'start_url' => "https://zoom.us/s/" . Str::random(10),
-                    'password' => Str::random(8)
-                ];
-            }
-            public function deleteMeeting($meetingId) {
-                // Http::delete("https://api.zoom.us/v2/meetings/$meetingId")
-            }
-        };
-    }
-
-    /**
-     * Service BigBlueButton (simulation).
-     */
-    private function bbbApiService()
-    {
-        return new class {
-            public function createMeeting($data) {
-                return [
-                    'id' => 'bbb-' . Str::random(12),
-                    'join_url' => 'https://your-bbb-server.com/bigbluebutton/api/join?...',
-                    'start_url' => 'https://your-bbb-server.com/bigbluebutton/api/join?...',
-                    'password' => $data['passcode'] ?? ''
-                ];
-            }
-            public function updateMeeting($meetingId, $data) {
-                return $this->createMeeting($data);
-            }
-            public function deleteMeeting($meetingId) {
-                // Logique de fin de réunion
-            }
-        };
-    }
-
-    /**
-     * Service Google Meet (simulation).
-     */
-    private function googleMeetService()
-    {
-        return new class {
-            public function createMeeting($data) {
-                return [
-                    'id' => 'meet-' . Str::random(16),
-                    'join_url' => 'https://meet.google.com/' . Str::random(10),
-                    'start_url' => 'https://meet.google.com/' . Str::random(10),
-                    'password' => null
-                ];
-            }
-            public function updateMeeting($meetingId, $data) {
-                return $this->createMeeting($data);
-            }
-            public function deleteMeeting($meetingId) {
-                // Annulation via Calendar API
-            }
-        };
-    }
-
-    /**
-     * Génération de lien Jitsi (auto-hébergé).
-     */
-    private function generateJitsiMeeting($data): array
-    {
-        $roomName = Str::slug($data['title']) . '-' . Str::random(6);
-        return [
-            'id' => $roomName,
-            'join_url' => "https://meet.jit.si/{$roomName}#config.prejoinPageEnabled=false",
-            'start_url' => "https://meet.jit.si/{$roomName}",
-            'password' => null
-        ];
+        try {
+            match ($session->provider) {
+                self::PROVIDER_ZOOM => app(ZoomService::class)->deleteMeeting($session->meeting_id),
+                self::PROVIDER_BBB  => app(BbbService::class)->deleteMeeting($session->meeting_id),
+                self::PROVIDER_MEET => app(GoogleMeetService::class)->deleteMeeting($session->meeting_id),
+                self::PROVIDER_JITSI => app(JitsiService::class)->deleteMeeting($session->meeting_id),
+                default => null,
+            };
+        } catch (Exception $e) {
+            Log::warning("SNC_LIVE_DELETE_FAIL: " . $e->getMessage());
+        }
     }
 
     /**
@@ -521,7 +432,7 @@ class LiveSessionController extends Controller
         return [
             'live_now' => LiveSession::where('status', self::STATUS_LIVE)->count(),
             'scheduled_today' => LiveSession::whereDate('start_at', Carbon::today())->count(),
-            'avg_attendance' => (int) (LiveAttendance::groupBy('session_id')
+            'avg_attendance' => (int) (LiveAttendance::groupBy('live_session_id')
                                 ->selectRaw('count(user_id) as count')
                                 ->get()->avg('count') ?? 0),
             'storage_used' => $this->formatBytes(Recording::sum('file_size'))
@@ -543,7 +454,7 @@ class LiveSessionController extends Controller
         while ($current <= $endTime) {
             $labels[] = $current->format('H:i');
             $count = DB::table('live_attendances')
-                ->where('session_id', $session->id)
+                ->where('live_session_id', $session->id)
                 ->where('joined_at', '<=', $current)
                 ->where('last_ping_at', '>=', $current->copy()->subMinutes(2))
                 ->count();
@@ -569,7 +480,7 @@ class LiveSessionController extends Controller
     private function getPeakParticipants($sessionId): int
     {
         // Logique de calcul du pic basée sur les pings ou les logs
-        return LiveAttendance::where('session_id', $sessionId)->count();
+        return LiveAttendance::where('live_session_id', $sessionId)->count();
     }
 
     /**
@@ -577,18 +488,16 @@ class LiveSessionController extends Controller
      */
     private function fetchProviderRecordings(LiveSession $session): array
     {
-        // À implémenter selon le provider
-        // Exemple pour Zoom :
-        // $response = Http::withToken(...)->get("https://api.zoom.us/v2/meetings/{$session->meeting_id}/recordings");
-        // return $response->json('recording_files');
-        return [
-            [
-                'id' => 'rec_' . Str::random(10),
-                'download_url' => 'https://example.com/recording.mp4',
-                'file_size' => rand(10000, 500000),
-                'duration_sec' => $session->duration * 60
-            ]
-        ];
+        if ($session->provider === self::PROVIDER_ZOOM && $session->meeting_id) {
+            $files = app(ZoomService::class)->listRecordings($session->meeting_id);
+            return array_map(fn($f) => [
+                'id' => $f['recording_id'] ?? $f['id'],
+                'download_url' => $f['download_url'] ?? null,
+                'file_size' => $f['file_size'] ?? 0,
+                'duration_sec' => (int) ($f['duration'] ?? 0),
+            ], $files);
+        }
+        return [];
     }
 
     /**

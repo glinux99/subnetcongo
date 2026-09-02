@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\CertificateController;
 use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\Lesson;
+use App\Models\Module;
 use App\Models\Resource;
 use App\Models\User;
 use App\Models\UserProgress;
@@ -351,6 +353,72 @@ class StudentController extends Controller
             'Content-Type' => $resource->mime_type ?? 'application/octet-stream',
             'Cache-Control' => 'private, max-age=3600',
         ]);
+    }
+
+    /**
+     * Auto-save progression vidéo (heartbeat frontend toutes les ~30s).
+     */
+    public function updateProgress(Request $request, Course $course, Lesson $lesson)
+    {
+        $user = $request->user();
+        abort_unless($user->isEnrolledIn($course), 403, 'Vous n\'êtes pas inscrit à ce cours.');
+
+        $data = $request->validate([
+            'progress_percent' => 'required|numeric|min:0|max:100',
+            'time_spent_seconds' => 'nullable|integer|min:0',
+            'current_position_seconds' => 'nullable|integer|min:0',
+        ]);
+
+        $progress = UserProgress::firstOrNew([
+            'user_id' => $user->id,
+            'lesson_id' => $lesson->id,
+        ]);
+
+        $progress->course_id = $course->id;
+        $progress->progress_percent = min(100, max($progress->progress_percent ?? 0, $data['progress_percent']));
+        $progress->time_spent_seconds = ($progress->time_spent_seconds ?? 0) + ($data['time_spent_seconds'] ?? 0);
+        $progress->last_accessed_at = now();
+
+        if ($progress->progress_percent >= 100) {
+            $progress->completed_at = $progress->completed_at ?? now();
+        }
+        $progress->save();
+
+        // Met à jour l'enrollment "last_lesson_id" si colonne dispo
+        if (\Schema::hasColumn('enrollments', 'last_lesson_id')) {
+            \DB::table('enrollments')
+                ->where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->update(['last_lesson_id' => $lesson->id, 'updated_at' => now()]);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'progress_percent' => (float) $progress->progress_percent,
+            'time_spent_seconds' => $progress->time_spent_seconds,
+            'is_completed' => $progress->progress_percent >= 100,
+        ]);
+    }
+
+    /**
+     * Marque manuellement une leçon comme terminée.
+     */
+    public function completeLesson(Request $request, Course $course, Lesson $lesson)
+    {
+        $user = $request->user();
+        abort_unless($user->isEnrolledIn($course), 403, 'Vous n\'êtes pas inscrit à ce cours.');
+
+        $progress = UserProgress::updateOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+            [
+                'course_id' => $course->id,
+                'progress_percent' => 100,
+                'completed_at' => now(),
+                'last_accessed_at' => now(),
+            ]
+        );
+
+        return back()->with('success', 'Leçon marquée comme terminée.');
     }
 
     /**

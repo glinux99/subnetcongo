@@ -142,6 +142,11 @@ Route::middleware(['auth'])->group(function () {
         // Live sessions
         Route::post('live-sessions/{live_session}/sync-recordings', [LiveSessionController::class, 'syncRecordings'])->name('live-sessions.sync-recordings');
         Route::post('live-sessions/{live_session}/start', [LiveSessionController::class, 'start'])->name('live-sessions.start');
+        Route::post('live-sessions/{live_session}/heartbeat', [LiveSessionController::class, 'heartbeat'])->name('live-sessions.heartbeat');
+        Route::post('live-sessions/{live_session}/end', [LiveSessionController::class, 'endSession'])->name('live-sessions.end');
+        Route::post('live-sessions/{live_session}/cancel', [LiveSessionController::class, 'cancel'])->name('live-sessions.cancel');
+        Route::get('live-sessions/{live_session}/report', [LiveSessionController::class, 'report'])->name('live-sessions.report');
+        Route::get('live-sessions/{live_session}/join', [LiveSessionController::class, 'join'])->name('live-sessions.join');
         Route::resource('live-sessions', LiveSessionController::class);
     });
 
@@ -213,6 +218,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/progress', [App\Http\Controllers\Student\StudentController::class, 'progress'])->name('progress');
         // Player de leçon
         Route::get('/courses/{course}/lessons/{lesson}', [App\Http\Controllers\Student\StudentController::class, 'lessonPlayer'])->name('lesson-player');
+        // Auto-save progression
+        Route::post('/courses/{course}/lessons/{lesson}/progress', [App\Http\Controllers\Student\StudentController::class, 'updateProgress'])->name('lessons.update-progress');
+        Route::post('/courses/{course}/lessons/{lesson}/complete', [App\Http\Controllers\Student\StudentController::class, 'completeLesson'])->name('lessons.complete');
         // Téléchargement de ressources
         Route::get('/resources/{resource}/download', [App\Http\Controllers\Student\StudentController::class, 'resourceDownload'])->name('resources.download');
     });
