@@ -23,8 +23,19 @@ class Order extends Model
         'currency',
         'status',
         'payment_method',
+        'payment_provider',
+        'payment_reference',
+        'phone_number',
+        'country_code',
+        'coupon_code',
         'transaction_id',
         'billing_details',
+        'billing_email',
+        'billing_name',
+        'tax_amount',
+        'discount_amount',
+        'paid_at',
+        'refunded_at',
         'notes',
     ];
 
@@ -35,7 +46,11 @@ class Order extends Model
      */
     protected $casts = [
         'amount' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'billing_details' => 'array',
+        'paid_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
     /**

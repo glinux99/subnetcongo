@@ -4,6 +4,8 @@ import { computed, ref, watch, onMounted } from 'vue';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
+import AppBreadcrumb from '@/Components/AppBreadcrumb.vue';
+import CommandPalette from '@/Components/CommandPalette.vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
@@ -111,21 +113,24 @@ watch(dateRange, (newDates) => {
         <app-sidebar></app-sidebar>
 
         <div class="layout-main-container">
-            <div class="px-0 py-4 sticky top-0 z-10 bg-[#f8fafc]/80 backdrop-blur-md">
-                <div class="flex items-center justify-end gap-2 p-3 bg-white rounded-lg shadow-sm border">
-                    <Dropdown
-                        v-model="filterType"
-                        :options="[
-                            { label: t('date_filters.this_month'), value: 'this_month' },
-                            { label: t('date_filters.last_month'), value: 'last_month' },
-                            { label: t('date_filters.last_week'), value: 'last_week' },
-                            { label: t('date_filters.custom'), value: 'custom' }
-                        ]"
-                        optionLabel="label"
-                        optionValue="value"
-                        class="w-full md:w-48"
-                    />
-                    <Calendar v-if="filterType === 'custom'" v-model="dateRange" selectionMode="range" dateFormat="dd/mm/yy" class="w-full md:w-64" />
+            <div class="px-6 py-4 sticky top-20 z-10 bg-[#f8fafc]/80 backdrop-blur-md border-b border-slate-100">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <AppBreadcrumb />
+                    <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-slate-100">
+                        <Dropdown
+                            v-model="filterType"
+                            :options="[
+                                { label: t('date_filters.this_month'), value: 'this_month' },
+                                { label: t('date_filters.last_month'), value: 'last_month' },
+                                { label: t('date_filters.last_week'), value: 'last_week' },
+                                { label: t('date_filters.custom'), value: 'custom' }
+                            ]"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-full md:w-44 border-none shadow-none text-xs"
+                        />
+                        <Calendar v-if="filterType === 'custom'" v-model="dateRange" selectionMode="range" dateFormat="dd/mm/yy" class="w-full md:w-64 border-none" />
+                    </div>
                 </div>
             </div>
 
@@ -139,6 +144,7 @@ watch(dateRange, (newDates) => {
         <div class="layout-mask animate-fadein"></div>
     </div>
     <Toast />
+    <CommandPalette />
 </template>
 
 <style>

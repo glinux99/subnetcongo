@@ -5,6 +5,8 @@ import { updatePreset, updateSurfacePalette } from '@primevue/themes';
 import Aura from '@primevue/themes/aura';
 import Lara from '@primevue/themes/lara';
 import AppConfigurator from './AppConfigurator.vue';
+import CommandPalette from '@/Components/CommandPalette.vue';
+import NotificationBell from '@/Components/NotificationBell.vue';
 import NavLink from "@/Components/NavLink.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import { usePage } from '@inertiajs/vue3';
@@ -50,8 +52,9 @@ const primaryColors = ref([
 const languages = [
     { name: 'Français', code: 'FR', flag: 'https://flagcdn.com/w40/fr.png' },
     { name: 'English', code: 'EN', flag: 'https://flagcdn.com/w40/gb.png' },
-    { name: 'Swahili', code: 'SW', flag: 'https://flagcdn.com/w40/tz.png' },
-    { name: 'Lingala', code: 'LN', flag: 'https://flagcdn.com/w40/cd.png' }
+    { name: 'Deutsch', code: 'DE', flag: 'https://flagcdn.com/w40/de.png' },
+    { name: 'Kiswahili', code: 'SW', flag: 'https://flagcdn.com/w40/tz.png' },
+    { name: 'Lingála', code: 'LN', flag: 'https://flagcdn.com/w40/cd.png' }
 ];
 
 // On cherche la langue actuelle basée sur la locale
@@ -60,6 +63,7 @@ const currentLang = computed(() => {
 });
 
 const searchQuery = ref('');
+const showPalette = ref(false);
 
 /**
  * MÉTHODES DE MISE À JOUR DU THÈME
@@ -82,7 +86,7 @@ function changeLanguage(lang) {
 const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        document.getElementById('topbar-search')?.focus();
+        showPalette.value = true;
     }
 };
 
@@ -112,22 +116,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
         </div>
 
         <div class="hidden lg:flex flex-1 justify-center max-w-xl px-8">
-            <div class="relative w-full group">
+            <button type="button" @click="showPalette = true"
+                    class="relative w-full group text-left">
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                    <i class="pi pi-search text-gray-400 group-focus-within:text-indigo-600 transition-colors duration-300"></i>
+                    <i class="pi pi-search text-gray-400 group-hover:text-indigo-600 transition-colors duration-300"></i>
                 </div>
-                <input
-                    id="topbar-search"
-                    v-model="searchQuery"
-                    type="text"
-                    :placeholder="t('topbar.search_placeholder')"
-                    class="w-full bg-gray-100/50 border-2 border-transparent rounded-2xl py-2.5 pl-12 pr-20 text-sm focus:ring-0 focus:border-indigo-100 focus:bg-white transition-all duration-300 outline-none text-gray-700 font-medium"
-                />
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none opacity-60 group-focus-within:opacity-100 transition-opacity">
+                <div class="w-full bg-gray-100/50 border-2 border-transparent rounded-2xl py-2.5 pl-12 pr-20 text-sm group-hover:bg-white group-hover:border-indigo-100 transition-all duration-300 text-gray-400 font-medium">
+                    {{ t('topbar.search_placeholder') }}
+                </div>
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
                     <kbd class="px-2 py-1 bg-white border border-gray-200 rounded-md text-[9px] font-black text-gray-500 shadow-sm uppercase tracking-tighter">Ctrl</kbd>
                     <kbd class="px-2 py-1 bg-white border border-gray-200 rounded-md text-[9px] font-black text-gray-500 shadow-sm uppercase">K</kbd>
                 </div>
-            </div>
+            </button>
         </div>
 
         <div class="flex items-center gap-3">
@@ -135,6 +136,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                 <button type="button" class="layout-topbar-action p-2.5 rounded-xl hover:bg-gray-50 border-none bg-transparent cursor-pointer" @click="toggleDarkMode">
                     <i :class="['pi text-lg', { 'pi-moon text-indigo-500': isDarkTheme, 'pi-sun text-amber-500': !isDarkTheme }]"></i>
                 </button>
+
+                <!-- Notifications -->
+                <div class="ml-1">
+                    <NotificationBell />
+                </div>
 
                 <div class="relative ml-1">
                     <button
@@ -222,7 +228,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
             </div>
         </div>
     </header>
+
+    <CommandPalette v-model:visible="showPalette" />
 </template>
+
+<script>
+import CommandPalette from '@/Components/CommandPalette.vue';
+export default { components: { CommandPalette } };
+</script>
 
 <style scoped>
 /* Vos styles sont conservés sans modification */

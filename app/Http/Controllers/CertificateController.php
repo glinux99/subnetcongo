@@ -29,6 +29,7 @@ use App\Models\User;
 use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\ExamResult;
+use App\Notifications\CertificateIssuedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -541,6 +542,16 @@ class CertificateController extends Controller
             // Notification Email (Mocké ici pour la structure)
             if ($notify) {
                 // Mail::to(User::find($userId)->email)->queue(new \App\Mail\CertificateIssuedMail($certificate));
+
+                // Notification in-app temps réel
+                $user = User::find($userId);
+                if ($user) {
+                    $user->notify(new CertificateIssuedNotification(
+                        courseTitle: $certificate->course?->title ?? 'votre formation',
+                        certificateId: $certificate->id,
+                        score: (float) $certificate->score,
+                    ));
+                }
             }
 
             DB::commit();

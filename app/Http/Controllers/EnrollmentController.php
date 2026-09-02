@@ -6,6 +6,7 @@ use App\Models\Enrollment;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\UserProgress;
+use App\Notifications\CourseEnrolledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -123,6 +124,13 @@ class EnrollmentController extends Controller
             $this->initializeProgress($course, $user);
 
             DB::commit();
+
+            // Notifier l'apprenant
+            $user->notify(new CourseEnrolledNotification(
+                courseTitle: $course->title,
+                courseId: $course->id,
+                courseImage: $course->thumbnail_path,
+            ));
 
             return back()->with('success', 'Successfully enrolled in ' . $course->title);
         } catch (\Exception $e) {

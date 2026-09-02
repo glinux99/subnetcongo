@@ -20,6 +20,7 @@ import { definePreset } from '@primevue/themes';
 // 1. Importer les fichiers de traduction
 import fr from './locales/fr.json';
 import en from './locales/en.json';
+import de from './locales/de.json';
 import sw from './locales/sw.json';
 import ln from './locales/ln.json';
 
@@ -50,6 +51,7 @@ const i18n = createI18n({
     messages: {
         fr, // Raccourci pour fr: fr
         en, // Raccourci pour en: en
+        de, // Allemand
         sw,
         ln,
     },

@@ -118,45 +118,35 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sales-reports', [SalesReportController::class, 'index'])->name('sales.reports');
 
     // 2. Gestion E-learning
-    Route::resource('courses', CourseController::class);
+    Route::middleware(['has_role:superadmin,admin,instructor,cohort-assistant'])->group(function () {
+        Route::resource('courses', CourseController::class);
+        Route::post('courses/{course}/duplicate', [CourseController::class, 'duplicate'])->name('courses.duplicate');
+        Route::post('courses/bulk-destroy', [CourseController::class, 'bulkDestroy'])->name('courses.bulk-destroy');
+        Route::post('courses/{course}/restore', [CourseController::class, 'restore'])->name('courses.restore');
+        Route::post('courses/bulk-restore', [CourseController::class, 'bulkRestore'])->name('courses.bulk-restore');
+        Route::resource('modules', ModuleController::class);
+        Route::post('learning-paths/{learningPath}/enroll-mass', [LearningPathController::class, 'enrollMass'])->name('learning-paths.enroll-mass');
+        Route::post('learning-paths/{learningPath}/enroll-student', [LearningPathController::class, 'enrollStudent'])->name('learning-paths.enroll-student');
+        Route::post('learning-paths/{learningPath}/sync-cohort', [LearningPathController::class, 'syncCohort'])->name('learning-paths.sync-cohort');
+        Route::resource('learning-paths', LearningPathController::class);
+        Route::resource('media-library', MediaLibraryController::class);
 
-    Route::post('courses/{course}/duplicate', [CourseController::class, 'duplicate'])->name('courses.duplicate');
-    Route::post('courses/bulk-destroy', [CourseController::class, 'bulkDestroy'])->name('courses.bulk-destroy');
-    Route::post('courses/{course}/restore', [CourseController::class, 'restore'])->name('courses.restore');
-    Route::post('courses/bulk-restore', [CourseController::class, 'bulkRestore'])->name('courses.bulk-restore');
-    Route::resource('modules', ModuleController::class);
-    Route::post('learning-paths/{learningPath}/enroll-mass', [LearningPathController::class, 'enrollMass'])->name('learning-paths.enroll-mass');
-    Route::post('learning-paths/{learningPath}/enroll-student', [LearningPathController::class, 'enrollStudent'])->name('learning-paths.enroll-student');
-    Route::post('learning-paths/{learningPath}/sync-cohort', [LearningPathController::class, 'syncCohort'])->name('learning-paths.sync-cohort');
-    Route::resource('learning-paths', LearningPathController::class);
-    Route::resource('media-library', MediaLibraryController::class);
+        Route::resource('exams', ExamController::class);
+        Route::post('questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
+        Route::resource('questions', QuestionController::class);
 
-    Route::resource('exams', ExamController::class);
-    Route::post('questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
-    Route::resource('questions', QuestionController::class);
+        // Correction & Rapports
+        Route::get('gradings/{submission}/edit', [GradingController::class, 'edit'])->name('gradings.edit');
+        Route::patch('gradings/{submission}', [GradingController::class, 'update'])->name('gradings.update');
 
-    // Correction & Rapports
-    Route::get('gradings/{submission}/edit', [GradingController::class, 'edit'])->name('gradings.edit');
-    Route::patch('gradings/{submission}', [GradingController::class, 'update'])->name('gradings.update');
-    Route::get('student-reports', [StudentReportController::class, 'index'])->name('student-reports.index');
-    Route::get('student-reports/{student}', [StudentReportController ::class, 'show'])->name('student-reports.show');
-
-    // Certificates & Templates
-    Route::post('certificates/templates', [CertificateController::class, 'storeTemplate'])->name('certificates.templates.store');
-    Route::post('certificates/templates/{template}', [CertificateController::class, 'updateTemplate'])->name('certificates.templates.update');
-    Route::delete('certificates/templates/{template}', [CertificateController::class, 'destroyTemplate'])->name('certificates.templates.destroy');
-    Route::post('certificates/bulk-issue', [CertificateController::class, 'bulkIssue'])->name('certificates.bulkIssue');
-    Route::get('certificates/verify/{hash}', [CertificateController::class, 'verifyPublic'])->name('certificates.verify.public');
-    Route::get('certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');
-    Route::post('certificates/bulk-issue', [CertificateController::class, 'bulkIssue'])->name('certificates.bulkIssue');
-    Route::resource('certificates', CertificateController::class);
-
-    Route::post('live-sessions/{live_session}/sync-recordings', [LiveSessionController::class, 'syncRecordings'])->name('live-sessions.sync-recordings');
-    Route::post('live-sessions/{live_session}/start', [LiveSessionController::class, 'start'])->name('live-sessions.start');
-    Route::resource('live-sessions', LiveSessionController::class);
+        // Live sessions
+        Route::post('live-sessions/{live_session}/sync-recordings', [LiveSessionController::class, 'syncRecordings'])->name('live-sessions.sync-recordings');
+        Route::post('live-sessions/{live_session}/start', [LiveSessionController::class, 'start'])->name('live-sessions.start');
+        Route::resource('live-sessions', LiveSessionController::class);
+    });
 
     // 3. Administration du Site Web
-    Route::prefix('web')->name('web.')->group(function () {
+    Route::prefix('web')->name('web.')->middleware(['has_role:superadmin,admin,editor'])->group(function () {
         Route::resource('pages', App\Http\Controllers\Web\PageController::class);
         Route::resource('blog', App\Http\Controllers\Web\BlogController::class);
         Route::resource('menus', App\Http\Controllers\Web\MenuController::class);
@@ -174,6 +164,44 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/results/{result}', [ExamAttemptController::class, 'results'])->name('exams.results');
     Route::get('/exams/{exam}/audit-logs', [ExamController::class, 'logActivity'])->name('exams.audit-logs');
     Route::get('/my-exams', [ExamAttemptController::class, 'index'])->name('exams.learner.index');
+
+    // ── Rapports étudiants (admin/instructeur uniquement) ──
+    Route::middleware(['has_role:superadmin,admin,instructor,cohort-assistant'])->group(function () {
+        Route::get('student-reports', [StudentReportController::class, 'index'])->name('student-reports.index');
+        Route::get('student-reports/{student}', [StudentReportController ::class, 'show'])->name('student-reports.show');
+    });
+
+    // ── Certificats : download + verify sont publics pour utilisateurs connectés, gestion admin ──
+    Route::middleware(['has_role:superadmin,admin,instructor'])->group(function () {
+        Route::post('certificates/templates', [CertificateController::class, 'storeTemplate'])->name('certificates.templates.store');
+        Route::post('certificates/templates/{template}', [CertificateController::class, 'updateTemplate'])->name('certificates.templates.update');
+        Route::delete('certificates/templates/{template}', [CertificateController::class, 'destroyTemplate'])->name('certificates.templates.destroy');
+        Route::post('certificates/bulk-issue', [CertificateController::class, 'bulkIssue'])->name('certificates.bulkIssue');
+        Route::resource('certificates', CertificateController::class)->except(['show']);
+    });
+
+    // Téléchargement + vérification accessibles à tout utilisateur authentifié (sécurisé par CertificateController)
+    Route::get('certificates/verify/{hash}', [CertificateController::class, 'verifyPublic'])->name('certificates.verify.public');
+    Route::get('certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');
+
+    // ===== MARKETPLACE =====
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        Route::get('/', [App\Http\Controllers\MarketplaceController::class, 'index'])->name('index');
+        Route::get('/cart', [App\Http\Controllers\MarketplaceController::class, 'cart'])->name('cart');
+        Route::get('/checkout', [App\Http\Controllers\MarketplaceController::class, 'checkout'])->name('checkout');
+        Route::post('/checkout/process', [App\Http\Controllers\MarketplaceController::class, 'processCheckout'])->name('process');
+        Route::get('/confirmation/{order}', [App\Http\Controllers\MarketplaceController::class, 'confirmation'])->name('confirmation');
+        Route::post('/cart/{course}/add', [App\Http\Controllers\MarketplaceController::class, 'addToCart'])->name('cart.add');
+        Route::delete('/cart/{course}/remove', [App\Http\Controllers\MarketplaceController::class, 'removeFromCart'])->name('cart.remove');
+        Route::post('/wishlist/{course}/toggle', [App\Http\Controllers\MarketplaceController::class, 'toggleWishlist'])->name('wishlist.toggle');
+        Route::post('/course/{course}/review', [App\Http\Controllers\MarketplaceController::class, 'review'])->name('review');
+        Route::get('/{course}', [App\Http\Controllers\MarketplaceController::class, 'show'])->name('show');
+    });
+
+    // ===== WEBHOOKS PAIEMENT (sans middleware auth) =====
+    Route::post('/webhooks/payment/{provider}', [App\Http\Controllers\MarketplaceController::class, 'webhook'])
+        ->name('webhooks.payment')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
     // ===== STUDENT EXPERIENCE ROUTES (Apprenant) =====
     Route::prefix('student')->name('student.')->group(function () {
@@ -217,10 +245,20 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // 5. Marketing & Ventes
-    Route::prefix('marketing')->name('marketing.')->group(function () {
+    Route::prefix('marketing')->name('marketing.')->middleware(['has_role:superadmin,admin,finance-manager,marketing-manager'])->group(function () {
         Route::resource('emails', App\Http\Controllers\Marketing\EmailCampaignController::class);
         Route::resource('coupons', App\Http\Controllers\Marketing\CouponController::class);
         Route::resource('affiliates', App\Http\Controllers\Marketing\AffiliateController::class);
+    });
+
+    // ===== NOTIFICATIONS =====
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/list', [App\Http\Controllers\NotificationController::class, 'list'])->name('list');
+        Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/read-all', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markRead'])->name('read');
+        Route::delete('/{id}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
     });
     // Routes pour l'API curriculum
 Route::prefix('curriculum')->group(function () {
@@ -238,12 +276,12 @@ Route::prefix('curriculum')->group(function () {
     Route::delete('/lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
     Route::post('/modules/{module}/lessons/reorder', [LessonController::class, 'reorder'])->name('lessons.reorder');
 });
-    Route::prefix('billing')->name('billing.')->group(function () {
+    Route::prefix('billing')->name('billing.')->middleware(['has_role:superadmin,admin,finance-manager'])->group(function () {
         Route::resource('subscriptions', App\Http\Controllers\Billing\SubscriptionController::class);
     });
 
     // 6. Configuration Système
-    Route::prefix('system')->name('system.')->group(function () {
+    Route::prefix('system')->name('system.')->middleware(['has_role:superadmin,admin'])->group(function () {
         Route::resource('roles', App\Http\Controllers\System\RoleController::class);
         Route::resource('api', App\Http\Controllers\System\ApiController::class);
         Route::get('logs',[App\Http\Controllers\System\AuditLogController::class, 'index'])->name('logs');

@@ -2,9 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Certificate;
+use App\Models\Exam;
+use App\Models\ForumTopic;
+use App\Models\SupportTicket;
+use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
-use Illuminate\Http\Request;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -30,11 +34,11 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // Logique pour déterminer les dates par défaut si elles ne sont pas dans la requête
-        // Par défaut: le mois en cours.
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $filterType = $request->input('filterType');
+
+        $user = $request->user();
 
         return array_merge(parent::share($request), [
             'flash' => [
@@ -44,8 +48,32 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
             'auth' => [
-                'user' => $request->user(),
-                'can' => $request->user() ? $request->user()->getPermissionArray() : [],
+                'user' => $user,
+                'roles' => $user ? $user->roles->map(fn ($r) => [
+                    'id' => $r->id,
+                    'name' => $r->name,
+                ]) : [],
+                'permissions' => $user ? $user->getAllPermissions()->pluck('name') : [],
+                'can' => $user ? $user->getPermissionArray() : [],
+            ],
+            'menu_badges' => $user ? [
+                'courses' => \App\Models\Course::count(),
+                'certificates' => Certificate::where('user_id', $user->id)->where('status', 'Active')->count(),
+                'exams_pending' => Exam::where('is_published', true)->where('status', 'Active')
+                    ->whereDoesntHave('attempts', fn ($q) => $q->where('user_id', $user->id))
+                    ->count(),
+                'forum_pending' => ForumTopic::where('status', 'pending')->count(),
+                'tickets_pending' => SupportTicket::whereIn('status', ['open', 'pending'])->count(),
+                'notifications' => $user->unreadNotifications()->count(),
+                'cart' => \App\Models\CartItem::where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)->orWhere('session_id', session()->getId());
+                })->count(),
+            ] : [],
+            'app_meta' => [
+                'name' => config('app.name'),
+                'env' => config('app.env'),
+                'locale' => app()->getLocale(),
+                'version' => config('app.version', '1.0.0'),
             ],
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [

@@ -85,12 +85,15 @@ class DashboardController extends Controller
             // 1. Logique pour les ÉTUDIANTS
             if ($user->hasRole('student')) {
                 return $this->studentDashboard($user);
+            }else{
+                 return $this->adminDashboard($request);
             }
 
             // 2. Logique pour les ADMINS / MANAGERS
-            if ($user->hasAnyRole(['admin', 'manager'])) {
-                return $this->adminDashboard($request);
-            }
+            // if ($user->hasAnyRole(['admin', 'manager'])) {
+            //     return 123;
+            //     return $this->adminDashboard($request);
+            // }
 
             // Fallback si aucun rôle
             return redirect()->route('login')->with('error', 'Accès restreint.');

@@ -120,7 +120,18 @@ const isRouteActive = computed(() => {
         :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu, 'active-route': isRouteActive && !item.items }">
         <div v-if="root" class="layout-menuitem-root-text">{{ t(item.label) }}</div>
 
-        <a v-if="!item.to || item.items"
+        <nav-link v-if="item.to && !item.items"
+                  @click="handleLinkClick"
+                  :href="item.to" :class="[item.class, { 'active-route': isRouteActive }]"
+                  preserve-scroll>
+            <i :class="item.icon" class="layout-menuitem-icon"></i>
+            <span class="layout-menuitem-text">{{ t(item.label) }}</span>
+            <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-violet-600 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
+                {{ item.badge > 99 ? '99+' : item.badge }}
+            </span>
+        </nav-link>
+
+        <a v-else-if="!item.to || item.items"
            :href="item.url"
            @click="itemClick($event, item)"
            :class="item.class"
@@ -128,16 +139,11 @@ const isRouteActive = computed(() => {
            tabindex="0">
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ t(item.label) }}</span>
+            <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-violet-600 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
+                {{ item.badge > 99 ? '99+' : item.badge }}
+            </span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
         </a>
-
-        <nav-link v-if="item.to && !item.items"
-                  @click="handleLinkClick"
-                  :href="item.to" :class="[item.class, { 'active-route': isRouteActive }]"
-                  preserve-scroll>
-            <i :class="item.icon" class="layout-menuitem-icon"></i>
-            <span class="layout-menuitem-text">{{ t(item.label) }}</span>
-        </nav-link>
 
         <Transition v-if="item.items" name="layout-submenu">
             <ul v-show="root ? true : isActiveMenu" class="layout-submenu">
