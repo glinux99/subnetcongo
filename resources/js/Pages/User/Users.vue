@@ -439,8 +439,8 @@ watch(
                 <div class="grid grid-cols-12 gap-10">
                     <div class="col-span-12 md:col-span-4">
                         <div class="sticky top-0">
-                            <div class="relative group bg-white rounded-[2.5rem] p-3 border border-slate-200 shadow-2xl transition-all duration-500 hover:border-primary-300">
-                                <div class="relative w-full aspect-square overflow-hidden rounded-[2.5rem] bg-slate-100 shadow-2xl border-4 border-white group">
+                            <div class="relative group bg-white rounded-[1.5rem] p-3 border border-slate-200 shadow-2xl transition-all duration-500 hover:border-primary-300">
+                                <div class="relative w-full aspect-square overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-2xl border-4 border-white group">
                                     <div class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-110"
                                         :style="{ backgroundImage: form.profile_photo_preview ? `url(${form.profile_photo_preview})` : 'none' }">
                                         <div v-if="!form.profile_photo_preview" class="w-full h-full flex items-center justify-center">

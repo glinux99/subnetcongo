@@ -1114,7 +1114,7 @@ onBeforeUnmount(() => {
     v-model:visible="profileSidebar"
     modal
     :style="{ width: '600px' }"
-    class="p-fluid rounded-[2rem] custom-profile-dialog"
+    class="p-fluid rounded-[1rem] custom-profile-dialog"
     :pt="{
         header: { class: 'bg-white border-b border-slate-100 p-6' },
         content: { class: 'p-0 bg-slate-50' },

@@ -176,7 +176,7 @@ onMounted(() => {
                     { label: 'Payouts en Attente', val: '3,240.50 $', color: 'amber', icon: 'pi-users' },
                     { label: 'Taux de Succès', val: '97.8%', color: 'emerald', icon: 'pi-check-circle' },
                     { label: 'Remboursements', val: '120.00 $', color: 'rose', icon: 'pi-history' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-xl transition-all duration-300">
+                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-xl transition-all duration-300">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
                         <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
@@ -190,7 +190,7 @@ onMounted(() => {
             <!-- PERFORMANCE ANALYTICS -->
             <div class="grid grid-cols-12 gap-8 mb-10">
                 <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-[2.5rem] overflow-hidden h-full">
+                    <Card class="border-none shadow-sm rounded-[1.5rem] overflow-hidden h-full">
                         <template #title>
                             <div class="flex justify-between items-center px-4 pt-4">
                                 <span class="text-xl font-black text-slate-800">Flux de Trésorerie Hebdomadaire</span>
@@ -205,7 +205,7 @@ onMounted(() => {
                     </Card>
                 </div>
                 <div class="col-span-12 lg:col-span-4">
-                    <Card class="border-none shadow-sm rounded-[2.5rem] h-full flex flex-col justify-center bg-slate-900 text-white p-4">
+                    <Card class="border-none shadow-sm rounded-[1.5rem] h-full flex flex-col justify-center bg-slate-900 text-white p-4">
                         <template #content>
                             <div class="text-center space-y-4">
                                 <div class="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
@@ -231,7 +231,7 @@ onMounted(() => {
             </div>
 
             <!-- MANAGEMENT TABS -->
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-50 p-6">
+            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-6">
                 <TabView v-model:activeIndex="activeTab" class="custom-payment-tabs">
 
                     <!-- TAB 1: PASSRELLES (GATEWAYS) -->
@@ -243,7 +243,7 @@ onMounted(() => {
                             </div>
                         </template>
                         <div class="pt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div v-for="gw in gateways" :key="gw.id" class="p-6 border border-slate-100 rounded-[2rem] bg-slate-50/50 hover:bg-white hover:shadow-xl transition-all group">
+                            <div v-for="gw in gateways" :key="gw.id" class="p-6 border border-slate-100 rounded-[1rem] bg-slate-50/50 hover:bg-white hover:shadow-xl transition-all group">
                                 <div class="flex justify-between items-start mb-6">
                                     <div :class="`w-14 h-14 rounded-2xl ${gw.color} flex items-center justify-center shadow-lg text-white` ">
                                         <i :class="`pi ${gw.icon} text-2xl` "></i>

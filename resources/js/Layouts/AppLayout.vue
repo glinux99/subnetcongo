@@ -106,7 +106,7 @@
     <div class="max-w-[1400px] mx-auto">
 
         <!-- SECTION 1: Newsletter Banner (Top) -->
-        <div class="mb-16 p-8 lg:p-12 rounded-2xl border border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div class="mb-16 p-8 lg:p-12 rounded-1xl border border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent flex flex-col lg:flex-row items-center justify-between gap-8">
             <div class="max-w-2xl">
                 <h2 class="text-3xl lg:text-4xl font-bold text-white mb-4">
                     Restez à la pointe de la <span class="text-[#E11D48] italic">Tech en RDC.</span>

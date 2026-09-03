@@ -236,7 +236,7 @@ onMounted(() => {
                     { label: 'Taux d\'Ouverture', val: '42.8%', color: 'emerald', icon: 'pi-eye', trend: '+5.2%' },
                     { label: 'Taux de Clic', val: '12.4%', color: 'amber', icon: 'pi-external-link', trend: '+2.1%' },
                     { label: 'Délivrabilité', val: '98.2%', color: 'rose', icon: 'pi-verified', trend: 'Stable' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-all">
+                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-all">
                     <div :class="`p-4 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600` ">
                         <i :class="`pi ${kpi.icon} text-2xl` "></i>
                     </div>
@@ -294,7 +294,7 @@ onMounted(() => {
             </div>
 
             <!-- MAIN CONTENT TABS -->
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-50 p-6">
+            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-6">
                 <TabView v-model:activeIndex="activeTab" class="custom-tabview">
                     
                     <!-- TAB 1: AUTOMATIONS -->
@@ -499,7 +499,7 @@ onMounted(() => {
             <Dialog v-model:visible="displayTemplateDialog" :modal="true" :maximized="true" header="🎨 Éditeur de Modèle Email" class="p-fluid">
                 <div class="grid grid-cols-12 gap-8 h-full py-4">
                     <!-- Config Sidebar -->
-                    <div class="col-span-12 lg:col-span-3 space-y-6 bg-slate-50 p-6 rounded-[2rem] border border-slate-200">
+                    <div class="col-span-12 lg:col-span-3 space-y-6 bg-slate-50 p-6 rounded-[1rem] border border-slate-200">
                         <h3 class="text-lg font-black text-slate-800 mb-6">Paramètres Généraux</h3>
                         <div class="field">
                             <label class="font-bold text-slate-500 text-xs uppercase mb-2 block">Nom interne</label>

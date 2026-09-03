@@ -158,6 +158,7 @@ const model = computed(() => {
                 { label: 'Affiliation', icon: 'pi pi-fw pi-share-alt', to: r('marketing.affiliates.index') },
                 { label: 'Abonnements & Plans', icon: 'pi pi-fw pi-credit-card', to: r('billing.subscriptions.index') },
                 { label: 'Identité légale (RCCM/IFU)', icon: 'pi pi-fw pi-id-card', to: r('admin.legal.index') },
+                { label: 'Éditeur Landing (slides/tech)', icon: 'pi pi-fw pi-sliders-h', to: r('admin.landing.index') },
                 { label: 'Marketplace (vue catalogue)', icon: 'pi pi-fw pi-shopping-bag', to: r('marketplace.index') },
             ]
         },

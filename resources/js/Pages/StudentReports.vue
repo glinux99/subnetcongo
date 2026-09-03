@@ -354,7 +354,7 @@ const breadcrumbItems = ref([
                     aria-label="Statistiques clés"
                 >
                     <!-- KPI 1 : Moyenne Globale -->
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <div class="bg-white p-6 rounded-[1rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
                         <div class="flex justify-between items-start mb-5">
                             <div class="p-4 bg-indigo-50/80 rounded-2xl text-indigo-600 transition-transform duration-300 group-hover:scale-110">
                                 <i class="pi pi-percentage text-2xl"></i>
@@ -369,7 +369,7 @@ const breadcrumbItems = ref([
                     </div>
 
                     <!-- KPI 2 : Apprenants Actifs -->
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <div class="bg-white p-6 rounded-[1rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
                         <div class="flex justify-between items-start mb-5">
                             <div class="p-4 bg-emerald-50/80 rounded-2xl text-emerald-600 transition-transform duration-300 group-hover:scale-110">
                                 <i class="pi pi-users text-2xl"></i>
@@ -384,7 +384,7 @@ const breadcrumbItems = ref([
                     </div>
 
                     <!-- KPI 3 : Certifications -->
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <div class="bg-white p-6 rounded-[1rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
                         <div class="flex justify-between items-start mb-5">
                             <div class="p-4 bg-blue-50/80 rounded-2xl text-blue-600 transition-transform duration-300 group-hover:scale-110">
                                 <i class="pi pi-verified text-2xl"></i>
@@ -399,7 +399,7 @@ const breadcrumbItems = ref([
                     </div>
 
                     <!-- KPI 4 : Profils à Risque -->
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <div class="bg-white p-6 rounded-[1rem] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
                         <div class="flex justify-between items-start mb-5">
                             <div class="p-4 bg-rose-50/80 rounded-2xl text-rose-600 transition-transform duration-300 group-hover:scale-110">
                                 <i class="pi pi-exclamation-triangle text-2xl"></i>
@@ -505,7 +505,7 @@ const breadcrumbItems = ref([
                     <!-- Overlay de chargement (Feedback visuel) -->
                     <div
                         v-if="isLoading"
-                        class="absolute inset-0 bg-white/70 backdrop-blur-[3px] z-20 flex items-center justify-center rounded-[2rem]"
+                        class="absolute inset-0 bg-white/70 backdrop-blur-[3px] z-20 flex items-center justify-center rounded-[1rem]"
                     >
                         <div class="flex flex-col items-center gap-4">
                             <i class="pi pi-spin pi-spinner text-5xl text-indigo-600"></i>
@@ -520,7 +520,7 @@ const breadcrumbItems = ref([
                     <!-- ============================== -->
                     <div
                         v-if="displayMode === 'table'"
-                        class="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col"
+                        class="bg-white rounded-[1rem] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col"
                     >
                         <!-- Barre d'actions en masse (S'affiche si des lignes sont sélectionnées) -->
                         <Transition name="slide-down">
@@ -732,7 +732,7 @@ const breadcrumbItems = ref([
                             <div
                                 v-for="student in students.data"
                                 :key="student.id"
-                                class="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 relative group flex flex-col h-full"
+                                class="bg-white rounded-[1rem] p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 relative group flex flex-col h-full"
                             >
                                 <!-- Bouton Action absolue -->
                                 <div class="absolute top-4 right-4">
@@ -794,7 +794,7 @@ const breadcrumbItems = ref([
                         </template>
 
                         <!-- Empty State de la grille -->
-                        <div v-else class="col-span-full py-20 text-center bg-white rounded-[2rem] border border-slate-200 border-dashed">
+                        <div v-else class="col-span-full py-20 text-center bg-white rounded-[1rem] border border-slate-200 border-dashed">
                             <i class="pi pi-box text-4xl text-slate-300 mb-4"></i>
                             <p class="text-slate-500 font-medium">Aucun résultat à afficher sous forme de grille.</p>
                         </div>

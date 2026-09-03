@@ -241,7 +241,7 @@ const onFilter = (event) => {
         <div class="min-h-screen bg-slate-50/50 p-4 lg:p-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div class="flex items-center gap-4">
- <div class="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-primary-600 shadow-xl shadow-primary-200">
+ <div class="flex h-16 w-16 items-center justify-center rounded-[1rem] bg-primary-600 shadow-xl shadow-primary-200">
  <i class="pi pi-bolt text-2xl text-white"></i>
  <i class="pi pi-sun text-2xl text-white -ml-2"></i>
                     </div>
@@ -272,7 +272,7 @@ const onFilter = (event) => {
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
                 <DataTable
                     ref="dt"
                     :value="regions.data"

@@ -254,7 +254,7 @@ onMounted(() => {
                 <div class="space-y-2">
                     <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-4">
-                        <div class="bg-indigo-600 p-5 rounded-[2.2rem] shadow-2xl shadow-indigo-100 rotate-2 hover:rotate-0 transition-all duration-500">
+                        <div class="bg-indigo-600 p-5 rounded-[1.2rem] shadow-2xl shadow-indigo-100 rotate-2 hover:rotate-0 transition-all duration-500">
                             <i class="pi pi-chart-line text-white text-3xl"></i>
                         </div>
                         <div>
@@ -264,7 +264,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3 bg-white p-3 rounded-[2rem] shadow-sm border border-slate-100">
+                <div class="flex flex-wrap items-center gap-3 bg-white p-3 rounded-[1rem] shadow-sm border border-slate-100">
                     <Calendar v-model="dateRange" selectionMode="range" :showIcon="true" class="w-64" placeholder="Filtrer par date" @date-select="applyGlobalFilters" />
                     <SelectButton v-model="selectedCurrency" :options="currencyOptions" optionLabel="label" optionValue="value" class="custom-selectbutton hidden md:flex" />
                     <Divider layout="vertical" class="hidden md:block" />
@@ -423,7 +423,7 @@ onMounted(() => {
                         </div>
 
                         <Divider />
-                        <div class="p-6 bg-slate-50 border border-slate-200 rounded-[2.5rem]">
+                        <div class="p-6 bg-slate-50 border border-slate-200 rounded-[1.5rem]">
                             <div class="flex items-center gap-3 mb-4">
                                 <i class="pi pi-shield text-indigo-500 text-xl"></i>
                                 <span class="text-sm font-black text-slate-800 uppercase tracking-widest">Données vérifiées</span>

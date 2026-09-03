@@ -29,6 +29,8 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->foreignId('assignment_id')->constrained()->onDelete('cascade');
             $table->foreignId('instructor_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('student_id')->nullable()->constrained('users')->onDelete('set null');
+            
             $table->boolean('is_graded')->default(false);
             $table->string('status')->default('submitted'); // submitted, graded, resubmitted
             $table->text('content')->nullable();

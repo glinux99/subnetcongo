@@ -243,7 +243,7 @@ onMounted(() => {
                     { label: 'Panier Moyen (AOV)', val: averageOrderValue + ' $', color: 'emerald', icon: 'pi-shopping-cart', trend: '+2.1%' },
                     { label: 'Remboursements', val: totalRefunds + ' $', color: 'rose', icon: 'pi-history', trend: '-5.2%' },
                     { label: 'Revenu Net (TVA déduite)', val: (parseFloat(totalGrossRevenue.replace(',','')) * 0.84).toLocaleString() + ' $', color: 'amber', icon: 'pi-percentage', trend: '+15.8%' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[2.5rem] border border-slate-50 shadow-sm hover:shadow-xl transition-all duration-300 group">
+                ]" :key="kpi.label" class="bg-white p-6 rounded-[1.5rem] border border-slate-50 shadow-sm hover:shadow-xl transition-all duration-300 group">
                     <div class="flex justify-between items-start mb-6">
                         <div :class="`p-4 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600 group-hover:scale-110 transition-transform` ">
                             <i :class="`pi ${kpi.icon} text-2xl` "></i>
@@ -322,7 +322,7 @@ onMounted(() => {
             </div>
 
             <!-- SALES LEDGER (DATATABLE) -->
-            <Card class="border-none shadow-sm rounded-[2.5rem] overflow-hidden">
+            <Card class="border-none shadow-sm rounded-[1.5rem] overflow-hidden">
                 <template #content>
                     <DataTable 
                         v-model:filters="filters"

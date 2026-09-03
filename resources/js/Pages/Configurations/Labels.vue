@@ -233,7 +233,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
         <div class="min-h-screen bg-slate-50/50 p-4 lg:p-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div class="flex items-center gap-4">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-primary-600 shadow-xl shadow-primary-200">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-[1rem] bg-primary-600 shadow-xl shadow-primary-200">
                         <i class="pi pi-tags text-2xl text-white"></i>
                     </div>
                     <h1 class="text-3xl font-black text-slate-900 tracking-tight">Configuration des <span class="text-primary-600">Labels</span></h1>
@@ -255,7 +255,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
                 <Toast />
                 <ConfirmDialog />
 

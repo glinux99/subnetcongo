@@ -259,7 +259,7 @@ const onLogoUpload = (event) => {
             <!-- --- BARRE DE TITRE & ACTIONS --- -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="flex items-center gap-6">
-                    <div class="bg-indigo-600 p-5 rounded-[2rem] shadow-2xl shadow-indigo-100 -rotate-2 animate-pulse">
+                    <div class="bg-indigo-600 p-5 rounded-[1rem] shadow-2xl shadow-indigo-100 -rotate-2 animate-pulse">
                         <i class="pi pi-cog text-white text-3xl"></i>
                     </div>
                     <div>
@@ -382,7 +382,7 @@ const onLogoUpload = (event) => {
                                             <div class="field">
                                                 <label class="block text-[11px] font-black text-slate-400 uppercase mb-4 tracking-widest text-center">Logo Officiel (Version Sombre)</label>
                                                 <div class="flex flex-col items-center gap-6">
-                                                    <div class="w-full p-10 bg-white rounded-[2.5rem] flex justify-center border-2 border-dashed border-slate-200 group hover:border-indigo-400 transition-all cursor-pointer">
+                                                    <div class="w-full p-10 bg-white rounded-[1.5rem] flex justify-center border-2 border-dashed border-slate-200 group hover:border-indigo-400 transition-all cursor-pointer">
                                                         <img :src="form.branding.logo_url" class="h-16 object-contain group-hover:scale-110 transition-transform" />
                                                     </div>
                                                     <FileUpload mode="basic" name="logo" @uploader="onLogoUpload" customUpload :auto="true" chooseLabel="Remplacer le Logo" class="p-button-outlined p-button-indigo rounded-xl font-bold" />
@@ -423,7 +423,7 @@ const onLogoUpload = (event) => {
                                 <div class="space-y-6">
                                     <h4 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Accès & Inscriptions</h4>
 
-                                    <div class="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
+                                    <div class="flex justify-between items-center bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
                                         <div class="flex gap-4 items-center">
                                             <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform">
                                                 <i class="pi pi-bolt"></i>
@@ -436,7 +436,7 @@ const onLogoUpload = (event) => {
                                         <InputSwitch v-model="form.lms.auto_enroll_on_payment" />
                                     </div>
 
-                                    <div class="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
+                                    <div class="flex justify-between items-center bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
                                         <div class="flex gap-4 items-center">
                                             <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform">
                                                 <i class="pi pi-eye"></i>
@@ -449,7 +449,7 @@ const onLogoUpload = (event) => {
                                         <InputSwitch v-model="form.lms.allow_course_preview" />
                                     </div>
 
-                                    <div class="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
+                                    <div class="flex justify-between items-center bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-lg transition-all group">
                                         <div class="flex gap-4 items-center">
                                             <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform">
                                                 <i class="pi pi-shield"></i>
@@ -702,7 +702,7 @@ const onLogoUpload = (event) => {
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="space-y-6">
-                                    <div class="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex items-center justify-between group hover:border-indigo-300 transition-all">
+                                    <div class="p-8 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm flex items-center justify-between group hover:border-indigo-300 transition-all">
                                         <div class="flex items-center gap-5">
                                             <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform">
                                                 <i class="pi pi-user-plus text-xl"></i>
@@ -715,7 +715,7 @@ const onLogoUpload = (event) => {
                                         <InputSwitch v-model="form.security.enable_registration" />
                                     </div>
 
-                                    <div class="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex items-center justify-between group hover:border-rose-300 transition-all">
+                                    <div class="p-8 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm flex items-center justify-between group hover:border-rose-300 transition-all">
                                         <div class="flex items-center gap-5">
                                             <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform">
                                                 <i class="pi pi-verified text-xl"></i>
@@ -728,7 +728,7 @@ const onLogoUpload = (event) => {
                                         <InputSwitch v-model="form.security.force_2fa" />
                                     </div>
 
-                                    <div class="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex items-center justify-between group hover:border-amber-300 transition-all">
+                                    <div class="p-8 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm flex items-center justify-between group hover:border-amber-300 transition-all">
                                         <div class="flex items-center gap-5">
                                             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform">
                                                 <i class="pi pi-shield text-xl"></i>
@@ -800,7 +800,7 @@ const onLogoUpload = (event) => {
                                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 relative z-10">
                                     <div class="flex items-center gap-8">
                                         <div :class="form.advanced.maintenance_mode ? 'bg-rose-600 text-white' : 'bg-rose-100 text-rose-600'"
-                                             class="w-20 h-20 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all duration-500">
+                                             class="w-20 h-20 rounded-[1.5rem] flex items-center justify-center shadow-2xl transition-all duration-500">
                                             <i :class="form.advanced.maintenance_mode ? 'pi pi-lock' : 'pi pi-unlock'" class="text-4xl"></i>
                                         </div>
                                         <div>
@@ -811,7 +811,7 @@ const onLogoUpload = (event) => {
                                     <Button :label="form.advanced.maintenance_mode ? 'Désactiver la Maintenance' : 'Activer le Mode Maintenance'"
                                             :icon="form.advanced.maintenance_mode ? 'pi pi-power-off' : 'pi pi-exclamation-triangle'"
                                             :class="form.advanced.maintenance_mode ? 'p-button-danger' : 'p-button-outlined p-button-danger border-4'"
-                                            class="font-black px-10 py-5 rounded-[2rem] text-lg shadow-2xl transition-all active:scale-95"
+                                            class="font-black px-10 py-5 rounded-[1rem] text-lg shadow-2xl transition-all active:scale-95"
                                             @click="toggleMaintenance" />
                                 </div>
 

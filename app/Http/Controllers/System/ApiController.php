@@ -5,12 +5,11 @@ namespace App\Http\Controllers\System;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Models\WebSetting;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -19,548 +18,556 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ApiController extends Controller
 {
     /**
-     * Display the API Management Dashboard.
+     * Page principale du Gateway API – 100% données réelles.
      *
-     * This view provides a high-level overview of the API's health,
-     * recent activity, and key metrics such as total requests,
-     * error rates, and active tokens.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Inertia\Response
+     * Retourne un seul payload agrégé (Vue) pour l'onglet Vue d'ensemble
+     * et les compteurs en bandeau. Les onglets Tokens / Logs / Settings
+     * sont servis par les routes dédiés.
      */
     public function index(Request $request)
     {
-        // Calculate date ranges for stats
         $now = Carbon::now();
-        $thirtyDaysAgo = $now->copy()->subDays(30);
+        $last30 = $now->copy()->subDays(30);
 
-        // 1. Token Statistics
+        // 1. Tokens (Sanctum)
         $totalTokens = PersonalAccessToken::count();
-        $activeTokens = PersonalAccessToken::where(function ($query) {
-            $query->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', Carbon::now());
-        })->count();
+        $activeTokens = PersonalAccessToken::query()
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
+            })->count();
+        $expiredTokens = PersonalAccessToken::where('expires_at', '<', Carbon::now())->count();
+        $lastUsedToken = PersonalAccessToken::orderByDesc('last_used_at')->first();
 
-        $lastUsedToken = PersonalAccessToken::orderBy('last_used_at', 'desc')->first();
+        // 2. Audit logs "API" : on considère comme API tout log avec method HTTP
+        //    OU url commençant par /api/ OU event_name commençant par "api."
+        $apiLogs = AuditLog::query()
+            ->where(function ($q) {
+                $q->whereNotNull('method')
+                  ->orWhere('url', 'like', '/api/%')
+                  ->orWhere('event_name', 'like', 'api.%')
+                  ->orWhere('event', 'like', 'api_%');
+            });
 
-        // 2. Request Statistics (based on AuditLog)
-        // Assuming 'api' events or URLs starting with /api are logged
-        $apiLogsQuery = AuditLog::where('url', 'like', '%/api/%');
+        $totalRequests = (clone $apiLogs)->count();
+        $requestsToday  = (clone $apiLogs)->whereDate('created_at', $now->today())->count();
+        $errorsCount    = (clone $apiLogs)->whereIn('level', ['error', 'critical'])
+                            ->orWhere('event', 'like', '%error%')
+                            ->orWhere('event', 'like', '%fail%')
+                            ->count();
+        $errorRate = $totalRequests > 0 ? round(($errorsCount / $totalRequests) * 100, 2) : 0;
 
-        $totalRequests = $apiLogsQuery->count();
-        $recentRequests = $apiLogsQuery->where('created_at', '>=', $now->copy()->subDay())->count();
-        $errorRequests = $apiLogsQuery->where('event', 'like', '%error%')
-                                      ->orWhere('event', 'like', '%fail%')
-                                      ->count();
-
-        // 3. Traffic Chart Data (Last 30 Days)
-        $trafficData = AuditLog::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-            ->where('url', 'like', '%/api/%')
-            ->where('created_at', '>=', $thirtyDaysAgo)
+        // 3. Trafic 30 jours (groupé par jour)
+        $traffic = (clone $apiLogs)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->where('created_at', '>=', $last30)
             ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($r) => ['date' => (string) $r->date, 'count' => (int) $r->count])
+            ->values();
 
-        // 4. Top API Users
-        $topUsers = AuditLog::select('user_id', DB::raw('count(*) as count'))
-            ->where('url', 'like', '%/api/%')
+        // 4. Distribution par méthode HTTP
+        $methods = (clone $apiLogs)
+            ->select('method', DB::raw('count(*) as count'))
+            ->whereNotNull('method')
+            ->where('created_at', '>=', $last30)
+            ->groupBy('method')
+            ->pluck('count', 'method')
+            ->toArray();
+
+        // 5. Top 5 consommateurs (par user_id)
+        $topUsers = (clone $apiLogs)
+            ->select('user_id', DB::raw('count(*) as count'))
             ->whereNotNull('user_id')
+            ->where('created_at', '>=', $last30)
             ->groupBy('user_id')
             ->orderByDesc('count')
             ->limit(5)
-            ->with('user:id,name,email,profile_photo_path') // Assuming profile_photo_path exists or similar
             ->get();
+        $topUsers->loadMissing('user:id,name,email');
+
+        // 6. Settings API persistés (WebSetting group='api')
+        $settings = [
+            'api_enabled'             => (bool) WebSetting::get('api_enabled', true),
+            'default_rate_limit'      => (int)  WebSetting::get('default_rate_limit', 60),
+            'logging_enabled'         => (bool) WebSetting::get('logging_enabled', true),
+            'token_expiration_days'   => (int)  WebSetting::get('token_expiration_days', 365),
+            'cors_allowed_origins'    => WebSetting::get('cors_allowed_origins', '*'),
+        ];
+
+        // 7. Health snapshot
+        $health = $this->computeHealth();
 
         return Inertia::render('System/Api', [
             'stats' => [
-                'total_tokens' => $totalTokens,
-                'active_tokens' => $activeTokens,
-                'total_requests' => $totalRequests,
-                'recent_requests' => $recentRequests,
-                'error_rate' => $totalRequests > 0 ? round(($errorRequests / $totalRequests) * 100, 2) : 0,
-                'last_activity' => $lastUsedToken ? $lastUsedToken->last_used_at?->diffForHumans() : 'Never',
+                'total_tokens'    => $totalTokens,
+                'active_tokens'   => $activeTokens,
+                'expired_tokens'  => $expiredTokens,
+                'total_requests'  => $totalRequests,
+                'requests_today'  => $requestsToday,
+                'error_rate'      => $errorRate,
+                'errors_count'    => $errorsCount,
+                'last_activity'   => $lastUsedToken && $lastUsedToken->last_used_at
+                    ? $lastUsedToken->last_used_at->diffForHumans()
+                    : 'Aucune activité',
             ],
-            'traffic_data' => $trafficData,
-            'top_users' => $topUsers,
-            'filters' => $request->all(['date_range']),
+            'traffic_data' => $traffic,
+            'methods'      => $methods,
+            'top_users'    => $topUsers->map(fn ($r) => [
+                'count' => (int) $r->count,
+                'user'  => $r->user ? [
+                    'id'    => $r->user->id,
+                    'name'  => $r->user->name,
+                    'email' => $r->user->email,
+                ] : null,
+            ]),
+            'settings'     => $settings,
+            'health'       => $health,
+            'csrf_token'   => csrf_token(),
         ]);
     }
 
     /**
-     * List all Personal Access Tokens.
-     *
-     * Allows administrators to view, search, and manage tokens
-     * issued to users within the system.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Inertia\Response
+     * Liste paginée des tokens Sanctum.
      */
     public function tokens(Request $request)
     {
-        $query = PersonalAccessToken::query();
+        $query = PersonalAccessToken::query()->with('tokenable');
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->input('search');
+        if ($search = trim((string) $request->input('search'))) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('tokenable_id', 'like', "%{$search}%"); // Searching by ID usually
+                $q->where('name', 'like', "%{$search}%");
+                if (ctype_digit($search)) {
+                    $q->orWhere('tokenable_id', (int) $search);
+                }
             });
         }
 
-        // Filter by User
-        if ($request->filled('user_id')) {
-            $query->where('tokenable_id', $request->input('user_id'))
-                  ->where('tokenable_type', User::class);
+        if ($userId = $request->input('user_id')) {
+            $query->where('tokenable_id', $userId)->where('tokenable_type', User::class);
         }
 
-        // Sorting
         $sortField = $request->input('sort_field', 'created_at');
-        $sortDirection = $request->input('sort_direction', 'desc');
-        $allowedSorts = ['name', 'last_used_at', 'created_at', 'expires_at'];
-
-        if (in_array($sortField, $allowedSorts)) {
-            $query->orderBy($sortField, $sortDirection);
+        $sortDir   = $request->input('sort_direction', 'desc');
+        if (in_array($sortField, ['name', 'last_used_at', 'created_at', 'expires_at'], true)) {
+            $query->orderBy($sortField, $sortDir);
         }
 
-        $tokens = $query->paginate($request->input('per_page', 15))
-            ->withQueryString();
+        $tokens = $query->paginate(15)->withQueryString();
 
-        // Transform tokens to include user info manually if relation not defined on PAT model
-        $tokens->getCollection()->transform(function ($token) {
-            if ($token->tokenable_type === User::class) {
-                $token->user = User::find($token->tokenable_id);
-            }
-            return $token;
+        // Hydrate user (Sanctum ne définit pas la relation par défaut)
+        $tokens->getCollection()->transform(function (PersonalAccessToken $token) {
+            $user = $token->tokenable_type === User::class
+                ? User::find($token->tokenable_id)
+                : null;
+            return [
+                'id'             => $token->id,
+                'name'           => $token->name,
+                'abilities'      => $token->abilities ?? ['*'],
+                'last_used_at'   => $token->last_used_at?->toIso8601String(),
+                'expires_at'     => $token->expires_at?->toIso8601String(),
+                'created_at'     => $token->created_at?->toIso8601String(),
+                'is_expired'     => $token->expires_at ? $token->expires_at->isPast() : false,
+                'is_active'      => ! $token->expires_at || $token->expires_at->isFuture(),
+                'user'           => $user ? [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                ] : null,
+            ];
         });
 
-        return Inertia::render('Configurations/System/Api/Tokens', [
-            'tokens' => $tokens,
-            'filters' => $request->only(['search', 'user_id', 'sort_field', 'sort_direction']),
+        return response()->json([
+            'tokens'  => $tokens,
+            'users'   => User::orderBy('name')->get(['id', 'name', 'email']),
         ]);
     }
 
     /**
-     * Store a newly created API Token.
-     *
-     * This method allows admins to manually generate tokens for users.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Crée un Personal Access Token pour un utilisateur.
+     * Retourne le token en clair UNE SEULE fois.
      */
     public function storeToken(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'name' => 'required|string|max:255',
-            'abilities' => 'nullable|array',
+        $data = $request->validate([
+            'user_id'    => 'required|integer|exists:users,id',
+            'name'       => 'required|string|max:255',
+            'abilities'  => 'nullable|array',
             'expires_at' => 'nullable|date|after:now',
         ]);
 
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
+        $user     = User::findOrFail($data['user_id']);
+        $name     = $data['name'];
+        $abilities = ! empty($data['abilities']) ? $data['abilities'] : ['*'];
+        $expiresAt = ! empty($data['expires_at']) ? Carbon::parse($data['expires_at']) : null;
 
-        $user = User::findOrFail($request->input('user_id'));
-        $name = $request->input('name');
-        $abilities = $request->input('abilities', ['*']);
-        $expiresAt = $request->input('expires_at') ? Carbon::parse($request->input('expires_at')) : null;
+        $result = $user->createToken($name, $abilities, $expiresAt);
+        $plain  = $result->plainTextToken;
+        $token  = $result->accessToken;
 
-        // Create the token using Sanctum's method
-        $tokenResult = $user->createToken($name, $abilities, $expiresAt);
-
-        // Log the action
         AuditLog::create([
-            'user_id' => $request->user()->id,
-            'event' => 'api_token_created',
+            'user_id'        => $request->user()?->id,
+            'event_name'     => 'api.token.created',
+            'event'          => 'api_token_created',
+            'level'          => 'info',
+            'description'    => "Token « {$name} » créé pour l'utilisateur #{$user->id} ({$user->email})",
             'auditable_type' => PersonalAccessToken::class,
-            'auditable_id' => $tokenResult->accessToken->id,
-            'new_values' => json_encode(['name' => $name, 'user_id' => $user->id]),
-            'url' => $request->fullUrl(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
+            'auditable_id'   => $token->id,
+            'new_values'     => json_encode(['name' => $name, 'user_id' => $user->id, 'abilities' => $abilities]),
+            'url'            => $request->fullUrl(),
+            'method'         => 'POST',
+            'ip_address'     => $request->ip(),
+            'user_agent'     => $request->userAgent(),
+            'tags'           => 'api,tokens',
         ]);
 
-        return back()->with('flash', [
-            'token' => $tokenResult->plainTextToken,
-            'message' => 'Token created successfully. Please copy it now as it will not be shown again.',
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Token créé. Copiez-le maintenant, il ne sera plus jamais affiché.',
+            'plain_token' => $plain,
+            'token'       => [
+                'id'         => $token->id,
+                'name'       => $token->name,
+                'user'       => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+                'abilities'  => $abilities,
+                'expires_at' => $expiresAt?->toIso8601String(),
+                'created_at' => $token->created_at?->toIso8601String(),
+            ],
         ]);
     }
 
     /**
-     * Revoke a specific API Token.
-     *
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
+     * Révoque un token.
      */
     public function revokeToken(Request $request, string $id)
     {
         $token = PersonalAccessToken::findOrFail($id);
-
-        // Optional: Check permissions
-        // if ($request->user()->cannot('delete', $token)) { abort(403); }
-
-        $oldValues = $token->toArray();
+        $old   = $token->toArray();
         $token->delete();
 
-        // Log the action
         AuditLog::create([
-            'user_id' => $request->user()->id,
-            'event' => 'api_token_revoked',
+            'user_id'        => $request->user()?->id,
+            'event_name'     => 'api.token.revoked',
+            'event'          => 'api_token_revoked',
+            'level'          => 'warning',
+            'description'    => "Token #{$id} « {$old['name']} » révoqué",
             'auditable_type' => PersonalAccessToken::class,
-            'auditable_id' => $id,
-            'old_values' => json_encode($oldValues),
-            'url' => $request->fullUrl(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
+            'auditable_id'   => $id,
+            'old_values'     => json_encode($old),
+            'url'            => $request->fullUrl(),
+            'method'         => 'DELETE',
+            'ip_address'     => $request->ip(),
+            'user_agent'     => $request->userAgent(),
+            'tags'           => 'api,tokens',
         ]);
 
-        return back()->with('success', 'API Token revoked successfully.');
+        return response()->json(['success' => true, 'message' => 'Token révoqué.']);
     }
 
     /**
-     * Revoke all tokens for a specific user.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param string $userId
-     * @return \Illuminate\Http\RedirectResponse
+     * Révoque tous les tokens d'un utilisateur.
      */
     public function revokeUserTokens(Request $request, string $userId)
     {
-        $user = User::findOrFail($userId);
-
+        $user  = User::findOrFail($userId);
         $count = $user->tokens()->delete();
 
         AuditLog::create([
-            'user_id' => $request->user()->id,
-            'event' => 'api_tokens_flushed',
+            'user_id'        => $request->user()?->id,
+            'event_name'     => 'api.tokens.flushed',
+            'event'          => 'api_tokens_flushed',
+            'level'          => 'warning',
+            'description'    => "Suppression de {$count} token(s) de l'utilisateur #{$user->id}",
             'auditable_type' => User::class,
-            'auditable_id' => $user->id,
-            'new_values' => json_encode(['count' => $count]),
-            'url' => $request->fullUrl(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
+            'auditable_id'   => $user->id,
+            'new_values'     => json_encode(['count' => $count]),
+            'url'            => $request->fullUrl(),
+            'method'         => 'DELETE',
+            'ip_address'     => $request->ip(),
+            'user_agent'     => $request->userAgent(),
+            'tags'           => 'api,tokens',
         ]);
 
-        return back()->with('success', "All {$count} tokens for user {$user->name} have been revoked.");
+        return response()->json(['success' => true, 'message' => "{$count} token(s) révoqué(s) pour {$user->name}."]);
     }
 
     /**
-     * Display API Access Logs.
-     *
-     * Filters AuditLogs specifically for API related events.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Inertia\Response
-     */
-    public function logs(Request $request)
-    {
-        $query = AuditLog::with('user')
-            ->where(function($q) {
-                $q->where('url', 'like', '%/api/%')
-                  ->orWhere('event', 'like', 'api_%');
-            });
-
-        // Filtering
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('event', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhere('url', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            // Assuming we might tag logs with status in 'tags' or infer from event name
-            $status = $request->input('status');
-            if ($status === 'error') {
-                $query->where('event', 'like', '%error%');
-            } elseif ($status === 'success') {
-                $query->where('event', 'not like', '%error%');
-            }
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->input('date_to'));
-        }
-
-        $logs = $query->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 20))
-            ->withQueryString();
-
-        return Inertia::render('Configurations/System/Api/Logs', [
-            'logs' => $logs,
-            'filters' => $request->all(),
-        ]);
-    }
-
-    /**
-     * Show details of a specific API Log.
-     *
-     * @param string $id
-     * @return \Inertia\Response
-     */
-    public function logShow(string $id)
-    {
-        $log = AuditLog::with('user')->findOrFail($id);
-
-        return Inertia::render('Configurations/System/Api/LogShow', [
-            'log' => $log,
-        ]);
-    }
-
-    /**
-     * Get API Statistics Data (JSON).
-     *
-     * Used for dynamic charts on the frontend.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function stats(Request $request)
-    {
-        $period = $request->input('period', '30_days');
-        $startDate = match ($period) {
-            '7_days' => Carbon::now()->subDays(7),
-            '90_days' => Carbon::now()->subDays(90),
-            'year' => Carbon::now()->subYear(),
-            default => Carbon::now()->subDays(30),
-        };
-
-        // Requests per day
-        $requests = AuditLog::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
-            ->where('url', 'like', '%/api/%')
-            ->where('created_at', '>=', $startDate)
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // Methods distribution (GET, POST, etc.) - Assuming method is logged or inferred
-        // Since AuditLog doesn't have 'method' column explicitly in the migration provided,
-        // we might skip this or assume it's in 'tags' or 'event'.
-        // Let's try to parse it from 'event' if the convention is "METHOD /url"
-        // Otherwise, we return empty.
-
-        return response()->json([
-            'requests' => $requests,
-            'period' => $period,
-        ]);
-    }
-
-    /**
-     * Display API Settings.
-     *
-     * Allows configuration of global API parameters like rate limiting,
-     * maintenance mode, and allowed origins.
-     *
-     * @return \Inertia\Response
-     */
-    public function settings()
-    {
-        // In a real app, these would come from a database table (e.g., 'settings')
-        // For now, we'll mock the structure or read from config
-        $settings = [
-            'api_enabled' => config('api.enabled', true),
-            'default_rate_limit' => config('api.rate_limit', 60),
-            'logging_enabled' => config('api.logging', true),
-            'allowed_origins' => config('cors.allowed_origins', ['*']),
-            'token_expiration_days' => config('sanctum.expiration', null) ? (config('sanctum.expiration') / 60 / 24) : 0,
-        ];
-
-        return Inertia::render('Configurations/System/Api/Settings', [
-            'settings' => $settings,
-        ]);
-    }
-
-    /**
-     * Update API Settings.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function updateSettings(Request $request)
-    {
-        $validated = $request->validate([
-            'api_enabled' => 'required|boolean',
-            'default_rate_limit' => 'required|integer|min:1|max:10000',
-            'logging_enabled' => 'required|boolean',
-            'token_expiration_days' => 'required|integer|min:0',
-        ]);
-
-        // Here we would save to the Settings model or update a config file.
-        // Since we don't have a generic Settings model in the context provided (except empty WebSetting),
-        // we will simulate saving and log the action.
-
-        // Example logic if we had a Settings model:
-        // Setting::set('api.enabled', $validated['api_enabled']);
-        // ...
-
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'event' => 'api_settings_updated',
-            'auditable_type' => 'System',
-            'auditable_id' => 0,
-            'new_values' => json_encode($validated),
-            'url' => $request->fullUrl(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return back()->with('success', 'API Settings updated successfully.');
-    }
-
-    /**
-     * Display API Documentation.
-     *
-     * Renders a view that might embed Swagger UI or Redoc.
-     *
-     * @return \Inertia\Response
-     */
-    public function documentation()
-    {
-        return Inertia::render('Configurations/System/Api/Documentation', [
-            'spec_url' => url('/api/documentation/json'), // Hypothetical endpoint
-        ]);
-    }
-
-    /**
-     * Export API Logs to CSV.
-     *
-     * Generates a streamed download of API logs for auditing purposes.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
-     */
-    public function exportLogs(Request $request)
-    {
-        $fileName = 'api_logs_' . date('Y-m-d_H-i') . '.csv';
-
-        $query = AuditLog::with('user')
-            ->where('url', 'like', '%/api/%')
-            ->orderBy('created_at', 'desc');
-
-        // Apply same filters as index
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
-        }
-
-        return new StreamedResponse(function () use ($query) {
-            $handle = fopen('php://output', 'w');
-
-            // Add BOM for Excel compatibility
-            fputs($handle, "\xEF\xBB\xBF");
-
-            // Headers
-            fputcsv($handle, [
-                'ID',
-                'Date',
-                'User',
-                'Event',
-                'URL',
-                'IP Address',
-                'User Agent',
-                'Tags'
-            ]);
-
-            $query->chunk(500, function ($logs) use ($handle) {
-                foreach ($logs as $log) {
-                    fputcsv($handle, [
-                        $log->id,
-                        $log->created_at->toDateTimeString(),
-                        $log->user ? $log->user->name : 'System/Guest',
-                        $log->event,
-                        $log->url,
-                        $log->ip_address,
-                        $log->user_agent,
-                        $log->tags,
-                    ]);
-                }
-            });
-
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ]);
-    }
-
-    /**
-     * Check API System Health.
-     *
-     * Performs checks on database, cache, and storage to ensure
-     * the API subsystem is functioning correctly.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function health()
-    {
-        $checks = [
-            'database' => false,
-            'cache' => false,
-            'storage' => false,
-        ];
-
-        // Check Database
-        try {
-            DB::connection()->getPdo();
-            $checks['database'] = true;
-        } catch (\Exception $e) {
-            $checks['database_error'] = $e->getMessage();
-        }
-
-        // Check Cache (assuming file or redis)
-        try {
-            cache()->set('health_check', 'ok', 10);
-            if (cache()->get('health_check') === 'ok') {
-                $checks['cache'] = true;
-            }
-        } catch (\Exception $e) {
-            $checks['cache_error'] = $e->getMessage();
-        }
-
-        // Check Storage
-        try {
-            $checks['storage'] = is_writable(storage_path());
-        } catch (\Exception $e) {
-            $checks['storage_error'] = $e->getMessage();
-        }
-
-        $status = !in_array(false, $checks, true) ? 'healthy' : 'degraded';
-
-        return response()->json([
-            'status' => $status,
-            'checks' => $checks,
-            'timestamp' => now()->toIso8601String(),
-        ], $status === 'healthy' ? 200 : 503);
-    }
-
-    /**
-     * Prune expired tokens.
-     *
-     * Removes tokens that have passed their expiration date.
-     *
-     * @return \Illuminate\Http\RedirectResponse
+     * Supprime tous les tokens expirés.
      */
     public function pruneTokens(Request $request)
     {
         $count = PersonalAccessToken::where('expires_at', '<', now())->delete();
 
         AuditLog::create([
-            'user_id' => $request->user()->id,
-            'event' => 'api_tokens_pruned',
+            'user_id'        => $request->user()?->id,
+            'event_name'     => 'api.tokens.pruned',
+            'event'          => 'api_tokens_pruned',
+            'level'          => 'info',
+            'description'    => "{$count} token(s) expiré(s) nettoyé(s)",
             'auditable_type' => PersonalAccessToken::class,
-            'auditable_id' => 0,
-            'new_values' => json_encode(['deleted_count' => $count]),
-            'url' => $request->fullUrl(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
+            'auditable_id'   => 0,
+            'new_values'     => json_encode(['count' => $count]),
+            'url'            => $request->fullUrl(),
+            'method'         => 'POST',
+            'ip_address'     => $request->ip(),
+            'user_agent'     => $request->userAgent(),
+            'tags'           => 'api,tokens',
         ]);
 
-        return back()->with('success', "Cleaned up {$count} expired tokens.");
+        return response()->json(['success' => true, 'message' => "{$count} token(s) expiré(s) nettoyé(s)."]);
+    }
+
+    /**
+     * Liste paginée des audit logs API.
+     */
+    public function logs(Request $request)
+    {
+        $query = AuditLog::with('user')
+            ->where(function ($q) {
+                $q->whereNotNull('method')
+                  ->orWhere('url', 'like', '/api/%')
+                  ->orWhere('event_name', 'like', 'api.%')
+                  ->orWhere('event', 'like', 'api_%');
+            });
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('event', 'like', "%{$search}%")
+                  ->orWhere('event_name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhere('url', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('method')) {
+            $query->where('method', strtoupper($request->input('method')));
+        }
+        if ($request->filled('level')) {
+            $query->where('level', $request->input('level'));
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        $logs = $query->orderByDesc('created_at')
+            ->paginate($request->input('per_page', 20))
+            ->withQueryString();
+
+        $logs->getCollection()->transform(fn (AuditLog $log) => [
+            'id'           => $log->id,
+            'event'        => $log->event,
+            'event_name'   => $log->event_name,
+            'level'        => $log->level ?? 'info',
+            'description'  => $log->description,
+            'url'          => $log->url,
+            'method'       => $log->method,
+            'ip_address'   => $log->ip_address,
+            'user_agent'   => $log->user_agent,
+            'tags'         => $log->tags,
+            'metadata'     => $log->metadata,
+            'created_at'   => $log->created_at?->toIso8601String(),
+            'user'         => $log->user ? [
+                'id'    => $log->user->id,
+                'name'  => $log->user->name,
+                'email' => $log->user->email,
+            ] : null,
+        ]);
+
+        return response()->json([
+            'logs'    => $logs,
+            'methods' => AuditLog::whereNotNull('method')->distinct()->pluck('method')->values(),
+            'levels'  => AuditLog::whereNotNull('level')->distinct()->pluck('level')->values(),
+        ]);
+    }
+
+    /**
+     * Détail d'un log.
+     */
+    public function logShow(string $id)
+    {
+        $log = AuditLog::with('user')->findOrFail($id);
+        return response()->json(['log' => $log]);
+    }
+
+    /**
+     * Statistiques JSON pour rafraîchir les graphes sans recharger la page.
+     */
+    public function stats(Request $request)
+    {
+        $period = $request->input('period', '30_days');
+        $start  = match ($period) {
+            '7_days'  => Carbon::now()->subDays(7),
+            '90_days' => Carbon::now()->subDays(90),
+            'year'    => Carbon::now()->subYear(),
+            default   => Carbon::now()->subDays(30),
+        };
+
+        $base = AuditLog::query()
+            ->where(function ($q) {
+                $q->whereNotNull('method')
+                  ->orWhere('url', 'like', '/api/%')
+                  ->orWhere('event_name', 'like', 'api.%')
+                  ->orWhere('event', 'like', 'api_%');
+            })
+            ->where('created_at', '>=', $start);
+
+        $requests = (clone $base)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
+            ->groupBy('date')->orderBy('date')->get();
+
+        $methods = (clone $base)
+            ->select('method', DB::raw('count(*) as count'))
+            ->whereNotNull('method')
+            ->groupBy('method')->pluck('count', 'method')->toArray();
+
+        $levels = (clone $base)
+            ->select('level', DB::raw('count(*) as count'))
+            ->whereNotNull('level')
+            ->groupBy('level')->pluck('count', 'level')->toArray();
+
+        return response()->json([
+            'period'   => $period,
+            'requests' => $requests,
+            'methods'  => $methods,
+            'levels'   => $levels,
+        ]);
+    }
+
+    /**
+     * Renvoie les settings API actuels.
+     */
+    public function settings()
+    {
+        return response()->json([
+            'settings' => [
+                'api_enabled'           => (bool) WebSetting::get('api_enabled', true),
+                'default_rate_limit'    => (int)  WebSetting::get('default_rate_limit', 60),
+                'logging_enabled'       => (bool) WebSetting::get('logging_enabled', true),
+                'token_expiration_days' => (int)  WebSetting::get('token_expiration_days', 365),
+                'cors_allowed_origins'  => WebSetting::get('cors_allowed_origins', '*'),
+            ],
+        ]);
+    }
+
+    /**
+     * Persiste les settings API dans WebSetting (group='api').
+     */
+    public function updateSettings(Request $request)
+    {
+        $data = $request->validate([
+            'api_enabled'           => 'required|boolean',
+            'default_rate_limit'    => 'required|integer|min:1|max:10000',
+            'logging_enabled'       => 'required|boolean',
+            'token_expiration_days' => 'required|integer|min:0|max:3650',
+            'cors_allowed_origins'  => 'nullable|string|max:1000',
+        ]);
+
+        foreach ($data as $k => $v) {
+            WebSetting::set($k, is_bool($v) ? (int) $v : (string) $v, 'api', is_bool($v) ? 'boolean' : (is_int($v) ? 'integer' : 'text'));
+        }
+
+        AuditLog::create([
+            'user_id'     => $request->user()?->id,
+            'event_name'  => 'api.settings.updated',
+            'event'       => 'api_settings_updated',
+            'level'       => 'info',
+            'description' => 'Paramètres de l\'API mis à jour',
+            'new_values'  => json_encode($data),
+            'url'         => $request->fullUrl(),
+            'method'      => 'POST',
+            'ip_address'  => $request->ip(),
+            'user_agent'  => $request->userAgent(),
+            'tags'        => 'api,settings',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Paramètres enregistrés.']);
+    }
+
+    /**
+     * Diagnostics temps réel.
+     */
+    public function health()
+    {
+        return response()->json($this->computeHealth());
+    }
+
+    /**
+     * Export CSV des logs API.
+     */
+    public function exportLogs(Request $request)
+    {
+        $fileName = 'api_logs_' . date('Y-m-d_H-i') . '.csv';
+
+        $query = AuditLog::with('user')
+            ->where(function ($q) {
+                $q->whereNotNull('method')
+                  ->orWhere('url', 'like', '/api/%')
+                  ->orWhere('event_name', 'like', 'api.%')
+                  ->orWhere('event', 'like', 'api_%');
+            })
+            ->orderByDesc('created_at');
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        return new StreamedResponse(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF"); // BOM UTF-8 pour Excel
+            fputcsv($handle, ['ID', 'Date', 'Niveau', 'Événement', 'Description', 'Méthode', 'URL', 'IP', 'Utilisateur', 'Agent']);
+            $query->chunk(500, function ($logs) use ($handle) {
+                foreach ($logs as $log) {
+                    fputcsv($handle, [
+                        $log->id,
+                        $log->created_at?->toDateTimeString(),
+                        $log->level,
+                        $log->event,
+                        $log->description,
+                        $log->method,
+                        $log->url,
+                        $log->ip_address,
+                        $log->user?->name ?? '—',
+                        $log->user_agent,
+                    ]);
+                }
+            });
+            fclose($handle);
+        }, 200, [
+            'Content-Type'        => 'text/csv; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
+    }
+
+    /**
+     * Calcule l'état de santé (DB / Cache / Storage).
+     */
+    private function computeHealth(): array
+    {
+        $checks = [];
+
+        try { DB::connection()->getPdo(); $checks['database'] = true; }
+        catch (\Throwable $e) { $checks['database'] = false; $checks['database_error'] = $e->getMessage(); }
+
+        try {
+            cache()->put('api_health_check', 'ok', 5);
+            $checks['cache'] = cache()->get('api_health_check') === 'ok';
+        } catch (\Throwable $e) { $checks['cache'] = false; $checks['cache_error'] = $e->getMessage(); }
+
+        try { $checks['storage'] = is_writable(storage_path('app')) && is_writable(public_path('storage')); }
+        catch (\Throwable $e) { $checks['storage'] = false; $checks['storage_error'] = $e->getMessage(); }
+
+        $checks['status']    = ! in_array(false, $checks, true) ? 'healthy' : 'degraded';
+        $checks['timestamp'] = now()->toIso8601String();
+        $checks['php']       = PHP_VERSION;
+        $checks['laravel']   = app()->version();
+
+        return $checks;
     }
 }

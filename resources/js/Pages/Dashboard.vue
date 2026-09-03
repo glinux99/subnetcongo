@@ -256,7 +256,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
 
                     <!-- KPI : REVENUS & PRÉDICTION -->
-                    <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+                    <div class="bg-slate-900 rounded-[1.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
                         <i class="pi pi-wallet absolute -right-6 -bottom-6 text-9xl text-white/5 group-hover:rotate-12 transition-transform duration-700"></i>
                         <div class="relative z-10">
                             <div class="flex justify-between items-start mb-6">
@@ -282,7 +282,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
 
                     <!-- KPI : ÉTUDIANTS & CHURN -->
-                    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm relative group">
+                    <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm relative group">
                         <div class="flex justify-between items-start mb-6">
                             <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
                                 <i class="pi pi-users text-xl"></i>
@@ -301,7 +301,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
 
                     <!-- KPI : RÉUSSITE ACADÉMIQUE -->
-                    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm relative group">
+                    <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm relative group">
                         <div class="flex justify-between items-start mb-6">
                             <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
                                 <i class="pi pi-graduation-cap text-xl"></i>
@@ -319,7 +319,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
 
                     <!-- KPI : INFRASTRUCTURE HEALTH -->
-                    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm relative overflow-hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                                 <i class="pi pi-server text-indigo-500"></i> System Health
@@ -353,7 +353,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             <div class="max-w-[1800px] mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 <!-- Evolution des Revenus (Gros Graphe) -->
-                <div class="lg:col-span-2 bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm">
+                <div class="lg:col-span-2 bg-white rounded-[1.5rem] p-10 border border-slate-200 shadow-sm">
                     <div class="flex justify-between items-center mb-10">
                         <div>
                             <h3 class="text-xl font-black text-slate-800 italic">Trajectoire Financière SNC</h3>
@@ -369,7 +369,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 </div>
 
                 <!-- Radar de Compétences -->
-                <div class="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm flex flex-col">
+                <div class="bg-white rounded-[1.5rem] p-10 border border-slate-200 shadow-sm flex flex-col">
                     <div class="mb-10 text-center">
                         <h3 class="text-xl font-black text-slate-800 italic">Offre vs Demande</h3>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Équilibre des compétences enseignées</p>
@@ -394,7 +394,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             <div class="max-w-[1800px] mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
 
                 <!-- Infrastructure Real-time Details -->
-                <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl flex flex-col justify-between">
+                <div class="bg-slate-900 rounded-[1.5rem] p-8 text-white shadow-xl flex flex-col justify-between">
                     <div>
                         <h3 class="text-lg font-black italic flex items-center gap-3 mb-8">
                             <i class="pi pi-bolt text-amber-400"></i> Live Metrics
@@ -429,7 +429,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 </div>
 
                 <!-- Audit Trail (Timeline) -->
-                <div class="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
+                <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm">
                     <h3 class="text-lg font-black italic text-slate-800 mb-8 flex justify-between items-center">
                         Journal d'Audit
                         <Badge :value="props.activities.length" severity="secondary" />
@@ -456,7 +456,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 </div>
 
                 <!-- Support Center (Tickets) -->
-                <div class="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm flex flex-col">
+                <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm flex flex-col">
                     <h3 class="text-lg font-black italic text-slate-800 mb-8 flex items-center gap-3">
                         <OverlayBadge :value="props.supportStatus.open_tickets" severity="danger">
                             <i class="pi pi-comment text-indigo-500"></i>
@@ -477,7 +477,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 </div>
 
                 <!-- Leaderboard (Gamification) -->
-                <div class="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
+                <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm">
                     <h3 class="text-lg font-black italic text-slate-800 mb-8">SNC Hall of Fame</h3>
                     <div class="space-y-6">
                         <div v-for="student in props.leaderboard" :key="student.rank" class="flex items-center justify-between">
@@ -503,7 +503,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 
             <!-- --- [SECTION 5] DATA MANAGEMENT TABLE --- -->
             <div class="max-w-[1800px] mx-auto px-6 mt-12 mb-20">
-                <div class="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white rounded-[1.5rem] p-10 border border-slate-200 shadow-sm relative overflow-hidden">
 
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                         <div>
@@ -672,7 +672,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
         </Sidebar>
 
         <!-- --- [DIALOG] MASSIVE EXPORT ENGINE --- -->
-        <Dialog v-model:visible="showExportModal" modal header="SNC Massive Export Engine" :style="{ width: '550px' }" class="rounded-[2.5rem] overflow-hidden">
+        <Dialog v-model:visible="showExportModal" modal header="SNC Massive Export Engine" :style="{ width: '550px' }" class="rounded-[1.5rem] overflow-hidden">
             <div class="p-8 space-y-8">
                 <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 flex gap-4 items-start">
                     <i class="pi pi-info-circle text-indigo-500 mt-1"></i>
@@ -684,7 +684,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 <div class="space-y-4">
                     <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Type de Données</h4>
                     <div class="grid grid-cols-1 gap-4">
-                        <div class="p-6 border border-slate-200 rounded-[2rem] flex items-center justify-between hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer group" @click="handleExport('payments')">
+                        <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer group" @click="handleExport('payments')">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
                                     <i class="pi pi-file-excel text-xl"></i>
@@ -697,7 +697,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                             <i class="pi pi-chevron-right text-slate-300 group-hover:translate-x-2 transition-transform"></i>
                         </div>
 
-                        <div class="p-6 border border-slate-200 rounded-[2rem] flex items-center justify-between hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer group" @click="handleExport('enrollments')">
+                        <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer group" @click="handleExport('enrollments')">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
                                     <i class="pi pi-users text-xl"></i>

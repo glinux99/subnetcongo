@@ -178,7 +178,7 @@ const getCategoryStats = (type) => {
                 <div class="space-y-2">
                     <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-6">
-                        <div class="bg-indigo-600 p-5 rounded-[2.2rem] shadow-2xl shadow-indigo-100 rotate-2 hover:rotate-0 transition-all duration-500">
+                        <div class="bg-indigo-600 p-5 rounded-[1.2rem] shadow-2xl shadow-indigo-100 rotate-2 hover:rotate-0 transition-all duration-500">
                             <i class="pi pi-cloud text-white text-3xl"></i>
                         </div>
                         <div>
@@ -188,7 +188,7 @@ const getCategoryStats = (type) => {
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-3 bg-white p-3 rounded-[2.2rem] border border-slate-100 shadow-sm">
+                <div class="flex flex-wrap gap-3 bg-white p-3 rounded-[1.2rem] border border-slate-100 shadow-sm">
                     <Button label="Nouveau Dossier" icon="pi pi-folder-plus" class="p-button-text p-button-secondary rounded-xl font-bold" @click="folderDialog = true" />
                     <Divider layout="vertical" />
                     <Button label="Propager des Assets" icon="pi pi-plus-circle" class="p-button-primary shadow-xl shadow-indigo-200 px-10 rounded-2xl font-black italic" @click="uploadDialog = true" />
@@ -274,7 +274,7 @@ const getCategoryStats = (type) => {
                 <main class="col-span-12 lg:col-span-9 space-y-8">
 
                     <!-- Search & Layout Tools -->
-                    <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="flex items-center gap-6 w-full md:w-auto">
                             <div class="flex bg-slate-100 p-1.5 rounded-[1.2rem] shadow-inner">
                                 <Button icon="pi pi-th-large" @click="layout = 'grid'" :class="['p-button-sm p-button-text px-4', layout === 'grid' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-400']" />
@@ -322,7 +322,7 @@ const getCategoryStats = (type) => {
                             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                             <!-- Thumbnail Wrapper -->
-                            <div class="aspect-square bg-slate-50 rounded-[2.5rem] overflow-hidden flex items-center justify-center relative border border-slate-50 shadow-inner">
+                            <div class="aspect-square bg-slate-50 rounded-[1.5rem] overflow-hidden flex items-center justify-center relative border border-slate-50 shadow-inner">
                                 <img v-if="file.type === 'image'" :src="file.thumbnail" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                 <div v-else class="flex flex-col items-center gap-4">
                                     <i :class="[getFileIcon(file.type), 'text-6xl opacity-30 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500']"></i>
@@ -421,7 +421,7 @@ const getCategoryStats = (type) => {
                             :first="(props.assets.current_page - 1) * props.assets.per_page"
                             @page="onPage"
                             template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                            class="rounded-[2rem] shadow-xl border border-slate-100 px-8 py-4"
+                            class="rounded-[1rem] shadow-xl border border-slate-100 px-8 py-4"
                         />
                     </div>
                 </main>
@@ -448,7 +448,7 @@ const getCategoryStats = (type) => {
                 </div>
 
                 <div class="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-                    <div class="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center text-emerald-500 mb-6 shadow-inner">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-[1rem] flex items-center justify-center text-emerald-500 mb-6 shadow-inner">
                         <i class="pi pi-shield text-3xl"></i>
                     </div>
                     <h4 class="text-xl font-black text-slate-800 uppercase italic tracking-tighter mb-4">Sécurité des Assets</h4>
@@ -477,7 +477,7 @@ const getCategoryStats = (type) => {
 
             <div class="p-8 space-y-8">
                 <div class="p-16 border-4 border-dashed border-indigo-100 bg-indigo-50/30 rounded-[4rem] text-center flex flex-col items-center justify-center space-y-6 hover:bg-white hover:border-indigo-400 transition-all cursor-pointer group relative">
-                    <div class="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-transform duration-500">
+                    <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-transform duration-500">
                         <i class="pi pi-cloud-upload text-4xl"></i>
                     </div>
                     <div>
@@ -529,7 +529,7 @@ const getCategoryStats = (type) => {
                     <Button label="Annuler" class="p-button-text p-button-secondary font-black italic uppercase" @click="uploadDialog = false" />
                     <Button label="Lancer la Synchronisation" icon="pi pi-check-circle"
                         :loading="uploadForm.processing"
-                        class="p-button-primary px-12 py-4 rounded-[2rem] shadow-2xl shadow-indigo-200 font-black italic text-lg"
+                        class="p-button-primary px-12 py-4 rounded-[1rem] shadow-2xl shadow-indigo-200 font-black italic text-lg"
                         @click="handleUpload" />
                 </div>
             </template>
@@ -544,7 +544,7 @@ const getCategoryStats = (type) => {
                     <i class="pi pi-search-plus absolute -right-10 -bottom-10 text-[12rem] text-white/5 rotate-12"></i>
 
                     <div class="relative z-10">
-                        <div class="aspect-video bg-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden mb-8 border border-white/10 flex items-center justify-center group relative">
+                        <div class="aspect-video bg-white/5 rounded-[1.5rem] shadow-2xl overflow-hidden mb-8 border border-white/10 flex items-center justify-center group relative">
                             <img v-if="metadataForm.id" :src="props.assets.data.find(f => f.id === metadataForm.id)?.thumbnail" class="w-full h-full object-contain" />
                             <div class="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                 <Button icon="pi pi-eye" label="Plein écran" class="p-button-white p-button-text font-black uppercase italic" />
@@ -622,7 +622,7 @@ const getCategoryStats = (type) => {
                     <Button label="Annuler" class="p-button-text p-button-secondary font-black italic flex-1 uppercase" @click="fileSidebar = false" />
                     <Button label="Enregistrer les Métadonnées" icon="pi pi-save"
                         :loading="metadataForm.processing"
-                        class="p-button-primary px-10 py-5 rounded-[2.2rem] shadow-2xl shadow-indigo-200 flex-[2] font-black italic text-lg tracking-tighter"
+                        class="p-button-primary px-10 py-5 rounded-[1.2rem] shadow-2xl shadow-indigo-200 flex-[2] font-black italic text-lg tracking-tighter"
                         @click="updateMetadata" />
                 </div>
             </div>
@@ -631,7 +631,7 @@ const getCategoryStats = (type) => {
         <!-- --- MODAL : NOUVEAU DOSSIER --- -->
         <Dialog v-model:visible="folderDialog" modal header="Créer une unité de rangement" :style="{width: '450px'}" class="rounded-[3rem] overflow-hidden">
             <div class="p-10 space-y-8">
-                <div class="w-20 h-20 bg-amber-50 rounded-[2.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-inner">
+                <div class="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-inner">
                     <i class="pi pi-folder-plus text-3xl"></i>
                 </div>
 

@@ -121,7 +121,7 @@ const remove = (id) => {
 
             <!-- MAIN CONTENT (Overlapping Header) -->
             <div class="max-w-[1000px] mx-auto px-4 lg:px-6 -mt-12 relative z-20">
-                <div class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-10 min-h-[500px]">
+                <div class="bg-white rounded-[1rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-10 min-h-[500px]">
 
                     <!-- Segmented Control Filter -->
                     <div class="flex gap-1 mb-8 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200 w-full sm:w-fit mx-auto sm:mx-0 overflow-x-auto hide-scrollbar">

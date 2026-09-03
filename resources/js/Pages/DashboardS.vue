@@ -435,7 +435,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                  MAIN — WHITE FLOATING CARD
             ═══════════════════════════════════════════════════ -->
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
 
             <!-- ═══════════════════════════════════════════════════
                  ÉTAT DE CHARGEMENT
@@ -473,7 +473,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <component :is="stat.href ? 'Link' : 'button'"
                                    :href="stat.href"
                                    @click="stat.action === 'materials' && continueLearning && openCourseHub(continueLearning)"
-                                   :class="`group bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between min-h-[110px] ${stat.border} transition-colors text-left`">
+                                   :class="`group bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between min-h-[110px] ${stat.border} transition-colors text-left`">
                             <div class="flex justify-between items-start mb-3">
                                 <div :class="`w-11 h-11 ${stat.iconBg} ${stat.iconText} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`">
                                     <i :class="`pi ${stat.icon} text-lg`" aria-hidden="true"></i>
@@ -496,7 +496,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                     <div class="lg:col-span-8 space-y-8">
 
                         <!-- HERO : REPRENDRE LE COURS -->
-                        <div v-if="continueLearning" class="bg-slate-900 rounded-3xl relative overflow-hidden shadow-xl border border-slate-800">
+                        <div v-if="continueLearning" class="bg-slate-900 rounded-xl relative overflow-hidden shadow-xl border border-slate-800">
                             <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[80px] pointer-events-none"></div>
                             <div class="absolute bottom-0 left-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none"></div>
 
@@ -511,7 +511,7 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                                 <div class="flex items-start gap-5 flex-wrap md:flex-nowrap">
                                     <div v-if="getImageUrl(continueLearning.image || continueLearning.thumbnail)"
-                                         class="hidden sm:block w-20 h-20 rounded-2xl overflow-hidden shrink-0 ring-1 ring-white/10">
+                                         class="hidden sm:block w-20 h-20 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/10">
                                         <img :src="getImageUrl(continueLearning.image || continueLearning.thumbnail)"
                                              :alt="continueLearning.title" class="w-full h-full object-cover" />
                                     </div>
@@ -523,7 +523,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                     </div>
                                 </div>
 
-                                <div class="bg-white/[0.04] backdrop-blur-md rounded-2xl border border-white/10 p-5">
+                                <div class="bg-white/[0.04] backdrop-blur-md rounded-xl border border-white/10 p-5">
                                     <div class="flex justify-between items-start gap-4 mb-3">
                                         <div class="min-w-0">
                                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Prochaine étape</p>
@@ -555,8 +555,8 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </div>
 
                         <!-- Aucun cours inscrit -->
-                        <div v-else class="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center">
-                            <div class="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <div v-else class="bg-white border-2 border-dashed border-slate-200 rounded-xl p-14 text-center">
+                            <div class="w-20 h-20 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto mb-4">
                                 <i class="pi pi-folder-open text-3xl text-indigo-400"></i>
                             </div>
                             <h3 class="text-xl font-black text-slate-800 mb-2">Aucune formation en cours</h3>
@@ -568,7 +568,7 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                         <!-- EXAMENS -->
                         <section v-if="(upcomingExams?.length || inProgressExams?.length) > 0"
-                                 class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                                 class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100">
                                 <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
                                     <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center">
@@ -588,7 +588,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                 </p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div v-for="exam in inProgressExams" :key="exam.attempt_uuid"
-                                         class="bg-white border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                                         class="bg-white border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
                                         <div class="flex items-center gap-3 min-w-0">
                                             <div class="w-10 h-10 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
                                                 <i class="pi pi-pencil text-sm"></i>
@@ -607,7 +607,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">À passer</p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div v-for="exam in upcomingExams" :key="exam.id"
-                                         class="bg-slate-50/50 hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-2xl p-4 transition-all group">
+                                         class="bg-slate-50/50 hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-4 transition-all group">
                                         <div class="flex justify-between items-start mb-3 gap-2">
                                             <div class="min-w-0">
                                                 <p class="text-sm font-black text-slate-800 truncate">{{ exam.title }}</p>
@@ -641,9 +641,9 @@ watch(() => props.stats?.completion_rate, (v) => {
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div v-for="course in otherCourses" :key="course.id"
-                                     class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all group relative">
+                                     class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all group relative">
                                     <div class="flex gap-4">
-                                        <div class="w-16 h-16 rounded-2xl overflow-hidden shrink-0 bg-indigo-50 flex items-center justify-center">
+                                        <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-indigo-50 flex items-center justify-center">
                                             <img v-if="getImageUrl(course.image || course.thumbnail)"
                                                  :src="getImageUrl(course.image || course.thumbnail)" :alt="course.title"
                                                  class="w-full h-full object-cover" />
@@ -674,7 +674,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </section>
 
                         <!-- ASSIDUITÉ -->
-                        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-center mb-5">
                                 <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
                                     <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
@@ -687,14 +687,70 @@ watch(() => props.stats?.completion_rate, (v) => {
                             <div class="h-48 w-full">
                                 <Chart type="line" :data="activityData" :options="chartOptions" class="h-full" />
                             </div>
+                            
                         </div>
+                        
+                        <!-- CLASSEMENT -->
+                   <div v-if="leaderboard && leaderboard.length > 0" class="bg-white rounded-[1rem] p-8 border border-slate-100 shadow-sm overflow-hidden">
+    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-6 flex items-center gap-3">
+        <div class="w-9 h-9 bg-red-50 text-red-600 rounded-xl flex items-center justify-center italic shadow-inner border border-red-100/50">
+            <i class="pi pi-trophy text-xs"></i>
+        </div>
+        Classement
+    </h3>
+
+    <!-- Conteneur avec scrollbar si plus de 3 éléments (Hauteur ajustée pour 3.5 items pour inciter au scroll) -->
+    <div class="max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
+        <ol class="space-y-2">
+            <li v-for="(student, idx) in leaderboard" :key="idx"
+                class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100">
+                
+                <div class="flex items-center gap-4">
+                    <!-- Rang avec indicateur de style -->
+                    <span class="text-[10px] font-mono font-black text-slate-300 w-5 text-center group-hover:text-red-600 transition-colors">
+                        #{{ student.rank }}
+                    </span>
+                    
+                    <!-- Avatar Pro -->
+                    <Avatar 
+                        :label="student.name?.charAt(0)" 
+                        :image="getImageUrl(student.avatar)" 
+                        shape="circle" 
+                        class="!bg-slate-100 !text-slate-800 !font-black !w-9 !h-9 border-2 border-white shadow-sm" 
+                    />
+                    
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-black text-slate-800 truncate italic w-28 tracking-tighter uppercase leading-none mb-1">
+                            {{ student.name }}
+                        </p>
+                        <span class="inline-flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                            <i :class="`pi pi-arrow-${student.trend === 'up' ? 'up text-emerald-500' : 'down text-red-600'} text-[7px]`"></i>
+                            {{ student.trend === 'up' ? 'Ascendant' : 'Stable' }}
+                        </span>
                     </div>
+                </div>
+
+                <!-- Badge Score V40 -->
+                <div class="flex flex-col items-end">
+                     <Badge :value="student.score + ' xp'" class="text-[10px] font-black text-red-600 font-mono italic tracking-tighter" />
+                   
+                    <div v-if="student.rank <= 3" class="w-1 h-1 rounded-full bg-red-500 animate-pulse"></div>
+                </div>
+            </li>
+        </ol>
+    </div>
+
+    <!-- Petit indicateur visuel si le contenu dépasse -->
+    <div v-if="leaderboard.length > 3" class="mt-4 pt-2 border-t border-slate-50 flex justify-center opacity-30">
+        <i class="pi pi-angle-down text-[10px] animate-bounce"></i>
+    </div>
+ </div></div>
 
                     <!-- ── COLONNE DROITE ── -->
                     <aside class="lg:col-span-4 space-y-6">
 
                         <!-- MAÎTRISE GLOBALE -->
-                        <div class="bg-white rounded-3xl p-7 border border-slate-200 shadow-sm text-center">
+                        <div class="bg-white rounded-xl p-7 border border-slate-200 shadow-sm text-center">
                             <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Maîtrise globale</h3>
                             <div class="flex justify-center mb-5">
                                 <Knob
@@ -720,7 +776,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </div>
 
                         <!-- PROGRESSION PAR COURS -->
-                        <div v-if="courseProgressBreakdown.length > 0" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <div v-if="courseProgressBreakdown.length > 0" class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Progression par cours</h3>
                                 <Link :href="route('student.progress')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Détails →</Link>
@@ -754,7 +810,7 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                         <!-- RÉPARTITION PAR NIVEAU -->
                         <div v-if="Object.values(skillDistribution).some(v => v > 0)"
-                             class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                             class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Répartition par niveau</h3>
                             <div class="h-40">
                                 <Chart type="doughnut" :data="skillChartData" :options="doughnutOptions" class="h-full" />
@@ -762,7 +818,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </div>
 
                         <!-- CERTIFICATS -->
-                        <div v-if="allCertificates.length > 0" class="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden">
+                        <div v-if="allCertificates.length > 0" class="bg-slate-900 rounded-xl p-6 text-white relative overflow-hidden">
                             <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-[60px]"></div>
                             <div class="relative z-10">
                                 <div class="flex justify-between items-center mb-4">
@@ -773,7 +829,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                 </div>
                                 <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                                     <div v-for="cert in allCertificates" :key="cert.id"
-                                         class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
+                                         class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3 transition-colors">
                                         <div class="flex items-center gap-3 min-w-0">
                                             <div class="w-9 h-9 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center shrink-0">
                                                 <i class="pi pi-award text-sm"></i>
@@ -795,7 +851,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </div>
 
                         <!-- ACCÈS RAPIDE -->
-                        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3">Accès rapide</h3>
                             <nav class="space-y-1">
                                 <Link :href="route('student.my-courses')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
@@ -821,33 +877,9 @@ watch(() => props.stats?.completion_rate, (v) => {
                             </nav>
                         </div>
 
-                        <!-- CLASSEMENT -->
-                        <div v-if="leaderboard && leaderboard.length > 0" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <div class="w-8 h-8 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center"><i class="pi pi-trophy text-xs"></i></div>
-                                Classement
-                            </h3>
-                            <ol class="space-y-1.5">
-                                <li v-for="(student, idx) in leaderboard" :key="idx"
-                                    class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-xs font-mono font-black text-slate-400 w-5 text-center">#{{ student.rank }}</span>
-                                        <Avatar :label="student.name?.charAt(0)" :image="getImageUrl(student.avatar)" shape="circle" size="small" />
-                                        <div>
-                                            <p class="text-xs font-black text-slate-800">{{ student.name }}</p>
-                                            <span class="inline-flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                                <i :class="`pi pi-arrow-${student.trend === 'up' ? 'up text-emerald-500' : 'down text-rose-500'} text-[8px]`"></i>
-                                                variation
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <Badge :value="student.score + ' xp'" class="!bg-indigo-50 !text-indigo-600 font-mono !text-[10px] !font-black" />
-                                </li>
-                            </ol>
-                        </div>
 
                         <!-- ACTIVITÉ -->
-                        <div v-if="recentActivities && recentActivities.length > 0" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <div v-if="recentActivities && recentActivities.length > 0" class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center justify-between">
                                 Activité récente
                                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -884,9 +916,9 @@ watch(() => props.stats?.completion_rate, (v) => {
         </div>
 
         <!-- Q&A Dialog -->
-        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question" class="!rounded-3xl" :closable="!askSubmitting">
+        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question" class="!rounded-xl" :closable="!askSubmitting">
             <div class="space-y-4 p-2">
-                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center gap-3">
+                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3">
                     <i class="pi pi-book text-indigo-500"></i>
                     <div class="text-xs">
                         <p class="font-black text-slate-800">{{ askContext.course?.title }}</p>
@@ -1041,5 +1073,30 @@ a:focus-visible, button:focus-visible {
 /* Respect des préférences de mouvement réduit */
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
+}
+/* Custom Scrollbar Elite Pro v40 */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px; /* Très fin pour la discrétion */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #F8FAFC; /* Couleur de fond de la piste (Slate 50) */
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #E2E8F0; /* Couleur du curseur par défaut */
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #E11D48; /* Devient Rouge SubnetCongo au survol */
+}
+
+/* Firefox support */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #E2E8F0 #F8FAFC;
 }
 </style>

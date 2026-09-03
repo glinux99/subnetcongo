@@ -202,7 +202,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
             <div class="max-w-[1400px] mx-auto">
 
                 <!-- HEADER : Barre d'outils et contexte -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6 sticky top-0 z-10 transition-all">
+                <div class="bg-white p-5 rounded-1xl shadow-sm border border-slate-200 mb-6 sticky top-0 z-10 transition-all">
                     <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
 
                         <!-- Info Étudiant & Devoir -->
@@ -253,7 +253,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                     <!-- Colonne de Gauche : Copie de l'étudiant (8 colonnes) -->
                     <div class="xl:col-span-8 space-y-6">
 
-                        <div v-if="answers.length === 0" class="bg-white p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
+                        <div v-if="answers.length === 0" class="bg-white p-12 rounded-1xl border border-slate-200 text-center shadow-sm">
                             <i class="pi pi-check-square text-6xl text-slate-200 mb-4"></i>
                             <h3 class="text-xl font-bold text-slate-700">Correction 100% Automatique</h3>
                             <p class="text-slate-500 mt-2 max-w-md mx-auto">Ce devoir ne contient que des questions à choix multiples ou auto-évaluées. Aucune action manuelle n'est requise par question.</p>
@@ -311,7 +311,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
 
                     <!-- Colonne de Droite : Panneau de Synthèse (4 colonnes) -->
                     <div class="xl:col-span-4">
-                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 sticky top-32">
+                        <div class="bg-white p-6 rounded-1xl shadow-lg border border-slate-200 sticky top-32">
 
                             <h3 class="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
                                 <i class="pi pi-calculator text-indigo-500"></i> Synthèse de Notation

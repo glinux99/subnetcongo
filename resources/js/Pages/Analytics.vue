@@ -208,7 +208,7 @@ onMounted(() => {
                 <div class="space-y-2">
                     <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-4">
-                        <div class="bg-indigo-600 p-5 rounded-[2rem] shadow-2xl shadow-indigo-100 relative group">
+                        <div class="bg-indigo-600 p-5 rounded-[1rem] shadow-2xl shadow-indigo-100 relative group">
                             <i class="pi pi-chart-bar text-white text-3xl"></i>
                             <div class="absolute -top-1 -right-1 flex h-4 w-4">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -222,7 +222,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-3 p-3 bg-white rounded-[2rem] shadow-sm border border-slate-100">
+                <div class="flex flex-wrap gap-3 p-3 bg-white rounded-[1rem] shadow-sm border border-slate-100">
                     <Calendar v-model="dateRange" selectionMode="range" :showIcon="true" class="w-64" placeholder="Période d'analyse" />
                     <Divider layout="vertical" />
                     <Button label="Exporter" icon="pi pi-upload" class="p-button-outlined p-button-secondary rounded-xl" @click="exportMenu.toggle($event)" />
@@ -238,11 +238,11 @@ onMounted(() => {
                     { label: 'Apprenants Actifs', val: '8,420', trend: '+5.2%', color: 'emerald', icon: 'pi-users' },
                     { label: 'Taux de Complétion', val: '74.8%', trend: '+2.1%', color: 'amber', icon: 'pi-verified' },
                     { label: 'Nouveaux Inscrits', val: '1,250', trend: '+22.4%', color: 'rose', icon: 'pi-user-plus' }
-                ]" :key="kpi.label" class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
+                ]" :key="kpi.label" class="bg-white p-8 rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
                     <div v-if="loading"><Skeleton width="100%" height="100px" /></div>
                     <div v-else>
                         <div class="flex justify-between items-start mb-6">
-                            <div :class="`p-4 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600 group-hover:scale-110 transition-transform` ">
+                            <div :class="`p-4 rounded-1xl bg-${kpi.color}-50 text-${kpi.color}-600 group-hover:scale-110 transition-transform` ">
                                 <i :class="`pi ${kpi.icon} text-xl` "></i>
                             </div>
                             <Badge :value="kpi.trend" :severity="kpi.trend.startsWith('+') ? 'success' : 'danger'" />
@@ -376,7 +376,7 @@ onMounted(() => {
                         </template>
 
                         <div class="p-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
-                            <div class="lg:col-span-4 flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                            <div class="lg:col-span-4 flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-[1.5rem] border border-slate-100">
                                 <h4 class="text-slate-400 font-black uppercase text-xs tracking-[0.2em] mb-6">Net Promoter Score</h4>
                                 <Knob v-model="value" :readonly="true" :size="150" valueTemplate="{value}%" valueColor="#6366F1" rangeColor="#E2E8F0" />
                                 <p class="mt-6 text-sm text-slate-600 font-medium">92% des apprenants de SubnetCongo recommanderaient la plateforme à leurs proches.</p>
@@ -420,20 +420,20 @@ onMounted(() => {
                         </template>
                         <div class="p-10">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div class="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                <div class="p-6 bg-indigo-50 rounded-1xl border border-indigo-100">
                                     <p class="text-xs font-bold text-indigo-400 uppercase mb-2">Taux de Réussite global</p>
                                     <h4 class="text-3xl font-black text-indigo-900">88.4%</h4>
                                 </div>
-                                <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                <div class="p-6 bg-emerald-50 rounded-1xl border border-emerald-100">
                                     <p class="text-xs font-bold text-emerald-400 uppercase mb-2">Diplômes émis (30j)</p>
                                     <h4 class="text-3xl font-black text-emerald-900">142</h4>
                                 </div>
-                                <div class="p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                                <div class="p-6 bg-amber-50 rounded-1xl border border-amber-100">
                                     <p class="text-xs font-bold text-amber-400 uppercase mb-2">Temps de correction moy.</p>
                                     <h4 class="text-3xl font-black text-amber-900">4.2h</h4>
                                 </div>
                             </div>
-                            <div class="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                            <div class="bg-slate-50 p-8 rounded-[1rem] border border-slate-100">
                                 <h4 class="font-bold text-slate-800 mb-4">Distribution des scores (Examens finaux)</h4>
                                 <div class="flex items-center gap-4">
                                     <span class="text-xs font-bold text-slate-400 w-20">0-50%</span>
@@ -466,7 +466,7 @@ onMounted(() => {
                     </h2>
                     <ScrollPanel style="height: 350px">
                         <div class="space-y-6">
-                            <div v-for="i in 6" :key="i" class="flex gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-all cursor-pointer group">
+                            <div v-for="i in 6" :key="i" class="flex gap-4 p-4 hover:bg-slate-50 rounded-1xl transition-all cursor-pointer group">
                                 <Avatar image="https://i.pravatar.cc/150?u=a" shape="circle" class="ring-2 ring-indigo-50 group-hover:ring-indigo-200 transition-all" />
                                 <div>
                                     <p class="text-sm font-bold text-slate-800">Jean-Pierre K. <span class="font-normal text-slate-500">s'est inscrit à</span> UX Design</p>

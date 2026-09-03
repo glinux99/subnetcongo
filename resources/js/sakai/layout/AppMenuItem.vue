@@ -89,35 +89,71 @@ const isActiveMenu = ref(false);
 const itemKey = ref(null);
 const { t } = useI18n();
 
+// Extrait le path pur (sans host, sans query, sans trailing slash)
+const pathOnly = (url) => {
+    if (!url) return '';
+    try {
+        // Si c'est une URL absolue (http://...) on prend seulement le pathname
+        if (/^https?:\/\//i.test(url)) {
+            return new URL(url).pathname.replace(/\/+$/, '') || '/';
+        }
+    } catch (_) { /* ignore */ }
+    return String(url).split('?')[0].replace(/\/+$/, '') || '/';
+};
+
+const currentPath = computed(() => pathOnly(page.url));
+
+// Détecte si l'item courant (ou un de ses descendants) est la route active
+const isRouteActive = computed(() => {
+    if (!props.item.to) return false;
+    return pathOnly(props.item.to) === currentPath.value;
+});
+
+// Détecte récursivement si un sous-item correspond à la route active
+const hasActiveDescendant = (item) => {
+    if (!item || !item.items) return false;
+    for (const child of item.items) {
+        if (child.to && pathOnly(child.to) === currentPath.value) return true;
+        if (hasActiveDescendant(child)) return true;
+    }
+    return false;
+};
+
+const shouldBeActive = computed(() => isRouteActive.value || hasActiveDescendant(props.item));
+
 onBeforeMount(() => {
     itemKey.value = props.parentItemKey ? props.parentItemKey + '-' + props.index : String(props.index);
 
-    const activeItem = layoutState.activeMenuItem;
-
-    isActiveMenu.value = activeItem === itemKey.value || activeItem ? activeItem.startsWith(itemKey.value + '-') : false;
+    // Si l'item (ou un enfant) correspond à la route active, on l'ouvre
+    if (shouldBeActive.value) {
+        isActiveMenu.value = true;
+        // On enregistre aussi dans le state pour rester synchro
+        setActiveMenuItem(itemKey.value);
+    } else {
+        const activeItem = layoutState.activeMenuItem;
+        isActiveMenu.value = activeItem === itemKey.value || (activeItem ? activeItem.startsWith(itemKey.value + '-') : false);
+    }
 });
 
 watch(
     () => layoutState.activeMenuItem,
     (newVal) => {
-        isActiveMenu.value = newVal === itemKey.value || newVal.startsWith(itemKey.value + '-');
+        isActiveMenu.value = newVal === itemKey.value || (newVal ? newVal.startsWith(itemKey.value + '-') : false);
     }
 );
 
-const isRouteActive = computed(() => {
-    if (!props.item.to) return false;
-
-    // On sépare l'URL au point d'interrogation et on prend la première partie
-    const currentPath = page.url.split('?')[0];
-    const targetPath = props.item.to.split('?')[0];
-
-    return currentPath === targetPath;
+// Ouvre automatiquement le sous-menu quand la route change
+watch(currentPath, () => {
+    if (shouldBeActive.value) {
+        isActiveMenu.value = true;
+        setActiveMenuItem(itemKey.value);
+    }
 });
 </script>
 
 <template>
     <li v-if="isVisible"
-        :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu, 'active-route': isRouteActive && !item.items }">
+        :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu, 'active-route': isRouteActive && !item.items, 'has-active-child': !isRouteActive && item.items && shouldBeActive }">
         <div v-if="root" class="layout-menuitem-root-text">{{ t(item.label) }}</div>
 
         <nav-link v-if="item.to && !item.items"
@@ -134,7 +170,7 @@ const isRouteActive = computed(() => {
         <a v-else-if="!item.to || item.items"
            :href="item.url"
            @click="itemClick($event, item)"
-           :class="item.class"
+           :class="[item.class, { 'active-route': !item.to && hasActiveDescendant(item) }]"
            :target="item.target"
            tabindex="0">
             <i :class="item.icon" class="layout-menuitem-icon"></i>
@@ -142,7 +178,7 @@ const isRouteActive = computed(() => {
             <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-violet-600 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
                 {{ item.badge > 99 ? '99+' : item.badge }}
             </span>
-            <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
+            <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items" :class="{ 'rotate-180': isActiveMenu }"></i>
         </a>
 
         <Transition v-if="item.items" name="layout-submenu">
@@ -159,4 +195,17 @@ const isRouteActive = computed(() => {
     </li>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+/* Item parent qui contient la page active */
+.active-route {
+    color: #8B5CF6 !important;
+    font-weight: 700;
+}
+.has-active-child > a {
+    color: #8B5CF6 !important;
+    font-weight: 700;
+}
+.layout-submenu-toggler {
+    transition: transform 0.2s ease;
+}
+</style>

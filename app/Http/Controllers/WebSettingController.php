@@ -74,29 +74,23 @@ class WebSettingController extends Controller
     {
         $props = $this->sharedProps();
 
-        // Hero : depuis une Page de template = "landing" marquée is_published
-        $heroPage = Page::where('template', 'landing')
-            ->where('is_published', true)
-            ->orderByDesc('published_at')
-            ->first();
-
-        // Fallback sur la 1ère page d'accueil si pas de template
-        $homePage = Page::where('slug', 'home')
-            ->where('is_published', true)
-            ->first();
-
-        $heroSource = $heroPage ?? $homePage;
-
-        // Sections hero depuis web_settings.group = 'hero' (JSON structuré)
-        $heroSettings = WebSetting::where('group', 'hero')->get()->pluck('value', 'key')->toArray();
-        $heroSlides = [];
-        if (! empty($heroSettings['slides'])) {
-            $decoded = json_decode($heroSettings['slides'], true);
-            if (is_array($decoded)) $heroSlides = $decoded;
-        }
-
-        // Sections "Services" / "About" / "Stats" depuis web_settings.group = 'about'
+        // Sections "About" / "FAQ" / "Services" depuis web_settings.group = 'about'
         $aboutGroup = WebSetting::where('group', 'about')->get()->pluck('value', 'key')->toArray();
+
+        // ── SLIDES (table dédiée landing_slides) ─────────────────
+        $heroSlides = \App\Models\LandingSlide::active()->get()->toArray();
+
+        // ── TECHNOLOGIES ────────────────────────────────────────
+        $technologies = \App\Models\LandingTechnology::active()->get()->toArray();
+
+        // ── STATS ADMIN-DÉFINIES + stats agrégées temps réel ───
+        $adminStats = \App\Models\LandingStat::active()->get()->toArray();
+        $aggregated = [
+            'students'    => User::role('student')->count(),
+            'courses'     => Course::published()->count(),
+            'instructors' => User::role('instructor')->count(),
+            'enrollments' => Enrollment::where('status', 'active')->count(),
+        ];
 
         // Cours publiés (catalogue)
         $publishedCourses = Course::query()
@@ -156,27 +150,16 @@ class WebSettingController extends Controller
             ->get(['id', 'title', 'slug', 'excerpt', 'featured_image', 'published_at'])
             ->toArray();
 
-        // Statistiques agrégées
-        $stats = [
-            'students'  => User::role('student')->count(),
-            'courses'   => Course::published()->count(),
-            'instructors' => User::role('instructor')->count(),
-            'enrollments' => Enrollment::where('status', 'active')->count(),
-        ];
-
         return Inertia::render('Web/Landing', array_merge($props, [
-            'heroSource'   => $heroSource ? [
-                'title'   => $heroSource->title,
-                'content' => $heroSource->content,
-                'image'   => $heroSource->featured_image,
-            ] : null,
             'heroSlides'   => $heroSlides,
+            'technologies' => $technologies,
+            'adminStats'   => $adminStats,
             'about'        => $aboutGroup,
             'courses'      => $publishedCourses,
             'testimonials' => $testimonials,
             'realizations' => $realizations,
             'recentPosts'  => $recentPosts,
-            'stats'        => $stats,
+            'stats'        => $aggregated,
         ]));
     }
 

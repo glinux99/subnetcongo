@@ -77,7 +77,7 @@ onBeforeUnmount(() => clearInterval(pollInterval));
 
         <Transition name="dropdown">
             <div v-if="visible"
-                 class="absolute right-0 mt-3 w-96 bg-white shadow-2xl rounded-2xl border border-slate-100 z-[120] overflow-hidden"
+                 class="absolute right-0 mt-3 w-96 bg-white shadow-2xl rounded-1xl border border-slate-100 z-[120] overflow-hidden"
                  @click.stop>
                 <!-- Header -->
                 <div class="px-4 py-3 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100 flex justify-between items-center">

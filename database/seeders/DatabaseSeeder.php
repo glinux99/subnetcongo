@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,   // Paramètres du site
             LanguageSeeder::class,  // Langues
             PaymentGatewaySettingSeeder::class, // Stripe/PayPal/Orange Money/M-Pesa/Airtel Money
+            LandingContentSeeder::class,        // Slides / technologies / stats de la landing
         ]);
 
         $this->command->info('Rôles, Utilisateurs et Configurations créés !');

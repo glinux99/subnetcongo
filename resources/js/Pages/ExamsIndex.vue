@@ -1,10 +1,8 @@
 <script setup>
 /**
  * ======================================================================================
- * SUBNETCONGO LMS — STUDENT EXAM CENTER v3.0
+ * SUBNETCONGO LMS — STUDENT EXAM CENTER v3.0 (Ultimate Edition)
  * ======================================================================================
- * Centre d'évaluation de l'étudiant : liste des examens disponibles,
- * statuts, scores, tentatives et navigation vers le player.
  */
 import { ref, computed } from 'vue';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
@@ -12,33 +10,27 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import ProgressBar from 'primevue/progressbar';
-import Badge from 'primevue/badge';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
 const props = defineProps({
     exams: Array
 });
 
-// Filtre local
+// Filtres
 const search = ref('');
-const activeFilter = ref('all'); // 'all', 'available', 'passed', 'failed'
+const activeFilter = ref('all');
 
 const filteredExams = computed(() => {
     let list = props.exams || [];
-
     if (search.value) {
         const s = search.value.toLowerCase();
         list = list.filter(e => e.title?.toLowerCase().includes(s) || e.course?.title?.toLowerCase().includes(s));
     }
-
-    if (activeFilter.value === 'available') {
-        list = list.filter(e => !e.is_passed && e.remaining_attempts !== 0);
-    } else if (activeFilter.value === 'passed') {
-        list = list.filter(e => e.is_passed);
-    } else if (activeFilter.value === 'failed') {
-        list = list.filter(e => !e.is_passed && e.attempts_count > 0 && e.remaining_attempts === 0);
-    }
-
+    if (activeFilter.value === 'available') list = list.filter(e => !e.is_passed && e.remaining_attempts !== 0);
+    else if (activeFilter.value === 'passed') list = list.filter(e => e.is_passed);
+    else if (activeFilter.value === 'failed') list = list.filter(e => !e.is_passed && e.attempts_count > 0 && e.remaining_attempts === 0);
     return list;
 });
 
@@ -46,228 +38,174 @@ const stats = computed(() => ({
     total: props.exams?.length ?? 0,
     available: props.exams?.filter(e => !e.is_passed && e.remaining_attempts !== 0).length ?? 0,
     passed: props.exams?.filter(e => e.is_passed).length ?? 0,
-    in_progress: props.exams?.filter(e => e.active_attempt_uuid).length ?? 0,
+    locked: props.exams?.filter(e => e.attempts_count > 0 && e.remaining_attempts === 0).length ?? 0,
 }));
 
 const getStatus = (exam) => {
-    if (exam.is_passed) return { label: 'Réussi', sev: 'success', icon: 'pi-check-circle', color: 'emerald' };
-    if (exam.active_attempt_uuid) return { label: 'En cours', sev: 'warning', icon: 'pi-spin pi-spinner', color: 'amber' };
-    if (exam.attempts_count > 0 && exam.remaining_attempts === 0) return { label: 'Limite atteinte', sev: 'danger', icon: 'pi-lock', color: 'rose' };
-    if (exam.attempts_count > 0) return { label: 'Échoué', sev: 'danger', icon: 'pi-times-circle', color: 'rose' };
-    return { label: 'Disponible', sev: 'info', icon: 'pi-circle', color: 'violet' };
+    if (exam.is_passed) return { label: 'Réussi', sev: 'success', icon: 'pi-verified', bg: 'bg-emerald-500' };
+    if (exam.active_attempt_uuid) return { label: 'En cours', sev: 'warn', icon: 'pi-spin pi-spinner', bg: 'bg-amber-500' };
+    if (exam.remaining_attempts === 0) return { label: 'Verrouillé', sev: 'danger', icon: 'pi-lock', bg: 'bg-rose-600' };
+    return { label: 'Disponible', sev: 'info', icon: 'pi-play', bg: 'bg-red-600' };
 };
 
-const getTypeIcon = (type) => {
-    const map = { 'Certification': 'pi-verified', 'Quiz': 'pi-question-circle', 'Examen': 'pi-pencil', 'Pratique': 'pi-code' };
-    return map[type] || 'pi-file';
-};
-
-const formatDuration = (minutes) => {
-    if (!minutes) return 'N/A';
-    if (minutes < 60) return `${minutes} min`;
-    return `${Math.floor(minutes / 60)}h${minutes % 60 > 0 ? String(minutes % 60).padStart(2, '0') : ''}`;
-};
+const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(min/60)}h${min%60 || ''}`) : '—';
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Centre d'Évaluation" />
+        <Head title="Centre d'Évaluation | SubnetCongo" />
 
-        <div class="min-h-screen bg-[#F8FAFC] pb-16">
+        <div class="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
 
-            <!-- ── HEADER ── -->
-            <div class="bg-white border-b border-slate-100 sticky top-0 z-40">
-                <div class="max-w-6xl mx-auto px-6 py-5">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <div class="flex items-center gap-3 mb-1">
-                                <Link :href="route('dashboard')" class="text-slate-400 hover:text-slate-600 transition-colors">
-                                    <i class="pi pi-home text-sm"></i>
-                                </Link>
-                                <i class="pi pi-chevron-right text-slate-300 text-xs"></i>
-                                <span class="text-sm font-bold text-slate-500">Centre d'Évaluation</span>
-                            </div>
-                            <h1 class="text-2xl font-black text-slate-800 italic">Mon Centre d'Évaluation</h1>
-                            <p class="text-slate-400 text-sm mt-1">Passez vos examens et certifications. Suivez vos résultats.</p>
+            <!-- ── HEADER ULTIMATE V30 (Mesh Gradient) ── -->
+            <div class="bg-[#0F172A] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">
+                <div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-red-600/15 rounded-full blur-[120px] pointer-events-none"></div>
+                <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-red-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-red-500/20">Evaluation Center</span>
                         </div>
-                        <!-- Barre de recherche -->
-                        <div class="relative">
-                            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <InputText v-model="search" placeholder="Rechercher un examen..." class="pl-9 text-sm rounded-xl border-slate-200 w-64" />
-                        </div>
+                        <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
+                            Centre <span class="text-red-600">d'Évaluation</span>
+                        </h1>
+                        <p class="text-slate-400 mt-4 max-w-lg text-sm font-medium leading-relaxed italic">
+                            Validez vos compétences, obtenez vos certifications et suivez votre progression académique.
+                        </p>
+                    </div>
+
+                    <!-- Search Pro -->
+                    <div class="w-full md:w-96">
+                        <IconField iconPosition="left">
+                            <InputIcon class="pi pi-search text-slate-500" />
+                            <InputText v-model="search" placeholder="Rechercher un examen..." 
+                                class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-1xl !py-4 !pl-12 !text-white placeholder:!text-slate-500 focus:!border-red-500/50 transition-all" />
+                        </IconField>
                     </div>
                 </div>
             </div>
 
-            <div class="max-w-6xl mx-auto px-6 mt-6">
-
+            <div class="max-w-11xl mx-auto px-6 -mt-12 relative z-20">
+                
                 <!-- ── KPI CARDS ── -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                     <div v-for="kpi in [
-                        { label: 'Total examens', val: stats.total, icon: 'pi-file', color: 'slate', filter: 'all' },
-                        { label: 'Disponibles', val: stats.available, icon: 'pi-circle', color: 'violet', filter: 'available' },
-                        { label: 'Réussis', val: stats.passed, icon: 'pi-check-circle', color: 'emerald', filter: 'passed' },
-                        { label: 'En cours', val: stats.in_progress, icon: 'pi-clock', color: 'amber', filter: 'in_progress' },
-                    ]" :key="kpi.label"
-                        @click="activeFilter = kpi.filter === 'in_progress' ? 'all' : kpi.filter"
-                        :class="[
-                            'bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-3 cursor-pointer transition-all duration-200',
-                            activeFilter === kpi.filter ? 'border-violet-300 ring-2 ring-violet-100' : 'border-slate-100 hover:border-slate-200 hover:shadow-md'
-                        ]">
-                        <div :class="`w-10 h-10 bg-${kpi.color}-50 text-${kpi.color}-600 rounded-xl flex items-center justify-center flex-shrink-0`">
-                            <i :class="`pi ${kpi.icon} text-base`"></i>
+                        { label: 'Total Examens', val: stats.total, icon: 'pi-file', bg: 'bg-slate-100 text-slate-600' },
+                        { label: 'Disponibles', val: stats.available, icon: 'pi-play-circle', bg: 'bg-red-50 text-red-600' },
+                        { label: 'Certifications', val: stats.passed, icon: 'pi-verified', bg: 'bg-emerald-50 text-emerald-600' },
+                        { label: 'Verrouillés', val: stats.locked, icon: 'pi-lock', bg: 'bg-rose-50 text-rose-600' },
+                    ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-xl transition-all group">
+                        <div :class="kpi.bg" class="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i :class="`pi ${kpi.icon}`"></i>
                         </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ kpi.label }}</p>
-                            <h3 class="text-xl font-black text-slate-800">{{ kpi.val }}</h3>
-                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
+                        <h3 class="text-2xl font-black text-slate-900">{{ kpi.val }}</h3>
                     </div>
                 </div>
 
-                <!-- ── FILTRES PILL ── -->
-                <div class="flex flex-wrap gap-2 mb-6">
-                    <button v-for="f in [
-                        { key: 'all', label: 'Tous' },
-                        { key: 'available', label: 'Disponibles' },
-                        { key: 'passed', label: 'Réussis' },
-                        { key: 'failed', label: 'Échoués' }
-                    ]" :key="f.key"
-                        @click="activeFilter = f.key"
-                        :class="[
-                            'px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all',
-                            activeFilter === f.key
-                                ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
-                                : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
-                        ]">
-                        {{ f.label }}
+                <!-- ── FILTRES ── -->
+                <div class="flex gap-2 mb-8 bg-white p-2 rounded-1xl border border-slate-200 w-fit shadow-sm">
+                    <button v-for="f in [{k:'all',l:'Tous'}, {k:'available',l:'À passer'}, {k:'passed',l:'Réussis'}, {k:'failed',l:'Échoués'}]" :key="f.k"
+                        @click="activeFilter = f.k"
+                        :class="['px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all', 
+                        activeFilter === f.k ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-slate-500 hover:bg-slate-50']">
+                        {{ f.l }}
                     </button>
                 </div>
 
-                <!-- ── GRILLE D'EXAMENS ── -->
-                <div v-if="filteredExams.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <div v-for="exam in filteredExams" :key="exam.id"
-                         class="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden group">
+                <!-- ── GRILLE EXAMENS ── -->
+                <div v-if="filteredExams.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div v-for="exam in filteredExams" :key="exam.id" 
+                        class="group bg-white rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-500 flex flex-col overflow-hidden">
+                        
+                        <!-- Status Header -->
+                        <div :class="getStatus(exam).bg" class="h-1.5 w-full"></div>
 
-                        <!-- Card Header coloré selon status -->
-                        <div :class="[
-                            'h-2',
-                            exam.is_passed ? 'bg-emerald-500' :
-                            exam.active_attempt_uuid ? 'bg-amber-400' :
-                            exam.attempts_count > 0 && exam.remaining_attempts === 0 ? 'bg-rose-500' :
-                            'bg-violet-500'
-                        ]"></div>
-
-                        <div class="p-5 flex-1">
-                            <!-- Badges -->
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="flex items-center gap-2">
-                                    <div :class="`w-8 h-8 rounded-lg flex items-center justify-center text-white bg-violet-500`">
-                                        <i :class="`pi ${getTypeIcon(exam.type)} text-sm`"></i>
-                                    </div>
-                                    <Tag :value="exam.type || 'Examen'" severity="secondary" class="text-[9px] font-bold" />
+                        <div class="p-8 flex-1 space-y-6">
+                            <div class="flex justify-between items-start">
+                                <div class="space-y-1">
+                                    <span class="text-[9px] font-black text-red-600 uppercase tracking-[0.2em]">{{ exam.type || 'EXAMEN' }}</span>
+                                    <h3 class="text-lg font-black text-slate-800 leading-tight italic tracking-tight line-clamp-2">{{ exam.title }}</h3>
                                 </div>
-                                <Tag
-                                    :value="getStatus(exam).label"
-                                    :severity="getStatus(exam).sev"
-                                    :icon="`pi ${getStatus(exam).icon}`"
-                                    class="text-[9px] font-bold"
-                                />
+                                <div class="w-10 h-10 rounded-1xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                                    <i :class="getStatus(exam).icon" class="text-slate-400"></i>
+                                </div>
                             </div>
 
-                            <!-- Titre & cours -->
-                            <h3 class="text-base font-black text-slate-800 italic mb-1 leading-tight">{{ exam.title }}</h3>
-                            <p class="text-xs text-slate-400 mb-4 flex items-center gap-1">
-                                <i class="pi pi-book text-violet-400 text-[10px]"></i>
-                                {{ exam.course?.title || 'Formation générale' }}
-                            </p>
+                            <div class="flex items-center gap-3 text-xs font-bold text-slate-500 italic">
+                                <i class="pi pi-book text-red-500"></i>
+                                <span class="truncate">{{ exam.course?.title || 'Formation générale' }}</span>
+                            </div>
 
-                            <!-- Metadata -->
-                            <div class="grid grid-cols-3 gap-2 py-3 border-y border-slate-50 mb-4">
+                            <!-- Meta Grid -->
+                            <div class="grid grid-cols-3 gap-4 py-4 border-y border-slate-50">
                                 <div class="text-center">
-                                    <span class="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Durée</span>
-                                    <span class="text-xs font-black text-slate-700">{{ formatDuration(exam.duration_minutes) }}</span>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Durée</p>
+                                    <p class="text-xs font-black text-slate-900">{{ formatDuration(exam.duration_minutes) }}</p>
                                 </div>
                                 <div class="text-center border-x border-slate-50">
-                                    <span class="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Tentatives</span>
-                                    <span class="text-xs font-black text-slate-700">{{ exam.remaining_attempts }}</span>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pass</p>
+                                    <p class="text-xs font-black text-slate-900">{{ exam.passing_score ?? 70 }}%</p>
                                 </div>
                                 <div class="text-center">
-                                    <span class="text-[9px] uppercase font-bold text-slate-400 block mb-0.5">Passantes</span>
-                                    <span class="text-xs font-black text-slate-700">{{ exam.passing_score ?? 70 }}%</span>
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Tentatives</p>
+                                    <p class="text-xs font-black text-slate-900">{{ exam.remaining_attempts }}</p>
                                 </div>
                             </div>
 
-                            <!-- Score si existant -->
-                            <div v-if="exam.best_score !== null && exam.best_score !== undefined" class="mb-3">
-                                <div class="flex justify-between text-[10px] font-black mb-1.5">
-                                    <span class="text-slate-500">Meilleur Score</span>
-                                    <span :class="exam.is_passed ? 'text-emerald-600' : 'text-rose-600'">{{ exam.best_score }}%</span>
+                            <!-- Score Visual -->
+                            <div v-if="exam.best_score !== null">
+                                <div class="flex justify-between items-end mb-2">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Performance</p>
+                                    <span :class="exam.is_passed ? 'text-emerald-500' : 'text-red-600'" class="text-sm font-black italic tracking-tighter">{{ exam.best_score }}%</span>
                                 </div>
-                                <ProgressBar
-                                    :value="exam.best_score"
-                                    :showValue="false"
-                                    class="h-1.5"
-                                    :style="`--p-progressbar-value-background: ${exam.is_passed ? '#10B981' : '#F43F5E'}`"
-                                />
+                                <ProgressBar :value="exam.best_score" :showValue="false" class="h-1.5" 
+                                    :style="`--p-progressbar-value-background: ${exam.is_passed ? '#10B981' : '#E11D48'}`" />
                             </div>
                         </div>
 
-                        <!-- ── FOOTER ACTIONS ── -->
-                        <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
-                            <!-- Reprendre -->
+                        <!-- ── ACTIONS ── -->
+                        <div class="p-6 bg-slate-50/50 border-t border-slate-50 flex gap-3">
                             <Link v-if="exam.active_attempt_uuid" :href="route('exams.take', exam.id)" class="flex-1">
-                                <Button label="Reprendre" icon="pi pi-play" class="w-full p-button-warning font-bold text-sm" />
+                                <Button label="Reprendre" icon="pi pi-spin pi-spinner" class="w-full !bg-amber-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest" />
                             </Link>
 
-                            <!-- Commencer -->
                             <Link v-else-if="exam.remaining_attempts !== 0 && !exam.is_passed" :href="route('exams.take', exam.id)" class="flex-1">
-                                <Button label="Commencer" icon="pi pi-external-link" class="w-full font-bold text-sm" />
+                                <Button label="Lancer l'examen" icon="pi pi-play-circle" class="w-full !bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest transition-all active:scale-95 shadow-lg shadow-red-600/20" />
                             </Link>
 
-                            <!-- Déjà passé -->
                             <div v-else class="flex-1">
-                                <Button
-                                    :label="exam.is_passed ? '✓ Certifié' : 'Limite atteinte'"
-                                    disabled
-                                    icon="pi pi-lock"
-                                    :class="[
-                                        'w-full text-sm',
-                                        exam.is_passed ? 'p-button-success p-button-outlined' : 'p-button-secondary opacity-60'
-                                    ]"
-                                />
+                                <Button :label="exam.is_passed ? 'Déjà Réussi' : 'Verrouillé'" icon="pi pi-lock" disabled 
+                                    class="w-full !bg-slate-200 !text-slate-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest opacity-60" />
                             </div>
 
-                            <!-- Voir résultats -->
-                            <Link v-if="exam.results && exam.results.length > 0" :href="route('exams.results', exam.results[0].id)">
-                                <Button icon="pi pi-chart-bar" severity="secondary" text
-                                        v-tooltip.top="'Voir mes résultats'"
-                                        class="text-sm" />
+                            <Link v-if="exam.results?.length" :href="route('exams.results', exam.results[0].id)">
+                                <Button icon="pi pi-chart-bar" text class="!text-slate-400 hover:!text-red-600" v-tooltip="'Mes performances'" />
                             </Link>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── ÉTAT VIDE ── -->
-                <div v-else class="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                    <div class="w-20 h-20 rounded-3xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
-                        <i class="pi pi-pencil text-4xl text-violet-300"></i>
+                <!-- ── EMPTY STATE ── -->
+                <div v-else class="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200 shadow-inner">
+                    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                        <i class="pi pi-file-edit text-slate-300 text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-black text-slate-700 italic mb-2">
-                        {{ search ? 'Aucun résultat trouvé' : 'Aucun examen disponible' }}
-                    </h3>
-                    <p class="text-slate-400 text-sm mb-6">
-                        {{ search ? `Aucun examen ne correspond à "${search}"` : 'Vous n\'êtes inscrit à aucun cours avec évaluation pour le moment.' }}
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight italic uppercase">Aucun examen</h3>
+                    <p class="text-slate-500 text-sm mt-2 max-w-sm mx-auto font-medium leading-relaxed">
+                        {{ search ? `Aucune évaluation ne correspond à "${search}".` : 'Inscrivez-vous à des formations pour débloquer vos examens.' }}
                     </p>
-                    <Link :href="route('student.my-courses')">
-                        <Button label="Voir mes formations" icon="pi pi-book" iconPos="left" class="p-button-primary font-bold" />
+                    <Link :href="route('student.my-courses')" class="mt-8 inline-block">
+                        <Button label="Voir mes formations" icon="pi pi-book" class="!bg-red-600 !border-none !rounded-xl !px-10 !py-4 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
                     </Link>
                 </div>
-
             </div>
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-:deep(.p-progressbar-value) { transition: width 0.5s ease; }
+:deep(.p-progressbar) { background: #F1F5F9; border-radius: 99px; }
+:deep(.p-progressbar-value) { transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 </style>

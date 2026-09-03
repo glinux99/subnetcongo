@@ -81,15 +81,15 @@ const contactSupport = () => {
         <!-- CONTENEUR PRINCIPAL -->
         <div class="max-w-2xl w-full relative z-10 animate-fade-in-up">
 
-            <div class="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200">
+            <div class="bg-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200">
 
                 <!-- HEADER CARTE -->
                 <div class="bg-rose-50 border-b border-rose-100 p-8 text-center relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9zdmc+')]"></div>
 
                     <div class="relative z-10">
-                        <div class="w-24 h-24 bg-white rounded-[2rem] mx-auto flex items-center justify-center shadow-xl shadow-rose-200/50 mb-6 border border-rose-100 relative group">
-                            <div class="absolute inset-0 bg-rose-500/10 rounded-[2rem] animate-ping"></div>
+                        <div class="w-24 h-24 bg-white rounded-[1rem] mx-auto flex items-center justify-center shadow-xl shadow-rose-200/50 mb-6 border border-rose-100 relative group">
+                            <div class="absolute inset-0 bg-rose-500/10 rounded-[1rem] animate-ping"></div>
                             <i class="pi pi-server text-4xl text-rose-500 group-hover:scale-110 transition-transform"></i>
                             <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center border-4 border-white shadow-sm">
                                 <i class="pi pi-times text-white text-xs font-black"></i>

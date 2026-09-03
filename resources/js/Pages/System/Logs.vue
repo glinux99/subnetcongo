@@ -228,7 +228,7 @@ onUnmounted(() => {
                     { label: 'Taux d\'Erreur', val: '0.45%', color: 'rose', icon: 'pi-exclamation-circle', trend: '-0.1%' },
                     { label: 'Temps de réponse', val: '112ms', color: 'emerald', icon: 'pi-bolt', trend: 'Optimal' },
                     { label: 'Tentatives Login Échouées', val: '42', color: 'amber', icon: 'pi-shield', trend: 'Attention' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
+                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
                         <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
@@ -244,7 +244,7 @@ onUnmounted(() => {
             <div class="grid grid-cols-12 gap-8 mb-10">
                 <!-- System Resource Graph -->
                 <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-[2.5rem] overflow-hidden h-full">
+                    <Card class="border-none shadow-sm rounded-[1.5rem] overflow-hidden h-full">
                         <template #title>
                             <div class="flex justify-between items-center px-4 pt-4">
                                 <span class="text-xl font-black text-slate-800 tracking-tight">Chronologie des Incidents</span>
@@ -261,7 +261,7 @@ onUnmounted(() => {
 
                 <!-- Resource Gauges -->
                 <div class="col-span-12 lg:col-span-4 space-y-6">
-                    <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white h-full relative overflow-hidden">
+                    <div class="bg-slate-900 rounded-[1.5rem] p-8 text-white h-full relative overflow-hidden">
                         <h3 class="text-xl font-bold mb-8 relative z-10">Statut de <br/><span class="text-emerald-400">l'Infrastructure</span></h3>
 
                         <div class="space-y-6 relative z-10">
@@ -296,7 +296,7 @@ onUnmounted(() => {
             </div>
 
             <!-- LOGS VIEWER -->
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-50 p-6">
+            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-6">
                 <TabView v-model:activeIndex="activeTab" class="custom-logs-tabs">
 
                     <!-- TAB 1: ALL LOGS -->
@@ -389,7 +389,7 @@ onUnmounted(() => {
                         <div class="pt-6 grid grid-cols-12 gap-8">
                             <!-- Security Map/Alerts -->
                             <div class="col-span-12 lg:col-span-4">
-                                <div class="bg-rose-50 border border-rose-100 p-8 rounded-[2rem] space-y-6">
+                                <div class="bg-rose-50 border border-rose-100 p-8 rounded-[1rem] space-y-6">
                                     <div class="flex items-center gap-4">
                                         <div class="p-4 bg-rose-500 rounded-2xl text-white">
                                             <i class="pi pi-bolt text-2xl"></i>

@@ -233,7 +233,7 @@ const activeCount = computed(() => {
 
             <!-- STATS CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card class="border-none shadow-sm rounded-2xl overflow-hidden">
+                <Card class="border-none shadow-sm rounded-1xl overflow-hidden">
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
@@ -251,7 +251,7 @@ const activeCount = computed(() => {
                     </template>
                 </Card>
 
-                <Card class="border-none shadow-sm rounded-2xl overflow-hidden">
+                <Card class="border-none shadow-sm rounded-1xl overflow-hidden">
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
@@ -269,7 +269,7 @@ const activeCount = computed(() => {
                     </template>
                 </Card>
 
-                <Card class="border-none shadow-sm rounded-2xl overflow-hidden">
+                <Card class="border-none shadow-sm rounded-1xl overflow-hidden">
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
@@ -287,7 +287,7 @@ const activeCount = computed(() => {
                     </template>
                 </Card>
 
-                <Card class="border-none shadow-sm rounded-2xl overflow-hidden">
+                <Card class="border-none shadow-sm rounded-1xl overflow-hidden">
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
@@ -309,7 +309,7 @@ const activeCount = computed(() => {
             <!-- ANALYTICS SECTION -->
             <div class="grid grid-cols-12 gap-8 mb-8">
                 <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-2xl h-full">
+                    <Card class="border-none shadow-sm rounded-1xl h-full">
                         <template #title>
                             <div class="flex justify-between items-center px-2">
                                 <span class="text-lg font-bold">Croissance des Revenus</span>
@@ -322,7 +322,7 @@ const activeCount = computed(() => {
                     </Card>
                 </div>
                 <div class="col-span-12 lg:col-span-4">
-                    <Card class="border-none shadow-sm rounded-2xl h-full">
+                    <Card class="border-none shadow-sm rounded-1xl h-full">
                         <template #title><span class="text-lg font-bold px-2">Répartition des Plans</span></template>
                         <template #content>
                             <div class="flex flex-col items-center">
@@ -343,7 +343,7 @@ const activeCount = computed(() => {
             </div>
 
             <!-- MAIN DATA TABLE -->
-            <Card class="border-none shadow-sm rounded-2xl overflow-hidden">
+            <Card class="border-none shadow-sm rounded-1xl overflow-hidden">
                 <template #content>
                     <DataTable
                         v-model:filters="filters"
@@ -482,7 +482,7 @@ const activeCount = computed(() => {
             <!-- MODAL: VIEW SUBSCRIPTION DETAIL -->
             <Dialog v-model:visible="displaySubDialog" :style="{width: '700px'}" header="Fiche Abonné" :modal="true" v-if="subDetail">
                 <div class="p-2">
-                    <div class="flex items-center gap-6 mb-8 p-4 bg-slate-50 rounded-2xl">
+                    <div class="flex items-center gap-6 mb-8 p-4 bg-slate-50 rounded-1xl">
                         <Avatar :image="subDetail.user.avatar" size="xlarge" shape="circle" class="border-4 border-white shadow-sm" />
                         <div class="flex-1">
                             <h2 class="text-2xl font-black text-slate-800">{{ subDetail.user.name }}</h2>

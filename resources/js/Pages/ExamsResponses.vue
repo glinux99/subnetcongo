@@ -636,7 +636,7 @@ onBeforeUnmount(() => {
 
             <!-- STEP 1 : ÉCRAN D'ACCUEIL & CONSIGNES -->
             <div v-if="currentStep === 'intro'" class="max-w-4xl mx-auto py-10 animate-fade-in">
-                <Card class="border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+                <Card class="border-none shadow-2xl rounded-[1.5rem] overflow-hidden">
                     <template #header>
                         <div class="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-900 flex flex-col items-center justify-center text-white relative overflow-hidden">
                             <div class="absolute inset-0 opacity-10 pattern-dots scale-150"></div>
@@ -695,7 +695,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <!-- UN SEUL BOUTON : avec gestion du chargement -->
-                            <Button label="Lancer l'Évaluation" icon="pi pi-bolt" size="large" class="w-full py-6 text-2xl font-black rounded-[2rem] shadow-2xl shadow-indigo-200" @click="handleStartClick" :loading="isStarting" />
+                            <Button label="Lancer l'Évaluation" icon="pi pi-bolt" size="large" class="w-full py-6 text-2xl font-black rounded-[1rem] shadow-2xl shadow-indigo-200" @click="handleStartClick" :loading="isStarting" />
                             <p class="text-center text-[11px] text-slate-400 mt-8 font-bold uppercase tracking-widest">Code de conduite Subnet Congo v12.4 s'applique</p>
                         </div>
                     </template>
@@ -709,7 +709,7 @@ onBeforeUnmount(() => {
                 <aside class="col-span-12 lg:col-span-3 space-y-6">
 
                     <!-- Webcam Feed -->
-                    <div class="bg-slate-900 rounded-[2rem] overflow-hidden aspect-video relative border-4 border-white shadow-xl shadow-slate-200 group">
+                    <div class="bg-slate-900 rounded-[1rem] overflow-hidden aspect-video relative border-4 border-white shadow-xl shadow-slate-200 group">
                         <video ref="webcamVideo" autoplay muted playsinline class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all"></video>
                         <div class="absolute top-4 left-4 flex items-center gap-2">
                             <span class="flex h-3 w-3 relative">
@@ -730,7 +730,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Sélecteur de Question -->
-                    <div class="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm sticky top-24">
+                    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm sticky top-24">
                         <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex justify-between">
                             Sélecteur <span>{{ currentIndex + 1 }}/{{ questions.length }}</span>
                         </h3>
@@ -842,7 +842,7 @@ onBeforeUnmount(() => {
                                     <div v-for="option in [true, false]" :key="option.toString()"
                                          @click="handleAnswerInput(currentQuestion.id, option)"
                                          :class="[
-                                            'group relative p-10 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 overflow-hidden',
+                                            'group relative p-10 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 overflow-hidden',
                                             answers[currentQuestion.id] === option ?
                                                 (option ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-100' : 'bg-rose-50 border-rose-500 shadow-xl shadow-rose-100') :
                                                 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50'
@@ -980,7 +980,7 @@ onBeforeUnmount(() => {
                                     <Textarea
                                         v-model="answers[currentQuestion.id]"
                                         rows="12"
-                                        class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[2.5rem] focus:border-indigo-500 transition-all bg-slate-50/50 shadow-inner"
+                                        class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[1.5rem] focus:border-indigo-500 transition-all bg-slate-50/50 shadow-inner"
                                         placeholder="Rédigez votre réponse de manière détaillée ici..."
                                         @input="handleAnswerInput(currentQuestion.id, $event.target.value)"
                                     />
@@ -1021,7 +1021,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- LOG DE SÉCURITÉ IA (VISIBLE SI INCIDENTS) -->
-                    <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[2.5rem] p-8 border-2 border-rose-100 shadow-lg animate-fade-in">
+                    <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[1.5rem] p-8 border-2 border-rose-100 shadow-lg animate-fade-in">
                         <div class="flex items-center justify-between mb-6">
                             <h5 class="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2">
                                 <i class="pi pi-shield"></i> Surveillance Intégrité Académique

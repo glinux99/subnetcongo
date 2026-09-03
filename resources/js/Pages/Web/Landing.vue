@@ -30,7 +30,9 @@ const props = defineProps({
     realizations: { type: Array, default: () => [] },
     recentPosts: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({}) },
-    instructors: { type: Array, default: () => [] } // NOUVEAU
+    adminStats: { type: Array, default: () => [] },
+    technologies: { type: Array, default: () => [] },
+    instructors: { type: Array, default: () => [] }
 });
 
 // ============================================================================
@@ -73,7 +75,21 @@ let progressTimer = null;
 const SLIDE_DURATION = 8000;
 
 const slides = computed(() => {
-    if (props.heroSlides && props.heroSlides.length) return props.heroSlides;
+    if (props.heroSlides && props.heroSlides.length) {
+        return props.heroSlides.map((s) => ({
+            badge: s.badge,
+            title: s.title,
+            highlight: s.highlight,
+            description: s.description,
+            bgImage: s.bg_image,
+            mainImage: s.main_image,
+            icon: s.icon,
+            cardTitle: s.card_title,
+            cardSub: s.card_sub,
+            ctaLabel: s.cta_label,
+            ctaUrl: s.cta_url,
+        }));
+    }
     return [
         { badge: 'Excellence & Innovation', title: 'Propulsez votre Carrière IT', highlight: 'Aujourd\'hui', description: 'Formez-vous aux technologies de demain avec des experts du réseau et de la cybersécurité.', bgImage: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=2069', mainImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070' },
         { badge: 'Infrastructures Critiques', title: 'Déployez des Réseaux', highlight: 'Performants', description: 'Solutions d\'ingénierie et d\'infogérance adaptées aux entreprises.', bgImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2034', mainImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070' }
@@ -147,12 +163,35 @@ const changeCategory = (cat) => {
 // ============================================================================
 const statsSection = ref(null);
 const statsVisible = ref(false);
-const displayStats = ref([
-    { current: 0, target: props.stats?.students ?? 3500, label: 'Apprenants formés', icon: 'pi-users' },
-    { current: 0, target: props.stats?.courses ?? 120, label: 'Cours & Modules', icon: 'pi-book' },
-    { current: 0, target: props.stats?.instructors ?? 25, label: 'Experts Certifiés', icon: 'pi-verified' },
-    { current: 0, target: props.stats?.success_rate ?? 98, label: 'Taux de réussite (%)', icon: 'pi-chart-line' },
-]);
+const displayStats = ref([]);
+
+const parseStatValue = (v) => {
+    if (v === null || v === undefined) return 0;
+    const cleaned = String(v).replace(/[^\d.]/g, '');
+    return parseInt(cleaned, 10) || 0;
+};
+
+const buildStats = () => {
+    if (props.adminStats && props.adminStats.length) {
+        return props.adminStats.map((s) => ({
+            current: 0,
+            target: parseStatValue(s.value),
+            label: s.label,
+            icon: s.icon || 'pi-chart-bar',
+            color: s.color || '#2563EB',
+        }));
+    }
+    return [
+        { current: 0, target: props.stats?.students ?? 3500, label: 'Apprenants formés', icon: 'pi-users', color: '#003399' },
+        { current: 0, target: props.stats?.courses ?? 120, label: 'Cours & Modules', icon: 'pi-book', color: '#EE1C25' },
+        { current: 0, target: props.stats?.instructors ?? 25, label: 'Experts Certifiés', icon: 'pi-verified', color: '#10B981' },
+        { current: 0, target: props.stats?.success_rate ?? 98, label: 'Taux de réussite (%)', icon: 'pi-chart-line', color: '#F59E0B' },
+    ];
+};
+
+displayStats.value = buildStats();
+
+watch(() => props.adminStats, () => { displayStats.value = buildStats(); });
 
 const animateStats = () => {
     displayStats.value.forEach((stat) => {
@@ -324,9 +363,35 @@ const schemaOrgData = computed(() => {
             <div class="max-w-[1600px] mx-auto w-full px-4 flex items-center gap-12">
                 <p class="hidden lg:block text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">Technologies maîtrisées</p>
                 <div class="flex space-x-12 animate-marquee whitespace-nowrap items-center flex-1">
-                    <div v-for="tech in ['Cisco', 'Fortinet', 'MikroTik', 'AWS', 'Microsoft Azure', 'Linux', 'VMware', 'Palo Alto']" :key="tech" class="flex items-center gap-2 text-slate-400 hover:text-slate-800 transition duration-300">
-                        <i class="pi pi-verified text-lg"></i>
-                        <span class="text-lg font-black font-sans tracking-tight">{{ tech }}</span>
+                    <div v-for="tech in (technologies.length ? technologies : [
+                        {name:'Cisco',icon:'pi-verified'},{name:'Fortinet',icon:'pi-verified'},{name:'AWS',icon:'pi-verified'},{name:'Linux',icon:'pi-verified'},{name:'VMware',icon:'pi-verified'},{name:'Microsoft',icon:'pi-verified'},{name:'Palo Alto',icon:'pi-verified'}
+                    ])" :key="tech.slug || tech.name" class="flex items-center gap-2 text-slate-400 hover:text-slate-800 transition duration-300" :style="{ color: tech.color || '' }">
+                        <i :class="['pi', tech.icon || 'pi-verified', 'text-lg']"></i>
+                        <span class="text-lg font-black font-sans tracking-tight">{{ tech.name }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================== -->
+        <!-- SECTION 2B : TECHNOLOGIES (Pilotées par l'admin via LandingEditor) -->
+        <!-- ================================================================== -->
+        <section v-if="technologies.length" class="py-20 bg-white relative overflow-hidden">
+            <div class="absolute -top-32 -right-32 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+            <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-red-100 rounded-full blur-3xl opacity-50"></div>
+            <div class="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
+                <div class="text-center mb-12 reveal-on-scroll">
+                    <p class="text-xs font-black text-red-500 uppercase tracking-[0.3em] mb-3">Stack technique</p>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter">Maîtrisez les technologies<br/>qui façonnent l'industrie</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div v-for="tech in technologies" :key="tech.id" class="reveal-on-scroll group bg-white p-6 rounded-2xl border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300">
+                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" :style="{ backgroundColor: (tech.color || '#003399') + '12', color: tech.color || '#003399' }">
+                            <i :class="['pi', tech.icon || 'pi-cog', 'text-2xl']"></i>
+                        </div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ tech.category }}</p>
+                        <h3 class="text-lg font-black text-slate-900 mb-2">{{ tech.name }}</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">{{ tech.description }}</p>
                     </div>
                 </div>
             </div>
@@ -337,9 +402,9 @@ const schemaOrgData = computed(() => {
         <!-- ================================================================== -->
         <section class="py-16 bg-[#F4F6F9]" id="stats-section" ref="statsSection">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                     <div v-for="(stat, idx) in displayStats" :key="idx" class="reveal-on-scroll bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center text-center group">
-                        <div class="w-14 h-14 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-[#2563EB] group-hover:text-white transition-colors">
+                        <div class="w-14 h-14 rounded-lg flex items-center justify-center mb-4 transition-colors" :style="{ backgroundColor: (stat.color || '#2563EB') + '15', color: stat.color || '#2563EB' }">
                             <i :class="['pi', stat.icon, 'text-xl']"></i>
                         </div>
                         <div class="flex items-baseline gap-1 text-[#0B1221]">
@@ -448,7 +513,7 @@ const schemaOrgData = computed(() => {
 
                     </div>
 
-                    <div v-else class="text-center py-24 bg-[#F4F6F9] rounded-[2rem] border border-dashed border-slate-300 w-full">
+                    <div v-else class="text-center py-24 bg-[#F4F6F9] rounded-[1rem] border border-dashed border-slate-300 w-full">
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                             <i class="pi pi-search text-3xl text-slate-300"></i>
                         </div>

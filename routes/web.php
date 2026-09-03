@@ -334,7 +334,23 @@ Route::prefix('curriculum')->group(function () {
     // 6. Configuration Système
     Route::prefix('system')->name('system.')->middleware(['has_role:superadmin,admin'])->group(function () {
         Route::resource('roles', App\Http\Controllers\System\RoleController::class);
-        Route::resource('api', App\Http\Controllers\System\ApiController::class);
+
+        // API Gateway : routes explicites (pas de resource car endpoints spécifiques)
+        Route::prefix('api')->name('api.')->controller(App\Http\Controllers\System\ApiController::class)->group(function () {
+            Route::get('/',                       'index')->name('index');
+            Route::get('/tokens',                 'tokens')->name('tokens');
+            Route::get('/logs',                   'logs')->name('logs');
+            Route::get('/settings',               'settings')->name('settings');
+            Route::get('/stats',                  'stats')->name('stats');
+            Route::get('/health',                 'health')->name('health');
+            Route::get('/export-logs',            'exportLogs')->name('export-logs');
+            Route::post('/tokens',                'storeToken')->name('tokens.store');
+            Route::delete('/tokens/{id}',         'revokeToken')->name('tokens.revoke');
+            Route::delete('/users/{userId}/tokens','revokeUserTokens')->name('tokens.flush');
+            Route::post('/tokens/prune',          'pruneTokens')->name('tokens.prune');
+            Route::post('/settings',              'updateSettings')->name('settings.update');
+        });
+
         Route::get('logs',[App\Http\Controllers\System\AuditLogController::class, 'index'])->name('logs');
         Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('settings');
         Route::get('payments', [App\Http\Controllers\System\PaymentGatewayController::class, 'index'])->name('payments');
@@ -355,6 +371,30 @@ Route::prefix('curriculum')->group(function () {
     Route::prefix('admin/legal')->name('admin.legal.')->middleware(['has_role:superadmin,admin,finance-manager'])->group(function () {
         Route::get('/',         [App\Http\Controllers\Admin\LegalInfoController::class, 'index'])->name('index');
         Route::post('/save',    [App\Http\Controllers\Admin\LegalInfoController::class, 'save'])->name('save');
+    });
+
+    // Admin : Éditeur de la Landing (slides / technologies / stats)
+    Route::prefix('admin/landing')->name('admin.landing.')->middleware(['has_role:superadmin,admin,marketing-manager,editor'])->group(function () {
+        Route::get('/',                       [App\Http\Controllers\Admin\LandingEditorController::class, 'index'])->name('index');
+
+        // Slides
+        Route::post('/slides',                [App\Http\Controllers\Admin\LandingEditorController::class, 'storeSlide'])->name('slides.store');
+        Route::put('/slides/{slide}',         [App\Http\Controllers\Admin\LandingEditorController::class, 'updateSlide'])->name('slides.update');
+        Route::delete('/slides/{slide}',      [App\Http\Controllers\Admin\LandingEditorController::class, 'destroySlide'])->name('slides.destroy');
+        Route::post('/slides/reorder',        [App\Http\Controllers\Admin\LandingEditorController::class, 'reorderSlides'])->name('slides.reorder');
+        Route::post('/slides/{slide}/toggle', [App\Http\Controllers\Admin\LandingEditorController::class, 'toggleSlide'])->name('slides.toggle');
+
+        // Technologies
+        Route::post('/technologies',                [App\Http\Controllers\Admin\LandingEditorController::class, 'storeTech'])->name('tech.store');
+        Route::put('/technologies/{tech}',          [App\Http\Controllers\Admin\LandingEditorController::class, 'updateTech'])->name('tech.update');
+        Route::delete('/technologies/{tech}',       [App\Http\Controllers\Admin\LandingEditorController::class, 'destroyTech'])->name('tech.destroy');
+        Route::post('/technologies/{tech}/toggle',  [App\Http\Controllers\Admin\LandingEditorController::class, 'toggleTech'])->name('tech.toggle');
+
+        // Stats
+        Route::post('/stats',                [App\Http\Controllers\Admin\LandingEditorController::class, 'storeStat'])->name('stats.store');
+        Route::put('/stats/{stat}',          [App\Http\Controllers\Admin\LandingEditorController::class, 'updateStat'])->name('stats.update');
+        Route::delete('/stats/{stat}',       [App\Http\Controllers\Admin\LandingEditorController::class, 'destroyStat'])->name('stats.destroy');
+        Route::post('/stats/{stat}/toggle',  [App\Http\Controllers\Admin\LandingEditorController::class, 'toggleStat'])->name('stats.toggle');
     });
 
 });

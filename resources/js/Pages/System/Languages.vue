@@ -177,7 +177,7 @@ onMounted(() => {
                     { label: 'Total Clés', val: '2,450', icon: 'pi-key', color: 'emerald' },
                     { label: 'Complétion Moyenne', val: '74%', icon: 'pi-chart-line', color: 'amber' },
                     { label: 'Langue par défaut', val: 'Français (FR)', icon: 'pi-star', color: 'rose' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
+                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
                         <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
@@ -195,7 +195,7 @@ onMounted(() => {
                 <div class="col-span-12 lg:col-span-9">
 
                     <!-- MODE: LISTE DES LANGUES -->
-                    <Card v-if="viewMode === 'list'" class="border-none shadow-sm rounded-[2.5rem] overflow-hidden">
+                    <Card v-if="viewMode === 'list'" class="border-none shadow-sm rounded-[1.5rem] overflow-hidden">
                         <template #content>
                             <DataTable
                                 v-model:filters="langFilters"
@@ -265,7 +265,7 @@ onMounted(() => {
                     </Card>
 
                     <!-- MODE: ÉDITEUR DE TRADUCTIONS -->
-                    <Card v-else class="border-none shadow-sm rounded-[2.5rem] overflow-hidden">
+                    <Card v-else class="border-none shadow-sm rounded-[1.5rem] overflow-hidden">
                         <template #content>
                             <DataTable
                                 v-model:filters="transFilters"
@@ -365,7 +365,7 @@ onMounted(() => {
                     </div>
 
                     <!-- HELP BOX -->
-                    <div class="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex flex-col gap-4">
+                    <div class="p-6 bg-amber-50 rounded-[1rem] border border-amber-100 flex flex-col gap-4">
                         <div class="flex items-center gap-3">
                             <i class="pi pi-lightbulb text-amber-500 text-2xl"></i>
                             <h4 class="font-black text-amber-900 text-lg">Le saviez-vous ?</h4>

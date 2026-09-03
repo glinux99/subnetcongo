@@ -221,7 +221,7 @@ onMounted(() => {
                     { label: 'Temps de réponse', val: avgResponseTime, icon: 'pi-clock', color: 'amber', trend: '-10 min' },
                     { label: 'Satisfaction (CSAT)', val: '4.8/5', icon: 'pi-star-fill', color: 'emerald', trend: '+0.2' },
                     { label: 'Taux de Résolution', val: '94%', icon: 'pi-check-circle', color: 'rose', trend: 'Stable' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
+                ]" :key="kpi.label" class="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
                         <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
@@ -237,7 +237,7 @@ onMounted(() => {
 
                 <!-- MAIN TICKETS TABLE -->
                 <div class="col-span-12 lg:col-span-9">
-                    <Card class="border-none shadow-sm rounded-[2.5rem] overflow-hidden">
+                    <Card class="border-none shadow-sm rounded-[1.5rem] overflow-hidden">
                         <template #content>
                             <DataTable
                                 v-model:filters="filters"
@@ -372,7 +372,7 @@ onMounted(() => {
                     </Card>
 
                     <!-- QUICK TIPS -->
-                    <div class="p-6 bg-indigo-50 rounded-[2rem] border border-indigo-100 space-y-4">
+                    <div class="p-6 bg-indigo-50 rounded-[1rem] border border-indigo-100 space-y-4">
                         <div class="flex items-center gap-3">
                             <i class="pi pi-lightbulb text-indigo-500 text-2xl"></i>
                             <h4 class="font-black text-indigo-900 text-lg">Conseils</h4>
@@ -390,7 +390,7 @@ onMounted(() => {
                 <div class="grid grid-cols-12 gap-8 pt-4 h-[70vh]">
 
                     <!-- Sidebar: Ticket Info -->
-                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-6 rounded-[2rem] border border-slate-100 overflow-y-auto">
+                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-6 rounded-[1rem] border border-slate-100 overflow-y-auto">
                         <div class="text-center mb-8">
                             <Avatar :image="currentTicket.user.avatar" size="xlarge" shape="circle" class="border-4 border-white shadow-xl mb-4" />
                             <h3 class="text-xl font-black text-slate-800">{{ currentTicket.user.name }}</h3>
