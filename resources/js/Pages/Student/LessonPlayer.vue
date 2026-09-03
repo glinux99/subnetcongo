@@ -6,6 +6,10 @@ import ProgressBar from 'primevue/progressbar';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -123,6 +127,54 @@ watch(() => props.lesson?.id, () => {
     percent.value = props.progress?.percent ?? 0;
     currentTime.value = 0;
 });
+
+// Q&A
+const showAskDialog = ref(false);
+const askForm = ref({ subject: '', body: '', priority: 'normal' });
+const askFiles = ref([]);
+const askSubmitting = ref(false);
+const askErrors = ref({});
+
+const onAskFileChange = (e) => {
+    const files = Array.from(e.target.files ?? []);
+    askFiles.value = [...askFiles.value, ...files].slice(0, 5);
+    e.target.value = '';
+};
+const removeAskFile = (i) => askFiles.value.splice(i, 1);
+const formatFileSize = (b) => b < 1024 ? `${b} o` : b < 1048576 ? `${(b / 1024).toFixed(1)} Ko` : `${(b / 1048576).toFixed(1)} Mo`;
+
+const openAsk = () => {
+    askForm.value = { subject: `Question sur : ${props.lesson?.title ?? ''}`, body: '', priority: 'normal' };
+    askFiles.value = [];
+    askErrors.value = {};
+    showAskDialog.value = true;
+};
+
+const submitAsk = () => {
+    if (!askForm.value.subject.trim() || !askForm.value.body.trim()) {
+        askErrors.value = { form: 'Le sujet et le message sont obligatoires.' };
+        return;
+    }
+    askSubmitting.value = true;
+    router.post(route('student.questions.store'), {
+        course_id: props.course.id,
+        lesson_id: props.lesson.id,
+        subject: askForm.value.subject,
+        body: askForm.value.body,
+        priority: askForm.value.priority,
+        attachments: askFiles.value,
+    }, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: (page) => {
+            showAskDialog.value = false;
+            askSubmitting.value = false;
+            askFiles.value = [];
+            toast.add({ severity: 'success', summary: 'Question envoyée', detail: page.props?.flash?.success || 'L\'instructeur répondra sous 24-48h.', life: 3500 });
+        },
+        onError: (e) => { askSubmitting.value = false; askErrors.value = e; },
+    });
+};
 </script>
 
 <template>
@@ -170,8 +222,9 @@ watch(() => props.lesson?.id, () => {
                         <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-start gap-4 mb-4 flex-wrap">
                                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">{{ lesson?.title }}</h1>
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <Button v-if="prevLesson" as="Link" :href="route('student.lesson-player', { course: course.id, lesson: prevLesson.id })" icon="pi pi-chevron-left" label="Précédent" outlined class="!rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
+                                    <Button label="Question" icon="pi pi-question-circle" outlined class="!border-amber-200 !text-amber-600 !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" @click="openAsk" />
                                     <Button :label="isCompleted ? 'Terminée' : 'Marquer comme terminé'" :icon="isCompleted ? 'pi pi-check-circle' : 'pi pi-check'" :disabled="isCompleted" @click="markComplete" :class="[isCompleted ? '!bg-emerald-100 !text-emerald-700 !border-emerald-200' : '!bg-emerald-500 !text-white !border-none', '!rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-2.5']" />
                                     <Button v-if="nextLesson" as="Link" :href="route('student.lesson-player', { course: course.id, lesson: nextLesson.id })" label="Suivant" icon="pi pi-chevron-right" iconPos="right" outlined class="!rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
                                 </div>
@@ -189,6 +242,26 @@ watch(() => props.lesson?.id, () => {
                     </div>
 
                     <aside class="lg:col-span-4 space-y-5">
+                        <!-- Q&A du cours -->
+                        <div class="bg-gradient-to-br from-amber-50 to-rose-50 rounded-3xl p-5 border border-amber-200 shadow-sm">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-rose-500 rounded-xl flex items-center justify-center text-white shadow-md">
+                                    <i class="pi pi-question-circle text-lg"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Besoin d'aide ?</h3>
+                                    <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Posez une question à l'instructeur</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 mb-3">L'instructeur vous répond généralement sous 24-48h.</p>
+                            <div class="flex gap-2">
+                                <Button label="Poser une question" icon="pi pi-plus" @click="openAsk" class="!flex-1 !bg-gradient-to-r !from-amber-500 !to-rose-500 !border-none !rounded-xl !text-white !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
+                                <Link :href="route('student.questions.index')" class="inline-flex">
+                                    <Button icon="pi pi-list" outlined class="!rounded-xl !text-amber-700 !border-amber-200" v-tooltip.bottom="'Mes questions'" />
+                                </Link>
+                            </div>
+                        </div>
+
                         <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
@@ -226,5 +299,51 @@ watch(() => props.lesson?.id, () => {
                 </div>
             </div>
         </div>
+
+        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question sur cette leçon" class="!rounded-3xl" :closable="!askSubmitting">
+            <div class="space-y-4 p-2">
+                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex items-center gap-3">
+                    <i class="pi pi-info-circle text-amber-500"></i>
+                    <p class="text-xs text-amber-700">Votre instructeur vous répondra généralement sous 24-48h.</p>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Sujet</label>
+                    <InputText v-model="askForm.subject" class="w-full !rounded-xl" />
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Message détaillé</label>
+                    <Textarea v-model="askForm.body" rows="5" class="w-full !rounded-xl" placeholder="Décrivez votre question ou votre blocage..." autoResize />
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Priorité</label>
+                    <Select v-model="askForm.priority" :options="[{label:'Faible', value:'low'},{label:'Normale', value:'normal'},{label:'Importante', value:'high'},{label:'Bloquante', value:'urgent'}]" optionLabel="label" optionValue="value" class="w-full" />
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Pièces jointes (capture, fichier… · 5 max · 10Mo)</label>
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-600 transition-colors">
+                        <i class="pi pi-paperclip text-slate-500"></i>
+                        <span class="font-bold">Ajouter un fichier</span>
+                        <input type="file" multiple class="hidden" @change="onAskFileChange" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.zip,.rar,.7z,.json,.xml" />
+                    </label>
+                    <div v-if="askFiles.length" class="mt-2 space-y-1.5">
+                        <div v-for="(f, i) in askFiles" :key="i" class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 text-xs">
+                            <i :class="f.type?.startsWith('image/') ? 'pi pi-image text-indigo-500' : 'pi pi-file text-indigo-500'"></i>
+                            <span class="flex-1 truncate font-bold text-slate-700">{{ f.name }}</span>
+                            <span class="text-[10px] font-mono text-slate-500">{{ formatFileSize(f.size) }}</span>
+                            <button type="button" @click="removeAskFile(i)" class="w-5 h-5 rounded-full bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">
+                                <i class="pi pi-times text-[9px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="askErrors.form || askErrors.subject || askErrors.body" class="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3">
+                    {{ askErrors.form || askErrors.subject || askErrors.body }}
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Annuler" outlined :disabled="askSubmitting" @click="showAskDialog = false" class="!rounded-xl" />
+                <Button :label="askSubmitting ? 'Envoi...' : 'Envoyer la question'" icon="pi pi-send" :loading="askSubmitting" @click="submitAsk" class="!bg-gradient-to-r !from-amber-500 !to-rose-500 !border-none !rounded-xl" />
+            </template>
+        </Dialog>
     </AppLayout>
 </template>

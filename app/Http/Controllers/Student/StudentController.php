@@ -295,6 +295,18 @@ class StudentController extends Controller
                 'last_accessed_at' => $progress->last_accessed_at?->toIso8601String(),
             ] : null,
             'courseResources' => $courseResources,
+            'recentQuestions' => \App\Models\LessonQuestion::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->latest()
+                ->take(3)
+                ->get(['id', 'subject', 'status', 'priority', 'created_at'])
+                ->map(fn ($q) => [
+                    'id' => $q->id,
+                    'subject' => $q->subject,
+                    'status' => $q->status,
+                    'priority' => $q->priority,
+                    'created_at' => $q->created_at?->toIso8601String(),
+                ])->values(),
         ]);
     }
 

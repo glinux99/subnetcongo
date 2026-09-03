@@ -14,7 +14,11 @@ const r = (name, params = null) => {
 };
 
 // Roles & permissions helpers ------------------------------------------
-const userRoles = computed(() => page.props.auth?.user?.roles?.map(r => r.name) ?? []);
+const userRoles = computed(() => {
+    const direct = page.props.auth?.user?.roles;
+    if (Array.isArray(direct) && direct.length) return direct.map(r => (typeof r === 'string' ? r : r.name));
+    return (page.props.auth?.roles ?? []).map(r => (typeof r === 'string' ? r : r.name));
+});
 const isSuper = computed(() => userRoles.value.includes('superadmin'));
 const isAdmin = computed(() => isSuper.value || userRoles.value.includes('admin'));
 const isInstructor = computed(() => userRoles.value.includes('instructor'));
@@ -38,6 +42,7 @@ const model = computed(() => {
                 items: [
                     { label: 'Mon tableau de bord', icon: 'pi pi-fw pi-home', to: r('dashboard') },
                     { label: 'Mes formations', icon: 'pi pi-fw pi-list', to: r('student.my-courses') },
+                    { label: 'Mes inscriptions', icon: 'pi pi-fw pi-id-card', to: r('student.my-enrollments'), badge: badges.value.enrollments_pending },
                     { label: 'Bibliothèque médias', icon: 'pi pi-fw pi-video', to: r('media-library.index') },
                     { label: 'Classes virtuelles', icon: 'pi pi-fw pi-desktop', to: r('live-sessions.index') },
                     { label: 'Marketplace', icon: 'pi pi-fw pi-shopping-bag', to: r('marketplace.index') },
@@ -57,6 +62,7 @@ const model = computed(() => {
                 icon: 'pi pi-fw pi-chart-line',
                 items: [
                     { label: 'Ma progression', icon: 'pi pi-fw pi-chart-line', to: r('student.progress') },
+                    { label: 'Mes questions', icon: 'pi pi-fw pi-question-circle', to: r('student.questions.index') },
                     { label: 'Notifications', icon: 'pi pi-fw pi-bell', to: r('notifications.index'), badge: badges.value.notifications },
                     { label: 'Forums & Discussions', icon: 'pi pi-fw pi-comments', to: r('social.forum.index') },
                     { label: 'Mes tickets support', icon: 'pi pi-fw pi-ticket', to: r('social.support.index') },
@@ -137,6 +143,7 @@ const model = computed(() => {
                 { label: 'Liste des Apprenants', icon: 'pi pi-fw pi-user', to: r('users.students.index') },
                 { label: 'Corps Enseignant', icon: 'pi pi-fw pi-user-tie', to: r('users.instructors.index') },
                 { label: 'Cohortes / Groupes', icon: 'pi pi-fw pi-tags', to: r('users.cohorts.index') },
+                { label: 'Demandes d\'inscription', icon: 'pi pi-fw pi-id-card', to: r('admin.enrollments.index'), badge: badges.value.enrollments_pending },
                 { label: 'Forums & Discussions', icon: 'pi pi-fw pi-comments', to: r('social.forum.index'), badge: badges.value.forum_pending },
                 { label: 'Support & Tickets', icon: 'pi pi-fw pi-ticket', to: r('social.support.index'), badge: badges.value.tickets_pending },
             ]
@@ -200,6 +207,7 @@ const model = computed(() => {
                             icon: 'pi pi-fw pi-check-circle',
                             items: [
                                 { label: 'Mes Examens', icon: 'pi pi-fw pi-pencil', to: r('exams.index') },
+                                { label: 'Questions apprenants', icon: 'pi pi-fw pi-inbox', to: r('instructor.questions.index'), badge: badges.value.questions_pending },
                                 { label: 'Mes Étudiants', icon: 'pi pi-fw pi-users', to: r('users.students.index') },
                             ]
                         },

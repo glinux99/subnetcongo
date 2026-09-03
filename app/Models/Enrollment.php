@@ -12,11 +12,20 @@ class Enrollment extends Model
 
     /**
      * Enrollment statuses.
+     * pending  : en attente d'approbation admin (cas d'un cours payant sans paiement)
+     * active   : étudiant inscrit, peut suivre
+     * suspended: inscription suspendue par l'admin (révocable, réactivable)
+     * completed: cours terminé
+     * cancelled: annulée par l'étudiant
+     * rejected : refusée par l'admin (cours non payé, pas autorisé, etc.)
+     * expired  : expiration naturelle (date dépassée)
      */
     public const STATUS_PENDING = 'pending';
     public const STATUS_ACTIVE = 'active';
+    public const STATUS_SUSPENDED = 'suspended';
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_REJECTED = 'rejected';
     public const STATUS_EXPIRED = 'expired';
 
     /**
@@ -27,6 +36,7 @@ class Enrollment extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'order_id',
         'progress_percent',
         'avg_score',
         'status',
@@ -36,6 +46,12 @@ class Enrollment extends Model
         'certificate_id',
         'grade',
         'notes',
+        'reviewed_by',
+        'reviewed_at',
+        'admin_notes',
+        'revoked_at',
+        'revoked_reason',
+        'last_lesson_id',
     ];
 
     /**
@@ -49,6 +65,8 @@ class Enrollment extends Model
         'enrolled_at' => 'datetime',
         'completed_at' => 'datetime',
         'expires_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'revoked_at' => 'datetime',
     ];
 
     /**
@@ -65,6 +83,21 @@ class Enrollment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function lastLesson()
+    {
+        return $this->belongsTo(Lesson::class, 'last_lesson_id');
     }
 
     /**
@@ -125,6 +158,26 @@ class Enrollment extends Model
                      ->where('status', self::STATUS_ACTIVE);
     }
 
+    public function scopePending($query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', self::STATUS_SUSPENDED);
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('status', self::STATUS_REJECTED);
+    }
+
+    public function scopeAccessible($query)
+    {
+        return $query->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_COMPLETED]);
+    }
+
     /**
      * Scope to get enrollments that are not completed.
      */
@@ -167,6 +220,52 @@ class Enrollment extends Model
             'status' => self::STATUS_COMPLETED,
             'completed_at' => now(),
         ]);
+    }
+
+    /**
+     * Statut lisible (FR).
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_PENDING => 'En attente',
+            self::STATUS_ACTIVE => 'Validée',
+            self::STATUS_SUSPENDED => 'Suspendue',
+            self::STATUS_COMPLETED => 'Terminée',
+            self::STATUS_CANCELLED => 'Annulée',
+            self::STATUS_REJECTED => 'Refusée',
+            self::STATUS_EXPIRED => 'Expirée',
+            default => $this->status ?? '—',
+        };
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_PENDING => 'amber',
+            self::STATUS_ACTIVE => 'emerald',
+            self::STATUS_SUSPENDED => 'rose',
+            self::STATUS_COMPLETED => 'indigo',
+            self::STATUS_CANCELLED => 'slate',
+            self::STATUS_REJECTED => 'rose',
+            self::STATUS_EXPIRED => 'slate',
+            default => 'slate',
+        };
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
+    }
+
+    public function isAccessible(): bool
+    {
+        return in_array($this->status, [self::STATUS_ACTIVE, self::STATUS_COMPLETED], true);
     }
 
     /**

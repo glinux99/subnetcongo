@@ -103,12 +103,18 @@ class MarketplaceController extends Controller
         ];
 
         $isEnrolled = false;
+        $enrollmentStatus = null;
         $inWishlist = false;
         if ($user = Auth::user()) {
-            $isEnrolled = Enrollment::where('user_id', $user->id)
-                ->where('course_id', $course->id)->exists();
+            $enrollment = Enrollment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->orderByDesc('id')
+                ->first();
+            $isEnrolled = $enrollment && in_array($enrollment->status, [Enrollment::STATUS_ACTIVE, Enrollment::STATUS_COMPLETED], true);
+            $enrollmentStatus = $enrollment?->status;
             $inWishlist = Wishlist::where('user_id', $user->id)
-                ->where('course_id', $course->id)->exists();
+                ->where('course_id', $course->id)
+                ->exists();
         }
 
         // Cours similaires (même catégorie)
@@ -122,6 +128,7 @@ class MarketplaceController extends Controller
             'course' => $course,
             'stats' => $stats,
             'isEnrolled' => $isEnrolled,
+            'enrollmentStatus' => $enrollmentStatus,
             'inWishlist' => $inWishlist,
             'related' => $related,
             'cartCount' => $this->getCartCount($request),
@@ -147,8 +154,107 @@ class MarketplaceController extends Controller
      */
     public function addToCart(Request $request, Course $course)
     {
+        $user = $request->user();
+        if ($user) {
+            // Empêcher d'ajouter un cours déjà en cours / validé
+            $existing = Enrollment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->whereIn('status', [
+                    Enrollment::STATUS_ACTIVE,
+                    Enrollment::STATUS_COMPLETED,
+                    Enrollment::STATUS_PENDING,
+                ])
+                ->exists();
+            if ($existing) {
+                return back()->with('error', 'Vous avez déjà une inscription en cours pour ce cours.');
+            }
+        }
         $this->upsertCartItem($request, $course);
         return back()->with('success', 'Cours ajouté au panier');
+    }
+
+    /**
+     * Inscription directe à un cours GRATUIT (active immédiatement).
+     */
+    public function enrollFree(Request $request, Course $course)
+    {
+        $user = $request->user();
+        abort_unless($user, 401, 'Vous devez être connecté pour vous inscrire.');
+
+        if ((float) ($course->effective_price ?? $course->price ?? 0) > 0) {
+            return back()->with('error', 'Ce cours n\'est pas gratuit. Ajoutez-le au panier pour passer commande.');
+        }
+
+        if ($user->isEnrolledIn($course)) {
+            return back()->with('error', 'Vous êtes déjà inscrit à ce cours.');
+        }
+        if ($user->hasPendingEnrollment($course)) {
+            return back()->with('error', 'Une demande d\'inscription est déjà en attente pour ce cours.');
+        }
+
+        DB::transaction(function () use ($user, $course) {
+            $user->enrollIn($course, [], Enrollment::STATUS_ACTIVE);
+            // Initialise la progression à 0
+            \App\Models\UserProgress::firstOrCreate(
+                ['user_id' => $user->id, 'course_id' => $course->id],
+                ['progress_percent' => 0, 'last_accessed_at' => now()]
+            );
+        });
+
+        try {
+            $user->notify(new CourseEnrolledNotification(
+                courseTitle: $course->title,
+                courseId: $course->id,
+                courseImage: $course->thumbnail_path,
+            ));
+        } catch (\Throwable $e) {
+            \Log::warning('Notify enroll free failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Inscription validée ! Bienvenue dans le cours « ' . $course->title . ' ».');
+    }
+
+    /**
+     * Demande d'inscription à un cours PAYANT (statut PENDING, attend validation admin
+     * après vérification du paiement).
+     */
+    public function requestEnrollment(Request $request, Course $course)
+    {
+        $user = $request->user();
+        abort_unless($user, 401, 'Vous devez être connecté.');
+
+        if ((float) ($course->effective_price ?? $course->price ?? 0) <= 0) {
+            return back()->with('error', 'Ce cours est gratuit, utilisez l\'inscription directe.');
+        }
+        if ($user->isEnrolledIn($course)) {
+            return back()->with('error', 'Vous êtes déjà inscrit à ce cours.');
+        }
+        if ($user->hasPendingEnrollment($course)) {
+            return back()->with('error', 'Une demande est déjà en attente pour ce cours.');
+        }
+
+        $data = $request->validate([
+            'payment_method' => 'required|in:orange_money,mpesa,airtel_money,stripe,paypal,on_site,manual',
+            'phone_number' => 'nullable|string|max:30',
+            'country_code' => 'nullable|string|max:5',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $enrollment = $user->requestEnrollment($course, [
+            'notes' => $data['note'] ?? null,
+        ]);
+
+        // Notifier les admins (best-effort)
+        try {
+            $admins = \App\Models\User::role(['admin', 'superadmin'])->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\NewEnrollmentRequestNotification($enrollment, $data));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Notify admin enrollment request failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Votre demande d\'inscription a été envoyée. L\'administrateur la traitera après vérification de votre paiement (' . strtoupper(str_replace('_', ' ', $data['payment_method'])) . ').');
     }
 
     /**
@@ -411,6 +517,7 @@ class MarketplaceController extends Controller
 
     /**
      * Inscrit l'utilisateur aux cours après paiement réussi.
+     * Lie la commande et bascule l'inscription en ACTIVE.
      */
     private function fulfillOrder(Order $order): void
     {
@@ -418,10 +525,23 @@ class MarketplaceController extends Controller
             foreach ($order->items()->with('course')->get() as $item) {
                 if (! $item->course) continue;
 
-                $enrollment = Enrollment::firstOrCreate(
-                    ['user_id' => $order->user_id, 'course_id' => $item->course_id],
-                    ['status' => Enrollment::STATUS_ACTIVE, 'progress_percent' => 0, 'enrolled_at' => now()],
-                );
+                $enrollment = Enrollment::where('user_id', $order->user_id)
+                    ->where('course_id', $item->course_id)
+                    ->first();
+
+                if (! $enrollment) {
+                    $enrollment = new Enrollment();
+                    $enrollment->user_id = $order->user_id;
+                    $enrollment->course_id = $item->course_id;
+                }
+
+                $enrollment->order_id = $order->id;
+                $enrollment->status = Enrollment::STATUS_ACTIVE;
+                $enrollment->progress_percent = $enrollment->progress_percent ?? 0;
+                $enrollment->enrolled_at = $enrollment->enrolled_at ?? now();
+                $enrollment->reviewed_at = now();
+                $enrollment->reviewed_by = $enrollment->reviewed_by ?? 1; // 1 = système
+                $enrollment->save();
 
                 // Notification
                 $order->user?->notify(new CourseEnrolledNotification(

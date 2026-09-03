@@ -117,6 +117,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/sales-reports', [SalesReportController::class, 'index'])->name('sales.reports');
 
+    // ===== ADMIN ENROLLMENTS (Demandes d'inscription, révocations) =====
+    Route::prefix('admin/enrollments')->name('admin.enrollments.')->middleware(['has_role:superadmin,admin,finance-manager'])->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'index'])->name('index');
+        Route::get('/{enrollment}', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'show'])->name('show');
+        Route::post('/{enrollment}/approve', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'approve'])->name('approve');
+        Route::post('/{enrollment}/reject', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'reject'])->name('reject');
+        Route::post('/{enrollment}/revoke', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'revoke'])->name('revoke');
+        Route::post('/{enrollment}/reactivate', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'reactivate'])->name('reactivate');
+        Route::delete('/{enrollment}', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'bulk'])->name('bulk');
+    });
+
     // 2. Gestion E-learning
     Route::middleware(['has_role:superadmin,admin,instructor,cohort-assistant'])->group(function () {
         Route::resource('courses', CourseController::class);
@@ -148,6 +160,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('live-sessions/{live_session}/report', [LiveSessionController::class, 'report'])->name('live-sessions.report');
         Route::get('live-sessions/{live_session}/join', [LiveSessionController::class, 'join'])->name('live-sessions.join');
         Route::resource('live-sessions', LiveSessionController::class);
+
+        // Q&A (instructeur répond aux questions)
+        Route::get('questions', [App\Http\Controllers\Instructor\InstructorQuestionController::class, 'index'])->name('instructor.questions.index');
+        Route::post('questions/{question}/answer', [App\Http\Controllers\Instructor\InstructorQuestionController::class, 'answer'])->name('instructor.questions.answer');
+        Route::post('questions/{question}/close', [App\Http\Controllers\Instructor\InstructorQuestionController::class, 'close'])->name('instructor.questions.close');
     });
 
     // 3. Administration du Site Web
@@ -200,6 +217,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/cart/{course}/remove', [App\Http\Controllers\MarketplaceController::class, 'removeFromCart'])->name('cart.remove');
         Route::post('/wishlist/{course}/toggle', [App\Http\Controllers\MarketplaceController::class, 'toggleWishlist'])->name('wishlist.toggle');
         Route::post('/course/{course}/review', [App\Http\Controllers\MarketplaceController::class, 'review'])->name('review');
+        // Inscription directe (gratuit) ou demande (payant) — 1 clic
+        Route::post('/course/{course}/enroll-free', [App\Http\Controllers\MarketplaceController::class, 'enrollFree'])->name('enroll-free');
+        Route::post('/course/{course}/request-enrollment', [App\Http\Controllers\MarketplaceController::class, 'requestEnrollment'])->name('request-enrollment');
         Route::get('/{course}', [App\Http\Controllers\MarketplaceController::class, 'show'])->name('show');
     });
 
@@ -223,6 +243,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/courses/{course}/lessons/{lesson}/complete', [App\Http\Controllers\Student\StudentController::class, 'completeLesson'])->name('lessons.complete');
         // Téléchargement de ressources
         Route::get('/resources/{resource}/download', [App\Http\Controllers\Student\StudentController::class, 'resourceDownload'])->name('resources.download');
+        // Q&A (questions sur un cours / une leçon)
+        Route::get('/questions', [App\Http\Controllers\Student\QuestionController::class, 'index'])->name('questions.index');
+        Route::post('/questions', [App\Http\Controllers\Student\QuestionController::class, 'store'])->name('questions.store');
+        Route::get('/questions/{question}', [App\Http\Controllers\Student\QuestionController::class, 'show'])->name('questions.show');
+        Route::post('/questions/{question}/reply', [App\Http\Controllers\Student\QuestionController::class, 'reply'])->name('questions.reply');
+        Route::post('/questions/{question}/resolve', [App\Http\Controllers\Student\QuestionController::class, 'resolve'])->name('questions.resolve');
+        // Mes inscriptions (validées, en attente, refusées, révoquées, terminées)
+        Route::get('/my-enrollments', [App\Http\Controllers\Student\StudentEnrollmentController::class, 'index'])->name('my-enrollments');
+        Route::post('/enrollments/{enrollment}/cancel', [App\Http\Controllers\Student\StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
     });
     // 4. Communauté & Étudiants
     Route::prefix('users')->name('users.')->group(function () {

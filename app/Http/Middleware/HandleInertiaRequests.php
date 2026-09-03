@@ -68,6 +68,13 @@ class HandleInertiaRequests extends Middleware
                 'cart' => \App\Models\CartItem::where(function ($q) use ($user) {
                     $q->where('user_id', $user->id)->orWhere('session_id', session()->getId());
                 })->count(),
+                'questions_pending' => \App\Models\LessonQuestion::where('status', 'open')
+                    ->when(! $user->hasAnyRole(['admin', 'superadmin']), function ($q) use ($user) {
+                        $q->whereIn('course_id', \App\Models\Course::where('instructor_id', $user->id)->orWhere('created_by', $user->id)->pluck('id'));
+                    })->count(),
+                'enrollments_pending' => $user->hasAnyRole(['admin', 'superadmin', 'finance-manager'])
+                    ? \App\Models\Enrollment::where('status', 'pending')->count()
+                    : 0,
             ] : [],
             'app_meta' => [
                 'name' => config('app.name'),

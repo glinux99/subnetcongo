@@ -243,9 +243,24 @@ class LiveSessionController extends Controller
     {
         $user = Auth::user();
 
-        // 3.1 Vérifier l'inscription au cours
-        if (!Enrollment::where('user_id', $user->id)->where('course_id', $liveSession->course_id)->exists()) {
-            return back()->with('error', "Vous devez être inscrit au cours '{$liveSession->course->title}' pour rejoindre.");
+        // 3.1 Vérifier l'inscription ACTIVE au cours (et pas seulement l'existence d'une ligne)
+        $enrolled = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $liveSession->course_id)
+            ->whereIn('status', [\App\Models\Enrollment::STATUS_ACTIVE, \App\Models\Enrollment::STATUS_COMPLETED])
+            ->exists();
+
+        if (! $enrolled) {
+            // Message plus précis si l'utilisateur a une demande en attente
+            $pending = Enrollment::where('user_id', $user->id)
+                ->where('course_id', $liveSession->course_id)
+                ->where('status', \App\Models\Enrollment::STATUS_PENDING)
+                ->exists();
+
+            $msg = $pending
+                ? "Votre inscription au cours '{$liveSession->course->title}' est en attente de validation par l'administrateur."
+                : "Vous devez être inscrit au cours '{$liveSession->course->title}' pour rejoindre cette session.";
+
+            return back()->with('error', $msg);
         }
 
         // 3.2 Enregistrer la présence initiale

@@ -229,40 +229,41 @@ class DashboardController extends Controller
         // ── Ressources (supports + vidéos) pour chaque cours inscrit ──
         $courseResources = $this->getCourseResourcesFor($enrolledCourseIds);
 
-        return Inertia::render('DashboardS', [
-            // Généralement déjà partagé globalement par HandleInertiaRequests ;
-            // explicité ici par sécurité pour ne jamais dépendre du middleware partagé.
-            'auth' => [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url ?? null,
-                ],
-            ],
-            'meta' => [
-                'greeting' => 'Bonjour',
-                'message' => $myCourses->count() > 0
-                    ? 'Continuez vos efforts, vous progressez bien !'
-                    : 'Bienvenue ! Trouvez votre premier cours pour commencer.',
-            ],
-            'stats' => [
-                'xp' => $xp,
-                'streak' => $this->calculateLoginStreak($user->id),
-                'certificates' => $certificatesCount,
-                'hours_studied' => round(UserProgress::where('user_id', $user->id)->sum('time_spent_seconds') / 3600, 1),
-                'rank' => $this->getStudentRank($user->id, $xp),
-                'completion_rate' => round($enrollments->avg('progress_percent') ?? 0, 1),
-            ],
-            'myCourses' => $myCourses,
-            'activityChart' => $this->getStudentActivityHistory($user->id),
-            'recentActivities' => $this->getStudentRecentTimeline($user->id),
-            'leaderboard' => $this->computeGamificationRankings(),
-            'certificates' => $certificates,
-            'upcomingExams' => $upcomingExams,
-            'inProgressExams' => $inProgressExams,
-            'courseResources' => $courseResources,
-        ]);
+       return Inertia::render('DashboardS', [
+    'auth' => [
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'profile_photo_url' => $user->profile_photo_url ?? null,
+            // AJOUT DES RÔLES ET PERMISSIONS ICI
+            'roles' => $user->getRoleNames(), // Retourne un tableau simple : ['student'] ou ['admin']
+            'permissions' => $user->getAllPermissions()->pluck('name'), // Retourne la liste des permissions
+        ],
+    ],
+    'meta' => [
+        'greeting' => 'Bonjour',
+        'message' => $myCourses->count() > 0
+            ? 'Continuez vos efforts, vous progressez bien !'
+            : 'Bienvenue ! Trouvez votre premier cours pour commencer.',
+    ],
+    'stats' => [
+        'xp' => $xp,
+        'streak' => $this->calculateLoginStreak($user->id),
+        'certificates' => $certificatesCount,
+        'hours_studied' => round(UserProgress::where('user_id', $user->id)->sum('time_spent_seconds') / 3600, 1),
+        'rank' => $this->getStudentRank($user->id, $xp),
+        'completion_rate' => round($enrollments->avg('progress_percent') ?? 0, 1),
+    ],
+    'myCourses' => $myCourses,
+    'activityChart' => $this->getStudentActivityHistory($user->id),
+    'recentActivities' => $this->getStudentRecentTimeline($user->id),
+    'leaderboard' => $this->computeGamificationRankings(),
+    'certificates' => $certificates,
+    'upcomingExams' => $upcomingExams,
+    'inProgressExams' => $inProgressExams,
+    'courseResources' => $courseResources,
+]);
     }
 
     /**

@@ -338,20 +338,53 @@ public function isAdmin(): bool
 }
 
 /**
- * Enroll user in a course.
+ * Enroll user in a course. Default status = ACTIVE.
+ * Pour un cours payant sans paiement validé, passer STATUS_PENDING.
  */
-public function enrollIn(Course $course, array $pivotData = []): Enrollment
+public function enrollIn(Course $course, array $pivotData = [], string $status = Enrollment::STATUS_ACTIVE): Enrollment
 {
     $enrollment = $this->enrollments()->firstOrCreate(
         ['course_id' => $course->id],
         array_merge([
-            'status' => Enrollment::STATUS_ACTIVE,
+            'status' => $status,
             'progress_percent' => 0,
-            'enrolled_at' => now(),
+            'enrolled_at' => $status === Enrollment::STATUS_ACTIVE ? now() : null,
+            'reviewed_at' => $status === Enrollment::STATUS_ACTIVE ? now() : null,
+            'reviewed_by' => $status === Enrollment::STATUS_ACTIVE ? $this->id : null,
         ], $pivotData)
     );
 
     return $enrollment;
+}
+
+/**
+ * Demande d'inscription (payante ou gratuite avec validation).
+ */
+public function requestEnrollment(Course $course, array $pivotData = []): Enrollment
+{
+    return $this->enrollIn($course, $pivotData, Enrollment::STATUS_PENDING);
+}
+
+/**
+ * Vérifier si l'utilisateur a déjà une demande d'inscription en attente.
+ */
+public function hasPendingEnrollment(Course $course): bool
+{
+    return $this->enrollments()
+        ->where('course_id', $course->id)
+        ->where('status', Enrollment::STATUS_PENDING)
+        ->exists();
+}
+
+/**
+ * Vérifier si l'utilisateur a déjà été rejeté pour ce cours.
+ */
+public function wasRejectedFor(Course $course): bool
+{
+    return $this->enrollments()
+        ->where('course_id', $course->id)
+        ->where('status', Enrollment::STATUS_REJECTED)
+        ->exists();
 }
 
 /**
