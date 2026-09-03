@@ -19,7 +19,8 @@ class NotificationController extends Controller
 
         $notifications = $user->notifications()
             ->latest('created_at')
-            ->paginate(15);
+            ->paginate(15)
+            ->through(fn ($n) => $this->flatten($n));
 
         $unreadCount = $user->unreadNotifications()->count();
 
@@ -27,6 +28,29 @@ class NotificationController extends Controller
             'notifications' => $notifications,
             'unreadCount' => $unreadCount,
         ]);
+    }
+
+    /**
+     * Aplatit le champ `data` JSON d'une notification en attributs top-level
+     * pour faciliter la lecture côté Vue.
+     */
+    private function flatten($n): array
+    {
+        $payload = is_string($n->data) ? json_decode($n->data, true) : (array) $n->data;
+        $payload = is_array($payload) ? $payload : [];
+        return [
+            'id'         => $n->id,
+            'type'       => $n->type,
+            'title'      => $payload['title']      ?? $payload['subject'] ?? 'Notification',
+            'message'    => $payload['message']    ?? $payload['body'] ?? '',
+            'icon'       => $payload['icon']       ?? 'pi-bell',
+            'severity'   => $payload['severity']   ?? 'info',
+            'url'        => $payload['url']        ?? null,
+            'payload'    => $payload,
+            'read_at'    => $n->read_at?->toIso8601String(),
+            'created_at' => $n->created_at->toIso8601String(),
+            'time_ago'   => $n->created_at->diffForHumans(),
+        ];
     }
 
     /**

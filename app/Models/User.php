@@ -64,9 +64,8 @@ class User extends Authenticatable implements HasMedia
     ];
 
     // Expose Spatie Media avatar URL as profile_photo_url in arrays/JSON
-    protected $appends = [
-        'profile_photo_url',
-    ];
+    // (pas dans $appends : on évite que SQL tente de sélectionner une colonne inexistante.
+    //  L'accesseur getProfilePhotoUrlAttribute() reste utilisable via ->profile_photo_url)
  public function logins(): HasMany
     {
         return $this->hasMany(Login::class);
@@ -139,13 +138,25 @@ public function profile()
 }
 
 /**
- * Accessor: profile_photo_url from Spatie Media (collection 'avatar').
+ * Accessor: profile_photo_url from DB column or Spatie Media.
  */
 public function getProfilePhotoUrlAttribute(): ?string
 {
+    // 1. Colonne profile_photo (chemin storage) ou avatar (URL)
+    if (! empty($this->attributes['profile_photo'])) {
+        return \Illuminate\Support\Facades\Storage::url($this->attributes['profile_photo']);
+    }
+    if (! empty($this->attributes['avatar'])) {
+        return $this->attributes['avatar'];
+    }
+    // 2. Spatie Media (collection 'avatar')
     if (method_exists($this, 'getLastMediaUrl')) {
-        $url = $this->getLastMediaUrl('avatar');
-        return $url ?: null;
+        try {
+            $url = $this->getLastMediaUrl('avatar');
+            if ($url) return $url;
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
     return null;
 }
@@ -279,6 +290,26 @@ public function reviews(): HasMany
 public function submissions(): HasMany
 {
     return $this->hasMany(Submission::class);
+}
+
+public function tickets(): HasMany
+{
+    return $this->hasMany(SupportTicket::class, 'user_id');
+}
+
+public function orders(): HasMany
+{
+    return $this->hasMany(Order::class, 'user_id');
+}
+
+public function cartItems(): HasMany
+{
+    return $this->hasMany(CartItem::class, 'user_id');
+}
+
+public function wishlist(): HasMany
+{
+    return $this->hasMany(Wishlist::class, 'user_id');
 }
 
 // ===================================================================

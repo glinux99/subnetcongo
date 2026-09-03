@@ -43,11 +43,11 @@ const toggleWishlist = () => {
 
 // ── Demande d'inscription (payant) ──────────────────────────────
 const showRequestDialog = ref(false);
-const reqForm = ref({ payment_method: 'orange_money', phone_number: '', country_code: 'CD', note: '' });
+const reqForm = ref({ payment_method: 'orange_money', phone_number: '', country_code: 'CD', transaction_id: '', note: '' });
 const reqSubmitting = ref(false);
 
 const openRequest = () => {
-    reqForm.value = { payment_method: 'orange_money', phone_number: '', country_code: 'CD', note: '' };
+    reqForm.value = { payment_method: 'orange_money', phone_number: '', country_code: 'CD', transaction_id: '', note: '' };
     showRequestDialog.value = true;
 };
 const submitRequest = () => {
@@ -291,6 +291,11 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Téléphone</label>
                         <InputText v-model="reqForm.phone_number" class="w-full !rounded-xl" placeholder="+243 000 000 000" />
                     </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">ID de la transaction (si déjà payé)</label>
+                    <InputText v-model="reqForm.transaction_id" class="w-full !rounded-xl" placeholder="Ex: OM-2026-1234567" />
+                    <p class="text-[10px] text-slate-400 mt-1">Renseignez ici l'identifiant fourni par votre opérateur mobile money après paiement.</p>
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Note (optionnel)</label>

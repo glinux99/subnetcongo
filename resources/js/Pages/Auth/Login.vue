@@ -1,5 +1,5 @@
 <script setup>
-import { useForm } from "@inertiajs/vue3";
+import { useForm, Link } from "@inertiajs/vue3";
 import { ref } from 'vue';
 
 const form = useForm({
@@ -30,7 +30,7 @@ const socialLogin = (provider) => {
                 <div class="w-full bg-surface-0 light:bg-surface-900 py-10 px-8 sm:px-12 shadow-lg" style="border-radius: 10px">
                     <div class="text-center mb-8">
                         <img src="/assets/media/logos/logo.png" alt="" class="h-16 inline-block mb-4">
-                        <div class="text-surface-900 light:text-surface-0 text-2xl font-medium mb-2">Bienvenu sur ESubnet Congo</div>
+                        <div class="text-surface-900 light:text-surface-0 text-2xl font-medium mb-2">Bienvenu sur E-SubnetCongo</div>
                         <span class="text-muted-color font-medium text-sm">Connectez-vous pour continuer</span>
                     </div>
 
@@ -62,6 +62,10 @@ const socialLogin = (provider) => {
                                 <Button @click="socialLogin('google')" :loading="socialLoginProcessing === 'google'" label="Se connecter avec Google" icon="pi pi-google" class="p-button-outlined p-button-secondary w-full"></Button>
                                 <Button @click="socialLogin('facebook')" :loading="socialLoginProcessing === 'facebook'" label="Se connecter avec Facebook" icon="pi pi-facebook" class="p-button-outlined p-button-secondary w-full"></Button>
                                 <Button @click="socialLogin('linkedin')" :loading="socialLoginProcessing === 'linkedin'" label="Se connecter avec LinkedIn" icon="pi pi-linkedin" class="p-button-outlined p-button-secondary w-full d-none"></Button>
+                                 <div class="text-center mt-6 text-sm text-muted-color">
+                                Vous n'avez pas de compte ?
+                                <Link :href="route('register')" class="text-primary font-semibold">S'identifier</Link>
+                            </div>
                             </div>
 
 

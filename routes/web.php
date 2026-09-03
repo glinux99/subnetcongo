@@ -47,7 +47,10 @@ Route::get('/', [WebSettingController::class, 'landing'])->name('landing');
 Route::get('/contact', [WebSettingController::class, 'contact'])->name('contact');
 Route::get('/about', [WebSettingController::class, 'about'])->name('about');
 Route::get('/academy', [WebSettingController::class, 'academy'])->name('academy');
+Route::get('/blog', [WebSettingController::class, 'blog'])->name('blog');
+Route::get('/testimonials', [WebSettingController::class, 'testimonials'])->name('testimonials');
 Route::get('realizations', [WebSettingController::class, 'realizations'])->name('realizations');
+Route::get('/page/{slug}', [WebSettingController::class, 'pages'])->name('web.page');
 Route::post('/contact', [WebSettingController::class, 'store'])->name('contact.store');
 
 // Route::get('/dashboard', function () {
@@ -174,6 +177,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('menus', App\Http\Controllers\Web\MenuController::class);
         Route::resource('testimonials', App\Http\Controllers\Web\TestimonialController::class);
         Route::get('theme', [App\Http\Controllers\Web\ThemeController::class, 'index'])->name('theme');
+        Route::post('theme/save', [App\Http\Controllers\Web\ThemeController::class, 'save'])->name('theme.save');
         Route::get('widgets',[App\Http\Controllers\Web\WidgetController::class, 'index'])->name('widgets');
         Route::get('seo',[App\Http\Controllers\Web\SeoController::class, 'index'])->name('seo');
         Route::get('assets',[App\Http\Controllers\Web\AssetController::class, 'index'])->name('assets');
@@ -252,6 +256,16 @@ Route::middleware(['auth'])->group(function () {
         // Mes inscriptions (validées, en attente, refusées, révoquées, terminées)
         Route::get('/my-enrollments', [App\Http\Controllers\Student\StudentEnrollmentController::class, 'index'])->name('my-enrollments');
         Route::post('/enrollments/{enrollment}/cancel', [App\Http\Controllers\Student\StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
+
+        // Support / Tickets
+        Route::prefix('support')->name('support.')->group(function () {
+            Route::get('/',                [App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('index');
+            Route::get('/create',          [App\Http\Controllers\Student\SupportTicketController::class, 'create'])->name('create');
+            Route::post('/',               [App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('store');
+            Route::get('/{id}',            [App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('show');
+            Route::post('/{id}/reply',     [App\Http\Controllers\Student\SupportTicketController::class, 'reply'])->name('reply');
+            Route::post('/{id}/close',     [App\Http\Controllers\Student\SupportTicketController::class, 'close'])->name('close');
+        });
     });
     // 4. Communauté & Étudiants
     Route::prefix('users')->name('users.')->group(function () {
@@ -326,6 +340,21 @@ Route::prefix('curriculum')->group(function () {
         Route::get('payments', [App\Http\Controllers\System\PaymentGatewayController::class, 'index'])->name('payments');
         Route::resource('languages', App\Http\Controllers\System\LanguageController::class);
         Route::get('server',[App\Http\Controllers\System\ServerMaintenanceController::class, 'index'])->name('server');
+    });
+
+    // Admin : Messages du formulaire de contact
+    Route::prefix('admin/messages')->name('admin.messages.')->middleware(['has_role:superadmin,admin,marketing-manager,support-agent'])->group(function () {
+        Route::get('/',              [App\Http\Controllers\Admin\ContactMessageController::class, 'index'])->name('index');
+        Route::get('/{id}',          [App\Http\Controllers\Admin\ContactMessageController::class, 'show'])->name('show');
+        Route::post('/{id}/reply',   [App\Http\Controllers\Admin\ContactMessageController::class, 'reply'])->name('reply');
+        Route::post('/{id}/archive', [App\Http\Controllers\Admin\ContactMessageController::class, 'archive'])->name('archive');
+        Route::delete('/{id}',       [App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])->name('destroy');
+    });
+
+    // Admin : Identité légale (RCCM / IFU / NIF)
+    Route::prefix('admin/legal')->name('admin.legal.')->middleware(['has_role:superadmin,admin,finance-manager'])->group(function () {
+        Route::get('/',         [App\Http\Controllers\Admin\LegalInfoController::class, 'index'])->name('index');
+        Route::post('/save',    [App\Http\Controllers\Admin\LegalInfoController::class, 'save'])->name('save');
     });
 
 });

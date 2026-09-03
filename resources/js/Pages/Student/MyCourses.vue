@@ -9,10 +9,13 @@ import Button from 'primevue/button';
 const props = defineProps({ courses: Array, meta: Object });
 const filter = ref('all');
 const filteredCourses = computed(() => {
-    if (filter.value === 'all') return props.courses ?? [];
-    if (filter.value === 'in_progress') return (props.courses ?? []).filter(c => c.progress < 100);
-    if (filter.value === 'completed') return (props.courses ?? []).filter(c => c.progress >= 100);
-    return props.courses ?? [];
+    const all = props.courses ?? [];
+    if (filter.value === 'all')         return all;
+    if (filter.value === 'in_progress') return all.filter(c => c.progress < 100);
+    if (filter.value === 'completed')   return all.filter(c => c.progress >= 100);
+    if (filter.value === 'soldee')      return all.filter(c => c.is_soldee);
+    if (filter.value === 'pending')     return all.filter(c => c.status === 'pending');
+    return all;
 });
 const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600' : (path.startsWith('http') ? path : `/storage/${path}`);
 const getLevelLabel = (level) => ({ beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé' }[level] || level);
@@ -44,11 +47,13 @@ const getProgressColor = (p) => p >= 80 ? '#10B981' : p >= 50 ? '#F59E0B' : '#8B
                             </p>
                         </div>
                     </div>
-                    <div class="flex gap-2 bg-slate-800/60 p-1 rounded-xl border border-slate-700/50">
+                    <div class="flex gap-2 bg-slate-800/60 p-1 rounded-xl border border-slate-700/50 flex-wrap">
                         <button v-for="f in [
                             { id: 'all', label: 'Tous' },
                             { id: 'in_progress', label: 'En cours' },
+                            { id: 'soldee', label: '✓ Soldés' },
                             { id: 'completed', label: 'Terminés' },
+                            { id: 'pending', label: 'En attente' },
                         ]" :key="f.id" @click="filter = f.id" :class="['px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-colors', filter === f.id ? 'bg-indigo-500 text-white' : 'text-slate-300 hover:bg-slate-700/50']">
                             {{ f.label }}
                         </button>
@@ -71,7 +76,11 @@ const getProgressColor = (p) => p >= 80 ? '#10B981' : p >= 50 ? '#F59E0B' : '#8B
                             <div class="relative h-40 overflow-hidden">
                                 <img :src="getImageUrl(course.image)" class="w-full h-full object-cover" />
                                 <Tag :value="getLevelLabel(course.level)" class="!absolute !top-3 !left-3 !bg-white/95 !text-indigo-700 !border-none !text-[10px] !font-black !uppercase !tracking-widest" />
-                                <Tag v-if="course.progress >= 100" value="Terminé" severity="success" class="!absolute !top-3 !right-3 !border-none !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <div class="!absolute !top-3 !right-3 flex flex-col gap-1 items-end">
+                                    <Tag v-if="course.is_soldee" value="✓ Soldé" severity="success" class="!border-none !text-[10px] !font-black !uppercase !tracking-widest" />
+                                    <Tag v-if="course.status === 'pending'" value="En attente" severity="warn" class="!border-none !text-[10px] !font-black !uppercase !tracking-widest" />
+                                    <Tag v-else-if="course.progress >= 100" value="Terminé" severity="info" class="!border-none !text-[10px] !font-black !uppercase !tracking-widest" />
+                                </div>
                             </div>
                             <div class="p-5 space-y-3">
                                 <h3 class="font-black text-slate-800 line-clamp-2 tracking-tight">{{ course.title }}</h3>

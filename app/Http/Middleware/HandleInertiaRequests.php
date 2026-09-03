@@ -82,6 +82,19 @@ class HandleInertiaRequests extends Middleware
                 'locale' => app()->getLocale(),
                 'version' => config('app.version', '1.0.0'),
             ],
+            'identity' => fn () => $this->sharedIdentity(),
+            'menuPages' => fn () => \App\Models\Page::where('is_published', true)
+                ->where('show_in_menu', true)
+                ->orderBy('menu_order')
+                ->get(['id', 'title', 'slug', 'template'])
+                ->map(fn ($p) => [
+                    'label' => $p->title,
+                    'url'   => '/' . ltrim($p->slug, '/'),
+                    'template' => $p->template,
+                ])->toArray(),
+            'legal' => fn () => \Illuminate\Support\Facades\Schema::hasTable('legal_info')
+                ? \App\Models\LegalInfo::first()
+                : null,
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [
                     'location' => $request->url(),
@@ -93,5 +106,39 @@ class HandleInertiaRequests extends Middleware
                 'filterType' => $filterType,
             ],
         ]);
+    }
+
+    /**
+     * Identité du site (clé/valeur → array), partagée globalement.
+     */
+    private function sharedIdentity(): array
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('web_settings')) {
+            return [
+                'site_name'        => config('app.name'),
+                'site_tagline'     => '',
+                'site_description' => '',
+                'contact_email'    => '',
+                'contact_phone'    => '',
+                'contact_address'  => '',
+                'footer_text'      => '© ' . date('Y') . ' ' . config('app.name') . '. Tous droits réservés.',
+            ];
+        }
+        $rows = \App\Models\WebSetting::all();
+        $merged = [];
+        foreach (['general' => ['site_name', 'site_tagline', 'site_description', 'site_logo', 'site_favicon', 'footer_text'],
+                  'contact' => ['contact_email', 'contact_phone', 'contact_address'],
+                  'social'  => ['social_facebook', 'social_twitter', 'social_linkedin', 'social_youtube', 'social_instagram']] as $group => $keys) {
+            $subset = $rows->where('group', $group);
+            foreach ($keys as $k) {
+                $r = $subset->firstWhere('key', $k);
+                $merged[$k] = $r?->value ?? '';
+            }
+        }
+        // Valeurs par défaut
+        $merged['site_name']    = $merged['site_name']    ?: config('app.name');
+        $merged['footer_text']  = $merged['footer_text']  ?: '© ' . date('Y') . ' ' . $merged['site_name'];
+        $merged['site_tagline'] = $merged['site_tagline'] ?: "Centre d'excellence numérique en RDC";
+        return $merged;
     }
 }

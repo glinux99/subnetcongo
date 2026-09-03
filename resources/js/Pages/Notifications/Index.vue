@@ -1,102 +1,231 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 
-const props = defineProps({ notifications: Object, unreadCount: Number });
+// Props avec valeurs par défaut sécurisées
+const props = defineProps({
+    notifications: { type: Object, default: () => ({ data: [] }) },
+    unreadCount: { type: Number, default: 0 }
+});
+
 const toast = useToast();
 const filter = ref('all');
+const isMarkingAll = ref(false);
+
+// Filtre calculé sécurisé
 const filtered = computed(() => {
-    if (!props.notifications?.data) return [];
-    if (filter.value === 'unread') return props.notifications.data.filter(n => !n.read_at);
-    if (filter.value === 'read') return props.notifications.data.filter(n => n.read_at);
-    return props.notifications.data;
+    const data = props.notifications?.data || [];
+    if (filter.value === 'unread') return data.filter(n => !n.read_at);
+    if (filter.value === 'read') return data.filter(n => n.read_at);
+    return data;
 });
+
+// Formate la date en français lisible
+const formatDate = (iso) => {
+    if (!iso) return '';
+    try {
+        const d = new Date(iso);
+        return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (_) { return iso; }
+};
+
+// Utilitaires de présentation
 const severityLabel = (s) => ({ success: 'Succès', warn: 'Attention', error: 'Erreur', info: 'Info' }[s] || 'Info');
-const markAsRead = async (n) => {
+
+const getIconStyles = (severity) => {
+    const styles = {
+        success: 'bg-emerald-100 text-emerald-600',
+        warn: 'bg-amber-100 text-amber-600',
+        error: 'bg-rose-100 text-rose-600',
+        info: 'bg-indigo-100 text-indigo-600'
+    };
+    return styles[severity] || styles.info;
+};
+
+// Actions (Utilisation de Inertia Router pour éviter les rechargements manuels et gérer le CSRF)
+const markAsRead = (n) => {
     if (!n.read_at) {
-        await fetch(route('notifications.read', n.id), { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
+        router.post(route('notifications.read', n.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (n.url) router.visit(n.url);
+            }
+        });
+    } else if (n.url) {
+        router.visit(n.url);
     }
-    if (n.url) router.visit(n.url);
 };
-const markAll = async () => {
-    await fetch(route('notifications.read-all'), { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
-    router.reload();
-    toast.add({ severity: 'success', summary: 'Toutes les notifications marquées comme lues', life: 2500 });
+
+const markAll = () => {
+    isMarkingAll.value = true;
+    router.post(route('notifications.read-all'), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.add({ severity: 'success', summary: 'Fait', detail: 'Toutes les notifications sont lues.', life: 3000 });
+        },
+        onFinish: () => { isMarkingAll.value = false; }
+    });
 };
-const remove = async (id) => {
-    await fetch(route('notifications.destroy', id), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' } });
-    router.reload();
+
+const remove = (id) => {
+    router.delete(route('notifications.destroy', id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.add({ severity: 'info', summary: 'Supprimée', detail: 'Notification effacée.', life: 2000 });
+        }
+    });
 };
 </script>
 
 <template>
+    <Head title="Notifications" />
+
     <AppLayout>
-        <div class="min-h-screen bg-slate-50 font-sans pb-10">
-            <div class="bg-slate-900 pt-8 pb-16 px-6 lg:px-12 relative overflow-hidden shadow-xl border-b border-slate-800">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="min-h-screen bg-slate-50/50 font-sans pb-12">
+            <!-- HEADER (Premium Dark Mode with Glow) -->
+            <div class="bg-[#0f172a] pt-10 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
+                <!-- Abstract Glow Effects -->
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none transition-transform duration-1000 animate-pulse"></div>
                 <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[900px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 border border-white/10">
-                            <i class="pi pi-bell text-white text-3xl"></i>
+                <!-- Subtle Texture -->
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+
+                <div class="max-w-[1000px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="flex items-center gap-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.3)] border border-white/10 shrink-0">
+                            <i class="pi pi-bell text-white text-2xl"></i>
                         </div>
                         <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
+                            <div class="flex items-center gap-3 mb-1.5 flex-wrap">
                                 <h1 class="text-3xl font-black text-white tracking-tight">Notifications</h1>
-                                <Tag :value="`${unreadCount ?? 0} non lues`" class="!bg-rose-500/20 !text-rose-300 !border !border-rose-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <Tag v-if="unreadCount > 0" :value="`${unreadCount} non lues`" class="!bg-rose-500/20 !text-rose-400 !border !border-rose-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                             </div>
-                            <p class="text-slate-400 font-medium text-sm">Centre de notifications temps réel.</p>
+                            <p class="text-slate-400 font-medium text-sm">Restez informé de l'activité de votre compte.</p>
                         </div>
                     </div>
-                    <Button v-if="unreadCount > 0" label="Tout marquer comme lu" icon="pi pi-check" @click="markAll" class="!bg-indigo-500 hover:!bg-indigo-400 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 !px-5" />
+
+                    <Button
+                        v-if="unreadCount > 0"
+                        label="Tout marquer comme lu"
+                        icon="pi pi-check-circle"
+                        :loading="isMarkingAll"
+                        @click="markAll"
+                        class="!bg-white/10 hover:!bg-white/20 !text-white !border-white/10 !backdrop-blur-md !rounded-xl !font-bold !text-xs !py-3 !px-5 transition-all shadow-lg"
+                    />
                 </div>
             </div>
 
-            <div class="max-w-[900px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
-                    <div class="flex gap-2 mb-6 bg-slate-50 p-1 rounded-xl border border-slate-100 w-fit">
-                        <button v-for="f in [{ id: 'all', label: 'Toutes' }, { id: 'unread', label: 'Non lues' }, { id: 'read', label: 'Lues' }]" :key="f.id" @click="filter = f.id" :class="['px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-colors', filter === f.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100']">
-                            {{ f.label }}
+            <!-- MAIN CONTENT (Overlapping Header) -->
+            <div class="max-w-[1000px] mx-auto px-4 lg:px-6 -mt-12 relative z-20">
+                <div class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-10 min-h-[500px]">
+
+                    <!-- Segmented Control Filter -->
+                    <div class="flex gap-1 mb-8 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200 w-full sm:w-fit mx-auto sm:mx-0 overflow-x-auto hide-scrollbar">
+                        <button
+                            v-for="f in [{ id: 'all', label: 'Toutes' }, { id: 'unread', label: 'Non lues' }, { id: 'read', label: 'Lues' }]"
+                            :key="f.id"
+                            @click="filter = f.id"
+                            class="relative flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 z-10"
+                            :class="filter === f.id ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'"
+                        >
+                            <span class="relative z-10">{{ f.label }}</span>
+                            <div v-if="filter === f.id" class="absolute inset-0 bg-white rounded-lg shadow-sm z-0"></div>
                         </button>
                     </div>
 
-                    <div v-if="filtered.length === 0" class="text-center py-16">
-                        <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <i class="pi pi-inbox text-3xl text-slate-300"></i>
+                    <!-- EMPTY STATE -->
+                    <div v-if="filtered.length === 0" class="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+                        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100 shadow-sm">
+                            <i class="pi pi-check-circle text-4xl text-emerald-400"></i>
                         </div>
-                        <h3 class="text-xl font-black text-slate-700">Aucune notification</h3>
+                        <h3 class="text-xl font-black text-slate-800 mb-2">Vous êtes à jour !</h3>
+                        <p class="text-slate-500 max-w-sm">Aucune notification à afficher pour ce filtre.</p>
                     </div>
 
-                    <div v-else class="space-y-2">
-                        <div v-for="n in filtered" :key="n.id" :class="['bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all flex items-start gap-4 cursor-pointer', !n.read_at && '!border-indigo-200 !bg-indigo-50/30']" @click="markAsRead(n)">
-                            <div :class="['w-12 h-12 rounded-2xl flex items-center justify-center shrink-0', n.severity === 'success' ? 'bg-emerald-100 text-emerald-600' : n.severity === 'warn' ? 'bg-amber-100 text-amber-600' : n.severity === 'error' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600']">
-                                <i :class="`pi ${n.icon} text-lg`"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-start justify-between gap-2">
-                                    <p class="font-black text-slate-800 text-sm tracking-tight">{{ n.title }}</p>
-                                    <div class="flex items-center gap-2">
-                                        <Tag :value="severityLabel(n.severity)" :severity="n.severity === 'warn' ? 'warning' : n.severity" class="!text-[9px] !font-black !uppercase !tracking-widest" />
-                                        <button @click.stop="remove(n.id)" class="text-slate-300 hover:text-rose-500 transition-colors">
-                                            <i class="pi pi-times text-xs"></i>
-                                        </button>
-                                    </div>
+                    <!-- NOTIFICATIONS LIST (Animated) -->
+                    <div v-else class="space-y-3">
+                        <TransitionGroup name="list">
+                            <div
+                                v-for="n in filtered"
+                                :key="n.id"
+                                @click="markAsRead(n)"
+                                class="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex items-start gap-4 cursor-pointer relative overflow-hidden"
+                                :class="{ '!bg-indigo-50/40 !border-indigo-100': !n.read_at }"
+                            >
+                                <!-- Indicateur Non-Lu (Ligne gauche) -->
+                                <div v-if="!n.read_at" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+
+                                <!-- Icône de sévérité -->
+                                <div :class="['w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-white', getIconStyles(n.severity)]">
+                                    <i :class="`pi ${n.icon || 'pi-bell'} text-xl`"></i>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1 font-medium">{{ n.message }}</p>
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">
-                                    <i class="pi pi-clock text-indigo-400"></i> {{ n.created_at }}
-                                    <span v-if="!n.read_at" class="ml-2 inline-block px-2 py-0.5 bg-indigo-600 text-white text-[9px] rounded-full">NOUVEAU</span>
-                                </p>
+
+                                <div class="flex-1 min-w-0 pr-8">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-bold text-slate-900 text-sm tracking-tight" :class="{'text-indigo-900': !n.read_at}">{{ n.title }}</p>
+                                            <Tag :value="severityLabel(n.severity)" :severity="n.severity === 'warn' ? 'warning' : n.severity" class="!text-[9px] !font-black !uppercase !tracking-widest hidden sm:inline-flex" />
+                                        </div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 flex items-center gap-1.5" :title="formatDate(n.created_at)">
+                                            <i class="pi pi-clock text-slate-300"></i> {{ n.time_ago || formatDate(n.created_at) }}
+                                        </p>
+                                    </div>
+                                    <p v-if="n.message" class="text-sm text-slate-500 leading-relaxed">{{ n.message }}</p>
+                                    <p v-else class="text-sm text-slate-400 italic leading-relaxed">Aucun contenu textuel — voir les détails.</p>
+                                </div>
+
+                                <!-- Action Supprimer (Apparaît au hover) -->
+                                <button
+                                    @click.stop="remove(n.id)"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-rose-100 hover:text-rose-500 transition-all focus:opacity-100"
+                                    title="Supprimer la notification"
+                                >
+                                    <i class="pi pi-trash text-sm"></i>
+                                </button>
                             </div>
-                        </div>
+                        </TransitionGroup>
                     </div>
+
                 </div>
             </div>
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+/* Animations pour la liste */
+.list-enter-active,
+.list-leave-active {
+    transition: all 0.4s ease;
+}
+.list-enter-from {
+    opacity: 0;
+    transform: translateX(-30px);
+}
+.list-leave-to {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+/* Fondu classique */
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cacher la scrollbar sur les filtres mobiles */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>

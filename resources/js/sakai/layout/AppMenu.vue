@@ -146,6 +146,7 @@ const model = computed(() => {
                 { label: 'Demandes d\'inscription', icon: 'pi pi-fw pi-id-card', to: r('admin.enrollments.index'), badge: badges.value.enrollments_pending },
                 { label: 'Forums & Discussions', icon: 'pi pi-fw pi-comments', to: r('social.forum.index'), badge: badges.value.forum_pending },
                 { label: 'Support & Tickets', icon: 'pi pi-fw pi-ticket', to: r('social.support.index'), badge: badges.value.tickets_pending },
+                { label: 'Messages du site web', icon: 'pi pi-fw pi-inbox', to: r('admin.messages.index') },
             ]
         },
         {
@@ -156,6 +157,7 @@ const model = computed(() => {
                 { label: 'Coupons de réduction', icon: 'pi pi-fw pi-percentage', to: r('marketing.coupons.index') },
                 { label: 'Affiliation', icon: 'pi pi-fw pi-share-alt', to: r('marketing.affiliates.index') },
                 { label: 'Abonnements & Plans', icon: 'pi pi-fw pi-credit-card', to: r('billing.subscriptions.index') },
+                { label: 'Identité légale (RCCM/IFU)', icon: 'pi pi-fw pi-id-card', to: r('admin.legal.index') },
                 { label: 'Marketplace (vue catalogue)', icon: 'pi pi-fw pi-shopping-bag', to: r('marketplace.index') },
             ]
         },

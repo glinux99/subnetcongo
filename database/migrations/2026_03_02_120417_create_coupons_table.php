@@ -16,6 +16,7 @@ return new class extends Migration
         $table->string('code')->unique();
         $table->string('discount_type'); // percentage, fixed_amount
         $table->decimal('discount_value', 8, 2);
+        $table->string('status')->nullable();
         $table->integer('usage_limit')->nullable();
         $table->integer('used_count')->default(0);
         $table->timestamp('expires_at')->nullable();

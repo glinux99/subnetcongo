@@ -33,7 +33,7 @@ return new class extends Migration
             $table->foreignId('instructor_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            
+            $table ->timestamp('published_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

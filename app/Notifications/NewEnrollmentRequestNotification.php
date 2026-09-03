@@ -23,16 +23,40 @@ class NewEnrollmentRequestNotification extends Notification implements ShouldBro
 
     public function toArray($notifiable): array
     {
+        $studentName = $this->enrollment->user?->name ?? 'Un apprenant';
+        $courseTitle = $this->enrollment->course?->title ?? 'un cours';
+        $method = $this->meta['payment_method'] ?? null;
+        $txId   = $this->meta['transaction_id'] ?? null;
+        $phone  = $this->meta['phone_number'] ?? null;
+        $note   = $this->meta['note'] ?? null;
+
+        $methodLabel = $method ? strtoupper(str_replace('_', ' ', $method)) : null;
+
+        $lines = [];
+        $lines[] = "📩 Nouvelle demande d'inscription";
+        $lines[] = "{$studentName} souhaite rejoindre « {$courseTitle} »";
+        if ($methodLabel) $lines[] = "Méthode annoncée : {$methodLabel}";
+        if ($phone)       $lines[] = "Téléphone déclaré : {$phone}";
+        if ($txId)        $lines[] = "ID transaction fournie : {$txId}";
+        if ($note)        $lines[] = "Note : « {$note} »";
+        $lines[] = "— Statut actuel : en attente de votre validation.";
+
         return [
-            'type' => 'enrollment_request',
-            'enrollment_id' => $this->enrollment->id,
-            'course_id' => $this->enrollment->course_id,
-            'course_title' => $this->enrollment->course?->title,
-            'student_id' => $this->enrollment->user_id,
-            'student_name' => $this->enrollment->user?->name,
-            'payment_method' => $this->meta['payment_method'] ?? null,
-            'phone_number' => $this->meta['phone_number'] ?? null,
-            'message' => 'Nouvelle demande d\'inscription de ' . ($this->enrollment->user?->name ?? '—') . ' pour le cours « ' . ($this->enrollment->course?->title ?? '—') . ' ».',
+            'type'            => 'enrollment_request',
+            'severity'        => 'info',
+            'icon'            => 'pi-user-plus',
+            'enrollment_id'   => $this->enrollment->id,
+            'course_id'       => $this->enrollment->course_id,
+            'course_title'    => $courseTitle,
+            'student_id'      => $this->enrollment->user_id,
+            'student_name'    => $studentName,
+            'payment_method'  => $method,
+            'phone_number'    => $phone,
+            'transaction_id'  => $txId,
+            'note'            => $note,
+            'url'             => route('admin.enrollments.show', $this->enrollment->id, false),
+            'title'           => "Demande d'inscription à valider",
+            'message'         => implode("\n", $lines),
         ];
     }
 

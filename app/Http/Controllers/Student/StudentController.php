@@ -52,6 +52,7 @@ class StudentController extends Controller
                 $q->with(['instructor:id,name', 'category:id,name'])
                     ->withCount(['lessons', 'resources']);
             },
+            'order:id,status,amount,paid_at',
         ])
             ->where('user_id', $user->id)
             ->orderByDesc('updated_at')
@@ -67,6 +68,10 @@ class StudentController extends Controller
                     ->count()
                 : 0;
 
+            // "Soldé" = inscription ACTIVE ou COMPLETED ET (pas de order_id OU order.status = paid)
+            $orderPaid = $en->order ? $en->order->status === 'paid' : true;
+            $isSoldee = in_array($en->status, ['active', 'completed'], true) && $orderPaid;
+
             return [
                 'id' => $en->course_id,
                 'title' => $course?->title ?? 'Cours retiré',
@@ -79,6 +84,9 @@ class StudentController extends Controller
                 'lessons_total' => $lessonsTotal,
                 'resources_count' => $course?->resources_count ?? 0,
                 'status' => $en->status,
+                'is_soldee' => $isSoldee,
+                'order_id' => $en->order_id,
+                'order_paid_at' => $en->order?->paid_at?->toIso8601String(),
                 'enrolled_at' => $en->enrolled_at?->toIso8601String(),
                 'last_accessed' => $en->updated_at?->diffForHumans(),
                 'next_lesson' => $this->getNextLessonSummary($en->course_id, $user->id),
@@ -91,6 +99,8 @@ class StudentController extends Controller
                 'total' => $courses->count(),
                 'completed' => $courses->where('progress', 100)->count(),
                 'in_progress' => $courses->where('progress', '<', 100)->count(),
+                'soldee' => $courses->where('is_soldee', true)->count(),
+                'pending' => $courses->where('status', 'pending')->count(),
             ],
         ]);
     }

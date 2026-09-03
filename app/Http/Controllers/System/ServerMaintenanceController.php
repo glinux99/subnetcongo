@@ -66,21 +66,27 @@ class ServerMaintenanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:backup_db,clear_cache,update_system,restart_queue,custom_command',
-            'command' => 'required_if:type,custom_command|string|nullable',
-            'scheduled_at' => 'required|date|after:now',
+            'type' => 'required|in:security,performance,update,backup,database,other',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'notify_users' => 'boolean',
+            'severity' => 'required|in:low,medium,high,critical',
+            'scheduled_at' => 'required|date',
+            'duration_minutes' => 'nullable|integer|min:1',
+            'affected_services' => 'nullable|array',
+            'downtime_estimate' => 'nullable|string|max:50',
         ]);
 
         $task = ServerMaintenance::create([
             'type' => $request->input('type'),
-            'command' => $this->resolveCommand($request->input('type'), $request->input('command')),
-            'scheduled_at' => Carbon::parse($request->input('scheduled_at')),
+            'title' => $request->input('title'),
             'description' => $request->input('description'),
+            'severity' => $request->input('severity', 'medium'),
+            'scheduled_at' => Carbon::parse($request->input('scheduled_at')),
+            'duration_minutes' => $request->input('duration_minutes'),
+            'affected_services' => $request->input('affected_services', []),
+            'downtime_estimate' => $request->input('downtime_estimate'),
             'status' => 'pending',
             'created_by' => auth()->id(),
-            'notify_users' => $request->boolean('notify_users'),
         ]);
 
         AuditLog::create([
@@ -295,56 +301,58 @@ class ServerMaintenanceController extends Controller
      */
     private function getSystemHealth()
     {
-        $diskTotal = disk_total_space('/');
-        $diskFree = disk_free_space('/');
-        $diskUsed = $diskTotal - $diskFree;
+        $diskTotal = @disk_total_space('/');
+        $diskFree = @disk_free_space('/');
+        $diskUsed = $diskTotal ? ($diskTotal - $diskFree) : 0;
 
-        $load = sys_getloadavg();
+        // sys_getloadavg() n'existe que sur Linux. Sur Windows on retourne [0,0,0].
+        $load = function_exists('sys_getloadavg') ? sys_getloadavg() : [0, 0, 0];
 
-        // Estimation RAM (Linux seulement, fallback pour Windows/Mac dev)
+        // RAM (Linux /proc/meminfo, fallback Windows via wmic / GlobalMemoryStatus)
         $memory = ['total' => 0, 'free' => 0, 'used' => 0, 'percent' => 0];
         if (false !== ($memInfo = @file_get_contents("/proc/meminfo"))) {
             preg_match("/MemTotal:\s+(\d+)/", $memInfo, $total);
             preg_match("/MemFree:\s+(\d+)/", $memInfo, $free);
-            $memory['total'] = $total[1] * 1024;
-            $memory['free'] = $free[1] * 1024;
-            $memory['used'] = $memory['total'] - $memory['free'];
-            $memory['percent'] = round(($memory['used'] / $memory['total']) * 100, 1);
+            $memory['total'] = (int) ($total[1] ?? 0) * 1024;
+            $memory['free']  = (int) ($free[1] ?? 0) * 1024;
+            $memory['used']  = $memory['total'] - $memory['free'];
+            $memory['percent'] = $memory['total'] > 0 ? round(($memory['used'] / $memory['total']) * 100, 1) : 0;
+        } elseif (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $cmd = 'wmic OS get FreePhysicalMemory,TotalVisibleMemorySize /Value 2>nul';
+            $output = @shell_exec($cmd);
+            if ($output) {
+                preg_match('/TotalVisibleMemorySize=(\d+)/', $output, $t);
+                preg_match('/FreePhysicalMemory=(\d+)/', $output, $f);
+                $memory['total'] = (int) ($t[1] ?? 0) * 1024;
+                $memory['free']  = (int) ($f[1] ?? 0) * 1024;
+                $memory['used']  = $memory['total'] - $memory['free'];
+                $memory['percent'] = $memory['total'] > 0 ? round(($memory['used'] / $memory['total']) * 100, 1) : 0;
+            }
         }
 
         return [
             'disk' => [
                 'total' => $this->formatBytes($diskTotal),
-                'used' => $this->formatBytes($diskUsed),
-                'free' => $this->formatBytes($diskFree),
-                'percent' => round(($diskUsed / $diskTotal) * 100, 1),
+                'used'  => $this->formatBytes($diskUsed),
+                'free'  => $this->formatBytes($diskFree),
+                'percent' => $diskTotal > 0 ? round(($diskUsed / $diskTotal) * 100, 1) : 0,
             ],
             'cpu_load' => [
-                '1min' => $load[0],
-                '5min' => $load[1],
-                '15min' => $load[2],
+                '1min' => $load[0] ?? 0,
+                '5min' => $load[1] ?? 0,
+                '15min' => $load[2] ?? 0,
             ],
             'memory' => $memory,
             'database' => [
                 'connection' => DB::connection()->getDatabaseName(),
                 'size' => $this->getDatabaseSize(),
             ],
+            'platform' => [
+                'os' => PHP_OS,
+                'php' => PHP_VERSION,
+                'laravel' => app()->version(),
+            ],
         ];
-    }
-
-    /**
-     * Résout la commande artisan selon le type.
-     */
-    private function resolveCommand($type, $customCommand)
-    {
-        return match ($type) {
-            'backup_db' => 'backup:run --only-db',
-            'clear_cache' => 'optimize:clear',
-            'update_system' => 'system:update', // Commande custom hypothétique
-            'restart_queue' => 'queue:restart',
-            'custom_command' => $customCommand,
-            default => 'about',
-        };
     }
 
     /**

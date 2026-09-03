@@ -44,7 +44,7 @@
             <span :class="['text-sm font-black leading-none transition-colors', scrolled ? 'text-[#003399]' : 'text-white']">+243 973 359 648</span>
           </div>
 
-          <button class="hidden md:flex items-center gap-2 px-5 py-3 text-sm font-black text-[#003399] bg-white/90 hover:bg-white rounded-lg transition-all shadow-sm">
+          <button @click="goToClient" class="hidden md:flex items-center gap-2 px-5 py-3 text-sm font-black text-[#003399] bg-white/90 hover:bg-white rounded-lg transition-all shadow-sm">
             <i class="pi pi-user-circle"></i> Espace Client
           </button>
 
@@ -102,79 +102,149 @@
     </main>
 
     <!-- --- [SECTION 9] FOOTER RICHE --- -->
-    <footer class="relative bg-[#0A0F1C] pt-24 pb-10 px-6 overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#EE1C25] to-transparent opacity-30"></div>
+<footer class="bg-[#050811] text-slate-400 py-12 px-6 lg:px-20 font-sans tracking-tight">
+    <div class="max-w-[1400px] mx-auto">
 
-        <div class="max-w-[1400px] mx-auto relative z-10">
-            <!-- Newsletter Card -->
-            <div class="relative mb-20 p-8 rounded-lg bg-gradient-to-br from-[#161C2D] to-[#0A0F1C] border border-white/10 shadow-2xl group overflow-hidden">
-                <div class="flex flex-col lg:flex-row items-center justify-between gap-10">
-                    <div class="text-center lg:text-left">
-                        <h4 class="text-3xl font-black text-white mb-2 italic">Restez à la pointe de la <span class="text-[#EE1C25]">Tech en RDC</span>.</h4>
-                        <p class="text-slate-400 font-medium">Rejoignez notre communauté pour recevoir les alertes Starlink et nos bourses d'études.</p>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                        <input type="email" placeholder="votre@email.com" class="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white outline-none focus:border-[#EE1C25] w-full sm:w-[300px]" />
-                        <button class="bg-[#EE1C25] text-white px-10 py-5 rounded-2xl font-black hover:scale-105 transition-all">S'abonner</button>
-                    </div>
+        <!-- SECTION 1: Newsletter Banner (Top) -->
+        <div class="mb-16 p-8 lg:p-12 rounded-2xl border border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div class="max-w-2xl">
+                <h2 class="text-3xl lg:text-4xl font-bold text-white mb-4">
+                    Restez à la pointe de la <span class="text-[#E11D48] italic">Tech en RDC.</span>
+                </h2>
+                <p class="text-slate-400 text-lg">
+                    Rejoignez notre communauté pour recevoir les alertes Starlink et nos bourses d'études.
+                </p>
+            </div>
+            <div class="w-full lg:w-auto flex items-center bg-[#0A0F1C] border border-white/10 rounded-xl p-1.5 focus-within:border-red-500/50 transition-all">
+                <input type="email" placeholder="votre@email.com" class="bg-transparent border-none outline-none px-4 py-3 text-white w-full lg:w-64 placeholder:text-slate-600 text-sm" />
+                <button class="bg-[#E11D48] hover:bg-[#BE123C] text-white font-bold px-8 py-3 rounded-lg transition-all active:scale-95 whitespace-nowrap">
+                    S'abonner
+                </button>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Grid Content -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-20">
+
+            <!-- Branding -->
+            <div class="lg:col-span-3 space-y-8">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-xl font-black text-white italic tracking-tighter">
+                        SubNet<span class="text-[#E11D48]">Congo</span>
+                    </h1>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-[0.3em]">Technologie du futur</span>
+                </div>
+                <p class="text-sm leading-relaxed max-w-xs italic font-medium">
+                    {{ identity.site_tagline || "Propulser l'excellence numérique au cœur de la République Démocratique du Congo." }}
+                </p>
+                <!-- Socials -->
+                <div class="flex gap-3 mt-8">
+                    <a v-for="soc in [
+                        { icon: 'facebook', link: identity.social_facebook, color: 'hover:bg-blue-600' },
+                        { icon: 'twitter', link: identity.social_twitter, color: 'hover:bg-black' },
+                        { icon: 'linkedin', link: identity.social_linkedin, color: 'hover:bg-blue-700' },
+                        { icon: 'youtube', link: identity.social_youtube, color: 'hover:bg-red-600' }
+                    ]" :key="soc.icon" :href="soc.link"
+                       class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)]"
+                       :class="soc.color">
+                        <i :class="`pi pi-${soc.icon} text-sm  text-white`"></i>
+                    </a>
                 </div>
             </div>
 
-            <!-- Grille Footer -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
-                <div class="space-y-8">
-                    <img src="https://subnetcongo.net/assets/media/logos/logo.png" class="h-12 w-auto brightness-200" />
-                    <p class="text-slate-400 font-medium leading-relaxed italic">Leader panafricain basé à Goma, combinant infrastructure réseau et centre de formation d'élite.</p>
-                    <div class="flex gap-3">
-                        <a v-for="s in ['facebook', 'linkedin', 'instagram', 'whatsapp']" :key="s" href="#" class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-300 hover:bg-[#003399] transition-all">
-                            <i :class="`pi pi-${s}`"></i>
-                        </a>
-                    </div>
-                </div>
+            <!-- Col 2: Solutions -->
+            <div class="lg:col-span-2">
+                <h4 class="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8 relative inline-block">
+                    Solutions
+                    <span class="absolute -bottom-2 left-0 w-6 h-[2px] bg-[#E11D48]"></span>
+                </h4>
+                <ul class="space-y-4 text-sm font-medium">
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Internet Satellite
+                    </li>
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Starlink Business
+                    </li>
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Fibre Optique
+                    </li>
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Audit Réseau
+                    </li>
+                </ul>
+            </div>
 
-                <div v-for="group in footerLinks" :key="group.title" class="space-y-6">
-                    <h5 class="text-white font-black uppercase text-xs tracking-widest border-b border-red-500 w-fit pb-2">{{ group.title }}</h5>
-                    <ul class="space-y-4">
-                        <li v-for="link in group.links" :key="link">
-                            <Link href="#" class="text-slate-400 font-bold hover:text-white transition-colors flex items-center gap-2 group">
-                                <span class="w-1 h-1 bg-slate-700 rounded-full group-hover:bg-[#EE1C25]"></span> {{ link }}
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
+            <!-- Col 3: Académie -->
+            <div class="lg:col-span-2">
+                <h4 class="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8 relative inline-block">
+                    Académie
+                    <span class="absolute -bottom-2 left-0 w-6 h-[2px] bg-[#E11D48]"></span>
+                </h4>
+                <ul class="space-y-4 text-sm font-medium">
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Catalogue Cours
+                    </li>
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Espace Étudiant
+                    </li>
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Certifications
+                    </li>
+                    <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Recrutement
+                    </li>
+                </ul>
+            </div>
 
-                <div class="space-y-8 bg-white/5 p-8 rounded-3xl border border-white/10">
-                    <div class="flex items-center gap-4 text-white">
-                        <i class="pi pi-verified text-2xl text-red-500"></i>
+            <!-- Col 4: Starlink Authorized Card -->
+            <div class="lg:col-span-5 lg:flex lg:justify-end">
+                <div class="w-full max-w-sm p-8 rounded-3xl bg-[#0A0F1C] border border-white/5 shadow-2xl space-y-6">
+                    <div class="flex items-center gap-4 border-b border-white/5 pb-6">
+                        <div class="w-10 h-10 rounded-full border border-red-500/50 flex items-center justify-center text-[#E11D48]">
+                            <i class="pi pi-verified text-lg"></i>
+                        </div>
                         <div>
-                            <p class="text-[10px] font-black uppercase text-slate-500">Starlink</p>
-                            <p class="text-xs font-bold">Authorized Reseller</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">STARLINK</p>
+                            <p class="text-sm font-bold text-white tracking-tight">Authorized Reseller</p>
                         </div>
                     </div>
-                    <div class="text-sm">
-                        <p class="text-white font-black mb-2 uppercase italic tracking-tighter">Nord-Kivu / Goma</p>
-                        <p class="text-slate-500 font-medium text-xs leading-relaxed">N° 0001, Avenue Des Touristes, Quartier les Volcans, Goma, RDC</p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Copyright -->
-            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p class="text-slate-500 font-black text-[10px] uppercase tracking-[0.3em]">© 2026 <span class="text-white">SUBNETCONGO</span>. Design by Linux99</p>
-                <div class="flex gap-6 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                    <a href="#" class="hover:text-red-500 transition-colors">Confidentialité</a>
-                    <a href="#" class="hover:text-red-500 transition-colors">Mentions Légales</a>
+                    <div class="space-y-4">
+                        <h5 class="text-xs font-black uppercase italic tracking-widest text-white">NORD-KIVU/GOMA</h5>
+                        <p class="text-xs leading-relaxed text-slate-500 font-medium">
+                           {{ legal?.address_line || identity.contact_address }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
-    </footer>
+
+        <!-- SECTION 3: Bottom Bar -->
+        <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                  {{ identity.footer_text || `© ${year} ${identity.site_name}. ALL SYSTEMS OPERATIONAL.` }} DESIGN BY LINUX99
+            </p>
+            <div class="flex gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                <a href="#" class="hover:text-white transition-colors">Confidentialité</a>
+                <a href="#" class="hover:text-white transition-colors">Mentions Légales</a>
+            </div>
+        </div>
+    </div>
+</footer>
 
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+
+// Données globales partagées par HandleInertiaRequests (toujours présentes,
+// mais on protège contre un premier rendu où usePage() pourrait être vide).
+const page = usePage();
+const identity = computed(() => page.props.identity || {});
+const legal    = computed(() => page.props.legal    || null);
+const menuPages = computed(() => Array.isArray(page.props.menuPages) ? page.props.menuPages : []);
 
 // États
 const scrolled = ref(false);
@@ -185,9 +255,8 @@ const navLinks = [
     { name: 'Accueil', href: route('landing'), icon: 'pi-home' },
     { name: 'À Propos', href: route('about'), icon: 'pi-info-circle' },
     { name: 'Réalisations', href: route('realizations'), icon: 'pi-info-circle' },
-    // { name: 'Academy', href: '/academy', icon: 'pi-graduation-cap', submenu: ['Cisco CCNA', 'Cyber-Sécurité', 'Cloud Computing'] },
-    { name: 'Academy', href: route('academy'), icon: 'pi-graduation-cap'},
-    { name: 'Génie Civil', href: '#', icon: 'pi-cog' },
+    { name: 'Academy', href: route('academy'), icon: 'pi-graduation-cap' },
+    { name: 'Blog', href: route('blog'), icon: 'pi-book' },
     { name: 'Contact', href: route('contact'), icon: 'pi-envelope' }
 ];
 
@@ -199,7 +268,9 @@ const footerLinks = [
 // Logique
 const handleScroll = () => { scrolled.value = window.scrollY > 50; };
 const goToLogin = () => { router.get('/login'); };
-
+const goToClient =()=>{
+    router.get('/contact');
+};
 onMounted(() => { window.addEventListener('scroll', handleScroll); });
 onUnmounted(() => { window.removeEventListener('scroll', handleScroll); });
 </script>

@@ -96,7 +96,7 @@ class MenuController extends Controller
             'menu' => $menu,
             'locations' => ['header', 'footer', 'sidebar', 'mobile'],
             // Pages disponibles pour ajout rapide
-            'available_pages' => \App\Models\Page::where('status', 'published')->select('id', 'title', 'slug')->get(),
+            'available_pages' => \App\Models\Page::where('is_published', true)->select('id', 'title', 'slug')->get(),
         ]);
     }
 

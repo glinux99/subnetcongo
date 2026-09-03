@@ -7,7 +7,7 @@
                     <span>© 2026 MAINTX</span>
                     <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
                     <span class="text-primary-500">
-                      Design by   <a href="https://veoperations.org" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">VeOperations</a>
+                      Design by   <a href="https://www.linkedin.com/in/daniel-kikimba" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">Linux99</a>
 
 
                     </span>

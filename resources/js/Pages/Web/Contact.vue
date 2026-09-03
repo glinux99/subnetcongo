@@ -1,362 +1,171 @@
 <script setup>
-import { ref, reactive, watch } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
-// Import PrimeVue Components
-import Dropdown from 'primevue/dropdown';
-import InputText from 'primevue/inputtext';
-import 'primeicons/primeicons.css';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
-/**
- * --- GESTION DU FORMULAIRE ---
- */
+const props = defineProps({
+    identity: { type: Object, default: () => ({}) },
+    categories: { type: Array, default: () => [] },
+    menuPages: { type: Array, default: () => [] },
+    legal: { type: Object, default: () => null },
+});
+
 const form = useForm({
-    name: '',
-    email: '',
-    country: { name: 'Congo (DRC)', code: 'CD', dial_code: '+243' },
-    phone: '',
-    subject: null, // Changé à null pour le Dropdown
-    message: '',
-    privacy: false
+    name: '', email: '', phone: '', subject: '', message: '',
 });
 
-const submit = () => {
-    form.post(route('contact.store'), {
-        preserveScroll: true,
-        onSuccess: () => form.reset(),
-    });
-};
-watch([() => form.phone, () => form.country], ([newPhone, newCountry]) => {
-    if (newPhone && newCountry) {
-        // Nettoyage du numéro (on enlève le 0 au début si présent)
-        const cleanedPhone = newPhone.startsWith('0') ? newPhone.substring(1) : newPhone;
-        const fullNumber = newCountry.dial_code + cleanedPhone;
+const submit = () => form.post(route('contact.store'), { onSuccess: () => form.reset() });
 
-        try {
-            const phoneNumber = parsePhoneNumberFromString(fullNumber, newCountry.code);
-            if (phoneNumber && phoneNumber.isValid()) {
-                form.clearErrors('phone');
-            } else {
-                form.setError('phone', 'Format invalide pour ce pays.');
-            }
-        } catch (e) {
-            form.setError('phone', 'Erreur de validation.');
-        }
-    } else {
-        form.clearErrors('phone');
-    }
-});
-/**
- * --- DATA : DÉPARTEMENTS ---
- * Ajout de couleurs spécifiques pour un design plus riche
- */
-const departments = [
-    { name: 'Service Commercial & Ventes', code: 'sales', icon: 'pi-shopping-cart', color: 'text-blue-600', bg: 'bg-blue-50', desc: 'Devis Internet, Starlink & Solutions Entreprises.' },
-    { name: 'Support Technique & NOC', code: 'tech', icon: 'pi-cog', color: 'text-red-600', bg: 'bg-red-50', desc: 'Assistance technique 24/7 et maintenance.', live: true },
-    { name: 'Subnet Academy', code: 'academy', icon: 'pi-graduation-cap', color: 'text-amber-600', bg: 'bg-amber-50', desc: 'Inscriptions et informations sur les certifications.' },
-    { name: 'Partenariats & Projets', code: 'partners', icon: 'pi-briefcase', color: 'text-indigo-600', bg: 'bg-indigo-50', desc: 'Opportunités de collaboration et projets civils.' }
-];
-
-const countries = ref([
-    { name: 'Congo (DRC)', code: 'CD', dial_code: '+243' },
-    { name: 'France', code: 'FR', dial_code: '+33' },
-    { name: 'USA', code: 'US', dial_code: '+1' },
-    { name: 'Congo', code: 'CG', dial_code: '+242' },
-    { name: 'Rwanda', code: 'RW', dial_code: '+250' },
-    { name: 'Belgium', code: 'BE', dial_code: '+32' },
-]);
-
-const getFlagUrl = (code) => `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
-
-/**
- * --- DATA : BUREAUX ---
- */
-const offices = [
-  {
-    city: "Goma (Siège Social)",
-    address: "N° 0001, Avenue Des Touristes, Quartier les Volcans",
-    phone: "+243 973 359 648",
-    email: "goma@subnetcongo.net",
-    image: "https://images.unsplash.com/photo-1596463059283-da257325bee8?q=80&w=2070"
-  },
-  {
-    city: "Kinshasa",
-    address: "Bld du 30 Juin, Immeuble Royal, Gombe",
-    phone: "+243 810 000 000",
-    email: "kin@subnetcongo.net",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070"
-  },
-  {
-    city: "Bukavu",
-    address: "Av. Mobutu, Quartier Nyalukemba, Ibanda",
-    phone: "+243 850 000 000",
-    email: "bukavu@subnetcongo.net",
-    image: "https://images.unsplash.com/photo-1531973576160-7125cd663d86?q=80&w=2070"
-  }
-];
-
-const quickFaqs = [
-    { q: "Comment obtenir un devis Starlink ?", a: "Sélectionnez 'Service Commercial' et précisez votre localisation pour une étude de signal gratuite." },
-    { q: "Support disponible le week-end ?", a: "Oui, notre équipe NOC assure une surveillance 24h/24, même les jours fériés." }
-];
+const flash = computed(() => usePage().props.flash || {});
+import { computed } from 'vue';
 </script>
 
 <template>
-  <Head title="Contact - SubnetCongo" />
-
-  <AppLayout>
-    <!-- --- [SECTION 1] HERO --- -->
-    <header class="relative min-h-[60vh] flex items-center pt-32 pb-20 bg-[#001A4D] overflow-hidden">
-      <div class="absolute inset-0 z-0">
-        <div class="absolute inset-0 bg-black/60 z-10"></div>
-        <img src="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?q=80&w=2070" class="w-full h-full object-cover scale-110 animate-slow-zoom" />
-        <div class="absolute inset-0 bg-gradient-to-r from-[#001A4D] via-[#001A4D]/80 to-transparent z-20"></div>
-      </div>
-
-      <div class="relative z-30 max-w-[1500px] mx-auto px-6 w-full text-center lg:text-left">
-          <div class="inline-flex items-center gap-4 px-6 py-2 bg-white/10 backdrop-blur-3xl border border-white/20 rounded-full text-white mb-8">
-            <span class="flex h-2 w-2 rounded-full bg-red-500 animate-ping"></span>
-            <span class="text-[10px] font-black uppercase tracking-[0.4em]">Support réactif 24h/24</span>
-          </div>
-          <h1 class="text-5xl md:text-8xl font-black text-white leading-tight tracking-tighter">
-            L'Expertise à portée <br/>
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-400 italic">de clic.</span>
-          </h1>
-      </div>
-    </header>
-
-    <!-- --- [SECTION 2] CONTACT GRID --- -->
-    <section class="py-32 px-6 bg-white">
-      <div class="max-w-[1500px] mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-20">
-
-          <!-- COLONNE GAUCHE : DÉPARTEMENTS (L'expertise à portée de clic) -->
-          <div class="lg:col-span-5 space-y-12">
-            <div class="space-y-4">
-                <h2 class="text-[#EE1C25] font-black uppercase tracking-[0.4em] text-sm">Nous sommes là</h2>
-                <h3 class="text-5xl font-black text-slate-900 leading-[0.9] tracking-tighter">Choisissez votre <span class="text-[#003399]">expert</span>.</h3>
+    <Head :title="`Contact - ${identity.site_name || 'SubnetCongo'}`" />
+    <AppLayout>
+        <section class="relative pt-32 pb-16 bg-[#001A4D] text-white">
+            <div class="absolute inset-0 bg-gradient-to-b from-[#001A4D] to-[#003399] opacity-80"></div>
+            <div class="relative max-w-[1500px] mx-auto px-6 text-center">
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter">Contact</h1>
+                <p class="text-xl text-blue-100 mt-4">Nous sommes à votre écoute</p>
             </div>
+        </section>
 
-            <!-- Bento List de Départements -->
-            <div class="grid grid-cols-1 gap-4">
-                <div v-for="dept in departments" :key="dept.name"
-                     class="group p-6 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-6 hover:bg-white hover:shadow-lg hover:scale-[1.02] transition-all duration-500 cursor-pointer">
+        <section class="py-20 px-6 bg-white">
+            <div class="max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
 
-                    <div :class="['w-16 h-16 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform', dept.bg]">
-                        <i :class="['pi text-lg', dept.icon, dept.color]"></i>
-                    </div>
+                <!-- COORDONNÉES -->
+                <div>
+                    <h2 class="text-3xl font-black text-slate-900 mb-6">Nos coordonnées</h2>
 
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-1">
-                            <h4 class="text-lg font-black text-slate-900">{{ dept.name }}</h4>
-                            <span v-if="dept.live" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 text-[8px] font-black text-green-600 uppercase animate-pulse">
-                                <i class="pi pi-circle-fill text-[6px]"></i> Live
-                            </span>
+                    <div class="space-y-5 text-slate-700">
+                        <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition">
+                            <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center shrink-0">
+                                <i class="pi pi-map-marker text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Adresse</p>
+                                <p class="font-bold text-slate-900">{{ legal?.address_line || identity.contact_address || '—' }}</p>
+                                <p v-if="legal?.city || legal?.province || legal?.country" class="text-sm text-slate-600">
+                                    {{ [legal?.city, legal?.province, legal?.country].filter(Boolean).join(', ') }}
+                                </p>
+                                <p v-if="legal?.po_box" class="text-sm text-slate-500">BP : {{ legal.po_box }}</p>
+                            </div>
                         </div>
-                        <p class="text-sm text-slate-500 font-medium leading-relaxed italic">{{ dept.desc }}</p>
-                    </div>
 
-                    <i class="pi pi-chevron-right text-slate-300 group-hover:text-[#EE1C25] group-hover:translate-x-2 transition-all"></i>
-                </div>
-            </div>
+                        <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition">
+                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                                <i class="pi pi-envelope text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Email</p>
+                                <a :href="`mailto:${identity.contact_email}`" class="font-bold text-slate-900 hover:underline">{{ identity.contact_email }}</a>
+                            </div>
+                        </div>
 
-            <!-- Urgent Card -->
-            <div class="bg-gradient-to-br from-[#003399] to-blue-900 p-10 rounded-lg text-white relative overflow-hidden shadow-lg group">
-                <div class="relative z-10 space-y-6">
-                    <h4 class="text-3xl font-black italic">Canal WhatsApp</h4>
-                    <p class="text-blue-100/70 font-medium leading-relaxed">Besoin d'une réponse instantanée ? Discutez en direct avec nos ingénieurs.</p>
-                    <a href="https://wa.me/243970912428" target="_blank" class="inline-flex items-center gap-4 bg-[#25D366] px-8 py-4 rounded-lg font-black text-white hover:scale-105 transition-all shadow-lg">
-                        <i class="pi pi-whatsapp text-lg"></i> +243 973 359 648
-                    </a>
-                </div>
-                <i class="pi pi-whatsapp absolute -right-10 -bottom-10 text-[15rem] opacity-5 group-hover:rotate-12 transition-transform duration-700"></i>
-            </div>
-          </div>
+                        <div class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition">
+                            <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                                <i class="pi pi-phone text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Téléphone</p>
+                                <a :href="`tel:${identity.contact_phone}`" class="font-bold text-slate-900 hover:underline">{{ identity.contact_phone }}</a>
+                            </div>
+                        </div>
 
-          <!-- COLONNE DROITE : FORMULAIRE -->
-          <div class="lg:col-span-7 bg-[#FDFFFF] rounded-lg p-8 md:p-16 shadow-[0_40px_100px_rgba(0,0,0,0.08)] border border-slate-50">
-             <form @submit.prevent="submit" class="space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-4">Nom Complet</label>
-                        <InputText v-model="form.name" placeholder="Daniel KIKIMBA" class="subnet-input" required />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-4">Email Professionnel</label>
-                        <InputText v-model="form.email" type="email" placeholder="genesiskikimba@gmail.com" class="subnet-input" required />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-4">Département visé</label>
-                        <Dropdown v-model="form.subject" :options="departments" optionLabel="name"
-                                  placeholder="Sélectionnez un expert" class="subnet-dropdown">
-                            <template #option="slotProps">
-                                <div class="flex items-center gap-3">
-                                    <i :class="['pi text-[#EE1C25]', slotProps.option.icon]" />
-                                    <span class="font-bold text-sm">{{ slotProps.option.name }}</span>
+                        <div v-if="identity.social_facebook !== '#' || identity.social_twitter !== '#' || identity.social_linkedin !== '#' || identity.social_youtube !== '#'" class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50">
+                            <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                                <i class="pi pi-share-alt text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Réseaux sociaux</p>
+                                <div class="flex gap-3 mt-2">
+                                    <a v-if="identity.social_facebook && identity.social_facebook !== '#'" :href="identity.social_facebook" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white shadow hover:scale-110 hover:bg-blue-600 hover:text-white flex items-center justify-center transition"><i class="pi pi-facebook"></i></a>
+                                    <a v-if="identity.social_twitter && identity.social_twitter !== '#'"  :href="identity.social_twitter"  target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white shadow hover:scale-110 hover:bg-sky-500 hover:text-white flex items-center justify-center transition"><i class="pi pi-twitter"></i></a>
+                                    <a v-if="identity.social_linkedin && identity.social_linkedin !== '#'" :href="identity.social_linkedin" target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white shadow hover:scale-110 hover:bg-blue-700 hover:text-white flex items-center justify-center transition"><i class="pi pi-linkedin"></i></a>
+                                    <a v-if="identity.social_youtube && identity.social_youtube !== '#'"  :href="identity.social_youtube"  target="_blank" rel="noopener" class="w-10 h-10 rounded-full bg-white shadow hover:scale-110 hover:bg-red-600 hover:text-white flex items-center justify-center transition"><i class="pi pi-youtube"></i></a>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMATIONS LÉGALES (RCCM/IFU) -->
+                    <div v-if="legal && (legal.company_name || legal.rccm || legal.ifu || legal.tax_id)" class="mt-8 p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl shadow-lg">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center">
+                                <i class="pi pi-id-card text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-black">Informations légales</h3>
+                        </div>
+                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                            <template v-if="legal.company_name">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Raison sociale</dt>
+                                <dd class="font-bold mb-2">{{ legal.company_name }}<span v-if="legal.legal_form" class="text-slate-400"> {{ legal.legal_form }}</span></dd>
                             </template>
-                        </Dropdown>
+                            <template v-if="legal.rccm">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">RCCM</dt>
+                                <dd class="font-mono mb-2">{{ legal.rccm }}</dd>
+                            </template>
+                            <template v-if="legal.ifu">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">IFU</dt>
+                                <dd class="font-mono mb-2">{{ legal.ifu }}</dd>
+                            </template>
+                            <template v-if="legal.tax_id">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">N° Contribuable</dt>
+                                <dd class="font-mono mb-2">{{ legal.tax_id }}</dd>
+                            </template>
+                            <template v-if="legal.nif">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">NIF</dt>
+                                <dd class="font-mono mb-2">{{ legal.nif }}</dd>
+                            </template>
+                            <template v-if="legal.ai">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Article d'Imposition</dt>
+                                <dd class="font-mono mb-2">{{ legal.ai }}</dd>
+                            </template>
+                            <template v-if="legal.capital_social">
+                                <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Capital social</dt>
+                                <dd class="font-bold mb-2">{{ legal.capital_social }}</dd>
+                            </template>
+                        </dl>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black uppercase text-slate-400 ml-4">Votre Message</label>
-                    <textarea v-model="form.message" rows="5" placeholder="Décrivez votre besoin..." class="subnet-input resize-none pt-4"></textarea>
-                </div>
-
-                <div class="flex items-center gap-4 px-4 bg-slate-50 py-4 rounded-lg">
-                    <input v-model="form.privacy" type="checkbox" id="privacy" class="w-5 h-5 rounded text-red-600 focus:ring-red-500 border-slate-200" required />
-                    <label for="privacy" class="text-xs font-bold text-slate-500 italic">J'accepte la politique de confidentialité de SubnetCongo.</label>
-                </div>
-
-                <button type="submit" :disabled="form.processing" class="w-full py-8 bg-slate-900 text-white rounded-lg font-black text-xl hover:bg-[#EE1C25] transition-all shadow-lg flex items-center justify-center gap-6 group">
-                   {{ form.processing ? 'Envoi...' : 'Propulser mon message' }}
-                   <i class="pi pi-send group-hover:translate-x-4 group-hover:-translate-y-2 transition-transform"></i>
-                </button>
-             </form>
-          </div>
-        </div>
-      </div>
-    </section>
-
-        <!-- --- [SECTION 3] NOS BUREAUX (CARDS) --- -->
-    <section class="py-32 bg-slate-50 px-6">
-        <div class="max-w-[1500px] mx-auto">
-            <div class="text-center mb-24 space-y-4">
-                <h2 class="text-[#003399] font-black uppercase tracking-[0.4em] text-sm">Présence Nationale</h2>
-                <h3 class="text-6xl font-black text-slate-900 tracking-tighter italic">Où nous <span class="text-red-600">trouver</span> ?</h3>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <div v-for="office in offices" :key="office.city" class="group bg-white rounded-lg overflow-hidden shadow-xl border border-slate-100 hover:shadow-lg transition-all duration-700">
-                    <div class="h-64 relative overflow-hidden">
-                        <img :src="office.image" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                        <div class="absolute bottom-6 left-10 text-white">
-                            <h4 class="text-3xl font-black italic">{{ office.city }}</h4>
+                <!-- FORMULAIRE -->
+                <form @submit.prevent="submit" class="space-y-4 bg-slate-50 p-8 rounded-2xl shadow-sm border border-slate-100 self-start">
+                    <h2 class="text-2xl font-black text-slate-900 mb-2">Envoyez-nous un message</h2>
+                    <p v-if="flash.success" class="p-4 bg-emerald-100 text-emerald-800 rounded-xl text-sm font-bold">
+                        <i class="pi pi-check-circle mr-2"></i>{{ flash.success }}
+                    </p>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Nom complet *</label>
+                        <input v-model="form.name" type="text" placeholder="Jean-Paul Mulumba" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required />
+                        <p v-if="form.errors.name" class="text-rose-500 text-xs mt-1">{{ form.errors.name }}</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Email *</label>
+                            <input v-model="form.email" type="email" placeholder="exemple@email.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required />
+                            <p v-if="form.errors.email" class="text-rose-500 text-xs mt-1">{{ form.errors.email }}</p>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Téléphone</label>
+                            <input v-model="form.phone" type="tel" placeholder="+243 000 000 000" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" />
                         </div>
                     </div>
-                    <div class="p-10 space-y-8">
-                        <div class="space-y-6">
-                            <div class="flex items-start gap-6">
-                                <i class="pi pi-map-marker text-red-600 mt-1"></i>
-                                <p class="text-slate-500 font-medium leading-relaxed italic text-sm">{{ office.address }}</p>
-                            </div>
-                            <div class="flex items-center gap-6">
-                                <i class="pi pi-phone text-[#003399]"></i>
-                                <p class="text-slate-900 font-black text-sm">{{ office.phone }}</p>
-                            </div>
-                            <div class="flex items-center gap-6">
-                                <i class="pi pi-envelope text-[#003399]"></i>
-                                <p class="text-slate-900 font-black text-sm">{{ office.email }}</p>
-                            </div>
-                        </div>
-                        <button class="w-full py-5 bg-slate-50 text-slate-900 rounded-lg font-black text-xs uppercase tracking-widest hover:bg-[#003399] hover:text-white transition-all">
-                            Voir sur la carte <i class="pi pi-external-link ml-2"></i>
-                        </button>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Sujet *</label>
+                        <input v-model="form.subject" type="text" placeholder="Ex : Demande de partenariat" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required />
+                        <p v-if="form.errors.subject" class="text-rose-500 text-xs mt-1">{{ form.errors.subject }}</p>
                     </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- --- [SECTION 4] FAQ RAPIDE --- -->
-    <section class="py-32 px-6 bg-white">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-24">
-                <h3 class="text-5xl font-black text-slate-900 tracking-tighter italic">Réponses Immédiates</h3>
-            </div>
-            <div class="space-y-6">
-                <div v-for="(item, idx) in quickFaqs" :key="idx" class="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 hover:bg-white hover:shadow-xl transition-all group">
-                    <div class="flex items-center gap-6">
-                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-red-600 shadow-sm font-black">?</div>
-                        <h4 class="text-xl font-black text-slate-900 italic">{{ item.q }}</h4>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Message *</label>
+                        <textarea v-model="form.message" placeholder="Votre message..." rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required></textarea>
+                        <p v-if="form.errors.message" class="text-rose-500 text-xs mt-1">{{ form.errors.message }}</p>
                     </div>
-                    <p class="mt-6 text-slate-500 font-medium leading-relaxed italic border-l-2 border-red-500 pl-6">{{ item.a }}</p>
-                </div>
+                    <button type="submit" :disabled="form.processing" class="w-full px-6 py-4 bg-[#003399] text-white font-black rounded-xl hover:bg-blue-800 transition disabled:opacity-50">
+                        <i class="pi pi-send mr-2"></i>{{ form.processing ? 'Envoi...' : 'Envoyer le message' }}
+                    </button>
+                </form>
             </div>
-        </div>
-    </section>
-
-    <!-- --- [SECTION 5] BANNER SUPPORT --- -->
-    <section class="py-24 px-6">
-        <div class="max-w-[1500px] mx-auto bg-[#001A4D] rounded-lg p-6 md:p-12 relative overflow-hidden shadow-lg flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div class="relative z-10 space-y-6 text-center lg:text-left max-w-lg">
-                <h3 class="text-4xl md:text-6xl font-black text-white leading-tight italic tracking-tighter">Support Technique <br/> <span class="text-red-500">24/7 de Proximité</span>.</h3>
-                <p class="text-blue-100/60 font-medium text-xl leading-relaxed italic">Nos ingénieurs NOC basés à Goma supervisent votre réseau en temps réel.</p>
-            </div>
-            <div class="relative z-10 flex flex-col sm:flex-row gap-6">
-                <button class="px-12 py-6 bg-white text-[#001A4D] rounded-lg font-black text-lg hover:scale-105 transition-all shadow-xl">Ouvrir un Ticket</button>
-                <button class="px-12 py-6 bg-red-600 text-white rounded-lg font-black text-lg hover:bg-red-700 transition-all shadow-xl flex items-center gap-4">
-                    <i class="pi pi-phone animate-bounce"></i> Appeler l'Urgence
-                </button>
-            </div>
-            <!-- Décorations -->
-            <div class="absolute top-0 right-0 w-80 h-80 bg-blue-600/20 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-0 left-0 w-80 h-80 bg-red-600/10 rounded-full blur-[100px]"></div>
-        </div>
-    </section>
-  </AppLayout>
+        </section>
+    </AppLayout>
 </template>
-
-<style scoped>
-/* --- STYLES PRIME VUE PERSONNALISÉS --- */
-.subnet-input {
-    width: 100% !important;
-    background: #f8fafc !important;
-    border: 2px solid #f1f5f9 !important;
-    border-radius: 1.5rem !important;
-    padding: 1.25rem 1.5rem !important;
-    font-weight: 700 !important;
-    transition: all 0.3s ease !important;
-}
-
-.subnet-input:focus {
-    background: #ffffff !important;
-    border-color: #EE1C25 !important;
-    box-shadow: 0 10px 30px rgba(238, 28, 37, 0.08) !important;
-    outline: none !important;
-}
-
-.subnet-dropdown {
-    width: 100% !important;
-    background: #f8fafc !important;
-    border: 2px solid #f1f5f9 !important;
-    border-radius: 1.5rem !important;
-    padding: 0.5rem !important;
-}
-
-.p-dropdown-panel {
-    border-radius: 1.5rem !important;
-    border: none !important;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.1) !important;
-}
-
-.country-dropdown.p-dropdown {
-    border-right: 1px solid #f1f5f9 !important;
-    border-radius: 1.5rem 0 0 1.5rem !important;
-    background: #f8fafc !important;
-    border-width: 2px !important;
-    border-color: #f1f5f9 !important;
-}
-
-.p-inputgroup .p-dropdown:focus-within {
-    border-color: #EE1C25 !important;
-}
-
-.country-dropdown .p-dropdown-trigger {
-    width: 2rem !important;
-}
-
-
-@keyframes slow-zoom {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.1); }
-}
-.animate-slow-zoom { animation: slow-zoom 20s linear infinite alternate; }
-</style>

@@ -242,11 +242,24 @@ class EnrollmentController extends Controller
     {
         $lessons = $course->lessons;
 
+        // Récupère (ou crée) l'enrollment pour lier la progression
+        $enrollment = $user->enrollments()->firstOrCreate(
+            ['course_id' => $course->id],
+            [
+                'status'            => \App\Models\Enrollment::STATUS_ACTIVE,
+                'progress_percent'  => 0,
+                'enrolled_at'       => now(),
+                'reviewed_at'       => now(),
+                'reviewed_by'       => $user->id,
+            ]
+        );
+
         foreach ($lessons as $lesson) {
             UserProgress::firstOrCreate([
-                'user_id' => $user->id,
-                'lesson_id' => $lesson->id,
-                'course_id' => $course->id,
+                'user_id'       => $user->id,
+                'lesson_id'     => $lesson->id,
+                'course_id'     => $course->id,
+                'enrollment_id' => $enrollment->id,
             ], [
                 'progress_percent' => 0,
             ]);

@@ -8,6 +8,7 @@ use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentGatewaySetting;
 use App\Models\Wishlist;
 use App\Notifications\CourseEnrolledNotification;
 use App\Services\Payment\PaymentService;
@@ -87,11 +88,11 @@ class MarketplaceController extends Controller
     public function show(Request $request, Course $course)
     {
         $course->load([
-            'instructor:id,name,bio,profile_photo_url',
+            'instructor:id,name,bio,avatar',
             'category:id,name',
             'modules.lessons' => fn ($q) => $q->orderBy('order'),
             'reviews' => fn ($q) => $q->where('is_approved', true)->latest()->limit(10),
-            'reviews.user:id,name,profile_photo_url',
+            'reviews.user:id,name,avatar',
         ]);
 
         $stats = [
@@ -141,10 +142,21 @@ class MarketplaceController extends Controller
     public function cart(Request $request)
     {
         $items = $this->getCartItems($request)->load('course.instructor:id,name', 'course.category:id,name');
+        $subtotal = (float) $items->sum(fn ($i) => $i->price - $i->discount_amount);
+        $tax = round($subtotal * 0.0, 2); // 0% — modifier selon législation RDC
+        $total = $subtotal - (float) $items->sum('discount_amount') + $tax;
 
         return Inertia::render('Marketplace/Cart', [
-            'items' => $items,
-            'subtotal' => $items->sum(fn ($i) => $i->price - $i->discount_amount),
+            'cart' => [
+                'items'     => $items,
+                'subtotal'  => $subtotal,
+                'tax'       => $tax,
+                'discount'  => (float) $items->sum('discount_amount'),
+                'total'     => $total,
+                'count'     => $items->count(),
+            ],
+            'items'     => $items,        // rétro-compat (page Marketplace/Index lit ces props)
+            'subtotal'  => $subtotal,
             'cartCount' => $items->count(),
         ]);
     }
@@ -193,11 +205,18 @@ class MarketplaceController extends Controller
         }
 
         DB::transaction(function () use ($user, $course) {
-            $user->enrollIn($course, [], Enrollment::STATUS_ACTIVE);
+            $enrollment = $user->enrollIn($course, [], Enrollment::STATUS_ACTIVE);
             // Initialise la progression à 0
             \App\Models\UserProgress::firstOrCreate(
-                ['user_id' => $user->id, 'course_id' => $course->id],
-                ['progress_percent' => 0, 'last_accessed_at' => now()]
+                [
+                    'user_id'       => $user->id,
+                    'course_id'     => $course->id,
+                    'enrollment_id' => $enrollment->id,
+                ],
+                [
+                    'progress_percent' => 0,
+                    'last_accessed_at' => now(),
+                ]
             );
         });
 
@@ -235,13 +254,14 @@ class MarketplaceController extends Controller
 
         $data = $request->validate([
             'payment_method' => 'required|in:orange_money,mpesa,airtel_money,stripe,paypal,on_site,manual',
-            'phone_number' => 'nullable|string|max:30',
-            'country_code' => 'nullable|string|max:5',
-            'note' => 'nullable|string|max:500',
+            'phone_number'   => 'nullable|string|max:30',
+            'country_code'   => 'nullable|string|max:5',
+            'transaction_id' => 'nullable|string|max:100',
+            'note'           => 'nullable|string|max:500',
         ]);
 
         $enrollment = $user->requestEnrollment($course, [
-            'notes' => $data['note'] ?? null,
+            'notes' => ($data['note'] ?? null) . ($data['transaction_id'] ?? null ? "\n\n[ID transaction déclarée] " . $data['transaction_id'] : ''),
         ]);
 
         // Notifier les admins (best-effort)
@@ -254,7 +274,9 @@ class MarketplaceController extends Controller
             \Log::warning('Notify admin enrollment request failed: ' . $e->getMessage());
         }
 
-        return back()->with('success', 'Votre demande d\'inscription a été envoyée. L\'administrateur la traitera après vérification de votre paiement (' . strtoupper(str_replace('_', ' ', $data['payment_method'])) . ').');
+        $methodLabel = strtoupper(str_replace('_', ' ', $data['payment_method']));
+        $txSuffix = $data['transaction_id'] ?? null ? " (ID transaction : {$data['transaction_id']})" : '';
+        return back()->with('success', "✅ Demande envoyée via {$methodLabel}{$txSuffix}. Un administrateur validera votre inscription après vérification du paiement.");
     }
 
     /**
@@ -490,8 +512,12 @@ class MarketplaceController extends Controller
         $user = $request->user();
         $sessionId = $request->session()->getId();
         if ($user) {
+            // Inclut : les items explicitement attachés à cet utilisateur
+            //          + les items anonymes (session) pour reprise de panier post-login
             $query->where(function ($q) use ($user, $sessionId) {
-                $q->where('user_id', $user->id)->orWhere('session_id', $sessionId);
+                $q->where('user_id', $user->id)
+                  ->orWhere('session_id', $sessionId)
+                  ->orWhereNull('user_id');
             });
         } else {
             $query->where('session_id', $sessionId);
