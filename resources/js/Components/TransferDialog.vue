@@ -86,7 +86,7 @@ const onRemoveItem = (itemId) => emit('removeItem', itemId);
                 </AutoComplete>
             </div>
 
-            <div class="p-4 bg-slate-50 rounded-1xl border border-slate-100">
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">{{ props.config.itemCountLabel(props.itemsToTransfer.length) }}</h4>
                 <div class="max-h-48 overflow-y-auto space-y-2 pr-2">
                     <div v-for="item in props.itemsToTransfer" :key="item.id" class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200">
@@ -107,7 +107,7 @@ const onRemoveItem = (itemId) => emit('removeItem', itemId);
         <template #footer>
             <div class="flex justify-between items-center w-full px-8 py-5 bg-slate-50 border-t border-slate-100">
                 <Button :label="props.config.cancelLabel" icon="pi pi-times" text severity="secondary" @click="onUpdateVisible(false)" class="font-bold uppercase text-[10px] tracking-widest" />
-                <Button :label="props.config.confirmLabel" icon="pi pi-check-circle" @click="onConfirm" :loading="props.form.processing" class="px-10 h-14 rounded-1xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs" :disabled="props.itemsToTransfer.length === 0" />
+                <Button :label="props.config.confirmLabel" icon="pi pi-check-circle" @click="onConfirm" :loading="props.form.processing" class="px-10 h-14 rounded-xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs" :disabled="props.itemsToTransfer.length === 0" />
             </div>
         </template>
     </Dialog>

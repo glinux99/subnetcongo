@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\PaymentGatewaySetting;
 use App\Models\Wishlist;
 use App\Notifications\CourseEnrolledNotification;
+use App\Services\CountriesService;
 use App\Services\Payment\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -137,28 +138,151 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Panier.
+     * Panier — avec détection automatique du pays (IP / préférence user / session).
+     * Sépare les articles GRATUITS (inscription directe) et PAYANTS (paiement / validation admin).
      */
     public function cart(Request $request)
     {
+        $user = $request->user();
+        $countryCode = $this->resolveCountryCode($request, $user);
+        $country     = CountriesService::find($countryCode) ?? CountriesService::find('CD');
+
         $items = $this->getCartItems($request)->load('course.instructor:id,name', 'course.category:id,name');
-        $subtotal = (float) $items->sum(fn ($i) => $i->price - $i->discount_amount);
-        $tax = round($subtotal * 0.0, 2); // 0% — modifier selon législation RDC
-        $total = $subtotal - (float) $items->sum('discount_amount') + $tax;
+
+        // On annote chaque item (prix converti, estGratuit, etc.)
+        $free  = [];
+        $paid  = [];
+        $usdSubtotal = 0.0;
+        foreach ($items as $item) {
+            $course = $item->course;
+            $priceUsd  = (float) ($item->price - $item->discount_amount);
+            $converted = CountriesService::convertFromUsd($priceUsd, $country['code'] ?? 'CD');
+            $itemArray = $item->toArray();
+            $itemArray['price_usd']        = $priceUsd;
+            $itemArray['price_local']      = $converted['amount'];
+            $itemArray['currency']         = $converted['currency'];
+            $itemArray['currency_symbol']  = $converted['symbol'];
+            $itemArray['is_free']          = $priceUsd <= 0;
+            $isFree = $priceUsd <= 0;
+            if ($isFree) {
+                $free[] = $itemArray;
+            } else {
+                $paid[] = $itemArray;
+                $usdSubtotal += $priceUsd;
+            }
+        }
+
+        $usdTax     = round($usdSubtotal * 0.0, 2);
+        $usdTotal   = $usdSubtotal + $usdTax;
+        $localTotal = CountriesService::convertFromUsd($usdTotal, $country['code'] ?? 'CD');
+        $localSub   = CountriesService::convertFromUsd($usdSubtotal, $country['code'] ?? 'CD');
 
         return Inertia::render('Marketplace/Cart', [
             'cart' => [
                 'items'     => $items,
-                'subtotal'  => $subtotal,
-                'tax'       => $tax,
+                'free'      => $free,
+                'paid'      => $paid,
+                'subtotal'  => $usdSubtotal,
+                'subtotal_local' => $localSub['amount'],
+                'tax'       => $usdTax,
                 'discount'  => (float) $items->sum('discount_amount'),
-                'total'     => $total,
+                'total'     => $usdTotal,
+                'total_local'    => $localTotal['amount'],
+                'currency'  => $localTotal['currency'],
+                'symbol'    => $localTotal['symbol'],
                 'count'     => $items->count(),
             ],
-            'items'     => $items,        // rétro-compat (page Marketplace/Index lit ces props)
-            'subtotal'  => $subtotal,
+            'items'     => $items,
+            'subtotal'  => $usdSubtotal,
             'cartCount' => $items->count(),
+            'country'   => $country,
+            'countries' => CountriesService::options(),
         ]);
+    }
+
+    /**
+     * Détermine le code pays de l'utilisateur (session > user > IP).
+     */
+    private function resolveCountryCode(Request $request, $user): string
+    {
+        if ($session = $request->session()->get('country_code')) {
+            return strtoupper($session);
+        }
+        if ($user && ! empty($user->country_code)) {
+            return strtoupper($user->country_code);
+        }
+        // Fallback : géolocalisation IP via header CDN (Cloudflare) ou défaut RDC
+        $headers = [
+            'CF-IPCountry',
+            'HTTP_CF_IPCOUNTRY',
+            'X-AppEngine-Country',
+        ];
+        foreach ($headers as $h) {
+            if ($val = $request->header($h)) {
+                return strtoupper(substr($val, 0, 2));
+            }
+        }
+        return 'CD';
+    }
+
+    /**
+     * Permet à l'utilisateur de changer son pays (sauvegarde en session).
+     */
+    public function setCountry(Request $request)
+    {
+        $data = $request->validate(['country_code' => 'required|string|size:2']);
+        $request->session()->put('country_code', strtoupper($data['country_code']));
+        if ($user = $request->user()) {
+            $user->forceFill(['country_code' => strtoupper($data['country_code'])])->save();
+        }
+        return back()->with('success', 'Pays mis à jour');
+    }
+
+    /**
+     * Inscription immédiate à tous les cours GRATUITS du panier (sans payer).
+     */
+    public function enrollFreeCart(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 401);
+
+        $items = $this->getCartItems($request)->load('course');
+        $enrolled = 0;
+        $skipped  = 0;
+        foreach ($items as $item) {
+            $course = $item->course;
+            if (! $course) { $skipped++; continue; }
+            $price = (float) ($course->effective_price ?? $course->price ?? 0);
+            if ($price > 0) { $skipped++; continue; } // pas gratuit -> on ignore
+            if ($user->isEnrolledIn($course) || $user->hasPendingEnrollment($course)) { $skipped++; continue; }
+
+            DB::transaction(function () use ($user, $course) {
+                $enrollment = $user->enrollIn($course, [], Enrollment::STATUS_ACTIVE);
+                \App\Models\UserProgress::firstOrCreate(
+                    ['user_id' => $user->id, 'course_id' => $course->id, 'enrollment_id' => $enrollment->id],
+                    ['progress_percent' => 0, 'last_accessed_at' => now()]
+                );
+            });
+            try {
+                $user->notify(new CourseEnrolledNotification(
+                    courseTitle: $course->title,
+                    courseId: $course->id,
+                    courseImage: $course->thumbnail_path,
+                ));
+            } catch (\Throwable $e) {
+                // notification best-effort
+            }
+            // Retirer du panier
+            $item->delete();
+            $enrolled++;
+        }
+
+        if ($enrolled === 0) {
+            return back()->with('error', 'Aucun cours gratuit à inscrire (ou déjà inscrit).');
+        }
+        $msg = "{$enrolled} cours gratuit(s) ajouté(s) à votre compte.";
+        if ($skipped > 0) $msg .= " ({$skipped} élément(s) ignoré(s) — payants ou déjà inscrits).";
+        return back()->with('success', $msg);
     }
 
     /**
@@ -310,32 +434,145 @@ class MarketplaceController extends Controller
      */
     public function checkout(Request $request)
     {
+        $user = $request->user();
+        $countryCode = $this->resolveCountryCode($request, $user);
+        $country     = CountriesService::find($countryCode) ?? CountriesService::find('CD');
+
         $items = $this->getCartItems($request)->load('course');
-        if ($items->isEmpty()) {
-            return redirect()->route('marketplace.cart')->with('error', 'Votre panier est vide.');
+        // On ne procède au checkout que pour les items payants
+        $paidItems = $items->filter(fn ($i) => (float) ($i->price - $i->discount_amount) > 0);
+        if ($paidItems->isEmpty()) {
+            // Si le panier ne contient que des gratuits, on propose l'inscription directe
+            return redirect()->route('marketplace.cart')->with('info', 'Votre panier ne contient que des cours gratuits : utilisez "S\'inscrire gratuitement".');
         }
 
-        $subtotal = $items->sum(fn ($i) => $i->price - $i->discount_amount);
-        $tax = round($subtotal * 0.0, 2); // 0% pour l'instant, à configurer par pays
-        $total = $subtotal + $tax;
+        $subtotalUsd = (float) $paidItems->sum(fn ($i) => $i->price - $i->discount_amount);
+        $taxUsd      = round($subtotalUsd * 0.0, 2);
+        $totalUsd    = $subtotalUsd + $taxUsd;
+
+        $subtotal = CountriesService::convertFromUsd($subtotalUsd, $country['code'] ?? 'CD');
+        $tax      = CountriesService::convertFromUsd($taxUsd, $country['code'] ?? 'CD');
+        $total    = CountriesService::convertFromUsd($totalUsd, $country['code'] ?? 'CD');
 
         $providers = $this->paymentService->enabledProviders()->map(fn ($p) => [
             'provider' => $p->provider,
-            'label' => PaymentGatewaySetting::PROVIDERS[$p->provider] ?? $p->provider,
-            'sandbox' => $p->sandbox,
+            'label'    => PaymentGatewaySetting::PROVIDERS[$p->provider] ?? $p->provider,
+            'sandbox'  => $p->sandbox,
         ]);
 
         return Inertia::render('Marketplace/Checkout', [
-            'items' => $items,
-            'subtotal' => $subtotal,
-            'tax' => $tax,
-            'total' => $total,
-            'providers' => $providers,
+            'cart' => [
+                'items'          => $items,
+                'paid'           => $paidItems->values(),
+                'subtotal'       => $subtotalUsd,
+                'subtotal_local' => $subtotal['amount'],
+                'tax'            => $taxUsd,
+                'tax_local'      => $tax['amount'],
+                'total'          => $totalUsd,
+                'total_local'    => $total['amount'],
+                'currency'       => $total['currency'],
+                'symbol'         => $total['symbol'],
+            ],
+            'items'             => $items,
+            'subtotal'          => $subtotalUsd,
+            'total'             => $totalUsd,
+            'currency'          => $total['currency'],
+            'symbol'            => $total['symbol'],
+            'providers'         => $providers,
+            'countries'         => CountriesService::options(),
+            'country'           => $country,
             'recommendedProvider' => $this->paymentService->recommendProvider(
-                $request->input('country_code', 'CD'),
-                $total,
+                $country['code'] ?? 'CD',
+                $totalUsd,
             ),
+            'user' => $user ? [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'country_code' => $user->country_code ?? $country['code'] ?? 'CD',
+            ] : null,
         ]);
+    }
+
+    /**
+     * Demande de validation par un administrateur pour tous les articles PAYANTS du panier.
+     * Crée des enrollments en statut PENDING (sans paiement) qui seront validés ou rejetés manuellement.
+     */
+    public function requestEnrollmentCart(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 401, 'Vous devez être connecté.');
+
+        $data = $request->validate([
+            'note'         => 'nullable|string|max:500',
+            'country_code' => 'nullable|string|size:2',
+            'phone_number' => 'nullable|string|max:30',
+        ]);
+
+        $items = $this->getCartItems($request)->load('course');
+        $paidItems = $items->filter(fn ($i) => (float) ($i->price - $i->discount_amount) > 0);
+
+        if ($paidItems->isEmpty()) {
+            return back()->with('error', 'Aucun cours payant dans votre panier.');
+        }
+
+        $requested = 0;
+        $skipped   = 0;
+        $requestedEnrollments = [];
+        $requestedCourses = [];
+
+        foreach ($paidItems as $item) {
+            $course = $item->course;
+            if (! $course) { $skipped++; continue; }
+
+            if ($user->isEnrolledIn($course) || $user->hasPendingEnrollment($course)) {
+                $skipped++;
+                continue;
+            }
+
+            try {
+                $enrollment = $user->requestEnrollment($course, [
+                    'notes' => ($data['note'] ?? null) . "\n[Origine] Demande via panier (sans paiement en ligne) — validation admin requise.",
+                ]);
+                $requestedEnrollments[] = $enrollment;
+                $requestedCourses[] = $course;
+                $item->delete(); // Retirer du panier
+                $requested++;
+            } catch (\Throwable $e) {
+                \Log::warning('requestEnrollmentCart failed for course ' . $course->id . ': ' . $e->getMessage());
+                $skipped++;
+            }
+        }
+
+        // Notifier tous les admins / finance managers
+        if ($requestedEnrollments) {
+            try {
+                $admins = \App\Models\User::role(['admin', 'superadmin', 'finance-manager'])->get();
+                foreach ($admins as $admin) {
+                    foreach ($requestedEnrollments as $enrollment) {
+                        $admin->notify(new \App\Notifications\NewEnrollmentRequestNotification($enrollment, [
+                            'payment_method' => 'manual_validation',
+                            'note' => $data['note'] ?? null,
+                            'phone_number' => $data['phone_number'] ?? null,
+                            'country_code' => $data['country_code'] ?? null,
+                        ]));
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Notify admin (requestEnrollmentCart) failed: ' . $e->getMessage());
+            }
+        }
+
+        if ($requested === 0) {
+            return back()->with('error', 'Aucune demande créée (vous êtes peut-être déjà inscrit ou avez déjà une demande en attente).');
+        }
+
+        $msg = "✅ {$requested} demande(s) d'inscription envoyée(s) à l'équipe pédagogique.";
+        if ($skipped > 0) $msg .= " ({$skipped} élément(s) ignoré(s) — déjà inscrit ou en attente).";
+        $msg .= ' Vous recevrez une notification dès qu\'elle sera traitée.';
+
+        return redirect()->route('student.my-enrollments')->with('success', $msg);
     }
 
     /**

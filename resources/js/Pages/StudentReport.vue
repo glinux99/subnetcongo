@@ -1,164 +1,106 @@
 <script setup lang="ts">
 /**
  * ======================================================================================
- * SUBNETCONGO LMS - ADVANCED STUDENT ANALYTICS DASHBOARD v2.0
+ * SUBNETCONGO LMS - STUDENT ANALYTICS HUB v40.0 (Prestige Edition)
  * ======================================================================================
- * Tableau de bord analytique Premium.
- * UI/UX améliorée avec : Onglets, Timeline, Radar Chart, Filtrage, Tendances, Skeletons.
- *
- * @author SubnetCongo Framework Division
  */
-
 import { ref, computed, onMounted } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
 
-// Composants de Layout & UI
+// UI CORE
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Avatar from 'primevue/avatar';
-import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import ProgressBar from 'primevue/progressbar';
-import Breadcrumb from 'primevue/breadcrumb';
-import TabView from 'primevue/tabview';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import Button from 'primevue/button';
-import Menu from 'primevue/menu';
 import InputText from 'primevue/inputtext';
 import Timeline from 'primevue/timeline';
 import Skeleton from 'primevue/skeleton';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
-// --- INTERFACES TYPESCRIPT ---
+// --- INTERFACES ---
 interface Exam {
-    id: number;
-    title: string;
-    status: 'Réussi' | 'Échoué' | 'En attente';
-    score: number | null;
-    attempted_at: string;
+    id: number; title: string; status: 'Réussi' | 'Échoué' | 'En attente';
+    score: number | null; attempted_at: string;
 }
-
-interface Course {
-    id: number;
-    title: string;
-    exams: Exam[];
-}
+interface Course { id: number; title: string; exams: Exam[]; }
 
 interface StudentProps {
     student: { id: number; name: string; avatar?: string; email: string; enrollment_date: string };
     globalStats: {
         average_score: number; score_trend: number;
         success_rate: number; success_trend: number;
-        completed_exams: number;
-        total_attempts: number;
+        completed_exams: number; total_attempts: number;
     };
     coursesData: Course[];
     performanceOverTime: { labels: string[]; scores: number[] };
-    skillsData: { labels: string[]; scores: number[] }; // Nouveau pour le Radar Chart
-    activityLog: { status: string; date: string; icon: string; color: string; description: string }[]; // Nouveau pour Timeline
+    skillsData: { labels: string[]; scores: number[] };
+    activityLog: { status: string; date: string; icon: string; color: string; description: string }[];
 }
 
 const props = defineProps<StudentProps>();
 const toast = useToast();
-
-// --- STATE ---
-const isLoading = ref(true); // Simule le chargement pour l'UX
+const isLoading = ref(true);
 const searchQuery = ref('');
-const exportMenu = ref();
 
-// --- COMPOSANTS & LOGIQUE ---
 onMounted(() => {
-    // Simule un délai réseau pour montrer l'animation de chargement (UX Premium)
-    setTimeout(() => { isLoading.value = false; }, 800);
+    setTimeout(() => { isLoading.value = false; }, 600);
 });
 
-// Menu d'exportation
-const exportItems = ref([
-    { label: 'Exporter en PDF', icon: 'pi pi-file-pdf', command: () => triggerExport('PDF') },
-    { label: 'Exporter en Excel', icon: 'pi pi-file-excel', command: () => triggerExport('Excel') }
-]);
-
-const toggleExportMenu = (event: Event) => { exportMenu.value.toggle(event); };
-
-const triggerExport = (format: string) => {
-    toast.add({ severity: 'info', summary: 'Génération en cours', detail: `Le fichier ${format} est en cours de création...`, life: 3000 });
-};
-
-// Filtrage intelligent des cours et examens
+// FILTRAGE
 const filteredCourses = computed(() => {
     if (!searchQuery.value) return props.coursesData;
-    const lowerQuery = searchQuery.value.toLowerCase();
-
-    return props.coursesData.map(course => {
-        const filteredExams = course.exams.filter(exam => exam.title.toLowerCase().includes(lowerQuery));
-        return { ...course, exams: filteredExams };
-    }).filter(course => course.exams.length > 0 || course.title.toLowerCase().includes(lowerQuery));
+    const q = searchQuery.value.toLowerCase();
+    return props.coursesData.map(c => ({
+        ...c,
+        exams: c.exams.filter(e => e.title.toLowerCase().includes(q))
+    })).filter(c => c.exams.length > 0 || c.title.toLowerCase().includes(q));
 });
 
-// --- CONFIGURATION DES GRAPHIQUES (CHART.JS) ---
-
-// 1. Graphique d'évolution (Line Chart avec dégradé simulé)
+// --- CHARTS CONFIG (SubnetCongo Ruby Palette) ---
 const lineChartData = computed(() => ({
     labels: props.performanceOverTime.labels,
     datasets: [{
-        label: 'Score Obtenu (%)',
+        label: 'Performance (%)',
         data: props.performanceOverTime.scores,
         fill: true,
-        borderColor: '#4F46E5', // Indigo 600
-        backgroundColor: 'rgba(79, 70, 229, 0.08)',
+        borderColor: '#E11D48',
+        backgroundColor: 'rgba(225, 29, 72, 0.1)',
         tension: 0.4,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#4F46E5',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#E11D48',
+        pointRadius: 5
     }]
 }));
 
-const lineChartOptions = {
-    maintainAspectRatio: false,
-    plugins: {
-        legend: { display: false },
-        tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', padding: 12 }
-    },
-    scales: {
-        y: { min: 0, max: 100, grid: { borderDash: [5, 5], color: '#f1f5f9' }, ticks: { color: '#64748b' } },
-        x: { grid: { display: false }, ticks: { color: '#64748b' } }
-    },
-    interaction: { mode: 'nearest', axis: 'x', intersect: false }
-};
-
-// 2. Graphique Radar des compétences (Nouveau)
 const radarChartData = computed(() => ({
     labels: props.skillsData?.labels || [],
     datasets: [{
-        label: 'Niveau de maîtrise',
+        label: 'Maîtrise',
         data: props.skillsData?.scores || [],
-        backgroundColor: 'rgba(16, 185, 129, 0.2)', // Emerald 500
-        borderColor: '#10B981',
-        pointBackgroundColor: '#10B981',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: '#10B981'
+        backgroundColor: 'rgba(225, 29, 72, 0.2)',
+        borderColor: '#E11D48',
+        pointBackgroundColor: '#E11D48'
     }]
 }));
 
-const radarChartOptions = {
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { r: { angleLines: { color: '#f1f5f9' }, grid: { color: '#f1f5f9' }, pointLabels: { color: '#64748b', font: { size: 11 } }, ticks: { display: false, min: 0, max: 100 } } }
-};
-
-// --- UTILITAIRES ---
-const getStatusProps = (status: string) => {
-    const map: Record<string, { severity: string, icon: string }> = {
-        'Réussi': { severity: 'success', icon: 'pi pi-check-circle' },
-        'Échoué': { severity: 'danger', icon: 'pi pi-times-circle' },
-        'En attente': { severity: 'warning', icon: 'pi pi-clock' }
+const getStatusProps = (s: string) => {
+    const map: any = {
+        'Réussi': { sev: 'success', icon: 'pi-check-circle' },
+        'Échoué': { sev: 'danger', icon: 'pi-times' },
+        'En attente': { sev: 'warn', icon: 'pi-clock' }
     };
-    return map[status] || { severity: 'secondary', icon: 'pi pi-info-circle' };
+    return map[s] || { sev: 'secondary', icon: 'pi-info' };
 };
 </script>
 
@@ -166,296 +108,206 @@ const getStatusProps = (status: string) => {
     <AppLayout>
         <Head :title="`Analytics | ${student.name}`" />
 
-        <div class="min-h-screen bg-slate-50 p-4 md:p-6 lg:p-8 font-sans">
-            <div class="max-w-[1400px] mx-auto">
+        <div class="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
+            
+            <!-- ── HEADER : PRESTIGE V40 (Mesh Gradient) ── -->
+            <header class="bg-[#0F172A] pt-12 pb-28 px-8 relative overflow-hidden">
+                <div class="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-red-600/15 rounded-full blur-[120px] pointer-events-none"></div>
+                <div class="absolute bottom-[-20%] left-[-5%] w-[400px] h-[400px] bg-red-900/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-                <!-- EN-TÊTE DU PROFIL (HEADER) -->
-                <div class="mb-8">
-                    <Breadcrumb :model="[{ label: 'Analytics', icon: 'pi pi-chart-bar' }, { label: 'Apprenants' }, { label: student.name }]" class="bg-transparent p-0 text-sm mb-4" />
-
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 relative overflow-hidden">
-                        <!-- Décoration de fond -->
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60"></div>
-
-                        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 z-10">
-                            <div class="relative">
-                                <Avatar :image="student.avatar || `https://ui-avatars.com/api/?name=${student.name}&background=4F46E5&color=fff`" size="xlarge" shape="circle" class="w-24 h-24 shadow-md border-4 border-white" />
-                                <div class="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-2 border-white rounded-full" v-tooltip.bottom="'Étudiant Actif'"></div>
-                            </div>
-                            <div class="text-center md:text-left">
-                                <h1 class="text-3xl font-black text-slate-800 tracking-tight">{{ student.name }}</h1>
-                                <p class="text-slate-500 font-medium flex items-center justify-center md:justify-start gap-2 mt-1">
-                                    <i class="pi pi-envelope text-sm"></i> {{ student.email }}
-                                </p>
-                                <div class="flex gap-2 mt-4 justify-center md:justify-start">
-                                    <Tag severity="info" value="Inscrit en 2024" rounded></Tag>
-                                    <Tag severity="success" value="Parcours Premium" rounded></Tag>
-                                </div>
-                            </div>
+                <div class="max-w-[1500px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div class="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                        <div class="relative group">
+                            <Avatar :image="student.avatar" :label="student.name.charAt(0)" size="xlarge" shape="circle" 
+                                class="!w-24 !h-24 !bg-red-50 !text-red-600 !font-black border-4 border-white/10 shadow-2xl group-hover:scale-105 transition-transform" />
+                            <div class="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-2 border-[#0F172A] rounded-full"></div>
                         </div>
-
-                        <!-- Actions d'export -->
-                        <div class="z-10 w-full md:w-auto flex justify-center">
-                            <Button type="button" label="Exporter le rapport" icon="pi pi-cloud-download" @click="toggleExportMenu" aria-haspopup="true" aria-controls="overlay_menu" class="p-button-outlined p-button-secondary rounded-xl font-bold w-full md:w-auto" />
-                            <Menu ref="exportMenu" id="overlay_menu" :model="exportItems" :popup="true" />
+                        <div>
+                            <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                                <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/20">Student Analytics Profile</span>
+                            </div>
+                            <h1 class="text-4xl font-black text-white tracking-tighter italic uppercase leading-none">{{ student.name }}</h1>
+                            <p class="text-slate-400 mt-2 font-medium text-sm italic">{{ student.email }}</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- ETAT DE CHARGEMENT SKELETON (UX) -->
-                <div v-if="isLoading" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <Skeleton height="8rem" borderRadius="16px" v-for="i in 4" :key="`skel-kpi-${i}`"></Skeleton>
+                    <div class="flex gap-4">
+                        <Button label="Rapport PDF" icon="pi pi-file-pdf" class="!bg-white/5 hover:!bg-white/10 !border-white/10 !text-white !rounded-xl !px-6 !py-3 backdrop-blur-xl" />
+                        <Button label="Partager" icon="pi pi-share-alt" class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-6 !py-3 shadow-xl shadow-red-600/20 transition-all active:scale-95" />
                     </div>
-                    <Skeleton height="24rem" borderRadius="16px"></Skeleton>
+                </div>
+            </header>
+
+            <main class="max-w-[1500px] mx-auto px-8 -mt-16 relative z-20 space-y-8">
+                
+                <!-- ETAT DE CHARGEMENT -->
+                <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <Skeleton height="120px" borderRadius="32px" v-for="i in 4" :key="i" />
                 </div>
 
-                <!-- CONTENU PRINCIPAL (TAB SYSTEM) -->
-                <div v-else class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                    <TabView class="custom-tabview">
-
-                        <!-- ONGLET 1 : VUE D'ENSEMBLE (DASHBOARD) -->
-                        <TabPanel>
-                            <template #header>
-                                <div class="flex items-center gap-2 px-2 py-1"><i class="pi pi-th-large"></i><span class="font-bold">Vue d'ensemble</span></div>
-                            </template>
-
-                            <div class="p-4 md:p-6 bg-slate-50/50">
-                                <!-- Ligne des KPIs -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-
-                                    <!-- Score Moyen -->
-                                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl"><i class="pi pi-percentage"></i></div>
-                                            <Tag :severity="globalStats.score_trend > 0 ? 'success' : 'danger'" rounded>
-                                                <i :class="globalStats.score_trend > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="text-xs mr-1"></i> {{ Math.abs(globalStats.score_trend) }}%
-                                            </Tag>
-                                        </div>
-                                        <h4 class="text-slate-400 text-sm font-bold uppercase tracking-wider">Score Moyen</h4>
-                                        <div class="text-3xl font-black text-slate-800 mt-1">{{ globalStats.average_score }} <span class="text-lg text-slate-400 font-medium">/ 100</span></div>
-                                    </div>
-
-                                    <!-- Taux de réussite -->
-                                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl"><i class="pi pi-check-circle"></i></div>
-                                            <Tag :severity="globalStats.success_trend >= 0 ? 'success' : 'warning'" rounded>
-                                                <i :class="globalStats.success_trend >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="text-xs mr-1"></i> {{ Math.abs(globalStats.success_trend) }}%
-                                            </Tag>
-                                        </div>
-                                        <h4 class="text-slate-400 text-sm font-bold uppercase tracking-wider">Taux de Réussite</h4>
-                                        <div class="text-3xl font-black text-slate-800 mt-1">{{ globalStats.success_rate }}%</div>
-                                    </div>
-
-                                    <!-- Examens passés -->
-                                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl"><i class="pi pi-book"></i></div>
-                                        </div>
-                                        <h4 class="text-slate-400 text-sm font-bold uppercase tracking-wider">Examens Validés</h4>
-                                        <div class="text-3xl font-black text-slate-800 mt-1">{{ globalStats.completed_exams }}</div>
-                                    </div>
-
-                                    <!-- Tentatives -->
-                                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform duration-300">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl"><i class="pi pi-sync"></i></div>
-                                        </div>
-                                        <h4 class="text-slate-400 text-sm font-bold uppercase tracking-wider">Total Tentatives</h4>
-                                        <div class="text-3xl font-black text-slate-800 mt-1">{{ globalStats.total_attempts }}</div>
-                                    </div>
-
-                                </div>
-
-                                <!-- Section Graphiques -->
-                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    <!-- Courbe de progression (Prend 2/3 de l'espace) -->
-                                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                        <div class="flex justify-between items-center mb-6">
-                                            <h3 class="text-lg font-bold text-slate-800">Évolution Globale</h3>
-                                            <Button icon="pi pi-external-link" text rounded aria-label="Agrandir" />
-                                        </div>
-                                        <div class="h-[300px]">
-                                            <Chart type="line" :data="lineChartData" :options="lineChartOptions" class="h-full" />
-                                        </div>
-                                    </div>
-
-                                    <!-- Radar de compétences (Prend 1/3) -->
-                                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                                        <h3 class="text-lg font-bold text-slate-800 mb-6 text-center">Cartographie des Compétences</h3>
-                                        <div class="h-[280px] flex items-center justify-center">
-                                            <Chart type="radar" :data="radarChartData" :options="radarChartOptions" class="w-full h-full" />
-                                        </div>
-                                    </div>
-                                </div>
+                <!-- 1. KPI CARDS V40 -->
+                <section v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div v-for="kpi in [
+                        { l: 'Score Moyen', v: globalStats.average_score + '%', t: globalStats.score_trend, i: 'pi-percentage', c: 'text-red-600', bg: 'bg-red-50' },
+                        { l: 'Taux de Réussite', v: globalStats.success_rate + '%', t: globalStats.success_trend, i: 'pi-verified', c: 'text-emerald-600', bg: 'bg-emerald-50' },
+                        { l: 'Examen Validés', v: globalStats.completed_exams, t: globalStats.success_trend, i: 'pi-book', c: 'text-blue-600', bg: 'bg-blue-50' },
+                        { l: 'Total Tentatives', v: globalStats.total_attempts, t: globalStats.success_trend, i: 'pi-sync', c: 'text-slate-900', bg: 'bg-slate-100' }
+                    ]" :key="kpi.l" class="bg-white p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-xl transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div :class="kpi.bg" class="w-10 h-10 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
+                                <i :class="['pi', kpi.i, kpi.c, 'text-lg']"></i>
                             </div>
-                        </TabPanel>
+                          <Tag 
+    v-if="kpi.t !== undefined && kpi.t !== null" 
+    :severity="Number(kpi.t) >= 0 ? 'success' : 'danger'" 
+    :value="`${Number(kpi.t) > 0 ? '+' : ''}${kpi.t}%`" 
+    class="!text-[9px] !font-black" 
+/>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.l }}</p>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">{{ kpi.v }}</h2>
+                    </div>
+                </section>
 
-                        <!-- ONGLET 2 : RÉSULTATS DÉTAILLÉS (DATATABLES) -->
-                        <TabPanel>
-                            <template #header>
-                                <div class="flex items-center gap-2 px-2 py-1"><i class="pi pi-list"></i><span class="font-bold">Relevé de notes</span></div>
-                            </template>
+                <!-- 2. ANALYTICS TABS -->
+                <div class="bg-white rounded-[1.5rem] border border-slate-200 shadow-2xl overflow-hidden min-h-[600px]">
+                    <Tabs value="0">
+                        <TabList class="bg-slate-50/50 px-8 pt-4 !border-none">
+                            <Tab value="0" class="!text-xs !font-black !uppercase !tracking-widest !px-8">Performance</Tab>
+                            <Tab value="1" class="!text-xs !font-black !uppercase !tracking-widest !px-8">Relevé de notes</Tab>
+                            <Tab value="2" class="!text-xs !font-black !uppercase !tracking-widest !px-8">Timeline</Tab>
+                        </TabList>
 
-                            <div class="p-4 md:p-6">
-                                <!-- Barre d'outils -->
-                                <div class="flex flex-col md:flex-row justify-between items-center bg-slate-50 p-4 rounded-xl mb-6 gap-4 border border-slate-100">
-                                    <span class="p-input-icon-left w-full md:w-96">
-                                        <i class="pi pi-search text-slate-400" />
-                                        <InputText v-model="searchQuery" placeholder="Rechercher un examen ou un cours..." class="w-full rounded-lg border-slate-200" />
-                                    </span>
-                                    <Button icon="pi pi-filter" label="Filtres avancés" outlined class="p-button-secondary rounded-lg w-full md:w-auto" />
+                        <TabPanels class="p-8">
+                            <!-- TAB 0 : GRAPHIQUES -->
+                            <TabPanel value="0">
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                                    <div class="lg:col-span-2 space-y-6">
+                                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> Évolution Cognitive
+                                        </h3>
+                                        <div class="h-[400px] p-6 rounded-[1rem] bg-slate-50 border border-slate-100 shadow-inner">
+                                            <Chart type="line" :data="lineChartData" class="h-full" :options="{ maintainAspectRatio: false, plugins: { legend: { display: false } } }" />
+                                        </div>
+                                    </div>
+                                    <div class="space-y-6">
+                                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest text-center">Skill Mapping</h3>
+                                        <div class="h-[400px] flex items-center justify-center p-6 rounded-[1rem] border border-red-50">
+                                            <Chart type="radar" :data="radarChartData" class="h-full" :options="{ maintainAspectRatio: false, plugins: { legend: { display: false } } }" />
+                                        </div>
+                                    </div>
                                 </div>
+                            </TabPanel>
 
-                                <!-- Liste des cours et examens -->
+                            <!-- TAB 1 : DATA TABLE V40 -->
+                            <TabPanel value="1">
                                 <div class="space-y-8">
-                                    <div v-for="course in filteredCourses" :key="course.id" class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <IconField iconPosition="left" class="w-full max-w-md">
+                                            <InputIcon class="pi pi-search" />
+                                            <InputText v-model="searchQuery" placeholder="Rechercher une évaluation..." class="w-full !rounded-xl !bg-slate-50 border-none !py-4" />
+                                        </IconField>
+                                    </div>
 
-                                        <!-- Header du cours -->
-                                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                                            <h4 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                                                <div class="w-8 h-8 rounded bg-indigo-600 text-white flex items-center justify-center text-sm shadow-sm"><i class="pi pi-folder-open"></i></div>
-                                                {{ course.title }}
-                                            </h4>
-                                            <Tag :value="`${course.exams.length} examens`" severity="secondary" rounded />
+                                    <div v-for="course in filteredCourses" :key="course.id" class="rounded-[1rem] border border-slate-100 overflow-hidden mb-8 shadow-sm">
+                                        <div class="bg-[#0F172A] px-8 py-5 flex justify-between items-center">
+                                            <h4 class="font-black text-white text-sm tracking-tight italic uppercase">{{ course.title }}</h4>
+                                            <span class="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">{{ course.exams.length }} Assessments</span>
                                         </div>
 
-                                        <!-- Tableau des examens -->
-                                        <DataTable :value="course.exams" responsiveLayout="stack" breakpoint="768px" class="p-datatable-lg border-none" hoverRows>
-
+                                        <DataTable :value="course.exams" responsiveLayout="scroll" class="p-datatable-v40">
                                             <Column field="title" header="Évaluation">
                                                 <template #body="{ data }">
-                                                    <span class="font-bold text-slate-700">{{ data.title }}</span>
+                                                    <span class="font-black text-slate-800 tracking-tight italic">{{ data.title }}</span>
                                                 </template>
                                             </Column>
-
-                                            <Column field="status" header="Statut">
+                                            <Column header="Score (%)">
                                                 <template #body="{ data }">
-                                                    <Tag :severity="getStatusProps(data.status).severity" :icon="getStatusProps(data.status).icon" :value="data.status" rounded />
-                                                </template>
-                                            </Column>
-
-                                            <Column field="score" header="Score Obtenu">
-                                                <template #body="{ data }">
-                                                    <div v-if="data.score !== null" class="flex items-center gap-3">
-                                                        <ProgressBar :value="data.score" :showValue="false" class="h-2 w-32" :color="data.score >= 50 ? '#10B981' : '#EF4444'" />
-                                                        <span class="font-bold text-slate-700 w-10">{{ data.score }}%</span>
+                                                    <div v-if="data.score !== null" class="w-32">
+                                                        <div class="flex justify-between mb-1">
+                                                            <span class="text-[10px] font-bold text-slate-400">Précision</span>
+                                                            <span class="text-xs font-black text-slate-800">{{ data.score }}%</span>
+                                                        </div>
+                                                        <ProgressBar :value="data.score" :showValue="false" class="h-1 bg-slate-100" 
+                                                            :style="`--p-progressbar-value-background: ${data.score >= 50 ? '#10B981' : '#E11D48'}`" />
                                                     </div>
-                                                    <span v-else class="text-slate-400 italic text-sm">Non noté</span>
+                                                    <span v-else class="text-[10px] italic text-slate-300">Pending</span>
                                                 </template>
                                             </Column>
-
-                                            <Column field="attempted_at" header="Passé le">
+                                            <Column header="Statut">
                                                 <template #body="{ data }">
-                                                    <span class="text-sm font-medium text-slate-500">
-                                                        <i class="pi pi-calendar mr-1 text-xs"></i> {{ data.attempted_at || '---' }}
-                                                    </span>
+                                                    <Tag :severity="getStatusProps(data.status).sev" :value="data.status" 
+                                                         class="!text-[9px] !font-black !uppercase !px-3 !rounded-lg" />
                                                 </template>
                                             </Column>
-
-                                            <Column headerStyle="width: 5rem" bodyStyle="text-align: center">
-                                                <template #body>
-                                                    <Button icon="pi pi-angle-right" text rounded class="text-slate-400 hover:text-indigo-600" v-tooltip.left="'Voir la copie'" />
+                                            <Column header="Date">
+                                                <template #body="{ data }">
+                                                    <span class="text-xs font-bold text-slate-500 italic">{{ data.attempted_at || '---' }}</span>
                                                 </template>
                                             </Column>
-
-                                            <template #empty>
-                                                <div class="p-6 text-center text-slate-500">Aucun examen trouvé pour les critères actuels.</div>
-                                            </template>
-
                                         </DataTable>
                                     </div>
-
-                                    <!-- Empty State Global -->
-                                    <div v-if="filteredCourses.length === 0" class="text-center py-16 px-4">
-                                        <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <i class="pi pi-search text-4xl text-slate-300"></i>
-                                        </div>
-                                        <h3 class="text-xl font-bold text-slate-700">Aucun résultat</h3>
-                                        <p class="text-slate-500 mt-2">Modifiez votre recherche pour trouver un cours ou un examen.</p>
-                                    </div>
                                 </div>
-                            </div>
-                        </TabPanel>
+                            </TabPanel>
 
-                        <!-- ONGLET 3 : CHRONOLOGIE (TIMELINE) -->
-                        <TabPanel>
-                            <template #header>
-                                <div class="flex items-center gap-2 px-2 py-1"><i class="pi pi-history"></i><span class="font-bold">Journal d'activité</span></div>
-                            </template>
-
-                            <div class="p-6 max-w-3xl mx-auto">
-                                <Timeline :value="activityLog" class="w-full">
-                                    <template #marker="slotProps">
-                                        <span class="flex w-10 h-10 items-center justify-center text-white rounded-full z-10 shadow-sm" :style="{ backgroundColor: slotProps.item.color }">
-                                            <i :class="slotProps.item.icon"></i>
-                                        </span>
-                                    </template>
-                                    <template #content="slotProps">
-                                        <Card class="mt-0 mb-8 shadow-sm border border-slate-100 rounded-2xl">
-                                            <template #title>
-                                                <div class="text-lg font-bold text-slate-800">{{ slotProps.item.status }}</div>
-                                            </template>
-                                            <template #subtitle>
-                                                <div class="text-sm text-slate-500 font-medium"><i class="pi pi-clock mr-1"></i> {{ slotProps.item.date }}</div>
-                                            </template>
-                                            <template #content>
-                                                <p class="text-slate-600 leading-relaxed m-0">{{ slotProps.item.description }}</p>
-                                            </template>
-                                        </Card>
-                                    </template>
-                                </Timeline>
-                            </div>
-                        </TabPanel>
-
-                    </TabView>
+                            <!-- TAB 2 : TIMELINE ELITE -->
+                            <TabPanel value="2">
+                                <div class="max-w-3xl mx-auto py-10 px-6 bg-slate-50 rounded-[1rem] border border-slate-100">
+                                    <Timeline :value="activityLog" align="alternate" class="custom-timeline-v40">
+                                        <template #marker="slotProps">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-xl" :style="{ backgroundColor: slotProps.item.color }">
+                                                <i :class="slotProps.item.icon" class="text-sm"></i>
+                                            </div>
+                                        </template>
+                                        <template #content="slotProps">
+                                            <div class="p-6 bg-white rounded-3xl shadow-sm border border-slate-200 mb-6 group hover:shadow-lg transition-all">
+                                                <h4 class="text-sm font-black text-slate-800 italic uppercase mb-1">{{ slotProps.item.status }}</h4>
+                                                <p class="text-xs text-slate-500 font-medium leading-relaxed mb-3">{{ slotProps.item.description }}</p>
+                                                <span class="text-[10px] font-black text-slate-400 tracking-widest italic">{{ slotProps.item.date }}</span>
+                                            </div>
+                                        </template>
+                                    </Timeline>
+                                </div>
+                            </TabPanel>
+                        </TabPanels>
+                    </Tabs>
                 </div>
-
-            </div>
+            </main>
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-/* Design personnalisé pour surcharger légèrement PrimeVue et obtenir le look "Premium" */
+/* PRESTIGE V40 CORE STYLES */
+.italic { font-style: italic; }
+.tracking-tighter { letter-spacing: -0.05em; }
 
-/* Tabs Styling */
-:deep(.custom-tabview .p-tabview-nav) {
-    border-bottom: 1px solid #e2e8f0;
-    background: transparent;
-    padding: 0 1rem;
-}
-:deep(.custom-tabview .p-tabview-nav li .p-tabview-nav-link) {
-    background: transparent;
+/* TABS OVERRIDES */
+:deep(.p-tablist-tab-list) { border: none !important; }
+:deep(.p-tab) { transition: all 0.3s ease; border-bottom: 2px solid transparent !important; color: #94A3B8; }
+:deep(.p-tab-active) { color: #E11D48 !important; border-bottom-color: #E11D48 !important; }
+
+/* DATATABLE V40 */
+:deep(.p-datatable-v40 .p-datatable-thead > tr > th) {
+    background: #F8FAFC;
+    color: #94A3B8;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 1.5rem 2rem;
     border: none;
-    border-bottom: 2px solid transparent;
-    color: #64748b;
-    padding: 1.25rem 1rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
 }
-:deep(.custom-tabview .p-tabview-nav li:not(.p-highlight):hover .p-tabview-nav-link) {
-    background: transparent;
-    border-color: #cbd5e1;
-    color: #334155;
-}
-:deep(.custom-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-    background: transparent;
-    border-color: #4f46e5;
-    color: #4f46e5;
+:deep(.p-datatable-v40 .p-datatable-tbody > tr) { border-bottom: 1px solid #F1F5F9; }
+:deep(.p-datatable-v40 .p-datatable-tbody > tr:hover) { background: #F8FAFC !important; }
+
+/* TIMELINE V40 */
+:deep(.p-timeline-event-opposite) { display: none; }
+@media (min-width: 768px) {
+    :deep(.p-timeline-event-opposite) { display: block; flex: 1; padding: 0 1rem; }
 }
 
-/* Timeline Customization */
-:deep(.p-timeline-event-opposite) {
-    display: none; /* Cache la colonne de gauche vide de la timeline par défaut pour centrer le focus */
-}
-@media (min-width: 768px) {
-    :deep(.p-timeline-event-opposite) {
-        display: block;
-        flex: 0 0 15%; /* Réduit l'espace pris par la date à gauche */
-        padding-right: 2rem;
-        text-align: right;
-    }
-}
+/* KNOB / PROGRESS OVERRIDES */
+:deep(.p-progressbar) { border-radius: 99px; }
+:deep(.p-progressbar-value) { transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 </style>

@@ -129,7 +129,7 @@ const formatPrice = (price) => {
                     <IconField iconPosition="left">
                         <InputIcon class="pi pi-search text-slate-400" />
                         <InputText v-model="search" @keyup.enter="apply" placeholder="Qu'allez-vous maîtriser aujourd'hui ?"
-                            class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-1xl !py-5 !pl-14 !text-white placeholder:!text-slate-500 focus:!bg-white/10 focus:!border-violet-500/50 transition-all" />
+                            class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-xl !py-5 !pl-14 !text-white placeholder:!text-slate-500 focus:!bg-white/10 focus:!border-violet-500/50 transition-all" />
                     </IconField>
                 </div>
             </div>
@@ -145,7 +145,7 @@ const formatPrice = (price) => {
                             { label: 'Gratuits', val: stats.free, icon: 'gift', color: 'bg-emerald-50 text-emerald-600' },
                             { label: 'Certifiants', val: stats.paid, icon: 'star', color: 'bg-amber-50 text-amber-600' },
                             { label: 'Rating Global', val: stats.avg_rating, icon: 'verified', color: 'bg-indigo-50 text-indigo-600', suffix: '/5' }
-                        ]" :key="stat.label" class="p-6 rounded-1xl border border-slate-100 bg-white hover:shadow-lg transition-all group">
+                        ]" :key="stat.label" class="p-6 rounded-xl border border-slate-100 bg-white hover:shadow-lg transition-all group">
                             <div :class="stat.color" class="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <i :class="`pi pi-${stat.icon}`"></i>
                             </div>

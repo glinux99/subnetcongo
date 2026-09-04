@@ -99,7 +99,7 @@ const verify = (cert) => {
                                 <!-- Top Bar -->
                                 <div class="flex justify-between items-start mb-6">
                                     <div class="flex gap-4 items-center">
-                                        <div class="w-16 h-16 bg-white rounded-1xl overflow-hidden border-2 border-emerald-500/30 p-1 shadow-inner">
+                                        <div class="w-16 h-16 bg-white rounded-xl overflow-hidden border-2 border-emerald-500/30 p-1 shadow-inner">
                                             <img :src="getImageUrl(cert.course_image)" @error="handleImageError" class="w-full h-full object-cover rounded-xl" />
                                         </div>
                                         <div>

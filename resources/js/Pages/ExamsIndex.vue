@@ -80,7 +80,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-slate-500" />
                             <InputText v-model="search" placeholder="Rechercher un examen..." 
-                                class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-1xl !py-4 !pl-12 !text-white placeholder:!text-slate-500 focus:!border-red-500/50 transition-all" />
+                                class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-xl !py-4 !pl-12 !text-white placeholder:!text-slate-500 focus:!border-red-500/50 transition-all" />
                         </IconField>
                     </div>
                 </div>
@@ -105,7 +105,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                 </div>
 
                 <!-- ── FILTRES ── -->
-                <div class="flex gap-2 mb-8 bg-white p-2 rounded-1xl border border-slate-200 w-fit shadow-sm">
+                <div class="flex gap-2 mb-8 bg-white p-2 rounded-xl border border-slate-200 w-fit shadow-sm">
                     <button v-for="f in [{k:'all',l:'Tous'}, {k:'available',l:'À passer'}, {k:'passed',l:'Réussis'}, {k:'failed',l:'Échoués'}]" :key="f.k"
                         @click="activeFilter = f.k"
                         :class="['px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all', 
@@ -128,7 +128,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                                     <span class="text-[9px] font-black text-red-600 uppercase tracking-[0.2em]">{{ exam.type || 'EXAMEN' }}</span>
                                     <h3 class="text-lg font-black text-slate-800 leading-tight italic tracking-tight line-clamp-2">{{ exam.title }}</h3>
                                 </div>
-                                <div class="w-10 h-10 rounded-1xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
+                                <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner">
                                     <i :class="getStatus(exam).icon" class="text-slate-400"></i>
                                 </div>
                             </div>

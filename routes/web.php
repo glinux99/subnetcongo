@@ -214,14 +214,16 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('marketplace')->name('marketplace.')->group(function () {
         Route::get('/', [App\Http\Controllers\MarketplaceController::class, 'index'])->name('index');
         Route::get('/cart', [App\Http\Controllers\MarketplaceController::class, 'cart'])->name('cart');
+        Route::post('/cart/enroll-free', [App\Http\Controllers\MarketplaceController::class, 'enrollFreeCart'])->name('cart.enroll-free');
+        Route::post('/country', [App\Http\Controllers\MarketplaceController::class, 'setCountry'])->name('country.set');
         Route::get('/checkout', [App\Http\Controllers\MarketplaceController::class, 'checkout'])->name('checkout');
         Route::post('/checkout/process', [App\Http\Controllers\MarketplaceController::class, 'processCheckout'])->name('process');
+        Route::post('/checkout/request-validation', [App\Http\Controllers\MarketplaceController::class, 'requestEnrollmentCart'])->name('request-validation');
         Route::get('/confirmation/{order}', [App\Http\Controllers\MarketplaceController::class, 'confirmation'])->name('confirmation');
         Route::post('/cart/{course}/add', [App\Http\Controllers\MarketplaceController::class, 'addToCart'])->name('cart.add');
         Route::delete('/cart/{course}/remove', [App\Http\Controllers\MarketplaceController::class, 'removeFromCart'])->name('cart.remove');
         Route::post('/wishlist/{course}/toggle', [App\Http\Controllers\MarketplaceController::class, 'toggleWishlist'])->name('wishlist.toggle');
         Route::post('/course/{course}/review', [App\Http\Controllers\MarketplaceController::class, 'review'])->name('review');
-        // Inscription directe (gratuit) ou demande (payant) — 1 clic
         Route::post('/course/{course}/enroll-free', [App\Http\Controllers\MarketplaceController::class, 'enrollFree'])->name('enroll-free');
         Route::post('/course/{course}/request-enrollment', [App\Http\Controllers\MarketplaceController::class, 'requestEnrollment'])->name('request-enrollment');
         Route::get('/{course}', [App\Http\Controllers\MarketplaceController::class, 'show'])->name('show');

@@ -72,7 +72,7 @@ const submit = () => {
                             </p>
                         </div>
                         <div class="hidden lg:block">
-                            <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-1xl">
+                            <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-xl">
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20">
                                         <i class="pi pi-shield text-white text-xl"></i>
@@ -180,7 +180,7 @@ const submit = () => {
                     </div>
 
                     <!-- STICKY ACTION BAR -->
-                    <div class="sticky bottom-6 bg-[#0F172A]/90 backdrop-blur-xl p-4 rounded-1xl border border-white/10 shadow-2xl flex items-center justify-between">
+                    <div class="sticky bottom-6 bg-[#0F172A]/90 backdrop-blur-xl p-4 rounded-xl border border-white/10 shadow-2xl flex items-center justify-between">
                         <p class="text-xs text-slate-400 px-4 hidden md:block">
                             <i class="pi pi-info-circle text-red-500 mr-2"></i> Les modifications sont définitives après enregistrement.
                         </p>

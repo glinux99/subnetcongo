@@ -158,10 +158,10 @@ const quickReject = (id) => {
                             <div class="flex flex-1 items-center gap-3 w-full">
                                 <IconField iconPosition="left" class="flex-1 max-w-md">
                                     <InputIcon class="pi pi-search" />
-                                    <InputText v-model="search" placeholder="Rechercher un étudiant ou un cours..." class="w-full !rounded-1xl !bg-slate-50 border-none !py-3" @keyup.enter="applyFilter" />
+                                    <InputText v-model="search" placeholder="Rechercher un étudiant ou un cours..." class="w-full !rounded-xl !bg-slate-50 border-none !py-3" @keyup.enter="applyFilter" />
                                 </IconField>
-                                <Select v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" class="!rounded-1xl !bg-slate-50 border-none !min-w-[180px]" @change="applyFilter" />
-                                <Select v-model="courseFilter" :options="courses" optionLabel="title" optionValue="id" placeholder="Filtrer par cours" class="!rounded-1xl !bg-slate-50 border-none !flex-1 lg:max-w-xs" showClear @change="applyFilter" >
+                                <Select v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" class="!rounded-xl !bg-slate-50 border-none !min-w-[180px]" @change="applyFilter" />
+                                <Select v-model="courseFilter" :options="courses" optionLabel="title" optionValue="id" placeholder="Filtrer par cours" class="!rounded-xl !bg-slate-50 border-none !flex-1 lg:max-w-xs" showClear @change="applyFilter" >
   <template v-slot:empty></template>
 </Select>
                             </div>
@@ -169,7 +169,7 @@ const quickReject = (id) => {
                         </div>
 
                         <!-- BULK ACTION BAR -->
-                        <div v-if="selected.length" class="flex items-center justify-between p-4 bg-[#0F172A] rounded-1xl animate-fade-in shadow-2xl">
+                        <div v-if="selected.length" class="flex items-center justify-between p-4 bg-[#0F172A] rounded-xl animate-fade-in shadow-2xl">
                             <div class="flex items-center gap-4 px-4 text-white">
                                 <div class="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center font-black text-xs">{{ selected.length }}</div>
                                 <span class="text-xs font-bold uppercase tracking-widest">Éléments sélectionnés</span>
@@ -267,7 +267,7 @@ const quickReject = (id) => {
         <!-- MODAL BULK V30 -->
         <Dialog v-model:visible="showBulkDialog" modal :header="`Action Groupée : ${bulkAction}`" :style="{ width: '450px' }" class="!rounded-[1rem]">
             <div class="p-6 text-center space-y-6">
-                <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-1xl flex items-center justify-center mx-auto shadow-inner">
+                <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center mx-auto shadow-inner">
                     <i :class="bulkAction === 'approve' ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'" class="text-2xl"></i>
                 </div>
                 <div>

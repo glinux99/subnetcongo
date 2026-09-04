@@ -121,7 +121,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
                     <i class="pi pi-search text-gray-400 group-hover:text-indigo-600 transition-colors duration-300"></i>
                 </div>
-                <div class="w-full bg-gray-100/50 border-2 border-transparent rounded-1xl py-2.5 pl-12 pr-20 text-sm group-hover:bg-white group-hover:border-indigo-100 transition-all duration-300 text-gray-400 font-medium">
+                <div class="w-full bg-gray-100/50 border-2 border-transparent rounded-xl py-2.5 pl-12 pr-20 text-sm group-hover:bg-white group-hover:border-indigo-100 transition-all duration-300 text-gray-400 font-medium">
                     {{ t('topbar.search_placeholder') }}
                 </div>
                 <div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
@@ -171,7 +171,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                     <img :src="currentLang.flag" class="w-5 h-3.5 rounded shadow-sm object-cover" />
                     <span class="text-[10px] font-black text-gray-700 uppercase">{{ currentLang.code }}</span>
                 </button>
-                <div class="hidden absolute right-0 mt-4 w-44 bg-white shadow-2xl rounded-1xl border border-gray-100 z-[120] p-1.5 overflow-hidden">
+                <div class="hidden absolute right-0 mt-4 w-44 bg-white shadow-2xl rounded-xl border border-gray-100 z-[120] p-1.5 overflow-hidden">
                     <button v-for="l in languages" :key="l.code" @click="changeLanguage(l)"
                         class="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-indigo-50 transition-all border-none bg-transparent cursor-pointer group text-left">
                         <img :src="l.flag" class="w-5 h-3.5 rounded shadow-sm" />
@@ -183,7 +183,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
             <div class="relative ml-2">
                 <button
                     v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
-                    class="flex items-center gap-3 p-1.5 rounded-1xl hover:bg-gray-50 transition-all border-none bg-transparent cursor-pointer group"
+                    class="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 transition-all border-none bg-transparent cursor-pointer group"
                 >
                     <div class="relative">
                         <img :src="user?.avatar || user?.profile_photo_url || '/assets/media/avatars/blank.png'" class="w-10 h-10 rounded-xl object-cover ring-2 ring-white shadow-md border border-gray-100" />
@@ -199,10 +199,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                     <i class="pi pi-chevron-down text-[10px] text-gray-400 group-hover:text-indigo-600 transition-colors ml-1"></i>
                 </button>
 
-                <div class="hidden absolute right-0 mt-4 w-64 bg-white shadow-2xl rounded-1xl border border-gray-100 z-[130] overflow-hidden text-left">
+                <div class="hidden absolute right-0 mt-4 w-64 bg-white shadow-2xl rounded-xl border border-gray-100 z-[130] overflow-hidden text-left">
                     <div class="p-6 bg-gradient-to-br from-gray-50 to-white text-center border-b border-gray-100">
                         <div class="relative inline-block mb-3">
-                            <img :src="user?.avatar || user?.profile_photo_url || '/assets/media/avatars/blank.png'" :alt="user?.profile_photo_url"  class="w-16 h-16 rounded-1xl mx-auto shadow-xl border-2 border-white" />
+                            <img :src="user?.avatar || user?.profile_photo_url || '/assets/media/avatars/blank.png'" :alt="user?.profile_photo_url"  class="w-16 h-16 rounded-xl mx-auto shadow-xl border-2 border-white" />
                         </div>
                         <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight">{{ user.name }}</h3>
                         <p class="text-[10px] text-gray-500 font-bold mt-1 lowercase">{{ user.email }}</p>

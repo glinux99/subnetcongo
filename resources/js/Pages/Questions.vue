@@ -342,7 +342,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <!-- KPI DASHBOARD                                                                  -->
             <!-- ============================================================================== -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-1xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-list text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Items</p>
@@ -352,7 +352,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
                 </div>
 
-                <div class="bg-white rounded-1xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-check-circle text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Items Actifs</p>
@@ -362,7 +362,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
                 </div>
 
-                <div class="bg-white rounded-1xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-star text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Barème Moyen</p>
@@ -370,7 +370,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <h3 class="text-4xl font-black text-slate-800">{{ props.statistics?.avg_difficulty || 1.5 }} <span class="text-sm text-slate-400">pts</span></h3>
                 </div>
 
-                <div class="bg-white rounded-1xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all duration-300 hover:shadow-md">
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center"><i class="pi pi-exclamation-triangle text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">À Réviser</p>
@@ -382,7 +382,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <!-- ============================================================================== -->
             <!-- DATA GRID : TABLEAU DES QUESTIONS                                              -->
             <!-- ============================================================================== -->
-            <div class="bg-white rounded-1xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
 
                 <!-- Toolbar de filtre -->
                 <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -507,11 +507,11 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <!-- STATS FOOTER SECTION                                                           -->
             <!-- ============================================================================== -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
-                <div class="lg:col-span-2 bg-white p-8 rounded-1xl shadow-sm border border-slate-200">
+                <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-indigo-500"></i> Répartition par Difficulté</h3>
                     <Chart type="bar" :data="chartData" :options="chartOptions" class="h-48" />
                 </div>
-                <div class="bg-indigo-900 p-8 rounded-1xl text-white shadow-xl relative overflow-hidden border border-indigo-800 flex flex-col justify-between">
+                <div class="bg-indigo-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden border border-indigo-800 flex flex-col justify-between">
                     <i class="pi pi-bolt absolute -right-6 -bottom-6 text-9xl text-white/5 rotate-12"></i>
                     <div class="relative z-10">
                         <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-indigo-100"><i class="pi pi-sparkles text-amber-400"></i> Conseil IA Pédagogique</h3>
@@ -527,7 +527,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- DIALOG ÉDITEUR : WORKSPACE ATOMIC QUESTION                                     -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="questionDialog" modal :closable="false" :draggable="false" :style="{ width: '90vw', maxWidth: '1200px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[85vh]" headerClass="hidden" class="rounded-1xl shadow-2xl overflow-hidden border border-slate-200">
+        <Dialog v-model:visible="questionDialog" modal :closable="false" :draggable="false" :style="{ width: '90vw', maxWidth: '1200px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[85vh]" headerClass="hidden" class="rounded-xl shadow-2xl overflow-hidden border border-slate-200">
 
             <!-- WORKSPACE HEADER -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
@@ -579,7 +579,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                         <!-- TAB 1: ÉNONCÉ & MÉTA -->
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in">
-                            <div class="bg-white p-8 rounded-1xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Classification & Énoncé</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -618,7 +618,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                         <!-- TAB 2: LOGIQUE DE RÉPONSE -->
                         <div v-show="activeEditorTab === 'logic'" class="space-y-8 animate-fade-in">
-                            <div class="bg-white p-8 rounded-1xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                     <h3 class="text-lg font-bold text-slate-800">Paramétrage de la Réponse</h3>
                                     <Tag :value="getTypeLabel(form.type)" class="bg-indigo-50 text-indigo-600 border border-indigo-100" />
@@ -682,7 +682,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                         <!-- TAB 3: AUDIT -->
                         <div v-show="activeEditorTab === 'audit'" class="space-y-8 animate-fade-in">
-                            <div class="bg-white p-8 rounded-1xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Version & Journal</h3>
 
                                 <div class="mb-8">
@@ -731,7 +731,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- MODAL : ANALYSE D'ITEM (STATISTIQUES)                                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="analyticsDialog" modal header="Analyse Statistique de l'Item" class="w-full md:w-[700px] rounded-1xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
+        <Dialog v-model:visible="analyticsDialog" modal header="Analyse Statistique de l'Item" class="w-full md:w-[700px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-6 space-y-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-md text-center">
@@ -762,9 +762,9 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- MODAL : IMPORTATION                                                            -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="importDialog" modal header="Importer des Items (GIFT / CSV)" class="w-full md:w-[600px] rounded-1xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
+        <Dialog v-model:visible="importDialog" modal header="Importer des Items (GIFT / CSV)" class="w-full md:w-[600px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-8 text-center space-y-6">
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-1xl flex items-center justify-center mx-auto border border-indigo-100">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto border border-indigo-100">
                     <i class="pi pi-upload text-2xl"></i>
                 </div>
                 <div>

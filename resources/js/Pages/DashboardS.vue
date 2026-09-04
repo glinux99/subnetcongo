@@ -696,7 +696,7 @@ watch(() => props.stats?.completion_rate, (v) => {
         <div class="w-9 h-9 bg-red-50 text-red-600 rounded-xl flex items-center justify-center italic shadow-inner border border-red-100/50">
             <i class="pi pi-trophy text-xs"></i>
         </div>
-        Classement
+        Classement 
     </h3>
 
     <!-- Conteneur avec scrollbar si plus de 3 éléments (Hauteur ajustée pour 3.5 items pour inciter au scroll) -->

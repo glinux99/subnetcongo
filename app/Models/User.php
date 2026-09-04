@@ -40,6 +40,7 @@ class User extends Authenticatable implements HasMedia
         'phone',
         'cohort_id',
         'country',
+        'country_code',
 
     ];
 
