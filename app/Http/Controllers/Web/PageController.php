@@ -51,7 +51,7 @@ class PageController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('Web/Pages/Index', [
+        return Inertia::render('Web/Pages', [
             'pages' => $pages,
             'filters' => $request->all(['search', 'status', 'sort_field', 'sort_direction']),
             'stats' => [
@@ -69,7 +69,7 @@ class PageController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Web/Pages/Create', [
+        return Inertia::render('Web/Pages', [
             'templates' => ['default', 'landing', 'contact', 'legal'],
         ]);
     }
@@ -141,7 +141,7 @@ class PageController extends Controller
     {
         $page = Page::with('author')->findOrFail($id);
 
-        return Inertia::render('Web/Pages/Show', [
+        return Inertia::render('Web/Pages', [
             'page' => $page,
             'revisions' => $page->revisions()->latest()->take(5)->get() // Supposant un modèle Revision
         ]);
@@ -157,7 +157,7 @@ class PageController extends Controller
     {
         $page = Page::findOrFail($id);
 
-        return Inertia::render('Web/Pages/Edit', [
+        return Inertia::render('Web/Pages', [
             'page' => $page,
             'templates' => ['default', 'landing', 'contact', 'legal'],
         ]);

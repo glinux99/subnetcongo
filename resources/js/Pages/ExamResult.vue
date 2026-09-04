@@ -38,8 +38,8 @@ const events = [
     <AppLayout>
         <Head :title="`Résultat — ${result?.exam?.title ?? 'Examen'}`" />
 
-        <div class="min-h-screen bg-slate-50 font-sans pb-10">
-            <div class="bg-slate-900 pt-8 pb-16 px-6 lg:px-12 relative overflow-hidden shadow-xl border-b border-slate-800">
+        <div class="page-bg min-h-screen font-sans pb-20">
+            <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[100px] pointer-events-none"
                      :class="passed ? 'bg-emerald-600/15' : 'bg-rose-600/15'"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>

@@ -4,62 +4,86 @@ namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LanguageController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $locales = config('app.locales', ['fr', 'en', 'de', 'sw', 'ln']);
+        $current = app()->getLocale();
+
+        return Inertia::render('System/Languages', [
+            'locales'    => $locales,
+            'current'    => $current,
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return Inertia::render('System/Languages', [
+            'mode' => 'create',
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'code' => 'required|string|size:2|unique:languages,code',
+            'name' => 'required|string|max:100',
+        ]);
+
+        $lang = \App\Models\Language::create([
+            'code' => strtolower($request->input('code')),
+            'name' => $request->input('name'),
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Langue ajoutée avec succès.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        $lang = \App\Models\Language::findOrFail($id);
+
+        return Inertia::render('System/Languages', [
+            'language' => $lang,
+            'mode' => 'show',
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
+        $lang = \App\Models\Language::findOrFail($id);
+
+        return Inertia::render('System/Languages', [
+            'language' => $lang,
+            'mode' => 'edit',
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $lang = \App\Models\Language::findOrFail($id);
+
+        $request->validate([
+            'code' => 'required|string|size:2|unique:languages,code,' . $id,
+            'name' => 'required|string|max:100',
+        ]);
+
+        $lang->update([
+            'code' => strtolower($request->input('code')),
+            'name' => $request->input('name'),
+        ]);
+
+        return back()->with('success', 'Langue mise à jour.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $lang = \App\Models\Language::findOrFail($id);
+        $lang->delete();
+
+        return back()->with('success', 'Langue supprimée.');
     }
 }

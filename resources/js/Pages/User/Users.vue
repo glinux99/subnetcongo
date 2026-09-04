@@ -300,7 +300,7 @@ watch(
         <Toast />
         <ConfirmDialog />
 
-        <div class="p-4 md:p-8 bg-[#F8FAFC] min-h-screen">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
                 <div class="flex items-center gap-4">
                     <div class="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg">

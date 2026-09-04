@@ -71,7 +71,7 @@ class SettingController extends Controller
             }
         }
 
-        return Inertia::render('System/Settings/Index', [
+        return Inertia::render('System/Settings', [
             'settings' => $mergedSettings,
             'env_type' => config('app.env'),
         ]);
@@ -271,7 +271,7 @@ class SettingController extends Controller
             $envVars[$key] = $val;
         }
 
-        return Inertia::render('System/Settings/Env', [
+        return Inertia::render('System/Settings', [
             'env_vars' => $envVars,
         ]);
     }

@@ -565,7 +565,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- TABLEAU DE BORD PRINCIPAL (HORS ÉDITEUR)                                       -->
         <!-- ============================================================================== -->
-        <div class="min-h-screen bg-slate-50 p-4 md:p-8 lg:p-10 font-sans pb-24">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- EN-TÊTE DU MODULE -->
             <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">

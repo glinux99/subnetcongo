@@ -43,7 +43,7 @@ class BlogController extends Controller
             ->paginate($request->input('per_page', 10))
             ->withQueryString();
 
-        return Inertia::render('Web/Blog/Index', [
+        return Inertia::render('Web/Blog', [
             'posts' => $posts,
             'categories' => BlogCategory::all(['id', 'name']),
             'filters' => $request->all(['search', 'status', 'category_id', 'sort_field', 'sort_direction']),
@@ -62,7 +62,7 @@ class BlogController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Web/Blog/Create', [
+        return Inertia::render('Web/Blog', [
             'categories' => BlogCategory::all(['id', 'name']),
         ]);
     }
@@ -129,7 +129,7 @@ class BlogController extends Controller
     public function show(string $id)
     {
         $post = BlogPost::with(['category', 'author'])->findOrFail($id);
-        return Inertia::render('Web/Blog/Show', ['post' => $post]);
+        return Inertia::render('Web/Blog', ['post' => $post]);
     }
 
     /**
@@ -141,7 +141,7 @@ class BlogController extends Controller
     public function edit(string $id)
     {
         $post = BlogPost::findOrFail($id);
-        return Inertia::render('Web/Blog/Edit', [
+        return Inertia::render('Web/Blog', [
             'post' => $post,
             'categories' => BlogCategory::all(['id', 'name']),
         ]);

@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#F0F2F5] font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
+    <div class="page-bg min-h-screen font-sans pb-20">
         <Head :title="`Certification - ${exam.title}`" />
         <Toast position="bottom-right" />
         <ConfirmDialog />

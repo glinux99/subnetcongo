@@ -101,7 +101,7 @@ const onPageChange = (event) => {
         <Head :title="props.title" />
         <Toast />
 
-        <div class="quantum-v11-container p-4 lg:p-8 bg-[#f8fafc] min-h-screen">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div class="flex items-center gap-4">

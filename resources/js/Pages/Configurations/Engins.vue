@@ -154,7 +154,7 @@ onMounted(() => loadEnginTypes());
     <AppLayout>
         <Head :title="t('engins.title')" />
 
-        <div class="p-4 lg:p-10 bg-[#F8FAFC] min-h-screen">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-100 rotate-3">

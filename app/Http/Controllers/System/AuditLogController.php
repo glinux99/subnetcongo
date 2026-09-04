@@ -64,7 +64,7 @@ class AuditLogController extends Controller
         $logs = $query->paginate($request->input('per_page', 15))
             ->withQueryString();
 
-        return Inertia::render('System/AuditLogs/Index', [
+        return Inertia::render('System/Logs', [
             'logs' => $logs,
             'filters' => $request->all(),
             'events' => AuditLog::select('event')->distinct()->pluck('event'),
@@ -78,7 +78,7 @@ class AuditLogController extends Controller
     {
         $auditLog->load('user');
 
-        return Inertia::render('System/AuditLogs/Show', [
+        return Inertia::render('System/Logs', [
             'log' => $auditLog,
         ]);
     }
@@ -90,7 +90,7 @@ class AuditLogController extends Controller
     {
         $auditLog->delete();
 
-        return Redirect::route('system.audit-logs.index')
+        return Redirect::route('system.logs')
             ->with('success', 'Audit log deleted successfully.');
     }
 }

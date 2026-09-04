@@ -326,7 +326,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
         <Toast position="top-right" />
         <ConfirmDialog />
 
-        <div class="min-h-screen bg-[#f4f7f9] flex flex-col font-sans pb-10">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden flex-shrink-0 shadow-xl border-b border-indigo-900/50">
                 <div class="absolute -right-32 -top-32 w-[40rem] h-[40rem] bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none"></div>

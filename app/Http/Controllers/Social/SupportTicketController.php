@@ -62,7 +62,7 @@ class SupportTicketController extends Controller
         $categories = TicketCategory::select('id', 'name')->get();
         $agents = User::whereHas('roles', fn($q) => $q->where('name', 'agent'))->select('id', 'name')->get(); // Supposons un rôle 'agent'
 
-        return Inertia::render('Social/SupportTickets/Index', [
+        return Inertia::render('Social/Support', [
             'tickets' => $tickets,
             'filters' => $request->all(['search', 'status', 'priority', 'category_id', 'assigned_to_user_id', 'sort_field', 'sort_direction', 'per_page']),
             'stats' => $stats,
@@ -81,7 +81,7 @@ class SupportTicketController extends Controller
         $categories = TicketCategory::select('id', 'name')->get();
         $priorities = ['low', 'medium', 'high'];
 
-        return Inertia::render('Social/SupportTickets/Create', [
+        return Inertia::render('Social/Support', [
             'categories' => $categories,
             'priorities' => $priorities,
         ]);
@@ -152,7 +152,7 @@ class SupportTicketController extends Controller
             $ticket->update(['status' => 'pending']);
         }
 
-        return Inertia::render('Social/SupportTickets/Show', [
+        return Inertia::render('Social/Support', [
             'ticket' => $ticket,
             'messages' => $ticket->messages()->with('user:id,name,profile_photo_path')->latest()->paginate(10),
         ]);
@@ -172,7 +172,7 @@ class SupportTicketController extends Controller
         $priorities = ['low', 'medium', 'high'];
         $agents = User::whereHas('roles', fn($q) => $q->where('name', 'agent'))->select('id', 'name')->get();
 
-        return Inertia::render('Social/SupportTickets/Edit', [
+        return Inertia::render('Social/Support', [
             'ticket' => $ticket,
             'categories' => $categories,
             'priorities' => $priorities,

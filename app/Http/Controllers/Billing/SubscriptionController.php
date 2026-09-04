@@ -88,7 +88,7 @@ class SubscriptionController extends Controller
             'trialing' => Subscription::where('stripe_status', 'trialing')->count(),
         ];
 
-        return Inertia::render('Billing/Subscriptions/Index', [
+        return Inertia::render('Billing/Subscriptions', [
             'subscriptions' => $subscriptions,
             'filters' => $request->all(['search', 'status', 'plan', 'date_start', 'date_end', 'per_page', 'sort_field', 'sort_direction']),
             'stats' => $stats,
@@ -103,7 +103,7 @@ class SubscriptionController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Billing/Subscriptions/Create', [
+        return Inertia::render('Billing/Subscriptions', [
             'users' => User::select('id', 'name', 'email')->orderBy('name')->get(),
             'plans' => $this->getAvailablePlans(),
         ]);
@@ -175,7 +175,7 @@ class SubscriptionController extends Controller
         // Simulation de factures liées (si un modèle Invoice existait)
         $invoices = []; // $subscription->user->invoices()->latest()->take(5)->get();
 
-        return Inertia::render('Billing/Subscriptions/Show', [
+        return Inertia::render('Billing/Subscriptions', [
             'subscription' => $subscription,
             'duration' => $duration,
             'invoices' => $invoices,
@@ -191,7 +191,7 @@ class SubscriptionController extends Controller
      */
     public function edit(Subscription $subscription)
     {
-        return Inertia::render('Billing/Subscriptions/Edit', [
+        return Inertia::render('Billing/Subscriptions', [
             'subscription' => $subscription,
             'users' => User::select('id', 'name', 'email')->get(), // Pour info, généralement on ne change pas le user d'une souscription
             'plans' => $this->getAvailablePlans(),

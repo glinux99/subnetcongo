@@ -164,7 +164,7 @@ onMounted(() => {
         <Head title="Gestion des Coupons - SubNetCongo" />
         <Toast />
 
-        <div class="p-4 lg:p-8 bg-[#F8FAFC] min-h-screen">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER AVEC TAILWIND -->
             <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">

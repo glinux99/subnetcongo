@@ -448,7 +448,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
-        <div class="min-h-screen bg-slate-50/50 p-4 md:p-8 lg:p-10 font-sans pb-24">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- PAGE HEADER -->
             <div class="flex justify-between items-end mb-10">

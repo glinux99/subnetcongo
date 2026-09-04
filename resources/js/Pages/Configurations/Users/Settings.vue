@@ -176,7 +176,7 @@ const exportAsPdf = () => {
             </div>
         </div>
 
-        <div v-else class="min-h-screen bg-[#f8fafc] pb-20">
+        <div v-else class="page-bg min-h-screen font-sans pb-20">>
 
            <div class="relative w-full h-80 bg-slate-900 overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-br from-primary-700/50 via-slate-900 to-black z-0"></div>

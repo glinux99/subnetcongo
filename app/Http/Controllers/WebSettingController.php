@@ -273,6 +273,20 @@ class WebSettingController extends Controller
         return Inertia::render('Web/Page', array_merge($props, ['page' => $page]));
     }
 
+    public function mentionsLegales()
+    {
+        $props = $this->sharedProps();
+        $legal = WebSetting::group('legal');
+        return Inertia::render('Web/MentionsLegales', array_merge($props, ['legal' => $legal]));
+    }
+
+    public function confidentialite()
+    {
+        $props = $this->sharedProps();
+        $privacy = WebSetting::group('privacy');
+        return Inertia::render('Web/Confidentialite', array_merge($props, ['privacy' => $privacy]));
+    }
+
     /**
      * Soumission du formulaire de contact → stocke dans `contact_messages`.
      */

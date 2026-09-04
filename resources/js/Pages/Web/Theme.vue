@@ -65,7 +65,7 @@ const submit = () => {
     <Head title="Configuration du Thème" />
 
     <AppLayout>
-        <div class="min-h-screen pb-24 font-sans">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <!-- Header de la page -->
             <div class="bg-white border-b border-slate-200 px-6 py-8 sm:px-10 mb-8 shadow-sm">
                 <div class="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">

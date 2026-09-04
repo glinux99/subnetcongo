@@ -198,7 +198,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
     <AppLayout>
         <Head :title="`Correction | ${submission.student.name}`" />
 
-        <div class="min-h-screen bg-slate-50/50 p-4 md:p-6 lg:p-8">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="max-w-[1400px] mx-auto">
 
                 <!-- HEADER : Barre d'outils et contexte -->

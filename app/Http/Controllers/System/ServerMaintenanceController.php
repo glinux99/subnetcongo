@@ -47,7 +47,7 @@ class ServerMaintenanceController extends Controller
         // État du mode maintenance Laravel
         $isDown = app()->isDownForMaintenance();
 
-        return Inertia::render('System/Maintenance/Index', [
+        return Inertia::render('System/Maintenance', [
             'scheduled_tasks' => $scheduledTasks,
             'history' => $history,
             'system_health' => $systemHealth,
@@ -194,9 +194,10 @@ class ServerMaintenanceController extends Controller
             $logs = array_slice(array_reverse($lines), 0, 200); // 200 dernières lignes
         }
 
-        return Inertia::render('System/Maintenance/Logs', [
+        return Inertia::render('System/Maintenance', [
             'logs' => $logs,
             'file_size' => File::exists($logFile) ? round(File::size($logFile) / 1024 / 1024, 2) . ' MB' : '0 MB',
+            'view' => 'logs',
         ]);
     }
 
@@ -289,8 +290,9 @@ class ServerMaintenanceController extends Controller
         // Nettoyage basique pour l'affichage dans une iframe ou div
         $phpinfo = preg_replace('%^.*<body>(.*)</body>.*$%ms', '$1', $phpinfo);
 
-        return Inertia::render('System/Maintenance/PhpInfo', [
+        return Inertia::render('System/Maintenance', [
             'info' => $phpinfo,
+            'view' => 'phpinfo',
         ]);
     }
 

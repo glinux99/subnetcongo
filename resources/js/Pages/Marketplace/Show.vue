@@ -87,10 +87,10 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
     <AppLayout>
         <Head :title="course.title" />
 
-        <div class="min-h-screen bg-slate-50 font-sans pb-10">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER GLOBAL -->
-            <div class="bg-slate-900 pt-8 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-xl border-b border-slate-800">
+            <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
                 <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-violet-500/10 rounded-full blur-[80px] pointer-events-none"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>

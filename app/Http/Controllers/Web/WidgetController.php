@@ -22,7 +22,7 @@ class WidgetController extends Controller
     {
         $widgets = Widget::orderBy('position')->get()->groupBy('zone');
 
-        return Inertia::render('Web/Widgets/Index', [
+        return Inertia::render('Web/Widgets', [
             'widgets' => $widgets,
             'zones' => ['sidebar_left', 'sidebar_right', 'footer_1', 'footer_2', 'footer_3', 'homepage_top'],
             'types' => ['html', 'menu', 'recent_posts', 'newsletter', 'image'],

@@ -38,7 +38,7 @@ const verify = (cert) => {
         <Head title="Mes Certifications | SubnetCongo Academy" />
         <Toast />
 
-        <div class="min-h-screen bg-[#F8FAFC] font-sans pb-20">
+        <div class="page-bg min-h-screen font-sans pb-20">
             
             <!-- HEADER ULTIMATE V30 (Prestige Dark) -->
             <div class="bg-[#0F172A] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">

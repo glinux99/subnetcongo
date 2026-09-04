@@ -43,7 +43,7 @@ class AssetController extends Controller
             ->paginate($request->input('per_page', 20))
             ->withQueryString();
 
-        return Inertia::render('Web/Assets/Index', [
+        return Inertia::render('Web/Assets', [
             'assets' => $assets,
             'filters' => $request->all(['search', 'type', 'date', 'sort_field', 'sort_direction']),
             'stats' => [
@@ -61,7 +61,7 @@ class AssetController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Web/Assets/Create');
+        return Inertia::render('Web/Assets');
     }
 
     /**

@@ -57,7 +57,7 @@ class PaymentGatewayController extends Controller
             'active_gateways'    => PaymentGatewaySetting::where('enabled', true)->count(),
         ];
 
-        return Inertia::render('System/Payments/Gateways/Index', [
+        return Inertia::render('System/Payments', [
             'gateways'        => $gateways,
             'filters'         => $request->all(),
             'stats'           => $stats,
@@ -67,7 +67,7 @@ class PaymentGatewayController extends Controller
 
     public function create()
     {
-        return Inertia::render('System/Payments/Gateways/Create', [
+        return Inertia::render('System/Payments', [
             'providers' => $this->providerCatalog(),
         ]);
     }
@@ -117,7 +117,7 @@ class PaymentGatewayController extends Controller
                 'ip_address'     => $request->ip(),
             ]);
 
-            return Redirect::route('system.payments.gateways.index')
+            return Redirect::route('system.payments')
                 ->with('success', 'Passerelle de paiement ajoutée avec succès.');
         } catch (\Exception $e) {
             return back()->with('error', 'Erreur lors de la création : ' . $e->getMessage())->withInput();
@@ -142,7 +142,7 @@ class PaymentGatewayController extends Controller
             ->orderBy('date')
             ->get();
 
-        return Inertia::render('System/Payments/Gateways/Show', [
+        return Inertia::render('System/Payments', [
             'gateway'            => $gateway,
             'recent_transactions' => $recentOrders,
             'daily_stats'        => $dailyStats,
@@ -155,7 +155,7 @@ class PaymentGatewayController extends Controller
         $safeCredentials = $gateway->credentials ?? [];
         $safeCredentials['api_secret'] = ''; // masqué
 
-        return Inertia::render('System/Payments/Gateways/Edit', [
+        return Inertia::render('System/Payments', [
             'gateway'        => $gateway,
             'safe_credentials' => $safeCredentials,
         ]);
@@ -200,7 +200,7 @@ class PaymentGatewayController extends Controller
                 'ip_address'     => $request->ip(),
             ]);
 
-            return Redirect::route('system.payments.gateways.index')
+            return Redirect::route('system.payments')
                 ->with('success', 'Configuration mise à jour.');
         } catch (\Exception $e) {
             return back()->with('error', 'Erreur de mise à jour : ' . $e->getMessage());
@@ -224,7 +224,7 @@ class PaymentGatewayController extends Controller
             'ip_address'     => request()->ip(),
         ]);
 
-        return Redirect::route('system.payments.gateways.index')->with('success', 'Passerelle supprimée.');
+        return Redirect::route('system.payments')->with('success', 'Passerelle supprimée.');
     }
 
     public function toggleStatus(PaymentGatewaySetting $gateway)
@@ -321,7 +321,7 @@ class PaymentGatewayController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return Inertia::render('System/Payments/Gateways/WebhookLogs', [
+        return Inertia::render('System/Payments', [
             'gateway' => $gateway,
             'logs'    => $logs,
         ]);

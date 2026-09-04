@@ -467,7 +467,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
-        <div class="min-h-screen bg-[#f8fafc] p-4 md:p-8 lg:p-10 font-sans pb-24">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- ============================================================================== -->
             <!-- HEADER DE PAGE ET KPI                                                          -->

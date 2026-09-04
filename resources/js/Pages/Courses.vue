@@ -804,7 +804,7 @@ onBeforeUnmount(() => {
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
-        <div class="min-h-screen bg-slate-50/50 p-4 md:p-8 lg:p-10 font-sans pb-24">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- ============================================================================== -->
             <!-- HEADER DE PAGE ET KPI                                                          -->

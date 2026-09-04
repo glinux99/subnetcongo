@@ -48,7 +48,7 @@ const submit = () => {
     <Head title="Identité Légale | Dashboard Admin" />
     <Toast />
     <AppLayout>
-        <div class="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER ULTIMATE V30 -->
             <div class="bg-[#0F172A] relative overflow-hidden">

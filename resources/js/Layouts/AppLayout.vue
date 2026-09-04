@@ -225,8 +225,8 @@
                   {{ identity.footer_text || `© ${year} ${identity.site_name}. ALL SYSTEMS OPERATIONAL.` }} DESIGN BY LINUX99
             </p>
             <div class="flex gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
-                <a href="#" class="hover:text-white transition-colors">Confidentialité</a>
-                <a href="#" class="hover:text-white transition-colors">Mentions Légales</a>
+                <Link :href="route('confidentialite')" class="hover:text-white transition-colors">Confidentialité</Link>
+                <Link :href="route('mentions-legales')" class="hover:text-white transition-colors">Mentions Légales</Link>
             </div>
         </div>
     </div>

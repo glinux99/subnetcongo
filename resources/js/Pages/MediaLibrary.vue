@@ -171,7 +171,7 @@ const getCategoryStats = (type) => {
         <Head title="Médiathèque Cloud v10 | SubnetCongo" />
         <Toast />
 
-        <div class="p-4 lg:p-10 bg-[#F8FAFC] min-h-screen pb-20">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- --- HEADER SECTION --- -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">

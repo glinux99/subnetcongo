@@ -24,7 +24,7 @@ class MenuController extends Controller
     {
         $menus = Menu::withCount('items')->orderBy('name')->get();
 
-        return Inertia::render('Web/Menus/Index', [
+        return Inertia::render('Web/Menus', [
             'menus' => $menus,
             'locations' => ['header', 'footer', 'sidebar', 'mobile'], // Emplacements disponibles
         ]);
@@ -37,7 +37,7 @@ class MenuController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Web/Menus/Create', [
+        return Inertia::render('Web/Menus', [
             'locations' => ['header', 'footer', 'sidebar', 'mobile'],
         ]);
     }
@@ -92,7 +92,7 @@ class MenuController extends Controller
             $q->orderBy('order');
         }])->findOrFail($id);
 
-        return Inertia::render('Web/Menus/Edit', [
+        return Inertia::render('Web/Menus', [
             'menu' => $menu,
             'locations' => ['header', 'footer', 'sidebar', 'mobile'],
             // Pages disponibles pour ajout rapide
@@ -163,10 +163,8 @@ class MenuController extends Controller
 
         DB::beginTransaction();
         try {
-            // Stratégie simple : supprimer et recréer (ou synchroniser si IDs présents)
-            $menu->items()->delete();
-
-            $menu->items()->createMany($request->input('items'));
+            $menu->items = $request->input('items');
+            $menu->save();
 
             DB::commit();
             return Redirect::back()->with('success', 'Structure du menu enregistrée.');

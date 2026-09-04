@@ -97,7 +97,7 @@ const quickReject = (id) => {
         <Head title="Gestion des Inscriptions | Admin" />
         <Toast />
 
-        <div class="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
+        <div class="page-bg min-h-screen font-sans pb-20">
             
             <!-- HEADER ULTIMATE V30 -->
             <div class="bg-[#0F172A] relative overflow-hidden pt-12 pb-24 px-8">

@@ -24,7 +24,7 @@ const formatDate = (iso) => { if(!iso) return ''; try { return new Date(iso).toL
 <template>
     <Head :title="`Message ${message.ticket_number}`" />
     <AppLayout>
-        <div class="min-h-screen bg-slate-50 font-sans pb-12">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="bg-[#0f172a] pt-10 pb-16 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
                 <div class="max-w-[1000px] mx-auto relative z-10">
                     <Link :href="route('admin.messages.index')" class="text-slate-400 hover:text-white text-xs flex items-center gap-2 mb-4">

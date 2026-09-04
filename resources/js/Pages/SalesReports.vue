@@ -113,7 +113,7 @@ watch(selectedReportType, fetchReportData);
         <Head title="Finance Intelligence Hub | SubnetCongo" />
         <Toast />
 
-        <div class="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
+        <div class="page-bg min-h-screen font-sans pb-20">
             
             <!-- ── HEADER : FINANCIAL COMMAND (Mesh Gradient Ruby) ── -->
             <header class="bg-[#0F172A] pt-12 pb-28 px-8 relative overflow-hidden">

@@ -66,7 +66,7 @@ class CouponController extends Controller
             });
 
         // Tri
-        $validSorts = ['code', 'type', 'value', 'usage_count', 'created_at', 'expires_at'];
+        $validSorts = ['code', 'type', 'value', 'used_count', 'created_at', 'expires_at'];
         if (in_array($sortField, $validSorts)) {
             $query->orderBy($sortField, $sortDirection);
         }
@@ -78,10 +78,10 @@ class CouponController extends Controller
             'total' => Coupon::count(),
             'active' => Coupon::where('status', 'active')->where(fn($q) => $q->where('expires_at', '>=', now())->orWhereNull('expires_at'))->count(),
             'inactive' => Coupon::where('status', 'inactive')->count(),
-            'total_usage' => Coupon::sum('usage_count'),
+            'total_usage' => Coupon::sum('used_count'),
         ];
 
-        return Inertia::render('Marketing/Coupons/Index', [
+        return Inertia::render('Marketing/Coupons', [
             'coupons' => $coupons,
             'filters' => $request->all(['search', 'status', 'type', 'sort_field', 'sort_direction', 'per_page']),
             'stats' => $stats,
@@ -98,7 +98,7 @@ class CouponController extends Controller
         // On pourrait charger des données associables, comme des cours ou des produits
         $courses = Course::where('status', 'published')->select('id', 'title')->get();
 
-        return Inertia::render('Marketing/Coupons/Create', [
+        return Inertia::render('Marketing/Coupons', [
             'courses' => $courses,
         ]);
     }
@@ -135,7 +135,7 @@ class CouponController extends Controller
                 'value' => $validated['value'],
                 'usage_limit' => $validated['usage_limit'],
                 'usage_limit_per_user' => $validated['usage_limit_per_user'],
-                'usage_count' => 0,
+                'used_count' => 0,
                 'expires_at' => $validated['expires_at'] ? Carbon::parse($validated['expires_at']) : null,
                 'status' => $validated['status'],
             ]);
@@ -170,7 +170,7 @@ class CouponController extends Controller
         // $coupon->load(['usages.user', 'courses']);
         $usages = []; // CouponUsage::where('coupon_id', $coupon->id)->with('user')->latest()->paginate(10);
 
-        return Inertia::render('Marketing/Coupons/Show', [
+        return Inertia::render('Marketing/Coupons', [
             'coupon' => $coupon,
             'usages' => $usages,
         ]);
@@ -187,7 +187,7 @@ class CouponController extends Controller
         // $coupon->load('courses:id'); // Charger les IDs des cours liés
         $courses = Course::where('status', 'published')->select('id', 'title')->get();
 
-        return Inertia::render('Marketing/Coupons/Edit', [
+        return Inertia::render('Marketing/Coupons', [
             'coupon' => $coupon,
             'courses' => $courses,
         ]);
@@ -246,7 +246,7 @@ class CouponController extends Controller
     {
         try {
             // On pourrait vérifier si le coupon a été utilisé avant de le supprimer
-            // if ($coupon->usage_count > 0) {
+            // if ($coupon->used_count > 0) {
             //     return Redirect::back()->with('error', 'Impossible de supprimer un coupon qui a déjà été utilisé. Désactivez-le plutôt.');
             // }
             $coupon->delete();
@@ -317,7 +317,7 @@ class CouponController extends Controller
                 $row['Valeur'] = $coupon->value;
                 $row['Statut'] = $coupon->status;
                 $row['Limite d\'utilisation'] = $coupon->usage_limit ?? 'Illimitée';
-                $row['Utilisations'] = $coupon->usage_count;
+                $row['Utilisations'] = $coupon->used_count;
                 $row['Expire le'] = $coupon->expires_at ? $coupon->expires_at->format('Y-m-d') : 'N/A';
                 $row['Créé le'] = $coupon->created_at->format('Y-m-d');
 

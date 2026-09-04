@@ -11,7 +11,7 @@ const formatPrice = (p) => new Intl.NumberFormat('fr-FR', { style: 'currency', c
 <template>
     <AppLayout>
         <Head title="Commande confirmée" />
-        <div class="min-h-screen bg-slate-50 font-sans flex items-center justify-center py-12 px-6">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-10 max-w-xl w-full text-center">
                 <div class="w-24 h-24 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <i class="pi pi-check-circle text-emerald-500 text-5xl"></i>

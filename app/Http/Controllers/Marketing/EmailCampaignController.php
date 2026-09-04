@@ -67,7 +67,7 @@ class EmailCampaignController extends Controller
             'sent' => EmailCampaign::where('status', 'sent')->count(),
         ];
 
-        return Inertia::render('Marketing/EmailCampaigns/Index', [
+        return Inertia::render('Marketing/Emails', [
             'campaigns' => $campaigns,
             'filters' => $request->all(['search', 'status', 'sort_field', 'sort_direction', 'per_page']),
             'stats' => $stats,
@@ -85,7 +85,7 @@ class EmailCampaignController extends Controller
         $emailLists = []; // EmailList::get(['id', 'name']);
         $emailTemplates = []; // EmailTemplate::get(['id', 'name']);
 
-        return Inertia::render('Marketing/EmailCampaigns/Create', [
+        return Inertia::render('Marketing/Emails', [
             'emailLists' => $emailLists,
             'emailTemplates' => $emailTemplates,
         ]);
@@ -147,7 +147,7 @@ class EmailCampaignController extends Controller
             ],
         ];
 
-        return Inertia::render('Marketing/EmailCampaigns/Show', [
+        return Inertia::render('Marketing/Emails', [
             'campaign' => $campaign,
             'performance_chart' => $performance_chart,
         ]);
@@ -169,7 +169,7 @@ class EmailCampaignController extends Controller
         $emailLists = []; // EmailList::get(['id', 'name']);
         $emailTemplates = []; // EmailTemplate::get(['id', 'name']);
 
-        return Inertia::render('Marketing/EmailCampaigns/Edit', [
+        return Inertia::render('Marketing/Emails', [
             'campaign' => $campaign,
             'emailLists' => $emailLists,
             'emailTemplates' => $emailTemplates,

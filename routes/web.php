@@ -51,6 +51,8 @@ Route::get('/blog', [WebSettingController::class, 'blog'])->name('blog');
 Route::get('/testimonials', [WebSettingController::class, 'testimonials'])->name('testimonials');
 Route::get('realizations', [WebSettingController::class, 'realizations'])->name('realizations');
 Route::get('/page/{slug}', [WebSettingController::class, 'pages'])->name('web.page');
+Route::get('/mentions-legales', [WebSettingController::class, 'mentionsLegales'])->name('mentions-legales');
+Route::get('/confidentialite', [WebSettingController::class, 'confidentialite'])->name('confidentialite');
 Route::post('/contact', [WebSettingController::class, 'store'])->name('contact.store');
 
 // Route::get('/dashboard', function () {
@@ -373,6 +375,12 @@ Route::prefix('curriculum')->group(function () {
     Route::prefix('admin/legal')->name('admin.legal.')->middleware(['has_role:superadmin,admin,finance-manager'])->group(function () {
         Route::get('/',         [App\Http\Controllers\Admin\LegalInfoController::class, 'index'])->name('index');
         Route::post('/save',    [App\Http\Controllers\Admin\LegalInfoController::class, 'save'])->name('save');
+    });
+
+    // Admin : Éditeur de contenu légal (mentions légales + confidentialité)
+    Route::prefix('admin/legal-content')->name('admin.legal-content.')->middleware(['has_role:superadmin,admin'])->group(function () {
+        Route::get('/',              [App\Http\Controllers\Admin\LegalContentController::class, 'index'])->name('index');
+        Route::put('/{group}',       [App\Http\Controllers\Admin\LegalContentController::class, 'update'])->name('update');
     });
 
     // Admin : Éditeur de la Landing (slides / technologies / stats)

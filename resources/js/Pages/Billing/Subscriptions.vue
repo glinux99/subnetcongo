@@ -214,7 +214,7 @@ const activeCount = computed(() => {
         <Head title="Gestion des Abonnements" />
         <Toast />
 
-        <div class="p-4 lg:p-8 bg-[#F8FAFC] min-h-screen">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER SECTION -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">

@@ -56,7 +56,7 @@ class AffiliateController extends Controller
             'total_earnings' => Affiliate::sum('total_earnings'), // Supposant que ce champ existe
         ];
 
-        return Inertia::render('Marketing/Affiliates/Index', [
+        return Inertia::render('Marketing/Affiliates', [
             'affiliates' => $affiliates,
             'filters' => $request->all(['search', 'status', 'sort_field', 'sort_direction', 'per_page']),
             'stats' => $stats,
@@ -76,7 +76,7 @@ class AffiliateController extends Controller
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('Marketing/Affiliates/Create', [
+        return Inertia::render('Marketing/Affiliates', [
             'users' => $users,
         ]);
     }
@@ -151,7 +151,7 @@ class AffiliateController extends Controller
             'conversions' => [12, 18, 7, 25, 30, 22],
         ];
 
-        return Inertia::render('Marketing/Affiliates/Show', [
+        return Inertia::render('Marketing/Affiliates', [
             'affiliate' => $affiliate,
             'performance_chart' => $performance_chart,
         ]);
@@ -166,7 +166,7 @@ class AffiliateController extends Controller
     public function edit(Affiliate $affiliate)
     {
         $affiliate->load('user');
-        return Inertia::render('Marketing/Affiliates/Edit', [
+        return Inertia::render('Marketing/Affiliates', [
             'affiliate' => $affiliate,
         ]);
     }
@@ -378,7 +378,7 @@ class AffiliateController extends Controller
         // Simule la récupération des paiements
         $payouts = []; // AffiliatePayout::where('affiliate_id', $affiliate->id)->latest()->paginate(10);
 
-        return Inertia::render('Marketing/Affiliates/Payouts', [
+        return Inertia::render('Marketing/Affiliates', [
             'affiliate' => $affiliate,
             'payouts' => $payouts,
             'payout_methods' => ['PayPal', 'Virement Bancaire'], // Exemple

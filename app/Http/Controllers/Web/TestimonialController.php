@@ -36,7 +36,7 @@ class TestimonialController extends Controller
 
         $testimonials = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return Inertia::render('Web/Testimonials/Index', [
+        return Inertia::render('Web/Testimonials', [
             'testimonials' => $testimonials,
             'filters' => $request->all(['search', 'status', 'rating']),
         ]);
@@ -49,7 +49,7 @@ class TestimonialController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Web/Testimonials/Create');
+        return Inertia::render('Web/Testimonials');
     }
 
     /**
@@ -101,7 +101,7 @@ class TestimonialController extends Controller
      */
     public function show(string $id)
     {
-        return Inertia::render('Web/Testimonials/Show', [
+        return Inertia::render('Web/Testimonials', [
             'testimonial' => Testimonial::findOrFail($id)
         ]);
     }
@@ -114,7 +114,7 @@ class TestimonialController extends Controller
      */
     public function edit(string $id)
     {
-        return Inertia::render('Web/Testimonials/Edit', [
+        return Inertia::render('Web/Testimonials', [
             'testimonial' => Testimonial::findOrFail($id)
         ]);
     }

@@ -40,7 +40,7 @@ class SeoController extends Controller
             ? File::get(public_path('robots.txt'))
             : "User-agent: *\nAllow: /";
 
-        return Inertia::render('Web/Seo/Index', [
+        return Inertia::render('Web/Seo', [
             'global' => $globalSettings,
             'rules' => $rules,
             'robots_txt' => $robotsTxt,

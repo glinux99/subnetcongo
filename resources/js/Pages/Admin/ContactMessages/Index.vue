@@ -28,7 +28,7 @@ const formatDate = (iso) => { if(!iso) return ''; try { return new Date(iso).toL
 <template>
     <Head title="Messages du site web" />
     <AppLayout>
-        <div class="min-h-screen bg-slate-50 font-sans pb-12">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="bg-[#0f172a] pt-10 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/15 rounded-full blur-[100px]"></div>
                 <div class="max-w-[1500px] mx-auto relative z-10">

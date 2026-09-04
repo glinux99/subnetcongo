@@ -85,7 +85,7 @@ const remove = (id) => {
     <Head title="Notifications" />
 
     <AppLayout>
-        <div class="min-h-screen bg-slate-50/50 font-sans pb-12">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <!-- HEADER (Premium Dark Mode with Glow) -->
             <div class="bg-[#0f172a] pt-10 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
                 <!-- Abstract Glow Effects -->

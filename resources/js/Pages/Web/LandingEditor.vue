@@ -129,7 +129,7 @@ const handleMainPick = (e) => { slideForm.main_image_file = e.target.files[0]; m
 <template>
     <Head title="Configuration Landing Page" />
     <AppLayout>
-        <div class="min-h-screen bg-[#F8FAFC] pb-20">
+        <div class="page-bg min-h-screen font-sans pb-20">
             
             <!-- HEADER V30 (Saas Style) -->
             <div class="bg-[#0F172A] pt-12 pb-24 px-8 relative overflow-hidden">

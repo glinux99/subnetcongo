@@ -224,7 +224,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 <div class="max-w-[1800px] mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-6">
 
                     <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-100 animate-pulse-slow">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-xl shadow-indigo-100 animate-pulse-slow">
                             <i class="pi pi-chart-bar text-white text-2xl"></i>
                         </div>
                         <div>
@@ -256,11 +256,11 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
 
                     <!-- KPI : REVENUS & PRÉDICTION -->
-                    <div class="bg-slate-900 rounded-[1.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+                    <div class="bg-slate-900 rounded-[1rem] p-8 text-white shadow-2xl relative overflow-hidden group">
                         <i class="pi pi-wallet absolute -right-6 -bottom-6 text-9xl text-white/5 group-hover:rotate-12 transition-transform duration-700"></i>
                         <div class="relative z-10">
                             <div class="flex justify-between items-start mb-6">
-                                <div class="w-12 h-12 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10">
+                                <div class="w-12 h-12 bg-white/10 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/10">
                                     <i class="pi pi-dollar text-emerald-400 text-xl"></i>
                                 </div>
                                 <div class="text-right">
@@ -282,9 +282,9 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
 
                     <!-- KPI : ÉTUDIANTS & CHURN -->
-                    <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm relative group">
+                    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm relative group">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
                                 <i class="pi pi-users text-xl"></i>
                             </div>
                             <div class="text-right">
@@ -301,9 +301,9 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
 
                     <!-- KPI : RÉUSSITE ACADÉMIQUE -->
-                    <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm relative group">
+                    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm relative group">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
+                            <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center">
                                 <i class="pi pi-graduation-cap text-xl"></i>
                             </div>
                             <Tag :value="props.kpis.academic.certificates_issued + ' Diplômes'" severity="warning" class="font-black text-[9px]" />
@@ -319,7 +319,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
 
                     <!-- KPI : INFRASTRUCTURE HEALTH -->
-                    <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm relative overflow-hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                                 <i class="pi pi-server text-indigo-500"></i> System Health
@@ -353,7 +353,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             <div class="max-w-[1800px] mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 <!-- Evolution des Revenus (Gros Graphe) -->
-                <div class="lg:col-span-2 bg-white rounded-[1.5rem] p-10 border border-slate-200 shadow-sm">
+                <div class="lg:col-span-2 bg-white rounded-[1rem] p-10 border border-slate-200 shadow-sm">
                     <div class="flex justify-between items-center mb-10">
                         <div>
                             <h3 class="text-xl font-black text-slate-800 italic">Trajectoire Financière SNC</h3>
@@ -369,7 +369,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 </div>
 
                 <!-- Radar de Compétences -->
-                <div class="bg-white rounded-[1.5rem] p-10 border border-slate-200 shadow-sm flex flex-col">
+                <div class="bg-white rounded-[1rem] p-10 border border-slate-200 shadow-sm flex flex-col">
                     <div class="mb-10 text-center">
                         <h3 class="text-xl font-black text-slate-800 italic">Offre vs Demande</h3>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Équilibre des compétences enseignées</p>
@@ -390,120 +390,125 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 </div>
             </div>
 
-            <!-- --- [SECTION 4] OPERATIONS : TIMELINE & INFRA & LEADERBOARD --- -->
-            <div class="max-w-[1800px] mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
+         <!-- --- [SECTION 4] OPERATIONS : TIMELINE & INFRA & LEADERBOARD --- -->
+<div class="max-w-[1800px] mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-                <!-- Infrastructure Real-time Details -->
-                <div class="bg-slate-900 rounded-[1.5rem] p-8 text-white shadow-xl flex flex-col justify-between">
-                    <div>
-                        <h3 class="text-lg font-black italic flex items-center gap-3 mb-8">
-                            <i class="pi pi-bolt text-amber-400"></i> Live Metrics
-                        </h3>
-                        <div class="space-y-8">
-                            <div>
-                                <div class="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                    <span>Mémoire RAM (Cache)</span>
-                                    <span>{{ infraState.ram }}%</span>
-                                </div>
-                                <ProgressBar :value="infraState.ram" :showValue="false" class="h-1.5 bg-white/10 border-none" color="#8B5CF6" />
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
-                                    <span>Stockage Stockage</span>
-                                    <span>{{ infraState.disk }}%</span>
-                                </div>
-                                <ProgressBar :value="infraState.disk" :showValue="false" class="h-1.5 bg-white/10 border-none" color="#EC4899" />
+    <!-- Infrastructure Real-time Details -->
+    <div class="bg-slate-900 rounded-[1rem] p-8 text-white shadow-xl flex flex-col justify-between">
+        <div>
+            <h3 class="text-lg font-black italic flex items-center gap-3 mb-8">
+                <i class="pi pi-bolt text-amber-400"></i> Live Metrics
+            </h3>
+            <div class="space-y-8">
+                <div>
+                    <div class="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                        <span>Mémoire RAM (Cache)</span>
+                        <span>{{ infraState.ram }}%</span>
+                    </div>
+                    <ProgressBar :value="infraState.ram" :showValue="false" class="h-1.5 bg-white/10 border-none" color="#8B5CF6" />
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                        <span>Stockage Stockage</span>
+                        <span>{{ infraState.disk }}%</span>
+                    </div>
+                    <ProgressBar :value="infraState.disk" :showValue="false" class="h-1.5 bg-white/10 border-none" color="#EC4899" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 bg-white/5 p-6 rounded-xl border border-white/10">
+            <p class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4">Temps d'activité (Uptime)</p>
+            <p class="text-sm font-bold italic">{{ props.infra.uptime || 'Analysing...' }}</p>
+            <div class="flex gap-2 mt-4">
+                <div class="flex-1 h-1 bg-emerald-500 rounded-full"></div>
+                <div class="flex-1 h-1 bg-emerald-500 rounded-full"></div>
+                <div class="flex-1 h-1 bg-emerald-500/20 rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Trail (Timeline) -->
+    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm">
+        <h3 class="text-lg font-black italic text-slate-800 mb-8 flex justify-between items-center">
+            Journal d'Audit
+            <Badge :value="props.activities.length" severity="secondary" />
+        </h3>
+        <ScrollPanel style="height: 100px" class="custom-scroll pr-4">
+            <Timeline :value="props.activities">
+                <template #marker="slotProps">
+                    <span class="flex w-8 h-8 items-center justify-center text-white rounded-full shadow-lg" :class="`bg-${slotProps.item.type === 'error' ? 'rose' : slotProps.item.type === 'success' ? 'emerald' : 'indigo'}-500`">
+                        <i :class="`pi ${slotProps.item.type === 'error' ? 'pi-times' : 'pi-check'} text-[10px]`"></i>
+                    </span>
+                </template>
+                <template #content="slotProps">
+                    <div class="mb-8">
+                        <h4 class="text-xs font-black text-slate-800 leading-tight mb-1">{{ slotProps.item.action }}</h4>
+                        <p class="text-[10px] font-medium text-slate-400 italic mb-2">{{ slotProps.item.description }}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[8px] font-black uppercase tracking-widest text-indigo-500">{{ slotProps.item.user }}</span>
+                            <span class="text-[8px] font-bold text-slate-300">• {{ slotProps.item.time }}</span>
+                        </div>
+                    </div>
+                </template>
+            </Timeline>
+        </ScrollPanel>
+    </div>
+
+    <!-- Support Center (Tickets) -->
+    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm flex flex-col">
+        <h3 class="text-lg font-black italic text-slate-800 mb-8 flex items-center gap-3">
+            <OverlayBadge :value="props.supportStatus.open_tickets" severity="danger">
+                <i class="pi pi-comment text-indigo-500"></i>
+            </OverlayBadge>
+            Tickets Ouverts
+        </h3>
+        <div class="space-y-4 flex-1 overflow-y-auto">
+            <div v-for="ticket in props.supportStatus.recent_tickets" :key="ticket.id" class="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-300 transition-all cursor-pointer group">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[9px] font-black text-slate-400 font-mono">#{{ ticket.id }}</span>
+                    <Tag :value="ticket.priority" :severity="ticket.priority === 'High' ? 'danger' : 'info'" class="text-[8px] uppercase font-black" />
+                </div>
+                <p class="text-xs font-bold text-slate-700 leading-tight group-hover:text-indigo-600 mb-2">{{ ticket.subject }}</p>
+                <Badge :value="ticket.status" severity="secondary" class="text-[8px] font-black" />
+            </div>
+        </div>
+        <Button label="Gérer le Support" class="p-button-outlined p-button-secondary rounded-xl mt-6 font-black text-xs" />
+    </div>
+
+    <!-- Leaderboard (Gamification) - CORRIGÉ -->
+    <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm flex flex-col">
+        <h3 class="text-lg font-black italic text-slate-800 mb-8">SNC Hall of Fame</h3>
+        
+        <!-- Ajout du conteneur avec max-height et overflow-y-auto -->
+        <div class="overflow-y-auto max-h-[280px] pr-2 custom-scroll flex-1">
+            <div class="space-y-6">
+                <div v-for="student in props.leaderboard" :key="student.rank" class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 text-sm font-black italic" :class="student.rank <= 3 ? 'text-amber-500' : 'text-slate-300'">{{ student.rank }}</span>
+                        <Avatar :image="student.avatar" shape="circle" size="large" />
+                        <div>
+                            <p class="text-xs font-black text-slate-800">{{ student.name }}</p>
+                            <div class="flex items-center gap-2">
+                                <i :class="`pi pi-arrow-${student.trend} text-[8px] text-${student.trend === 'up' ? 'emerald' : 'rose'}-500`"></i>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SNC Credits</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="mt-12 bg-white/5 p-6 rounded-3xl border border-white/10">
-                        <p class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4">Temps d'activité (Uptime)</p>
-                        <p class="text-sm font-bold italic">{{ props.infra.uptime || 'Analysing...' }}</p>
-                        <div class="flex gap-2 mt-4">
-                            <div class="flex-1 h-1 bg-emerald-500 rounded-full"></div>
-                            <div class="flex-1 h-1 bg-emerald-500 rounded-full"></div>
-                            <div class="flex-1 h-1 bg-emerald-500/20 rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Audit Trail (Timeline) -->
-                <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm">
-                    <h3 class="text-lg font-black italic text-slate-800 mb-8 flex justify-between items-center">
-                        Journal d'Audit
-                        <Badge :value="props.activities.length" severity="secondary" />
-                    </h3>
-                    <ScrollPanel style="height: 400px" class="custom-scroll pr-4">
-                        <Timeline :value="props.activities">
-                            <template #marker="slotProps">
-                                <span class="flex w-8 h-8 items-center justify-center text-white rounded-full shadow-lg" :class="`bg-${slotProps.item.type === 'error' ? 'rose' : slotProps.item.type === 'success' ? 'emerald' : 'indigo'}-500`">
-                                    <i :class="`pi ${slotProps.item.type === 'error' ? 'pi-times' : 'pi-check'} text-[10px]`"></i>
-                                </span>
-                            </template>
-                            <template #content="slotProps">
-                                <div class="mb-8">
-                                    <h4 class="text-xs font-black text-slate-800 leading-tight mb-1">{{ slotProps.item.action }}</h4>
-                                    <p class="text-[10px] font-medium text-slate-400 italic mb-2">{{ slotProps.item.description }}</p>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[8px] font-black uppercase tracking-widest text-indigo-500">{{ slotProps.item.user }}</span>
-                                        <span class="text-[8px] font-bold text-slate-300">• {{ slotProps.item.time }}</span>
-                                    </div>
-                                </div>
-                            </template>
-                        </Timeline>
-                    </ScrollPanel>
-                </div>
-
-                <!-- Support Center (Tickets) -->
-                <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm flex flex-col">
-                    <h3 class="text-lg font-black italic text-slate-800 mb-8 flex items-center gap-3">
-                        <OverlayBadge :value="props.supportStatus.open_tickets" severity="danger">
-                            <i class="pi pi-comment text-indigo-500"></i>
-                        </OverlayBadge>
-                        Tickets Ouverts
-                    </h3>
-                    <div class="space-y-4 flex-1 overflow-y-auto">
-                        <div v-for="ticket in props.supportStatus.recent_tickets" :key="ticket.id" class="p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-300 transition-all cursor-pointer group">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="text-[9px] font-black text-slate-400 font-mono">#{{ ticket.id }}</span>
-                                <Tag :value="ticket.priority" :severity="ticket.priority === 'High' ? 'danger' : 'info'" class="text-[8px] uppercase font-black" />
-                            </div>
-                            <p class="text-xs font-bold text-slate-700 leading-tight group-hover:text-indigo-600 mb-2">{{ ticket.subject }}</p>
-                            <Badge :value="ticket.status" severity="secondary" class="text-[8px] font-black" />
-                        </div>
-                    </div>
-                    <Button label="Gérer le Support" class="p-button-outlined p-button-secondary rounded-xl mt-6 font-black text-xs" />
-                </div>
-
-                <!-- Leaderboard (Gamification) -->
-                <div class="bg-white rounded-[1.5rem] p-8 border border-slate-200 shadow-sm">
-                    <h3 class="text-lg font-black italic text-slate-800 mb-8">SNC Hall of Fame</h3>
-                    <div class="space-y-6">
-                        <div v-for="student in props.leaderboard" :key="student.rank" class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-6 text-sm font-black italic" :class="student.rank <= 3 ? 'text-amber-500' : 'text-slate-300'">{{ student.rank }}</span>
-                                <Avatar :image="student.avatar" shape="circle" size="large" />
-                                <div>
-                                    <p class="text-xs font-black text-slate-800">{{ student.name }}</p>
-                                    <div class="flex items-center gap-2">
-                                        <i :class="`pi pi-arrow-${student.trend} text-[8px] text-${student.trend === 'up' ? 'emerald' : 'rose'}-500`"></i>
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SNC Credits</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-black text-indigo-600 italic">{{ student.score }}</p>
-                                <span class="text-[8px] font-bold text-slate-300 uppercase">XP</span>
-                            </div>
-                        </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black text-indigo-600 italic">{{ student.score }}</p>
+                        <span class="text-[8px] font-bold text-slate-300 uppercase">XP</span>
                     </div>
                 </div>
             </div>
+        </div>
+        
+    </div>
+</div>
 
             <!-- --- [SECTION 5] DATA MANAGEMENT TABLE --- -->
             <div class="max-w-[1800px] mx-auto px-6 mt-12 mb-20">
-                <div class="bg-white rounded-[1.5rem] p-10 border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white rounded-[1rem] p-10 border border-slate-200 shadow-sm relative overflow-hidden">
 
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                         <div>
@@ -593,7 +598,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                                     <i class="pi pi-list text-indigo-500"></i> Distribution de Validation par Module
                                 </h5>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                    <div v-for="mod in 4" :key="mod" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                    <div v-for="mod in 4" :key="mod" class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                                         <div class="flex justify-between items-center mb-4">
                                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Module {{ mod }}</span>
                                             <i class="pi pi-check-circle text-emerald-500"></i>
@@ -607,7 +612,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </DataTable>
 
                     <!-- Simple Pagination -->
-                    <div class="mt-8 flex justify-between items-center bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                    <div class="mt-8 flex justify-between items-center bg-slate-50 p-6 rounded-xl border border-slate-100">
                         <span class="text-xs font-bold text-slate-500 italic">Affichage de {{ props.cohorts.from }} à {{ props.cohorts.to }} sur {{ props.cohorts.total }} résultats</span>
                         <div class="flex gap-2">
                             <Button icon="pi pi-chevron-left" class="p-button-outlined p-button-secondary rounded-xl h-10 w-10" :disabled="!props.cohorts.prev_page_url" />
@@ -652,7 +657,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 
                 <div class="space-y-4">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paramètres d'Affichage</label>
-                    <div class="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                    <div class="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-slate-700 italic">Afficher les prédictions</span>
                             <InputSwitch :modelValue="true" />
@@ -667,14 +672,14 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             </div>
             <div class="absolute bottom-0 left-0 w-full p-8 bg-white border-t border-slate-100 flex gap-4">
                 <Button label="Réinitialiser" class="p-button-text p-button-secondary flex-1 font-black" @click="activeFilters.category = 'all'; applyDeepFilters()" />
-                <Button label="Appliquer l'Analyse" class="p-button-primary flex-1 font-black rounded-2xl shadow-xl shadow-indigo-100" @click="applyDeepFilters" />
+                <Button label="Appliquer l'Analyse" class="p-button-primary flex-1 font-black rounded-xl shadow-xl shadow-indigo-100" @click="applyDeepFilters" />
             </div>
         </Sidebar>
 
         <!-- --- [DIALOG] MASSIVE EXPORT ENGINE --- -->
-        <Dialog v-model:visible="showExportModal" modal header="SNC Massive Export Engine" :style="{ width: '550px' }" class="rounded-[1.5rem] overflow-hidden">
+        <Dialog v-model:visible="showExportModal" modal header="SNC Massive Export Engine" :style="{ width: '550px' }" class="rounded-[1rem] overflow-hidden">
             <div class="p-8 space-y-8">
-                <div class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 flex gap-4 items-start">
+                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 flex gap-4 items-start">
                     <i class="pi pi-info-circle text-indigo-500 mt-1"></i>
                     <p class="text-[11px] text-indigo-800 leading-relaxed font-bold italic">
                         L'exportation utilise un moteur asynchrone (Chunked Stream). Vous pouvez exporter des millions de lignes sans impact sur les performances du serveur.
@@ -686,7 +691,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     <div class="grid grid-cols-1 gap-4">
                         <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer group" @click="handleExport('payments')">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
+                                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
                                     <i class="pi pi-file-excel text-xl"></i>
                                 </div>
                                 <div>
@@ -699,7 +704,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 
                         <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer group" @click="handleExport('enrollments')">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
                                     <i class="pi pi-users text-xl"></i>
                                 </div>
                                 <div>
@@ -748,7 +753,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
     font-weight: 900 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.1em !important;
-    padding: 1.5rem !important;
+    padding: 1rem !important;
     border: none !important;
 }
 
@@ -762,7 +767,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 }
 
 :deep(.p-datatable-tbody > tr > td) {
-    padding: 1.5rem !important;
+    padding: 1rem !important;
     border-bottom: 1px solid #f1f5f9 !important;
 }
 
@@ -830,7 +835,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 
 /* TabView Customization (Subtle & Elegant) */
 :deep(.custom-tabview .p-tabview-nav) {
-    background: transparent; border: none; border-bottom: 1px solid #e2e8f0; padding: 0 1.5rem;
+    background: transparent; border: none; border-bottom: 1px solid #e2e8f0; padding: 0 1rem;
 }
 :deep(.custom-tabview .p-tabview-nav li .p-tabview-nav-link) {
     background: transparent; border: none; font-weight: 800; text-transform: uppercase;
@@ -861,7 +866,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 :deep(.p-timeline-event-content) { padding-left: 1rem; }
 
 /* Custom Overlays & Modals */
-:deep(.custom-dialog .p-dialog-header) { border-bottom: 1px solid #f1f5f9; padding: 1.5rem; }
+:deep(.custom-dialog .p-dialog-header) { border-bottom: 1px solid #f1f5f9; padding: 1rem; }
 :deep(.custom-dialog .p-dialog-content) { padding: 0; }
 :deep(.p-sidebar-custom) { border-left: 1px solid #e2e8f0; box-shadow: -10px 0 30px rgba(0,0,0,0.05); }
 

@@ -144,7 +144,7 @@ onMounted(() => {
         <Head title="Gestion des Langues - SubNetCongo" />
         <Toast />
 
-        <div class="p-4 lg:p-8 bg-[#F8FAFC] min-h-screen">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">

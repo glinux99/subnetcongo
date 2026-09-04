@@ -14,7 +14,7 @@ onMounted(() => setTimeout(() => { checking.value = false; }, 5000));
 <template>
     <AppLayout>
         <Head title="Paiement en cours" />
-        <div class="min-h-screen bg-slate-50 font-sans flex items-center justify-center py-12 px-6">
+        <div class="page-bg min-h-screen font-sans pb-20">
             <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-10 max-w-lg w-full text-center">
                 <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse">
                     <i class="pi pi-mobile text-indigo-600 text-4xl"></i>

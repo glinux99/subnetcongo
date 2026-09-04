@@ -202,7 +202,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <Head :title="props.title" />
         <Toast position="top-right" />
 
-        <div class="p-4 lg:p-8 bg-[#f8fafc] min-h-screen font-sans pb-20">
+        <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- ============================================================================== -->
             <!-- HEADER -->
