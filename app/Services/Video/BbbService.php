@@ -2,24 +2,33 @@
 
 namespace App\Services\Video;
 
+use Exception;
+
 class BbbService
 {
     public function createMeeting(array $data): array
     {
-        $base = config('services.bbb.base_url', 'https://bbb.example.com');
+        $base = config('services.bbb.base_url');
         $secret = config('services.bbb.secret');
+
+        if (!$base || !$secret) {
+            throw new Exception('BigBlueButton n\'est pas configuré. Définissez BBB_BASE_URL et BBB_SECRET dans le fichier .env.');
+        }
+
         $meetingID = 'snc-' . substr(md5($data['title'] . microtime()), 0, 12);
 
-        if ($secret) {
-            $createParams = http_build_query([
-                'meetingID' => $meetingID,
-                'name' => $data['title'],
-                'attendeePW' => $data['passcode'] ?? 'ap',
-                'moderatorPW' => 'mp',
-            ]);
-            $checksum = sha1($createParams . $secret);
-            $joinURL = $base . '/bigbluebutton/api/create?' . $createParams . '&checksum=' . $checksum;
-            // Appel réel à BBB pour créer la réunion
+        $createParams = http_build_query([
+            'meetingID' => $meetingID,
+            'name' => $data['title'],
+            'attendeePW' => $data['passcode'] ?? 'ap',
+            'moderatorPW' => 'mp',
+        ]);
+        $checksum = sha1($createParams . $secret);
+        $joinURL = $base . '/bigbluebutton/api/create?' . $createParams . '&checksum=' . $checksum;
+
+        $response = file_get_contents($joinURL);
+        if ($response && str_contains($response, '<returncode>FAILED</returncode>')) {
+            throw new Exception('Création BBB échouée : ' . $response);
         }
 
         return [
@@ -38,6 +47,13 @@ class BbbService
 
     public function deleteMeeting(string $meetingId): void
     {
-        // API call if needed
+        $base = config('services.bbb.base_url');
+        $secret = config('services.bbb.secret');
+        if (!$base || !$secret) {
+            return;
+        }
+        $params = http_build_query(['meetingID' => $meetingId]);
+        $checksum = sha1($params . $secret);
+        file_get_contents($base . '/bigbluebutton/api/delete?' . $params . '&checksum=' . $checksum);
     }
 }

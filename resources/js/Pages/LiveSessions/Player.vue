@@ -6,6 +6,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
+import VideoConference from '@/Components/LiveKit/VideoConference.vue';
 
 const props = defineProps({
     session: Object,
@@ -17,15 +18,19 @@ const minutesLeft = ref(0);
 let heartbeat = null;
 let countdown = null;
 
-const joinUrl = computed(() => props.session?.meeting_url);
-const providerLabel = computed(() => ({
-    zoom: 'Zoom', meet: 'Google Meet', bbb: 'BigBlueButton', jitsi: 'Jitsi Meet'
-}[props.session?.provider] ?? 'Classe virtuelle'));
+const isLiveKit = computed(() => props.session?.provider === 'livekit');
+const providerLabel = computed(() => {
+    const p = props.session?.provider;
+    return ({ zoom: 'Zoom', meet: 'Google Meet', bbb: 'BigBlueButton', jitsi: 'Jitsi Meet', livekit: 'LiveKit (In-App)' })[p] ?? 'Classe virtuelle';
+});
 
-const providerColor = computed(() => ({
-    zoom: 'from-blue-500 to-blue-700', meet: 'from-emerald-500 to-emerald-700',
-    bbb: 'from-indigo-500 to-indigo-700', jitsi: 'from-slate-600 to-slate-800'
-}[props.session?.provider] ?? 'from-indigo-500 to-rose-500'));
+const providerColor = computed(() => {
+    const p = props.session?.provider;
+    return ({ zoom: 'from-blue-500 to-blue-700', meet: 'from-emerald-500 to-emerald-700', bbb: 'from-indigo-500 to-indigo-700', jitsi: 'from-slate-600 to-slate-800', livekit: 'from-rose-500 to-rose-700' })[p] ?? 'from-indigo-500 to-rose-500';
+});
+
+const joinUrl = computed(() => props.session?.meeting_url);
+const isMock = computed(() => !joinUrl.value && props.session?.provider !== 'livekit');
 
 const sendHeartbeat = async () => {
     try {
@@ -67,6 +72,7 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
     <AppLayout>
         <Head :title="session?.title || 'Session live'" />
         <Toast />
+
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
@@ -90,13 +96,28 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
                             <span class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
                             EN DIRECT
                         </div>
+                        <span v-if="!isMock" class="bg-blue-500/20 text-blue-300 px-3 py-1.5 rounded-full border border-blue-500/30">Session réelle</span>
+                        <span v-else class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-full border border-amber-500/30">Mode Démo</span>
                         <span>~{{ minutesLeft }} min restantes</span>
                     </div>
                 </div>
             </div>
 
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
-                <div class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
+                <div v-if="isLiveKit" class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
+                    <VideoConference :session="session" :user="user" />
+                </div>
+
+                <div v-else-if="isMock" class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
+                    <div class="aspect-video flex flex-col items-center justify-center text-white/80 p-8 text-center">
+                        <i class="pi pi-info-circle text-6xl mb-4 text-amber-400"></i>
+                        <h2 class="text-2xl font-black mb-2">{{ session?.title }}</h2>
+                        <p class="text-sm mb-6 text-amber-300">Cette session est en mode démo. Configurez les identifiants Zoom/Meet/BBB dans les paramètres système pour activer les vraies sessions.</p>
+                        <Tag value="Mode Démo" severity="warning" class="!text-[10px] !font-black !uppercase !tracking-widest" />
+                    </div>
+                </div>
+
+                <div v-else class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
                     <div class="aspect-video flex flex-col items-center justify-center text-white/80 p-8 text-center">
                         <i class="pi pi-video text-6xl mb-4 text-indigo-400"></i>
                         <h2 class="text-2xl font-black mb-2">{{ session?.title }}</h2>

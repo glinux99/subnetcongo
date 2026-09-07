@@ -21,6 +21,13 @@ const search = ref(props.filters?.search ?? '');
 const provider = ref(props.filters?.provider ?? null);
 const status = ref(props.filters?.status ?? null);
 
+const providers = props.meta?.providers ?? [];
+const configuredProviders = props.meta?.configured_providers ?? [];
+const courses = props.meta?.courses ?? [];
+const instructors = props.meta?.instructors ?? [];
+
+const isProviderConfigured = (providerValue) => configuredProviders.includes(providerValue);
+
 const showCreate = ref(false);
 const form = ref({
     title: '',
@@ -28,23 +35,24 @@ const form = ref({
     instructor_id: null,
     start_at: '',
     duration: 60,
-    provider: 'zoom',
+    provider: configuredProviders[0] || 'zoom',
     max_participants: 100,
     is_recorded: true,
     passcode: '',
 });
 const submitting = ref(false);
 
-const providers = props.meta?.providers ?? [];
-const courses = props.meta?.courses ?? [];
-const instructors = props.meta?.instructors ?? [];
+const providerLabel = (p) => {
+    const found = providers.find(pr => pr.value === p);
+    return found ? found.label : p;
+};
 
 const statusSeverity = (s) => ({
     'Scheduled': 'info', 'Live': 'success', 'Ended': 'secondary', 'Cancelled': 'danger'
 }[s] ?? 'secondary');
 
 const providerColor = (p) => ({
-    zoom: 'bg-blue-500', meet: 'bg-emerald-500', bbb: 'bg-indigo-600', jitsi: 'bg-slate-700'
+    zoom: 'bg-blue-500', meet: 'bg-emerald-500', bbb: 'bg-indigo-600', jitsi: 'bg-slate-700', livekit: 'bg-rose-500'
 }[p] ?? 'bg-slate-500');
 
 const formatDate = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -58,7 +66,7 @@ const search_ = () => {
 const submit = () => {
     submitting.value = true;
     router.post(route('live-sessions.store'), form.value, {
-        onSuccess: () => { showCreate.value = false; submitting.value = false; form.value = { title: '', course_id: null, instructor_id: null, start_at: '', duration: 60, provider: 'zoom', max_participants: 100, is_recorded: true, passcode: '' }; },
+        onSuccess: () => { showCreate.value = false; submitting.value = false; form.value = { title: '', course_id: null, instructor_id: null, start_at: '', duration: 60, provider: configuredProviders[0] || 'zoom', max_participants: 100, is_recorded: true, passcode: '' }; },
         onError: () => { submitting.value = false; },
     });
 };
@@ -127,11 +135,14 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <div :class="['w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs', providerColor(data.provider)]">
-                                        <i :class="data.provider === 'zoom' ? 'pi pi-video' : data.provider === 'meet' ? 'pi pi-google' : data.provider === 'bbb' ? 'pi pi-users' : 'pi pi-comments'"></i>
+                                        <i :class="data.provider === 'zoom' ? 'pi pi-video' : data.provider === 'meet' ? 'pi pi-google' : data.provider === 'bbb' ? 'pi pi-users' : data.provider === 'livekit' ? 'pi pi-camera' : 'pi pi-comments'"></i>
                                     </div>
                                     <div>
                                         <div class="font-bold text-slate-800">{{ data.title }}</div>
-                                        <div class="text-[10px] text-slate-400 font-mono">{{ data.meeting_id ?? '—' }}</div>
+                                        <div class="text-[10px] text-slate-400 font-mono flex items-center gap-2">
+                                            <span>{{ data.meeting_id ?? '—' }}</span>
+                                            <Tag v-if="!data.meeting_url && data.provider !== 'livekit'" value="Demo" severity="warning" class="!text-[8px] !py-0 !px-1" />
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -206,7 +217,15 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Fournisseur</label>
-                        <Select v-model="form.provider" :options="providers" optionLabel="label" optionValue="value" class="w-full" />
+                        <Select v-model="form.provider" :options="providers" optionLabel="label" optionValue="value" class="w-full" :optionDisabled="p => !isProviderConfigured(p.value)">
+                            <template #option="slotProps">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span :class="{'text-slate-400': !isProviderConfigured(slotProps.option.value)}">{{ slotProps.option.label }}</span>
+                                    <Tag v-if="!isProviderConfigured(slotProps.option.value)" value="Non configuré" severity="warning" class="!text-[8px] !py-0 !px-1" />
+                                </div>
+                            </template>
+                        </Select>
+                        <p v-if="!configuredProviders.length" class="text-xs text-rose-500 mt-1 font-medium">Aucun fournisseur vidéo n'est configuré. Vérifiez les paramètres système.</p>
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Max participants</label>

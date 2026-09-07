@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use DateTimeZone;
 
 class SettingController extends Controller
 {
@@ -35,9 +35,11 @@ class SettingController extends Controller
         $defaults = [
             'general' => [
                 'site_name' => config('app.name'),
-                'site_description' => 'Plateforme E-learning',
-                'contact_email' => 'admin@example.com',
-                'support_phone' => '',
+                'site_description' => 'Plateforme ERP & E-learning',
+                'contact_email' => 'admin@subnetcongo.cd',
+                'support_phone' => '+243000000000',
+                'timezone' => config('app.timezone', 'Africa/Kinshasa'), // Ajouté pour éviter une erreur Vue
+                'language' => config('app.locale', 'fr'), // Ajouté pour éviter une erreur Vue
             ],
             'branding' => [
                 'logo_url' => null,
@@ -50,15 +52,15 @@ class SettingController extends Controller
                 '2fa_required_admins' => false,
             ],
             'mail' => [
-                'driver' => config('mail.default'),
-                'host' => config('mail.mailers.smtp.host'),
-                'port' => config('mail.mailers.smtp.port'),
-                'username' => config('mail.mailers.smtp.username'),
-                'from_address' => config('mail.from.address'),
+                'driver' => config('mail.default', 'smtp'),
+                'host' => config('mail.mailers.smtp.host', 'smtp.mailtrap.io'),
+                'port' => config('mail.mailers.smtp.port', 2525),
+                'username' => config('mail.mailers.smtp.username', ''),
+                'from_address' => config('mail.from.address', 'hello@example.com'),
             ],
             'payment' => [
-                'currency' => 'USD',
-                'symbol' => '$',
+                'currency' => 'CDF',
+                'symbol' => 'FC',
             ]
         ];
 
@@ -71,22 +73,45 @@ class SettingController extends Controller
             }
         }
 
+        // --- CORRECTION ICI : GÉNÉRATION DES LISTES POUR LES DROPDOWNS VUE.JS ---
+        $lists = [
+            'languages' => [
+                ['value' => 'fr', 'label' => 'Français'],
+                ['value' => 'en', 'label' => 'Anglais (English)'],
+            ],
+            // Génère la liste de tous les fuseaux horaires mondiaux
+            'timezones' => array_map(fn($tz) => ['value' => $tz, 'label' => $tz], DateTimeZone::listIdentifiers()),
+            'currencies' => [
+                ['value' => 'CDF', 'label' => 'Franc Congolais (CDF)'],
+                ['value' => 'USD', 'label' => 'Dollar Américain (USD)'],
+                ['value' => 'EUR', 'label' => 'Euro (EUR)'],
+            ],
+            'mailDrivers' => [
+                ['value' => 'smtp', 'label' => 'SMTP (Recommandé)'],
+                ['value' => 'mailgun', 'label' => 'Mailgun'],
+                ['value' => 'sendmail', 'label' => 'Sendmail'],
+                ['value' => 'log', 'label' => 'Log (Développement)'],
+            ]
+        ];
+
         return Inertia::render('System/Settings', [
             'settings' => $mergedSettings,
             'env_type' => config('app.env'),
+            
+            // On envoie les listes de deux manières pour couvrir toutes les syntaxes possibles de votre fichier Vue.js
+            'dictionaries' => $lists, 
+            'languages' => $lists['languages'],
+            'timezones' => $lists['timezones'],
+            'currencies' => $lists['currencies'],
+            'mailDrivers' => $lists['mailDrivers'],
         ]);
     }
 
     /**
      * Met à jour un groupe de paramètres.
-     *
-     * @param Request $request
-     * @param string $group
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, string $group)
     {
-        // Validation dynamique selon le groupe
         $rules = match ($group) {
             'general' => [
                 'site_name' => 'required|string|max:50',
@@ -103,15 +128,15 @@ class SettingController extends Controller
             default => [],
         };
 
-        $request->validate($rules);
+        if (!empty($rules)) {
+            $request->validate($rules);
+        }
 
         DB::beginTransaction();
         try {
             foreach ($request->all() as $key => $value) {
-                // Ignorer les champs non pertinents
                 if (in_array($key, ['_method', '_token'])) continue;
 
-                // Gestion des types
                 $type = 'string';
                 if (is_bool($value)) $type = 'boolean';
                 elseif (is_numeric($value)) $type = 'integer';
@@ -123,7 +148,6 @@ class SettingController extends Controller
                 );
             }
 
-            // Vider le cache des settings
             Cache::forget('system_settings');
 
             AuditLog::create([
@@ -146,9 +170,6 @@ class SettingController extends Controller
 
     /**
      * Upload du logo ou favicon.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function uploadLogo(Request $request)
     {
@@ -170,19 +191,13 @@ class SettingController extends Controller
     }
 
     /**
-     * Envoie un email de test pour vérifier la configuration SMTP.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Envoie un email de test.
      */
     public function testEmail(Request $request)
     {
         $request->validate(['email' => 'required|email']);
 
         try {
-            // Utilisation de la config dynamique (si stockée en BDD, il faudrait la charger dans config() avant)
-            // Ici on suppose que les settings sont déjà chargés dans le ServiceProvider
-
             Mail::raw('Ceci est un email de test du système SubnetCongo.', function ($message) use ($request) {
                 $message->to($request->input('email'))
                         ->subject('Test de configuration SMTP');
@@ -195,9 +210,7 @@ class SettingController extends Controller
     }
 
     /**
-     * Exporte la configuration actuelle en JSON (Backup).
-     *
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * Exporte la configuration.
      */
     public function backupConfig()
     {
@@ -210,10 +223,7 @@ class SettingController extends Controller
     }
 
     /**
-     * Restaure une configuration depuis un fichier JSON.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Restaure une configuration.
      */
     public function restoreConfig(Request $request)
     {
@@ -248,12 +258,9 @@ class SettingController extends Controller
 
     /**
      * Affiche les variables d'environnement (masquées).
-     *
-     * @return \Inertia\Response
      */
     public function env()
     {
-        // Liste blanche des clés à afficher
         $allowedKeys = [
             'APP_NAME', 'APP_ENV', 'APP_DEBUG', 'APP_URL',
             'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE',
@@ -264,7 +271,6 @@ class SettingController extends Controller
         $envVars = [];
         foreach ($allowedKeys as $key) {
             $val = env($key);
-            // Masquer partiellement si sensible
             if (in_array($key, ['DB_PASSWORD', 'MAIL_PASSWORD'])) {
                 $val = '********';
             }
@@ -278,8 +284,6 @@ class SettingController extends Controller
 
     /**
      * Vide le cache de l'application.
-     *
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function clearCache()
     {

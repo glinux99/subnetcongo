@@ -93,4 +93,12 @@ class AuditLogController extends Controller
         return Redirect::route('system.logs')
             ->with('success', 'Audit log deleted successfully.');
     }
+
+    public function clear(Request $request)
+    {
+        AuditLog::where('user_id', auth()->id())->delete();
+
+        return Redirect::route('system.logs')
+            ->with('success', 'Logs d\'audit effacés.');
+    }
 }

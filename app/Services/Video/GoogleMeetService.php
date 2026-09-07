@@ -8,23 +8,11 @@ use Exception;
 
 class GoogleMeetService
 {
-    /**
-     * Crée une réunion Google Meet via Calendar API (OAuth2 requis).
-     * Si GOOGLE_MEET_CREDENTIALS_PATH n'est pas défini → fallback Jitsi.
-     */
     public function createMeeting(array $data): array
     {
         $credentialsPath = config('services.google.credentials_path');
         if (!$credentialsPath || !file_exists($credentialsPath)) {
-            // Fallback : génère un ID Jitsi-like pour Meet (URL non garantie)
-            return [
-                'id' => 'meet-' . bin2hex(random_bytes(8)),
-                'join_url' => 'https://meet.google.com/lookup/' . bin2hex(random_bytes(5)),
-                'start_url' => 'https://meet.google.com/lookup/' . bin2hex(random_bytes(5)),
-                'password' => null,
-                'provider' => 'meet',
-                'mock' => true,
-            ];
+            throw new Exception('Google Meet n\'est pas configuré. Définissez GOOGLE_CREDENTIALS_PATH dans .env et fournissez un fichier de credentials Google Calendar API valide.');
         }
 
         $token = $this->getAccessToken();
@@ -47,7 +35,7 @@ class GoogleMeetService
 
         if ($response->failed()) {
             Log::error('Google Meet create failed', ['body' => $response->body()]);
-            throw new Exception('Création Google Meet échouée.');
+            throw new Exception('Création Google Meet échouée : ' . $response->body());
         }
 
         $json = $response->json();
@@ -58,6 +46,7 @@ class GoogleMeetService
             'join_url' => $entry['uri'] ?? null,
             'start_url' => $entry['uri'] ?? null,
             'password' => null,
+            'provider' => 'meet',
         ];
     }
 
@@ -90,8 +79,9 @@ class GoogleMeetService
     protected function getAccessToken(): string
     {
         $credentials = json_decode(file_get_contents(config('services.google.credentials_path')), true);
-        // Real implementation : use google/apiclient + refresh_token
-        // Simplified here for brevity
-        return $credentials['access_token'] ?? throw new Exception('Token Google manquant.');
+        if (!isset($credentials['access_token'])) {
+            throw new Exception('Token Google manquant dans le fichier de credentials.');
+        }
+        return $credentials['access_token'];
     }
 }

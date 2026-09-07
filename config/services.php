@@ -47,4 +47,11 @@ return [
         'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
         'redirect' => env('APP_URL') . '/login/linkedin/callback',
     ],
+
+    'livekit' => [
+        'api_key' => env('LIVEKIT_API_KEY'),
+        'api_secret' => env('LIVEKIT_API_SECRET'),
+        'url' => env('LIVEKIT_URL', 'http://localhost:7880'),
+        'ws_url' => env('LIVEKIT_WS_URL', 'ws://localhost:7880'),
+    ],
 ];

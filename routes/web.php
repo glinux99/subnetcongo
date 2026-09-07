@@ -164,6 +164,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('live-sessions/{live_session}/cancel', [LiveSessionController::class, 'cancel'])->name('live-sessions.cancel');
         Route::get('live-sessions/{live_session}/report', [LiveSessionController::class, 'report'])->name('live-sessions.report');
         Route::get('live-sessions/{live_session}/join', [LiveSessionController::class, 'join'])->name('live-sessions.join');
+        Route::post('live-sessions/{live_session}/chat/send', [LiveSessionController::class, 'sendChat'])->name('live-sessions.chat.send');
+        Route::get('live-sessions/{live_session}/livekit-token', [LiveSessionController::class, 'livekitToken'])->name('live-sessions.livekit-token');
+        Route::get('live-sessions/{live_session}/livekit-participants', [LiveSessionController::class, 'livekitParticipants'])->name('live-sessions.livekit-participants');
+        Route::post('live-sessions/{live_session}/livekit-start', [LiveSessionController::class, 'livekitStart'])->name('live-sessions.livekit-start');
+        Route::post('live-sessions/{live_session}/livekit-end', [LiveSessionController::class, 'livekitEnd'])->name('live-sessions.livekit-end');
         Route::resource('live-sessions', LiveSessionController::class);
 
         // Q&A (instructeur répond aux questions)
@@ -356,8 +361,15 @@ Route::prefix('curriculum')->group(function () {
         });
 
         Route::get('logs',[App\Http\Controllers\System\AuditLogController::class, 'index'])->name('logs');
+        Route::delete('logs/{log}', [App\Http\Controllers\System\AuditLogController::class, 'destroy'])->name('logs.destroy');
+        Route::delete('logs/clear', [App\Http\Controllers\System\AuditLogController::class, 'clear'])->name('logs.clear');
         Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('settings');
+        Route::post('settings/mail/test', [App\Http\Controllers\System\SettingController::class, 'testEmail'])->name('settings.mail.test');
         Route::get('payments', [App\Http\Controllers\System\PaymentGatewayController::class, 'index'])->name('payments');
+        Route::get('payments/{gateway}/export', [App\Http\Controllers\System\PaymentGatewayController::class, 'exportTransactions'])->name('payments.export');
+        Route::post('payments/{gateway}/toggle', [App\Http\Controllers\System\PaymentGatewayController::class, 'toggleStatus'])->name('payments.toggle');
+        Route::delete('payments/{gateway}', [App\Http\Controllers\System\PaymentGatewayController::class, 'destroy'])->name('payments.destroy');
+        Route::post('payments/{gateway}/test', [App\Http\Controllers\System\PaymentGatewayController::class, 'testConnection'])->name('payments.test');
         Route::resource('languages', App\Http\Controllers\System\LanguageController::class);
         Route::get('server',[App\Http\Controllers\System\ServerMaintenanceController::class, 'index'])->name('server');
     });

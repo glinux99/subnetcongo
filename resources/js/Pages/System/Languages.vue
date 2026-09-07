@@ -1,40 +1,41 @@
 <script setup>
+/**
+ * ======================================================================================
+ * SUBNETCONGO LMS - INTERNATIONALIZATION (i18n) MANAGER v40.0
+ * ======================================================================================
+ * Interface Ultimate : Design épuré, UX optimisée, Sticky Header, Seamless Editor.
+ */
+
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode } from '@primevue/core/api';
 
 // --- PRIME VUE IMPORTS ---
-import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
-import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Dialog from 'primevue/dialog';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
 import ProgressBar from 'primevue/progressbar';
 import InputSwitch from 'primevue/inputswitch';
 import Toast from 'primevue/toast';
 import Divider from 'primevue/divider';
 import ScrollPanel from 'primevue/scrollpanel';
-import InlineMessage from 'primevue/inlinemessage';
 import Textarea from 'primevue/textarea';
 import FileUpload from 'primevue/fileupload';
-import Menu from 'primevue/menu';
 import Message from 'primevue/message';
+import Chart from 'primevue/chart'; // <-- CORRECTION: Import ajouté
 
 const { t } = useI18n();
 const toast = useToast();
 
 // --- ETATS DE GESTION ---
 const loading = ref(true);
-const activeTab = ref(0);
 const displayLangDialog = ref(false);
 const displayKeyDialog = ref(false);
 const displayImportDialog = ref(false);
@@ -50,7 +51,7 @@ const languages = ref([
     { id: 5, name: 'Español', code: 'es', flag: '🇪🇸', is_default: false, status: false, progress: 0, keys: 0 }
 ]);
 
-// --- SYSTEME DE TRADUCTION (MOCK DATABASE) ---
+// --- SYSTEME DE TRADUCTION ---
 const translationKeys = ref([
     { key: 'auth.login', group: 'Auth', fr: 'Connexion', en: 'Login', ln: 'Kokota', sw: 'Ingia' },
     { key: 'auth.register', group: 'Auth', fr: 'Inscription', en: 'Sign Up', ln: 'Komisa', sw: 'Jisajili' },
@@ -83,8 +84,8 @@ const coverageData = ref({
     labels: ['Français', 'English', 'Lingala', 'Swahili'],
     datasets: [{
         data: [100, 92, 65, 40],
-        backgroundColor: ['#6366F1', '#10B981', '#F59E0B', '#EF4444'],
-        borderRadius: 10
+        backgroundColor: ['#4f46e5', '#10B981', '#F59E0B', '#EF4444'],
+        borderRadius: 6
     }]
 });
 
@@ -92,35 +93,38 @@ const chartOptions = {
     indexAxis: 'y',
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
-    scales: { x: { max: 100, grid: { display: false } }, y: { grid: { display: false } } }
+    scales: { 
+        x: { max: 100, grid: { display: false }, border: { display: false } }, 
+        y: { grid: { display: false }, border: { display: false } } 
+    }
 };
 
 // --- ACTIONS ---
 const editTranslations = (lang) => {
     viewMode.value = 'editor';
-    toast.add({ severity: 'info', summary: 'Éditeur chargé', detail: `Modification des clés pour : ${lang.name}`, life: 2000 });
+    toast.add({ severity: 'info', summary: 'Mode Éditeur', detail: `Modification du dictionnaire en cours.`, life: 2000 });
 };
 
 const saveLanguage = () => {
     submitted.value = true;
     if (newLang.value.name && newLang.value.code) {
         languages.value.push({ ...newLang.value, id: Date.now(), progress: 0, keys: 0 });
-        toast.add({ severity: 'success', summary: 'Langue ajoutée', detail: 'La nouvelle locale est prête.', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Langue ajoutée', detail: 'La nouvelle locale est prête à être traduite.', life: 3000 });
         displayLangDialog.value = false;
         newLang.value = { name: '', code: '', flag: '', status: true };
     }
 };
 
 const updateTranslation = (data, field) => {
-    toast.add({ severity: 'success', summary: 'Sauvegardé', detail: `Clé "${data.key}" mise à jour en ${field.toUpperCase()}`, life: 1500 });
+    toast.add({ severity: 'success', summary: 'Sauvegarde auto', detail: `Clé mise à jour avec succès.`, life: 1500 });
 };
 
 const autoTranslateMissing = () => {
     loading.value = true;
     setTimeout(() => {
         loading.value = false;
-        toast.add({ severity: 'success', summary: 'IA Traduction', detail: 'Toutes les clés vides ont été traduites via SubNet-AI.', life: 4000 });
-    }, 2000);
+        toast.add({ severity: 'success', summary: 'Traduction IA terminée', detail: 'Les clés manquantes ont été générées.', life: 3000 });
+    }, 1500);
 };
 
 const exportTranslations = () => {
@@ -134,447 +138,363 @@ const exportTranslations = () => {
 };
 
 onMounted(() => {
-    setTimeout(() => { loading.value = false; }, 1000);
+    setTimeout(() => { loading.value = false; }, 800);
 });
-
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Gestion des Langues - SubNetCongo" />
+        <Head title="Internationalisation - SubNetCongo" />
         <Toast />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+        <div class="bg-slate-50/50 min-h-screen pb-20">
 
-            <!-- HEADER -->
-            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-                <div class="flex items-center gap-6">
-                    <div class="bg-indigo-600 p-4 rounded-3xl shadow-xl shadow-indigo-100 rotate-3 hover:rotate-0 transition-transform cursor-pointer">
-                        <i class="pi pi-globe text-white text-3xl"></i>
+            <!-- --- STICKY HEADER --- -->
+            <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-indigo-600 rounded-xl shadow-inner flex items-center justify-center">
+                        <i class="pi pi-globe text-white text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Internationalisation (i18n)</h1>
-                        <p class="text-slate-500 font-medium">Gérez le multilinguisme et les traductions de SubNetCongo</p>
+                        <div class="flex items-center gap-3">
+                            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Internationalisation (i18n)</h1>
+                            <Badge value="Multilang" severity="info" class="!text-[10px] !px-2 uppercase" />
+                        </div>
+                        <p class="text-sm text-slate-500 font-medium mt-0.5">Gérez le multilinguisme du système ERP</p>
                     </div>
                 </div>
+                
                 <div class="flex gap-3">
                     <template v-if="viewMode === 'list'">
-                        <Button label="Importer JSON" icon="pi pi-upload" class="p-button-outlined p-button-secondary border-2 font-bold" @click="displayImportDialog = true" />
-                        <Button label="Nouvelle Langue" icon="pi pi-plus" class="p-button-primary shadow-lg px-6 font-bold" @click="displayLangDialog = true" />
+                        <Button label="Importer" icon="pi pi-upload" class="p-button-outlined p-button-secondary font-bold !rounded-xl" @click="displayImportDialog = true" />
+                        <Button label="Nouvelle Langue" icon="pi pi-plus" class="p-button-primary font-bold shadow-md !rounded-xl" @click="displayLangDialog = true" />
                     </template>
                     <template v-else>
-                        <Button label="Retour à la liste" icon="pi pi-arrow-left" class="p-button-text p-button-secondary font-bold" @click="viewMode = 'list'" />
-                        <Button label="Ajouter une Clé" icon="pi pi-plus-circle" class="p-button-outlined p-button-indigo border-2 font-bold" @click="displayKeyDialog = true" />
-                        <Button label="Auto-Traduction (AI)" icon="pi pi-bolt" class="p-button-warning shadow-lg px-6 font-bold" @click="autoTranslateMissing" />
+                        <Button label="Retour" icon="pi pi-arrow-left" class="p-button-text p-button-secondary font-bold" @click="viewMode = 'list'" />
+                        <Button label="Nouvelle Clé" icon="pi pi-plus" class="p-button-outlined p-button-secondary font-bold !rounded-xl" @click="displayKeyDialog = true" />
+                        <Button label="Traduction IA (SubNet)" icon="pi pi-bolt" class="bg-indigo-600 hover:bg-indigo-700 text-white border-none font-bold shadow-md !rounded-xl" @click="autoTranslateMissing" />
                     </template>
                 </div>
             </header>
 
-            <!-- KPI SECTION -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div v-for="kpi in [
-                    { label: 'Langues Actives', val: languages.filter(l => l.status).length, icon: 'pi-flag', color: 'indigo' },
-                    { label: 'Total Clés', val: '2,450', icon: 'pi-key', color: 'emerald' },
-                    { label: 'Complétion Moyenne', val: '74%', icon: 'pi-chart-line', color: 'amber' },
-                    { label: 'Langue par défaut', val: 'Français (FR)', icon: 'pi-star', color: 'rose' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
-                        <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
-                    </div>
-                    <div :class="`p-4 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-500 group-hover:scale-110 transition-transform` ">
-                        <i :class="`pi ${kpi.icon} text-2xl` "></i>
+            <div class="max-w-screen-2xl mx-auto px-6">
+                <!-- --- KPI SECTION --- -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div v-for="kpi in [
+                        { label: 'Langues Actives', val: languages.filter(l => l.status).length, icon: 'pi-flag', color: 'indigo' },
+                        { label: 'Total Clés', val: '2,450', icon: 'pi-key', color: 'emerald' },
+                        { label: 'Complétion', val: '74%', icon: 'pi-chart-line', color: 'amber' },
+                        { label: 'Langue Principale', val: 'Français (FR)', icon: 'pi-star', color: 'rose' }
+                    ]" :key="kpi.label" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ kpi.label }}</p>
+                            <div class="text-3xl font-black text-slate-900 tracking-tight">{{ kpi.val }}</div>
+                        </div>
+                        <div :class="`w-12 h-12 rounded-xl bg-${kpi.color}-50 flex items-center justify-center text-${kpi.color}-600`">
+                            <i :class="`pi ${kpi.icon} text-xl`"></i>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- MAIN VIEW TOGGLE -->
-            <div class="grid grid-cols-12 gap-8">
+                <!-- --- MAIN VIEW CONTENT --- -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                <!-- LEFT CONTENT: TABLE OR EDITOR -->
-                <div class="col-span-12 lg:col-span-9">
+                    <!-- LEFT PANEL (TABLES) -->
+                    <div class="lg:col-span-9">
 
-                    <!-- MODE: LISTE DES LANGUES -->
-                    <Card v-if="viewMode === 'list'" class="border-none shadow-sm rounded-[1.5rem] overflow-hidden">
-                        <template #content>
-                            <DataTable
-                                v-model:filters="langFilters"
-                                :value="languages"
-                                :paginator="true"
-                                :rows="10"
-                                :loading="loading"
-                                class="p-datatable-lg custom-lang-table"
-                            >
-                                <template #header>
-                                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
-                                        <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter px-2">Locales Installées</h2>
-                                        <span class="p-input-icon-left w-full md:w-80">
-                                            <i class="pi pi-search" />
-                                            <InputText v-model="langFilters['global'].value" placeholder="Rechercher une langue..." class="w-full rounded-2xl border-slate-200" />
-                                        </span>
-                                    </div>
-                                </template>
+                        <!-- MODE: LISTE DES LANGUES -->
+                        <div v-if="viewMode === 'list'" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                            
+                            <!-- Header Tableau -->
+                            <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Locales Installées</h2>
+                                <span class="relative w-full sm:w-72">
+                                    <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                    <InputText v-model="langFilters['global'].value" placeholder="Rechercher une langue..." class="w-full pl-10 !rounded-lg" />
+                                </span>
+                            </div>
 
-                                <Column field="name" header="LANGUE" style="min-width: 14rem">
+                            <DataTable v-model:filters="langFilters" :value="languages" :loading="loading" class="ultimate-table">
+                                <Column field="name" header="Langue" style="min-width: 14rem">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-4">
-                                            <span class="text-3xl shadow-sm">{{ data.flag }}</span>
-                                            <div class="flex flex-col">
+                                            <span class="text-3xl">{{ data.flag }}</span>
+                                            <div>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="font-black text-slate-800 text-lg">{{ data.name }}</span>
-                                                    <Badge v-if="data.is_default" value="DEFAULT" severity="warning" class="text-[8px] font-black" />
+                                                    <span class="font-bold text-slate-900">{{ data.name }}</span>
+                                                    <Badge v-if="data.is_default" value="Défaut" severity="secondary" class="!text-[9px] uppercase tracking-wider" />
                                                 </div>
-                                                <span class="text-xs font-mono text-slate-400 uppercase">{{ data.code }}</span>
+                                                <span class="text-xs font-mono text-slate-400">{{ data.code }}</span>
                                             </div>
                                         </div>
                                     </template>
                                 </Column>
 
-                                <Column field="progress" header="COMPLÉTION" style="min-width: 12rem">
+                                <Column field="progress" header="Complétion" style="min-width: 12rem">
                                     <template #body="{ data }">
-                                        <div class="flex flex-col gap-2">
-                                            <div class="flex justify-between text-[10px] font-bold">
-                                                <span class="text-slate-500">{{ data.progress }}% Traduit</span>
+                                        <div class="flex flex-col gap-1.5 pr-8">
+                                            <div class="flex justify-between text-xs font-semibold">
+                                                <span class="text-slate-600">{{ data.progress }}% Traduit</span>
                                                 <span class="text-slate-400">{{ data.keys }} clés</span>
                                             </div>
-                                            <ProgressBar :value="data.progress" :showValue="false" style="height: 6px" class="rounded-full"
-                                                :color="data.progress === 100 ? '#10B981' : (data.progress > 50 ? '#6366F1' : '#F59E0B')" />
+                                            <ProgressBar :value="data.progress" :showValue="false" style="height: 6px" 
+                                                :color="data.progress === 100 ? '#10B981' : (data.progress > 50 ? '#4f46e5' : '#F59E0B')" />
                                         </div>
                                     </template>
                                 </Column>
 
-                                <Column field="status" header="ÉTAT" style="width: 8rem">
+                                <Column field="status" header="Visibilité" style="width: 8rem">
                                     <template #body="{ data }">
-                                        <div class="flex flex-col gap-1">
-                                            <InputSwitch v-model="data.status" />
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase text-center">{{ data.status ? 'Visible' : 'Masqué' }}</span>
-                                        </div>
+                                        <InputSwitch v-model="data.status" />
                                     </template>
                                 </Column>
 
-                                <Column header="ACTION" alignFrozen="right" frozen style="width: 12rem">
+                                <Column alignFrozen="right" frozen style="width: 8rem">
                                     <template #body="{ data }">
-                                        <div class="flex gap-2">
-                                            <Button label="Éditer" icon="pi pi-pencil" class="p-button-text p-button-indigo p-button-sm font-black" @click="editTranslations(data)" />
-                                            <Button icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text p-button-secondary" />
-                                        </div>
+                                        <Button label="Éditer" icon="pi pi-pencil" class="p-button-text p-button-sm font-bold text-indigo-600" @click="editTranslations(data)" />
                                     </template>
                                 </Column>
                             </DataTable>
-                        </template>
-                    </Card>
+                        </div>
 
-                    <!-- MODE: ÉDITEUR DE TRADUCTIONS -->
-                    <Card v-else class="border-none shadow-sm rounded-[1.5rem] overflow-hidden">
-                        <template #content>
-                            <DataTable
-                                v-model:filters="transFilters"
-                                :value="translationKeys"
-                                :paginator="true"
-                                :rows="15"
-                                editMode="cell"
-                                @cell-edit-complete="updateTranslation"
-                                class="p-datatable-sm custom-trans-table"
-                            >
-                                <template #header>
-                                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
-                                        <div class="flex items-center gap-3">
-                                            <Button icon="pi pi-filter-slash" class="p-button-outlined p-button-secondary p-button-sm" @click="transFilters['global'].value = null" />
-                                            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Éditeur de Clés</h2>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <Dropdown v-model="transFilters['group'].value" :options="groups" placeholder="Groupe" class="w-40 rounded-xl" showClear />
-                                            <span class="p-input-icon-left w-full md:w-64">
-                                                <i class="pi pi-search" />
-                                                <InputText v-model="transFilters['global'].value" placeholder="Chercher une clé..." class="w-full rounded-2xl border-slate-200" />
-                                            </span>
-                                        </div>
-                                    </div>
-                                </template>
+                        <!-- MODE: ÉDITEUR DE TRADUCTIONS -->
+                        <div v-else class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                            
+                            <!-- Header Éditeur -->
+                            <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Dictionnaire de traduction</h2>
+                                <div class="flex items-center gap-2 w-full md:w-auto">
+                                    <Dropdown v-model="transFilters['group'].value" :options="groups" placeholder="Groupe" class="w-40 !rounded-lg" showClear />
+                                    <span class="relative w-full sm:w-64">
+                                        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                        <InputText v-model="transFilters['global'].value" placeholder="Chercher une clé..." class="w-full pl-10 !rounded-lg" />
+                                    </span>
+                                </div>
+                            </div>
 
-                                <Column field="key" header="CLÉ (LOCALE)" sortable style="min-width: 15rem">
+                            <DataTable v-model:filters="transFilters" :value="translationKeys" :paginator="true" :rows="15" editMode="cell" @cell-edit-complete="updateTranslation" class="ultimate-table ultimate-editor">
+                                <Column field="key" header="Clé & Référence" sortable style="min-width: 14rem">
                                     <template #body="{ data }">
                                         <div class="flex flex-col">
-                                            <span class="font-mono text-xs text-indigo-500 font-bold">{{ data.key }}</span>
-                                            <span class="text-[9px] text-slate-300 font-bold uppercase">{{ data.group }}</span>
+                                            <span class="font-mono text-xs text-slate-900 font-semibold">{{ data.key }}</span>
+                                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5">{{ data.group }}</span>
                                         </div>
                                     </template>
                                 </Column>
 
-                                <Column field="fr" header="FRANÇAIS 🇫🇷" style="min-width: 12rem">
+                                <Column field="fr" header="Français 🇫🇷" style="min-width: 12rem">
                                     <template #editor="{ data, field }">
-                                        <InputText v-model="data[field]" class="w-full font-bold" />
+                                        <InputText v-model="data[field]" class="w-full !border-none !shadow-none focus:ring-0 !px-0 font-medium" />
                                     </template>
                                 </Column>
 
-                                <Column field="en" header="ENGLISH 🇬🇧" style="min-width: 12rem">
+                                <Column field="en" header="English 🇬🇧" style="min-width: 12rem">
                                     <template #editor="{ data, field }">
-                                        <InputText v-model="data[field]" class="w-full font-bold" />
+                                        <InputText v-model="data[field]" class="w-full !border-none !shadow-none focus:ring-0 !px-0 font-medium" />
                                     </template>
                                 </Column>
-
-                                <Column field="ln" header="LINGALA 🇨🇩" style="min-width: 12rem">
+                                
+                                <Column field="ln" header="Lingala 🇨🇩" style="min-width: 12rem">
                                     <template #editor="{ data, field }">
-                                        <InputText v-model="data[field]" class="w-full font-bold" />
-                                    </template>
-                                </Column>
-
-                                <Column style="width: 4rem">
-                                    <template #body>
-                                        <i class="pi pi-pencil text-slate-300"></i>
+                                        <InputText v-model="data[field]" class="w-full !border-none !shadow-none focus:ring-0 !px-0 font-medium" />
                                     </template>
                                 </Column>
                             </DataTable>
-                        </template>
-                    </Card>
-                </div>
+                        </div>
+                    </div>
 
-                <!-- RIGHT SIDEBAR: TOOLS & STATS -->
-                <div class="col-span-12 lg:col-span-3 space-y-8">
+                    <!-- RIGHT SIDEBAR (STATS & ACTIONS) -->
+                    <div class="lg:col-span-3 space-y-6">
 
-                    <!-- COVERAGE CHART -->
-                    <Card class="border-none shadow-sm rounded-3xl">
-                        <template #title>
-                            <div class="px-2 pt-2">
-                                <span class="text-xs font-black uppercase tracking-widest text-indigo-400">Couverture Globale</span>
-                                <h3 class="text-xl font-black text-slate-800">Santé i18n</h3>
-                            </div>
-                        </template>
-                        <template #content>
-                            <div class="h-48 mt-4">
+                        <!-- CHART -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <h3 class="text-sm font-bold text-slate-900 mb-4 tracking-tight">Couverture Linguistique</h3>
+                            <div class="h-40">
                                 <Chart type="bar" :data="coverageData" :options="chartOptions" class="h-full" />
                             </div>
-                            <Divider />
-                            <div class="space-y-3">
-                                <div class="flex justify-between text-xs font-bold">
-                                    <span class="text-slate-400">Clés orphelines</span>
-                                    <span class="text-rose-500">124</span>
-                                </div>
-                                <div class="flex justify-between text-xs font-bold">
-                                    <span class="text-slate-400">Dernier export</span>
-                                    <span class="text-slate-800">Hier, 14:20</span>
+                            <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                                <div class="flex justify-between items-center text-xs font-semibold">
+                                    <span class="text-slate-500">Clés orphelines</span>
+                                    <span class="text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded">124 alertes</span>
                                 </div>
                             </div>
-                        </template>
-                    </Card>
-
-                    <!-- QUICK ACTIONS -->
-                    <div class="space-y-4">
-                        <Button label="Exporter JSON complet" icon="pi pi-download" class="p-button-indigo w-full shadow-lg rounded-2xl py-4 font-black uppercase tracking-widest text-sm" @click="exportTranslations" />
-                        <Button label="Scanner le code (Sync)" icon="pi pi-search-plus" class="p-button-outlined p-button-indigo w-full border-2 rounded-2xl py-3 font-bold" v-tooltip="'Trouve les nouvelles clés dans le code source'" />
-                    </div>
-
-                    <!-- HELP BOX -->
-                    <div class="p-6 bg-amber-50 rounded-[1rem] border border-amber-100 flex flex-col gap-4">
-                        <div class="flex items-center gap-3">
-                            <i class="pi pi-lightbulb text-amber-500 text-2xl"></i>
-                            <h4 class="font-black text-amber-900 text-lg">Le saviez-vous ?</h4>
                         </div>
-                        <p class="text-xs text-amber-700 font-medium leading-relaxed">
-                            SubNetCongo supporte les **Pluralisations** et les **Paramètres dynamiques** dans les clés. Utilisez `{n}` pour les nombres et `{name}` pour les variables.
-                        </p>
-                        <Button label="Guide Développeur" class="p-button-text p-button-warning p-0 text-xs font-black underline decoration-2 underline-offset-4" />
-                    </div>
 
-                    <!-- ACTIVITY LOG -->
-                    <Card class="border-none shadow-sm rounded-3xl bg-slate-900 text-white overflow-hidden">
-                        <template #title><span class="text-base font-black px-4 pt-4">Historique</span></template>
-                        <template #content>
-                            <ScrollPanel style="height: 200px" class="px-2">
-                                <div class="space-y-4 py-2">
+                        <!-- ACTIONS -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                            <Button label="Télécharger JSON" icon="pi pi-download" class="p-button-outlined p-button-secondary w-full !rounded-xl font-bold" @click="exportTranslations" />
+                            <Button label="Scanner le code (Sync)" icon="pi pi-sync" class="p-button-text p-button-secondary w-full font-bold" v-tooltip="'Recherche de nouvelles clés dans les vues Blade/Vue'" />
+                        </div>
+
+                        <!-- LOGS -->
+                        <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-lg">
+                            <h3 class="text-sm font-bold mb-4 tracking-tight">Journal d'activité</h3>
+                            <ScrollPanel style="height: 180px" class="custom-dark-scroll">
+                                <div class="space-y-5 mt-2">
                                     <div v-for="log in [
                                         { user: 'Admin', action: 'Export JSON', date: 'Il y a 2h' },
-                                        { user: 'Sarah', action: 'Traduit auth.login (LN)', date: 'Il y a 4h' },
-                                        { user: 'AI Bot', action: 'Auto-traduction (SW)', date: 'Hier' }
-                                    ]" :key="log.date" class="flex gap-4 items-start border-l border-slate-700 pl-4 relative">
-                                        <div class="absolute -left-1.5 top-2 w-3 h-3 rounded-full bg-indigo-500"></div>
-                                        <div>
-                                            <p class="text-[10px] font-bold text-slate-500 uppercase">{{ log.date }}</p>
-                                            <p class="text-xs font-bold"><span class="text-indigo-400">{{ log.user }}</span> {{ log.action }}</p>
-                                        </div>
+                                        { user: 'Sarah', action: 'Traduit auth.login', date: 'Il y a 4h' },
+                                        { user: 'AI Bot', action: 'Auto-traduction', date: 'Hier' }
+                                    ]" :key="log.date" class="relative pl-5 border-l border-slate-700">
+                                        <div class="absolute -left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-slate-900"></div>
+                                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ log.date }}</p>
+                                        <p class="text-xs font-medium text-slate-200 mt-0.5"><span class="text-indigo-300 font-bold">{{ log.user }}</span> {{ log.action }}</p>
                                     </div>
                                 </div>
                             </ScrollPanel>
-                        </template>
-                    </Card>
+                        </div>
 
+                    </div>
                 </div>
             </div>
 
-            <!-- MODAL: ADD LANGUAGE -->
-            <Dialog v-model:visible="displayLangDialog" :modal="true" :style="{ width: '500px' }" header="🌍 Ajouter une Locale" class="p-fluid">
-                <div class="space-y-6 pt-4">
+            <!-- --- MODALS (v40 Standard) --- -->
+            
+            <!-- Modal Add Language -->
+            <Dialog v-model:visible="displayLangDialog" modal :style="{ width: '450px' }" header="Ajouter une Locale">
+                <div class="pt-4 space-y-5">
                     <div class="field">
-                        <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Nom de la langue</label>
-                        <InputText v-model="newLang.name" placeholder="ex: Portugais" class="rounded-xl border-2" />
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Nom de la langue</label>
+                        <InputText v-model="newLang.name" placeholder="ex: Portugais" class="w-full !rounded-lg" />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="field">
-                            <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Code ISO (2 chars)</label>
-                            <InputText v-model="newLang.code" placeholder="ex: pt" maxlength="2" class="rounded-xl font-mono" />
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Code ISO</label>
+                            <InputText v-model="newLang.code" placeholder="ex: pt" maxlength="2" class="w-full !rounded-lg font-mono" />
                         </div>
                         <div class="field">
-                            <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Emoji Drapeau</label>
-                            <InputText v-model="newLang.flag" placeholder="ex: 🇵🇹" class="rounded-xl" />
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Drapeau</label>
+                            <InputText v-model="newLang.flag" placeholder="ex: 🇵🇹" class="w-full !rounded-lg text-center" />
                         </div>
                     </div>
-                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                        <span class="text-sm font-bold text-slate-700">Activer immédiatement</span>
+                    <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                        <span class="text-sm font-semibold text-slate-700">Activer immédiatement</span>
                         <InputSwitch v-model="newLang.status" />
                     </div>
                 </div>
                 <template #footer>
                     <Button label="Annuler" @click="displayLangDialog = false" class="p-button-text p-button-secondary font-bold" />
-                    <Button label="Installer la langue" icon="pi pi-check" class="p-button-primary shadow-lg shadow-indigo-100 font-black rounded-xl" @click="saveLanguage" />
+                    <Button label="Ajouter la langue" class="bg-indigo-600 hover:bg-indigo-700 text-white border-none !rounded-lg font-bold shadow-md" @click="saveLanguage" />
                 </template>
             </Dialog>
 
-            <!-- MODAL: ADD KEY -->
-            <Dialog v-model:visible="displayKeyDialog" :modal="true" :style="{ width: '550px' }" header="🆕 Créer une Clé de Traduction" class="p-fluid">
-                <div class="space-y-6 pt-4">
+            <!-- Modal Add Key -->
+            <Dialog v-model:visible="displayKeyDialog" modal :style="{ width: '500px' }" header="Créer une Clé">
+                <div class="pt-4 space-y-5">
                     <div class="field">
-                        <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Identifiant de la clé</label>
-                        <InputText v-model="newKey.key" placeholder="ex: common.errors.timeout" class="rounded-xl font-mono border-2" />
-                        <small class="text-slate-400">Utilisez la notation par points pour organiser vos clés.</small>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Identifiant (Notation Point)</label>
+                        <InputText v-model="newKey.key" placeholder="ex: auth.errors.password" class="w-full !rounded-lg font-mono text-sm" />
                     </div>
                     <div class="field">
-                        <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Groupe de destination</label>
-                        <Dropdown v-model="newKey.group" :options="groups" class="rounded-xl shadow-sm" />
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Groupe</label>
+                        <Dropdown v-model="newKey.group" :options="groups" class="w-full !rounded-lg" />
                     </div>
                     <div class="field">
-                        <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Valeur par défaut (FR)</label>
-                        <Textarea v-model="newKey.fr" rows="3" class="rounded-xl" />
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Valeur Initiale (FR)</label>
+                        <Textarea v-model="newKey.fr" rows="3" class="w-full !rounded-lg" />
                     </div>
                 </div>
                 <template #footer>
-                    <Button label="Fermer" @click="displayKeyDialog = false" class="p-button-text p-button-secondary font-bold" />
-                    <Button label="Enregistrer la clé" icon="pi pi-save" class="p-button-primary font-black rounded-xl" />
+                    <Button label="Annuler" @click="displayKeyDialog = false" class="p-button-text p-button-secondary font-bold" />
+                    <Button label="Enregistrer" class="bg-indigo-600 hover:bg-indigo-700 text-white border-none !rounded-lg font-bold shadow-md" @click="displayKeyDialog = false" />
                 </template>
             </Dialog>
 
-            <!-- MODAL: IMPORT -->
-            <Dialog v-model:visible="displayImportDialog" :modal="true" :style="{ width: '600px' }" header="📥 Importation de Traductions" class="p-fluid">
-                <div class="py-4 space-y-6">
-                    <FileUpload name="demo[]" url="./upload" @upload="onUpload" :multiple="true" accept="application/json" :maxFileSize="1000000" class="custom-upload">
-                        <template #empty>
-                            <div class="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-200 rounded-3xl">
-                                <i class="pi pi-cloud-upload text-5xl text-slate-300 mb-4"></i>
-                                <p class="text-slate-500 font-bold">Glissez-déposez vos fichiers .json ici</p>
-                            </div>
-                        </template>
-                    </FileUpload>
-                    <Message severity="warn" class="rounded-2xl">L'importation remplacera les clés existantes ayant le même nom.</Message>
+            <!-- Modal Import -->
+            <Dialog v-model:visible="displayImportDialog" modal :style="{ width: '500px' }" header="Importer Traductions (JSON)">
+                <div class="pt-4 space-y-4">
+                    <FileUpload mode="basic" accept="application/json" :maxFileSize="1000000" chooseLabel="Parcourir le fichier" class="w-full p-button-outlined !rounded-lg font-bold" />
+                    <Message severity="warn" class="!rounded-lg text-sm mt-4">Les clés existantes seront écrasées par les nouvelles valeurs du fichier.</Message>
                 </div>
             </Dialog>
-
-            <footer class="mt-16 text-center text-slate-400 text-sm pb-10 font-medium">
-                © 2026 SubNetCongo Localization Engine. i18n Toolkit v5.2.
-            </footer>
 
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-/* PrimeVue Overrides pour design SubNetCongo Languages */
-:deep(.p-card) {
-    background: white;
+/* 
+ * ULTIMATE DATATABLE DESIGN (Style SaaS Moderne : Notion, Linear, Stripe)
+ */
+:deep(.ultimate-table .p-datatable-header) {
+    display: none; /* Remplacé par notre div custom pour plus de flexibilité */
 }
 
-:deep(.p-datatable.custom-lang-table) {
-    border: none;
-}
-
-:deep(.p-datatable-header) {
-    background: transparent;
-    border: none;
-    padding: 2.5rem 1.5rem;
-}
-
-:deep(.p-datatable-thead > tr > th) {
-    background: #F8FAFC;
-    color: #94A3B8;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    padding: 1.5rem 1rem;
-    text-transform: uppercase;
-    border-bottom: 1px solid #F1F5F9;
-}
-
-:deep(.p-datatable-tbody > tr) {
-    background: white;
-    transition: background 0.2s;
-}
-
-:deep(.p-datatable-tbody > tr:hover) {
-    background: #F8FAFC !important;
-}
-
-:deep(.p-datatable.custom-trans-table .p-datatable-tbody > tr > td) {
-    border-bottom: 1px solid #F8FAFC;
-    padding: 1.25rem 1rem;
-}
-
-:deep(.p-datatable-sm .p-datatable-thead > tr > th) {
-    padding: 1rem;
+:deep(.ultimate-table .p-datatable-thead > tr > th) {
+    background: #ffffff;
+    color: #64748b;
     font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-:deep(.p-progressbar .p-progressbar-value) {
-    border-radius: 10px;
+:deep(.ultimate-table .p-datatable-tbody > tr > td) {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 1rem 1.25rem;
+    color: #334155;
+    transition: background-color 0.2s ease;
 }
 
-/* Modal styling */
-:deep(.p-dialog-header) {
-    background: white;
-    padding: 2rem 2rem 1rem 2rem;
-    border-bottom: 1px solid #F1F5F9;
+:deep(.ultimate-table .p-datatable-tbody > tr:hover > td) {
+    background-color: #f8fafc;
 }
 
-:deep(.p-dialog-content) {
-    padding: 0 2rem 2rem 2rem;
+/* 
+ * EDITOR SPECIFIC STYLING (Seamless Edition)
+ */
+:deep(.ultimate-editor .p-editable-column) {
+    cursor: text;
 }
 
-/* Editor Cell Styling */
-:deep(.p-editable-column.p-cell-editing) {
-    background: #F5F3FF !important;
+:deep(.ultimate-editor .p-cell-editing) {
+    background-color: #f1f5f9 !important;
     padding: 0 !important;
 }
 
-:deep(.p-editable-column input) {
-    border: none !important;
-    box-shadow: none !important;
-    padding: 1.25rem 1rem !important;
-    background: transparent !important;
+:deep(.ultimate-editor .p-cell-editing input) {
+    background-color: #f1f5f9;
+    border-radius: 0;
+    height: 100%;
+    padding: 1rem 1.25rem;
 }
 
-/* Tabs UI */
-:deep(.p-tabview-nav) {
+/* Progress Bar Overrides */
+:deep(.p-progressbar) {
+    background: #f1f5f9;
+    border-radius: 100px;
+}
+:deep(.p-progressbar .p-progressbar-value) {
+    border-radius: 100px;
+}
+
+/* Modals Consistency */
+:deep(.p-dialog-header) {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+:deep(.p-dialog-content) {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+:deep(.p-dialog-footer) {
+    border-top: none;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+/* Scrollbar Log Sombre (Esthétique Hacker/Terminal) */
+.custom-dark-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-dark-scroll::-webkit-scrollbar-track {
     background: transparent;
-    border-bottom: 2px solid #F1F5F9;
 }
-
-/* Transitions */
-.p-button-indigo {
-    background: #6366F1;
-    border: none;
-    color: white;
+.custom-dark-scroll::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
 }
-
-.p-button-indigo:hover {
-    background: #4F46E5;
-}
-
-/* File Upload */
-:deep(.custom-upload .p-fileupload-buttonbar) {
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-
-:deep(.custom-upload .p-fileupload-content) {
-    padding: 1rem 0;
-    border: none;
+.custom-dark-scroll::-webkit-scrollbar-thumb:hover {
+    background: #475569;
 }
 </style>

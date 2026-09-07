@@ -26,6 +26,7 @@ use App\Services\Video\ZoomService;
 use App\Services\Video\GoogleMeetService;
 use App\Services\Video\BbbService;
 use App\Services\Video\JitsiService;
+use App\Services\LiveKitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Redirect, Storage, Log, Cache, Notification, Http, Mail};
 use Illuminate\Support\Str;
@@ -43,6 +44,7 @@ class LiveSessionController extends Controller
     const PROVIDER_MEET  = 'meet';
     const PROVIDER_BBB   = 'bbb';
     const PROVIDER_JITSI = 'jitsi';
+    const PROVIDER_LIVEKIT = 'livekit';
 
     const STATUS_SCHEDULED = 'Scheduled';
     const STATUS_LIVE      = 'Live';
@@ -110,6 +112,7 @@ class LiveSessionController extends Controller
             'filters' => $request->all(),
             'meta' => [
                 'providers' => $this->getProvidersMetadata(),
+                'configured_providers' => $this->getConfiguredProviders(),
                 'courses' => Course::select('id', 'title')->get(),
                 'instructors' => User::role('instructor')->select('id', 'name', 'avatar')->get()
             ]
@@ -371,7 +374,7 @@ class LiveSessionController extends Controller
             'duration'          => 'required|integer|min:15|max:480',
             'provider'          => [
                 'required',
-                Rule::in([self::PROVIDER_ZOOM, self::PROVIDER_MEET, self::PROVIDER_BBB, self::PROVIDER_JITSI])
+                Rule::in([self::PROVIDER_ZOOM, self::PROVIDER_MEET, self::PROVIDER_BBB, self::PROVIDER_JITSI, self::PROVIDER_LIVEKIT])
             ],
             'max_participants'  => 'required|integer|min:1',
             'is_recorded'       => 'boolean',
@@ -403,6 +406,7 @@ class LiveSessionController extends Controller
             self::PROVIDER_BBB   => app(BbbService::class)->createMeeting($data),
             self::PROVIDER_MEET  => app(GoogleMeetService::class)->createMeeting($data),
             self::PROVIDER_JITSI => app(JitsiService::class)->createMeeting($data),
+            self::PROVIDER_LIVEKIT => app(LiveKitService::class)->createRoomForData($data),
             default => throw new Exception("Fournisseur non supporté : {$data['provider']}"),
         };
     }
@@ -412,11 +416,12 @@ class LiveSessionController extends Controller
      */
     private function updateMeetingOnProvider(LiveSession $session, array $data): array
     {
-        return match ($data['provider']) {
+        return match ($session->provider) {
             self::PROVIDER_ZOOM  => app(ZoomService::class)->updateMeeting($session->meeting_id, $data),
             self::PROVIDER_BBB   => app(BbbService::class)->updateMeeting($session->meeting_id, $data),
             self::PROVIDER_MEET  => app(GoogleMeetService::class)->updateMeeting($session->meeting_id, $data),
             self::PROVIDER_JITSI => app(JitsiService::class)->updateMeeting($session->meeting_id, $data),
+            self::PROVIDER_LIVEKIT => app(LiveKitService::class)->updateRoom($session),
             default => throw new Exception("Fournisseur non supporté."),
         };
     }
@@ -432,6 +437,7 @@ class LiveSessionController extends Controller
                 self::PROVIDER_BBB  => app(BbbService::class)->deleteMeeting($session->meeting_id),
                 self::PROVIDER_MEET => app(GoogleMeetService::class)->deleteMeeting($session->meeting_id),
                 self::PROVIDER_JITSI => app(JitsiService::class)->deleteMeeting($session->meeting_id),
+                self::PROVIDER_LIVEKIT => app(LiveKitService::class)->deleteRoom($session),
                 default => null,
             };
         } catch (Exception $e) {
@@ -559,8 +565,36 @@ class LiveSessionController extends Controller
             ['label' => 'Zoom Video', 'value' => 'zoom', 'icon' => 'pi pi-video', 'color' => 'bg-blue-500'],
             ['label' => 'Google Meet', 'value' => 'meet', 'icon' => 'pi pi-google', 'color' => 'bg-emerald-500'],
             ['label' => 'BigBlueButton', 'value' => 'bbb', 'icon' => 'pi pi-users', 'color' => 'bg-indigo-600'],
-            ['label' => 'Jitsi Meet', 'value' => 'jitsi', 'icon' => 'pi pi-comments', 'color' => 'bg-slate-700']
+            ['label' => 'Jitsi Meet', 'value' => 'jitsi', 'icon' => 'pi pi-comments', 'color' => 'bg-slate-700'],
+            ['label' => 'LiveKit (In-App)', 'value' => 'livekit', 'icon' => 'pi pi-camera', 'color' => 'bg-rose-500']
         ];
+    }
+
+    private function getConfiguredProviders(): array
+    {
+        $configured = [];
+
+        if (config('services.zoom.account_id') && config('services.zoom.client_id') && config('services.zoom.client_secret')) {
+            $configured[] = 'zoom';
+        }
+
+        if (config('services.google.credentials_path') && file_exists(config('services.google.credentials_path'))) {
+            $configured[] = 'meet';
+        }
+
+        if (config('services.bbb.base_url') && config('services.bbb.secret')) {
+            $configured[] = 'bbb';
+        }
+
+        if (config('services.jitsi.base_url')) {
+            $configured[] = 'jitsi';
+        }
+
+        if (config('services.livekit.api_key') && config('services.livekit.api_secret') && config('services.livekit.url')) {
+            $configured[] = 'livekit';
+        }
+
+        return $configured;
     }
 
     private function formatBytes($bytes, $precision = 2): string
@@ -642,6 +676,141 @@ class LiveSessionController extends Controller
         $this->audit('LIVE_SESSION_DELETED', $liveSession);
 
         return Redirect::route('live-sessions.index')->with('success', 'Session supprimée.');
+    }
+
+    // --------------------------------------------------------------------------
+    // 9. LIVEKIT WEBSOCKET VIDEO (In-App Video)
+    // --------------------------------------------------------------------------
+
+    /**
+     * Generate a LiveKit access token for the current user.
+     */
+    public function livekitToken(LiveSession $liveSession)
+    {
+        $user = Auth::user();
+
+        if ($liveSession->provider !== self::PROVIDER_LIVEKIT) {
+            return response()->json(['error' => 'Cette session n\'utilise pas LiveKit.'], 400);
+        }
+
+        $isInstructor = $user->id === $liveSession->instructor_id || $user->hasRole('admin') || $user->hasRole('superadmin');
+
+        try {
+            $token = app(LiveKitService::class)->generateToken($liveSession, $user, $isInstructor);
+
+            return response()->json([
+                'token' => $token,
+                'room' => app(LiveKitService::class)->getRoomName($liveSession),
+                'ws_url' => config('services.livekit.ws_url', 'ws://localhost:7880'),
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'avatar' => $user->avatar ?? null,
+                ],
+                'is_instructor' => $isInstructor,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * List participants in a LiveKit room.
+     */
+    public function livekitParticipants(LiveSession $liveSession)
+    {
+        if ($liveSession->provider !== self::PROVIDER_LIVEKIT) {
+            return response()->json(['error' => 'Cette session n\'utilise pas LiveKit.'], 400);
+        }
+
+        $participants = app(LiveKitService::class)->listParticipants($liveSession);
+
+        return response()->json(['participants' => $participants]);
+    }
+
+    /**
+     * Start a LiveKit session (marks as Live, creates room).
+     */
+    public function livekitStart(LiveSession $liveSession)
+    {
+        if (Auth::id() !== $liveSession->instructor_id && !Auth::user()->hasRole('admin')) {
+            abort(403, "Seul l'instructeur assigné peut démarrer ce live.");
+        }
+
+        if ($liveSession->provider !== self::PROVIDER_LIVEKIT) {
+            return response()->json(['error' => 'Cette session n\'utilise pas LiveKit.'], 400);
+        }
+
+        try {
+            $roomData = app(LiveKitService::class)->createRoom($liveSession);
+
+            $liveSession->update([
+                'status' => self::STATUS_LIVE,
+                'actual_start_at' => now(),
+                'meeting_url' => $roomData['join_url'],
+                'host_url' => $roomData['start_url'],
+                'metadata' => array_merge($liveSession->metadata ?? [], [
+                    'livekit_room' => $roomData,
+                ]),
+            ]);
+
+            $this->broadcastLiveStart($liveSession);
+            $this->audit('LIVEKIT_SESSION_STARTED', $liveSession);
+
+            return response()->json([
+                'room' => $roomData,
+                'message' => 'Session LiveKit démarrée.'
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Échec du démarrage LiveKit.'], 500);
+        }
+    }
+
+    /**
+     * End a LiveKit session.
+     */
+    public function livekitEnd(LiveSession $liveSession)
+    {
+        if (Auth::id() !== $liveSession->instructor_id && !Auth::user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        if ($liveSession->provider !== self::PROVIDER_LIVEKIT) {
+            return response()->json(['error' => 'Cette session n\'utilise pas LiveKit.'], 400);
+        }
+
+        try {
+            app(LiveKitService::class)->deleteRoom($liveSession);
+
+            $liveSession->update([
+                'status' => self::STATUS_ENDED,
+                'ended_at' => now(),
+            ]);
+
+            $this->audit('LIVEKIT_SESSION_ENDED', $liveSession);
+
+            return response()->json(['message' => 'Session LiveKit terminée.']);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Échec de la fermeture.'], 500);
+        }
+    }
+
+    public function sendChat(LiveSession $liveSession, Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string|max:2000',
+        ]);
+
+        $chatMessage = \App\Models\LiveSessionChatMessage::create([
+            'live_session_id' => $liveSession->id,
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name,
+            'message' => $request->input('message'),
+        ]);
+
+        broadcast(new \App\Events\LiveSessionChatMessageSent($chatMessage));
+
+        return response()->json(['success' => true]);
     }
 
     // --------------------------------------------------------------------------

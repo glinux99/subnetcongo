@@ -35,6 +35,7 @@ class LiveSession extends Model
     public const PROVIDER_MEET = 'meet';
     public const PROVIDER_BBB = 'bbb';
     public const PROVIDER_JITSI = 'jitsi';
+    public const PROVIDER_LIVEKIT = 'livekit';
 
     public const STATUS_SCHEDULED = 'Scheduled';
     public const STATUS_LIVE = 'Live';
