@@ -54,4 +54,14 @@ return [
         'url' => env('LIVEKIT_URL', 'http://localhost:7880'),
         'ws_url' => env('LIVEKIT_WS_URL', 'ws://localhost:7880'),
     ],
+
+    'imap' => [
+        'host' => env('IMAP_HOST'),
+        'port' => env('IMAP_PORT', 993),
+        'encryption' => env('IMAP_ENCRYPTION', 'ssl'),
+        'username' => env('IMAP_USERNAME'),
+        'password' => env('IMAP_PASSWORD'),
+        'default_folder' => env('IMAP_DEFAULT_FOLDER', 'INBOX'),
+        'validate_cert' => env('IMAP_VALIDATE_CERT', true),
+    ],
 ];

@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Order;
 use App\Models\User;
+use App\Events\EnrollmentConfirmed;
 use App\Notifications\EnrollmentApprovedNotification;
 use App\Notifications\EnrollmentRejectedNotification;
 use App\Notifications\EnrollmentRevokedNotification;
@@ -109,7 +110,14 @@ class EnrollmentManagementController extends Controller
             \Log::warning('Notify enrollment approved failed: ' . $e->getMessage());
         }
 
-        return back()->with('success', 'Inscription approuvée. L\'étudiant a été notifié.');
+        // Dispatch event for email template (enrollment_confirmed)
+        try {
+            EnrollmentConfirmed::dispatch($enrollment);
+        } catch (\Throwable $e) {
+            \Log::warning('EnrollmentConfirmed event dispatch failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Inscription approuvee. L\'etudiant a ete notifie.');
     }
 
     /**

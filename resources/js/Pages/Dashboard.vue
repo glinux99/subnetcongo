@@ -539,7 +539,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                                     <span class="text-sm font-black text-slate-800 italic leading-tight">{{ data.title }}</span>
                                     <div class="flex gap-2 mt-2">
                                         <Tag :value="data.category" severity="info" class="text-[8px] font-black uppercase px-2" />
-                                        <span v-for="tag in data.tags.slice(0,2)" :key="tag" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100 px-2 rounded-md">{{ tag }}</span>
+                                        <span v-for="tag in (data.tags || []).slice(0,2)" :key="tag" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100 px-2 rounded-md">{{ tag }}</span>
                                     </div>
                                 </div>
                             </template>

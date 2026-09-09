@@ -26,7 +26,7 @@ use App\Services\Video\ZoomService;
 use App\Services\Video\GoogleMeetService;
 use App\Services\Video\BbbService;
 use App\Services\Video\JitsiService;
-use App\Services\LiveKitService;
+use App\Services\LiveKit\LiveKitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Redirect, Storage, Log, Cache, Notification, Http, Mail};
 use Illuminate\Support\Str;
@@ -155,6 +155,7 @@ class LiveSessionController extends Controller
         return Redirect::route('live-sessions.index')->with('success', 'Session planifiée.');
     } catch (Exception $e) {
         DB::rollBack();
+        return $e->getMessage();
         Log::error("SNC_LIVE_STORE_FAIL: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
         return back()->with('error', 'Erreur lors de la création : ' . $e->getMessage())->withInput();
     }
@@ -811,6 +812,11 @@ class LiveSessionController extends Controller
         broadcast(new \App\Events\LiveSessionChatMessageSent($chatMessage));
 
         return response()->json(['success' => true]);
+    }
+
+    public function livekitHealth()
+    {
+        return response()->json(['status' => 'ok', 'message' => 'LiveKit health check']);
     }
 
     // --------------------------------------------------------------------------

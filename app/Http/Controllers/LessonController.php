@@ -27,14 +27,22 @@ class LessonController extends Controller
         $validated = $request->validate([
             'title'              => 'required|string|max:255',
             'type'               => ['required', Rule::in(['video', 'document', 'quiz', 'assignment'])],
+            'lesson_type'        => 'nullable|string|max:50',
             'content'            => 'nullable|string',
+            'content_text'       => 'nullable|string',
+            'content_html'       => 'nullable|string',
             'video_url'          => 'nullable|url|max:500',
             'video_source'       => ['nullable', Rule::in(['youtube', 'vimeo', 'custom'])],
+            'video_duration'     => 'nullable|integer|min:0',
             'duration_minutes'   => 'nullable|integer|min:0',
             'is_free_preview'    => 'boolean',
             'status'             => ['required', Rule::in(['draft', 'published'])],
+            'is_sequential'      => 'boolean',
+            'has_attachment'     => 'boolean',
+            'attachment_title'   => 'nullable|string|max:255',
             'attachment_paths'   => 'nullable|array',
             'attachment_paths.*' => 'nullable',
+            'quiz_id'            => 'nullable|integer|exists:exams,id',
             'seo_metadata'       => 'nullable|array',
             'seo_metadata.title' => 'nullable|string|max:70',
             'seo_metadata.description' => 'nullable|string|max:160',
@@ -58,18 +66,33 @@ class LessonController extends Controller
             $attachmentPaths[] = $file->store('lessons/attachments', 'media');
         }
 
+        $boolFields = ['is_free_preview', 'is_sequential', 'has_attachment'];
+        foreach ($boolFields as $f) {
+            if ($request->has($f)) {
+                $validated[$f] = filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
         $lesson = $module->lessons()->create([
             'title'            => $validated['title'],
             'slug'             => $slug,
             'type'             => $validated['type'],
+            'lesson_type'      => $validated['lesson_type'] ?? $validated['type'],
             'content'          => $validated['content'] ?? null,
+            'content_text'     => $validated['content_text'] ?? null,
+            'content_html'     => $validated['content_html'] ?? null,
             'video_url'        => $validated['video_url'] ?? null,
             'video_source'     => $validated['video_source'] ?? null,
+            'video_duration'   => $validated['video_duration'] ?? null,
             'duration_minutes' => $validated['duration_minutes'] ?? null,
             'is_free_preview'  => $validated['is_free_preview'] ?? false,
+            'is_sequential'    => $validated['is_sequential'] ?? false,
+            'has_attachment'   => $validated['has_attachment'] ?? false,
+            'attachment_title' => $validated['attachment_title'] ?? null,
             'status'           => $validated['status'],
             'order'            => $maxOrder + 1,
             'attachment_paths' => $attachmentPaths,
+            'quiz_id'          => $validated['quiz_id'] ?? null,
             'seo_metadata'     => $validated['seo_metadata'] ?? [],
         ]);
 
@@ -97,14 +120,22 @@ class LessonController extends Controller
         $validated = $request->validate([
             'title'              => 'required|string|max:255',
             'type'               => ['required', Rule::in(['video', 'document', 'quiz', 'assignment'])],
+            'lesson_type'        => 'nullable|string|max:50',
             'content'            => 'nullable|string',
+            'content_text'       => 'nullable|string',
+            'content_html'       => 'nullable|string',
             'video_url'          => 'nullable|url|max:500',
             'video_source'       => ['nullable', Rule::in(['youtube', 'vimeo', 'custom'])],
+            'video_duration'     => 'nullable|integer|min:0',
             'duration_minutes'   => 'nullable|integer|min:0',
             'is_free_preview'    => 'boolean',
             'status'             => ['required', Rule::in(['draft', 'published'])],
+            'is_sequential'      => 'boolean',
+            'has_attachment'     => 'boolean',
+            'attachment_title'   => 'nullable|string|max:255',
             'attachment_paths'   => 'nullable|array',
-            'attachment_paths.*' => 'nullable', // Accepte string (existant) ou File (nouveau)
+            'attachment_paths.*' => 'nullable',
+            'quiz_id'            => 'nullable|integer|exists:exams,id',
             'seo_metadata'       => 'nullable|array',
             'seo_metadata.title' => 'nullable|string|max:70',
             'seo_metadata.description' => 'nullable|string|max:160',
@@ -116,38 +147,52 @@ class LessonController extends Controller
             $validated['slug'] = $this->generateUniqueSlug($validated['title'], $lesson->id);
         }
 
-
       $attachmentPaths = [];
 
-            // Existing string paths from input
-            $inputPaths = $request->input('attachment_paths', []);
-            foreach ((array) $inputPaths as $item) {
-                if (is_string($item)) {
-                    $attachmentPaths[] = $item;
-                }
+        // Existing string paths from input
+        $inputPaths = $request->input('attachment_paths', []);
+        foreach ((array) $inputPaths as $item) {
+            if (is_string($item)) {
+                $attachmentPaths[] = $item;
             }
+        }
 
-            // Uploaded files
-            $files = $request->file('attachment_paths');
-            if ($files) {
-                foreach ((array) $files as $file) {
-                    // Ensure it's a valid uploaded file object
-                    if ($file && $file->isValid()) {
-                        $attachmentPaths[] = $file->store('lessons/attachments', 'media');
-                    }
+        // Uploaded files
+        $files = $request->file('attachment_paths');
+        if ($files) {
+            foreach ((array) $files as $file) {
+                // Ensure it's a valid uploaded file object
+                if ($file && $file->isValid()) {
+                    $attachmentPaths[] = $file->store('lessons/attachments', 'media');
                 }
             }
+        }
+
+        $boolFields = ['is_free_preview', 'is_sequential', 'has_attachment'];
+        foreach ($boolFields as $f) {
+            if ($request->has($f)) {
+                $validated[$f] = filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN);
+            }
+        }
 
         $lesson->update([
             'title'            => $validated['title'],
             'type'             => $validated['type'],
+            'lesson_type'      => $validated['lesson_type'] ?? $validated['type'],
             'content'          => $validated['content'] ?? $lesson->content,
+            'content_text'     => $validated['content_text'] ?? $lesson->content_text,
+            'content_html'     => $validated['content_html'] ?? $lesson->content_html,
             'video_url'        => $validated['video_url'] ?? $lesson->video_url,
             'video_source'     => $validated['video_source'] ?? $lesson->video_source,
+            'video_duration'   => $validated['video_duration'] ?? $lesson->video_duration,
             'duration_minutes' => $validated['duration_minutes'] ?? $lesson->duration_minutes,
             'is_free_preview'  => $validated['is_free_preview'] ?? $lesson->is_free_preview,
+            'is_sequential'    => $validated['is_sequential'] ?? $lesson->is_sequential,
+            'has_attachment'   => $validated['has_attachment'] ?? $lesson->has_attachment,
+            'attachment_title' => $validated['attachment_title'] ?? $lesson->attachment_title,
             'status'           => $validated['status'],
             'attachment_paths' => $attachmentPaths,
+            'quiz_id'          => $validated['quiz_id'] ?? $lesson->quiz_id,
             'seo_metadata'     => $validated['seo_metadata'] ?? $lesson->seo_metadata,
         ]);
 

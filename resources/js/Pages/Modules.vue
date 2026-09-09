@@ -53,13 +53,15 @@ import Tooltip from 'primevue/tooltip';
 import Chip from 'primevue/chip';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
+import Checkbox from 'primevue/checkbox';
 
 // ======================================================================================
 // PROPS INERTIA
 // ======================================================================================
 const props = defineProps({
     modules: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
-    courses: { type: Array, default: () => [] }, // Liste des cours pour l'association
+    courses: { type: Array, default: () => [] },
+    exams: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({ total_modules: 0, total_lessons: 0, video_hours: 0, total_attachments: 0 }) },
     filters: { type: Object, default: () => ({ search: '', course_id: null, status: null }) }
 });
@@ -155,7 +157,21 @@ const moduleForm = useForm({
     is_locked: false,
     estimated_duration: 0,
     thumbnail_path: null,
-    seo_metadata: { title: '', description: '', keywords: '' }
+    seo_metadata: { title: '', description: '', keywords: '' },
+    has_quiz: false,
+    quiz_required: true,
+    quiz_weight: 10,
+    quiz_passing_score: 50,
+    quiz_attempts_allowed: 3,
+    intro_video_url: '',
+    intro_video_title: '',
+    text_content: '',
+    objectives: [],
+    has_document: false,
+    document_title: '',
+    document_url: '',
+    document_name: '',
+    order_in_course: 0
 });
 
 // Modèle Leçon
@@ -164,15 +180,23 @@ const lessonForm = useForm({
     module_id: null,
     title: '',
     slug: '',
-    type: 'video', // 'video', 'document', 'quiz', 'assignment'
+    type: 'video',
+    lesson_type: 'video',
     content: '',
+    content_text: '',
+    content_html: '',
     video_url: '',
-    video_source: 'youtube', // 'youtube', 'vimeo', 'custom'
+    video_source: 'youtube',
+    video_duration: 0,
     duration_minutes: 0,
     is_free_preview: false,
     status: 'draft',
     order: 0,
+    is_sequential: false,
+    has_attachment: false,
+    attachment_title: '',
     attachment_paths: [],
+    quiz_id: null,
     seo_metadata: { title: '', description: '', keywords: '' }
 });
 
@@ -222,6 +246,20 @@ const editModule = (moduleData) => {
     moduleForm.estimated_duration = data.estimated_duration || 0;
     moduleForm.thumbnail_path = data.thumbnail_path || null;
     moduleForm.seo_metadata = data.seo_metadata || { title: '', description: '', keywords: '' };
+    moduleForm.has_quiz = !!data.has_quiz;
+    moduleForm.quiz_required = !!data.quiz_required;
+    moduleForm.quiz_weight = data.quiz_weight || 10;
+    moduleForm.quiz_passing_score = data.quiz_passing_score || 50;
+    moduleForm.quiz_attempts_allowed = data.quiz_attempts_allowed || 3;
+    moduleForm.intro_video_url = data.intro_video_url || '';
+    moduleForm.intro_video_title = data.intro_video_title || '';
+    moduleForm.text_content = data.text_content || '';
+    moduleForm.objectives = data.objectives || [];
+    moduleForm.has_document = !!data.has_document;
+    moduleForm.document_title = data.document_title || '';
+    moduleForm.document_url = data.document_url || '';
+    moduleForm.document_name = data.document_name || '';
+    moduleForm.order_in_course = data.order_in_course || 0;
 
     activeModuleTab.value = 'general';
     moduleDialog.value = true;
@@ -293,12 +331,19 @@ const openNewLesson = (moduleId) => {
     lessonForm.reset();
     lessonForm.module_id = moduleId;
     lessonForm.type = 'video';
+    lessonForm.lesson_type = 'video';
     lessonForm.video_source = 'youtube';
     lessonForm.content = '<h2>Transcription de la vidéo</h2><p>Saisissez ici le contenu textuel ou la transcription de votre leçon...</p>';
+    lessonForm.content_text = '';
+    lessonForm.content_html = '';
+    lessonForm.video_duration = 0;
     lessonForm.attachment_paths = [];
+    lessonForm.has_attachment = false;
+    lessonForm.attachment_title = '';
+    lessonForm.is_sequential = false;
+    lessonForm.quiz_id = null;
     lessonForm.seo_metadata = { title: '', description: '', keywords: '' };
 
-    // Auto-expand module if needed
     if (!expandedRows.value[moduleId]) {
         expandedRows.value[moduleId] = true;
     }
@@ -325,6 +370,14 @@ const editLesson = (lessonData, moduleId) => {
     lessonForm.order = data.order || 0;
     lessonForm.attachment_paths = data.attachment_paths || [];
     lessonForm.seo_metadata = data.seo_metadata || { title: '', description: '', keywords: '' };
+    lessonForm.lesson_type = data.lesson_type || data.type || 'video';
+    lessonForm.content_text = data.content_text || '';
+    lessonForm.content_html = data.content_html || '';
+    lessonForm.video_duration = data.video_duration || 0;
+    lessonForm.has_attachment = !!data.has_attachment;
+    lessonForm.attachment_title = data.attachment_title || '';
+    lessonForm.is_sequential = !!data.is_sequential;
+    lessonForm.quiz_id = data.quiz_id || null;
 
     activeLessonTab.value = 'general';
     lessonDialog.value = true;
@@ -812,6 +865,42 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                                 <InputNumber v-model="moduleForm.estimated_duration" class="w-full" placeholder="Ex: 120 pour 2h" />
                             </div>
                         </div>
+
+                        <!-- Quiz de Fin de Module -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                            <h3 class="font-bold text-lg border-b border-slate-100 pb-3 flex items-center gap-2">
+                                <i class="pi pi-check-square text-emerald-500"></i> Quiz de Validation
+                            </h3>
+
+                            <div class="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                                <div>
+                                    <div class="font-bold text-sm text-slate-800">Quiz obligatoire à la fin du module</div>
+                                    <div class="text-[11px] text-slate-500 mt-1">L'apprenant doit réussir ce quiz pour débloquer le module suivant.</div>
+                                </div>
+                                <ToggleSwitch v-model="moduleForm.has_quiz" />
+                            </div>
+
+                            <div v-if="moduleForm.has_quiz" class="grid grid-cols-2 gap-6 pt-2">
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                                        <Checkbox v-model="moduleForm.quiz_required" :binary="true" />
+                                        Quiz obligatoire
+                                    </label>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-slate-700">Tentatives autorisées</label>
+                                    <InputNumber v-model="moduleForm.quiz_attempts_allowed" :min="1" :max="10" class="w-full" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-slate-700">Pondération (%)</label>
+                                    <InputNumber v-model="moduleForm.quiz_weight" :min="0" :max="100" class="w-full" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-slate-700">Note de passage (/20)</label>
+                                    <InputNumber v-model="moduleForm.quiz_passing_score" :min="0" :max="20" class="w-full" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Autres onglets Media / SEO similaires au précédent... -->
@@ -927,6 +1016,26 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                                     <div class="text-[11px] text-slate-500">Permet aux non-inscrits de visionner cette leçon avant achat.</div>
                                 </div>
                                 <ToggleSwitch v-model="lessonForm.is_free_preview" />
+                            </div>
+
+                            <!-- Quiz Configuration (si type quiz) -->
+                            <div v-if="lessonForm.type === 'quiz'" class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-4">
+                                <h4 class="font-bold text-sm text-emerald-800 mb-3 flex items-center gap-2">
+                                    <i class="pi pi-check-square"></i> Configuration du Quiz
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-bold text-slate-700">Quiz associé</label>
+                                        <Dropdown v-model="lessonForm.quiz_id" :options="props.exams" optionLabel="title" optionValue="id" placeholder="Sélectionner un quiz..." class="w-full" showClear />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-bold text-slate-700">Séquentiel</label>
+                                        <div class="flex items-center gap-2">
+                                            <Checkbox v-model="lessonForm.is_sequential" :binary="true" />
+                                            <span class="text-xs text-slate-600">L'étudiant doit terminer cette leçon avant la suivante</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

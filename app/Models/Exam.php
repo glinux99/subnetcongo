@@ -34,6 +34,7 @@ class Exam extends Model
      */
     protected $fillable = [
         'course_id',
+        'module_id',
         'uuid',
         'category_id',
         'created_by',
@@ -55,6 +56,8 @@ class Exam extends Model
         'available_from',
         'available_until',
         'time_limit_minutes',
+        'is_module_quiz',
+        'is_final_exam',
     ];
 
     /**
@@ -77,6 +80,8 @@ class Exam extends Model
         'available_from' => 'datetime',
         'available_until' => 'datetime',
         'deleted_at' => 'datetime',
+        'is_module_quiz' => 'boolean',
+        'is_final_exam' => 'boolean',
     ];
 
     /**

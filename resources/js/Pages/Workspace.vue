@@ -128,7 +128,7 @@ const getStatusInfo = (status: string) => {
 
 // Fonction de soumission principale
 const submitGrade = (publish: boolean = false) => {
-    const routeName = 'gradings.update';
+    const routeName = 'sgradings.update';
 
     gradingForm
         .transform(data => ({
@@ -163,7 +163,7 @@ const triggerAutoSave = debounce(() => {
     if (gradingForm.processing) return;
     isAutoSaving.value = true;
 
-    gradingForm.put(route('gradings.update', props.submission.id), {
+    gradingForm.put(route('sgradings.update', props.submission.id), {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => { isAutoSaving.value = false; },
@@ -178,7 +178,7 @@ watch(() => gradingForm.data(), () => {
 
 // --- NAVIGATION ---
 const navigateTo = (id: number) => {
-    router.visit(route('gradings.show', id));
+    router.visit(route('sgradings.show', id));
 };
 
 // Empêcher de quitter si form dirty et non sauvegardé

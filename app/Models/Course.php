@@ -30,21 +30,47 @@ class Course extends Model
         'level', 'status', 'is_featured', 'short_info', 'tags', 'seo_metadata',
         'instructor_id', 'category_id', 'created_by', 'preview_video_url',
         'requires_enrollment', 'certificate_enabled', 'duration_minutes',
-        'language', 'prerequisites'
+        'language', 'prerequisites',
+        'has_final_exam', 'final_exam_id', 'final_exam_weight',
+        'passing_score_20', 'quiz_weight_total',
+        'intro_video_url', 'intro_video_title', 'certificate_template_id',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
         'requires_enrollment' => 'boolean',
         'certificate_enabled' => 'boolean',
-        'tags' => 'array',
-        'seo_metadata' => 'array',
-        'prerequisites' => 'array', // Ajouté pour éviter les erreurs de string
+        'prerequisites' => 'array',
         'price' => 'decimal:2',
         'promo_price' => 'decimal:2',
         'duration_minutes' => 'integer',
         'deleted_at' => 'datetime',
+        'has_final_exam' => 'boolean',
+        'final_exam_weight' => 'decimal:2',
+        'passing_score_20' => 'decimal:2',
+        'quiz_weight_total' => 'decimal:2',
     ];
+
+    protected function tags(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value ?? [],
+        );
+    }
+
+    protected function seoMetadata(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value ?? ['title' => '', 'description' => '', 'keywords' => '', 'og_image' => null],
+        );
+    }
+
+    protected function prerequisites(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value ?? [],
+        );
+    }
 
     /**
      * FIX: Correction de l'Accessor pour le thumbnail

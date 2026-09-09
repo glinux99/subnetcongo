@@ -30,6 +30,8 @@ use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\ExamResult;
 use App\Notifications\CertificateIssuedNotification;
+use App\Services\Email\EmailTemplateService;
+use App\Services\GradingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -77,10 +79,13 @@ class CertificateController extends Controller
     /**
      * Configuration initiale du contrôleur.
      */
-    public function __construct()
+    protected EmailTemplateService $emailTemplateService;
+    protected GradingService $gradingService;
+
+    public function __construct(EmailTemplateService $emailTemplateService, GradingService $gradingService)
     {
-        // Les politiques de sécurité (Authorization) sont gérées via les middlewares de routes
-        // ex: $this->middleware('can:manage-credentials')->except(['verifyPublic', 'download']);
+        $this->emailTemplateService = $emailTemplateService;
+        $this->gradingService = $gradingService;
     }
 
     /**
@@ -379,15 +384,21 @@ class CertificateController extends Controller
      */
     public function store(Request $request)
     {
-
         $request->validate([
             'user_id'     => 'required|exists:users,id',
             'course_id'   => 'required|exists:courses,id',
             'template_id' => 'required|exists:certificate_templates,id',
-            'score'       => 'nullable|numeric|min:0|max:100',
+            'score'       => 'nullable|numeric|min:0|max:20',
         ]);
 
-        return $this->processIssuance($request->user_id, $request->course_id, $request->template_id, $request->score);
+        $score = $request->score;
+        if ($score === null) {
+            $course = Course::find($request->course_id);
+            $calculated = $this->gradingService->calculateFinalScore($course, $request->user_id);
+            $score = $calculated ?? 0;
+        }
+
+        return $this->processIssuance($request->user_id, $request->course_id, $request->template_id, $score);
     }
 
     /**
@@ -397,12 +408,18 @@ class CertificateController extends Controller
     public function update(Request $request, Certificate $certificate)
     {
               $validated = $request->validate([
-            'score'       => 'nullable|numeric|min:0|max:100',
+            'score'       => 'nullable|numeric|min:0|max:20',
             'status'      => ['required', Rule::in([self::STATUS_ACTIVE, self::STATUS_REVOKED, self::STATUS_EXPIRED, self::STATUS_DRAFT])],
             'expires_at'  => 'nullable|date|after_or_equal:issued_at',
-            'metadata'    => 'nullable|array', // Pour des métadonnées additionnelles
-            'revocation_reason' => 'nullable|string|min:10', // Requis si le statut est REVOKED
+            'metadata'    => 'nullable|array',
+            'revocation_reason' => 'nullable|string|min:10',
         ]);
+
+        if ($request->has('score') && $request->score === null) {
+            $course = $certificate->course;
+            $calculated = $this->gradingService->calculateFinalScore($course, $certificate->user_id);
+            $validated['score'] = $calculated ?? 0;
+        }
 
         DB::beginTransaction();
         try {
@@ -466,15 +483,15 @@ class CertificateController extends Controller
             return back()->with('error', 'Aucun étudiant n\'est éligible à la certification pour ce programme (Aucune validation finale trouvée).');
         }
 
+        $course = Course::find($request->course_id);
+
         // ÉTAPE 2 : Traitement par lot (Batch Processing)
         $count = 0;
         $failed = 0;
 
         foreach ($eligibleUserIds as $userId) {
-            // Récupération du score exact de l'étudiant
-            $score = ExamResult::where('user_id', $userId)->where('course_id', $request->course_id)->latest()->first()->score_percentage ?? 100;
+            $score = $this->gradingService->calculateFinalScore($course, $userId) ?? 0;
 
-            // Appel de la méthode interne d'émission (Mode silencieux)
             $success = $this->processIssuance($userId, $request->course_id, $request->template_id, $score, $request->notify_users ?? true, true);
 
             if ($success) {
@@ -541,11 +558,18 @@ class CertificateController extends Controller
 
             // Notification Email (Mocké ici pour la structure)
             if ($notify) {
-                // Mail::to(User::find($userId)->email)->queue(new \App\Mail\CertificateIssuedMail($certificate));
-
-                // Notification in-app temps réel
+                // Envoyer via le système de templates d'emails
                 $user = User::find($userId);
                 if ($user) {
+                    // Email via template configurable
+                    $this->emailTemplateService->sendCertificateGenerated($user, [
+                        'course_name' => Course::find($courseId)?->title ?? 'Formation',
+                        'certificate_url' => url('/certificates/' . $certificate->id),
+                        'certificate_code' => $certificate->certificate_code,
+                        'completion_date' => $certificate->issued_at->format('d/m/Y'),
+                    ]);
+
+                    // Notification in-app temps réel
                     $user->notify(new CertificateIssuedNotification(
                         courseTitle: $certificate->course?->title ?? 'votre formation',
                         certificateId: $certificate->id,

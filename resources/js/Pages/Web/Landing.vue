@@ -385,7 +385,7 @@ const schemaOrgData = computed(() => {
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter">Maîtrisez les technologies<br/>qui façonnent l'industrie</h2>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                    <div v-for="tech in technologies" :key="tech.id" class="reveal-on-scroll group bg-white p-6 rounded-2xl border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300">
+                    <div v-for="tech in technologies" :key="tech.id" class="reveal-on-scroll group bg-white p-6 rounded-xl border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300">
                         <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" :style="{ backgroundColor: (tech.color || '#003399') + '12', color: tech.color || '#003399' }">
                             <i :class="['pi', tech.icon || 'pi-cog', 'text-2xl']"></i>
                         </div>
@@ -403,7 +403,7 @@ const schemaOrgData = computed(() => {
         <section class="py-16 bg-[#F4F6F9]" id="stats-section" ref="statsSection">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                    <div v-for="(stat, idx) in displayStats" :key="idx" class="reveal-on-scroll bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center text-center group">
+                    <div v-for="(stat, idx) in displayStats" :key="idx" class="reveal-on-scroll bg-white p-8 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center group">
                         <div class="w-14 h-14 rounded-lg flex items-center justify-center mb-4 transition-colors" :style="{ backgroundColor: (stat.color || '#2563EB') + '15', color: stat.color || '#2563EB' }">
                             <i :class="['pi', stat.icon, 'text-xl']"></i>
                         </div>

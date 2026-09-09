@@ -8,6 +8,13 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+
+Route::get('/test-health', function () {
+    return response('TEST_HEALTH_OK', 200);
+});
+
+// LiveKit health check (public)
+Route::get('livekit-health', [App\Http\Controllers\LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
 use App\Http\Controllers\ExamAttemptController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\GradingController;
@@ -134,6 +141,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'bulk'])->name('bulk');
     });
 
+    // LiveKit health check (public)
+    Route::get('livekit-health', [LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
+
     // 2. Gestion E-learning
     Route::middleware(['has_role:superadmin,admin,instructor,cohort-assistant'])->group(function () {
         Route::resource('courses', CourseController::class);
@@ -149,12 +159,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('media-library', MediaLibraryController::class);
 
         Route::resource('exams', ExamController::class);
-        Route::post('questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
-        Route::resource('questions', QuestionController::class);
+        Route::post('questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('squestions.duplicate');
+        Route::resource('squestions', QuestionController::class);
 
         // Correction & Rapports
-        Route::get('gradings/{submission}/edit', [GradingController::class, 'edit'])->name('gradings.edit');
-        Route::patch('gradings/{submission}', [GradingController::class, 'update'])->name('gradings.update');
+        Route::get('sgradings/{submission}/edit', [GradingController::class, 'edit'])->name('sgradings.edit');
+        Route::patch('sgradings/{submission}', [GradingController::class, 'update'])->name('sgradings.update');
 
         // Live sessions
         Route::post('live-sessions/{live_session}/sync-recordings', [LiveSessionController::class, 'syncRecordings'])->name('live-sessions.sync-recordings');
@@ -381,6 +391,37 @@ Route::prefix('curriculum')->group(function () {
         Route::post('/{id}/reply',   [App\Http\Controllers\Admin\ContactMessageController::class, 'reply'])->name('reply');
         Route::post('/{id}/archive', [App\Http\Controllers\Admin\ContactMessageController::class, 'archive'])->name('archive');
         Route::delete('/{id}',       [App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])->name('destroy');
+    });
+
+    // Admin : Boîte email IMAP (lire, répondre aux emails)
+    Route::prefix('admin/emails')->name('admin.emails.')->middleware(['has_role:superadmin,admin'])->group(function () {
+        Route::get('/',                        [App\Http\Controllers\Admin\AdminEmailController::class, 'index'])->name('index');
+        Route::get('/compose',                 [App\Http\Controllers\Admin\AdminEmailController::class, 'compose'])->name('compose');
+        Route::post('/send',                   [App\Http\Controllers\Admin\AdminEmailController::class, 'send'])->name('send');
+        Route::post('/draft',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'saveDraft'])->name('draft');
+        Route::get('/{messageNumber}',          [App\Http\Controllers\Admin\AdminEmailController::class, 'show'])->name('show');
+        Route::get('/{messageNumber}/thread',   [App\Http\Controllers\Admin\AdminEmailController::class, 'getThread'])->name('thread');
+        Route::post('/{messageNumber}/reply',   [App\Http\Controllers\Admin\AdminEmailController::class, 'reply'])->name('reply');
+        Route::post('/{messageNumber}/forward',  [App\Http\Controllers\Admin\AdminEmailController::class, 'forward'])->name('forward');
+        Route::post('/{messageNumber}/read',    [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsRead'])->name('markAsRead');
+        Route::post('/{messageNumber}/unread',  [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsUnread'])->name('markAsUnread');
+        Route::post('/{messageNumber}/flag',    [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsFlagged'])->name('flag');
+        Route::post('/{messageNumber}/unflag',  [App\Http\Controllers\Admin\AdminEmailController::class, 'unflag'])->name('unflag');
+        Route::post('/{messageNumber}/archive', [App\Http\Controllers\Admin\AdminEmailController::class, 'archive'])->name('archive');
+        Route::post('/{messageNumber}/unarchive', [App\Http\Controllers\Admin\AdminEmailController::class, 'unarchive'])->name('unarchive');
+        Route::post('/{messageNumber}/trash',   [App\Http\Controllers\Admin\AdminEmailController::class, 'moveToTrash'])->name('trash');
+        Route::delete('/{messageNumber}',       [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->name('destroy');
+        Route::get('/folders',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'getFolders'])->name('folders');
+        Route::post('/search',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'search'])->name('search');
+        Route::get('/test',                     [App\Http\Controllers\Admin\AdminEmailController::class, 'testConnection'])->name('test');
+    });
+
+    // Admin : Modèles d'emails (templates pour certificates, inscriptions, etc.)
+    Route::prefix('admin/email-templates')->name('admin.email-templates.')->middleware(['has_role:superadmin,admin'])->group(function () {
+        Route::get('/',         [App\Http\Controllers\Admin\EmailTemplateController::class, 'index'])->name('index');
+        Route::get('/{id}',    [App\Http\Controllers\Admin\EmailTemplateController::class, 'show'])->name('show');
+        Route::put('/{id}',    [App\Http\Controllers\Admin\EmailTemplateController::class, 'update'])->name('update');
+        Route::post('/test',   [App\Http\Controllers\Admin\EmailTemplateController::class, 'test'])->name('test');
     });
 
     // Admin : Identité légale (RCCM / IFU / NIF)

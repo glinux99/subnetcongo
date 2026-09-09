@@ -97,6 +97,7 @@ class CourseController extends Controller
                 'categories'   => Category::where('is_active', true)->orderBy('name')->get(['id', 'name']),
                 'levels'       => $this->getLevelsForUI(),
                 'instructors'  => User::role('instructor')->get(['id', 'name', 'avatar']),
+                'exams'        => \App\Models\Exam::where('is_published', true)->get(['id', 'title', 'pass_percentage', 'type']),
                 'meta'         => $this->getFinancialMeta(),
             ]);
 
@@ -108,7 +109,7 @@ class CourseController extends Controller
     }
 
     /**
-     * --------------------------------------------------------------------------
+      * --------------------------------------------------------------------------
      * 2. STORE : FORGER UN NOUVEAU PARCOURS
      * --------------------------------------------------------------------------
      */
@@ -259,12 +260,32 @@ class CourseController extends Controller
         $keptSectionIds = [];
 
         foreach ($sections as $index => $sData) {
+            $sectionData = [
+                'title'       => $sData['title'],
+                'order'       => $index + 1,
+                'description' => $sData['description'] ?? null,
+                'has_quiz'    => filter_var($sData['has_quiz'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'quiz_required' => filter_var($sData['quiz_required'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'quiz_weight' => $sData['quiz_weight'] ?? 0,
+                'quiz_passing_score' => $sData['quiz_passing_score'] ?? 50,
+                'quiz_attempts_allowed' => $sData['quiz_attempts_allowed'] ?? 3,
+                'intro_video_url' => $sData['intro_video_url'] ?? null,
+                'intro_video_title' => $sData['intro_video_title'] ?? null,
+                'text_content' => $sData['text_content'] ?? null,
+                'objectives' => $sData['objectives'] ?? null,
+                'has_document' => filter_var($sData['has_document'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'document_title' => $sData['document_title'] ?? null,
+                'document_url' => $sData['document_url'] ?? null,
+                'document_name' => $sData['document_name'] ?? null,
+                'order_in_course' => $index + 1,
+            ];
+
             $section = isset($sData['id']) && is_numeric($sData['id'])
                 ? $course->sections()->find($sData['id'])
-                : $course->sections()->create(['title' => $sData['title'], 'order' => $index + 1]);
+                : $course->sections()->create($sectionData);
 
             if ($section) {
-                $section->update(['title' => $sData['title'], 'order' => $index + 1]);
+                $section->update($sectionData);
                 $keptSectionIds[] = $section->id;
                 
                 // Synchronisation des leçons à l'intérieur
@@ -285,10 +306,24 @@ class CourseController extends Controller
             $payload = [
                 'title'            => $lData['title'],
                 'type'             => $lData['type'] ?? 'video',
+                'lesson_type'      => $lData['lesson_type'] ?? ($lData['type'] ?? 'video'),
                 'is_free_preview'  => filter_var($lData['is_free'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'is_sequential'    => filter_var($lData['is_sequential'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'duration_minutes' => $lData['duration_minutes'] ?? 0,
+                'video_duration'   => $lData['video_duration'] ?? null,
+                'video_source'     => $lData['video_source'] ?? null,
                 'order'            => $index + 1,
-                'slug'             => Str::slug($lData['title']) . '-' . Str::random(4)
+                'slug'             => Str::slug($lData['title']) . '-' . Str::random(4),
+                'content_text'     => $lData['content_text'] ?? null,
+                'content_html'     => $lData['content_html'] ?? null,
+                'content'          => $lData['content'] ?? null,
+                'video_url'        => $lData['video_url'] ?? null,
+                'has_attachment'   => filter_var($lData['has_attachment'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'attachment_title' => $lData['attachment_title'] ?? null,
+                'document_title'   => $lData['document_title'] ?? null,
+                'document_url'     => $lData['document_url'] ?? null,
+                'quiz_id'          => $lData['quiz_id'] ?? null,
+                'seo_metadata'     => $lData['seo_metadata'] ?? [],
             ];
 
             $lesson = isset($lData['id']) && is_numeric($lData['id'])
@@ -384,7 +419,7 @@ class CourseController extends Controller
     private function prepareAndSanitize(Request $request): void
     {
         // Convertir les chaînes "true"/"false" de FormData en booléens réels
-        $fields = ['is_featured', 'requires_enrollment', 'certificate_enabled'];
+        $fields = ['is_featured', 'requires_enrollment', 'certificate_enabled', 'has_final_exam'];
         foreach ($fields as $f) {
             if ($request->has($f)) $request->merge([$f => filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN)]);
         }
@@ -419,6 +454,10 @@ class CourseController extends Controller
             'requires_enrollment' => 'boolean',
             'certificate_enabled' => 'boolean',
             'is_featured'         => 'boolean',
+            'has_final_exam'      => 'boolean',
+            'final_exam_weight'   => 'nullable|numeric|min:0|max:100',
+            'passing_score_20'    => 'nullable|numeric|min:0|max:20',
+            'quiz_weight_total'   => 'nullable|numeric|min:0|max:100',
         ]);
     }
 

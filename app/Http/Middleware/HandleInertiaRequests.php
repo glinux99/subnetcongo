@@ -75,6 +75,9 @@ class HandleInertiaRequests extends Middleware
                 'enrollments_pending' => $user->hasAnyRole(['admin', 'superadmin', 'finance-manager'])
                     ? \App\Models\Enrollment::where('status', 'pending')->count()
                     : 0,
+                'unread_emails' => $user->hasAnyRole(['admin', 'superadmin'])
+                    ? 0 // Mis à jour dynamiquement sur la page email
+                    : 0,
             ] : [],
             'app_meta' => [
                 'name' => config('app.name'),

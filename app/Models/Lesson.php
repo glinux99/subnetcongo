@@ -12,118 +12,95 @@ class Lesson extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Lesson types.
-     */
     public const TYPE_VIDEO = 'video';
     public const TYPE_DOCUMENT = 'document';
     public const TYPE_QUIZ = 'quiz';
     public const TYPE_TEXT = 'text';
     public const TYPE_ASSIGNMENT = 'assignment';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'module_id',
         'uuid',
         'title',
         'slug',
         'type',
+        'lesson_type',
         'content',
+        'content_text',
+        'content_html',
         'video_url',
+        'video_duration',
         'duration_minutes',
         'order',
         'is_free_preview',
         'is_published',
+        'is_sequential',
         'attachment_paths',
+        'has_attachment',
+        'attachment_title',
         'quiz_id',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
         'order' => 'integer',
         'duration_minutes' => 'integer',
+        'video_duration' => 'integer',
         'is_free_preview' => 'boolean',
         'is_published' => 'boolean',
+        'is_sequential' => 'boolean',
         'attachment_paths' => 'array',
+        'has_attachment' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 
-    /**
-     * Get the module that owns the lesson.
-     */
+    protected function seoMetadata(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value ?? ['title' => '', 'description' => '', 'keywords' => ''],
+        );
+    }
+
     public function module()
     {
         return $this->belongsTo(Module::class);
     }
 
-    /**
-     * Get the course through the module.
-     */
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id', 'id')
             ->through('module');
     }
 
-    /**
-     * Get user progress for this lesson.
-     */
     public function userProgress()
     {
         return $this->hasMany(UserProgress::class);
     }
 
-    /**
-     * Get the quiz associated with this lesson.
-     */
     public function quiz()
     {
         return $this->belongsTo(Exam::class, 'quiz_id');
     }
 
-    /**
-     * Scope to get lessons for a specific module in order.
-     */
     public function scopeForModule($query, $moduleId)
     {
         return $query->where('module_id', $moduleId)->orderBy('order');
     }
 
-    /**
-     * Scope to get published lessons.
-     */
     public function scopePublished($query)
     {
         return $query->where('is_published', true);
     }
 
-    /**
-     * Scope to get free preview lessons.
-     */
     public function scopeFreePreview($query)
     {
         return $query->where('is_free_preview', true);
     }
 
-    /**
-     * Scope to get lessons by type.
-     */
     public function scopeOfType($query, $type)
     {
         return $query->where('type', $type);
     }
 
-    /**
-     * Get the URL for the attachment.
-     */
     protected function attachmentPath(): Attribute
     {
         return Attribute::make(
@@ -139,33 +116,26 @@ class Lesson extends Model
         );
     }
 
-    /**
-     * Check if lesson is a video type.
-     */
     public function isVideo(): bool
     {
         return $this->type === self::TYPE_VIDEO;
     }
 
-    /**
-     * Check if lesson is a quiz type.
-     */
     public function isQuiz(): bool
     {
         return $this->type === self::TYPE_QUIZ;
     }
 
-    /**
-     * Check if lesson is a document type.
-     */
     public function isDocument(): bool
     {
         return $this->type === self::TYPE_DOCUMENT;
     }
 
-    /**
-     * Get completion rate for this lesson.
-     */
+    public function isText(): bool
+    {
+        return $this->type === self::TYPE_TEXT;
+    }
+
     public function getCompletionRateAttribute()
     {
         $progressRecords = $this->userProgress;
@@ -176,9 +146,6 @@ class Lesson extends Model
         return round(($completed / $progressRecords->count()) * 100, 1);
     }
 
-    /**
-     * Get average progress for this lesson.
-     */
     public function getAverageProgressAttribute()
     {
         return $this->userProgress->avg('progress_percent') ?? 0;

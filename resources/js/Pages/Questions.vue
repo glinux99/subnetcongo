@@ -102,7 +102,7 @@ const serverFilters = reactive({
 
 watch(serverFilters, debounce(() => {
     searchLoading.value = true;
-    router.get(route('questions.index'), serverFilters, {
+    router.get(route('squestions.index'), serverFilters, {
         preserveState: true,
         replace: true,
         onFinish: () => searchLoading.value = false
@@ -181,7 +181,7 @@ const editQuestion = async (data) => {
     // Chargement de l'audit trail réel depuis le serveur
     auditEvents.value = [];
     try {
-        const response = await axios.get(route('questions.audit', qData.id));
+        const response = await axios.get(route('squestions.audit', qData.id));
         auditEvents.value = response.data;
     } catch (e) {
         console.error("Audit load failed", e);
@@ -202,7 +202,7 @@ const editQuestion = async (data) => {
 const saveQuestion = () => {
     isSaving.value = true;
     const isUpdate = !!form.id;
-    const url = isUpdate ? route('questions.update', form.id) : route('questions.store');
+    const url = isUpdate ? route('squestions.update', form.id) : route('squestions.store');
 
     form.transform((data) => ({
         ...data,
@@ -231,7 +231,7 @@ const confirmDelete = (id) => {
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => {
-            router.delete(route('questions.destroy', id), {
+            router.delete(route('squestions.destroy', id), {
                 preserveScroll: true,
                 onSuccess: () => toast.add({ severity: 'warn', summary: 'Archivé', detail: 'L\'item a été archivé.', life: 3000 })
             });
@@ -240,7 +240,7 @@ const confirmDelete = (id) => {
 };
 
 const duplicateQuestion = (id) => {
-    router.post(route('questions.duplicate', id), {}, {
+    router.post(route('squestions.duplicate', id), {}, {
         preserveScroll: true,
         onSuccess: () => toast.add({ severity: 'info', summary: 'Clonage', detail: 'Copie de l\'item générée.', life: 3000 })
     });
@@ -285,7 +285,7 @@ const getTypeColor = (type) => {
 };
 
 const onPage = (event) => {
-    router.get(route('questions.index'), { ...serverFilters, page: event.page + 1, per_page: event.rows }, { preserveState: true });
+    router.get(route('squestions.index'), { ...serverFilters, page: event.page + 1, per_page: event.rows }, { preserveState: true });
 };
 
 // ======================================================================================

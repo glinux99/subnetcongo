@@ -56,6 +56,7 @@ import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Tooltip from 'primevue/tooltip';
+import Checkbox from 'primevue/checkbox';
 
 // ======================================================================================
 // PROPS INERTIA
@@ -72,6 +73,7 @@ const props = defineProps({
         ]
     },
     instructors: { type: Array, default: () => [] },
+    exams: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({ total_courses: 0, total_students: 0, active_instructors: 0 }) },
     filters: { type: Object, default: () => ({}) },
     meta: { type: Object, default: () => ({ total_revenue: 0, avg_rating: 0, completion_rate: 0 }) }
@@ -235,7 +237,11 @@ const courseForm = useForm({
     certificate_enabled: false,
     prerequisites: '',
     estimated_duration: 0,
-    resources : []
+    resources : [],
+    has_final_exam: false,
+    final_exam_weight: 0,
+    passing_score_20: 10,
+    quiz_weight_total: 80
 });
 
 // ======================================================================================
@@ -306,12 +312,17 @@ const editCourse = (data) => {
     courseForm.resources = (courseData.resources || []).map(res => ({
         id: res.id,
         title: res.title,
-        file: null, // Pas de nouveau fichier au chargement
-        size: res.human_size, // Utilise l'accesseur du modèle
+        file: null,
+        size: res.human_size,
         type: res.file_type,
-        full_url: res.full_url, // URL complète pour prévisualisation
-        is_new: false // Important pour le contrôleur Laravel
+        full_url: res.full_url,
+        is_new: false
     }));
+
+    courseForm.has_final_exam = !!courseData.has_final_exam;
+    courseForm.final_exam_weight = courseData.final_exam_weight || 0;
+    courseForm.passing_score_20 = courseData.passing_score_20 || 10;
+    courseForm.quiz_weight_total = courseData.quiz_weight_total || 80;
 
     activeEditorTab.value = 'general';
     courseDialog.value = true;
@@ -530,9 +541,44 @@ const addSection = () => {
         id: 'sec_' + Date.now(),
         title: '',
         description: '',
+        text_content: '',
+        has_intro_video: false,
+        intro_video_url: '',
+        intro_video_title: '',
+        has_document: false,
+        document_title: '',
+        document_url: '',
+        document_name: '',
+        content_blocks: [],
+        has_quiz: false,
+        quiz_required: true,
+        quiz_weight: 10,
+        quiz_passing_score: 50,
+        quiz_attempts_allowed: 3,
         order: courseForm.sections.length + 1,
+        order_in_course: courseForm.sections.length + 1,
         lessons: []
     });
+};
+
+const getBlockIcon = (type) => {
+    const map = {
+        video: { icon: 'pi pi-video', bg: 'bg-rose-100 text-rose-600' },
+        document: { icon: 'pi pi-file-pdf', bg: 'bg-blue-100 text-blue-600' },
+        quiz: { icon: 'pi pi-check-square', bg: 'bg-emerald-100 text-emerald-600' },
+        text: { icon: 'pi pi-align-left', bg: 'bg-slate-100 text-slate-600' }
+    };
+    return map[type] || map.text;
+};
+
+const getBlockPlaceholder = (type) => {
+    const map = {
+        video: 'Titre de la vidéo...',
+        document: 'Titre du document...',
+        quiz: 'Titre du quiz...',
+        text: 'Titre du bloc texte...'
+    };
+    return map[type] || 'Titre...';
 };
 
 const removeSection = (index) => {
@@ -561,16 +607,49 @@ const moveSectionDown = (index) => {
     }
 };
 
-const addLesson = (sectionIndex) => {
-    courseForm.sections[sectionIndex].lessons.push({
+const addLesson = (sectionIndex, type = 'video') => {
+    const block = {
         id: 'les_' + Date.now(),
         title: '',
-        type: 'video', // 'video', 'document', 'quiz', 'assignment'
+        type: type,
+        lesson_type: type,
         duration_minutes: 0,
         is_free: false,
+        is_sequential: false,
+        order: (courseForm.sections[sectionIndex].lessons?.length || 0) + 1,
+        video_duration: 0,
         resource_url: '',
-        order: courseForm.sections[sectionIndex].lessons.length + 1
-    });
+        content_text: '',
+        content_html: '',
+        has_attachment: false,
+        attachment_title: '',
+        quiz_id: null
+    };
+
+    switch(type) {
+        case 'video':
+            block.video_source = 'youtube';
+            block.title = 'Nouvelle vidéo';
+            break;
+        case 'document':
+            block.document_url = '';
+            block.document_title = '';
+            block.title = 'Nouveau document';
+            break;
+        case 'quiz':
+            block.title = 'Nouveau quiz';
+            break;
+        case 'text':
+            block.content_text = '';
+            block.content_html = '';
+            block.title = 'Nouveau contenu textuel';
+            break;
+        case 'assignment':
+            block.title = 'Nouvel exercice';
+            break;
+    }
+
+    courseForm.sections[sectionIndex].lessons.push(block);
 };
 
 const removeLesson = (sIdx, lIdx) => courseForm.sections[sIdx].lessons.splice(lIdx, 1);
@@ -1530,81 +1609,216 @@ onBeforeUnmount(() => {
                                         </div>
                                     </div>
 
-                                    <!-- MODULE BODY (LEÇONS) -->
-                                    <div class="p-6 lg:p-8 bg-white">
-                                        <!-- Leçons existantes -->
-                                        <div class="space-y-3 mb-6" v-if="section.lessons.length > 0">
-                                            <div v-for="(lesson, lIdx) in section.lessons" :key="lesson.id" class="flex items-center gap-4 bg-slate-50/50 border border-slate-200 rounded-xl p-3 hover:shadow-md hover:border-indigo-300 hover:bg-white transition-all duration-300 group/lesson relative">
+                                    <!-- MODULE CONTENT BUILDER -->
+                                    <div class="p-6 lg:p-8 bg-white space-y-6">
+                                        
+                                        <!-- 1. DESCRIPTION & TEXTE DU MODULE -->
+                                        <div class="bg-slate-50/50 rounded-xl border border-slate-200 p-5 space-y-4">
+                                            <h4 class="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                                <i class="pi pi-file-edit text-indigo-500"></i> Contenu du Module
+                                            </h4>
+                                            
+                                            <div class="space-y-2">
+                                                <label class="block text-xs font-bold text-slate-600">Description courte</label>
+                                                <InputText v-model="section.description" class="w-full bg-white border-slate-200" placeholder="Résumé du module en une phrase..." />
+                                            </div>
 
-                                                <!-- Handle Drag -->
-                                                <i class="pi pi-bars text-slate-300 cursor-move hover:text-indigo-500 px-2 flex-shrink-0" v-tooltip.top="'Glisser pour réorganiser'"></i>
+                                            <div class="space-y-2">
+                                                <label class="block text-xs font-bold text-slate-600">Texte principal du module <span class="text-rose-500">*</span></label>
+                                                <Textarea v-model="section.text_content" rows="4" class="w-full bg-white border-slate-200 font-mono text-sm" placeholder="Contenu textuel, consignes, théorie, transcription vidéo..."></Textarea>
+                                                <div class="text-[10px] text-slate-400">Ce texte est affiché en haut du module avant les contenus multimédias.</div>
+                                            </div>
+                                        </div>
 
-                                                <!-- Type Selector -->
-                                                <Dropdown v-model="lesson.type" :options="[
-                                                    {icon:'pi pi-video', val:'video', color:'text-rose-500', bg:'bg-rose-50'},
-                                                    {icon:'pi pi-file-pdf', val:'document', color:'text-blue-500', bg:'bg-blue-50'},
-                                                    {icon:'pi pi-check-square', val:'quiz', color:'text-emerald-500', bg:'bg-emerald-50'},
-                                                    {icon:'pi pi-code', val:'assignment', color:'text-amber-500', bg:'bg-amber-50'}
-                                                ]" optionValue="val" class="w-[70px] border border-slate-200 shadow-sm bg-white rounded-lg flex-shrink-0 p-0" :pt="{ input: { class: 'p-2 flex justify-center' } }">
-                                                    <template #value="slotProps">
-                                                        <div class="w-8 h-8 rounded flex items-center justify-center" :class="[
-                                                            slotProps.value === 'video' ? 'bg-rose-50 text-rose-500' : '',
-                                                            slotProps.value === 'document' ? 'bg-blue-50 text-blue-500' : '',
-                                                            slotProps.value === 'quiz' ? 'bg-emerald-50 text-emerald-500' : '',
-                                                            slotProps.value === 'assignment' ? 'bg-amber-50 text-amber-500' : ''
-                                                        ]">
-                                                            <i :class="[
-                                                                slotProps.value === 'video' ? 'pi pi-video' : '',
-                                                                slotProps.value === 'document' ? 'pi pi-file-pdf' : '',
-                                                                slotProps.value === 'quiz' ? 'pi pi-check-square' : '',
-                                                                slotProps.value === 'assignment' ? 'pi pi-code' : ''
-                                                            ]" class="text-sm"></i>
-                                                        </div>
-                                                    </template>
-                                                    <template #option="slotProps">
-                                                        <div class="flex items-center gap-3 w-full p-1">
-                                                            <div class="w-6 h-6 rounded flex items-center justify-center" :class="slotProps.option.bg"><i :class="[slotProps.option.icon, slotProps.option.color]" class="text-[10px]"></i></div>
-                                                            <span class="text-xs font-bold uppercase tracking-wider text-slate-600">{{ slotProps.option.val }}</span>
-                                                        </div>
-                                                    </template>
-                                                </Dropdown>
-
-                                                <!-- Lesson Title Input -->
-                                                <InputText v-model="lesson.title" class="flex-1 border-transparent hover:border-slate-300 focus:border-indigo-400 bg-transparent focus:bg-white font-bold text-slate-700 text-sm py-2 px-3 transition-colors shadow-none" placeholder="Donnez un nom à cette leçon..." />
-
-                                                <!-- Settings & Actions (Affichés au survol) -->
-                                                <div class="flex items-center gap-3 xl:gap-5 flex-shrink-0 opacity-40 group-hover/lesson:opacity-100 transition-opacity">
-
-                                                    <!-- Duration Input -->
-                                                    <div class="hidden xl:flex items-center gap-2" v-tooltip.top="'Durée estimée (minutes)'">
-                                                        <i class="pi pi-clock text-slate-400 text-xs"></i>
-
-                                                        <InputNumber v-model="lesson.duration_minutes" class="w-16" :pt="{ input: { class: 'p-1.5 text-xs text-center font-mono' } }" placeholder="min" />
+                                        <!-- 2. MÉDIAS DU MODULE -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <!-- Vidéo d'introduction -->
+                                            <div class="bg-rose-50/30 rounded-xl border border-rose-200 p-4 space-y-3">
+                                                <div class="flex items-center justify-between">
+                                                    <label class="text-xs font-black text-rose-700 uppercase tracking-wider flex items-center gap-2">
+                                                        <i class="pi pi-video"></i> Vidéo d'introduction
+                                                    </label>
+                                                    <ToggleSwitch v-model="section.has_intro_video" />
+                                                </div>
+                                                
+                                                <div v-if="section.has_intro_video" class="space-y-3">
+                                                    <div class="space-y-1">
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Titre de la vidéo</label>
+                                                        <InputText v-model="section.intro_video_title" class="w-full bg-white border-slate-200 text-xs" placeholder="Ex: Présentation du module" />
                                                     </div>
-
-                                                    <div class="w-px h-6 bg-slate-200 hidden xl:block"></div>
-
-                                                    <!-- Free Preview Toggle -->
-                                                    <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-300 transition-colors" @click="lesson.is_free = !lesson.is_free">
-                                                        <i :class="lesson.is_free ? 'pi pi-unlock text-emerald-500' : 'pi pi-lock text-slate-300'" class="text-xs"></i>
-                                                        <label class="text-[10px] uppercase font-bold cursor-pointer" :class="lesson.is_free ? 'text-emerald-600' : 'text-slate-500'">Extrait</label>
+                                                    <div class="space-y-1">
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">URL (YouTube / Vimeo / Lien direct)</label>
+                                                        <InputText v-model="section.intro_video_url" class="w-full bg-white border-slate-200 text-xs font-mono" placeholder="https://www.youtube.com/watch?v=..." />
                                                     </div>
+                                                </div>
+                                            </div>
 
-                                                    <!-- Delete Lesson -->
-                                                    <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm p-button-rounded bg-white border border-slate-200 hover:bg-rose-50 w-9 h-9" @click="removeLesson(sIdx, lIdx)" v-tooltip.top="'Supprimer cette leçon'" />
+                                            <!-- Document du module -->
+                                            <div class="bg-blue-50/30 rounded-xl border border-blue-200 p-4 space-y-3">
+                                                <div class="flex items-center justify-between">
+                                                    <label class="text-xs font-black text-blue-700 uppercase tracking-wider flex items-center gap-2">
+                                                        <i class="pi pi-file-pdf"></i> Document du module
+                                                    </label>
+                                                    <ToggleSwitch v-model="section.has_document" />
+                                                </div>
+                                                
+                                                <div v-if="section.has_document" class="space-y-3">
+                                                    <div class="space-y-1">
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du document</label>
+                                                        <InputText v-model="section.document_title" class="w-full bg-white border-slate-200 text-xs" placeholder="Ex: Guide pratique PDF" />
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">URL ou fichier</label>
+                                                        <InputText v-model="section.document_url" class="w-full bg-white border-slate-200 text-xs font-mono" placeholder="https://... ou /storage/..." />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div v-else class="text-center py-6 bg-slate-50 border border-dashed border-slate-200 rounded-xl mb-4 text-slate-500 text-sm italic">
-                                            Ce module ne contient encore aucun contenu.
+                                        <!-- 3. BLOCS DE CONTENU (VIDÉO, DOCUMENT, QUIZ) -->
+                                        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                            <div class="bg-slate-50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+                                                <h4 class="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                                    <i class="pi pi-objects-column text-indigo-500"></i> Contenus du module
+                                                </h4>
+                                                <div class="flex gap-2">
+                                                    <Button icon="pi pi-video" class="p-button-sm p-button-outlined p-button-danger text-rose-600 border-rose-200 hover:bg-rose-50" @click="addLesson(sIdx, 'video')" v-tooltip.top="'Ajouter une vidéo'" />
+                                                    <Button icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-info text-blue-600 border-blue-200 hover:bg-blue-50" @click="addLesson(sIdx, 'document')" v-tooltip.top="'Ajouter un document'" />
+                                                    <Button icon="pi pi-check-square" class="p-button-sm p-button-outlined p-button-success text-emerald-600 border-emerald-200 hover:bg-emerald-50" @click="addLesson(sIdx, 'quiz')" v-tooltip.top="'Ajouter un quiz'" />
+                                                    <Button icon="pi pi-align-left" class="p-button-sm p-button-outlined p-button-secondary text-slate-600 border-slate-200 hover:bg-slate-50" @click="addLesson(sIdx, 'text')" v-tooltip.top="'Ajouter du texte'" />
+                                                </div>
+                                            </div>
+
+                                            <div class="p-5">
+                                                <div v-if="section.lessons && section.lessons.length > 0" class="space-y-4">
+                                                    <div v-for="(block, bIdx) in section.lessons" :key="block.id" class="border border-slate-200 rounded-xl overflow-hidden hover:border-indigo-300 transition-all bg-white">
+                                                        
+                                                        <!-- Block Header -->
+                                                        <div class="bg-slate-50/80 px-4 py-2.5 flex items-center gap-3 border-b border-slate-200">
+                                                            <i class="pi pi-bars text-slate-300 cursor-move hover:text-indigo-500"></i>
+                                                            
+                                                            <div class="w-7 h-7 rounded flex items-center justify-center" :class="getBlockIcon(block.type).bg">
+                                                                <i :class="getBlockIcon(block.type).icon" class="text-xs"></i>
+                                                            </div>
+                                                            
+                                                            <InputText v-model="block.title" class="flex-1 bg-transparent border-transparent font-bold text-sm text-slate-700" :placeholder="getBlockPlaceholder(block.type)" />
+                                                            
+                                                            <div class="flex items-center gap-2">
+                                                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-slate-200">
+                                                                    <i class="pi pi-clock text-slate-400 text-[10px]"></i>
+                                                                    <InputNumber v-model="block.duration_minutes" class="w-14 h-7 text-xs" placeholder="min" :pt="{ input: { class: 'p-1 text-xs text-center' } }" />
+                                                                </div>
+                                                                <ToggleSwitch v-model="block.is_free" />
+                                                                <span class="text-[10px] uppercase font-bold" :class="block.is_free ? 'text-emerald-600' : 'text-slate-400'">Extrait</span>
+                                                                <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm p-button-rounded w-7 h-7" @click="removeLesson(sIdx, bIdx)" />
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Block Body -->
+                                                        <div class="p-4 bg-white space-y-3">
+                                                            
+                                                            <!-- Video Block -->
+                                                            <div v-if="block.type === 'video'" class="space-y-3">
+                                                                <div class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Source vidéo</label>
+                                                                    <SelectButton v-model="block.video_source" :options="['youtube', 'vimeo', 's3', 'wistia']" class="w-full" />
+                                                                </div>
+                                                                <div class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">URL de la vidéo</label>
+                                                                    <InputText v-model="block.video_url" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="https://www.youtube.com/watch?v=..." />
+                                                                </div>
+                                                                <div class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Durée (secondes)</label>
+                                                                    <InputNumber v-model="block.video_duration" class="w-full bg-slate-50 border-slate-200" placeholder="Durée en secondes" />
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Document Block -->
+                                                            <div v-if="block.type === 'document'" class="space-y-3">
+                                                                <div class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du document</label>
+                                                                    <InputText v-model="block.document_title" class="w-full bg-slate-50 border-slate-200 text-xs" placeholder="Titre affiché à l'apprenant" />
+                                                                </div>
+                                                                <div class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">URL ou fichier</label>
+                                                                    <InputText v-model="block.document_url" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="https://... ou /storage/..." />
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Quiz Block -->
+                                                            <div v-if="block.type === 'quiz'" class="space-y-3">
+                                                                <div class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Quiz assigné</label>
+                                                                    <Dropdown v-model="block.quiz_id" :options="props.exams || []" optionLabel="title" optionValue="id" placeholder="Sélectionner un quiz existant..." class="w-full" showClear>
+                                                                        <template #option="slotProps">
+                                                                            <div class="flex items-center gap-2 p-2">
+                                                                                <i class="pi pi-check-square text-emerald-500 text-xs"></i>
+                                                                                <span class="text-xs font-bold">{{ slotProps.option.title }}</span>
+                                                                                <Tag :value="slotProps.option.type" severity="info" class="text-[9px] ml-auto" />
+                                                                            </div>
+                                                                        </template>
+                                                                    </Dropdown>
+                                                                </div>
+                                                                <Message v-if="!block.quiz_id" severity="info" class="text-xs">
+                                                                    Vous pouvez sélectionner un quiz existant ou créer un nouveau quiz depuis la section Examens.
+                                                                </Message>
+                                                            </div>
+
+                                                            <!-- Text Block -->
+                                                            <div v-if="block.type === 'text'" class="space-y-2">
+                                                                <label class="text-[10px] font-bold text-slate-500 uppercase">Contenu textuel</label>
+                                                                <Textarea v-model="block.content_text" rows="4" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="Saisissez le contenu textuel de ce bloc..."></Textarea>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div v-else class="text-center py-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-400">
+                                                    <i class="pi pi-objects-column text-3xl mb-2 block"></i>
+                                                    <p class="text-sm font-medium">Aucun contenu ajouté</p>
+                                                    <p class="text-xs mt-1">Utilisez les boutons ci-dessus pour ajouter vidéos, documents, quizzes ou texte.</p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <!-- Bouton Add Lesson -->
-                                        <button @click="addLesson(sIdx)" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-300 transition-all group">
-                                            <div class="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition-colors"><i class="pi pi-plus text-xs"></i></div>
-                                            Ajouter un contenu à ce module
-                                        </button>
+                                        <!-- 4. QUIZ DE FIN DE MODULE -->
+                                        <div class="bg-indigo-50/50 rounded-xl border border-indigo-200 p-5 space-y-4">
+                                            <h4 class="text-sm font-black text-indigo-700 uppercase tracking-wider flex items-center gap-2">
+                                                <i class="pi pi-check-square"></i> Quiz de validation du module
+                                            </h4>
+                                            
+                                            <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-indigo-100">
+                                                <div>
+                                                    <div class="font-bold text-sm text-slate-800">Quiz obligatoire à la fin du module</div>
+                                                    <div class="text-[11px] text-slate-500">L'apprenant doit valider ce quiz pour progresser.</div>
+                                                </div>
+                                                <ToggleSwitch v-model="section.has_quiz" />
+                                            </div>
+
+                                            <div v-if="section.has_quiz" class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
+                                                <div class="space-y-1">
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Obligatoire</label>
+                                                    <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-indigo-100">
+                                                        <Checkbox v-model="section.quiz_required" :binary="true" />
+                                                        <span class="text-xs text-slate-600">Requis</span>
+                                                    </div>
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Poids (%)</label>
+                                                    <InputNumber v-model="section.quiz_weight" :min="0" :max="100" class="w-full bg-white border-indigo-100" placeholder="10" />
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Note /20</label>
+                                                    <InputNumber v-model="section.quiz_passing_score" :min="0" :max="20" class="w-full bg-white border-indigo-100" placeholder="10" />
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Tentatives</label>
+                                                    <InputNumber v-model="section.quiz_attempts_allowed" :min="1" :max="10" class="w-full bg-white border-indigo-100" placeholder="3" />
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -1839,6 +2053,39 @@ onBeforeUnmount(() => {
                                                 </div>
                                             </div>
                                             <ToggleSwitch v-model="courseForm.requires_enrollment" />
+                                        </div>
+
+                                        <!-- Examen Final -->
+                                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                            <div class="flex gap-4">
+                                                <div class="w-10 h-10 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-check-square"></i></div>
+                                                <div>
+                                                    <div class="font-bold text-slate-800 text-sm">Examen Final Obligatoire</div>
+                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">Un examen certifiant doit être réussi pour obtenir le diplôme.</div>
+                                                </div>
+                                            </div>
+                                            <ToggleSwitch v-model="courseForm.has_final_exam" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Quiz & Certification Settings -->
+                                    <div class="space-y-6 col-span-1" v-if="courseForm.has_final_exam">
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-bold text-slate-700">Score de passage (/20)</label>
+                                            <InputNumber v-model="courseForm.passing_score_20" :min="0" :max="20" class="w-full" placeholder="Ex: 10" />
+                                            <div class="text-[10px] text-slate-500">Note minimale requise pour valider le cours.</div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-bold text-slate-700">Pondération du Quiz Final (%)</label>
+                                            <InputNumber v-model="courseForm.final_exam_weight" :min="0" :max="100" class="w-full" placeholder="Ex: 70" />
+                                            <div class="text-[10px] text-slate-500">Pourcentage du score final provenant de l'examen.</div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label class="block text-sm font-bold text-slate-700">Pondération Totale des Quiz (%)</label>
+                                            <InputNumber v-model="courseForm.quiz_weight_total" :min="0" :max="100" class="w-full" placeholder="Ex: 80" />
+                                            <div class="text-[10px] text-slate-500">Somme des pondérations de tous les quiz du cours.</div>
                                         </div>
                                     </div>
 

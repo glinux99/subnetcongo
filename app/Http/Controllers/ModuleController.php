@@ -97,6 +97,7 @@ class ModuleController extends Controller
         return Inertia::render('Modules', [
             'modules' => $modules,
             'courses' => $courses,
+            'exams'   => \App\Models\Exam::where('is_published', true)->get(['id', 'title', 'pass_percentage', 'type']),
             'stats'   => $stats,
             'filters' => [
                 'search'    => $search,
@@ -147,7 +148,21 @@ class ModuleController extends Controller
             'estimated_duration' => 'nullable|integer|min:0',
             'thumbnail_path'     => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
             'seo_metadata'       => 'nullable|array',
-            'order'              => 'nullable|integer'
+            'order'              => 'nullable|integer',
+            'has_quiz'           => 'boolean',
+            'quiz_required'      => 'boolean',
+            'quiz_weight'        => 'nullable|numeric|min:0|max:100',
+            'quiz_passing_score' => 'nullable|numeric|min:0|max:20',
+            'quiz_attempts_allowed' => 'nullable|integer|min:1',
+            'intro_video_url'    => 'nullable|url',
+            'intro_video_title'  => 'nullable|string|max:255',
+            'text_content'       => 'nullable|string',
+            'objectives'         => 'nullable|array',
+            'has_document'       => 'boolean',
+            'document_title'     => 'nullable|string|max:255',
+            'document_url'       => 'nullable|url',
+            'document_name'      => 'nullable|string|max:255',
+            'order_in_course'    => 'nullable|integer|min:1'
         ]);
 
         DB::beginTransaction();
@@ -166,6 +181,20 @@ class ModuleController extends Controller
             $module->order       = $validated['order'] ?? ($maxOrder + 1);
             $module->estimated_duration = $validated['estimated_duration'] ?? 0;
             $module->seo_metadata = $validated['seo_metadata'] ?? ['title' => '', 'description' => '', 'keywords' => ''];
+            $module->has_quiz           = $validated['has_quiz'] ?? false;
+            $module->quiz_required      = $validated['quiz_required'] ?? false;
+            $module->quiz_weight        = $validated['quiz_weight'] ?? 0;
+            $module->quiz_passing_score = $validated['quiz_passing_score'] ?? 50;
+            $module->quiz_attempts_allowed = $validated['quiz_attempts_allowed'] ?? 3;
+            $module->intro_video_url    = $validated['intro_video_url'] ?? null;
+            $module->intro_video_title  = $validated['intro_video_title'] ?? null;
+            $module->text_content       = $validated['text_content'] ?? null;
+            $module->objectives         = $validated['objectives'] ?? null;
+            $module->has_document       = $validated['has_document'] ?? false;
+            $module->document_title     = $validated['document_title'] ?? null;
+            $module->document_url       = $validated['document_url'] ?? null;
+            $module->document_name      = $validated['document_name'] ?? null;
+            $module->order_in_course    = $validated['order_in_course'] ?? ($maxOrder + 1);
 
             // Gestion de l'upload de la miniature du module
             if ($request->hasFile('thumbnail_path')) {
@@ -199,7 +228,21 @@ class ModuleController extends Controller
             'estimated_duration' => 'nullable|integer|min:0',
             'thumbnail_path'     => 'nullable|file|mimes:jpeg,png,jpg,webp|max:2048',
             'seo_metadata'       => 'nullable|array',
-            'order'              => 'nullable|integer'
+            'order'              => 'nullable|integer',
+            'has_quiz'           => 'boolean',
+            'quiz_required'      => 'boolean',
+            'quiz_weight'        => 'nullable|numeric|min:0|max:100',
+            'quiz_passing_score' => 'nullable|numeric|min:0|max:20',
+            'quiz_attempts_allowed' => 'nullable|integer|min:1',
+            'intro_video_url'    => 'nullable|url',
+            'intro_video_title'  => 'nullable|string|max:255',
+            'text_content'       => 'nullable|string',
+            'objectives'         => 'nullable|array',
+            'has_document'       => 'boolean',
+            'document_title'     => 'nullable|string|max:255',
+            'document_url'       => 'nullable|url',
+            'document_name'      => 'nullable|string|max:255',
+            'order_in_course'    => 'nullable|integer|min:1'
         ]);
 
 
@@ -213,6 +256,14 @@ class ModuleController extends Controller
                     Storage::disk('media')->delete($module->thumbnail_path);
                 }
                 $validated['thumbnail_path'] = $request->file('thumbnail_path')->store("courses/modules/thumbnails", 'media');
+            }
+
+            // Convertir les booléens
+            $boolFields = ['has_quiz', 'quiz_required', 'has_document', 'is_locked'];
+            foreach ($boolFields as $f) {
+                if ($request->has($f)) {
+                    $validated[$f] = filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN);
+                }
             }
 
             $module->update($validated);
@@ -278,14 +329,22 @@ class ModuleController extends Controller
     public function storeLesson(Request $request, Module $module)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'type'        => 'required|in:video,pdf,quiz,text,link',
-            'duration'    => 'nullable|string', // Format HH:MM:SS ou MM:SS
-            'content'     => 'nullable|string', // Pour le type 'text'
-            'video_url'   => 'nullable|url|required_if:type,video',
-            'video_source'=> 'nullable|string|in:vimeo,youtube,s3,wistia',
-            'is_free'     => 'boolean',
-            'status'      => 'required|in:draft,active'
+            'title'            => 'required|string|max:255',
+            'type'             => 'required|in:video,pdf,quiz,text,link',
+            'lesson_type'      => 'nullable|string|max:50',
+            'duration'         => 'nullable|string',
+            'content'          => 'nullable|string',
+            'content_text'     => 'nullable|string',
+            'content_html'     => 'nullable|string',
+            'video_url'        => 'nullable|url|required_if:type,video',
+            'video_source'     => 'nullable|string|in:vimeo,youtube,s3,wistia',
+            'video_duration'   => 'nullable|integer|min:0',
+            'is_free'          => 'boolean',
+            'status'           => 'required|in:draft,active',
+            'has_attachment'   => 'boolean',
+            'attachment_title' => 'nullable|string|max:255',
+            'is_sequential'    => 'boolean',
+            'quiz_id'          => 'nullable|integer|exists:exams,id'
         ]);
 
         DB::beginTransaction();
@@ -297,11 +356,19 @@ class ModuleController extends Controller
             $lesson->uuid        = (string) Str::uuid();
             $lesson->title       = $validated['title'];
             $lesson->type        = $validated['type'];
+            $lesson->lesson_type = $validated['lesson_type'] ?? $validated['type'];
             $lesson->duration    = $this->normalizeDuration($validated['duration']);
             $lesson->content     = $validated['content'];
+            $lesson->content_text = $validated['content_text'] ?? null;
+            $lesson->content_html = $validated['content_html'] ?? null;
             $lesson->is_free     = $validated['is_free'] ?? false;
             $lesson->status      = $validated['status'];
             $lesson->order       = $maxOrder + 1;
+            $lesson->video_duration = $validated['video_duration'] ?? null;
+            $lesson->has_attachment = $validated['has_attachment'] ?? false;
+            $lesson->attachment_title = $validated['attachment_title'] ?? null;
+            $lesson->is_sequential = $validated['is_sequential'] ?? false;
+            $lesson->quiz_id     = $validated['quiz_id'] ?? null;
 
             // Logique spécifique aux métadonnées vidéo
             if ($lesson->type === self::TYPE_VIDEO) {
@@ -330,17 +397,35 @@ class ModuleController extends Controller
     public function updateLesson(Request $request, Lesson $lesson)
     {
         $validated = $request->validate([
-            'title'    => 'required|string|max:255',
-            'type'     => 'required|string',
-            'duration' => 'nullable|string',
-            'status'   => 'required|string',
-            'is_free'  => 'boolean',
-            'content'  => 'nullable|string'
+            'title'            => 'required|string|max:255',
+            'type'             => 'required|string',
+            'lesson_type'      => 'nullable|string|max:50',
+            'duration'         => 'nullable|string',
+            'status'           => 'required|string',
+            'is_free'          => 'boolean',
+            'content'          => 'nullable|string',
+            'content_text'     => 'nullable|string',
+            'content_html'     => 'nullable|string',
+            'video_url'        => 'nullable|url',
+            'video_duration'   => 'nullable|integer|min:0',
+            'has_attachment'   => 'boolean',
+            'attachment_title' => 'nullable|string|max:255',
+            'is_sequential'    => 'boolean',
+            'quiz_id'          => 'nullable|integer|exists:exams,id'
         ]);
 
         DB::beginTransaction();
         try {
             $oldState = $lesson->toArray();
+            
+            // Convertir les booléens
+            $boolFields = ['is_free', 'has_attachment', 'is_sequential'];
+            foreach ($boolFields as $f) {
+                if ($request->has($f)) {
+                    $validated[$f] = filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN);
+                }
+            }
+            
             $lesson->update($validated);
 
             // Gestion de l'upload de ressources si présentes

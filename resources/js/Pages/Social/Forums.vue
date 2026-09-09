@@ -338,7 +338,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <i class="pi pi-globe text-3xl text-indigo-300"></i>
                         </div>
                         <div>
-                            <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-white mb-1">Hub Communautaire</h1>
+                            <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-white mb-1">Communauté</h1>
                             <p class="text-indigo-200/90 font-medium text-sm max-w-lg leading-relaxed">
                                 {{ isInstructor ? "Espace Professeur : Gérez vos évaluations, animez vos groupes et interagissez avec les étudiants." : "Espace Étudiant : Discutez, collaborez sur le forum et remettez vos devoirs." }}
                             </p>

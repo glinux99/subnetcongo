@@ -101,8 +101,8 @@ const model = computed(() => {
                     icon: 'pi pi-fw pi-check-circle',
                     items: [
                         { label: 'Quiz & Tests', icon: 'pi pi-fw pi-pencil', to: r('exams.index') },
-                        { label: 'Banque de Questions', icon: 'pi pi-fw pi-database', to: r('questions.index') },
-                        { label: 'Corrections', icon: 'pi pi-fw pi-user-edit', to: r('gradings.edit') },
+                        { label: 'Banque de Questions', icon: 'pi pi-fw pi-database', to: r('squestions.index') },
+                        { label: 'Corrections', icon: 'pi pi-fw pi-user-edit', to: r('sgradings.edit') },
                         { label: 'Certificats', icon: 'pi pi-fw pi-verified', to: r('certificates.index'), badge: badges.value.certificates },
                     ]
                 },
@@ -147,6 +147,9 @@ const model = computed(() => {
                 { label: 'Forums & Discussions', icon: 'pi pi-fw pi-comments', to: r('social.forum.index'), badge: badges.value.forum_pending },
                 { label: 'Support & Tickets', icon: 'pi pi-fw pi-ticket', to: r('social.support.index'), badge: badges.value.tickets_pending },
                 { label: 'Messages du site web', icon: 'pi pi-fw pi-inbox', to: r('admin.messages.index') },
+                { label: 'Boîte email (IMAP)', icon: 'pi pi-fw pi-envelope', to: r('admin.emails.index'), badge: badges.value.unread_emails },
+                { label: 'Nouveau message email', icon: 'pi pi-fw pi-send', to: r('admin.emails.compose') },
+                { label: 'Modèles d\'emails', icon: 'pi pi-fw pi-file-edit', to: r('admin.email-templates.index') },
             ]
         },
         {
