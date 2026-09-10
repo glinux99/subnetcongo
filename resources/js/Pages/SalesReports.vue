@@ -146,7 +146,7 @@ watch(selectedReportType, fetchReportData);
                 
                 <!-- ── KPI INSIGHTS ── -->
                 <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div v-for="stat in kpiStats" :key="stat.label" class="bg-white p-8 rounded-[1.5rem] border border-slate-200/60 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+                    <div v-for="stat in kpiStats" :key="stat.label" class="bg-white p-8 rounded-[1rem] border border-slate-200/60 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
                         <div class="relative z-10">
                             <div :class="`bg-${stat.c}-50 text-${stat.c}-600`" class="w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
                                 <i :class="['pi', stat.i, 'text-xl']"></i>
@@ -240,7 +240,7 @@ watch(selectedReportType, fetchReportData);
         <!-- ── TRANSACTION INSPECTOR DRAWER ── -->
         <Drawer v-model:visible="transactionDrawer" position="right" header="Financial Audit" class="!w-[500px] !rounded-l-[3rem]">
             <div v-if="selectedRow" class="space-y-8 p-4">
-                <div class="bg-[#0F172A] p-10 rounded-[1.5rem] text-white relative overflow-hidden shadow-2xl">
+                <div class="bg-[#0F172A] p-10 rounded-[1rem] text-white relative overflow-hidden shadow-2xl">
                     <div class="absolute -top-10 -right-10 w-48 h-48 bg-red-600/10 rounded-full blur-3xl"></div>
                     <p class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mb-4">Inspection ID: #{{ selectedRow.id || 'N/A' }}</p>
                     <h2 class="text-3xl font-black italic tracking-tighter uppercase leading-none">Détails <br/> Transactionnels</h2>

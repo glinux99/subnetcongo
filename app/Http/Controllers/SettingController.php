@@ -24,13 +24,14 @@ use App\Models\Setting;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, DB, Redirect, Artisan, Storage, Cache, Log, Http, Mail, Validator};
+use Illuminate\Support\Facades\{Auth, DB, Redirect, Artisan, Storage, Cache, Log, Http, Mail, Validator, Hash};
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\Rule;
-
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 class SettingController extends Controller
 {
     /**
@@ -82,62 +83,34 @@ class SettingController extends Controller
      *
      * @return \Inertia\Response
      */
-    public function index()
-    {
-        // 1.1 Sécurité : Seuls les utilisateurs avec le rôle 'super-admin' accèdent ici
-        if (!Auth::user()->hasRole('super-admin')) {
-            abort(403, 'Accès non autorisé au panneau de contrôle système.');
-        }
 
-        // 1.2 Hydratation des paramètres depuis la base de données
-        $dbSettings = Setting::all()->pluck('value', 'key');
 
-        // 1.3 Assemblage du schéma de configuration global
-        $settings = [
-            'general' => $this->hydrateModule('general', $dbSettings),
-            'branding' => $this->hydrateModule('branding', $dbSettings),
-            'lms' => $this->hydrateModule('lms', $dbSettings),
-            'localization' => $this->hydrateModule('localization', $dbSettings),
-            'mail' => $this->hydrateMailConfig(),
-            'security' => $this->hydrateModule('security', $dbSettings),
-            'advanced' => [
-                'maintenance_mode' => app()->isDownForMaintenance(),
-                'debug_mode' => config('app.debug'),
-                'cache_driver' => config('cache.default'),
-                'analytics_id' => $dbSettings->get('analytics_id', 'G-XXXXXXXXXX'),
-                'server_info' => $this->getServerInfo(),
-                'last_backup' => $dbSettings->get('last_backup_at', 'Jamais'),
-            ]
-        ];
+public function index(Request $request)
+{
+    // L'utilisateur que l'on est en train de modifier 
+    // (Auth::user() si c'est "Mon Profil", ou bien le User ciblé si c'est un panel d'administration)
+    $user = Auth::user(); 
 
-        // 1.4 Injection des dictionnaires pour les listes déroulantes du frontend
-        return Inertia::render('Settings', [
-            'settings' => $settings,
-            'dictionaries' => [
-                'languages' => [
-                    ['name' => 'Français (RDC)', 'code' => 'fr'],
-                    ['name' => 'English (US)', 'code' => 'en'],
-                    ['name' => 'Lingala', 'code' => 'ln'],
-                    ['name' => 'Swahili', 'code' => 'sw']
-                ],
-                'timezones' => $this->getTimezonesList(),
-                'currencies' => [
-                    ['label' => 'US Dollar ($)', 'value' => 'USD'],
-                    ['label' => 'Franc Congolais (FC)', 'value' => 'CDF'],
-                    ['label' => 'Euro (€)', 'value' => 'EUR']
-                ],
-                'mailDrivers' => [
-                    ['label' => 'SMTP Server', 'value' => 'smtp'],
-                    ['label' => 'Mailgun API', 'value' => 'mailgun'],
-                    ['label' => 'Amazon SES', 'value' => 'ses'],
-                    ['label' => 'Postmark', 'value' => 'postmark']
-                ],
-                'cacheDrivers' => ['file', 'database', 'redis', 'memcached']
-            ],
-            'system_health' => $this->getSystemHealthScore($settings)
-        ]);
-    }
+    // Vérifier si l'utilisateur connecté est Super Admin
+    $isSuperAdmin = Auth::user()->hasRole('super-admin'); // ou 'admin', selon votre base de données
 
+    $data = [
+        'user' => $user,
+        'regions' =>[],
+        'logins' => $user->logins()->latest()->take(10)->get(), // Adapté selon votre logique
+        
+        // --- NOUVELLES PROPS (Spatie + Administration) ---
+        'isSuperAdmin' => $isSuperAdmin,
+        'availableRoles' => $isSuperAdmin ? Role::select('id', 'name')->get() : [],
+        'availablePermissions' => $isSuperAdmin ? Permission::select('id', 'name')->get() : [],
+        
+        // Rôles et permissions actuels de cet utilisateur
+        'userRoles' => $isSuperAdmin ? $user->roles->pluck('name') : [],
+        'userPermissions' => $isSuperAdmin ? $user->roles->getDirectPermissions()->pluck('name') : [],
+    ];
+
+    return Inertia::render('Configurations/Users/Settings', $data);
+}
     /**
      * --------------------------------------------------------------------------
      * SECTION 2 : MOTEUR DE MISE À JOUR ATOMIQUE
@@ -554,6 +527,113 @@ class SettingController extends Controller
     }
 
     /**
+     * --------------------------------------------------------------------------
+     * SECTION 13 : PROFIL UTILISATEUR (PARAMÈTRES PERSONNELS)
+     * --------------------------------------------------------------------------
+     */
+
+    /**
+     * Page des paramètres utilisateur (profil, mot de passe, sessions actives).
+     */
+    public function userSettings()
+    {
+        $user = Auth::user();
+        
+        // Sessions actives de l'utilisateur
+        $sessions = $user->tokens ?? collect();
+        
+        return Inertia::render('User/Settings', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar ?? $user->profile_photo_url ?? null,
+                'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+                'created_at' => $user->created_at?->toIso8601String(),
+                'last_login_at' => $user->last_login_at?->toIso8601String(),
+            ],
+            'sessions' => $sessions,
+        ]);
+    }
+
+    /**
+     * Met à jour le profil de l'utilisateur connecté.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        
+        if ($request->hasFile('avatar')) {
+            // Supprimer l'ancien avatar s'il existe
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+        
+        $user->save();
+        
+        return Redirect::back()->with('message', 'Profil mis à jour avec succès.');
+    }
+
+    /**
+     * Met à jour le mot de passe de l'utilisateur connecté.
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return Redirect::back()->withErrors(['current_password' => 'Le mot de passe actuel est incorrect.']);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Révoquer tous les tokens sauf le current
+        $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()?->id)->delete();
+
+        return Redirect::back()->with('message', 'Mot de passe mis à jour. Vous devrez vous reconnecter sur vos autres appareils.');
+    }
+
+    /**
+     * Déconnecte une session spécifique (token d'accès).
+     */
+    public function logoutSession(Request $request, $sessionId)
+    {
+        $user = Auth::user();
+        
+        // Trouver et supprimer le token
+        $token = $user->tokens()->find($sessionId);
+        
+        if ($token) {
+            // Ne pas supprimer le token actuel
+            if ($token->id === $request->user()->currentAccessToken()?->id) {
+                return Redirect::back()->withErrors(['error' => 'Vous ne pouvez pas révoquer votre session actuelle.']);
+            }
+            $token->delete();
+            return Redirect::back()->with('message', 'Session révoquée avec succès.');
+        }
+
+        return Redirect::back()->withErrors(['error' => 'Session introuvable.']);
+    }
+
+    /**
      * Valide l'intégralité des champs de configuration.
      */
     private function validateSettings(Request $request)
@@ -680,7 +760,30 @@ class SettingController extends Controller
 
         return Redirect::back()->with('message', 'Clés API synchronisées.');
     }
+public function updateAdminAccess(Request $request, User $user)
+{
+    // Seul un super admin peut faire ça
+    abort_if(!Auth::user()->hasRole('super-admin'), 403);
 
+    $request->validate([
+        'roles' => 'array',
+        'permissions' => 'array',
+        'status' => 'string|in:ACTIVE,INACTIVE,SUSPENDED',
+        'hourly_rate' => 'numeric|min:0'
+    ]);
+
+    // Synchroniser les rôles et permissions spatie
+    $user->syncRoles($request->roles ?? []);
+    $user->syncPermissions($request->permissions ?? []);
+
+    // Mettre à jour les champs spéciaux (Status & Taux horaire)
+    $user->update([
+        'status' => $request->status,
+        'hourly_rate' => $request->hourly_rate,
+    ]);
+
+    return back()->with('success', 'Privilèges et données administrateur mis à jour.');
+}
     /**
      * --------------------------------------------------------------------------
      * SECTION 12 : SÉCURITÉ RÉSEAU (IP WHITELISTING)

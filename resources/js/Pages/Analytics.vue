@@ -238,7 +238,7 @@ onMounted(() => {
                     { label: 'Apprenants Actifs', val: '8,420', trend: '+5.2%', color: 'emerald', icon: 'pi-users' },
                     { label: 'Taux de Complétion', val: '74.8%', trend: '+2.1%', color: 'amber', icon: 'pi-verified' },
                     { label: 'Nouveaux Inscrits', val: '1,250', trend: '+22.4%', color: 'rose', icon: 'pi-user-plus' }
-                ]" :key="kpi.label" class="bg-white p-8 rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
+                ]" :key="kpi.label" class="bg-white p-8 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
                     <div v-if="loading"><Skeleton width="100%" height="100px" /></div>
                     <div v-else>
                         <div class="flex justify-between items-start mb-6">
@@ -376,7 +376,7 @@ onMounted(() => {
                         </template>
 
                         <div class="p-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
-                            <div class="lg:col-span-4 flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                            <div class="lg:col-span-4 flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-[1rem] border border-slate-100">
                                 <h4 class="text-slate-400 font-black uppercase text-xs tracking-[0.2em] mb-6">Net Promoter Score</h4>
                                 <Knob v-model="value" :readonly="true" :size="150" valueTemplate="{value}%" valueColor="#6366F1" rangeColor="#E2E8F0" />
                                 <p class="mt-6 text-sm text-slate-600 font-medium">92% des apprenants de SubnetCongo recommanderaient la plateforme à leurs proches.</p>

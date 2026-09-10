@@ -16,6 +16,9 @@ return new class extends Migration {
             $table->enum('type', ['video', 'document', 'quiz', 'assignment'])->default('video');
             $table->longText('content')->nullable();
             $table->string('video_url')->nullable();
+            $table->string('document_title')->nullable();
+            $table->string('document_url')->nullable();
+            
             $table->enum('video_source', ['youtube', 'vimeo', 'custom'])->nullable();
             $table->unsignedInteger('duration_minutes')->nullable();
             $table->boolean('is_free_preview')->default(false);

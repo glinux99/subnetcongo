@@ -10,20 +10,47 @@
  * @module  Media/Library
  */
 
-import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, reactive, computed, onMounted, watch } from 'vue';
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { ref, reactive, computed, watch } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { FilterMatchMode } from '@primevue/core/api';
 import debounce from 'lodash/debounce';
+
+// --- COMPOSANTS DE LAYOUT ---
+import AppLayout from '@/sakai/layout/AppLayout.vue';
+
+// --- COMPOSANTS PRIMEVUE ---
+import Breadcrumb from 'primevue/breadcrumb';
+import Button from 'primevue/button';
+import Divider from 'primevue/divider';
+import ProgressBar from 'primevue/progressbar';
+import ScrollPanel from 'primevue/scrollpanel';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import InputText from 'primevue/inputtext';
+import Dropdown from 'primevue/dropdown';
+import Tag from 'primevue/tag';
+import Dialog from 'primevue/dialog';
+import Chip from 'primevue/chip';
+import InputSwitch from 'primevue/inputswitch';
+import Sidebar from 'primevue/sidebar';
+import Badge from 'primevue/badge';
+import Textarea from 'primevue/textarea';
+import Paginator from 'primevue/paginator';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Toast from 'primevue/toast';
+
+// Déclaration de directive (utile si non enregistrée globalement dans app.js)
+import Tooltip from 'primevue/tooltip';
+const vTooltip = Tooltip;
 
 // --- PROPS DÉFINIES PAR LE MEDIA_LIBRARY_CONTROLLER ---
 const props = defineProps({
-    assets: Object,         // Données paginées (Inertia Paginated Collection)
-    filters: Object,        // Filtres actifs (search, category, folder, etc.)
-    folders: Array,         // Liste des dossiers virtuels uniques
-    storageStats: Object,   // Statistiques d'utilisation (GB, %, count)
-    permissions: Object     // can_upload, can_delete, etc.
+    assets: { type: Object, default: () => ({ data: [], current_page: 1, total: 0, per_page: 15 }) },
+    filters: { type: Object, default: () => ({}) },
+    folders: { type: Array, default: () => [] },
+    storageStats: { type: Object, default: () => ({ usage_percent: 0, by_type: [] }) },
+    permissions: { type: Object, default: () => ({}) }
 });
 
 // --- INITIALISATION ---
@@ -33,8 +60,10 @@ const layout = ref('grid');
 const uploadDialog = ref(false);
 const fileSidebar = ref(false);
 const folderDialog = ref(false);
-const bulkActionMenu = ref();
-const cm = ref();
+
+// --- DONNÉES SÉCURISÉES (COMPUTED) ---
+const storageValue = computed(() => props.storageStats?.total_human?.split(' ')[0] || '0');
+const storageUnit = computed(() => props.storageStats?.total_human?.split(' ')[1] || 'B');
 
 // --- FILTRAGE RÉACTIF (SERVER-SIDE SYNC) ---
 const serverFilters = reactive({
@@ -45,22 +74,28 @@ const serverFilters = reactive({
     sort_order: props.filters.sort_order || 'desc'
 });
 
-// Watcher avec Debounce pour limiter les appels serveurs
-watch(serverFilters, debounce(() => {
+// Fonction Debounce propre pour éviter les requêtes inutiles
+const fetchMedia = debounce(() => {
     loading.value = true;
     router.get(route('media.index'), serverFilters, {
         preserveState: true,
         replace: true,
         onFinish: () => loading.value = false
     });
-}, 400));
+}, 400);
+
+// Écouteur des changements de filtres
+watch(serverFilters, () => {
+    fetchMedia();
+}, { deep: true });
 
 // --- FORMULAIRES INERTIA ---
 const uploadForm = useForm({
     files: [],
     folder: serverFilters.folder,
     collection: 'library',
-    is_private: false
+    is_private: false,
+    auto_optimize: true // Lié au toggle dans la vue
 });
 
 const metadataForm = useForm({
@@ -91,13 +126,25 @@ const breadcrumbItems = computed(() => {
 const onPage = (event) => {
     router.get(route('media.index'), {
         ...serverFilters,
-        page: event.page + 1,
+        page: event.page + 1, // Inertia commence à la page 1, PrimeVue à 0
         per_page: event.rows
     }, { preserveState: true });
 };
 
 const selectFolder = (folderName) => {
     serverFilters.folder = folderName;
+};
+
+const createFolder = () => {
+    if (!folderForm.name.trim()) return;
+    
+    // Le dossier virtuel prend effet dès qu'on s'y déplace
+    serverFilters.folder = folderForm.name;
+    uploadForm.folder = folderForm.name;
+    folderDialog.value = false;
+    
+    toast.add({ severity: 'info', summary: 'Dossier virtuel actif', detail: `Le dossier "${folderForm.name}" sera créé physiquement lors du premier upload.`, life: 4000 });
+    folderForm.reset();
 };
 
 const openInspector = (file) => {
@@ -113,32 +160,47 @@ const openInspector = (file) => {
 
 const updateMetadata = () => {
     metadataForm.put(route('media.update', metadataForm.id), {
+        preserveScroll: true,
         onSuccess: () => {
             toast.add({ severity: 'success', summary: 'Mis à jour', detail: 'Métadonnées synchronisées.', life: 3000 });
             fileSidebar.value = false;
+        },
+        onError: () => {
+            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de mettre à jour les métadonnées.', life: 4000 });
         }
     });
 };
 
 const deleteMedia = (id) => {
-    if (confirm('Supprimer cet asset définitivement du cloud ?')) {
+    if (confirm('Voulez-vous supprimer cet asset définitivement du cloud ?')) {
         router.delete(route('media.destroy', id), {
+            preserveScroll: true,
             onSuccess: () => toast.add({ severity: 'warn', summary: 'Supprimé', detail: 'Asset retiré du stockage.', life: 3000 })
         });
     }
 };
 
 const handleUpload = () => {
+    if (!uploadForm.files || uploadForm.files.length === 0) {
+        toast.add({ severity: 'warn', summary: 'Attention', detail: 'Veuillez sélectionner au moins un fichier.', life: 3000 });
+        return;
+    }
+
     uploadForm.post(route('media.store'), {
+        preserveScroll: true,
         onSuccess: () => {
             toast.add({ severity: 'success', summary: 'Cloud Sync', detail: 'Fichiers envoyés avec succès.', life: 3000 });
             uploadDialog.value = false;
             uploadForm.reset();
+        },
+        onError: () => {
+            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Une erreur est survenue lors de l\'envoi des fichiers.', life: 5000 });
         }
     });
 };
 
 const copyCdnUrl = (file) => {
+    if(!file?.cdn_url) return;
     navigator.clipboard.writeText(file.cdn_url);
     toast.add({ severity: 'info', summary: 'Lien Copié', detail: 'URL CDN prête pour l\'intégration.', life: 2000 });
 };
@@ -158,12 +220,6 @@ const getFileIcon = (type) => {
     };
     return map[type] || 'pi pi-file text-slate-400';
 };
-
-const getCategoryStats = (type) => {
-    // Simulé ou extrait de props.storageStats.by_type
-    return props.storageStats.by_type.find(t => t.mime_type.includes(type)) || { count: 0, size: 0 };
-};
-
 </script>
 
 <template>
@@ -182,7 +238,7 @@ const getCategoryStats = (type) => {
                             <i class="pi pi-cloud text-white text-3xl"></i>
                         </div>
                         <div>
-                            <h1 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Médiathèque Cloud</h1>
+                            <h1 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Médiathèque Cloud xx</h1>
                             <p class="text-slate-500 font-medium italic">Stockage objet S3 & Distribution CDN <span class="text-indigo-600 font-bold underline">SubnetCongo</span>.</p>
                         </div>
                     </div>
@@ -208,16 +264,16 @@ const getCategoryStats = (type) => {
                             <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-8 italic">Infrastructure Cloud</h3>
 
                             <div class="flex items-baseline gap-2 mb-4">
-                                <span class="text-5xl font-black italic tracking-tighter">{{ props.storageStats.total_human.split(' ')[0] }}</span>
-                                <span class="text-indigo-400 font-bold text-xl uppercase">{{ props.storageStats.total_human.split(' ')[1] }}</span>
+                                <span class="text-5xl font-black italic tracking-tighter">{{ storageValue }}</span>
+                                <span class="text-indigo-400 font-bold text-xl uppercase">{{ storageUnit }}</span>
                             </div>
 
                             <div class="space-y-4">
                                 <div class="flex justify-between text-[10px] font-black uppercase text-slate-400">
                                     <span>Utilisation du Quota</span>
-                                    <span>{{ props.storageStats.usage_percent }}%</span>
+                                    <span>{{ props.storageStats?.usage_percent || 0 }}%</span>
                                 </div>
-                                <ProgressBar :value="props.storageStats.usage_percent" :showValue="false" class="h-2 rounded-full bg-white/10" color="#6366F1" />
+                                <ProgressBar :value="props.storageStats?.usage_percent || 0" :showValue="false" class="h-2 rounded-full bg-white/10" color="#6366F1" />
                             </div>
 
                             <div class="mt-10 flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10">
@@ -239,7 +295,7 @@ const getCategoryStats = (type) => {
                                 { id: 'audio', label: 'Archives Audio', icon: 'pi pi-volume-up', color: 'text-emerald-500', bg: 'bg-emerald-50' }
                             ]" :key="cat.id"
                                 @click="serverFilters.category = cat.id"
-                                :class="['flex items-center justify-between p-4 rounded-[1.5rem] transition-all cursor-pointer group', serverFilters.category === cat.id ? 'bg-indigo-600 text-white shadow-xl translate-x-2' : 'hover:bg-slate-50']">
+                                :class="['flex items-center justify-between p-4 rounded-[1rem] transition-all cursor-pointer group', serverFilters.category === cat.id ? 'bg-indigo-600 text-white shadow-xl translate-x-2' : 'hover:bg-slate-50']">
 
                                 <div class="flex items-center gap-4">
                                     <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm', serverFilters.category === cat.id ? 'bg-white/20 text-white' : cat.bg + ' ' + cat.color]">
@@ -274,7 +330,7 @@ const getCategoryStats = (type) => {
                 <main class="col-span-12 lg:col-span-9 space-y-8">
 
                     <!-- Search & Layout Tools -->
-                    <div class="bg-white p-6 rounded-[1.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="bg-white p-6 rounded-[1rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="flex items-center gap-6 w-full md:w-auto">
                             <div class="flex bg-slate-100 p-1.5 rounded-[1.2rem] shadow-inner">
                                 <Button icon="pi pi-th-large" @click="layout = 'grid'" :class="['p-button-sm p-button-text px-4', layout === 'grid' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-400']" />
@@ -314,7 +370,7 @@ const getCategoryStats = (type) => {
 
                     <!-- GRID VIEW --- -->
                     <div v-if="layout === 'grid'" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
-                        <div v-for="file in props.assets.data" :key="file.id"
+                        <div v-for="file in props.assets?.data" :key="file.id"
                             @click="openInspector(file)"
                             class="group relative bg-white border border-slate-100 rounded-[3.5rem] p-5 hover:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.2)] hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
 
@@ -322,7 +378,7 @@ const getCategoryStats = (type) => {
                             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                             <!-- Thumbnail Wrapper -->
-                            <div class="aspect-square bg-slate-50 rounded-[1.5rem] overflow-hidden flex items-center justify-center relative border border-slate-50 shadow-inner">
+                            <div class="aspect-square bg-slate-50 rounded-[1rem] overflow-hidden flex items-center justify-center relative border border-slate-50 shadow-inner">
                                 <img v-if="file.type === 'image'" :src="file.thumbnail" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                 <div v-else class="flex flex-col items-center gap-4">
                                     <i :class="[getFileIcon(file.type), 'text-6xl opacity-30 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500']"></i>
@@ -336,7 +392,7 @@ const getCategoryStats = (type) => {
                                 </div>
 
                                 <div class="absolute top-4 left-4">
-                                    <Tag :value="file.mime_type.split('/')[1].toUpperCase()" severity="info" class="text-[8px] font-black tracking-[0.2em] rounded-lg px-3 py-1 shadow-sm" />
+                                    <Tag :value="file.mime_type?.split('/')[1]?.toUpperCase() || file.type" severity="info" class="text-[8px] font-black tracking-[0.2em] rounded-lg px-3 py-1 shadow-sm" />
                                 </div>
                             </div>
 
@@ -346,7 +402,7 @@ const getCategoryStats = (type) => {
                                 <div class="flex justify-between items-center">
                                     <div class="flex items-center gap-2">
                                         <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                        <span class="text-[9px] font-black text-slate-400 uppercase">{{ file.size }}</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase">{{ file.size || 'N/A' }}</span>
                                     </div>
                                     <span class="text-[9px] font-bold text-slate-300 italic">{{ file.created_at }}</span>
                                 </div>
@@ -359,7 +415,7 @@ const getCategoryStats = (type) => {
 
                     <!-- LIST VIEW --- -->
                     <div v-else class="bg-white rounded-[4rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-                        <DataTable :value="props.assets.data" class="p-datatable-custom" responsiveLayout="stack">
+                        <DataTable :value="props.assets?.data" class="p-datatable-custom" responsiveLayout="stack">
                             <Column field="name" header="Fichier Asset" style="min-width: 25rem">
                                 <template #body="{ data }">
                                     <div class="flex items-center gap-6 py-2">
@@ -372,7 +428,7 @@ const getCategoryStats = (type) => {
                                             <div class="flex items-center gap-3 mt-1">
                                                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ data.mime_type }}</span>
                                                 <Divider layout="vertical" class="h-2 m-0" />
-                                                <span class="text-[9px] font-bold text-indigo-400 uppercase">{{ data.author }}</span>
+                                                <span class="text-[9px] font-bold text-indigo-400 uppercase">{{ data.author || 'Système' }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -383,7 +439,7 @@ const getCategoryStats = (type) => {
 
                             <Column field="folder" header="Dossier">
                                 <template #body="{ data }">
-                                    <Chip :label="data.folder" icon="pi pi-folder" class="text-[9px] font-black uppercase bg-slate-50" />
+                                    <Chip :label="data.folder || '/'" icon="pi pi-folder" class="text-[9px] font-black uppercase bg-slate-50" />
                                 </template>
                             </Column>
 
@@ -403,7 +459,7 @@ const getCategoryStats = (type) => {
                     </div>
 
                     <!-- EMPTY STATE --- -->
-                    <div v-if="props.assets.data.length === 0" class="py-32 text-center bg-white rounded-[4rem] border-4 border-dashed border-slate-100">
+                    <div v-if="props.assets?.data?.length === 0" class="py-32 text-center bg-white rounded-[4rem] border-4 border-dashed border-slate-100">
                         <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
                             <i class="pi pi-search-plus text-6xl text-slate-200"></i>
                         </div>
@@ -414,7 +470,7 @@ const getCategoryStats = (type) => {
                     </div>
 
                     <!-- PAGINATION --- -->
-                    <div class="flex justify-center mt-12">
+                    <div v-if="props.assets?.total > 0" class="flex justify-center mt-12">
                         <Paginator
                             :rows="props.assets.per_page"
                             :totalRecords="props.assets.total"
@@ -441,7 +497,7 @@ const getCategoryStats = (type) => {
                             Le moteur SubNetCongo peut automatiser cette tâche lors de l'upload.
                         </p>
                         <div class="flex gap-4">
-                            <Button label="En savoir plus sur le transcodage" class="p-button-warning px-8 rounded-2xl font-black italic shadow-xl shadow-amber-900/50" />
+                            <Button label="En savoir plus" class="p-button-warning px-8 rounded-2xl font-black italic shadow-xl shadow-amber-900/50" />
                             <Button label="Ignorer l'astuce" class="p-button-text p-button-white font-bold" />
                         </div>
                     </div>
@@ -475,9 +531,9 @@ const getCategoryStats = (type) => {
                 </div>
             </template>
 
-            <div class="p-8 space-y-8">
+            <form @submit.prevent="handleUpload" class="p-8 space-y-8">
                 <div class="p-16 border-4 border-dashed border-indigo-100 bg-indigo-50/30 rounded-[4rem] text-center flex flex-col items-center justify-center space-y-6 hover:bg-white hover:border-indigo-400 transition-all cursor-pointer group relative">
-                    <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-transform duration-500">
+                    <div class="w-24 h-24 bg-white rounded-[1rem] flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-transform duration-500">
                         <i class="pi pi-cloud-upload text-4xl"></i>
                     </div>
                     <div>
@@ -485,7 +541,6 @@ const getCategoryStats = (type) => {
                         <p class="text-slate-400 text-sm font-medium mt-2">Images, Vidéos (Max 500MB), Audio & Supports PDF</p>
                     </div>
 
-                    <!-- Real HTML File Input for Inertia -->
                     <input type="file" multiple class="absolute inset-0 opacity-0 cursor-pointer"
                         @change="(e) => uploadForm.files = Array.from(e.target.files)" />
 
@@ -511,23 +566,23 @@ const getCategoryStats = (type) => {
                             <span class="text-sm font-black text-slate-700 block italic">Auto-Optimisation</span>
                             <p class="text-[9px] text-slate-400 uppercase font-bold">Compression WebP intelligente</p>
                         </div>
-                        <InputSwitch :modelValue="true" />
+                        <InputSwitch v-model="uploadForm.auto_optimize" />
                     </div>
                 </div>
 
                 <div v-if="uploadForm.processing" class="space-y-2">
                     <div class="flex justify-between text-[10px] font-black uppercase text-indigo-600 italic">
                         <span>Flux de données vers S3...</span>
-                        <span>{{ uploadForm.progress?.percentage }}%</span>
+                        <span>{{ uploadForm.progress?.percentage || 0 }}%</span>
                     </div>
-                    <ProgressBar :value="uploadForm.progress?.percentage" :showValue="false" class="h-3 rounded-full" color="#6366F1" />
+                    <ProgressBar :value="uploadForm.progress?.percentage || 0" :showValue="false" class="h-3 rounded-full" color="#6366F1" />
                 </div>
-            </div>
+            </form>
 
             <template #footer>
                 <div class="flex justify-between items-center w-full p-8 border-t border-slate-50 bg-slate-50/50">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-black italic uppercase" @click="uploadDialog = false" />
-                    <Button label="Lancer la Synchronisation" icon="pi pi-check-circle"
+                    <Button type="button" label="Annuler" class="p-button-text p-button-secondary font-black italic uppercase" @click="uploadDialog = false" />
+                    <Button type="submit" label="Lancer la Synchronisation" icon="pi pi-check-circle"
                         :loading="uploadForm.processing"
                         class="p-button-primary px-12 py-4 rounded-[1rem] shadow-2xl shadow-indigo-200 font-black italic text-lg"
                         @click="handleUpload" />
@@ -544,16 +599,16 @@ const getCategoryStats = (type) => {
                     <i class="pi pi-search-plus absolute -right-10 -bottom-10 text-[12rem] text-white/5 rotate-12"></i>
 
                     <div class="relative z-10">
-                        <div class="aspect-video bg-white/5 rounded-[1.5rem] shadow-2xl overflow-hidden mb-8 border border-white/10 flex items-center justify-center group relative">
-                            <img v-if="metadataForm.id" :src="props.assets.data.find(f => f.id === metadataForm.id)?.thumbnail" class="w-full h-full object-contain" />
+                        <div class="aspect-video bg-white/5 rounded-[1rem] shadow-2xl overflow-hidden mb-8 border border-white/10 flex items-center justify-center group relative">
+                            <img v-if="metadataForm.id" :src="props.assets?.data?.find(f => f.id === metadataForm.id)?.thumbnail" class="w-full h-full object-contain" />
                             <div class="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                 <Button icon="pi pi-eye" label="Plein écran" class="p-button-white p-button-text font-black uppercase italic" />
                             </div>
                         </div>
                         <h2 class="text-2xl font-black text-white italic tracking-tighter break-all">{{ metadataForm.name }}</h2>
                         <div class="flex justify-center gap-3 mt-4">
-                            <Badge :value="props.assets.data.find(f => f.id === metadataForm.id)?.mime_type" severity="info" class="text-[9px] font-black uppercase" />
-                            <Badge :value="props.assets.data.find(f => f.id === metadataForm.id)?.size" severity="warning" class="text-[9px] font-black uppercase" />
+                            <Badge :value="props.assets?.data?.find(f => f.id === metadataForm.id)?.mime_type || 'Inconnu'" severity="info" class="text-[9px] font-black uppercase" />
+                            <Badge :value="props.assets?.data?.find(f => f.id === metadataForm.id)?.size || '0 B'" severity="warning" class="text-[9px] font-black uppercase" />
                         </div>
                     </div>
                 </div>
@@ -597,10 +652,10 @@ const getCategoryStats = (type) => {
                                     <span class="text-[9px] font-mono text-indigo-600 bg-indigo-50 px-2 py-1 rounded">eu-west-3</span>
                                 </div>
                                 <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-inner overflow-hidden">
-                                    <p class="text-[10px] font-mono text-slate-500 break-all leading-relaxed">{{ props.assets.data.find(f => f.id === metadataForm.id)?.cdn_url }}</p>
+                                    <p class="text-[10px] font-mono text-slate-500 break-all leading-relaxed">{{ props.assets?.data?.find(f => f.id === metadataForm.id)?.cdn_url || 'URL Non disponible' }}</p>
                                 </div>
                                 <Button label="Copier l'URL CDN" icon="pi pi-copy" class="p-button-text p-button-sm w-full font-black uppercase text-[10px]"
-                                    @click="copyCdnUrl(props.assets.data.find(f => f.id === metadataForm.id))" />
+                                    @click="copyCdnUrl(props.assets?.data?.find(f => f.id === metadataForm.id))" />
                             </div>
 
                             <div class="bg-indigo-900 p-8 rounded-[3rem] text-white shadow-xl relative overflow-hidden group">
@@ -630,8 +685,8 @@ const getCategoryStats = (type) => {
 
         <!-- --- MODAL : NOUVEAU DOSSIER --- -->
         <Dialog v-model:visible="folderDialog" modal header="Créer une unité de rangement" :style="{width: '450px'}" class="rounded-[3rem] overflow-hidden">
-            <div class="p-10 space-y-8">
-                <div class="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-inner">
+            <form @submit.prevent="createFolder" class="p-10 space-y-8">
+                <div class="w-20 h-20 bg-amber-50 rounded-[1rem] flex items-center justify-center text-amber-500 mx-auto shadow-inner">
                     <i class="pi pi-folder-plus text-3xl"></i>
                 </div>
 
@@ -642,20 +697,16 @@ const getCategoryStats = (type) => {
 
                 <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
                     <p class="text-[10px] text-slate-500 text-center font-medium italic leading-relaxed">
-                        Note : Les dossiers sont "virtuels". Un dossier n'existe que s'il contient au moins un asset numérique.
+                        Note : Les dossiers sont "virtuels". L'interface se déplacera dans ce dossier et il sera créé physiquement lors du premier upload.
                     </p>
                 </div>
-            </div>
 
-            <template #footer>
-                <div class="flex justify-center gap-3 p-8 border-t border-slate-50">
-                    <Button label="Abandonner" class="p-button-text p-button-secondary font-black italic uppercase" @click="folderDialog = false" />
-                    <Button label="Valider la création" icon="pi pi-check" class="p-button-primary px-8 py-3 rounded-2xl font-black italic shadow-lg" @click="folderDialog = false" />
+                <div class="flex justify-center gap-3 pt-6 border-t border-slate-50">
+                    <Button type="button" label="Abandonner" class="p-button-text p-button-secondary font-black italic uppercase" @click="folderDialog = false" />
+                    <Button type="submit" label="Valider la création" icon="pi pi-check" class="p-button-primary px-8 py-3 rounded-2xl font-black italic shadow-lg" />
                 </div>
-            </template>
+            </form>
         </Dialog>
-
-
 
     </AppLayout>
 </template>

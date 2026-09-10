@@ -226,7 +226,7 @@ const handleMainPick = (e) => { slideForm.main_image_file = e.target.files[0]; m
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div v-for="s in stats" :key="s.id" class="p-8 bg-slate-900 rounded-[1.5rem] border border-white/5 relative overflow-hidden group shadow-2xl">
+                        <div v-for="s in stats" :key="s.id" class="p-8 bg-slate-900 rounded-[1rem] border border-white/5 relative overflow-hidden group shadow-2xl">
                             <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
                             <div class="relative z-10 flex flex-col items-center text-center">
                                 <div class="w-14 h-14 rounded-xl bg-white/5 flex items-center justify-center mb-4 border border-white/10" :style="{ color: s.color }">
@@ -247,7 +247,7 @@ const handleMainPick = (e) => { slideForm.main_image_file = e.target.files[0]; m
             </div>
 
             <!-- ── DIALOG SLIDE V30 ── -->
-            <Dialog v-model:visible="showSlideDialog" modal header="Configuration Slide Hero" :style="{ width: '800px' }" class="!rounded-[1.5rem]">
+            <Dialog v-model:visible="showSlideDialog" modal header="Configuration Slide Hero" :style="{ width: '800px' }" class="!rounded-[1rem]">
                 <form @submit.prevent="saveSlide" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
                         <div><label class="text-[10px] font-black uppercase text-slate-400 block mb-2 tracking-widest">Badge</label><InputText v-model="slideForm.badge" class="w-full !rounded-xl !p-3 !bg-slate-50" /></div>

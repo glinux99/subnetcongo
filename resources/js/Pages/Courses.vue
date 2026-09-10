@@ -57,6 +57,7 @@ import AccordionTab from 'primevue/accordiontab';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Tooltip from 'primevue/tooltip';
 import Checkbox from 'primevue/checkbox';
+import RadioButton from 'primevue/radiobutton';
 
 // ======================================================================================
 // PROPS INERTIA
@@ -255,7 +256,7 @@ const tabValidation = computed(() => {
     return {
         general: courseForm.title.length > 3 && courseForm.category_id !== null,
         media: true, // Optionnel par défaut
-        curriculum: courseForm.sections.length > 0 && courseForm.sections[0].lessons?.length > 0,
+        curriculum: courseForm.sections.length > 0 && courseForm.sections.some(s => s.lessons && s.lessons.length > 0),
         seo: true,
         settings: courseForm.instructor_id !== null
     };
@@ -301,7 +302,6 @@ const editCourse = (data) => {
     courseForm.preview_video_url = courseData.preview_video_url || '';
     courseForm.tags = courseData.tags || [];
     courseForm.seo_metadata = courseData.seo_metadata || { title: '', description: '', keywords: '' };
-    courseForm.sections = courseData.sections || [];
     courseForm.is_featured = !!courseData.is_featured;
     courseForm.requires_enrollment = courseData.requires_enrollment ?? true;
     courseForm.certificate_enabled = !!courseData.certificate_enabled;
@@ -323,6 +323,51 @@ const editCourse = (data) => {
     courseForm.final_exam_weight = courseData.final_exam_weight || 0;
     courseForm.passing_score_20 = courseData.passing_score_20 || 10;
     courseForm.quiz_weight_total = courseData.quiz_weight_total || 80;
+
+    // Normalisation des sections/lessons pour l'édition
+    courseForm.sections = (courseData.sections || []).map(section => {
+        const normalizedSection = {
+            ...section,
+            has_intro_video: !!section.intro_video_url,
+            document_mode: section.document_url ? 'url' : 'url',
+        };
+
+        if (!normalizedSection.lessons) normalizedSection.lessons = [];
+        normalizedSection.lessons = normalizedSection.lessons.map(lesson => {
+            const normalizedLesson = {
+                ...lesson,
+                document_mode: lesson.document_url ? 'url' : 'url',
+                document_file: null,
+            };
+
+            // Parse inline quiz data from content JSON
+            if (lesson.type === 'quiz' && lesson.content) {
+                try {
+                    const contentData = JSON.parse(lesson.content);
+                    if (contentData && contentData.created_inline && Array.isArray(contentData.questions)) {
+                        normalizedLesson.quiz_mode = 'new';
+                        normalizedLesson.questions = contentData.questions.map(q => ({
+                            ...q,
+                            options: q.options || ['', ''],
+                            correct_answer: String(q.correct_answer ?? '0'),
+                            points: q.points || 1,
+                        }));
+                        normalizedLesson.new_quiz_title = contentData.quiz_title || lesson.title;
+                    } else {
+                        normalizedLesson.quiz_mode = 'existing';
+                    }
+                } catch (e) {
+                    normalizedLesson.quiz_mode = 'existing';
+                }
+            } else if (lesson.type === 'quiz') {
+                normalizedLesson.quiz_mode = 'existing';
+            }
+
+            return normalizedLesson;
+        });
+
+        return normalizedSection;
+    });
 
     activeEditorTab.value = 'general';
     courseDialog.value = true;
@@ -581,6 +626,49 @@ const getBlockPlaceholder = (type) => {
     return map[type] || 'Titre...';
 };
 
+const addQuestion = (block) => {
+    if (!block.questions) block.questions = [];
+    block.questions.push({
+        text: '',
+        type: 'multiple_choice',
+        options: ['', ''],
+        correct_answer: '0',
+        points: 1
+    });
+};
+
+const removeQuestion = (block, qIdx) => {
+    if (block.questions && block.questions.length > 0) {
+        block.questions.splice(qIdx, 1);
+    }
+};
+
+const addQuestionOption = (question) => {
+    if (question.options.length < 6) {
+        question.options.push('');
+    }
+};
+
+const removeQuestionOption = (question, oIdx) => {
+    if (question.options && question.options.length > 2) {
+        question.options.splice(oIdx, 1);
+        if (question.correct_answer === String(oIdx)) {
+            question.correct_answer = '0';
+        } else if (parseInt(question.correct_answer) > oIdx) {
+            question.correct_answer = String(parseInt(question.correct_answer) - 1);
+        }
+    }
+};
+
+const onDocumentSelect = (event, sectionIndex, blockIndex) => {
+    const file = event.files[0];
+    if (file) {
+        courseForm.sections[sectionIndex].lessons[blockIndex].document_file = file;
+        courseForm.sections[sectionIndex].lessons[blockIndex].document_url = '';
+        courseForm.sections[sectionIndex].lessons[blockIndex].document_mode = 'file';
+    }
+};
+
 const removeSection = (index) => {
     confirm.require({
         message: 'Supprimer ce module entraînera la suppression de toutes les leçons qu\'il contient. Confirmer ?',
@@ -634,9 +722,14 @@ const addLesson = (sectionIndex, type = 'video') => {
         case 'document':
             block.document_url = '';
             block.document_title = '';
+            block.document_mode = 'url';
+            block.document_file = null;
             block.title = 'Nouveau document';
             break;
         case 'quiz':
+            block.quiz_mode = 'new';
+            block.questions = [];
+            block.new_quiz_title = '';
             block.title = 'Nouveau quiz';
             break;
         case 'text':
@@ -1739,15 +1832,108 @@ onBeforeUnmount(() => {
                                                                     <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du document</label>
                                                                     <InputText v-model="block.document_title" class="w-full bg-slate-50 border-slate-200 text-xs" placeholder="Titre affiché à l'apprenant" />
                                                                 </div>
-                                                                <div class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">URL ou fichier</label>
-                                                                    <InputText v-model="block.document_url" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="https://... ou /storage/..." />
+                                                                
+                                                                <!-- Toggle URL / Fichier -->
+                                                                <div class="bg-slate-100 rounded-lg p-1 flex gap-1">
+                                                                    <button type="button" @click="block.document_mode = 'url'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.document_mode === 'url' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                                                                        <i class="pi pi-link mr-1"></i> Lien URL
+                                                                    </button>
+                                                                    <button type="button" @click="block.document_mode = 'file'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.document_mode === 'file' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                                                                        <i class="pi pi-upload mr-1"></i> Importer
+                                                                    </button>
+                                                                </div>
+                                                                
+                                                                <!-- Mode URL -->
+                                                                <div v-if="block.document_mode === 'url'" class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">URL du document</label>
+                                                                    <InputText v-model="block.document_url" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="https://..." />
+                                                                </div>
+                                                                
+                                                                <!-- Mode Fichier -->
+                                                                <div v-if="block.document_mode === 'file'" class="space-y-1">
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Fichier à importer</label>
+                                                                    <FileUpload 
+                                                                        mode="basic" 
+                                                                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
+                                                                        :maxFileSize="10000000"
+                                                                        customUpload
+                                                                        @select="onDocumentSelect($event, sIdx, bIdx)"
+                                                                        chooseLabel="Sélectionner un fichier"
+                                                                        class="p-button-outlined p-button-secondary w-full border-dashed border-2"
+                                                                        auto
+                                                                    />
+                                                                    <div v-if="block.document_file" class="text-[10px] text-emerald-600 font-medium mt-1">
+                                                                        <i class="pi pi-check-circle mr-1"></i> {{ block.document_file.name }}
+                                                                    </div>
                                                                 </div>
                                                             </div>
 
                                                             <!-- Quiz Block -->
                                                             <div v-if="block.type === 'quiz'" class="space-y-3">
-                                                                <div class="space-y-1">
+                                                                <!-- Tabs: Nouveau quiz / Quiz existant -->
+                                                                <div class="bg-slate-100 rounded-lg p-1 flex gap-1">
+                                                                    <button type="button" @click="block.quiz_mode = 'new'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.quiz_mode === 'new' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                                                                        <i class="pi pi-plus mr-1"></i> Créer
+                                                                    </button>
+                                                                    <button type="button" @click="block.quiz_mode = 'existing'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.quiz_mode === 'existing' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
+                                                                        <i class="pi pi-check-square mr-1"></i> Choisir
+                                                                    </button>
+                                                                </div>
+
+                                                                 <!-- Mode: Créer un nouveau quiz -->
+                                                                 <div v-if="block.quiz_mode === 'new'" class="space-y-3 border border-emerald-100 rounded-xl p-4 bg-emerald-50/30">
+                                                                     <div class="space-y-1">
+                                                                         <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du quiz</label>
+                                                                         <InputText v-model="block.new_quiz_title" class="w-full bg-white border-slate-200 text-xs" placeholder="Ex: Quiz de validation Module 1" />
+                                                                     </div>
+                                                                     
+                                                                     <div class="space-y-2">
+                                                                         <label class="text-[10px] font-bold text-slate-500 uppercase">Questions</label>
+                                                                         
+                                                                         <div v-if="block.questions && block.questions.length > 0" class="space-y-3">
+                                                                             <div v-for="(q, qIdx) in block.questions" :key="qIdx" class="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+                                                                                 <div class="flex items-center justify-between">
+                                                                                     <span class="text-[10px] font-bold text-slate-500">Q{{ qIdx + 1 }}</span>
+                                                                                     <div class="flex items-center gap-2">
+                                                                                         <Dropdown v-model="q.type" :options="[
+                                                                                             { label: 'QCM', value: 'multiple_choice' },
+                                                                                             { label: 'Vrai/Faux', value: 'true_false' },
+                                                                                             { label: 'Réponse courte', value: 'short_answer' }
+                                                                                         ]" optionLabel="label" optionValue="value" class="w-32 h-7 text-[10px]" />
+                                                                                         <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm p-button-rounded w-6 h-6" @click="removeQuestion(block, qIdx)" />
+                                                                                     </div>
+                                                                                 </div>
+                                                                                 <InputText v-model="q.text" class="w-full bg-slate-50 border-slate-200 text-xs" placeholder="Texte de la question..." />
+                                                                                 
+                                                                                 <!-- QCM -->
+                                                                                 <div v-if="q.type === 'multiple_choice'" class="space-y-1">
+                                                                                     <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-2">
+                                                                                         <RadioButton v-model="q.correct_answer" :value="String(oIdx)" :inputId="`q${qIdx}_o${oIdx}`" />
+                                                                                         <InputText v-model="q.options[oIdx]" class="flex-1 bg-slate-50 border-slate-200 text-xs" :placeholder="'Option ' + (oIdx + 1)" />
+                                                                                         <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm w-6 h-6" @click="removeQuestionOption(q, oIdx)" v-if="q.options.length > 2" />
+                                                                                     </div>
+                                                                                     <Button icon="pi pi-plus" label="Ajouter option" class="p-button-text p-button-sm text-xs" @click="addQuestionOption(q)" />
+                                                                                 </div>
+                                                                                 
+                                                                                 <!-- Vrai/Faux -->
+                                                                                 <div v-if="q.type === 'true_false'" class="flex justify-center">
+                                                                                     <SelectButton v-model="q.correct_answer" :options="[{label:'VRAI', value:'true'}, {label:'FAUX', value:'false'}]" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 font-black py-2 bg-white text-xs' } }" />
+                                                                                 </div>
+                                                                                 
+                                                                                 <!-- Réponse courte -->
+                                                                                 <div v-if="q.type === 'short_answer'" class="space-y-1">
+                                                                                     <label class="text-[9px] font-bold text-slate-400 uppercase">Réponse attendue</label>
+                                                                                     <InputText v-model="q.correct_answer" class="w-full bg-slate-50 border-slate-200 text-xs font-mono" placeholder="Mot-clé exact..." />
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div>
+                                                                         
+                                                                         <Button icon="pi pi-plus" label="Ajouter une question" class="p-button-outlined p-button-sm w-full border-dashed border-2" @click="addQuestion(block)" />
+                                                                     </div>
+                                                                 </div>
+
+                                                                <!-- Mode: Choisir un quiz existant -->
+                                                                <div v-if="block.quiz_mode === 'existing'" class="space-y-2">
                                                                     <label class="text-[10px] font-bold text-slate-500 uppercase">Quiz assigné</label>
                                                                     <Dropdown v-model="block.quiz_id" :options="props.exams || []" optionLabel="title" optionValue="id" placeholder="Sélectionner un quiz existant..." class="w-full" showClear>
                                                                         <template #option="slotProps">
@@ -1758,10 +1944,10 @@ onBeforeUnmount(() => {
                                                                             </div>
                                                                         </template>
                                                                     </Dropdown>
+                                                                    <Message severity="info" class="text-xs">
+                                                                        Sélectionnez un quiz depuis la banque de questions existante.
+                                                                    </Message>
                                                                 </div>
-                                                                <Message v-if="!block.quiz_id" severity="info" class="text-xs">
-                                                                    Vous pouvez sélectionner un quiz existant ou créer un nouveau quiz depuis la section Examens.
-                                                                </Message>
                                                             </div>
 
                                                             <!-- Text Block -->

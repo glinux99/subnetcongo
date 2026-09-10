@@ -150,7 +150,7 @@ const quickReject = (id) => {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[1.5rem] border border-slate-200/50 shadow-2xl overflow-hidden">
+                <div class="bg-white rounded-[1rem] border border-slate-200/50 shadow-2xl overflow-hidden">
                     
                     <!-- TOOLBAR PRO -->
                     <div class="p-8 border-b border-slate-100 space-y-6">

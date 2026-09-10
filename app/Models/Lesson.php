@@ -29,6 +29,7 @@ class Lesson extends Model
         'content_text',
         'content_html',
         'video_url',
+        'video_source',
         'video_duration',
         'duration_minutes',
         'order',
@@ -38,7 +39,11 @@ class Lesson extends Model
         'attachment_paths',
         'has_attachment',
         'attachment_title',
+        'document_title',
+        'document_url',
+        'document_name',
         'quiz_id',
+        'seo_metadata',
     ];
 
     protected $casts = [
@@ -49,16 +54,10 @@ class Lesson extends Model
         'is_published' => 'boolean',
         'is_sequential' => 'boolean',
         'attachment_paths' => 'array',
+        'seo_metadata' => 'array',
         'has_attachment' => 'boolean',
         'deleted_at' => 'datetime',
     ];
-
-    protected function seoMetadata(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => $value ?? ['title' => '', 'description' => '', 'keywords' => ''],
-        );
-    }
 
     public function module()
     {

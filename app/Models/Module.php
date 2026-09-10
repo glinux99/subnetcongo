@@ -49,6 +49,8 @@ class Module extends Model
         'is_locked' => 'boolean',
         'is_published' => 'boolean',
         'estimated_duration' => 'integer',
+        'seo_metadata' => 'array',
+        'objectives' => 'array',
         'deleted_at' => 'datetime',
         'has_quiz' => 'boolean',
         'quiz_required' => 'boolean',
@@ -57,20 +59,6 @@ class Module extends Model
         'quiz_attempts_allowed' => 'integer',
         'has_document' => 'boolean',
     ];
-
-    protected function seoMetadata(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => $value ?? ['title' => '', 'description' => '', 'keywords' => ''],
-        );
-    }
-
-    protected function objectives(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => $value ?? [],
-        );
-    }
 
     public function course()
     {

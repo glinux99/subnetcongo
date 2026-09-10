@@ -43,7 +43,7 @@ const model = computed(() => {
                     { label: 'Mon tableau de bord', icon: 'pi pi-fw pi-home', to: r('dashboard') },
                     { label: 'Mes formations', icon: 'pi pi-fw pi-list', to: r('student.my-courses') },
                     { label: 'Mes inscriptions', icon: 'pi pi-fw pi-id-card', to: r('student.my-enrollments'), badge: badges.value.enrollments_pending },
-                    { label: 'Bibliothèque médias', icon: 'pi pi-fw pi-video', to: r('media-library.index') },
+                    // { label: 'Bibliothèque médias', icon: 'pi pi-fw pi-video', to: r('media-library.index') },
                     { label: 'Classes virtuelles', icon: 'pi pi-fw pi-desktop', to: r('live-sessions.index') },
                     { label: 'Marketplace', icon: 'pi pi-fw pi-shopping-bag', to: r('marketplace.index') },
                     { label: 'Mon panier', icon: 'pi pi-fw pi-shopping-cart', to: r('marketplace.cart'), badge: badges.value.cart },
@@ -93,7 +93,7 @@ const model = computed(() => {
                         { label: 'Tous les Cours', icon: 'pi pi-fw pi-list', to: r('courses.index'), badge: badges.value.courses },
                         { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file', to: r('modules.index') },
                         { label: 'Parcours (Paths)', icon: 'pi pi-fw pi-map', to: r('learning-paths.index') },
-                        { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-images', to: r('media-library.index') },
+                        // { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-images', to: r('media-library.index') },
                     ]
                 },
                 {
@@ -141,7 +141,7 @@ const model = computed(() => {
             icon: 'pi pi-fw pi-users',
             items: [
                 { label: 'Liste des Apprenants', icon: 'pi pi-fw pi-user', to: r('users.students.index') },
-                { label: 'Corps Enseignant', icon: 'pi pi-fw pi-user-tie', to: r('users.instructors.index') },
+                { label: 'Corps Enseignant', icon: 'pi pi-fw pi-users', to: r('users.instructors.index') },
                 { label: 'Cohortes / Groupes', icon: 'pi pi-fw pi-tags', to: r('users.cohorts.index') },
                 { label: 'Demandes d\'inscription', icon: 'pi pi-fw pi-id-card', to: r('admin.enrollments.index'), badge: badges.value.enrollments_pending },
                 { label: 'Forums & Discussions', icon: 'pi pi-fw pi-comments', to: r('social.forum.index'), badge: badges.value.forum_pending },
@@ -205,7 +205,7 @@ const model = computed(() => {
                             items: [
                                 { label: 'Mes Cours', icon: 'pi pi-fw pi-list', to: r('courses.index') },
                                 { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file', to: r('modules.index') },
-                                { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-images', to: r('media-library.index') },
+                                // { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-images', to: r('media-library.index') },
                             ]
                         },
                         {

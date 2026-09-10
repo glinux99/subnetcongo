@@ -294,7 +294,7 @@ onMounted(() => {
             </div>
 
             <!-- MAIN CONTENT TABS -->
-            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-6">
+            <div class="bg-white rounded-[1rem] shadow-sm border border-slate-50 p-6">
                 <TabView v-model:activeIndex="activeTab" class="custom-tabview">
                     
                     <!-- TAB 1: AUTOMATIONS -->

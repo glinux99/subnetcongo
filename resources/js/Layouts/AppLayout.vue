@@ -22,7 +22,7 @@
         <div class="hidden lg:flex items-center gap-1 bg-slate-100 p-1.5 rounded-lg border border-white/50 shadow-inner">
           <template v-for="item in navLinks" :key="item.name">
             <div class="relative group">
-              <Link :href="item.href" class="px-6 py-2.5 rounded-[1.5rem] text-sm font-black text-slate-600 hover:text-[#003399] hover:bg-white transition-all duration-300 flex items-center gap-2">
+              <Link :href="item.href" class="px-6 py-2.5 rounded-[1rem] text-sm font-black text-slate-600 hover:text-[#003399] hover:bg-white transition-all duration-300 flex items-center gap-2">
                 {{ item.name }}
                 <i v-if="item.submenu" class="pi pi-chevron-down text-[10px] group-hover:rotate-180 transition-transform"></i>
               </Link>
@@ -74,7 +74,7 @@
                 <div class="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
                     <div v-for="(item, idx) in navLinks" :key="item.name">
                         <Link :href="item.href" @click="isMenuOpen = false"
-                           class="flex items-center justify-between p-5 rounded-[1.5rem] bg-slate-50 hover:bg-[#003399] group transition-all duration-300">
+                           class="flex items-center justify-between p-5 rounded-[1rem] bg-slate-50 hover:bg-[#003399] group transition-all duration-300">
                             <span class="font-black text-slate-700 group-hover:text-white flex items-center gap-3">
                                 <i :class="['pi text-lg', item.icon || 'pi-circle-fill text-[8px]']"></i>
                                 {{ item.name }}

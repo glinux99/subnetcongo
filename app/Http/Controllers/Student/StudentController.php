@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -234,9 +235,13 @@ class StudentController extends Controller
                 'id' => $l->id,
                 'title' => $l->title,
                 'type' => $l->type,
+                'lesson_type' => $l->lesson_type,
                 'order' => $l->order,
                 'module_title' => $l->module?->title,
                 'duration' => $l->duration_minutes,
+                'video_url' => $l->video_url,
+                'document_url' => $l->document_url ? $this->getMediaUrl($l->document_url) : null,
+                'document_title' => $l->document_title,
                 'is_completed' => UserProgress::where('user_id', $user->id)
                     ->where('lesson_id', $l->id)
                     ->where('progress_percent', '>=', 100)
@@ -247,6 +252,41 @@ class StudentController extends Controller
         $progress = UserProgress::where('user_id', $user->id)
             ->where('lesson_id', $lesson->id)
             ->first();
+
+        // Module info pour affichage dans le player
+        $module = $lesson->module;
+        $moduleData = $module ? [
+            'id' => $module->id,
+            'title' => $module->title,
+            'description' => $module->description,
+            'text_content' => $module->text_content,
+            'intro_video_url' => $module->intro_video_url ? $this->getMediaUrl($module->intro_video_url) : null,
+            'intro_video_title' => $module->intro_video_title,
+            'document_url' => $module->document_url ? $this->getMediaUrl($module->document_url) : null,
+            'document_name' => $module->document_name,
+            'has_quiz' => $module->has_quiz,
+            'quiz_id' => $module->quiz_id,
+            'quiz_weight' => $module->quiz_weight,
+            'quiz_passing_score' => $module->quiz_passing_score,
+            'quiz_attempts_allowed' => $module->quiz_attempts_allowed,
+        ] : null;
+
+        // Quiz attempts pour ce module (si le module a un quiz)
+        $moduleQuizAttempts = null;
+        if ($module && $module->has_quiz && $module->quiz_id) {
+            $moduleQuizAttempts = \App\Models\ExamAttempt::where('user_id', $user->id)
+                ->where('exam_id', $module->quiz_id)
+                ->where('status', 'Completed')
+                ->orderByDesc('created_at')
+                ->get(['id', 'score_percentage', 'created_at', 'time_spent_seconds'])
+                ->map(fn ($a) => [
+                    'id' => $a->id,
+                    'score' => $a->score_percentage,
+                    'score_out_of_20' => round(($a->score_percentage / 100) * 20, 2),
+                    'date' => $a->created_at?->toIso8601String(),
+                    'time_spent' => $a->time_spent_seconds,
+                ])->values();
+        }
 
         // Vidéos du cours (leçons de type vidéo)
         $videos = Lesson::whereHas('module', fn ($q) => $q->where('course_id', $course->id))
@@ -273,6 +313,7 @@ class StudentController extends Controller
                 'size' => (int) $r->size,
                 'mime_type' => $r->mime_type,
                 'download_url' => route('student.resources.download', $r->id),
+                'full_url' => $r->full_url,
             ])->values();
 
         $courseResources = [
@@ -293,11 +334,16 @@ class StudentController extends Controller
                 'id' => $lesson->id,
                 'title' => $lesson->title,
                 'type' => $lesson->type,
+                'lesson_type' => $lesson->lesson_type,
                 'content' => $lesson->content,
                 'video_url' => $lesson->video_url,
                 'duration' => $lesson->duration_minutes,
                 'attachments' => $lesson->attachment_paths ?? [],
+                'document_url' => $lesson->document_url ? $this->getMediaUrl($lesson->document_url) : null,
+                'document_title' => $lesson->document_title,
             ],
+            'module' => $moduleData,
+            'moduleQuizAttempts' => $moduleQuizAttempts,
             'lessons' => $lessons,
             'progress' => $progress ? [
                 'percent' => (float) $progress->progress_percent,
@@ -462,5 +508,24 @@ class StudentController extends Controller
             'title' => $next->title,
             'type' => $next->type,
         ] : null;
+    }
+
+    /**
+     * Génère l'URL complète pour un fichier sur le disque media.
+     * Retourne l'URL absolue (APP_URL + /storage/media/...) pour les fichiers locaux,
+     * ou l'URL directe si c'est déjà une URL externe.
+     */
+    private function getMediaUrl(string $path): string
+    {
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return $path;
+        }
+        // Utilise le disque 'media' pour générer l'URL
+        $url = Storage::disk('media')->url($path);
+        // S'assure que c'est une URL absolue
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            $url = URL::to($url);
+        }
+        return $url;
     }
 }

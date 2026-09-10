@@ -541,7 +541,7 @@ const schemaOrgData = computed(() => {
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div v-for="(path, i) in learningPaths" :key="i" class="reveal-on-scroll bg-white p-8 rounded-[1.5rem] border border-slate-100 hover:shadow-xl transition-shadow relative overflow-hidden group">
+                    <div v-for="(path, i) in learningPaths" :key="i" class="reveal-on-scroll bg-white p-8 rounded-[1rem] border border-slate-100 hover:shadow-xl transition-shadow relative overflow-hidden group">
                         <div class="absolute -right-6 -top-6 text-slate-50 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none">
                             <i :class="['pi', path.icon]" style="font-size: 10rem;"></i>
                         </div>

@@ -117,7 +117,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                 <!-- ── GRILLE EXAMENS ── -->
                 <div v-if="filteredExams.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <div v-for="exam in filteredExams" :key="exam.id" 
-                        class="group bg-white rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-500 flex flex-col overflow-hidden">
+                        class="group bg-white rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-red-100 transition-all duration-500 flex flex-col overflow-hidden">
                         
                         <!-- Status Header -->
                         <div :class="getStatus(exam).bg" class="h-1.5 w-full"></div>
@@ -180,6 +180,9 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                                     class="w-full !bg-slate-200 !text-slate-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest opacity-60" />
                             </div>
 
+                            <Link v-if="exam.results?.length" :href="route('exams.attempts', exam.id)">
+                                <Button icon="pi pi-history" text class="!text-slate-400 hover:!text-indigo-600" v-tooltip="'Historique des tentatives'" />
+                            </Link>
                             <Link v-if="exam.results?.length" :href="route('exams.results', exam.results[0].id)">
                                 <Button icon="pi pi-chart-bar" text class="!text-slate-400 hover:!text-red-600" v-tooltip="'Mes performances'" />
                             </Link>

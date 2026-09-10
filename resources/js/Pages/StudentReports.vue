@@ -113,7 +113,7 @@ const openQuickView = (s) => { selectedStudent.value = s; showQuickView.value = 
                         { l: 'Actifs (Real-time)', v: stats.active_now, i: 'pi-bolt', c: 'text-emerald-600', bg: 'bg-emerald-50' },
                         { l: 'Certifications', v: stats.total_certifications, i: 'pi-verified', c: 'text-blue-600', bg: 'bg-blue-50' },
                         { l: 'Profils à risque', v: stats.at_risk_students, i: 'pi-exclamation-triangle', c: 'text-rose-600', bg: 'bg-rose-50' }
-                    ]" :key="kpi.l" class="bg-white p-6 rounded-[1.5rem] border border-slate-200/50 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
+                    ]" :key="kpi.l" class="bg-white p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
                         <div class="relative z-10">
                             <div :class="kpi.bg" class="w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
                                 <i :class="['pi', kpi.i, kpi.c, 'text-xl']"></i>
@@ -297,7 +297,7 @@ const openQuickView = (s) => { selectedStudent.value = s; showQuickView.value = 
             </main>
 
             <!-- ── QUICK VIEW DIALOG (Dossier Mode) ── -->
-            <Dialog v-model:visible="showQuickView" modal header="Analytics Profil" :style="{ width: '550px' }" class="!rounded-[1.5rem]">
+            <Dialog v-model:visible="showQuickView" modal header="Analytics Profil" :style="{ width: '550px' }" class="!rounded-[1rem]">
                 <div v-if="selectedStudent" class="space-y-8 p-4">
                     <!-- Profile Card -->
                     <div class="bg-[#0F172A] p-8 rounded-[1rem] text-white relative overflow-hidden flex items-center gap-6 shadow-2xl">

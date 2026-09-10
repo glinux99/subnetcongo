@@ -364,19 +364,119 @@ public function index()
     }
 
     /**
-     * Affiche le résultat après l'examen
+     * Affiche le résultat après l'examen avec les réponses détaillées
      */
     public function results(ExamResult $result)
     {
-        $result->load(['exam', 'attempt']);
+        $result->load(['exam', 'attempt', 'exam.questions.options']);
 
         // Sécurité : Seul le propriétaire ou un admin peut voir le résultat
         if ($result->user_id !== Auth::id()) {
             abort(403);
         }
 
+        // Charger les questions avec les options et réponses correctes
+        $exam = $result->exam;
+        $attempt = $result->attempt;
+        $userAnswers = $attempt->answers ?? [];
+
+        $questions = $exam->questions->map(function ($question) use ($userAnswers) {
+            $userAnswer = $userAnswers[$question->id] ?? null;
+            
+            // Déterminer la bonne réponse selon le type de question
+            $correctAnswer = null;
+            switch ($question->type) {
+                case 'multiple_choice':
+                case 'true_false':
+                    $correctOption = $question->options->firstWhere('is_correct', true);
+                    $correctAnswer = $correctOption ? $correctOption->id : null;
+                    break;
+                case 'multiple_choice_multiple':
+                    $correctAnswer = $question->options->where('is_correct', true)->pluck('id')->all();
+                    break;
+                case 'short_answer':
+                case 'essay':
+                    $correctAnswer = $question->correct_answer;
+                    break;
+                case 'ordering':
+                    $correctAnswer = $question->options->sortBy('order')->pluck('id')->all();
+                    break;
+                case 'matching':
+                    $leftOptions = $question->options->where('is_match_source', true);
+                    $correctAnswer = $leftOptions->pluck('match_id')->all();
+                    break;
+            }
+
+            $isCorrect = false;
+            if ($userAnswer !== null && $correctAnswer !== null) {
+                if (is_array($userAnswer) && is_array($correctAnswer)) {
+                    $isCorrect = collect($userAnswer)->sort()->values()->all() === collect($correctAnswer)->sort()->values()->all();
+                } else {
+                    $isCorrect = (string)$userAnswer === (string)$correctAnswer;
+                }
+            }
+
+            // Préparer les options pour l'affichage
+            $options = $question->options->map(function ($opt) {
+                return [
+                    'id' => $opt->id,
+                    'option_text' => $opt->option_text,
+                    'is_correct' => (bool)$opt->is_correct,
+                    'order' => $opt->order,
+                    'is_match_source' => (bool)$opt->is_match_source,
+                    'match_id' => $opt->match_id,
+                ];
+            })->values();
+
+            return [
+                'id' => $question->id,
+                'type' => $question->type,
+                'text' => $question->text,
+                'points' => $question->points,
+                'correct_answer' => $correctAnswer,
+                'user_answer' => $userAnswer,
+                'is_correct' => $isCorrect,
+                'options' => $options,
+            ];
+        });
+
         return Inertia::render('ExamResult', [
-            'result' => $result
+            'result' => $result,
+            'questions' => $questions,
+            'attempt' => $attempt,
+        ]);
+    }
+
+    /**
+     * Liste toutes les tentatives de l'étudiant pour un examen donné
+     */
+    public function attemptHistory(Exam $exam)
+    {
+        $user = Auth::user();
+        
+        $attempts = ExamAttempt::where('user_id', $user->id)
+            ->where('exam_id', $exam->id)
+            ->where('status', ExamAttempt::STATUS_COMPLETED)
+            ->with('result')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($attempt) {
+                return [
+                    'id' => $attempt->id,
+                    'uuid' => $attempt->uuid,
+                    'score_percentage' => $attempt->result?->score_percentage ?? 0,
+                    'is_passed' => $attempt->result?->is_passed ?? false,
+                    'created_at' => $attempt->created_at?->toIso8601String(),
+                    'completed_at' => $attempt->completed_at?->toIso8601String(),
+                    'time_spent_seconds' => $attempt->time_spent_seconds,
+                    'formatted_time_spent' => $attempt->formatted_time_spent,
+                    'result_id' => $attempt->result?->id,
+                ];
+            });
+
+        return Inertia::render('ExamAttemptHistory', [
+            'exam' => $exam,
+            'attempts' => $attempts,
         ]);
     }
 }

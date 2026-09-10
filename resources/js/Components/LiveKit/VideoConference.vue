@@ -346,7 +346,7 @@ onUnmounted(() => {
 
             <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 <div class="xl:col-span-3 space-y-6">
-                    <Card class="border-none shadow-sm rounded-[1.5rem] overflow-hidden bg-slate-900">
+                    <Card class="border-none shadow-sm rounded-[1rem] overflow-hidden bg-slate-900">
                         <template #content>
                             <div v-if="!isConnected" class="aspect-video bg-slate-800 rounded-xl flex items-center justify-center">
                                 <div class="text-center">

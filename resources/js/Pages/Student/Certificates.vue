@@ -74,7 +74,7 @@ const verify = (cert) => {
 
             <!-- MAIN CONTENT -->
             <div class="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
-                <div class="bg-white rounded-[1.5rem] shadow-2xl border border-slate-200/50 p-8 lg:p-12 min-h-[500px]">
+                <div class="bg-white rounded-[1rem] shadow-2xl border border-slate-200/50 p-8 lg:p-12 min-h-[500px]">
                     
                     <!-- Empty State -->
                     <div v-if="(certificates ?? []).length === 0" class="py-24 text-center">

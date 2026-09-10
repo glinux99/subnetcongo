@@ -172,7 +172,7 @@ onMounted(() => loadEnginTypes());
                 </div>
             </div>
 
-            <div class="bg-white rounded-[1.5rem] shadow-xl shadow-slate-200/50 border border-slate-200/60 overflow-hidden">
+            <div class="bg-white rounded-[1rem] shadow-xl shadow-slate-200/50 border border-slate-200/60 overflow-hidden">
                 <DataTable
                     ref="dt" :value="engins" v-model:filters="filters"
                     dataKey="id" :paginator="true" :rows="15" filterDisplay="menu"

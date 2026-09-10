@@ -170,7 +170,7 @@ const getStatusProps = (s: string) => {
                 </section>
 
                 <!-- 2. ANALYTICS TABS -->
-                <div class="bg-white rounded-[1.5rem] border border-slate-200 shadow-2xl overflow-hidden min-h-[600px]">
+                <div class="bg-white rounded-[1rem] border border-slate-200 shadow-2xl overflow-hidden min-h-[600px]">
                     <Tabs value="0">
                         <TabList class="bg-slate-50/50 px-8 pt-4 !border-none">
                             <Tab value="0" class="!text-xs !font-black !uppercase !tracking-widest !px-8">Performance</Tab>

@@ -636,7 +636,7 @@ onBeforeUnmount(() => {
 
             <!-- STEP 1 : ÉCRAN D'ACCUEIL & CONSIGNES -->
             <div v-if="currentStep === 'intro'" class="max-w-4xl mx-auto py-10 animate-fade-in">
-                <Card class="border-none shadow-2xl rounded-[1.5rem] overflow-hidden">
+                <Card class="border-none shadow-2xl rounded-[1rem] overflow-hidden">
                     <template #header>
                         <div class="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-900 flex flex-col items-center justify-center text-white relative overflow-hidden">
                             <div class="absolute inset-0 opacity-10 pattern-dots scale-150"></div>
@@ -842,7 +842,7 @@ onBeforeUnmount(() => {
                                     <div v-for="option in [true, false]" :key="option.toString()"
                                          @click="handleAnswerInput(currentQuestion.id, option)"
                                          :class="[
-                                            'group relative p-10 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 overflow-hidden',
+                                            'group relative p-10 rounded-[1rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 overflow-hidden',
                                             answers[currentQuestion.id] === option ?
                                                 (option ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-100' : 'bg-rose-50 border-rose-500 shadow-xl shadow-rose-100') :
                                                 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50'
@@ -866,7 +866,7 @@ onBeforeUnmount(() => {
                                     <div v-for="(opt, idx) in currentQuestion.options" :key="opt.id"
                                          @click="handleAnswerInput(currentQuestion.id, opt.id)"
                                          :class="[
-                                            'group p-6 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 flex items-center gap-6',
+                                            'group p-6 rounded-[1rem] border-2 cursor-pointer transition-all duration-300 flex items-center gap-6',
                                             answers[currentQuestion.id] === opt.id ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-100' : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50'
                                          ]">
                                         <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black transition-all border-2"
@@ -894,7 +894,7 @@ onBeforeUnmount(() => {
                                              handleAnswerInput(currentQuestion.id, current);
                                          }"
                                          :class="[
-                                            'group p-6 rounded-[1.5rem] border-2 cursor-pointer transition-all flex items-center gap-6',
+                                            'group p-6 rounded-[1rem] border-2 cursor-pointer transition-all flex items-center gap-6',
                                             answers[currentQuestion.id]?.includes(opt.id) ? 'bg-indigo-50 border-indigo-500 shadow-md' : 'bg-white border-slate-100 hover:border-slate-300'
                                          ]">
                                         <div class="flex items-center justify-center">
@@ -980,7 +980,7 @@ onBeforeUnmount(() => {
                                     <Textarea
                                         v-model="answers[currentQuestion.id]"
                                         rows="12"
-                                        class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[1.5rem] focus:border-indigo-500 transition-all bg-slate-50/50 shadow-inner"
+                                        class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[1rem] focus:border-indigo-500 transition-all bg-slate-50/50 shadow-inner"
                                         placeholder="Rédigez votre réponse de manière détaillée ici..."
                                         @input="handleAnswerInput(currentQuestion.id, $event.target.value)"
                                     />
@@ -1021,7 +1021,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- LOG DE SÉCURITÉ IA (VISIBLE SI INCIDENTS) -->
-                    <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[1.5rem] p-8 border-2 border-rose-100 shadow-lg animate-fade-in">
+                    <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[1rem] p-8 border-2 border-rose-100 shadow-lg animate-fade-in">
                         <div class="flex items-center justify-between mb-6">
                             <h5 class="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2">
                                 <i class="pi pi-shield"></i> Surveillance Intégrité Académique

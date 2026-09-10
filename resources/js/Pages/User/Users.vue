@@ -303,7 +303,7 @@ watch(
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
                 <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg">
                         <i class="pi pi-users text-white text-3xl"></i>
                     </div>
                     <div>
@@ -311,13 +311,13 @@ watch(
                         <p class="text-slate-500 text-sm">{{ t('users.subtitle') }}</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
                     <Button :label="t('users.actions.add')" icon="pi pi-plus"  raised @click="openCreate" class="rounded-lg font-bold" />
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div v-for="(val, key) in stats" :key="key" class="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5">
+                <div v-for="(val, key) in stats" :key="key" class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center gap-5">
                      <div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center">
                         <i class="pi pi-users text-2xl text-slate-500"></i>
                     </div>
@@ -330,7 +330,7 @@ watch(
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <DataTable ref="dt" :value="formattedUsers" v-model:selection="selectedUsers" dataKey="id" paginator :rows="users.per_page" :totalRecords="users.total" lazy
                     :rowsPerPageOptions="[10, 25, 50, 100]" @page="onPage"
                     removableSort stripedRows class="p-datatable-custom">
@@ -339,7 +339,7 @@ watch(
                             <div class="flex items-center gap-2">
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search text-slate-400"/>
-                                    <InputText v-model="filters['global'].value" :placeholder="t('users.searchPlaceholder')" class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white"/>
+                                    <InputText v-model="filters['global'].value" :placeholder="t('users.searchPlaceholder')" class="w-full md:w-80 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white"/>
                                 </IconField>
                                 <Dropdown
                                     v-model="filters['region_name'].value"
@@ -348,7 +348,7 @@ watch(
                                     optionValue="value"
                                     placeholder="Filtrer par région"
                                     :placeholder="t('users.filterByRegionPlaceholder')"
-                                    class="w-full md:w-60 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
+                                    class="w-full md:w-60 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white" />
                             </div>
 
                             <div class="flex items-center gap-2">
@@ -439,8 +439,8 @@ watch(
                 <div class="grid grid-cols-12 gap-10">
                     <div class="col-span-12 md:col-span-4">
                         <div class="sticky top-0">
-                            <div class="relative group bg-white rounded-[1.5rem] p-3 border border-slate-200 shadow-2xl transition-all duration-500 hover:border-primary-300">
-                                <div class="relative w-full aspect-square overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-2xl border-4 border-white group">
+                            <div class="relative group bg-white rounded-[1rem] p-3 border border-slate-200 shadow-2xl transition-all duration-500 hover:border-primary-300">
+                                <div class="relative w-full aspect-square overflow-hidden rounded-[1rem] bg-slate-100 shadow-2xl border-4 border-white group">
                                     <div class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-110"
                                         :style="{ backgroundImage: form.profile_photo_preview ? `url(${form.profile_photo_preview})` : 'none' }">
                                         <div v-if="!form.profile_photo_preview" class="w-full h-full flex items-center justify-center">
@@ -455,7 +455,7 @@ watch(
                                         </div>
                                     </div>
                                     <button v-if="form.profile_photo_preview" type="button" @click.stop="removePhoto"
-                                        class="absolute top-5 right-5 w-12 h-12 bg-white/90 text-red-500 rounded-2xl flex items-center justify-center shadow-xl hover:bg-red-500 hover:text-white hover:scale-110 transition-all z-20 border border-white/50 backdrop-blur-md"
+                                        class="absolute top-5 right-5 w-12 h-12 bg-white/90 text-red-500 rounded-xl flex items-center justify-center shadow-xl hover:bg-red-500 hover:text-white hover:scale-110 transition-all z-20 border border-white/50 backdrop-blur-md"
                                         v-tooltip.left="t('users.actions.removePhoto')">
                                         <i class="pi pi-trash text-xl"></i>
                                     </button>
@@ -543,7 +543,7 @@ watch(
 
                 <div class="flex justify-between items-center w-full px-2 py-4">
                     <Button :label="t('common.cancel')" icon="pi pi-times" text severity="secondary" @click="isModalOpen = false" class="font-bold uppercase text-[10px] tracking-widest" /><Button :label="form.id ? t('common.save') : t('common.create')"  icon="pi pi-check-circle"
-                            class="px-10 h-14 rounded-2xl shadow-xl shadow-primary-100 font-black uppercase tracking-widest text-xs"
+                            class="px-10 h-14 rounded-xl shadow-xl shadow-primary-100 font-black uppercase tracking-widest text-xs"
                             @click="submit" :loading="form.processing" />
                 </div>
             </form>

@@ -88,7 +88,8 @@ class MarketplaceController extends Controller
      */
     public function show(Request $request, Course $course)
     {
-        $course->load([
+        try {
+            $course->load([
             'instructor:id,name,bio,avatar',
             'category:id,name',
             'modules.lessons' => fn ($q) => $q->orderBy('order'),
@@ -135,6 +136,10 @@ class MarketplaceController extends Controller
             'related' => $related,
             'cartCount' => $this->getCartCount($request),
         ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return $th;
+        }
     }
 
     /**

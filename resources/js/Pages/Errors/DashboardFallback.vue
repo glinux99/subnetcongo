@@ -81,7 +81,7 @@ const contactSupport = () => {
         <!-- CONTENEUR PRINCIPAL -->
         <div class="max-w-2xl w-full relative z-10 animate-fade-in-up">
 
-            <div class="bg-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200">
+            <div class="bg-white rounded-[1rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-200">
 
                 <!-- HEADER CARTE -->
                 <div class="bg-rose-50 border-b border-rose-100 p-8 text-center relative overflow-hidden">

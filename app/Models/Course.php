@@ -40,6 +40,8 @@ class Course extends Model
         'is_featured' => 'boolean',
         'requires_enrollment' => 'boolean',
         'certificate_enabled' => 'boolean',
+        'tags' => 'array',
+        'seo_metadata' => 'array',
         'prerequisites' => 'array',
         'price' => 'decimal:2',
         'promo_price' => 'decimal:2',
@@ -55,13 +57,6 @@ class Course extends Model
     {
         return Attribute::make(
             get: fn ($value) => $value ?? [],
-        );
-    }
-
-    protected function seoMetadata(): Attribute
-    {
-        return Attribute::make(
-            get: fn ($value) => $value ?? ['title' => '', 'description' => '', 'keywords' => '', 'og_image' => null],
         );
     }
 

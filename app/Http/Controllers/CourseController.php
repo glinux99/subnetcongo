@@ -116,7 +116,35 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $this->prepareAndSanitize($request);
+        
+        \Log::info('SNC_COURSE_STORE_REQUEST', [
+            'has_sections' => $request->has('sections'),
+            'sections_type' => gettype($request->input('sections')),
+            'sections_count' => is_array($request->input('sections')) ? count($request->input('sections')) : 'n/a',
+            'all_keys' => array_keys($request->all()),
+            'files' => array_keys($request->allFiles()),
+        ]);
+
         $validated = $this->validateCourseRequest($request);
+
+        \Log::info('SNC_COURSE_STORE_VALIDATED', [
+            'title' => $validated['title'] ?? null,
+            'sections_count' => count($validated['sections'] ?? []),
+            'sections_sample' => collect($validated['sections'] ?? [])->take(1)->map(function($s) {
+                return [
+                    'title' => $s['title'] ?? null,
+                    'lessons_count' => count($s['lessons'] ?? []),
+                    'lessons_sample' => collect($s['lessons'] ?? [])->take(1)->map(function($l) {
+                        return [
+                            'title' => $l['title'] ?? null,
+                            'type' => $l['type'] ?? null,
+                            'has_document_file' => isset($l['document_file']),
+                            'document_file_type' => is_object($l['document_file'] ?? null) ? get_class($l['document_file']) : gettype($l['document_file'] ?? null),
+                        ];
+                    })->toArray(),
+                ];
+            })->toArray(),
+        ]);
 
         DB::beginTransaction();
         try {
@@ -136,6 +164,7 @@ class CourseController extends Controller
 
             // Sync de l'arbre pédagogique
             if (!empty($validated['sections'])) {
+                \Log::info('SNC_COURSE_STORE_SECTIONS', ['count' => count($validated['sections'])]);
                 $this->syncCurriculum($course, $validated['sections']);
             }
 
@@ -153,7 +182,8 @@ class CourseController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("[LMS] Store Failure: " . $e->getMessage());
+            return $e->getMessage();
+            Log::error("[LMS] Store Failure: " . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', "Erreur critique : " . $e->getMessage())->withInput();
         }
     }
@@ -256,6 +286,12 @@ class CourseController extends Controller
      */
     private function syncCurriculum(Course $course, array $sections)
     {
+        \Log::info('SNC_SYNC_CURRICULUM_START', [
+            'course_id' => $course->id,
+            'sections_count' => count($sections),
+            'first_section_keys' => isset($sections[0]) ? array_keys($sections[0]) : [],
+        ]);
+
         $existingSectionIds = $course->sections()->pluck('id')->toArray();
         $keptSectionIds = [];
 
@@ -288,6 +324,12 @@ class CourseController extends Controller
                 $section->update($sectionData);
                 $keptSectionIds[] = $section->id;
                 
+                \Log::info('SNC_SYNC_CURRICULUM_SECTION', [
+                    'section_id' => $section->id,
+                    'title' => $section->title,
+                    'lessons_count' => count($sData['lessons'] ?? []),
+                ]);
+                
                 // Synchronisation des leçons à l'intérieur
                 $this->syncLessons($section, $sData['lessons'] ?? []);
             }
@@ -295,16 +337,32 @@ class CourseController extends Controller
 
         // Suppression des sections disparues
         $course->sections()->whereIn('id', array_diff($existingSectionIds, $keptSectionIds))->delete();
+        
+        \Log::info('SNC_SYNC_CURRICULUM_END', [
+            'course_id' => $course->id,
+            'kept_sections' => count($keptSectionIds),
+        ]);
     }
 
     private function syncLessons(Module $section, array $lessons)
     {
+        \Log::info('SNC_SYNC_LESSONS_START', [
+            'section_id' => $section->id,
+            'lessons_count' => count($lessons),
+            'lessons_type' => gettype($lessons),
+        ]);
+
         $existingLessonIds = $section->lessons()->pluck('id')->toArray();
         $keptLessonIds = [];
 
         foreach ($lessons as $index => $lData) {
+            if (!is_array($lData)) {
+                \Log::warning('SNC_SYNC_LESSONS_SKIP_NON_ARRAY', ['lesson_data_type' => gettype($lData)]);
+                continue;
+            }
+
             $payload = [
-                'title'            => $lData['title'],
+                'title'            => $lData['title'] ?? 'Sans titre',
                 'type'             => $lData['type'] ?? 'video',
                 'lesson_type'      => $lData['lesson_type'] ?? ($lData['type'] ?? 'video'),
                 'is_free_preview'  => filter_var($lData['is_free'] ?? false, FILTER_VALIDATE_BOOLEAN),
@@ -313,7 +371,7 @@ class CourseController extends Controller
                 'video_duration'   => $lData['video_duration'] ?? null,
                 'video_source'     => $lData['video_source'] ?? null,
                 'order'            => $index + 1,
-                'slug'             => Str::slug($lData['title']) . '-' . Str::random(4),
+                'slug'             => Str::slug($lData['title'] ?? 'lesson') . '-' . Str::random(4),
                 'content_text'     => $lData['content_text'] ?? null,
                 'content_html'     => $lData['content_html'] ?? null,
                 'content'          => $lData['content'] ?? null,
@@ -326,6 +384,48 @@ class CourseController extends Controller
                 'seo_metadata'     => $lData['seo_metadata'] ?? [],
             ];
 
+            // Gestion des documents uploadés (non-JSON, fichiers réels)
+            if (isset($lData['document_file'])) {
+                $file = $lData['document_file'];
+                
+                // Cas 1: vrai fichier uploadé (UploadedFile)
+                if (is_object($file) && method_exists($file, 'store')) {
+                    try {
+                        $payload['document_url'] = $file->store('lessons/documents', 'media');
+                        \Log::info('SNC_SYNC_LESSONS_DOC_UPLOAD', ['lesson_title' => $payload['title'], 'path' => $payload['document_url']]);
+                    } catch (\Throwable $e) {
+                        \Log::warning('SNC_ERR_DOCUMENT_UPLOAD: ' . $e->getMessage());
+                    }
+                } 
+                // Cas 2: objet fichier converti par Inertia (propriétés name/size/type)
+                elseif (is_object($file) && isset($file->name)) {
+                    \Log::warning('SNC_SYNC_LESSONS_DOC_OBJECT', ['lesson_title' => $payload['title'], 'file_info' => json_decode(json_encode($file), true)]);
+                    // Inertia a converti le fichier en objet plain, on ne peut pas l'uploader ici
+                    // On garde document_url si c'est une URL, sinon on ignore
+                    if (empty($lData['document_url'])) {
+                        $payload['document_url'] = null;
+                    }
+                }
+                // Cas 3: tableau (peut arriver depuis FormData)
+                elseif (is_array($file) && isset($file['name'])) {
+                    \Log::warning('SNC_SYNC_LESSONS_DOC_ARRAY', ['lesson_title' => $payload['title']]);
+                    if (empty($lData['document_url'])) {
+                        $payload['document_url'] = null;
+                    }
+                }
+            } elseif (isset($lData['document_url']) && is_string($lData['document_url'])) {
+                $payload['document_url'] = $lData['document_url'];
+            }
+
+            // Stockage des questions inline pour quiz créés dans le course builder
+            if (($lData['type'] ?? '') === 'quiz' && isset($lData['questions']) && is_array($lData['questions']) && count($lData['questions']) > 0) {
+                $payload['content'] = json_encode([
+                    'questions' => $lData['questions'],
+                    'quiz_title' => $lData['new_quiz_title'] ?? null,
+                    'created_inline' => true,
+                ]);
+            }
+
             $lesson = isset($lData['id']) && is_numeric($lData['id'])
                 ? $section->lessons()->find($lData['id'])
                 : $section->lessons()->create($payload);
@@ -333,10 +433,16 @@ class CourseController extends Controller
             if ($lesson) {
                 $lesson->update($payload);
                 $keptLessonIds[] = $lesson->id;
+                \Log::info('SNC_SYNC_LESSONS_LESSON', ['lesson_id' => $lesson->id, 'title' => $lesson->title, 'type' => $lesson->type]);
             }
         }
 
         $section->lessons()->whereIn('id', array_diff($existingLessonIds, $keptLessonIds))->delete();
+        
+        \Log::info('SNC_SYNC_LESSONS_END', [
+            'section_id' => $section->id,
+            'kept_lessons' => count($keptLessonIds),
+        ]);
     }
 
     /**
@@ -424,7 +530,7 @@ class CourseController extends Controller
             if ($request->has($f)) $request->merge([$f => filter_var($request->input($f), FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        // Décoder les JSON envoyés par l'UI (Inertia/Vue)
+        // Décoder les JSON envoyés par l'UI (Inertia/Vue avec forceFormData)
         $jsons = ['sections', 'seo_metadata', 'tags', 'resources'];
         foreach ($jsons as $f) {
             if ($request->has($f) && is_string($request->input($f))) {
@@ -432,6 +538,90 @@ class CourseController extends Controller
                 if (json_last_error() === JSON_ERROR_NONE) $request->merge([$f => $decoded]);
             }
         }
+
+        // Décodage récursif des champs JSON imbriqués dans sections/lessons
+        $this->recursiveJsonDecode($request);
+    }
+
+    private function recursiveJsonDecode(Request $request): void
+    {
+        $sections = $request->input('sections');
+        if (!is_array($sections)) return;
+
+        foreach ($sections as $i => $section) {
+            if (!is_array($section)) continue;
+
+            // Décoder les champs JSON imbriqués dans chaque section
+            $nestedJsonFields = ['objectives', 'seo_metadata', 'tags'];
+            foreach ($nestedJsonFields as $field) {
+                if (isset($section[$field]) && is_string($section[$field])) {
+                    $decoded = json_decode($section[$field], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $sections[$i][$field] = $decoded;
+                    }
+                }
+            }
+
+            // Décoder lessons si c'est une chaîne JSON
+            if (isset($section['lessons']) && is_string($section['lessons'])) {
+                $decoded = json_decode($section['lessons'], true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $sections[$i]['lessons'] = $decoded;
+                }
+            }
+
+            // Décoder content_blocks si c'est une chaîne JSON
+            if (isset($section['content_blocks']) && is_string($section['content_blocks'])) {
+                $decoded = json_decode($section['content_blocks'], true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $sections[$i]['content_blocks'] = $decoded;
+                }
+            }
+
+            // Décoder les champs imbriqués dans chaque lesson
+            if (isset($sections[$i]['lessons']) && is_array($sections[$i]['lessons'])) {
+                foreach ($sections[$i]['lessons'] as $j => $lesson) {
+                    if (!is_array($lesson)) continue;
+
+                    $lessonNestedFields = ['seo_metadata', 'attachment_paths', 'questions'];
+                    foreach ($lessonNestedFields as $field) {
+                        if (isset($lesson[$field]) && is_string($lesson[$field])) {
+                            $decoded = json_decode($lesson[$field], true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $sections[$i]['lessons'][$j][$field] = $decoded;
+                            }
+                        }
+                    }
+
+                    // Décoder document_file si c'est un tableau (file info from FormData)
+                    if (isset($lesson['document_file']) && is_string($lesson['document_file'])) {
+                        $decoded = json_decode($lesson['document_file'], true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $sections[$i]['lessons'][$j]['document_file'] = $decoded;
+                        }
+                    }
+                }
+            }
+
+            // Décoder les champs imbriqués dans chaque content_block
+            if (isset($sections[$i]['content_blocks']) && is_array($sections[$i]['content_blocks'])) {
+                foreach ($sections[$i]['content_blocks'] as $k => $block) {
+                    if (!is_array($block)) continue;
+
+                    $blockNestedFields = ['questions', 'seo_metadata'];
+                    foreach ($blockNestedFields as $field) {
+                        if (isset($block[$field]) && is_string($block[$field])) {
+                            $decoded = json_decode($block[$field], true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $sections[$i]['content_blocks'][$k][$field] = $decoded;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $request->merge(['sections' => $sections]);
     }
 
     private function validateCourseRequest(Request $request, $id = null): array

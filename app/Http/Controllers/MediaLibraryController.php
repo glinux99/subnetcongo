@@ -125,17 +125,17 @@ class MediaLibraryController extends Controller
             ->whereNotNull('custom_properties->folder')
             ->get()
             ->pluck('name');
-
-        return Inertia::render('MediaLibrary', [
-            'assets' => $mediaItems,
-            'filters' => $request->all(),
-            'folders' => $folders,
-            'storageStats' => $this->getStorageStatistics(),
-            'permissions' => [
-                'can_upload' => Auth::user()->can('upload_media'),
-                'can_delete' => Auth::user()->can('delete_media'),
-            ]
-        ]);
+    
+        // return Inertia::render('MediaLibrary', [
+        //     'assets' => $mediaItems,
+        //     'filters' => $request->all(),
+        //     'folders' => $folders,
+        //     'storageStats' => $this->getStorageStatistics(),
+        //     'permissions' => [
+        //         'can_upload' => Auth::user()->can('upload_media'),
+        //         'can_delete' => Auth::user()->can('delete_media'),
+        //     ]
+        // ]);
     }
 
     /**

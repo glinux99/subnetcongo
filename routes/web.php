@@ -8,13 +8,6 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
-
-Route::get('/test-health', function () {
-    return response('TEST_HEALTH_OK', 200);
-});
-
-// LiveKit health check (public)
-Route::get('livekit-health', [App\Http\Controllers\LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
 use App\Http\Controllers\ExamAttemptController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\GradingController;
@@ -37,6 +30,13 @@ use App\Http\Controllers\SalesReportController;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+Route::get('/test-health', function () {
+    return response('TEST_HEALTH_OK', 200);
+});
+
+// LiveKit health check (public)
+Route::get('livekit-health', [App\Http\Controllers\LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -70,34 +70,8 @@ Route::post('/contact', [WebSettingController::class, 'store'])->name('contact.s
 //     ]);
 // })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth', 'verified')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::resource('/user', UserController::class)->except('create', 'show', 'edit');
-    Route::post('/user/destroy-bulk', [UserController::class, 'destroyBulk'])->name('user.destroy-bulk');
-
-    Route::resource('/role', RoleController::class)->except('create', 'show', 'edit');
-    Route::post('/sessions/{session_id}', [SettingController::class, 'logoutSession'])->name('sessions.logout');
-    Route::resource('/permission', PermissionController::class)->except('create', 'show', 'edit');
-      // Déclarer les routes spécifiques AVANT les routes 'resource' pour éviter les conflits.
-      // NOUVEAU : Déplacer la route de recherche AVANT la route resource
-
-      Route::resources([
-
-    'roles'=> RoleController::class,
-    'permissions'=> PermissionController::class,
-    'categories'=>CategoryController::class,
-
-  ]);
-
-  Route::get('/users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
-  Route::get('/users/leave-impersonate', [UserController::class, 'leaveImpersonate'])->name('users.leave-impersonate');
-
-  Route::put('/settings/profile', [SettingController::class, 'updateProfile'])->name('settings.updateProfile');
-  Route::put('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.updatePassword');
-  Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+Route::middleware('auth')->group(function () {
+   
 
 });
 
@@ -140,7 +114,33 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{enrollment}', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'destroy'])->name('destroy');
         Route::post('/bulk', [App\Http\Controllers\Admin\EnrollmentManagementController::class, 'bulk'])->name('bulk');
     });
+     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::resource('/user', UserController::class)->except('create', 'show', 'edit');
+    Route::post('/user/destroy-bulk', [UserController::class, 'destroyBulk'])->name('user.destroy-bulk');
+
+    Route::resource('/role', RoleController::class)->except('create', 'show', 'edit');
+    Route::post('/sessions/{session_id}', [SettingController::class, 'logoutSession'])->name('sessions.logout');
+    Route::resource('/permission', PermissionController::class)->except('create', 'show', 'edit');
+      // Déclarer les routes spécifiques AVANT les routes 'resource' pour éviter les conflits.
+      // NOUVEAU : Déplacer la route de recherche AVANT la route resource
+
+      Route::resources([
+
+    'roles'=> RoleController::class,
+    'permissions'=> PermissionController::class,
+    'categories'=>CategoryController::class,
+
+  ]);
+
+  Route::get('/users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
+  Route::get('/users/leave-impersonate', [UserController::class, 'leaveImpersonate'])->name('users.leave-impersonate');
+
+  Route::put('/settings/profile', [SettingController::class, 'updateProfile'])->name('settings.updateProfile');
+  Route::put('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.updatePassword');
+  Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     // LiveKit health check (public)
     Route::get('livekit-health', [LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
 
@@ -205,6 +205,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attempts/{uuid}/flag', [ExamAttemptController::class, 'flag'])->name('attempts.flag');
     Route::post('/attempts/{uuid}/submit', [ExamAttemptController::class, 'submit'])->name('attempts.submit');
     Route::get('/results/{result}', [ExamAttemptController::class, 'results'])->name('exams.results');
+    Route::get('/exams/{exam}/attempts', [ExamAttemptController::class, 'attemptHistory'])->name('exams.attempts');
     Route::get('/exams/{exam}/audit-logs', [ExamController::class, 'logActivity'])->name('exams.audit-logs');
     Route::get('/my-exams', [ExamAttemptController::class, 'index'])->name('exams.learner.index');
 
@@ -297,6 +298,23 @@ Route::middleware(['auth'])->group(function () {
         Route::post('cohorts/members/transfer', [App\Http\Controllers\User\CohortController::class, 'transferMember'])->name('cohorts.members.transfer');
         Route::resource('cohorts', App\Http\Controllers\User\CohortController::class);
         Route::resource('list', UserController::class)->parameters(['list' => 'user'])->names('admin');
+    });
+
+    // ===== CONFIGURATIONS (Engins, Zones, Régions, Labels, Unités) =====
+    Route::prefix('configurations')->name('configurations.')->middleware(['has_role:superadmin,admin'])->group(function () {
+        Route::resource('engins', App\Http\Controllers\Configuration\EnginController::class);
+        Route::resource('zones', App\Http\Controllers\Configuration\ZoneController::class);
+        Route::resource('regions', App\Http\Controllers\Configuration\RegionController::class);
+        Route::resource('labels', App\Http\Controllers\Configuration\LabelController::class);
+        Route::resource('unities', App\Http\Controllers\Configuration\UnityController::class);
+        
+        // Utilisateurs - Profil & Historique
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Configuration\UserController::class, 'index'])->name('index');
+            Route::get('/{user}', [App\Http\Controllers\Configuration\UserController::class, 'show'])->name('show');
+            Route::put('/{user}', [App\Http\Controllers\Configuration\UserController::class, 'update'])->name('update');
+            Route::get('/{user}/history', [App\Http\Controllers\Configuration\UserController::class, 'history'])->name('history');
+        });
     });
     Route::prefix('social')->name('social.')->group(function () {
         Route::resource('forums', App\Http\Controllers\Social\ForumController::class)->names(['index' => 'forum.index']);
