@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
  * ======================================================================================
  * SUBNETCONGO LMS - ARCHITECTE PÉDAGOGIQUE & COURSE ENGINE v14.0
  * ======================================================================================
- * 
+ *
  * Ce contrôleur est le coeur du système de gestion des connaissances (LMS).
  * Il orchestre la création de cursus complexes, la gestion des médias sur disque dédié,
  * et la synchronisation polymorphique des ressources de support.
@@ -85,11 +85,11 @@ class CourseController extends Controller
 
             // Transformation des URLs pour le frontend
             $courses->getCollection()->transform(function ($course) {
-                $course->thumbnail_path = $course->thumbnail_path 
+                $course->thumbnail_path = $course->thumbnail_path
                     ?? null;
                 return $course;
             });
-         
+
             return Inertia::render('Courses', [
                 'courses'      => $courses,
                 'stats'        => $this->getAdvancedStats(),
@@ -103,7 +103,7 @@ class CourseController extends Controller
 
         } catch (Exception $e) {
             Log::error("[LMS] Index Error: " . $e->getMessage());
-           
+
             return back()->with('error', "Impossible de charger le catalogue.");
         }
     }
@@ -116,7 +116,7 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $this->prepareAndSanitize($request);
-        
+
         \Log::info('SNC_COURSE_STORE_REQUEST', [
             'has_sections' => $request->has('sections'),
             'sections_type' => gettype($request->input('sections')),
@@ -174,7 +174,7 @@ class CourseController extends Controller
             }
 
             $this->logAction('COURSE_CREATED', "Nouveau cours '{$course->title}' créé par ".Auth::user()->name);
-            
+
             DB::commit();
             Cache::forget('snc_executive_stats');
 
@@ -257,7 +257,7 @@ class CourseController extends Controller
                     'uploaded_by' => Auth::id(),
                 ]);
                 $keptIds[] = $newRes->id;
-            } 
+            }
             // Cas 2 : Mise à jour du titre d'un fichier existant
             elseif (isset($res['id']) && is_numeric($res['id'])) {
                 $existing = Resource::find($res['id']);
@@ -323,13 +323,13 @@ class CourseController extends Controller
             if ($section) {
                 $section->update($sectionData);
                 $keptSectionIds[] = $section->id;
-                
+
                 \Log::info('SNC_SYNC_CURRICULUM_SECTION', [
                     'section_id' => $section->id,
                     'title' => $section->title,
                     'lessons_count' => count($sData['lessons'] ?? []),
                 ]);
-                
+
                 // Synchronisation des leçons à l'intérieur
                 $this->syncLessons($section, $sData['lessons'] ?? []);
             }
@@ -337,7 +337,7 @@ class CourseController extends Controller
 
         // Suppression des sections disparues
         $course->sections()->whereIn('id', array_diff($existingSectionIds, $keptSectionIds))->delete();
-        
+
         \Log::info('SNC_SYNC_CURRICULUM_END', [
             'course_id' => $course->id,
             'kept_sections' => count($keptSectionIds),
@@ -387,7 +387,7 @@ class CourseController extends Controller
             // Gestion des documents uploadés (non-JSON, fichiers réels)
             if (isset($lData['document_file'])) {
                 $file = $lData['document_file'];
-                
+
                 // Cas 1: vrai fichier uploadé (UploadedFile)
                 if (is_object($file) && method_exists($file, 'store')) {
                     try {
@@ -396,7 +396,7 @@ class CourseController extends Controller
                     } catch (\Throwable $e) {
                         \Log::warning('SNC_ERR_DOCUMENT_UPLOAD: ' . $e->getMessage());
                     }
-                } 
+                }
                 // Cas 2: objet fichier converti par Inertia (propriétés name/size/type)
                 elseif (is_object($file) && isset($file->name)) {
                     \Log::warning('SNC_SYNC_LESSONS_DOC_OBJECT', ['lesson_title' => $payload['title'], 'file_info' => json_decode(json_encode($file), true)]);
@@ -438,7 +438,7 @@ class CourseController extends Controller
         }
 
         $section->lessons()->whereIn('id', array_diff($existingLessonIds, $keptLessonIds))->delete();
-        
+
         \Log::info('SNC_SYNC_LESSONS_END', [
             'section_id' => $section->id,
             'kept_lessons' => count($keptLessonIds),
@@ -452,9 +452,14 @@ class CourseController extends Controller
      */
     public function bulkArchive(Request $request)
     {
-        $request->validate(['ids' => 'required|array']);
+       try {
+         $request->validate(['ids' => 'required|array']);
         Course::whereIn('id', $request->ids)->update(['status' => self::STATUS_ARCHIVED]);
         return back()->with('success', "Archivage de masse réussi.");
+       } catch (\Throwable $th) {
+        //throw
+        return $th;
+       }
     }
 
     public function purge(Course $course)
@@ -467,7 +472,7 @@ class CourseController extends Controller
         try {
             // Nettoyage des fichiers physiques
             if ($course->thumbnail_path) Storage::disk($this->disk)->delete($course->thumbnail_path);
-            
+
             foreach($course->resources as $res) {
                 Storage::disk($this->disk)->delete($res->path);
             }

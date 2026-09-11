@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             PaymentGatewaySettingSeeder::class, // Stripe/PayPal/Orange Money/M-Pesa/Airtel Money
             LandingContentSeeder::class,        // Slides / technologies / stats de la landing
             WebSettingsSeeder::class,           // Paramètres web (identité, contact, social, about, hero, legal, privacy)
+            AffiliateSeeder::class,             // Affiliés et parrainages
         ]);
 
         $this->command->info('Rôles, Utilisateurs et Configurations créés !');

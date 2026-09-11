@@ -20,6 +20,12 @@ return new class extends Migration {
             $table->unsignedInteger('estimated_duration')->nullable(); // minutes
             $table->string('thumbnail_path')->nullable();
             $table->json('seo_metadata')->nullable();
+            $table->string('intro_video_url', 500)->nullable();
+            $table->string('intro_video_title')->nullable();
+            $table->string('document_url')->nullable();
+            $table->decimal('quiz_weight', 5, 2)->default(0);
+            $table->decimal('quiz_passing_score', 5, 2)->default(50);
+            $table->integer('quiz_attempts_allowed')->default(3);
             $table->softDeletes();
             $table->timestamps();
 

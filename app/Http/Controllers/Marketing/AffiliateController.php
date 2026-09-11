@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Affiliate; // Modèle à créer
+use App\Models\Affiliate;
 use App\Models\User;
+use App\Models\Referral;
+use App\Models\Course;
+use App\Models\AffiliatePayout;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -16,22 +19,12 @@ use Inertia\Inertia;
 
 class AffiliateController extends Controller
 {
-    /**
-     * Constructeur pour appliquer les middlewares de permissions.
-     */
     public function __construct()
     {
-        // Exemple de permissions
         // $this->middleware('can:view-affiliates')->only(['index', 'show', 'export']);
         // $this->middleware('can:manage-affiliates')->except(['index', 'show', 'export']);
     }
 
-    /**
-     * Affiche la liste des affiliés avec filtres, recherche et pagination.
-     *
-     * @param Request $request
-     * @return \Inertia\Response
-     */
     public function index(Request $request)
     {
         $sortField = $request->input('sort_field', 'created_at');
@@ -40,86 +33,96 @@ class AffiliateController extends Controller
 
         $query = $this->buildAffiliateQuery($request);
 
-        // Tri
-        $validSorts = ['created_at', 'status', 'commission_rate', 'clicks', 'conversions', 'total_earnings'];
+        $validSorts = ['created_at', 'status', 'commission_rate', 'clicks', 'conversions', 'total_earnings', 'tier'];
         if (in_array($sortField, $validSorts)) {
             $query->orderBy($sortField, $sortDirection);
         }
 
         $affiliates = $query->paginate($perPage)->withQueryString();
 
-        // Statistiques pour l'en-tête
+        // Transform affiliates for frontend
+        $affiliates->getCollection()->transform(function ($affiliate) {
+            return $this->transformAffiliate($affiliate);
+        });
+
+        // Stats for header
         $stats = [
             'total' => Affiliate::count(),
             'active' => Affiliate::where('status', 'active')->count(),
             'pending' => Affiliate::where('status', 'pending')->count(),
-            'total_earnings' => Affiliate::sum('total_earnings'), // Supposant que ce champ existe
+            'total_earnings' => Affiliate::sum('total_earnings'),
         ];
+
+        // Tiers config for frontend
+        $tiers = [
+            ['label' => 'Bronze (10%)', 'value' => 'bronze', 'color' => '#cd7f32', 'rate' => 10, 'minSales' => 0],
+            ['label' => 'Silver (15%)', 'value' => 'silver', 'color' => '#c0c0c0', 'rate' => 15, 'minSales' => 10],
+            ['label' => 'Gold (25%)', 'value' => 'gold', 'color' => '#ffd700', 'rate' => 25, 'minSales' => 50],
+            ['label' => 'Platinum (40%)', 'value' => 'platinum', 'color' => '#e5e4e2', 'rate' => 40, 'minSales' => 100],
+        ];
+
+        $statuses = ['active', 'pending', 'inactive', 'banned'];
 
         return Inertia::render('Marketing/Affiliates', [
             'affiliates' => $affiliates,
-            'filters' => $request->all(['search', 'status', 'sort_field', 'sort_direction', 'per_page']),
+            'filters' => $request->all(['search', 'status', 'tier', 'sort_field', 'sort_direction', 'per_page']),
             'stats' => $stats,
+            'tiers' => $tiers,
+            'statuses' => $statuses,
         ]);
     }
 
-    /**
-     * Affiche le formulaire de création d'un affilié.
-     *
-     * @return \Inertia\Response
-     */
     public function create()
     {
-        // On ne propose que les utilisateurs qui ne sont pas déjà affiliés
         $users = User::whereDoesntHave('affiliate')
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
 
+        $tiers = [
+            ['label' => 'Bronze (10%)', 'value' => 'bronze', 'color' => '#cd7f32', 'rate' => 10, 'minSales' => 0],
+            ['label' => 'Silver (15%)', 'value' => 'silver', 'color' => '#c0c0c0', 'rate' => 15, 'minSales' => 10],
+            ['label' => 'Gold (25%)', 'value' => 'gold', 'color' => '#ffd700', 'rate' => 25, 'minSales' => 50],
+            ['label' => 'Platinum (40%)', 'value' => 'platinum', 'color' => '#e5e4e2', 'rate' => 40, 'minSales' => 100],
+        ];
+
         return Inertia::render('Marketing/Affiliates', [
             'users' => $users,
+            'tiers' => $tiers,
         ]);
     }
 
-    /**
-     * Enregistre un nouvel affilié.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id|unique:affiliates,user_id',
-            'code' => 'nullable|string|max:50|unique:affiliates,code',
+            'referral_code' => 'nullable|string|max:50|unique:affiliates,referral_code',
             'commission_rate' => 'required|numeric|min:0|max:100',
             'status' => 'required|in:active,pending,inactive',
             'payment_email' => 'required|email',
+            'tier' => 'required|in:bronze,silver,gold,platinum',
+            'notes' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
         try {
             $user = User::findOrFail($validated['user_id']);
 
-            $affiliateCode = $validated['code'] ?: $this->generateUniqueCode($user->name);
+            $affiliateCode = $validated['referral_code'] ?: $this->generateUniqueCode($user->name);
 
             $affiliate = Affiliate::create([
                 'user_id' => $user->id,
-                'code' => $affiliateCode,
+                'referral_code' => $affiliateCode,
                 'commission_rate' => $validated['commission_rate'],
                 'status' => $validated['status'],
                 'payment_email' => $validated['payment_email'],
+                'tier' => $validated['tier'],
+                'notes' => $validated['notes'] ?? null,
                 'clicks' => 0,
                 'conversions' => 0,
                 'total_earnings' => 0,
-                'balance' => 0,
+                'unpaid_earnings' => 0,
             ]);
-
-            // Assigner un rôle à l'utilisateur
-            // $user->assignRole('affiliate');
-
-            // Envoyer une notification de bienvenue
-            // $user->notify(new WelcomeAffiliate($affiliate));
 
             DB::commit();
 
@@ -134,57 +137,46 @@ class AffiliateController extends Controller
         }
     }
 
-    /**
-     * Affiche les détails d'un affilié.
-     *
-     * @param Affiliate $affiliate
-     * @return \Inertia\Response
-     */
     public function show(Affiliate $affiliate)
     {
-        $affiliate->load(['user', 'referrals.user', 'payouts']); // Simule les relations
-
-        // Simulation de données de performance
-        $performance_chart = [
-            'labels' => ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
-            'clicks' => [120, 150, 80, 200, 250, 180],
-            'conversions' => [12, 18, 7, 25, 30, 22],
-        ];
+        $affiliate->load(['user', 'referrals.course', 'referrals.user', 'payouts']);
+        
+        $transformed = $this->transformAffiliate($affiliate);
+        
+        // Performance chart data from real referrals
+        $performanceChart = $this->getPerformanceChartData($affiliate);
 
         return Inertia::render('Marketing/Affiliates', [
-            'affiliate' => $affiliate,
-            'performance_chart' => $performance_chart,
+            'affiliate' => $transformed,
+            'performance_chart' => $performanceChart,
         ]);
     }
 
-    /**
-     * Affiche le formulaire d'édition d'un affilié.
-     *
-     * @param Affiliate $affiliate
-     * @return \Inertia\Response
-     */
     public function edit(Affiliate $affiliate)
     {
         $affiliate->load('user');
+        
+        $tiers = [
+            ['label' => 'Bronze (10%)', 'value' => 'bronze', 'color' => '#cd7f32', 'rate' => 10, 'minSales' => 0],
+            ['label' => 'Silver (15%)', 'value' => 'silver', 'color' => '#c0c0c0', 'rate' => 15, 'minSales' => 10],
+            ['label' => 'Gold (25%)', 'value' => 'gold', 'color' => '#ffd700', 'rate' => 25, 'minSales' => 50],
+            ['label' => 'Platinum (40%)', 'value' => 'platinum', 'color' => '#e5e4e2', 'rate' => 40, 'minSales' => 100],
+        ];
+
         return Inertia::render('Marketing/Affiliates', [
-            'affiliate' => $affiliate,
+            'affiliate' => $this->transformAffiliate($affiliate),
+            'tiers' => $tiers,
         ]);
     }
 
-    /**
-     * Met à jour un affilié.
-     *
-     * @param Request $request
-     * @param Affiliate $affiliate
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function update(Request $request, Affiliate $affiliate)
     {
         $validated = $request->validate([
-            'code' => ['nullable', 'string', 'max:50', Rule::unique('affiliates')->ignore($affiliate->id)],
+            'referral_code' => ['nullable', 'string', 'max:50', Rule::unique('affiliates')->ignore($affiliate->id)],
             'commission_rate' => 'required|numeric|min:0|max:100',
             'status' => 'required|in:active,pending,inactive,banned',
             'payment_email' => 'required|email',
+            'tier' => 'required|in:bronze,silver,gold,platinum',
             'notes' => 'nullable|string',
         ]);
 
@@ -200,22 +192,10 @@ class AffiliateController extends Controller
         }
     }
 
-    /**
-     * Supprime (désactive) un affilié.
-     *
-     * @param Affiliate $affiliate
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function destroy(Affiliate $affiliate)
     {
         try {
-            // On pourrait choisir de supprimer ou de désactiver
-            // $affiliate->delete();
             $affiliate->update(['status' => 'inactive']);
-
-
-            // Retirer le rôle
-            // $affiliate->user->removeRole('affiliate');
 
             return Redirect::route('marketing.affiliates.index')
                 ->with('success', 'Affilié désactivé.');
@@ -225,12 +205,6 @@ class AffiliateController extends Controller
         }
     }
 
-    /**
-     * Suppression en masse.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function bulkDestroy(Request $request)
     {
         $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:affiliates,id']);
@@ -241,12 +215,6 @@ class AffiliateController extends Controller
         return Redirect::back()->with('success', "$count affiliés ont été désactivés.");
     }
 
-    /**
-     * Approuve une demande d'affiliation.
-     *
-     * @param Affiliate $affiliate
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function approve(Affiliate $affiliate)
     {
         if ($affiliate->status !== 'pending') {
@@ -255,19 +223,9 @@ class AffiliateController extends Controller
 
         $affiliate->update(['status' => 'active']);
 
-        // Envoyer une notification d'approbation
-        // $affiliate->user->notify(new AffiliateApproved($affiliate));
-
         return Redirect::back()->with('success', 'Affilié approuvé et activé.');
     }
 
-    /**
-     * Rejette une demande d'affiliation.
-     *
-     * @param Request $request
-     * @param Affiliate $affiliate
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function reject(Request $request, Affiliate $affiliate)
     {
         $request->validate(['reason' => 'nullable|string|max:1000']);
@@ -278,27 +236,16 @@ class AffiliateController extends Controller
 
         $reason = $request->input('reason', 'Votre demande ne correspond pas à nos critères actuels.');
 
-        // Envoyer une notification de rejet avec la raison
-        // $affiliate->user->notify(new AffiliateRejected($affiliate, $reason));
-
-        // On supprime la demande rejetée
         $affiliate->delete();
 
         return Redirect::route('marketing.affiliates.index')
             ->with('success', 'Demande d\'affiliation rejetée et supprimée.');
     }
 
-    /**
-     * Exporte les données des affiliés en CSV.
-     *
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
-     */
     public function export(Request $request)
     {
         $fileName = 'affiliates_export_' . date('Y-m-d') . '.csv';
 
-        // On réutilise la logique de filtrage de l'index
         $affiliates = $this->buildAffiliateQuery($request)->get();
 
         $headers = [
@@ -319,7 +266,7 @@ class AffiliateController extends Controller
                 $row['ID'] = $aff->id;
                 $row['Nom'] = $aff->user->name;
                 $row['Email'] = $aff->user->email;
-                $row['Code'] = $aff->code;
+                $row['Code'] = $aff->referral_code;
                 $row['Taux Commission (%)'] = $aff->commission_rate;
                 $row['Statut'] = $aff->status;
                 $row['Clics'] = $aff->clicks;
@@ -336,11 +283,6 @@ class AffiliateController extends Controller
         return Response::stream($callback, 200, $headers);
     }
 
-    /**
-     * Retourne les statistiques pour un tableau de bord.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function stats()
     {
         $topAffiliates = Affiliate::with('user:id,name')
@@ -356,8 +298,8 @@ class AffiliateController extends Controller
         $data = [
             'total_affiliates' => Affiliate::count(),
             'pending_applications' => Affiliate::where('status', 'pending')->count(),
-            'total_revenue_generated' => 0, // Calculer via les ventes liées
-            'total_commission_paid' => 0, // Calculer via les paiements
+            'total_revenue_generated' => Referral::where('status', 'approved')->sum('amount'),
+            'total_commission_paid' => AffiliatePayout::where('status', 'completed')->sum('amount'),
             'top_affiliates' => $topAffiliates,
             'recent_signups' => $recentSignups,
         ];
@@ -365,32 +307,33 @@ class AffiliateController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Affiche la page de gestion des paiements pour un affilié.
-     *
-     * @param Affiliate $affiliate
-     * @return \Inertia\Response
-     */
     public function payouts(Affiliate $affiliate)
     {
         $affiliate->load('user');
-
-        // Simule la récupération des paiements
-        $payouts = []; // AffiliatePayout::where('affiliate_id', $affiliate->id)->latest()->paginate(10);
+        
+        $payouts = AffiliatePayout::where('affiliate_id', $affiliate->id)
+            ->latest()
+            ->paginate(10)
+            ->through(function ($payout) {
+                return [
+                    'id' => $payout->id,
+                    'amount' => $payout->amount,
+                    'status' => $payout->status,
+                    'payout_date' => $payout->payout_date?->format('Y-m-d'),
+                    'method' => $payout->method,
+                    'transaction_id' => $payout->transaction_id,
+                    'notes' => $payout->notes,
+                    'created_at' => $payout->created_at->format('Y-m-d H:i'),
+                ];
+            });
 
         return Inertia::render('Marketing/Affiliates', [
-            'affiliate' => $affiliate,
+            'affiliate' => $this->transformAffiliate($affiliate),
             'payouts' => $payouts,
-            'payout_methods' => ['PayPal', 'Virement Bancaire'], // Exemple
+            'payout_methods' => ['PayPal', 'Virement Bancaire', 'Orange Money', 'M-Pesa', 'Airtel Money'],
         ]);
     }
 
-    /**
-     * Génère un nouveau paiement pour un ou plusieurs affiliés.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function generatePayout(Request $request)
     {
         $request->validate([
@@ -401,7 +344,7 @@ class AffiliateController extends Controller
         ]);
 
         $affiliates = Affiliate::whereIn('id', $request->affiliate_ids)
-            ->where('balance', '>', 0) // Ne payer que ceux avec un solde positif
+            ->where('unpaid_earnings', '>', 0)
             ->get();
 
         if ($affiliates->isEmpty()) {
@@ -411,10 +354,8 @@ class AffiliateController extends Controller
         DB::beginTransaction();
         try {
             foreach ($affiliates as $affiliate) {
-                $amount = $affiliate->balance;
+                $amount = $affiliate->unpaid_earnings;
 
-                // Créer l'enregistrement du paiement (modèle AffiliatePayout à créer)
-                /*
                 AffiliatePayout::create([
                     'affiliate_id' => $affiliate->id,
                     'amount' => $amount,
@@ -422,11 +363,9 @@ class AffiliateController extends Controller
                     'payout_date' => $request->payout_date,
                     'notes' => $request->notes,
                 ]);
-                */
 
-                // Mettre à jour le solde de l'affilié
                 $affiliate->update([
-                    'balance' => 0,
+                    'unpaid_earnings' => 0,
                 ]);
             }
             DB::commit();
@@ -439,40 +378,29 @@ class AffiliateController extends Controller
         }
     }
 
-    /**
-     * Génère un code d'affiliation unique.
-     *
-     * @param string $name
-     * @return string
-     */
     private function generateUniqueCode(string $name): string
     {
         $baseCode = Str::slug($name, '');
         $code = $baseCode;
         $counter = 1;
 
-        while (Affiliate::where('code', $code)->exists()) {
+        while (Affiliate::where('referral_code', $code)->exists()) {
             $code = $baseCode . $counter;
             $counter++;
         }
 
-        return $code;
+        return strtoupper($code);
     }
 
-    /**
-     * Construit la requête de base pour les affiliés avec les filtres communs.
-     *
-     * @param Request $request
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
     private function buildAffiliateQuery(Request $request)
     {
         $search = $request->input('search');
         $status = $request->input('status');
+        $tier = $request->input('tier');
 
         return Affiliate::with(['user:id,name,email,profile_photo_path'])
             ->when($search, function ($q, $search) {
-                $q->where('code', 'like', "%{$search}%")
+                $q->where('referral_code', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($userQ) use ($search) {
                       $userQ->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
@@ -480,6 +408,103 @@ class AffiliateController extends Controller
             })
             ->when($status, function ($q, $status) {
                 $q->where('status', $status);
+            })
+            ->when($tier, function ($q, $tier) {
+                $q->where('tier', $tier);
             });
+    }
+
+    private function transformAffiliate($affiliate)
+    {
+        $referrals = $affiliate->referrals()->with('course:id,title')->get();
+        
+        $approvedReferrals = $referrals->where('status', 'approved');
+        $totalRevenue = $approvedReferrals->sum('amount');
+        $totalCommission = $approvedReferrals->sum('commission');
+        $pendingReferrals = $referrals->where('status', 'pending');
+        $pendingCommission = $pendingReferrals->sum('commission');
+        
+        $lastPayout = $affiliate->payouts()->where('status', 'completed')->latest()->first();
+
+        // Recent sales (last 3 approved referrals)
+        $recentSales = $approvedReferrals->take(3)->map(function ($ref) {
+            return [
+                'id' => $ref->id,
+                'course' => $ref->course->title ?? 'Cours supprimé',
+                'date' => $ref->converted_at?->format('Y-m-d') ?? $ref->created_at->format('Y-m-d'),
+                'amount' => $ref->amount,
+                'commission' => $ref->commission,
+            ];
+        })->values()->toArray();
+
+        return [
+            'id' => $affiliate->id,
+            'user' => [
+                'name' => $affiliate->user->name,
+                'email' => $affiliate->user->email,
+                'avatar' => $affiliate->user->profile_photo_path ?? "https://i.pravatar.cc/150?u=" . $affiliate->user->id,
+                'joined_at' => $affiliate->created_at->format('Y-m-d'),
+            ],
+            'tier' => $affiliate->tier,
+            'stats' => [
+                'clicks' => $affiliate->clicks,
+                'conversions' => $affiliate->conversions,
+                'conversion_rate' => $affiliate->clicks > 0 ? round(($affiliate->conversions / $affiliate->clicks) * 100, 2) : 0,
+                'total_revenue' => $totalRevenue,
+                'commission_earned' => $totalCommission,
+            ],
+            'balance' => [
+                'pending' => $pendingCommission,
+                'withdrawable' => $affiliate->unpaid_earnings,
+                'last_payout' => $lastPayout ? $lastPayout->payout_date?->format('d/m/Y') : 'Aucun',
+            ],
+            'status' => ucfirst($affiliate->status),
+            'recent_sales' => $recentSales,
+        ];
+    }
+
+    private function getPerformanceChartData($affiliate)
+    {
+        $months = 6;
+        $labels = [];
+        $commissions = [];
+        $newAffiliates = [];
+
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $labels[] = $date->format('M');
+            
+            $monthCommissions = $affiliate->referrals()
+                ->where('status', 'approved')
+                ->whereMonth('converted_at', $date->month)
+                ->whereYear('converted_at', $date->year)
+                ->sum('commission');
+            $commissions[] = $monthCommissions;
+            
+            // For demo, we'll use 0 for new affiliates since we don't track referral tree
+            $newAffiliates[] = 0;
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Commissions Générées ($)',
+                    'data' => $commissions,
+                    'fill' => false,
+                    'borderColor' => '#F97316',
+                    'tension' => 0.4,
+                    'pointBackgroundColor' => '#F97316'
+                ],
+                [
+                    'label' => 'Nouveaux Affiliés',
+                    'data' => $newAffiliates,
+                    'fill' => true,
+                    'backgroundColor' => 'rgba(99, 102, 241, 0.1)',
+                    'borderColor' => '#6366F1',
+                    'tension' => 0.4
+                ]
+            ]
+        ];
     }
 }
