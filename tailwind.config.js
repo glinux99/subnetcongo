@@ -16,6 +16,16 @@ export default {
             fontFamily: {
                 sans: ['Lato', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                subnetblue: {
+                    DEFAULT: '#3b82f6',
+                    hover: '#2563eb',
+                },
+                subnetred: {
+                    DEFAULT: '#ef4444',
+                    hover: '#dc2626',
+                }
+            }
         },
         screens: {
             sm: '576px',

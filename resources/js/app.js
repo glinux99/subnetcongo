@@ -28,16 +28,32 @@ const appName = import.meta.env.VITE_APP_NAME || 'Sakai';
 const MyCustomPreset = definePreset (Aura, {
     semantic: {
         primary: {
-            50: '#fef3ec',
-            100: '#fde5d4',
-            200: '#fbd2b3',
-            300: '#f8b488',
-            400: '#f48f54',
-            500: '#e15f14',
-            600: '#cb5211',
-            700: '#ac440e',
-            800: '#90390c',
-            900: '#79300a'
+            50: '#eff6ff',
+            100: '#dbeafe',
+            200: '#bfdbfe',
+            300: '#93c5fd',
+            400: '#60a5fa',
+            500: '#3b82f6', // SubnetCongo Blue Base
+            600: '#2563eb',
+            700: '#1d4ed8',
+            800: '#1e40af',
+            900: '#1e3a8a'
+        },
+        colorScheme: {
+            light: {
+                primary: {
+                    color: '{primary.500}',
+                    inverseColor: '#ffffff',
+                    hoverColor: '{primary.600}',
+                    activeColor: '{primary.700}'
+                },
+                highlight: {
+                    background: '{primary.50}',
+                    focusBackground: '{primary.100}',
+                    color: '{primary.700}',
+                    focusColor: '{primary.800}'
+                }
+            }
         }
     }
 });
@@ -95,6 +111,6 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#e15f14',
+        color: '#3b82f6',
     },
 });

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-
+use Exception;
 class AffiliateController extends Controller
 {
     public function __construct()
@@ -27,7 +27,9 @@ class AffiliateController extends Controller
 
     public function index(Request $request)
     {
-        $sortField = $request->input('sort_field', 'created_at');
+
+      try {
+          $sortField = $request->input('sort_field', 'created_at');
         $sortDirection = $request->input('sort_direction', 'desc');
         $perPage = $request->input('per_page', 15);
 
@@ -70,6 +72,10 @@ class AffiliateController extends Controller
             'tiers' => $tiers,
             'statuses' => $statuses,
         ]);
+      }
+      catch(Exception $e){
+        return $e->getMessage();
+      }
     }
 
     public function create()
@@ -140,9 +146,9 @@ class AffiliateController extends Controller
     public function show(Affiliate $affiliate)
     {
         $affiliate->load(['user', 'referrals.course', 'referrals.user', 'payouts']);
-        
+
         $transformed = $this->transformAffiliate($affiliate);
-        
+
         // Performance chart data from real referrals
         $performanceChart = $this->getPerformanceChartData($affiliate);
 
@@ -155,7 +161,7 @@ class AffiliateController extends Controller
     public function edit(Affiliate $affiliate)
     {
         $affiliate->load('user');
-        
+
         $tiers = [
             ['label' => 'Bronze (10%)', 'value' => 'bronze', 'color' => '#cd7f32', 'rate' => 10, 'minSales' => 0],
             ['label' => 'Silver (15%)', 'value' => 'silver', 'color' => '#c0c0c0', 'rate' => 15, 'minSales' => 10],
@@ -310,7 +316,7 @@ class AffiliateController extends Controller
     public function payouts(Affiliate $affiliate)
     {
         $affiliate->load('user');
-        
+
         $payouts = AffiliatePayout::where('affiliate_id', $affiliate->id)
             ->latest()
             ->paginate(10)
@@ -398,7 +404,7 @@ class AffiliateController extends Controller
         $status = $request->input('status');
         $tier = $request->input('tier');
 
-        return Affiliate::with(['user:id,name,email,profile_photo_path'])
+        return Affiliate::with(['user:id,name,email,profile_photo'])
             ->when($search, function ($q, $search) {
                 $q->where('referral_code', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($userQ) use ($search) {
@@ -417,13 +423,13 @@ class AffiliateController extends Controller
     private function transformAffiliate($affiliate)
     {
         $referrals = $affiliate->referrals()->with('course:id,title')->get();
-        
+
         $approvedReferrals = $referrals->where('status', 'approved');
         $totalRevenue = $approvedReferrals->sum('amount');
         $totalCommission = $approvedReferrals->sum('commission');
         $pendingReferrals = $referrals->where('status', 'pending');
         $pendingCommission = $pendingReferrals->sum('commission');
-        
+
         $lastPayout = $affiliate->payouts()->where('status', 'completed')->latest()->first();
 
         // Recent sales (last 3 approved referrals)
@@ -442,7 +448,7 @@ class AffiliateController extends Controller
             'user' => [
                 'name' => $affiliate->user->name,
                 'email' => $affiliate->user->email,
-                'avatar' => $affiliate->user->profile_photo_path ?? "https://i.pravatar.cc/150?u=" . $affiliate->user->id,
+                'avatar' => $affiliate->user->profile_photo_url ?? "https://i.pravatar.cc/150?u=" . $affiliate->user->id,
                 'joined_at' => $affiliate->created_at->format('Y-m-d'),
             ],
             'tier' => $affiliate->tier,
@@ -473,14 +479,14 @@ class AffiliateController extends Controller
         for ($i = $months - 1; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $labels[] = $date->format('M');
-            
+
             $monthCommissions = $affiliate->referrals()
                 ->where('status', 'approved')
                 ->whereMonth('converted_at', $date->month)
                 ->whereYear('converted_at', $date->year)
                 ->sum('commission');
             $commissions[] = $monthCommissions;
-            
+
             // For demo, we'll use 0 for new affiliates since we don't track referral tree
             $newAffiliates[] = 0;
         }

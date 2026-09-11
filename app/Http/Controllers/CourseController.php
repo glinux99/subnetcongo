@@ -462,6 +462,73 @@ class CourseController extends Controller
        }
     }
 
+    /**
+     * DESTROY : Suppression définitive d'un cours (Soft delete + nettoyage)
+     * Supprime les médias, ressources, et relations avant le hard delete
+     */
+    public function destroy(Course $course)
+    {
+        DB::beginTransaction();
+        try {
+            // Nettoyage des fichiers physiques sur le disque 'media'
+            if ($course->thumbnail_path) {
+                Storage::disk($this->disk)->delete($course->thumbnail_path);
+            }
+
+            foreach($course->resources as $res) {
+                Storage::disk($this->disk)->delete($res->path);
+            }
+
+            // Supprimer les médias Spatie attachés au cours
+            if (method_exists($course, 'clearMediaCollection')) {
+                $course->clearMediaCollection('avatar');
+                $course->clearMediaCollection('thumbnails');
+            }
+
+            // La suppression en cascade gérera : sections -> lessons, enrollments, resources, etc.
+            // grâce aux foreign keys onDelete('cascade') dans les migrations
+            $course->delete(); // Soft delete par défaut
+
+            DB::commit();
+            Cache::forget('snc_executive_stats');
+            
+            return back()->with('success', "Le cours et ses médias associés ont été supprimés.");
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("[LMS] Destroy Failure ID {$course->id}: " . $e->getMessage());
+            return back()->with('error', "Erreur lors de la suppression : " . $e->getMessage());
+        }
+    }
+
+    /**
+     * FORCE DESTROY : Suppression forcée (Hard delete) - seulement pour les cours archivés
+     */
+    public function forceDestroy(Course $course)
+    {
+        if ($course->status !== self::STATUS_ARCHIVED) {
+            return back()->with('error', "Seul un cours archivé peut être purgé définitivement.");
+        }
+
+        DB::beginTransaction();
+        try {
+            // Nettoyage des fichiers physiques
+            if ($course->thumbnail_path) Storage::disk($this->disk)->delete($course->thumbnail_path);
+
+            foreach($course->resources as $res) {
+                Storage::disk($this->disk)->delete($res->path);
+            }
+
+            // Force delete (hard delete) - bypass soft delete
+            $course->forceDelete();
+
+            DB::commit();
+            return back()->with('success', "Le parcours a été effacé définitivement du serveur.");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return back()->with('error', "Erreur lors de la purge définitive : " . $e->getMessage());
+        }
+    }
+
     public function purge(Course $course)
     {
         if ($course->status !== self::STATUS_ARCHIVED) {
