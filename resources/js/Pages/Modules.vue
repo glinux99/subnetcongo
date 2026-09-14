@@ -520,243 +520,291 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+  <div class="page-bg min-h-screen font-sans pb-20">
 
-            <!-- ============================================================================== -->
-            <!-- HEADER DE PAGE ET KPI                                                          -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'Cours', icon: 'pi pi-book' }, { label: 'Curriculum (Modules & Leçons)', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Gestionnaire de Curriculum
-                            <Badge value="Architect" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Organisez votre patrimoine pédagogique. Créez des modules, associez-les à vos cours, et construisez des leçons multimédias riches.
-                        </p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Créer un Module Indépendant" icon="pi pi-plus" class="p-button-primary shadow-lg shadow-indigo-500/20 w-full sm:w-auto font-bold px-6 py-3" @click="openNewModule" />
-                </div>
-            </div>
+    <!-- ============================================================================== -->
+    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- ============================================================================== -->
+    <div class="flex flex-col gap-2 mb-12">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm px-1 mb-2">
+            <Breadcrumb 
+                :model="[{ label: 'Cours', icon: 'pi pi-book' }, { label: 'Curriculum (Modules & Leçons)' }]" 
+                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+            />
+        </div>
 
-            <!-- KPI DASHBOARD -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform"><i class="pi pi-folder-open text-9xl text-indigo-900"></i></div>
-                    <div class="relative z-10">
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Total Modules</p>
-                        <h3 class="text-4xl font-black text-slate-800">{{ stats.total_modules }}</h3>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform"><i class="pi pi-file text-9xl text-emerald-900"></i></div>
-                    <div class="relative z-10">
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Total Leçons</p>
-                        <h3 class="text-4xl font-black text-slate-800">{{ stats.total_lessons }}</h3>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform"><i class="pi pi-video text-9xl text-rose-900"></i></div>
-                    <div class="relative z-10">
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Heures de Vidéo</p>
-                        <h3 class="text-4xl font-black text-slate-800">{{ stats.video_hours }}<span class="text-lg text-slate-400">h</span></h3>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform"><i class="pi pi-paperclip text-9xl text-amber-900"></i></div>
-                    <div class="relative z-10">
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Ressources jointes</p>
-                        <h3 class="text-4xl font-black text-slate-800">{{ stats.total_attachments }}</h3>
-                    </div>
-                </div>
-            </div>
+        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
+        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                
+                <!-- Partie Gauche (Titres) -->
+                <div class="space-y-4 max-w-3xl">
+                    <!-- Badge Architect -->
+                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                        Architect
+                    </span>
 
-            <!-- ============================================================================== -->
-            <!-- DATA GRID : GESTION DES MODULES (VUE ARCHITECTE)                               -->
-            <!-- ============================================================================== -->
-            <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden">
+                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
+                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                        <span class="text-white">Gestionnaire de</span>
+                        <span class="text-[#E92B2B]">Curriculum</span>
+                    </h1>
 
-                <!-- TOOLBAR -->
-                <div class="bg-slate-50 border-b border-slate-200 p-5 flex flex-col lg:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <IconField iconPosition="left" class="w-full sm:w-auto">
-                            <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Chercher un module..." class="w-full sm:w-64 bg-white border-slate-200" />
-                        </IconField>
-
-                        <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
-
-                        <!-- Filtre par Cours -->
-                        <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par Formation" class="w-full sm:w-72 bg-white border-slate-200" showClear filter>
-                            <template #value="slotProps">
-                                <div v-if="slotProps.value" class="flex items-center gap-2 text-indigo-700 font-bold text-sm">
-                                    <i class="pi pi-book"></i>
-                                    <span class="truncate max-w-[200px]">{{ props.courses.find(c => c.id === slotProps.value)?.title }}</span>
-                                </div>
-                                <span v-else class="text-slate-500">Tous les cours</span>
-                            </template>
-                        </Dropdown>
-
-                        <Dropdown v-model="serverFilters.status" :options="[{label:'Publiés', value:'published'}, {label:'Brouillons', value:'draft'}]" optionLabel="label" optionValue="value" placeholder="Statut" class="w-full sm:w-40 bg-white border-slate-200" showClear />
-                    </div>
+                    <!-- Sous-titre -->
+                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
+                        Organisez votre patrimoine pédagogique. Créez des modules, associez-les à vos cours, et construisez des leçons multimédias riches.
+                    </p>
                 </div>
 
-                <!-- TABLEAU PRINCIPAL -->
-                <DataTable
-                    v-model:expandedRows="expandedRows"
-                    :value="localModules"
-                    dataKey="id"
-                    :lazy="true"
-                    :paginator="true"
-                    :rows="props.modules.per_page"
-                    :totalRecords="props.modules.total"
-                    :first="(props.modules.current_page - 1) * props.modules.per_page"
-                    @page="onPageChange"
-                    :loading="loading"
-                    class="p-datatable-custom border-none"
-                    rowHover
-                    stripedRows
-                >
-                    <template #empty>
-                        <div class="p-16 text-center flex flex-col items-center">
-                            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center border border-slate-200 mb-4">
-                                <i class="pi pi-folder-open text-4xl text-slate-300"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-800">Aucun module trouvé</h3>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md">Modifiez vos filtres ou créez un nouveau module pour structurer votre premier cours.</p>
-                            <Button label="Créer un Module" icon="pi pi-plus" class="p-button-outlined mt-6" @click="openNewModule" />
-                        </div>
-                    </template>
-
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
-
-                    <!-- COLONNE : INFO MODULE -->
-                    <Column field="title" header="Module / Chapitre" style="min-width: 25rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex gap-4 py-1">
-
-                                <!-- Thumbnail miniature -->
-                                <div class="w-16 h-12 rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                                    <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover" />
-                                    <i v-else class="pi pi-image text-slate-300 text-lg"></i>
-                                </div>
-
-                                <div>
-                                    <div class="font-extrabold text-slate-800 text-base leading-tight hover:text-indigo-600 cursor-pointer" @click="editModule(data)">
-                                        {{ data.title }}
-                                        <i v-if="data.is_locked" class="pi pi-lock text-amber-500 text-xs ml-1" v-tooltip.top="'Module verrouillé (prérequis strict)'"></i>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <!-- Badge du cours parent -->
-                                        <div class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded font-bold flex items-center gap-1 max-w-[200px] truncate" v-tooltip.top="'Cours associé'">
-                                            <i class="pi pi-book text-[9px]"></i> {{ getCourseName(data.course_id) }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="stats" header="Contenu" style="min-width: 10rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex flex-col text-xs text-slate-600 space-y-1">
-                                <span class="font-bold"><i class="pi pi-file text-slate-400 mr-1 text-[10px]"></i> {{ data.lessons?.length || 0 }} Leçon(s)</span>
-                                <span><i class="pi pi-clock text-slate-400 mr-1 text-[10px]"></i> {{ formatDuration(data.estimated_duration) }} estimé</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="status" header="Statut" style="min-width: 8rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <Tag :severity="data.status === 'published' ? 'success' : 'secondary'" :value="data.status === 'published' ? 'Publié' : 'Brouillon'" class="text-[10px] uppercase font-bold tracking-wider" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-plus" class="p-button-text p-button-success p-button-rounded bg-emerald-50 hover:bg-emerald-100 w-8 h-8" v-tooltip.top="'Ajouter une leçon'" @click="openNewLesson(data.id)" />
-                                <div class="w-px h-5 bg-slate-200 self-center mx-1"></div>
-                                <Button icon="pi pi-arrow-right-arrow-left" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Transférer vers un autre cours'" @click="openTransferDialog(data)" />
-                                <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Configurer le module'" @click="editModule(data)" />
-                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Purger ce module'" @click="confirmDeleteModule(data)" />
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- LIGNE EXPANSIVE : LISTE DES LEÇONS (DRAGGABLE) -->
-                    <template #expansion="{ data }">
-                        <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_5px_10px_rgba(0,0,0,0.02)]">
-                            <div class="max-w-6xl mx-auto">
-                                <div class="flex items-center justify-between mb-6">
-                                    <h4 class="font-black text-slate-800 text-lg flex items-center gap-2">
-                                        <i class="pi pi-list text-indigo-500"></i> Sommaire du Module
-                                    </h4>
-                                    <Button label="Nouvelle Leçon" icon="pi pi-plus" class="p-button-sm p-button-success shadow-sm font-bold" @click="openNewLesson(data.id)" />
-                                </div>
-
-                                <div v-if="data.lessons && data.lessons.length > 0" class="bg-white rounded-2xl border border-slate-200 p-2 shadow-sm">
-                                    <draggable
-                                        v-model="data.lessons"
-                                        item-key="id"
-                                        handle=".lesson-drag"
-                                        @end="updateLessonsOrder(data.id, data.lessons)"
-                                        class="divide-y divide-slate-100"
-                                    >
-                                        <template #item="{ element: lesson, index }">
-                                            <div class="flex items-center p-3 hover:bg-slate-50 transition-colors group">
-
-                                                <i class="pi pi-bars lesson-drag text-slate-300 cursor-move hover:text-indigo-500 p-3 flex-shrink-0" v-tooltip.top="'Ordonner'"></i>
-
-                                                <div class="w-8 h-8 rounded-full text-[10px] font-black flex items-center justify-center mr-4 bg-slate-100 text-slate-400 flex-shrink-0 border border-slate-200">
-                                                    {{ index + 1 }}
-                                                </div>
-
-                                                <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-4 flex-shrink-0 border border-white shadow-sm" :class="lessonTypesDef.find(t => t.value === lesson.type)?.bg">
-                                                    <i :class="[lessonTypesDef.find(t => t.value === lesson.type)?.icon, lessonTypesDef.find(t => t.value === lesson.type)?.color]" class="text-lg"></i>
-                                                </div>
-
-                                                <div class="flex-1 min-w-0 pr-4">
-                                                    <div class="font-bold text-slate-800 text-base truncate hover:text-indigo-600 cursor-pointer" @click="editLesson(lesson, data.id)">
-                                                        {{ lesson.title }}
-                                                    </div>
-                                                    <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                                                        <span class="uppercase tracking-wider font-bold text-[10px] text-slate-400">{{ lesson.type }}</span>
-                                                        <span v-if="lesson.duration_minutes"><i class="pi pi-clock text-[10px]"></i> {{ lesson.duration_minutes }} min</span>
-                                                        <span v-if="lesson.is_free_preview" class="text-emerald-500 font-bold bg-emerald-50 px-1.5 py-0.5 rounded"><i class="pi pi-unlock text-[10px]"></i> Extrait Gratuit</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="flex items-center gap-6 mr-6 hidden md:flex">
-                                                    <div v-if="lesson.attachment_paths?.length" class="text-xs font-bold text-slate-400 flex items-center gap-1" v-tooltip.top="`${lesson.attachment_paths.length} fichier(s) joint(s)`">
-                                                       <i class="pi pi-paperclip"></i> {{ lesson.attachment_paths.length }}
-                                                    </div>
-                                                    <Tag :severity="lesson.status === 'published' ? 'success' : 'secondary'" :value="lesson.status === 'published' ? 'Publié' : 'Brouillon'" class="text-[10px]" />
-                                                </div>
-
-                                                <div class="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary text-slate-500 hover:bg-indigo-50 hover:text-indigo-600" @click="editLesson(lesson, data.id)" />
-                                                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger text-slate-500 hover:bg-rose-50 hover:text-rose-600" @click="confirmDeleteLesson(lesson)" />
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </draggable>
-                                </div>
-                                <div v-else class="text-center p-10 bg-white rounded-xl border border-dashed border-slate-300">
-                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3"><i class="pi pi-box text-2xl text-slate-300"></i></div>
-                                    <p class="text-slate-500 font-bold">Ce module est vide.</p>
-                                    <p class="text-xs text-slate-400 mt-1">Ajoutez des vidéos, documents ou devoirs.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </DataTable>
+                <!-- Partie Droite (Boutons) -->
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <Button 
+                        label="Créer un Module Indépendant" 
+                        icon="pi pi-plus" 
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6 py-3" 
+                        @click="openNewModule" 
+                    />
+                </div>
             </div>
         </div>
+
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- ============================================================================== -->
+        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+            
+            <!-- KPI 1 : Modules -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-folder-open text-indigo-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Modules</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_modules }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 2 : Leçons -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-file text-emerald-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Leçons</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_lessons }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 3 : Heures de vidéo -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-video text-rose-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Heures de Vidéo</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.video_hours }}<span class="text-lg text-slate-400 ml-1">h</span></p>
+                </div>
+            </div>
+
+            <!-- KPI 4 : Ressources jointes -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-paperclip text-amber-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ressources jointes</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_attachments }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================== -->
+    <!-- DATA GRID : GESTION DES MODULES (VUE ARCHITECTE) - (Code inchangé)             -->
+    <!-- ============================================================================== -->
+    <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden mt-6">
+
+        <!-- TOOLBAR -->
+        <div class="bg-slate-50 border-b border-slate-200 p-5 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <IconField iconPosition="left" class="w-full sm:w-auto">
+                    <InputIcon class="pi pi-search text-slate-400" />
+                    <InputText v-model="serverFilters.search" placeholder="Chercher un module..." class="w-full sm:w-64 bg-white border-slate-200" />
+                </IconField>
+
+                <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+                <!-- Filtre par Cours -->
+                <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par Formation" class="w-full sm:w-72 bg-white border-slate-200" showClear filter>
+                    <template #value="slotProps">
+                        <div v-if="slotProps.value" class="flex items-center gap-2 text-indigo-700 font-bold text-sm">
+                            <i class="pi pi-book"></i>
+                            <span class="truncate max-w-[200px]">{{ props.courses.find(c => c.id === slotProps.value)?.title }}</span>
+                        </div>
+                        <span v-else class="text-slate-500">Tous les cours</span>
+                    </template>
+                </Dropdown>
+
+                <Dropdown v-model="serverFilters.status" :options="[{label:'Publiés', value:'published'}, {label:'Brouillons', value:'draft'}]" optionLabel="label" optionValue="value" placeholder="Statut" class="w-full sm:w-40 bg-white border-slate-200" showClear />
+            </div>
+        </div>
+
+        <!-- TABLEAU PRINCIPAL -->
+        <DataTable
+            v-model:expandedRows="expandedRows"
+            :value="localModules"
+            dataKey="id"
+            :lazy="true"
+            :paginator="true"
+            :rows="props.modules.per_page"
+            :totalRecords="props.modules.total"
+            :first="(props.modules.current_page - 1) * props.modules.per_page"
+            @page="onPageChange"
+            :loading="loading"
+            class="p-datatable-custom border-none"
+            rowHover
+            stripedRows
+        >
+            <template #empty>
+                <div class="p-16 text-center flex flex-col items-center">
+                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center border border-slate-200 mb-4">
+                        <i class="pi pi-folder-open text-4xl text-slate-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Aucun module trouvé</h3>
+                    <p class="text-slate-500 text-sm mt-2 max-w-md">Modifiez vos filtres ou créez un nouveau module pour structurer votre premier cours.</p>
+                    <Button label="Créer un Module" icon="pi pi-plus" class="p-button-outlined mt-6" @click="openNewModule" />
+                </div>
+            </template>
+
+            <Column expander style="width: 3rem; background-color: #f8fafc;" />
+
+            <!-- COLONNE : INFO MODULE -->
+            <Column field="title" header="Module / Chapitre" style="min-width: 25rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex gap-4 py-1">
+
+                        <!-- Thumbnail miniature -->
+                        <div class="w-16 h-12 rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                            <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover" />
+                            <i v-else class="pi pi-image text-slate-300 text-lg"></i>
+                        </div>
+
+                        <div>
+                            <div class="font-extrabold text-slate-800 text-base leading-tight hover:text-indigo-600 cursor-pointer" @click="editModule(data)">
+                                {{ data.title }}
+                                <i v-if="data.is_locked" class="pi pi-lock text-amber-500 text-xs ml-1" v-tooltip.top="'Module verrouillé (prérequis strict)'"></i>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <!-- Badge du cours parent -->
+                                <div class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded font-bold flex items-center gap-1 max-w-[200px] truncate" v-tooltip.top="'Cours associé'">
+                                    <i class="pi pi-book text-[9px]"></i> {{ getCourseName(data.course_id) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="stats" header="Contenu" style="min-width: 10rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex flex-col text-xs text-slate-600 space-y-1">
+                        <span class="font-bold"><i class="pi pi-file text-slate-400 mr-1 text-[10px]"></i> {{ data.lessons?.length || 0 }} Leçon(s)</span>
+                        <span><i class="pi pi-clock text-slate-400 mr-1 text-[10px]"></i> {{ formatDuration(data.estimated_duration) }} estimé</span>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="status" header="Statut" style="min-width: 8rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <Tag :severity="data.status === 'published' ? 'success' : 'secondary'" :value="data.status === 'published' ? 'Publié' : 'Brouillon'" class="text-[10px] uppercase font-bold tracking-wider" />
+                </template>
+            </Column>
+
+            <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex justify-end gap-1">
+                        <Button icon="pi pi-plus" class="p-button-text p-button-success p-button-rounded bg-emerald-50 hover:bg-emerald-100 w-8 h-8" v-tooltip.top="'Ajouter une leçon'" @click="openNewLesson(data.id)" />
+                        <div class="w-px h-5 bg-slate-200 self-center mx-1"></div>
+                        <Button icon="pi pi-arrow-right-arrow-left" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Transférer vers un autre cours'" @click="openTransferDialog(data)" />
+                        <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Configurer le module'" @click="editModule(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Purger ce module'" @click="confirmDeleteModule(data)" />
+                    </div>
+                </template>
+            </Column>
+
+            <!-- LIGNE EXPANSIVE : LISTE DES LEÇONS (DRAGGABLE) -->
+            <template #expansion="{ data }">
+                <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_5px_10px_rgba(0,0,0,0.02)]">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                                <i class="pi pi-list text-indigo-500"></i> Sommaire du Module
+                            </h4>
+                            <Button label="Nouvelle Leçon" icon="pi pi-plus" class="p-button-sm p-button-success shadow-sm font-bold" @click="openNewLesson(data.id)" />
+                        </div>
+
+                        <div v-if="data.lessons && data.lessons.length > 0" class="bg-white rounded-2xl border border-slate-200 p-2 shadow-sm">
+                            <draggable
+                                v-model="data.lessons"
+                                item-key="id"
+                                handle=".lesson-drag"
+                                @end="updateLessonsOrder(data.id, data.lessons)"
+                                class="divide-y divide-slate-100"
+                            >
+                                <template #item="{ element: lesson, index }">
+                                    <div class="flex items-center p-3 hover:bg-slate-50 transition-colors group">
+
+                                        <i class="pi pi-bars lesson-drag text-slate-300 cursor-move hover:text-indigo-500 p-3 flex-shrink-0" v-tooltip.top="'Ordonner'"></i>
+
+                                        <div class="w-8 h-8 rounded-full text-[10px] font-black flex items-center justify-center mr-4 bg-slate-100 text-slate-400 flex-shrink-0 border border-slate-200">
+                                            {{ index + 1 }}
+                                        </div>
+
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-4 flex-shrink-0 border border-white shadow-sm" :class="lessonTypesDef.find(t => t.value === lesson.type)?.bg">
+                                            <i :class="[lessonTypesDef.find(t => t.value === lesson.type)?.icon, lessonTypesDef.find(t => t.value === lesson.type)?.color]" class="text-lg"></i>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0 pr-4">
+                                            <div class="font-bold text-slate-800 text-base truncate hover:text-indigo-600 cursor-pointer" @click="editLesson(lesson, data.id)">
+                                                {{ lesson.title }}
+                                            </div>
+                                            <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                                                <span class="uppercase tracking-wider font-bold text-[10px] text-slate-400">{{ lesson.type }}</span>
+                                                        <span v-if="lesson.duration_minutes"><i class="pi pi-clock text-[10px]"></i> {{ lesson.duration_minutes }} min</span>
+                                                <span v-if="lesson.is_free_preview" class="text-emerald-500 font-bold bg-emerald-50 px-1.5 py-0.5 rounded"><i class="pi pi-unlock text-[10px]"></i> Extrait Gratuit</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-6 mr-6 hidden md:flex">
+                                            <div v-if="lesson.attachment_paths?.length" class="text-xs font-bold text-slate-400 flex items-center gap-1" v-tooltip.top="`${lesson.attachment_paths.length} fichier(s) joint(s)`">
+                                               <i class="pi pi-paperclip"></i> {{ lesson.attachment_paths.length }}
+                                            </div>
+                                            <Tag :severity="lesson.status === 'published' ? 'success' : 'secondary'" :value="lesson.status === 'published' ? 'Publié' : 'Brouillon'" class="text-[10px]" />
+                                        </div>
+
+                                        <div class="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary text-slate-500 hover:bg-indigo-50 hover:text-indigo-600" @click="editLesson(lesson, data.id)" />
+                                            <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger text-slate-500 hover:bg-rose-50 hover:text-rose-600" @click="confirmDeleteLesson(lesson)" />
+                                        </div>
+                                    </div>
+                                </template>
+                            </draggable>
+                        </div>
+                        <div v-else class="text-center p-10 bg-white rounded-xl border border-dashed border-slate-300">
+                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3"><i class="pi pi-box text-2xl text-slate-300"></i></div>
+                            <p class="text-slate-500 font-bold">Ce module est vide.</p>
+                            <p class="text-xs text-slate-400 mt-1">Ajoutez des vidéos, documents ou devoirs.</p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </DataTable>
+    </div>
+</div>
 
         <!-- ============================================================================== -->
         <!-- DIALOG : ÉDITEUR DE MODULE (SPLIT-SCREEN)                                      -->

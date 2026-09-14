@@ -522,216 +522,262 @@ onMounted(() => {
         <Toast position="top-right" />
         <ConfirmDialog />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+   <div class="page-bg min-h-screen font-sans pb-20">
 
-            <!-- ============================================================================== -->
-            <!-- HEADER ET NAVIGATION GLOBALE                                                   -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Évaluations & Quiz', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Assessment Center
-                            <Badge value="Certifications" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Concevez des épreuves certifiantes, gérez la banque d'items et analysez la fiabilité psychométrique de vos cursus de manière centralisée.
-                        </p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Audit & Imports" icon="pi pi-database" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm font-medium w-full sm:w-auto" @click="importExportSidebar = true" />
-                    <Button label="Nouvelle Évaluation" icon="pi pi-plus" class="p-button-primary shadow-md shadow-indigo-500/20 font-bold px-6 w-full sm:w-auto" @click="openNew" />
-                </div>
-            </div>
+    <!-- ============================================================================== -->
+    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- ============================================================================== -->
+    <div class="flex flex-col gap-2 mb-12">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm px-1 mb-2">
+            <Breadcrumb 
+                :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Évaluations & Quiz' }]" 
+                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+            />
+        </div>
 
-            <!-- ============================================================================== -->
-            <!-- KPI DASHBOARD                                                                  -->
-            <!-- ============================================================================== -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-verified text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Examens Actifs</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats_overview?.total || 24 }}</h3>
-                    </div>
-                    <div class="absolute right-0 bottom-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity"><i class="pi pi-file text-6xl"></i></div>
-                </div>
+        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
+        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                
+                <!-- Partie Gauche (Titres) -->
+                <div class="space-y-4 max-w-3xl">
+                    <!-- Badge Certifications -->
+                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                        Certifications
+                    </span>
 
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-users text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Tentatives (Ce mois)</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats_overview?.attempts?.toLocaleString() }}</h3>
-                        <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">Live</span>
-                    </div>
+                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
+                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                        <span class="text-white">Assessment</span>
+                        <span class="text-[#E92B2B]">Center</span>
+                    </h1>
+
+                    <!-- Sous-titre -->
+                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
+                        Concevez des épreuves certifiantes, gérez la banque d'items et analysez la fiabilité psychométrique de vos cursus de manière centralisée.
+                    </p>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-chart-pie text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Taux de Réussite</p>
-                    </div>
-                    <h3 class="text-4xl font-black text-slate-800">{{ props.stats_overview?.avg_success_rate }}%</h3>
+                <!-- Partie Droite (Boutons) -->
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <Button 
+                        label="Audit & Imports" 
+                        icon="pi pi-database" 
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
+                        @click="importExportSidebar = true" 
+                    />
+                    <Button 
+                        label="Nouvelle Évaluation" 
+                        icon="pi pi-plus" 
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
+                        @click="openNew" 
+                    />
                 </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center"><i class="pi pi-shield text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Alertes Anti-Triche</p>
-                    </div>
-                    <h3 class="text-4xl font-black text-slate-800">{{ props.stats_overview?.anti_cheat_alerts }}</h3>
-                </div>
-            </div>
-
-            <!-- ============================================================================== -->
-            <!-- DATA GRID : TABLEAU DES ÉVALUATIONS                                            -->
-            <!-- ============================================================================== -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-
-                <!-- Toolbar de filtre -->
-                <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Rechercher par titre..." class="w-full sm:w-80 border-slate-200 font-medium" />
-                        </IconField>
-
-                        <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
-
-                        <Dropdown v-model="serverFilters.status" :options="['Active', 'Draft', 'Archived']" placeholder="État du flux" class="w-48 border-slate-200 font-medium" showClear />
-                        <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par cours" class="w-56 border-slate-200 font-medium" showClear filter />
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <Button v-if="selectedExams.length > 0" icon="pi pi-box" :label="`Archiver (${selectedExams.length})`" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
-                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
-                    </div>
-                </div>
-
-                <!-- DataTable Principale -->
-                <DataTable
-                    v-model:selection="selectedExams"
-                    v-model:expandedRows="expandedRows"
-                    :value="examList"
-                    dataKey="id"
-                    :paginator="true"
-                    :rows="10"
-                    :loading="loading || searchLoading"
-                    class="p-datatable-custom border-none"
-                    rowHover
-                    stripedRows
-                >
-                    <template #empty>
-                        <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
-                            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
-                                <i class="pi pi-file-edit text-5xl text-slate-300"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-2">Aucun examen trouvé</h3>
-                            <p class="text-sm text-center text-slate-500 mb-6">Il semblerait que votre base de données d'évaluations soit vide pour ces critères.</p>
-                            <Button label="Créer un examen" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
-                        </div>
-                    </template>
-
-                    <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
-
-                    <Column field="title" header="Épreuve & Programme" style="min-width: 25rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex items-center gap-4 py-2">
-                                <div class="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
-                                     :class="data.type === 'Certification' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500'">
-                                    <i :class="data.type === 'Certification' ? 'pi pi-verified' : 'pi pi-clock'" class="text-xl"></i>
-                                </div>
-                                <div class="flex flex-col justify-center">
-                                    <span class="font-extrabold text-slate-800 text-base hover:text-indigo-600 cursor-pointer transition-colors" @click="editExam(data)">
-                                        {{ data.title }}
-                                        </span>
-                                    <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
-                                        <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1"><i class="pi pi-book text-[10px]"></i> {{ data.course?.title || 'Tronc Commun' }}</span>
-                                        <span class="text-slate-400 flex items-center gap-1"><i class="pi pi-list text-[10px]"></i> {{ data.questions_count || 0 }} items</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="settings" header="Format & Règles" style="background-color: #f8fafc; min-width: 12rem;">
-                        <template #body="{ data }">
-                            <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
-                                <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> Durée : <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
-                                <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-emerald-500"></i> Validation : <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="status" header="État de publication" style="background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <Tag :severity="getStatusColor(data.status).sev" :icon="getStatusColor(data.status).icon" :value="getStatusColor(data.status).label" class="text-[10px] font-bold px-3 py-1.5 border uppercase tracking-wider" :class="`border-${getStatusColor(data.status).sev}-200 bg-${getStatusColor(data.status).sev}-50 text-${getStatusColor(data.status).sev}-700`" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
-                        <template #body="{ data }">
-                            <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Résultats & Analytics'" @click="analyticsDialog = true" /> <!-- Analytics dialog will need to be updated to fetch data for specific exam -->
-                                <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-indigo-50 hover:text-indigo-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
-                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" v-tooltip.top="'Supprimer l\'examen'" @click="deleteExam(data.id)" />
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- LIGNE EXPANSIVE (Vue Rapide Analytique) -->
-                    <template #expansion="{ data }">
-                        <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
-                            <div class="max-w-6xl mx-auto">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-indigo-500"></i> Aperçu des Performances Cohorte</h4>
-                                    <Button label="Générer Rapport Complet" icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-secondary bg-white font-bold text-xs" />
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
-                                        <div>
-                                            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Score Moyen</div>
-                                            <div class="text-3xl font-black text-slate-800 flex items-baseline gap-2">
-                                                {{ data.avg_score }}%
-                                                <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">+2.4%</span>
-                                            </div>
-                                        </div>
-                                        <Knob :modelValue="data.avg_score" :size="70" readonly valueColor="#10B981" rangeColor="#f1f5f9" />
-                                    </div>
-
-                                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                                        <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3">Sécurité & Proctoring</div>
-                                        <div class="flex items-center gap-3 text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                            <i class="pi pi-shield text-indigo-500 text-lg"></i>
-                                            <div>
-                                                <div>Niveau Actif</div>
-                                                <div class="text-[10px] text-slate-400 font-normal">Standard (Focus Mode)</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                                        <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Tentatives Récentes</div>
-                                        <div class="flex -space-x-2 overflow-hidden mt-1" v-if="data.recent_attempts_users && data.recent_attempts_users.length > 0">
-                                            <Avatar v-for="user in data.recent_attempts_users.slice(0, 5)" :key="user.id" :image="user.avatar || `https://ui-avatars.com/api/?name=${user.name}`" shape="circle" class="border-2 border-white shadow-sm" />
-                                            <Avatar v-if="data.recent_attempts_users.length > 5" :label="`+${data.recent_attempts_users.length - 5}`" shape="circle" class="bg-slate-100 text-slate-600 font-bold border-2 border-white shadow-sm text-xs" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </DataTable>
             </div>
         </div>
+
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- ============================================================================== -->
+        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+            
+            <!-- KPI 1 : Examens Actifs -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-verified text-indigo-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Examens Actifs</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.total || 24 }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 2 : Tentatives (Ce mois) -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-users text-emerald-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tentatives (Ce mois)</h3>
+                    <div class="flex items-center gap-2">
+                        <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.attempts?.toLocaleString() }}</p>
+                        <!-- Le badge 'Live' est conservé et adapté pour tenir dans ce layout -->
+                        <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Live</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 3 : Taux de Réussite -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-chart-pie text-amber-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taux de Réussite</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.avg_success_rate }}<span class="text-lg text-slate-400 ml-1">%</span></p>
+                </div>
+            </div>
+
+            <!-- KPI 4 : Alertes Anti-Triche -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-shield text-rose-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Alertes Anti-Triche</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.anti_cheat_alerts }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================== -->
+    <!-- DATA GRID : TABLEAU DES ÉVALUATIONS (Inchangé)                                 -->
+    <!-- ============================================================================== -->
+    <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden mt-6">
+
+        <!-- Toolbar de filtre -->
+        <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <IconField iconPosition="left">
+                    <InputIcon class="pi pi-search text-slate-400" />
+                    <InputText v-model="serverFilters.search" placeholder="Rechercher par titre..." class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
+                </IconField>
+
+                <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+                <Dropdown v-model="serverFilters.status" :options="['Active', 'Draft', 'Archived']" placeholder="État du flux" class="w-48 border-slate-200 font-medium bg-white" showClear />
+                <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par cours" class="w-56 border-slate-200 font-medium bg-white" showClear filter />
+            </div>
+
+            <div class="flex items-center gap-2">
+                <Button v-if="selectedExams.length > 0" icon="pi pi-box" :label="`Archiver (${selectedExams.length})`" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
+                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
+            </div>
+        </div>
+
+        <!-- DataTable Principale -->
+        <DataTable
+            v-model:selection="selectedExams"
+            v-model:expandedRows="expandedRows"
+            :value="examList"
+            dataKey="id"
+            :paginator="true"
+            :rows="10"
+            :loading="loading || searchLoading"
+            class="p-datatable-custom border-none"
+            rowHover
+            stripedRows
+        >
+            <template #empty>
+                <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
+                        <i class="pi pi-file-edit text-5xl text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Aucun examen trouvé</h3>
+                    <p class="text-sm text-center text-slate-500 mb-6">Il semblerait que votre base de données d'évaluations soit vide pour ces critères.</p>
+                    <Button label="Créer un examen" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
+                </div>
+            </template>
+
+            <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
+            <Column expander style="width: 3rem; background-color: #f8fafc;" />
+
+            <Column field="title" header="Épreuve & Programme" style="min-width: 25rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex items-center gap-4 py-2">
+                        <div class="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
+                             :class="data.type === 'Certification' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500'">
+                            <i :class="data.type === 'Certification' ? 'pi pi-verified' : 'pi pi-clock'" class="text-xl"></i>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <span class="font-extrabold text-slate-800 text-base hover:text-indigo-600 cursor-pointer transition-colors" @click="editExam(data)">
+                                {{ data.title }}
+                                </span>
+                            <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
+                                <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1"><i class="pi pi-book text-[10px]"></i> {{ data.course?.title || 'Tronc Commun' }}</span>
+                                <span class="text-slate-400 flex items-center gap-1"><i class="pi pi-list text-[10px]"></i> {{ data.questions_count || 0 }} items</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="settings" header="Format & Règles" style="background-color: #f8fafc; min-width: 12rem;">
+                <template #body="{ data }">
+                    <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
+                        <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> Durée : <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
+                        <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-emerald-500"></i> Validation : <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="status" header="État de publication" style="background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <Tag :severity="getStatusColor(data.status).sev" :icon="getStatusColor(data.status).icon" :value="getStatusColor(data.status).label" class="text-[10px] font-bold px-3 py-1.5 border uppercase tracking-wider" :class="`border-${getStatusColor(data.status).sev}-200 bg-${getStatusColor(data.status).sev}-50 text-${getStatusColor(data.status).sev}-700`" />
+                </template>
+            </Column>
+
+            <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+                <template #body="{ data }">
+                    <div class="flex justify-end gap-1">
+                        <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Résultats & Analytics'" @click="analyticsDialog = true" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-indigo-50 hover:text-indigo-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" v-tooltip.top="'Supprimer l\'examen'" @click="deleteExam(data.id)" />
+                    </div>
+                </template>
+            </Column>
+
+            <!-- LIGNE EXPANSIVE (Vue Rapide Analytique) -->
+            <template #expansion="{ data }">
+                <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-indigo-500"></i> Aperçu des Performances Cohorte</h4>
+                            <Button label="Générer Rapport Complet" icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-secondary bg-white font-bold text-xs" />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Score Moyen</div>
+                                    <div class="text-3xl font-black text-slate-800 flex items-baseline gap-2">
+                                        {{ data.avg_score }}%
+                                        <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">+2.4%</span>
+                                    </div>
+                                </div>
+                                <Knob :modelValue="data.avg_score" :size="70" readonly valueColor="#10B981" rangeColor="#f1f5f9" />
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                                <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3">Sécurité & Proctoring</div>
+                                <div class="flex items-center gap-3 text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                    <i class="pi pi-shield text-indigo-500 text-lg"></i>
+                                    <div>
+                                        <div>Niveau Actif</div>
+                                        <div class="text-[10px] text-slate-400 font-normal">Standard (Focus Mode)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                                <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Tentatives Récentes</div>
+                                <div class="flex -space-x-2 overflow-hidden mt-1" v-if="data.recent_attempts_users && data.recent_attempts_users.length > 0">
+                                    <Avatar v-for="user in data.recent_attempts_users.slice(0, 5)" :key="user.id" :image="user.avatar || `https://ui-avatars.com/api/?name=${user.name}`" shape="circle" class="border-2 border-white shadow-sm" />
+                                    <Avatar v-if="data.recent_attempts_users.length > 5" :label="`+${data.recent_attempts_users.length - 5}`" shape="circle" class="bg-slate-100 text-slate-600 font-bold border-2 border-white shadow-sm text-xs" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </DataTable>
+    </div>
+</div>
 
         <!-- ============================================================================== -->
         <!-- DIALOG ÉDITEUR : WORKSPACE EXAM ARCHITECT                                      -->

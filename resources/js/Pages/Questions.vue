@@ -314,215 +314,259 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <Toast position="top-right" />
         <ConfirmDialog />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+  <div class="page-bg min-h-screen font-sans pb-20">
 
-            <!-- ============================================================================== -->
-            <!-- HEADER ET NAVIGATION GLOBALE                                                   -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'Ingénierie Pédagogique', icon: 'pi pi-home' }, { label: 'Banque d\'Items', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Banque de Questions Centrale
-                            <Badge value="v11.5" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Gérez votre patrimoine d'évaluation. Ces items atomiques peuvent être réutilisés dynamiquement dans n'importe quel examen ou certification.
-                        </p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Importer (GIFT/CSV)" icon="pi pi-upload" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm font-medium w-full sm:w-auto" @click="importDialog = true" />
-                    <Button label="Créer un Item" icon="pi pi-plus" class="p-button-primary shadow-md shadow-indigo-500/20 font-bold px-6 w-full sm:w-auto" @click="openNew" />
-                </div>
-            </div>
+    <!-- ============================================================================== -->
+    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- ============================================================================== -->
+    <div class="flex flex-col gap-2 mb-12">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm px-1 mb-2">
+            <Breadcrumb 
+                :model="[{ label: 'Ingénierie Pédagogique', icon: 'pi pi-home' }, { label: 'Banque d\'Items' }]" 
+                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+            />
+        </div>
 
-            <!-- ============================================================================== -->
-            <!-- KPI DASHBOARD                                                                  -->
-            <!-- ============================================================================== -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-list text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Items</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.statistics?.total_items || 1245 }}</h3>
-                    </div>
-                </div>
+        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
+        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                
+                <!-- Partie Gauche (Titres) -->
+                <div class="space-y-4 max-w-3xl">
+                    <!-- Badge -->
+                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                        v11.5
+                    </span>
 
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-check-circle text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Items Actifs</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.statistics?.active_items || 980 }}</h3>
-                    </div>
+                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
+                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                        <span class="text-white">Banque de</span>
+                        <span class="text-[#E92B2B]">Questions Centrale</span>
+                    </h1>
+
+                    <!-- Sous-titre -->
+                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
+                        Gérez votre patrimoine d'évaluation. Ces items atomiques peuvent être réutilisés dynamiquement dans n'importe quel examen ou certification.
+                    </p>
                 </div>
 
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-star text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Barème Moyen</p>
-                    </div>
-                    <h3 class="text-4xl font-black text-slate-800">{{ props.statistics?.avg_difficulty || 1.5 }} <span class="text-sm text-slate-400">pts</span></h3>
-                </div>
-
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center"><i class="pi pi-exclamation-triangle text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">À Réviser</p>
-                    </div>
-                    <h3 class="text-4xl font-black text-rose-600">{{ props.statistics?.needs_review || 14 }}</h3>
-                </div>
-            </div>
-
-            <!-- ============================================================================== -->
-            <!-- DATA GRID : TABLEAU DES QUESTIONS                                              -->
-            <!-- ============================================================================== -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-
-                <!-- Toolbar de filtre -->
-                <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <IconField iconPosition="left">
-                            <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Rechercher dans l'énoncé..." class="w-full sm:w-80 border-slate-200 font-medium" />
-                        </IconField>
-
-                        <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
-
-                        <Dropdown v-model="serverFilters.type" :options="Object.entries(props.meta.questionTypes || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" placeholder="Format" class="w-40 border-slate-200 font-medium" showClear />
-                        <Dropdown v-model="serverFilters.difficulty" :options="Object.entries(props.meta.difficulties || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" placeholder="Niveau" class="w-40 border-slate-200 font-medium" showClear />
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <Button v-if="selectedQuestions.length > 0" icon="pi pi-trash" :label="`Archiver (${selectedQuestions.length})`" class="p-button-danger p-button-outlined shadow-sm" />
-                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
-                    </div>
-                </div>
-
-                <!-- DataTable -->
-                <DataTable
-                    :value="props.questions?.data || []"
-                    :lazy="true"
-                    :paginator="true"
-                    :rows="props.questions?.per_page || 15"
-                    :totalRecords="props.questions?.total || 0"
-                    @page="onPage"
-                    v-model:selection="selectedQuestions"
-                    dataKey="id"
-                    :loading="loading || searchLoading"
-                    class="p-datatable-custom border-none"
-                    rowHover
-                    stripedRows
-                >
-                    <template #empty>
-                        <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
-                            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
-                                <i class="pi pi-database text-5xl text-slate-300"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-2">Banque vide</h3>
-                            <p class="text-sm text-center text-slate-500 mb-6">Aucun item ne correspond à vos filtres actuels.</p>
-                            <Button label="Créer un item" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
-                        </div>
-                    </template>
-
-                    <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-
-                    <Column field="type" header="Format" style="width: 5rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" :class="getTypeColor(data.type)" v-tooltip.top="getTypeLabel(data.type)">
-                                <i :class="['text-lg', getTypeIcon(data.type)]"></i>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="question_text" header="Énoncé de l'Item" style="min-width: 25rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex flex-col gap-1 py-2">
-                                <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-indigo-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || 'Énoncé non défini'"></div>
-
-                                <!-- Aperçu des options / réponses en ligne -->
-                                <div v-if="data.options && data.options.length" class="flex flex-wrap gap-1 mt-1">
-                                    <template v-for="(opt, idx) in data.options" :key="idx">
-                                        <span v-if="opt.option_text"
-                                              :class="['text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1',
-                                                       opt.is_correct ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold' : 'bg-slate-50 text-slate-400 border-slate-200']">
-                                            <i v-if="opt.is_correct" class="pi pi-check text-[8px]"></i>
-                                            {{ opt.option_text }}
-                                        </span>
-                                    </template>
-                                </div>
-                                <div v-else-if="data.correct_answer" class="text-[9px] font-bold text-emerald-600 mt-1 uppercase flex items-center gap-1">
-                                    <i class="pi pi-key text-[10px]"></i>
-                                    Réponse: {{ data.correct_answer === 'true' ? 'VRAI' : (data.correct_answer === 'false' ? 'FAUX' : data.correct_answer) }}
-                                </div>
-
-                                <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
-                                    <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ data.category?.name || 'Général' }}</span>
-                                    <span v-if="data.attempts_count"><i class="pi pi-chart-bar mr-1"></i>{{ data.attempts_count }} pass.</span>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="difficulty" header="Niveau" style="background-color: #f8fafc; min-width: 8rem;">
-                        <template #body="{ data }">
-                            <Tag :value="data.difficulty" :severity="getDifficultySeverity(data.difficulty)" class="text-[10px] font-bold px-2 py-1 uppercase tracking-wider" />
-                        </template>
-                    </Column>
-
-                    <Column field="points" header="Pts" style="background-color: #f8fafc; width: 6rem; text-align: center;">
-                        <template #body="{ data }">
-                            <Badge :value="data.points" severity="secondary" class="font-bold bg-slate-100 text-slate-600 border border-slate-200" />
-                        </template>
-                    </Column>
-
-                    <Column field="status" header="État" style="background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex items-center gap-2">
-                                <div :class="['w-2 h-2 rounded-full', data.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300']"></div>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ data.status }}</span>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
-                        <template #body="{ data }">
-                            <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Analyse psychométrique'" @click="analyticsDialog = true" />
-                                <Button icon="pi pi-copy" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50" v-tooltip.top="'Cloner'" @click="duplicateQuestion(data.id)" />
-                                <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-indigo-50 hover:text-indigo-600" @click="editQuestion(data)" />
-                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" @click="confirmDelete(data.id)" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
-
-            <!-- ============================================================================== -->
-            <!-- STATS FOOTER SECTION                                                           -->
-            <!-- ============================================================================== -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
-                <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-indigo-500"></i> Répartition par Difficulté</h3>
-                    <Chart type="bar" :data="chartData" :options="chartOptions" class="h-48" />
-                </div>
-                <div class="bg-indigo-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden border border-indigo-800 flex flex-col justify-between">
-                    <i class="pi pi-bolt absolute -right-6 -bottom-6 text-9xl text-white/5 rotate-12"></i>
-                    <div class="relative z-10">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-indigo-100"><i class="pi pi-sparkles text-amber-400"></i> Conseil IA Pédagogique</h3>
-                        <p class="text-indigo-200 text-sm leading-relaxed">
-                            Votre banque manque de questions de type "Expert" (Seulement 15%). Pour vos certifications finales, nous recommandons d'équilibrer la base avec plus d'items d'analyse complexe (ex: Format Rédaction).
-                        </p>
-                    </div>
-                    <Button label="Générer avec l'IA" class="p-button-sm p-button-outlined p-button-secondary bg-white text-indigo-900 border-none font-bold mt-6 w-full" />
+                <!-- Partie Droite (Boutons) -->
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <Button 
+                        label="Importer (GIFT/CSV)" 
+                        icon="pi pi-upload" 
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
+                        @click="importDialog = true" 
+                    />
+                    <Button 
+                        label="Créer un Item" 
+                        icon="pi pi-plus" 
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
+                        @click="openNew" 
+                    />
                 </div>
             </div>
         </div>
+
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- ============================================================================== -->
+        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+            
+            <!-- KPI 1 : Total Items -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-list text-indigo-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Items</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.total_items || 1245 }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 2 : Items Actifs -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-check-circle text-emerald-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Items Actifs</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.active_items || 980 }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 3 : Barème Moyen -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-star text-amber-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Barème Moyen</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.avg_difficulty || 1.5 }}<span class="text-lg text-slate-400 ml-1">pts</span></p>
+                </div>
+            </div>
+
+            <!-- KPI 4 : À Réviser -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-exclamation-triangle text-rose-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">À Réviser</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.needs_review || 14 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================== -->
+    <!-- DATA GRID : TABLEAU DES QUESTIONS (Inchangé)                                   -->
+    <!-- ============================================================================== -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+
+        <!-- Toolbar de filtre -->
+        <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <IconField iconPosition="left">
+                    <InputIcon class="pi pi-search text-slate-400" />
+                    <InputText v-model="serverFilters.search" placeholder="Rechercher dans l'énoncé..." class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
+                </IconField>
+
+                <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+                <Dropdown v-model="serverFilters.type" :options="Object.entries(props.meta.questionTypes || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" placeholder="Format" class="w-40 border-slate-200 font-medium bg-white" showClear />
+                <Dropdown v-model="serverFilters.difficulty" :options="Object.entries(props.meta.difficulties || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" placeholder="Niveau" class="w-40 border-slate-200 font-medium bg-white" showClear />
+            </div>
+
+            <div class="flex items-center gap-2">
+                <Button v-if="selectedQuestions.length > 0" icon="pi pi-trash" :label="`Archiver (${selectedQuestions.length})`" class="p-button-danger p-button-outlined shadow-sm bg-white" />
+                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
+            </div>
+        </div>
+
+        <!-- DataTable -->
+        <DataTable
+            :value="props.questions?.data || []"
+            :lazy="true"
+            :paginator="true"
+            :rows="props.questions?.per_page || 15"
+            :totalRecords="props.questions?.total || 0"
+            @page="onPage"
+            v-model:selection="selectedQuestions"
+            dataKey="id"
+            :loading="loading || searchLoading"
+            class="p-datatable-custom border-none"
+            rowHover
+            stripedRows
+        >
+            <template #empty>
+                <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
+                        <i class="pi pi-database text-5xl text-slate-300"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Banque vide</h3>
+                    <p class="text-sm text-center text-slate-500 mb-6">Aucun item ne correspond à vos filtres actuels.</p>
+                    <Button label="Créer un item" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
+                </div>
+            </template>
+
+            <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
+
+            <Column field="type" header="Format" style="width: 5rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" :class="getTypeColor(data.type)" v-tooltip.top="getTypeLabel(data.type)">
+                        <i :class="['text-lg', getTypeIcon(data.type)]"></i>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="question_text" header="Énoncé de l'Item" style="min-width: 25rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex flex-col gap-1 py-2">
+                        <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-indigo-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || 'Énoncé non défini'"></div>
+
+                        <!-- Aperçu des options / réponses en ligne -->
+                        <div v-if="data.options && data.options.length" class="flex flex-wrap gap-1 mt-1">
+                            <template v-for="(opt, idx) in data.options" :key="idx">
+                                <span v-if="opt.option_text"
+                                      :class="['text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1',
+                                               opt.is_correct ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold' : 'bg-slate-50 text-slate-400 border-slate-200']">
+                                    <i v-if="opt.is_correct" class="pi pi-check text-[8px]"></i>
+                                    {{ opt.option_text }}
+                                </span>
+                            </template>
+                        </div>
+                        <div v-else-if="data.correct_answer" class="text-[9px] font-bold text-emerald-600 mt-1 uppercase flex items-center gap-1">
+                            <i class="pi pi-key text-[10px]"></i>
+                            Réponse: {{ data.correct_answer === 'true' ? 'VRAI' : (data.correct_answer === 'false' ? 'FAUX' : data.correct_answer) }}
+                        </div>
+
+                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
+                            <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ data.category?.name || 'Général' }}</span>
+                            <span v-if="data.attempts_count"><i class="pi pi-chart-bar mr-1"></i>{{ data.attempts_count }} pass.</span>
+                        </div>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="difficulty" header="Niveau" style="background-color: #f8fafc; min-width: 8rem;">
+                <template #body="{ data }">
+                    <Tag :value="data.difficulty" :severity="getDifficultySeverity(data.difficulty)" class="text-[10px] font-bold px-2 py-1 uppercase tracking-wider" />
+                </template>
+            </Column>
+
+            <Column field="points" header="Pts" style="background-color: #f8fafc; width: 6rem; text-align: center;">
+                <template #body="{ data }">
+                    <Badge :value="data.points" severity="secondary" class="font-bold bg-slate-100 text-slate-600 border border-slate-200" />
+                </template>
+            </Column>
+
+            <Column field="status" header="État" style="background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex items-center gap-2">
+                        <div :class="['w-2 h-2 rounded-full', data.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300']"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ data.status }}</span>
+                    </div>
+                </template>
+            </Column>
+
+            <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+                <template #body="{ data }">
+                    <div class="flex justify-end gap-1">
+                        <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Analyse psychométrique'" @click="analyticsDialog = true" />
+                        <Button icon="pi pi-copy" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50" v-tooltip.top="'Cloner'" @click="duplicateQuestion(data.id)" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-indigo-50 hover:text-indigo-600" @click="editQuestion(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" @click="confirmDelete(data.id)" />
+                    </div>
+                </template>
+            </Column>
+        </DataTable>
+    </div>
+
+    <!-- ============================================================================== -->
+    <!-- STATS FOOTER SECTION (Inchangé)                                                -->
+    <!-- ============================================================================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+        <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-indigo-500"></i> Répartition par Difficulté</h3>
+            <Chart type="bar" :data="chartData" :options="chartOptions" class="h-48" />
+        </div>
+        <div class="bg-indigo-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden border border-indigo-800 flex flex-col justify-between">
+            <i class="pi pi-bolt absolute -right-6 -bottom-6 text-9xl text-white/5 rotate-12"></i>
+            <div class="relative z-10">
+                <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-indigo-100"><i class="pi pi-sparkles text-amber-400"></i> Conseil IA Pédagogique</h3>
+                <p class="text-indigo-200 text-sm leading-relaxed">
+                    Votre banque manque de questions de type "Expert" (Seulement 15%). Pour vos certifications finales, nous recommandons d'équilibrer la base avec plus d'items d'analyse complexe (ex: Format Rédaction).
+                </p>
+            </div>
+            <Button label="Générer avec l'IA" class="p-button-sm p-button-outlined p-button-secondary bg-white text-indigo-900 border-none font-bold mt-6 w-full hover:bg-indigo-50" />
+        </div>
+    </div>
+</div>
 
         <!-- ============================================================================== -->
         <!-- DIALOG ÉDITEUR : WORKSPACE ATOMIC QUESTION                                     -->

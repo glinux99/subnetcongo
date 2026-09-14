@@ -981,25 +981,74 @@ onBeforeUnmount(() => {
             <!-- ============================================================================== -->
             <!-- HEADER DE PAGE ET KPI                                                          -->
             <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Patrimoine Pédagogique', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex flex-wrap items-center gap-3">
-                            Catalogue des Formations
-                            <Badge value="Enterprise" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Pilotez l'ingénierie de votre écosystème d'apprentissage. Concevez des cursus interactifs avancés, gérez les stratégies de monétisation et analysez l'engagement de vos cohortes.
-                        </p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Insights & Rapports" icon="pi pi-chart-pie" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 hover:bg-slate-50 w-full sm:w-auto font-medium shadow-sm" @click="analyticsDialog = true" />
-                    <Button label="Nouvelle Catégorie" icon="pi pi-tags" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 hover:bg-slate-50 w-full sm:w-auto font-medium shadow-sm" @click="openCategoryDialog" />
-                    <Button label="Forger un Nouveau Cours" icon="pi pi-plus" class="p-button-primary shadow-md shadow-indigo-500/20 w-full sm:w-auto font-bold px-6" @click="openNew" />
-                </div>
+            <!-- ============================================================================== -->
+<!-- HEADER DE PAGE ET KPI (Style Dark "Intelligence Hub")                          -->
+<!-- ============================================================================== -->
+<div class="flex flex-col gap-3 mb-10">
+    
+    <!-- Breadcrumb au-dessus de la bannière (comme sur la maquette) -->
+    <div class="flex items-center text-sm px-1">
+        <Breadcrumb 
+            :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Patrimoine Pédagogique' }]" 
+            class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+        />
+    </div>
+
+    <!-- Bannière sombre (Dark Banner) -->
+    <!-- NB: Si vous voulez faire chevaucher des cartes KPI en dessous plus tard, changez 'py-8' par 'pt-10 pb-28' -->
+    <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl py-8 px-6 md:px-10 shadow-lg overflow-hidden">
+        
+        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 relative z-10">
+            
+            <!-- Partie Gauche (Titres et Description) -->
+            <div class="space-y-4 max-w-3xl">
+                <!-- Badge stylisé (Remplace le composant <Badge> basique pour coller au design) -->
+                <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                    Enterprise
+                </span>
+
+                <!-- Titre Principal (Italique, gras, partie en rouge) -->
+                <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                    <span class="text-white">Catalogue des</span>
+                    <span class="text-[#E92B2B]">Formations</span>
+                </h1>
+
+                <!-- Description -->
+                <p class="text-slate-400 text-sm md:text-base italic leading-relaxed">
+                    Pilotez l'ingénierie de votre écosystème d'apprentissage. Concevez des cursus interactifs avancés, gérez les stratégies de monétisation et analysez l'engagement de vos cohortes.
+                </p>
             </div>
+
+            <!-- Partie Droite (Boutons d'actions conservés avec vos fonctions) -->
+            <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full xl:w-auto">
+                
+                <!-- Bouton Secondaire 1 -->
+                <Button 
+                    label="Insights & Rapports" 
+                    icon="pi pi-chart-pie" 
+                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors" 
+                    @click="analyticsDialog = true" 
+                />
+                
+                <!-- Bouton Secondaire 2 -->
+                <Button 
+                    label="Nouvelle Catégorie" 
+                    icon="pi pi-tags" 
+                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors" 
+                    @click="openCategoryDialog" 
+                />
+                
+                <!-- Bouton Principal (Rouge) -->
+                <Button 
+                    label="Forger un Nouveau Cours" 
+                    icon="pi pi-plus" 
+                    class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
+                    @click="openNew" 
+                />
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- KPI DASHBOARD (4 CARTES) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

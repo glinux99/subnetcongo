@@ -691,230 +691,310 @@ onMounted(() => {
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+   <div class="page-bg min-h-screen font-sans pb-20">
 
-            <!-- ============================================================================== -->
-            <!-- HEADER DE PAGE                                                                 -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Career Paths & Cohorts', class: 'font-semibold text-violet-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Architecte de Parcours
-                            <Badge value="Enterprise Edition" severity="info" class="text-[10px] bg-violet-100 text-violet-700 border border-violet-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Concevez des cursus complets en assemblant plusieurs cours. Définissez des règles de progression et administrez les cohortes d'étudiants en un clic.
-                        </p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Audit Log" icon="pi pi-history" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 hidden sm:flex font-bold hover:bg-slate-100 transition-colors" @click="historySidebar = true" />
-                    <Button label="Intelligence & Perf." icon="pi pi-chart-pie" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 hidden sm:flex font-bold hover:bg-slate-100 transition-colors" @click="analyticsDialog = true" />
-                    <Button label="Nouveau Parcours" icon="pi pi-map" class="p-button-primary bg-violet-600 border-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-500/30 font-bold px-6 py-3 w-full sm:w-auto transition-transform hover:-translate-y-0.5" @click="openNewPath" />
-                </div>
-            </div>
+    <!-- ============================================================================== -->
+    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- ============================================================================== -->
+    <div class="flex flex-col gap-2 mb-12">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm px-1 mb-2">
+            <Breadcrumb 
+                :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Career Paths & Cohorts' }]" 
+                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+            />
+        </div>
 
-            <!-- ============================================================================== -->
-            <!-- KPI DASHBOARD                                                                  -->
-            <!-- ============================================================================== -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <KpiCard label="Parcours Actifs" :value="stats.total_paths" icon="pi pi-map" color-class="violet" />
-                <KpiCard label="Apprenants Inscrits" :value="stats.active_students" icon="pi pi-users" color-class="emerald" />
-                <KpiCard label="Taux de Complétion" :value="`${stats.avg_completion}%`" icon="pi pi-chart-line" color-class="amber" />
-                <KpiCard label="MRR (Parcours)" :value="formatCurrency(stats.mrr)" icon="pi pi-wallet" color-class="rose" />
-            </div>
+        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
+        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                
+                <!-- Partie Gauche (Titres) -->
+                <div class="space-y-4 max-w-3xl">
+                    <!-- Badge -->
+                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                        Enterprise Edition
+                    </span>
 
-            <!-- ============================================================================== -->
-            <!-- MAIN DATA GRID (CATALOGUE DES PARCOURS & COHORTES)                             -->
-            <!-- ============================================================================== -->
-            <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden">
+                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
+                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                        <span class="text-white">Architecte de</span>
+                        <span class="text-[#E92B2B]">Parcours</span>
+                    </h1>
 
-                <!-- Toolbar Filtrage Principal -->
-                <div class="bg-slate-50/50 border-b border-slate-200 p-5 flex flex-col lg:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <IconField iconPosition="left" class="w-full sm:w-auto shadow-sm rounded-lg overflow-hidden">
-                            <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Rechercher un cursus..." class="w-full sm:w-64 bg-white border-slate-200 font-medium" />
-                        </IconField>
-                        <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
-                        <Dropdown v-model="serverFilters.category_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Catégorie métier" class="w-full sm:w-48 bg-white border-slate-200 shadow-sm" showClear filter />
-                        <Dropdown v-model="serverFilters.level" :options="levelsMap" optionLabel="label" optionValue="value" placeholder="Niveau visé" class="w-full sm:w-40 bg-white border-slate-200 shadow-sm" showClear />
-                    </div>
-                    <Button icon="pi pi-sync" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:bg-slate-100 transition-transform hover:rotate-180 duration-500" @click="router.reload()" v-tooltip.top="'Actualiser les données'" />
+                    <!-- Sous-titre -->
+                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
+                        Concevez des cursus complets en assemblant plusieurs cours. Définissez des règles de progression et administrez les cohortes d'étudiants en un clic.
+                    </p>
                 </div>
 
-                <!-- DataTable des Parcours -->
-                <DataTable
-                    v-model:expandedRows="expandedRows"
-                    :value="props.learningPaths.data"
-                    dataKey="id"
-                    :loading="loading"
-                    class="p-datatable-custom border-none"
-                    rowHover
-                    stripedRows
-                    responsiveLayout="scroll"
-                >
-                    <template #empty>
-                        <div class="p-20 text-center flex flex-col items-center justify-center animate-fade-in">
-                            <div class="w-28 h-28 bg-slate-50 rounded-full flex items-center justify-center border border-slate-200 mb-6 shadow-inner relative">
-                                <i class="pi pi-map text-6xl text-slate-300"></i>
-                                <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm border border-slate-100"><i class="pi pi-search text-slate-400"></i></div>
-                            </div>
-                            <h3 class="text-2xl font-black text-slate-800">Catalogue de Parcours Vide</h3>
-                            <p class="text-slate-500 text-sm mt-3 max-w-md leading-relaxed">Les parcours permettent de grouper des cours pour créer des cursus métiers de A à Z. Commencez à structurer votre académie dès maintenant.</p>
-                            <Button label="Concevoir mon premier Parcours" icon="pi pi-plus" class="p-button-primary mt-8 font-bold shadow-lg shadow-violet-500/30 px-6 py-3" @click="openNewPath" />
-                        </div>
-                    </template>
-
-                    <!-- Colonne Expand pour le Syllabus -->
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
-
-                    <Column field="name" header="Identité du Parcours" style="min-width: 25rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex items-center gap-4 py-2">
-                                <div class="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0 overflow-hidden relative shadow-sm group cursor-pointer" @click="editPath(data)">
-                                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <i class="pi pi-pencil text-white text-xl"></i>
-                                    </div>
-                                    <img v-if="data.badge_url" :src="data.badge_url" class="w-10 h-10 object-contain drop-shadow-md z-0" />
-                                    <img v-else-if="data.thumbnail" :src="data.thumbnail" class="w-full h-full object-cover z-0" />
-                                    <i v-else class="pi pi-map text-2xl text-slate-300 z-0"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-extrabold text-slate-800 text-base hover:text-violet-600 cursor-pointer transition-colors truncate" @click="editPath(data)">
-                                        {{ data.name }}
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                        <div class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border" :class="getLevelColor(data.level)">
-                                            {{ levelsMap.find(l => l.value === data.level)?.label }}
-                                        </div>
-                                        <span class="text-xs text-slate-500 flex items-center gap-1 font-medium"><i class="pi pi-folder text-slate-400"></i> {{ data.category?.name || 'Général' }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- COLONNE NOUVELLE : LA COHORTE -->
-                    <Column field="cohort" header="Cohorte (Étudiants)" style="min-width: 14rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex flex-col gap-2">
-                                <div class="flex items-center gap-2">
-                                    <Badge :value="data.enrollments?.length || 0" severity="info" class="bg-blue-100 text-blue-800 border border-blue-200"></Badge>
-                                    <Badge :value="data.users_count || 0" severity="info" class="bg-blue-100 text-blue-800 border border-blue-200"></Badge>
-                                    <span class="text-xs font-bold text-slate-700">Apprenants inscrits</span>
-                                </div>
-                                <!-- Avatar Group Preview (Mocké visuellement pour l'esthétique) -->
-                                <div v-if="data.enrollments?.length > 0" class="flex items-center">
-                                    <AvatarGroup class="mr-2">
-                                        <Avatar v-for="i in Math.min(3, data.enrollments.length)" :key="i" :image="`https://i.pravatar.cc/150?u=${data.id}${i}`" shape="circle" size="small" class="border-2 border-white shadow-sm" />
-                                        <Avatar v-if="data.enrollments.length > 3" :label="`+${data.enrollments.length - 3}`" shape="circle" size="small" class="bg-slate-100 text-slate-600 text-[10px] font-bold border-2 border-white shadow-sm" />
-                                    </AvatarGroup>
-                                </div>
-                                <div v-else class="text-[11px] text-slate-400 italic">Aucun étudiant dans cette cohorte.</div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="metrics" header="Volume Pédagogique" style="min-width: 12rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
-                                <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-book text-indigo-400"></i> {{ data.courses_count_cache || data.courses?.length || 0 }} Cours inclus</div>
-                                <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-clock text-amber-400"></i> {{ Math.floor(data.total_duration_minutes / 60) }}h {{ data.total_duration_minutes % 60 }}m</div>
-                            </div>
-                        </template>
-                    </Column>
-
-                    <Column field="status" header="Statut" style="min-width: 8rem; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <Tag :severity="getStatusDef(data.status).sev" :icon="`pi ${getStatusDef(data.status).icon}`" :value="getStatusDef(data.status).label" class="text-[10px] uppercase font-bold px-2 py-1" />
-                        </template>
-                    </Column>
-
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right; background-color: #f8fafc;">
-                        <template #body="{ data }">
-                            <div class="flex justify-end gap-2">
-                                <Button label="Cohorte" icon="pi pi-users" class="p-button-outlined p-button-sm p-button-info font-bold bg-white hover:bg-blue-50" v-tooltip.top="'Gérer les étudiants inscrits'" @click="openCohortManager(data)" />
-                                <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-violet-600 hover:bg-violet-50 transition-colors" v-tooltip.top="'Configurer le parcours'" @click="editPath(data)" />
-                                <Button icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" v-tooltip.top="'Archiver le parcours'" @click="confirmArchive(data)" />
-                            </div>
-                        </template>
-                    </Column>
-
-                    <!-- LIGNE EXPANSIVE : AFFICHAGE DU SYLLABUS -->
-                    <template #expansion="{ data }">
-                        <div class="p-4 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_5px_15px_rgba(0,0,0,0.03)]">
-                            <div class="max-w-6xl mx-auto">
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-                                    <div>
-                                        <h4 class="font-black text-slate-800 text-xl flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center"><i class="pi pi-sitemap"></i></div>
-                                            Structure du Cursus
-                                        </h4>
-                                        <p class="text-sm text-slate-500 mt-1">Séquence d'apprentissage linéaire configurée pour ce parcours.</p>
-                                    </div>
-                                    <Button label="Modifier la séquence" icon="pi pi-sliders-h" class="p-button-outlined p-button-secondary bg-white font-bold shadow-sm" @click="editPath(data)" />
-                                </div>
-
-                                <div v-if="data.courses && data.courses.length > 0" class="relative pl-2 md:pl-0">
-                                    <!-- Ligne de connexion verticale (Timeline) -->
-                                    <div class="absolute left-7 top-6 bottom-6 w-1 bg-violet-200 rounded-full hidden md:block"></div>
-
-                                    <div class="space-y-5 relative z-10">
-                                        <div v-for="(course, idx) in data.courses" :key="'syl_'+course.id" class="flex flex-col md:flex-row items-start md:items-center gap-5 group">
-                                            <!-- Numéro d'étape (Node de la timeline) -->
-                                            <div class="w-14 h-14 rounded-full bg-white border-4 border-violet-100 text-violet-600 font-black text-lg flex items-center justify-center flex-shrink-0 z-10 shadow-sm group-hover:border-violet-400 group-hover:bg-violet-50 transition-all duration-300 hidden md:flex relative">
-                                                {{ idx + 1 }}
-                                                <div v-if="idx !== data.courses.length -1" class="absolute -bottom-5 left-1/2 w-0.5 h-4 bg-violet-200"></div>
-                                            </div>
-
-                                            <!-- Carte du cours détaillée -->
-                                            <div class="flex-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-5 group-hover:shadow-md group-hover:border-violet-300 transition-all w-full relative overflow-hidden">
-                                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-violet-400 transition-colors"></div>
-
-                                                <div class="w-24 h-16 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 relative">
-                                                    <img v-if="course.thumbnail_path" :src="course.thumbnail_path" class="w-full h-full object-cover" />
-                                                    <div v-else class="w-full h-full flex items-center justify-center text-slate-300"><i class="pi pi-image text-2xl"></i></div>
-                                                    <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">{{ course.estimated_duration }} min</div>
-                                                </div>
-
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="font-extrabold text-slate-800 text-base truncate mb-1">{{ course.title }}</div>
-                                                    <div class="text-xs text-slate-500 line-clamp-1 mb-2">{{ course.description || 'Aucune description fournie.' }}</div>
-                                                    <div class="flex flex-wrap items-center gap-3">
-                                                        <span class="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1"><i class="pi pi-folder"></i> {{ course.category?.name || 'Général' }}</span>
-                                                        <span class="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1"><i class="pi pi-users"></i> {{ course.students_count || 0 }} inscrits</span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="hidden lg:flex flex-col items-end gap-2">
-                                                    <Tag :value="levelsMap.find(l => l.value === course.level)?.label" :severity="getLevelColor(course.level).split('-')[1]" class="text-[10px] font-bold" />
-                                                    <Button icon="pi pi-external-link" label="Aperçu" class="p-button-text p-button-sm p-button-secondary p-0 m-0 text-[11px]" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-else class="text-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="pi pi-link text-4xl text-slate-300"></i></div>
-                                    <h5 class="font-bold text-slate-700 text-lg">Syllabus vide</h5>
-                                    <p class="text-sm text-slate-500 max-w-sm mx-auto mt-2">Ce parcours ne contient aucun cours actuellement. Accédez à l'éditeur pour construire la séquence d'apprentissage.</p>
-                                    <Button label="Ajouter des cours" icon="pi pi-plus" class="p-button-outlined p-button-primary mt-6 font-bold" @click="editPath(data)" />
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </DataTable>
-
-                <!-- Pagination DataTable -->
-                <div class="p-4 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-4">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Total: {{ props.learningPaths.total }} parcours</span>
-                    <Paginator v-if="props.learningPaths.total" :rows="props.learningPaths.per_page" :totalRecords="props.learningPaths.total" :first="(props.learningPaths.current_page - 1) * props.learningPaths.per_page" @page="serverFilters.page = $event.page + 1" :template="'PrevPageLink PageLinks NextPageLink'" />
+                <!-- Partie Droite (Boutons) -->
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <Button 
+                        label="Audit Log" 
+                        icon="pi pi-history" 
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white hidden sm:flex font-medium transition-colors" 
+                        @click="historySidebar = true" 
+                    />
+                    <Button 
+                        label="Intelligence & Perf." 
+                        icon="pi pi-chart-pie" 
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white hidden sm:flex font-medium transition-colors" 
+                        @click="analyticsDialog = true" 
+                    />
+                    <Button 
+                        label="Nouveau Parcours" 
+                        icon="pi pi-map" 
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6 py-3 transition-transform hover:-translate-y-0.5" 
+                        @click="openNewPath" 
+                    />
                 </div>
             </div>
         </div>
+
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- ============================================================================== -->
+        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+            
+            <!-- KPI 1 : Parcours Actifs -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-violet-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-map text-violet-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Parcours Actifs</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_paths }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 2 : Apprenants Inscrits -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-users text-emerald-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Apprenants Inscrits</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.active_students }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 3 : Taux de Complétion -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-chart-line text-amber-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taux de Complétion</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.avg_completion }}<span class="text-lg text-slate-400 ml-1">%</span></p>
+                </div>
+            </div>
+
+            <!-- KPI 4 : MRR (Parcours) -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-wallet text-rose-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">MRR (Parcours)</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ formatCurrency(stats.mrr) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================== -->
+    <!-- MAIN DATA GRID (CATALOGUE DES PARCOURS & COHORTES) - Inchangé                  -->
+    <!-- ============================================================================== -->
+    <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden mt-6">
+
+        <!-- Toolbar Filtrage Principal -->
+        <div class="bg-slate-50/50 border-b border-slate-200 p-5 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <IconField iconPosition="left" class="w-full sm:w-auto shadow-sm rounded-lg overflow-hidden">
+                    <InputIcon class="pi pi-search text-slate-400" />
+                    <InputText v-model="serverFilters.search" placeholder="Rechercher un cursus..." class="w-full sm:w-64 bg-white border-slate-200 font-medium" />
+                </IconField>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
+                <Dropdown v-model="serverFilters.category_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Catégorie métier" class="w-full sm:w-48 bg-white border-slate-200 shadow-sm" showClear filter />
+                <Dropdown v-model="serverFilters.level" :options="levelsMap" optionLabel="label" optionValue="value" placeholder="Niveau visé" class="w-full sm:w-40 bg-white border-slate-200 shadow-sm" showClear />
+            </div>
+            <Button icon="pi pi-sync" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:bg-slate-100 transition-transform hover:rotate-180 duration-500" @click="router.reload()" v-tooltip.top="'Actualiser les données'" />
+        </div>
+
+        <!-- DataTable des Parcours -->
+        <DataTable
+            v-model:expandedRows="expandedRows"
+            :value="props.learningPaths.data"
+            dataKey="id"
+            :loading="loading"
+            class="p-datatable-custom border-none"
+            rowHover
+            stripedRows
+            responsiveLayout="scroll"
+        >
+            <template #empty>
+                <div class="p-20 text-center flex flex-col items-center justify-center animate-fade-in">
+                    <div class="w-28 h-28 bg-slate-50 rounded-full flex items-center justify-center border border-slate-200 mb-6 shadow-inner relative">
+                        <i class="pi pi-map text-6xl text-slate-300"></i>
+                        <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm border border-slate-100"><i class="pi pi-search text-slate-400"></i></div>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800">Catalogue de Parcours Vide</h3>
+                    <p class="text-slate-500 text-sm mt-3 max-w-md leading-relaxed">Les parcours permettent de grouper des cours pour créer des cursus métiers de A à Z. Commencez à structurer votre académie dès maintenant.</p>
+                    <Button label="Concevoir mon premier Parcours" icon="pi pi-plus" class="p-button-primary mt-8 font-bold shadow-lg shadow-violet-500/30 px-6 py-3" @click="openNewPath" />
+                </div>
+            </template>
+
+            <!-- Colonne Expand pour le Syllabus -->
+            <Column expander style="width: 3rem; background-color: #f8fafc;" />
+
+            <Column field="name" header="Identité du Parcours" style="min-width: 25rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex items-center gap-4 py-2">
+                        <div class="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0 overflow-hidden relative shadow-sm group cursor-pointer" @click="editPath(data)">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <i class="pi pi-pencil text-white text-xl"></i>
+                            </div>
+                            <img v-if="data.badge_url" :src="data.badge_url" class="w-10 h-10 object-contain drop-shadow-md z-0" />
+                            <img v-else-if="data.thumbnail" :src="data.thumbnail" class="w-full h-full object-cover z-0" />
+                            <i v-else class="pi pi-map text-2xl text-slate-300 z-0"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-extrabold text-slate-800 text-base hover:text-violet-600 cursor-pointer transition-colors truncate" @click="editPath(data)">
+                                {{ data.name }}
+                            </div>
+                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                <div class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border" :class="getLevelColor(data.level)">
+                                    {{ levelsMap.find(l => l.value === data.level)?.label }}
+                                </div>
+                                <span class="text-xs text-slate-500 flex items-center gap-1 font-medium"><i class="pi pi-folder text-slate-400"></i> {{ data.category?.name || 'Général' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </Column>
+
+            <!-- COLONNE NOUVELLE : LA COHORTE -->
+            <Column field="cohort" header="Cohorte (Étudiants)" style="min-width: 14rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <Badge :value="data.enrollments?.length || 0" severity="info" class="bg-blue-100 text-blue-800 border border-blue-200"></Badge>
+                            <Badge :value="data.users_count || 0" severity="info" class="bg-blue-100 text-blue-800 border border-blue-200"></Badge>
+                            <span class="text-xs font-bold text-slate-700">Apprenants inscrits</span>
+                        </div>
+                        <!-- Avatar Group Preview (Mocké visuellement pour l'esthétique) -->
+                        <div v-if="data.enrollments?.length > 0" class="flex items-center">
+                            <AvatarGroup class="mr-2">
+                                <Avatar v-for="i in Math.min(3, data.enrollments.length)" :key="i" :image="`https://i.pravatar.cc/150?u=${data.id}${i}`" shape="circle" size="small" class="border-2 border-white shadow-sm" />
+                                <Avatar v-if="data.enrollments.length > 3" :label="`+${data.enrollments.length - 3}`" shape="circle" size="small" class="bg-slate-100 text-slate-600 text-[10px] font-bold border-2 border-white shadow-sm" />
+                            </AvatarGroup>
+                        </div>
+                        <div v-else class="text-[11px] text-slate-400 italic">Aucun étudiant dans cette cohorte.</div>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="metrics" header="Volume Pédagogique" style="min-width: 12rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
+                        <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-book text-indigo-400"></i> {{ data.courses_count_cache || data.courses?.length || 0 }} Cours inclus</div>
+                        <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-clock text-amber-400"></i> {{ Math.floor(data.total_duration_minutes / 60) }}h {{ data.total_duration_minutes % 60 }}m</div>
+                    </div>
+                </template>
+            </Column>
+
+            <Column field="status" header="Statut" style="min-width: 8rem; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <Tag :severity="getStatusDef(data.status).sev" :icon="`pi ${getStatusDef(data.status).icon}`" :value="getStatusDef(data.status).label" class="text-[10px] uppercase font-bold px-2 py-1" />
+                </template>
+            </Column>
+
+            <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right; background-color: #f8fafc;">
+                <template #body="{ data }">
+                    <div class="flex justify-end gap-2">
+                        <Button label="Cohorte" icon="pi pi-users" class="p-button-outlined p-button-sm p-button-info font-bold bg-white hover:bg-blue-50" v-tooltip.top="'Gérer les étudiants inscrits'" @click="openCohortManager(data)" />
+                        <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-violet-600 hover:bg-violet-50 transition-colors" v-tooltip.top="'Configurer le parcours'" @click="editPath(data)" />
+                        <Button icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" v-tooltip.top="'Archiver le parcours'" @click="confirmArchive(data)" />
+                    </div>
+                </template>
+            </Column>
+
+            <!-- LIGNE EXPANSIVE : AFFICHAGE DU SYLLABUS -->
+            <template #expansion="{ data }">
+                <div class="p-4 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_5px_15px_rgba(0,0,0,0.03)]">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                            <div>
+                                <h4 class="font-black text-slate-800 text-xl flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center"><i class="pi pi-sitemap"></i></div>
+                                    Structure du Cursus
+                                </h4>
+                                <p class="text-sm text-slate-500 mt-1">Séquence d'apprentissage linéaire configurée pour ce parcours.</p>
+                            </div>
+                            <Button label="Modifier la séquence" icon="pi pi-sliders-h" class="p-button-outlined p-button-secondary bg-white font-bold shadow-sm" @click="editPath(data)" />
+                        </div>
+
+                        <div v-if="data.courses && data.courses.length > 0" class="relative pl-2 md:pl-0">
+                            <!-- Ligne de connexion verticale (Timeline) -->
+                            <div class="absolute left-7 top-6 bottom-6 w-1 bg-violet-200 rounded-full hidden md:block"></div>
+
+                            <div class="space-y-5 relative z-10">
+                                <div v-for="(course, idx) in data.courses" :key="'syl_'+course.id" class="flex flex-col md:flex-row items-start md:items-center gap-5 group">
+                                    <!-- Numéro d'étape (Node de la timeline) -->
+                                    <div class="w-14 h-14 rounded-full bg-white border-4 border-violet-100 text-violet-600 font-black text-lg flex items-center justify-center flex-shrink-0 z-10 shadow-sm group-hover:border-violet-400 group-hover:bg-violet-50 transition-all duration-300 hidden md:flex relative">
+                                        {{ idx + 1 }}
+                                        <div v-if="idx !== data.courses.length -1" class="absolute -bottom-5 left-1/2 w-0.5 h-4 bg-violet-200"></div>
+                                    </div>
+
+                                    <!-- Carte du cours détaillée -->
+                                    <div class="flex-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-5 group-hover:shadow-md group-hover:border-violet-300 transition-all w-full relative overflow-hidden">
+                                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-violet-400 transition-colors"></div>
+
+                                        <div class="w-24 h-16 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 relative">
+                                            <img v-if="course.thumbnail_path" :src="course.thumbnail_path" class="w-full h-full object-cover" />
+                                            <div v-else class="w-full h-full flex items-center justify-center text-slate-300"><i class="pi pi-image text-2xl"></i></div>
+                                            <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">{{ course.estimated_duration }} min</div>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-extrabold text-slate-800 text-base truncate mb-1">{{ course.title }}</div>
+                                            <div class="text-xs text-slate-500 line-clamp-1 mb-2">{{ course.description || 'Aucune description fournie.' }}</div>
+                                            <div class="flex flex-wrap items-center gap-3">
+                                                <span class="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1"><i class="pi pi-folder"></i> {{ course.category?.name || 'Général' }}</span>
+                                                <span class="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1"><i class="pi pi-users"></i> {{ course.students_count || 0 }} inscrits</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="hidden lg:flex flex-col items-end gap-2">
+                                            <Tag :value="levelsMap.find(l => l.value === course.level)?.label" :severity="getLevelColor(course.level).split('-')[1]" class="text-[10px] font-bold" />
+                                            <Button icon="pi pi-external-link" label="Aperçu" class="p-button-text p-button-sm p-button-secondary p-0 m-0 text-[11px]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="pi pi-link text-4xl text-slate-300"></i></div>
+                            <h5 class="font-bold text-slate-700 text-lg">Syllabus vide</h5>
+                            <p class="text-sm text-slate-500 max-w-sm mx-auto mt-2">Ce parcours ne contient aucun cours actuellement. Accédez à l'éditeur pour construire la séquence d'apprentissage.</p>
+                            <Button label="Ajouter des cours" icon="pi pi-plus" class="p-button-outlined p-button-primary mt-6 font-bold" @click="editPath(data)" />
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </DataTable>
+
+        <!-- Pagination DataTable -->
+        <div class="p-4 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-4">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Total: {{ props.learningPaths.total }} parcours</span>
+            <Paginator v-if="props.learningPaths.total" :rows="props.learningPaths.per_page" :totalRecords="props.learningPaths.total" :first="(props.learningPaths.current_page - 1) * props.learningPaths.per_page" @page="serverFilters.page = $event.page + 1" :template="'PrevPageLink PageLinks NextPageLink'" />
+        </div>
+    </div>
+</div>
 
         <!-- ============================================================================== -->
         <!-- DIALOG 1 : COHORT MANAGER (GESTION DES ÉTUDIANTS) - DEMANDÉ PAR LE USER        -->

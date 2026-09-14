@@ -427,33 +427,67 @@ onBeforeUnmount(() => {
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
+<!-- ============================================================================== -->
+    <!-- HEADER DE PAGE ET KPI (Style Dark Hub)                                         -->
+    <!-- ============================================================================== -->
+    <div class="flex flex-col gap-2 mb-12">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm px-1 mb-2">
+            <Breadcrumb 
+                :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Annuaire Apprenants' }]" 
+                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+            />
+        </div>
 
-            <!-- ============================================================================== -->
-            <!-- HEADER DE PAGE ET KPI                                                          -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Annuaire Apprenants', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            CRM Apprenants
-                            <Badge value="Enterprise Data" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Contrôlez l'ensemble des profils étudiants. Suivez leurs performances académiques, administrez leurs accès, et consultez leurs historiques d'inscription en temps réel.
-                        </p>
-                    </div>
+        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
+        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                
+                <!-- Partie Gauche (Titres) -->
+                <div class="space-y-4 max-w-3xl">
+                    <!-- Badge -->
+                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                        Enterprise Data
+                    </span>
+
+                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
+                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                        <span class="text-white">CRM</span>
+                        <span class="text-[#E92B2B]">Apprenants</span>
+                    </h1>
+
+                    <!-- Sous-titre -->
+                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
+                        Contrôlez l'ensemble des profils étudiants. Suivez leurs performances académiques, administrez leurs accès, et consultez leurs historiques d'inscription en temps réel.
+                    </p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Rapports d'engagement" icon="pi pi-chart-pie" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 hover:bg-slate-50 w-full sm:w-auto font-medium shadow-sm" />
-                    <Button label="Intégrer un Apprenant" icon="pi pi-user-plus" class="p-button-primary shadow-md shadow-indigo-500/20 w-full sm:w-auto font-bold px-6" @click="openNew" />
+
+                <!-- Partie Droite (Boutons) -->
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <Button 
+                        label="Rapports d'engagement" 
+                        icon="pi pi-chart-pie" 
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
+                    />
+                    <Button 
+                        label="Intégrer un Apprenant" 
+                        icon="pi pi-user-plus" 
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
+                        @click="openNew" 
+                    />
                 </div>
             </div>
+        </div>
 
-            <!-- KPI DASHBOARD (Strictement lié aux props DB) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <!-- Effectif Total -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- ============================================================================== -->
+        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+            
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-users text-6xl text-indigo-600"></i></div>
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-4">
@@ -506,7 +540,10 @@ onBeforeUnmount(() => {
                         <p class="text-xs text-blue-500 font-medium mt-1 flex items-center gap-1"><i class="pi pi-star-fill"></i> Diplômés officiels</p>
                     </div>
                 </div>
-            </div>
+        </div>
+    </div>
+
+         
 
             <!-- ============================================================================== -->
             <!-- DATA GRID : ANNUAIRE DES ÉTUDIANTS                                             -->

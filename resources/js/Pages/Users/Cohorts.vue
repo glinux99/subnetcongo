@@ -449,55 +449,112 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
+<!-- ============================================================================== -->
+    <!-- HEADER DE PAGE ET KPI (Style Dark Hub)                                         -->
+    <!-- ============================================================================== -->
+    <div class="flex flex-col gap-2 mb-12">
+        
+        <!-- Breadcrumb -->
+        <div class="flex items-center text-sm px-1 mb-2">
+            <Breadcrumb 
+                :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Organisation' }]" 
+                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+            />
+        </div>
 
-            <!-- PAGE HEADER -->
-            <div class="flex justify-between items-end mb-10">
-                <div>
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Organisation' }]" class="bg-transparent p-0 border-none text-xs text-slate-500 mb-2" />
-                    <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                        Cohortes & Promotions <Badge value="Group Architect" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
+        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
+        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+                
+                <!-- Partie Gauche (Titres) -->
+                <div class="space-y-4 max-w-3xl">
+                    <!-- Badge -->
+                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
+                        Group Architect
+                    </span>
+
+                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
+                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
+                        <span class="text-white">Cohortes &</span>
+                        <span class="text-[#E92B2B]">Promotions</span>
                     </h1>
+
+                    <!-- Sous-titre -->
+                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
+                        Structurez l'apprentissage par groupes. Créez des promotions, assignez des cours en masse et suivez la progression collective de vos apprenants en temps réel.
+                    </p>
                 </div>
-                <Button label="Créer une Cohorte" icon="pi pi-plus-circle" class="p-button-primary shadow-lg shadow-indigo-500/30 px-6 font-bold" @click="openNewCohort" />
+
+                <!-- Partie Droite (Boutons) -->
+                <div class="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
+                    <Button 
+                        label="Créer une Cohorte" 
+                        icon="pi pi-plus-circle" 
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
+                        @click="openNewCohort" 
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- ============================================================================== -->
+        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+            
+            <!-- KPI 1 : Total Groupes -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-objects-column text-indigo-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Groupes</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_cohorts || 0 }}</p>
+                </div>
             </div>
 
-            <!-- KPI DASHBOARD -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex items-center justify-between group hover:shadow-lg hover:border-indigo-300 transition-all duration-300">
-                    <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Groupes</p>
-                        <h3 class="text-4xl font-black text-slate-800 mt-2">{{ props.stats.total_cohorts || 0 }}</h3>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-indigo-50 text-indigo-500 group-hover:scale-110 transition-transform">
-                        <i class="pi pi-objects-column text-2xl"></i>
-                    </div>
+            <!-- KPI 2 : Élèves Groupés -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-users text-emerald-500 text-lg"></i>
                 </div>
-                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex items-center justify-between group hover:shadow-lg hover:border-emerald-300 transition-all duration-300">
-                    <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Élèves Groupés</p>
-                        <h3 class="text-4xl font-black text-slate-800 mt-2">{{ props.stats.total_enrolled_students || 0 }}</h3>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-emerald-50 text-emerald-500 group-hover:scale-110 transition-transform">
-                        <i class="pi pi-users text-2xl"></i>
-                    </div>
-                </div>
-                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex items-center justify-between group hover:shadow-lg hover:border-amber-300 transition-all duration-300">
-                    <div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Cours Assignés</p>
-                        <h3 class="text-4xl font-black text-slate-800 mt-2">{{ props.stats.active_courses_in_cohorts || 0 }}</h3>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-amber-50 text-amber-500 group-hover:scale-110 transition-transform">
-                        <i class="pi pi-book text-2xl"></i>
-                    </div>
-                </div>
-                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-center group hover:shadow-lg hover:border-rose-300 transition-all duration-300">
-                    <div class="flex justify-between items-center">
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Complétion Moyenne</p>
-                        <h3 class="text-2xl font-black text-slate-800">{{ props.stats.avg_cohort_completion || 0 }}%</h3>
-                    </div>
-                    <ProgressBar :value="props.stats.avg_cohort_completion || 0" :showValue="false" class="h-2 mt-3 [&>div]:bg-rose-500" />
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Élèves Groupés</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_enrolled_students || 0 }}</p>
                 </div>
             </div>
+
+            <!-- KPI 3 : Cours Assignés -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
+                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-book text-amber-500 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cours Assignés</h3>
+                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.active_courses_in_cohorts || 0 }}</p>
+                </div>
+            </div>
+
+            <!-- KPI 4 : Complétion Moyenne (avec barre de progression intégrée) -->
+            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden">
+                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-2 z-10 relative">
+                    <i class="pi pi-chart-line text-rose-500 text-lg"></i>
+                </div>
+                <div class="z-10 relative">
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Complétion Moyenne</h3>
+                    <div class="flex items-end gap-2">
+                        <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.avg_cohort_completion || 0 }}</p>
+                        <span class="text-xs font-bold text-rose-500 mb-1">%</span>
+                    </div>
+                </div>
+                <!-- Barre de progression de fond -->
+                <ProgressBar :value="props.stats.avg_cohort_completion || 0" :showValue="false" class="absolute bottom-0 left-0 w-full h-1 border-none" :pt="{ value: { class: 'bg-rose-500' } }"></ProgressBar>
+            </div>
+            
+        </div>
+    </div>
 
             <!-- DATATABLE DES COHORTES -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
