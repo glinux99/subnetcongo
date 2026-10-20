@@ -95,9 +95,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
 </script>
 
 <template>
-    <header class="layout-topbar h-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 flex items-center justify-between sticky top-0 z-[100] shadow-sm transition-all duration-300">
+    <header class="layout-topbar h-20 bg-white/90 backdrop-blur-md border-b border-gray-100 px-3 sm:px-6 flex items-center justify-between gap-2 sticky top-0 z-[100] shadow-sm transition-all duration-300">
 
-        <div class="flex items-center gap-6 min-w-[240px]">
+        <div class="flex items-center gap-3 sm:gap-6 min-w-0 lg:min-w-[240px]">
             <button
                 class="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-gray-50 hover:bg-indigo-600 border-none cursor-pointer transition-all duration-300 overflow-hidden shadow-sm"
                 @click="onMenuToggle"
@@ -111,7 +111,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
             </button>
 
             <nav-link href="/dashboard" class="flex items-center">
-                <img src="/assets/media/logos/logo.png" alt="Virunga Energies ERP" class="h-9 w-auto hover:opacity-80 transition-opacity" />
+                <img src="/assets/media/logos/logo.png" alt="Virunga Energies ERP" class="h-7 sm:h-9 w-auto hover:opacity-80 transition-opacity" />
             </nav-link>
         </div>
 
@@ -131,7 +131,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
             </button>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1 sm:gap-3 shrink-0">
             <div class="layout-config-menu flex items-center">
                 <button type="button" class="layout-topbar-action p-2.5 rounded-xl hover:bg-gray-50 border-none bg-transparent cursor-pointer" @click="toggleDarkMode">
                     <i :class="['pi text-lg', { 'pi-moon text-indigo-500': isDarkTheme, 'pi-sun text-amber-500': !isDarkTheme }]"></i>
@@ -142,7 +142,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                     <NotificationBell />
                 </div>
 
-                <div class="relative ml-1">
+                <div class="relative ml-1 hidden sm:block">
                     <button
                         v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
                         type="button"
@@ -161,15 +161,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                 <i class="pi pi-ellipsis-v text-gray-600"></i>
             </button>
 
-            <div class="h-6 w-px bg-gray-200 mx-2"></div>
+            <div class="hidden sm:block h-6 w-px bg-gray-200 mx-2"></div>
 
             <div class="relative">
                 <button
                     v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
-                    class="flex items-center gap-2.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all cursor-pointer border-none"
+                    class="flex items-center gap-2.5 px-2 sm:px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all cursor-pointer border-none"
                 >
                     <img :src="currentLang.flag" class="w-5 h-3.5 rounded shadow-sm object-cover" />
-                    <span class="text-[10px] font-black text-gray-700 uppercase">{{ currentLang.code }}</span>
+                    <span class="hidden sm:inline text-[10px] font-black text-gray-700 uppercase">{{ currentLang.code }}</span>
                 </button>
                 <div class="hidden absolute right-0 mt-4 w-44 bg-white shadow-2xl rounded-xl border border-gray-100 z-[120] p-1.5 overflow-hidden">
                     <button v-for="l in languages" :key="l.code" @click="changeLanguage(l)"
@@ -180,7 +180,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                 </div>
             </div>
 
-            <div class="relative ml-2">
+            <div class="relative sm:ml-2">
                 <button
                     v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }"
                     class="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 transition-all border-none bg-transparent cursor-pointer group"
@@ -196,7 +196,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
                         <span class="text-[11px] font-black text-gray-900 leading-none uppercase tracking-tight">{{ user?.name }}</span>
                         <span class="text-[9px] font-bold text-emerald-500 mt-1 uppercase tracking-widest">{{ t('topbar.status.connected') }}</span>
                     </div>
-                    <i class="pi pi-chevron-down text-[10px] text-gray-400 group-hover:text-indigo-600 transition-colors ml-1"></i>
+                    <i class="hidden sm:inline pi pi-chevron-down text-[10px] text-gray-400 group-hover:text-indigo-600 transition-colors ml-1" aria-hidden="true"></i>
                 </button>
 
                 <div class="hidden absolute right-0 mt-4 w-64 bg-white shadow-2xl rounded-xl border border-gray-100 z-[130] overflow-hidden text-left">

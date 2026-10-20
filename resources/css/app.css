@@ -368,6 +368,15 @@
 .app-dark .layout-main .bg-slate-100:not([class*="dark:bg-"]),
 .app-dark .layout-main .bg-gray-100:not([class*="dark:bg-"]) { background-color: #1E293B; }
 .app-dark .layout-main .bg-slate-200:not([class*="dark:bg-"]) { background-color: #334155; }
+.app-dark .layout-main .bg-\[\#f1f5f9\]:not([class*="dark:bg-"]),
+.app-dark .layout-main .bg-\[\#F1F5F9\]:not([class*="dark:bg-"]),
+.app-dark .layout-main .bg-\[\#f8f9fa\]:not([class*="dark:bg-"]),
+.app-dark .layout-main .bg-\[\#F4F6F9\]:not([class*="dark:bg-"]),
+.app-dark .layout-main .bg-\[\#fafafa\]:not([class*="dark:bg-"]) { background-color: var(--snc-bg); }
+/* Variantes `!bg-*` (souvent posées sur les champs PrimeVue) */
+.app-dark .layout-main .\!bg-white:not([class*="dark:"]) { background-color: var(--snc-surface) !important; }
+.app-dark .layout-main .\!bg-slate-50:not([class*="dark:"]) { background-color: var(--snc-surface-muted) !important; }
+.app-dark .layout-main .\!bg-slate-100:not([class*="dark:"]) { background-color: #1E293B !important; }
 
 .app-dark .layout-main .hover\:bg-slate-50:hover:not([class*="dark:hover:bg-"]),
 .app-dark .layout-main .hover\:bg-slate-50\/50:hover:not([class*="dark:hover:bg-"]),

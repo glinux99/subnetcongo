@@ -115,7 +115,7 @@ const ctaLabel = (c) => c.progress >= 100 ? 'Revoir le cours' : c.progress > 0 ?
                                 :href="route('student.lesson-player', { course: course.id, lesson: course.next_lesson.id })"
                                 class="btn-action-primary w-full mt-2"
                             >
-                                <i class="pi pi-play text-xs" aria-hidden="true"></i>
+                                <i :class="['pi text-xs', course.progress >= 100 ? 'pi-replay' : 'pi-play']" aria-hidden="true"></i>
                                 {{ ctaLabel(course) }}
                             </Link>
                             <p v-else-if="course.status === 'pending'" class="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 rounded-lg px-3 py-2 mt-2">

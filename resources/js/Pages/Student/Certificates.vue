@@ -30,7 +30,7 @@ const latest = computed(() => certs.value[0]?.issued_at ?? '—');
 
 const download = (cert) => {
     window.open(cert.download_url, '_blank', 'noopener');
-    toast.add({ severity: 'success', summary: 'Téléchargement lancé', detail: 'Votre certificat PDF s\'ouvre dans un nouvel onglet.', life: 3000 });
+    toast.add({ severity: 'success', summary: 'Téléchargement lancé', detail: 'Votre certificat PDF est en cours de téléchargement.', life: 3000 });
 };
 
 const copyVerifyLink = async (cert) => {

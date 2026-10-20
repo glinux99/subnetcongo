@@ -198,7 +198,7 @@ class StudentController extends Controller
         return Inertia::render('Student/Progress', [
             'kpis' => [
                 'courses_total' => $enrollments->count(),
-                'courses_completed' => $enrollments->where('progress', 100)->count(),
+                'courses_completed' => $enrollments->where('progress_percent', '>=', 100)->count(),
                 'completion_rate' => round((float) $enrollments->avg('progress_percent'), 1),
                 'hours_studied' => round($totalSeconds / 3600, 1),
                 'certificates' => Certificate::where('user_id', $user->id)->where('status', 'Active')->count(),
@@ -501,7 +501,10 @@ class StudentController extends Controller
         $next = Lesson::whereHas('module', fn ($q) => $q->where('course_id', $courseId))
             ->whereNotIn('id', $completedIds)
             ->orderBy('order')
-            ->first(['id', 'title', 'type']);
+            ->first(['id', 'title', 'type'])
+            ?? Lesson::whereHas('module', fn ($q) => $q->where('course_id', $courseId))
+                ->orderBy('order')
+                ->first(['id', 'title', 'type']);
 
         return $next ? [
             'id' => $next->id,
