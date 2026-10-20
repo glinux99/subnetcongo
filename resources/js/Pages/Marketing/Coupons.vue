@@ -22,7 +22,6 @@ import SelectButton from 'primevue/selectbutton';
 import MultiSelect from 'primevue/multiselect';
 import ProgressBar from 'primevue/progressbar';
 import InputSwitch from 'primevue/inputswitch';
-import Toast from 'primevue/toast';
 import Slider from 'primevue/slider';
 import InlineMessage from 'primevue/inlinemessage';
 import Divider from 'primevue/divider';
@@ -162,7 +161,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Gestion des Coupons - SubNetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

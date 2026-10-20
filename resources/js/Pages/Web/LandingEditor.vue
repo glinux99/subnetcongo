@@ -1,6 +1,7 @@
 <script setup>
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
@@ -74,7 +75,8 @@ const saveSlide = () => {
     });
 };
 
-const deleteSlide = (s) => { if(confirm('Supprimer ce slide ?')) router.delete(route('admin.landing.slides.destroy', s.id)); };
+const confirmAction = useConfirmAction();
+const deleteSlide = (s) => confirmAction({ message: 'Supprimer ce slide ?', acceptLabel: 'Supprimer', danger: true, accept: () => router.delete(route('admin.landing.slides.destroy', s.id)) });
 const toggleSlide = (s) => router.post(route('admin.landing.slides.toggle', s.id));
 
 // ── TECHNOLOGIES CRUD ──────────────────────────────────────────────
@@ -96,7 +98,7 @@ const saveTech = () => {
     techForm[method](url, { onSuccess: () => { showTechDialog.value = false; techForm.reset(); }});
 };
 
-const deleteTech = (t) => { if(confirm('Supprimer cette technologie ?')) router.delete(route('admin.landing.tech.destroy', t.id)); };
+const deleteTech = (t) => confirmAction({ message: 'Supprimer cette technologie ?', acceptLabel: 'Supprimer', danger: true, accept: () => router.delete(route('admin.landing.tech.destroy', t.id)) });
 const toggleTech = (t) => router.post(route('admin.landing.tech.toggle', t.id));
 
 // ── STATS CRUD (FIXED) ─────────────────────────────────────────────
@@ -117,7 +119,7 @@ const saveStat = () => {
     statForm[method](url, { onSuccess: () => { showStatDialog.value = false; statForm.reset(); }});
 };
 
-const deleteStat = (s) => { if(confirm('Supprimer cette statistique ?')) router.delete(route('admin.landing.stats.destroy', s.id)); };
+const deleteStat = (s) => confirmAction({ message: 'Supprimer cette statistique ?', acceptLabel: 'Supprimer', danger: true, accept: () => router.delete(route('admin.landing.stats.destroy', s.id)) });
 const toggleStat = (s) => router.post(route('admin.landing.stats.toggle', s.id));
 
 // Helpers images

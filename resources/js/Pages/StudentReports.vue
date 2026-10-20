@@ -22,7 +22,6 @@ import Select from 'primevue/select';
 import MultiSelect from 'primevue/multiselect';
 import Dialog from 'primevue/dialog';
 import Tooltip from 'primevue/tooltip';
-import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import { useToast } from 'primevue/usetoast';
@@ -73,7 +72,6 @@ const openQuickView = (s) => { selectedStudent.value = s; showQuickView.value = 
 <template>
     <AppLayout>
         <Head title="Intelligence Hub | SubnetCongo Analytics" />
-        <Toast />
 
         <div class="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
 

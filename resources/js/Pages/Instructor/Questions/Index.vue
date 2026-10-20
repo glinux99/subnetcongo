@@ -9,7 +9,6 @@ import Textarea from 'primevue/textarea';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -75,7 +74,6 @@ const submitAnswer = () => {
 <template>
     <AppLayout>
         <Head title="Questions des apprenants" />
-        <Toast />
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-600/15 rounded-full blur-[100px] pointer-events-none"></div>

@@ -6,7 +6,6 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import Textarea from 'primevue/textarea';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({ question: Object });
@@ -60,7 +59,6 @@ const markResolved = () => {
 <template>
     <AppLayout>
         <Head :title="question.subject || 'Question'" />
-        <Toast />
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>

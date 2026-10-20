@@ -9,7 +9,6 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import Breadcrumb from 'primevue/breadcrumb';
-import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 
@@ -74,7 +73,6 @@ const submit = () => {
     <Head title="Configuration du Thème" />
 
     <AppLayout>
-        <Toast position="top-right" />
 
         <div class="page-bg min-h-screen font-sans pb-32">
             

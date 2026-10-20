@@ -25,7 +25,6 @@ import MultiSelect from 'primevue/multiselect';
 import Calendar from 'primevue/calendar';
 import Avatar from 'primevue/avatar';
 import Divider from 'primevue/divider';
-import Toast from 'primevue/toast';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
@@ -212,7 +211,6 @@ const activeCount = computed(() => {
 <template>
     <AppLayout>
         <Head title="Gestion des Abonnements" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

@@ -13,7 +13,6 @@ import InputText from 'primevue/inputtext';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -161,7 +160,6 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
-                <Toast />
                 <ConfirmDialog />
 
                 <DataTable ref="dt" :value="unities" dataKey="id"

@@ -32,7 +32,6 @@ import Dialog from 'primevue/dialog';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import InputSwitch from 'primevue/inputswitch';
 import Calendar from 'primevue/calendar';
@@ -404,7 +403,6 @@ const exportLogs = () => {
 <template>
     <AppLayout>
         <Head title="API Gateway Management" />
-        <Toast position="top-right" />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">

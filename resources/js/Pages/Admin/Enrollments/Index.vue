@@ -11,7 +11,6 @@ import Column from 'primevue/column';
 import Avatar from 'primevue/avatar';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
-import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import { useToast } from 'primevue/usetoast';
@@ -95,7 +94,6 @@ const quickReject = (id) => {
 <template>
     <AppLayout>
         <Head title="Gestion des Inscriptions | Admin" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             

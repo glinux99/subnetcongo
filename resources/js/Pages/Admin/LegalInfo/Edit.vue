@@ -4,7 +4,6 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { useToast } from "primevue/usetoast";
-import Toast from 'primevue/toast';
 import Message from 'primevue/message';
 
 const props = defineProps({
@@ -46,7 +45,6 @@ const submit = () => {
 
 <template>
     <Head title="Identité Légale | Dashboard Admin" />
-    <Toast />
     <AppLayout>
         <div class="page-bg min-h-screen font-sans pb-20">
 

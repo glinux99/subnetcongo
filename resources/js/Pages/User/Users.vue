@@ -24,7 +24,6 @@ import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 
 const props = defineProps({
@@ -297,7 +296,6 @@ watch(
 <template>
     <AppLayout :title="props.title">
         <Head :title="props.title" />
-        <Toast />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">

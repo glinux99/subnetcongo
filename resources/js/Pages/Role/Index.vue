@@ -24,7 +24,6 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from "primevue/usetoast";
-import Toast from 'primevue/toast';
 import OverlayPanel from 'primevue/overlaypanel';
 import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
@@ -200,7 +199,6 @@ watch(() => cloneDeep(data.params), debounce(() => {
 <template>
     <AppLayout>
         <Head :title="props.title" />
-        <Toast position="top-right" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

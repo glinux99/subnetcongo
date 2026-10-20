@@ -23,7 +23,6 @@ import Badge from 'primevue/badge';
 import Dialog from 'primevue/dialog';
 import ProgressBar from 'primevue/progressbar';
 import InputSwitch from 'primevue/inputswitch';
-import Toast from 'primevue/toast';
 import Divider from 'primevue/divider';
 import ScrollPanel from 'primevue/scrollpanel';
 import Textarea from 'primevue/textarea';
@@ -145,7 +144,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Internationalisation - SubNetCongo" />
-        <Toast />
 
         <div class="bg-slate-50/50 min-h-screen pb-20">
 

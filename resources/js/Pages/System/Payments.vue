@@ -7,6 +7,7 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
@@ -20,7 +21,6 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import InputSwitch from 'primevue/inputswitch';
 import Password from 'primevue/password';
-import Toast from 'primevue/toast';
 import Badge from 'primevue/badge';
 
 const toast = useToast();
@@ -65,10 +65,16 @@ const toggleStatus = (gateway) => {
     });
 };
 
+const confirmAction = useConfirmAction();
 const deleteGateway = (gateway) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette passerelle ? Cette action est irréversible.')) return;
-    router.delete(route('system.payments.destroy', gateway.id), {
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Passerelle supprimée', life: 3000 }),
+    confirmAction({
+        header: 'Supprimer la passerelle',
+        message: 'Supprimer cette passerelle ? Cette action est irréversible.',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('system.payments.destroy', gateway.id), {
+            onSuccess: () => toast.add({ severity: 'success', summary: 'Passerelle supprimée', life: 3000 }),
+        }),
     });
 };
 
@@ -119,7 +125,6 @@ const getProviderStyle = (provider) => {
 <template>
     <Head title="Passerelles de Paiement - SubNetCongo" />
     <AppLayout>
-        <Toast />
 
         <div class="bg-slate-50/50 min-h-screen pb-20">
 

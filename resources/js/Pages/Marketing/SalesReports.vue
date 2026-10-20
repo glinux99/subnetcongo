@@ -20,7 +20,6 @@ import Dialog from 'primevue/dialog';
 import Calendar from 'primevue/calendar';
 import MultiSelect from 'primevue/multiselect';
 import ProgressBar from 'primevue/progressbar';
-import Toast from 'primevue/toast';
 import Divider from 'primevue/divider';
 import Avatar from 'primevue/avatar';
 import TabView from 'primevue/tabview';
@@ -206,7 +205,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Rapports de Vente - SubNetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             

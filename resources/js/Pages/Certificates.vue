@@ -31,7 +31,6 @@ import Divider from 'primevue/divider';
 import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Breadcrumb from 'primevue/breadcrumb';
 import Chart from 'primevue/chart';
@@ -559,7 +558,6 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 <template>
     <AppLayout>
         <Head title="Ingénierie de Certification | SubnetCongo LMS" />
-        <Toast position="top-right" />
         <ConfirmDialog />
 
         <!-- ============================================================================== -->

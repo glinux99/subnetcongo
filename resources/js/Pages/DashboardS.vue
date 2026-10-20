@@ -31,7 +31,6 @@ import Avatar from 'primevue/avatar';
 import Badge from 'primevue/badge';
 import Knob from 'primevue/knob';
 import Timeline from 'primevue/timeline';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import Tooltip from 'primevue/tooltip';
 import Dialog from 'primevue/dialog';
@@ -367,7 +366,6 @@ watch(() => props.stats?.completion_rate, (v) => {
 <template>
     <AppLayout>
         <Head title="Mon tableau de bord" />
-        <Toast />
 
         <div class="min-h-screen bg-slate-50 font-sans pb-10">
 
@@ -909,7 +907,9 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                 </template>
             </div>
-<!-- Q&A Dialog -->
+        </div>
+
+        <!-- Q&A Dialog -->
         <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question" class="!rounded-xl" :closable="!askSubmitting">
             <div class="space-y-4 p-2">
                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center gap-3">

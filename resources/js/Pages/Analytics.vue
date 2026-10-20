@@ -34,7 +34,6 @@ import Sidebar from 'primevue/sidebar';
 import Dialog from 'primevue/dialog';
 import Menu from 'primevue/menu';
 import OverlayPanel from 'primevue/overlaypanel';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import Knob from 'primevue/knob';
 import ScrollPanel from 'primevue/scrollpanel';
@@ -199,7 +198,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Analytique Stratégique | SubnetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

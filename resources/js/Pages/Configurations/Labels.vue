@@ -16,7 +16,6 @@ import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
 import Divider from 'primevue/divider';
@@ -256,7 +255,6 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
-                <Toast />
                 <ConfirmDialog />
 
                 <DataTable ref="dt"

@@ -35,7 +35,6 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
-import Toast from 'primevue/toast';
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from 'primevue/confirmdialog';
@@ -311,7 +310,6 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 <template>
     <AppLayout>
         <Head title="Banque d'Items Atomiques | LMS Enterprise" />
-        <Toast position="top-right" />
         <ConfirmDialog />
 
   <div class="page-bg min-h-screen font-sans pb-20">

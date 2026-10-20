@@ -23,7 +23,6 @@ import Editor from 'primevue/editor';
 import InputSwitch from 'primevue/inputswitch';
 import ProgressBar from 'primevue/progressbar';
 import MultiSelect from 'primevue/multiselect';
-import Toast from 'primevue/toast';
 import Menu from 'primevue/menu';
 import InlineMessage from 'primevue/inlinemessage';
 import Divider from 'primevue/divider';
@@ -208,7 +207,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Email Automation - SubNetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             

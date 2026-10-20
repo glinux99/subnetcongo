@@ -17,6 +17,7 @@ import debounce from 'lodash/debounce';
 
 // --- COMPOSANTS DE LAYOUT ---
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 
 // --- COMPOSANTS PRIMEVUE ---
 import Breadcrumb from 'primevue/breadcrumb';
@@ -38,7 +39,6 @@ import Textarea from 'primevue/textarea';
 import Paginator from 'primevue/paginator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Toast from 'primevue/toast';
 
 // Déclaration de directive (utile si non enregistrée globalement dans app.js)
 import Tooltip from 'primevue/tooltip';
@@ -171,13 +171,18 @@ const updateMetadata = () => {
     });
 };
 
+const confirmAction = useConfirmAction();
 const deleteMedia = (id) => {
-    if (confirm('Voulez-vous supprimer cet asset définitivement du cloud ?')) {
-        router.delete(route('media.destroy', id), {
+    confirmAction({
+        header: 'Supprimer le fichier',
+        message: 'Supprimer définitivement ce fichier du stockage ?',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('media.destroy', id), {
             preserveScroll: true,
-            onSuccess: () => toast.add({ severity: 'warn', summary: 'Supprimé', detail: 'Asset retiré du stockage.', life: 3000 })
-        });
-    }
+            onSuccess: () => toast.add({ severity: 'success', summary: 'Fichier supprimé', detail: 'Le fichier a été retiré du stockage.', life: 3000 })
+        }),
+    });
 };
 
 const handleUpload = () => {
@@ -225,7 +230,6 @@ const getFileIcon = (type) => {
 <template>
     <AppLayout>
         <Head title="Médiathèque Cloud v10 | SubnetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

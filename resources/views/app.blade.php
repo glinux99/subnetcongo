@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <script>try { if (localStorage.getItem('snc-dark-mode') === '1') document.documentElement.classList.add('app-dark'); } catch (e) {}</script>
 
         <!-- SEO Dynamique -->
         <title inertia>{{ config('app.name', 'Subnet Congo') }} | Solutions Internet & Infrastructures IT en RDC</title>

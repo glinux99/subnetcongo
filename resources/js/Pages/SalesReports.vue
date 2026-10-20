@@ -20,7 +20,6 @@ import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Drawer from 'primevue/drawer';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import DatePicker from 'primevue/datepicker';
 import Chart from 'primevue/chart';
 import SelectButton from 'primevue/selectbutton';
@@ -111,7 +110,6 @@ watch(selectedReportType, fetchReportData);
 <template>
     <AppLayout>
         <Head title="Finance Intelligence Hub | SubnetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             

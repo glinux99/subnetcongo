@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -126,12 +127,14 @@ const markAsUnread = (messageNumber) => {
     });
 };
 
+const confirmAction = useConfirmAction();
 const moveToTrash = (messageNumber) => {
-    if (confirm('Déplacer cet email vers la corbeille ?')) {
-        router.post(route('admin.emails.trash', messageNumber), {}, {
-            preserveScroll: true,
-        });
-    }
+    confirmAction({
+        message: 'Déplacer cet email vers la corbeille ?',
+        acceptLabel: 'Mettre à la corbeille',
+        danger: true,
+        accept: () => router.post(route('admin.emails.trash', messageNumber), {}, { preserveScroll: true }),
+    });
 };
 </script>
 

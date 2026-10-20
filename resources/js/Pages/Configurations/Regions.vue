@@ -18,7 +18,6 @@ import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import InputNumber from 'primevue/inputnumber';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import FileUpload from 'primevue/fileupload';
 import Tag from 'primevue/tag';
@@ -486,7 +485,6 @@ const onFilter = (event) => {
             </template>
         </Dialog>
 
-        <Toast position="bottom-right" />
         <ConfirmDialog />
     </AppLayout>
 </template>

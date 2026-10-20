@@ -17,7 +17,6 @@ import Dropdown from 'primevue/dropdown';
 import Avatar from 'primevue/avatar';
 import Tag from 'primevue/tag';
 import Divider from 'primevue/divider';
-import Toast from 'primevue/toast';
 import FileUpload from 'primevue/fileupload';
 import ProgressBar from 'primevue/progressbar';
 import InlineMessage from 'primevue/inlinemessage';
@@ -197,7 +196,6 @@ const exportAsPdf = () => {
 <template>
     <AppLayout :title="t('profile.title')">
         <Head :title="t('profile.headTitle')" />
-        <Toast position="bottom-right" />
 
         <div v-if="isPageLoading" class="min-h-screen p-8 bg-slate-50">
             <div class="max-w-6xl mx-auto space-y-6">

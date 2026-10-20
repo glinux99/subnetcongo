@@ -40,7 +40,6 @@ import Sidebar from 'primevue/sidebar';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import ToggleSwitch from 'primevue/toggleswitch';
 import SelectButton from 'primevue/selectbutton';
@@ -519,7 +518,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Architecte d'Évaluation | LMS Enterprise" />
-        <Toast position="top-right" />
         <ConfirmDialog />
 
    <div class="page-bg min-h-screen font-sans pb-20">

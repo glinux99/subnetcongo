@@ -18,7 +18,6 @@ import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import Calendar from 'primevue/calendar';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -373,7 +372,6 @@ onMounted(() => loadEnginTypes());
     </template>
 </Dialog>
 
-        <Toast position="bottom-right" />
         <ConfirmDialog />
     </AppLayout>
 </template>

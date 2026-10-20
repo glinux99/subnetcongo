@@ -31,14 +31,14 @@ const statusLabel = (s) => ({
 }[s] || s);
 
 const statusSeverity = (s) => ({
-    open: 'info', new: 'info', pending: 'warning', in_progress: 'info',
+    open: 'info', new: 'info', pending: 'warn', in_progress: 'info',
     resolved: 'success', closed: 'secondary',
 }[s] || 'secondary');
 
 const priorityLabel = (p) => ({ low: 'Basse', medium: 'Moyenne', high: 'Haute', urgent: 'Urgente' }[p] || p);
 
 // Adapté pour les severities natives de PrimeVue (danger, warning, info, success)
-const prioritySeverity = (p) => ({ urgent: 'danger', high: 'warning', medium: 'info', low: 'success' }[p] || 'secondary');
+const prioritySeverity = (p) => ({ urgent: 'danger', high: 'warn', medium: 'info', low: 'success' }[p] || 'secondary');
 
 const formatDate = (iso) => {
     if (!iso) return '';

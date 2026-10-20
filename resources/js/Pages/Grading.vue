@@ -33,7 +33,6 @@ import Sidebar from 'primevue/sidebar';
 import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import InputSwitch from 'primevue/inputswitch';
 import Divider from 'primevue/divider';
 import Knob from 'primevue/knob';
@@ -492,7 +491,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Console de Correction | LMS Enterprise" />
-        <Toast position="top-right" />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">

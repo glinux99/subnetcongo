@@ -2,12 +2,12 @@
 import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import Textarea from 'primevue/textarea';
 import Dialog from 'primevue/dialog';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({ enrollment: Object });
@@ -48,15 +48,21 @@ const submit = (action) => {
 };
 
 const reactivate = () => router.post(route('admin.enrollments.reactivate', props.enrollment.id), {}, { preserveScroll: true });
+const confirmAction = useConfirmAction();
 const destroy = () => {
-    if (confirm('Supprimer définitivement ?')) router.delete(route('admin.enrollments.destroy', props.enrollment.id), { preserveScroll: true });
+    confirmAction({
+        header: 'Supprimer l\'inscription',
+        message: 'Supprimer définitivement cette inscription ? Cette action est irréversible.',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('admin.enrollments.destroy', props.enrollment.id), { preserveScroll: true }),
+    });
 };
 </script>
 
 <template>
     <AppLayout>
         <Head :title="`Inscription #${enrollment.id}`" />
-        <Toast />
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>

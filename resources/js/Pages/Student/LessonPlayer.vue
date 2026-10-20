@@ -5,7 +5,6 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import ProgressBar from 'primevue/progressbar';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
-import Toast from 'primevue/toast';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
@@ -243,7 +242,6 @@ const submitAsk = () => {
 <template>
     <AppLayout>
         <Head :title="lesson?.title || 'Leçon'" />
-        <Toast />
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <div class="page-header">

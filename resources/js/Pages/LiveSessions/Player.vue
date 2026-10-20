@@ -4,7 +4,6 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import VideoConference from '@/Components/LiveKit/VideoConference.vue';
 
@@ -71,7 +70,6 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
 <template>
     <AppLayout>
         <Head :title="session?.title || 'Session live'" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">

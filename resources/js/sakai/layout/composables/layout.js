@@ -4,7 +4,7 @@ const layoutConfig = reactive({
     preset: 'Aura',
     primary: 'emerald',
     surface: null,
-    darkTheme: false,
+    darkTheme: typeof window !== 'undefined' && localStorage.getItem('snc-dark-mode') === '1',
     menuMode: 'static'
 });
 
@@ -46,12 +46,13 @@ export function useLayout() {
             return;
         }
 
-        document.startViewTransition(() => executeDarkModeToggle(event));
+        document.startViewTransition(() => executeDarkModeToggle());
     };
 
     const executeDarkModeToggle = () => {
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
-        document.documentElement.classList.toggle('app-dark');
+        document.documentElement.classList.toggle('app-dark', layoutConfig.darkTheme);
+        localStorage.setItem('snc-dark-mode', layoutConfig.darkTheme ? '1' : '0');
     };
 
     const onMenuToggle = () => {

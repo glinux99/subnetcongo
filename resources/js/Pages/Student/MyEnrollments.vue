@@ -2,6 +2,9 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
@@ -9,7 +12,6 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -51,11 +53,18 @@ const applyFilter = () => {
     router.get(route('student.my-enrollments'), { status: statusFilter.value }, { preserveState: true });
 };
 
+const confirmAction = useConfirmAction();
 const cancelEnrollment = (id) => {
-    if (!confirm('Annuler cette demande d\'inscription ?')) return;
-    router.post(route('student.enrollments.cancel', id), {}, {
-        preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Demande annulée', life: 2500 }),
+    confirmAction({
+        header: 'Annuler la demande',
+        message: 'Annuler cette demande d\'inscription ?',
+        acceptLabel: 'Annuler la demande',
+        rejectLabel: 'Conserver',
+        danger: true,
+        accept: () => router.post(route('student.enrollments.cancel', id), {}, {
+            preserveScroll: true,
+            onSuccess: () => toast.add({ severity: 'success', summary: 'Demande annulée', life: 2500 }),
+        }),
     });
 };
 
@@ -65,49 +74,28 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
 <template>
     <AppLayout>
         <Head title="Mes inscriptions" />
-        <Toast />
-        <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[1600px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 border border-white/10">
-                            <i class="pi pi-id-card text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-3xl font-black text-white tracking-tight">Mes inscriptions</h1>
-                            <p class="text-slate-400 font-medium text-sm">Suivez vos demandes, validations et révocations.</p>
-                        </div>
-                    </div>
-                    <Link :href="route('marketplace.index')">
-                        <Button label="Catalogue" icon="pi pi-shopping-bag" outlined class="!text-white !border-white/20 hover:!bg-white/10 !rounded-xl" />
-                    </Link>
-                </div>
-            </div>
+        <div class="page-bg min-h-screen">
+            <PageHeader
+                title="Mes inscriptions"
+                icon="pi-id-card"
+                subtitle="Suivez vos demandes d'inscription, leur validation et l'accès à vos formations."
+                :actions="[{ label: 'Explorer le catalogue', icon: 'pi-shopping-bag', href: route('marketplace.index') }]"
+            />
 
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
-                <!-- Stats KPI -->
-                <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-                    <div v-for="kpi in [
-                        { label: 'Total', value: stats?.total ?? 0, icon: 'pi-list', color: 'from-indigo-500 to-blue-500' },
-                        { label: 'Validées', value: stats?.active ?? 0, icon: 'pi-check-circle', color: 'from-emerald-500 to-teal-500' },
-                        { label: 'En attente', value: stats?.pending ?? 0, icon: 'pi-clock', color: 'from-amber-500 to-orange-500' },
-                        { label: 'Terminées', value: stats?.completed ?? 0, icon: 'pi-trophy', color: 'from-indigo-500 to-purple-500' },
-                        { label: 'Suspendues', value: stats?.suspended ?? 0, icon: 'pi-ban', color: 'from-rose-500 to-pink-500' },
-                        { label: 'Refusées', value: stats?.rejected ?? 0, icon: 'pi-times-circle', color: 'from-rose-600 to-red-600' },
-                    ]" :key="kpi.label" class="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm">
-                        <div :class="['w-10 h-10 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg mb-2', kpi.color]">
-                            <i :class="['pi', kpi.icon, 'text-base']"></i>
-                        </div>
-                        <div class="text-xl font-black text-slate-800 tracking-tight font-mono">{{ kpi.value }}</div>
-                        <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ kpi.label }}</div>
-                    </div>
+            <div class="page-container">
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+                    <PageKpi v-for="kpi in [
+                        { label: 'Total', value: stats?.total ?? 0, icon: 'pi-list', color: 'blue' },
+                        { label: 'Validées', value: stats?.active ?? 0, icon: 'pi-check-circle', color: 'emerald' },
+                        { label: 'En attente', value: stats?.pending ?? 0, icon: 'pi-clock', color: 'amber' },
+                        { label: 'Terminées', value: stats?.completed ?? 0, icon: 'pi-trophy', color: 'violet' },
+                        { label: 'Suspendues', value: stats?.suspended ?? 0, icon: 'pi-ban', color: 'slate' },
+                        { label: 'Refusées', value: stats?.rejected ?? 0, icon: 'pi-times-circle', color: 'rose' },
+                    ]" :key="kpi.label" :label="kpi.label" :value="kpi.value" :icon="kpi.icon" :color="kpi.color" />
                 </div>
 
                 <!-- Bandeau "en attente de validation" -->
-                <div v-if="stats?.pending > 0" class="bg-amber-50 border-2 border-amber-200 rounded-3xl p-5 mb-4 flex items-center gap-4">
+                <div v-if="stats?.pending > 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-4 flex items-center gap-4" role="status">
                     <div class="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shrink-0">
                         <i class="pi pi-info-circle text-xl"></i>
                     </div>
@@ -120,7 +108,7 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                     </a>
                 </div>
 
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                <div class="page-card">
                     <div class="flex items-center gap-3 mb-4 flex-wrap">
                         <Select v-model="statusFilter" :options="filterOptions" optionLabel="label" optionValue="value" class="!rounded-xl" />
                         <Button label="Filtrer" icon="pi pi-search" outlined @click="applyFilter" class="!rounded-xl" />

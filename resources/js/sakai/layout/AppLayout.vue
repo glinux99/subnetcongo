@@ -10,6 +10,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
 import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
 import { useI18n } from 'vue-i18n';
 
 const { layoutConfig, layoutState, isSidebarActive, resetMenu } = useLayout();
@@ -113,10 +114,10 @@ watch(dateRange, (newDates) => {
         <app-sidebar></app-sidebar>
 
         <div class="layout-main-container">
-            <div class="px-6 py-4 sticky top-20 z-10 bg-[#f8fafc]/80 backdrop-blur-md border-b border-slate-100">
+            <div class="px-6 py-4 sticky top-20 z-10 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center justify-between gap-3 flex-wrap">
                     <AppBreadcrumb />
-                    <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <Dropdown
                             v-model="filterType"
                             :options="[
@@ -144,6 +145,7 @@ watch(dateRange, (newDates) => {
         <div class="layout-mask animate-fadein"></div>
     </div>
     <Toast />
+    <ConfirmDialog group="app" />
     <CommandPalette />
 </template>
 

@@ -1,8 +1,13 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
+import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import { ref, computed } from 'vue';
+
+const toast = useToast();
+const confirmAction = useConfirmAction();
 
 const props = defineProps({
     prefill: {
@@ -72,14 +77,19 @@ const saveDraft = () => {
         body: form.body,
     }, {
         preserveScroll: true,
-        onSuccess: () => alert('Brouillon enregistré'),
+        onSuccess: () => toast.add({ severity: 'success', summary: 'Brouillon enregistré', life: 2500 }),
     });
 };
 
 const discard = () => {
-    if (confirm('Êtes-vous sûr de vouloir abandonner ce message ?')) {
-        router.visit(route('admin.emails.index'));
-    }
+    confirmAction({
+        header: 'Abandonner le message',
+        message: 'Abandonner ce message ? Le contenu non enregistré sera perdu.',
+        acceptLabel: 'Abandonner',
+        rejectLabel: 'Continuer la rédaction',
+        danger: true,
+        accept: () => router.visit(route('admin.emails.index')),
+    });
 };
 
 const isValid = computed(() => form.to && form.subject && form.body);

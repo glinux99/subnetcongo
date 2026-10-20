@@ -22,7 +22,6 @@ import TabPanel from 'primevue/tabpanel';
 import Avatar from 'primevue/avatar';
 import Editor from 'primevue/editor';
 import InputSwitch from 'primevue/inputswitch';
-import Toast from 'primevue/toast';
 import MultiSelect from 'primevue/multiselect';
 import Divider from 'primevue/divider';
 import ScrollPanel from 'primevue/scrollpanel';
@@ -193,7 +192,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head title="Centre de Support - SubNetCongo" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

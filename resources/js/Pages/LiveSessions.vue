@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Tag from 'primevue/tag';
@@ -10,7 +11,6 @@ import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
 import Breadcrumb from 'primevue/breadcrumb';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -76,11 +76,25 @@ const submit = () => {
 };
 
 const startSession = (id) => router.post(route('live-sessions.start', id), {}, { preserveScroll: true });
+const confirmAction = useConfirmAction();
 const cancelSession = (id) => {
-    if (confirm('Annuler cette session ?')) router.post(route('live-sessions.cancel', id));
+    confirmAction({
+        header: 'Annuler la session',
+        message: 'Annuler cette session en direct ? Les participants inscrits ne pourront plus la rejoindre.',
+        acceptLabel: 'Annuler la session',
+        rejectLabel: 'Conserver',
+        danger: true,
+        accept: () => router.post(route('live-sessions.cancel', id)),
+    });
 };
 const destroySession = (id) => {
-    if (confirm('Supprimer définitivement ?')) router.delete(route('live-sessions.destroy', id));
+    confirmAction({
+        header: 'Supprimer la session',
+        message: 'Supprimer définitivement cette session ? Cette action est irréversible.',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('live-sessions.destroy', id)),
+    });
 };
 const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings', id), {}, { preserveScroll: true });
 </script>
@@ -88,7 +102,6 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
 <template>
     <AppLayout>
         <Head title="Sessions en direct" />
-        <Toast position="top-right" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             

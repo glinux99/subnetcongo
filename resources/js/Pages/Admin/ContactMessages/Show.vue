@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import Textarea from 'primevue/textarea';
@@ -13,10 +14,15 @@ const replyForm = useForm({ reply_message: props.message.reply_message || '' });
 
 const submitReply = () => replyForm.post(route('admin.messages.reply', props.message.id), { preserveScroll: true });
 const archive = () => router.post(route('admin.messages.archive', props.message.id));
+const confirmAction = useConfirmAction();
 const destroyMsg = () => {
-    if (confirm('Supprimer définitivement ce message ? Cette action est irréversible.')) {
-        router.delete(route('admin.messages.destroy', props.message.id));
-    }
+    confirmAction({
+        header: 'Supprimer le message',
+        message: 'Supprimer définitivement ce message ? Cette action est irréversible.',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('admin.messages.destroy', props.message.id)),
+    });
 };
 
 const statusLabel = (s) => ({ new:'Nouveau', read:'Lu', replied:'Répondu', archived:'Archivé', spam:'Spam' }[s] || s);

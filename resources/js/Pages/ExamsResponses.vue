@@ -38,7 +38,6 @@ import Badge from 'primevue/badge';
 import Message from 'primevue/message';
 import Sidebar from 'primevue/sidebar';
 import Knob from 'primevue/knob';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Skeleton from 'primevue/skeleton';
 import OverlayPanel from 'primevue/overlaypanel';
@@ -580,7 +579,6 @@ onBeforeUnmount(() => {
 <template>
     <div class="page-bg min-h-screen font-sans pb-20">
         <Head :title="`Certification - ${exam.title}`" />
-        <Toast position="bottom-right" />
         <ConfirmDialog />
 
         <!-- ========================================================================== -->

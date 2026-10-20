@@ -24,7 +24,6 @@ import Drawer from 'primevue/drawer';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Avatar from 'primevue/avatar';
-import Toast from 'primevue/toast';
 import Divider from 'primevue/divider';
 import Editor from 'primevue/editor';
 import FileUpload from 'primevue/fileupload';
@@ -323,7 +322,6 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 <template>
     <AppLayout>
         <Head title="Hub Social & Académique" />
-        <Toast position="top-right" />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">

@@ -16,7 +16,6 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from "primevue/usetoast";
-import Toast from 'primevue/toast';
 import MultiSelect from 'primevue/multiselect';
 import OverlayPanel from 'primevue/overlaypanel';
 import Tag from 'primevue/tag';
@@ -99,7 +98,6 @@ const onPageChange = (event) => {
 <template>
     <AppLayout>
         <Head :title="props.title" />
-        <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

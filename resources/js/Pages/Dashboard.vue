@@ -44,7 +44,6 @@ import InputText from 'primevue/inputtext';
 import ScrollPanel from 'primevue/scrollpanel';
 import Timeline from 'primevue/timeline';
 import Dialog from 'primevue/dialog';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import SelectButton from 'primevue/selectbutton';
 import Breadcrumb from 'primevue/breadcrumb';
@@ -214,7 +213,6 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 <template>
     <AppLayout>
         <Head title="Executive Intelligence Command" />
-        <Toast />
         <ConfirmDialog />
 
         <div class="min-h-screen bg-[#F8FAFC] pb-20">

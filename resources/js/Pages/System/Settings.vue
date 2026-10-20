@@ -26,7 +26,6 @@ import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import ColorPicker from 'primevue/colorpicker';
 import FileUpload from 'primevue/fileupload';
-import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Textarea from 'primevue/textarea';
 import SelectButton from 'primevue/selectbutton';
@@ -156,7 +155,6 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 <template>
     <AppLayout>
         <Head title="Configuration Système" />
-        <Toast />
         <ConfirmDialog />
 
         <!-- DIALOG TEST EMAIL -->

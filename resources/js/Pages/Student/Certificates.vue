@@ -1,14 +1,16 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import Tag from 'primevue/tag';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
-import Toast from 'primevue/toast';
 
-const props = defineProps({ 
-    certificates: Array, 
-    meta: Object 
+const props = defineProps({
+    certificates: Array,
+    meta: Object
 });
 
 const toast = useToast();
@@ -22,196 +24,110 @@ const getImageUrl = (path) => {
 
 const handleImageError = (e) => { e.target.src = PLACEHOLDER; };
 
-const download = (cert) => { 
-    window.open(cert.download_url, '_blank'); 
-    toast.add({ severity: 'success', summary: 'Génération du PDF', detail: 'Le téléchargement a commencé.', life: 3000 }); 
+const certs = computed(() => props.certificates ?? []);
+const bestScore = computed(() => certs.value.reduce((m, c) => Math.max(m, Math.round(Number(c.score) || 0)), 0));
+const latest = computed(() => certs.value[0]?.issued_at ?? '—');
+
+const download = (cert) => {
+    window.open(cert.download_url, '_blank', 'noopener');
+    toast.add({ severity: 'success', summary: 'Téléchargement lancé', detail: 'Votre certificat PDF s\'ouvre dans un nouvel onglet.', life: 3000 });
 };
 
-const verify = (cert) => { 
-    navigator.clipboard?.writeText(cert.verify_url); 
-    toast.add({ severity: 'info', summary: 'Lien copié', detail: 'Lien de vérification prêt à être partagé.', life: 2500 }); 
+const copyVerifyLink = async (cert) => {
+    try {
+        await navigator.clipboard.writeText(cert.verify_url);
+        toast.add({ severity: 'info', summary: 'Lien copié', detail: 'Partagez ce lien pour permettre la vérification du certificat.', life: 2500 });
+    } catch (_) {
+        toast.add({ severity: 'warn', summary: 'Copie impossible', detail: cert.verify_url, life: 6000 });
+    }
 };
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Mes Certifications | SubnetCongo Academy" />
-        <Toast />
+        <Head title="Mes certificats" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
-            
-      <!-- ============================================================================== -->
-<!-- HEADER & KPI (Style "Banque de Questions Centrale")                            -->
-<!-- ============================================================================== -->
-<div class="flex flex-col mb-12">
-    
-    <!-- 1. BANNIÈRE SOMBRE -->
-    <!-- Le padding bottom (pb-24) est important pour laisser la place aux cartes de remonter -->
-    <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-        
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-            
-            <!-- Partie Gauche (Titres) -->
-            <div class="max-w-3xl">
-                <!-- Petit Badge rouge sombre -->
-                <span class="inline-block border border-red-900/50 text-[#ff4d4d] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
-                    Verified Credentials
-                </span>
+        <div class="page-bg min-h-screen">
+            <PageHeader
+                title="Mes certificats"
+                icon="pi-verified"
+                accent="emerald"
+                badge="Certificats vérifiables"
+                subtitle="Vos réussites officielles. Chaque certificat possède un code unique que vos employeurs peuvent vérifier en ligne."
+            />
 
-                <!-- Titre Principal (Italique, très gras, espacement réduit) -->
-                <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                    <span class="text-white">MES</span>
-                    <span class="text-[#FF3B3B]">CERTIFICATIONS</span>
-                </h1>
-
-                <!-- Sous-titre (Italique, gris clair) -->
-                <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                    Vos accomplissements officiels. Chaque certificat est vérifiable via un code unique et reconnu par nos partenaires.
-                </p>
-            </div>
-
-            <!-- Partie Droite (Boutons) -->
-            <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
-                <Button 
-                    label="Exporter Profil" 
-                    icon="pi pi-download" 
-                    class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
-                />
-                <Button 
-                    label="Partager Réseau" 
-                    icon="pi pi-share-alt" 
-                    class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
-                />
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. CARTES KPI (Chevauchement) -->
-    <!-- Le -mt-16 fait remonter les cartes sur la bannière sombre. Le z-20 les garde au premier plan -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 md:px-6 -mt-16 relative z-20">
-        
-        <!-- KPI 1 -->
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-            <div class="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">
-                <i class="pi pi-list text-indigo-500 text-sm"></i>
-            </div>
-            <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Obtenu</div>
-                <div class="text-2xl font-black text-slate-800 leading-none">{{ meta?.total ?? 0 }}</div>
-            </div>
-        </div>
-
-        <!-- KPI 2 -->
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-            <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center">
-                <i class="pi pi-check-circle text-emerald-500 text-sm"></i>
-            </div>
-            <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Score Moyen</div>
-                <div class="text-2xl font-black text-slate-800 leading-none">{{ meta?.avg_score ?? 0 }}<span class="text-sm text-slate-400 ml-1">%</span></div>
-            </div>
-        </div>
-
-        <!-- KPI 3 -->
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-            <div class="w-8 h-8 rounded bg-amber-50 flex items-center justify-center">
-                <i class="pi pi-star text-amber-500 text-sm"></i>
-            </div>
-            <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Validité Globale</div>
-                <div class="text-2xl font-black text-slate-800 leading-none">À jour</div>
-            </div>
-        </div>
-
-        <!-- KPI 4 -->
-        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-            <div class="w-8 h-8 rounded bg-rose-50 flex items-center justify-center">
-                <i class="pi pi-share-alt text-rose-500 text-sm"></i>
-            </div>
-            <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Partage Réseau</div>
-                <div class="text-2xl font-black text-slate-800 leading-none">Actif</div>
-            </div>
-        </div>
-        
-    </div>
-</div>
-<!-- FIN HEADER & KPI -->
-
-            <!-- MAIN CONTENT -->
-            <div class="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
-                <div class="bg-white rounded-[1rem] shadow-2xl border border-slate-200/50 p-8 lg:p-12 min-h-[500px]">
-                    
-                    <!-- Empty State -->
-                    <div v-if="(certificates ?? []).length === 0" class="py-24 text-center">
-                        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
-                            <i class="pi pi-verified text-4xl text-slate-300"></i>
-                        </div>
-                        <h3 class="text-2xl font-black text-slate-800 tracking-tight">En attente de réussite</h3>
-                        <p class="text-slate-500 text-sm mt-2 max-w-sm mx-auto font-medium">Complétez vos modules et réussissez vos examens pour voir vos certificats apparaître ici.</p>
-                        <Link :href="route('marketplace.index')" class="mt-8 inline-block">
-                            <Button label="Explorer les cours" icon="pi pi-search" class="!bg-[#0F172A] !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest" />
-                        </Link>
-                    </div>
-
-                    <!-- Certificate Grid -->
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div v-for="cert in certificates" :key="cert.id" class="group relative bg-[#0F172A] rounded-[1rem] overflow-hidden shadow-2xl hover:-translate-y-2 transition-all duration-500">
-                            
-                            <!-- Design Element: Card Shine -->
-                            <div class="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-transparent opacity-50 pointer-events-none"></div>
-                            
-                            <div class="p-8 relative z-10 flex flex-col h-full">
-                                <!-- Top Bar -->
-                                <div class="flex justify-between items-start mb-6">
-                                    <div class="flex gap-4 items-center">
-                                        <div class="w-16 h-16 bg-white rounded-xl overflow-hidden border-2 border-emerald-500/30 p-1 shadow-inner">
-                                            <img :src="getImageUrl(cert.course_image)" @error="handleImageError" class="w-full h-full object-cover rounded-xl" />
-                                        </div>
-                                        <div>
-                                            <p class="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-1">SubnetCongo Official</p>
-                                            <h3 class="text-lg font-black text-white leading-tight tracking-tight italic">{{ cert.course_title }}</h3>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-3xl font-black text-emerald-400 italic font-mono">{{ Math.round(cert.score) }}%</div>
-                                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Grade</p>
-                                    </div>
-                                </div>
-
-                                <!-- Middle Info -->
-                                <div class="space-y-4 mb-8">
-                                    <div class="flex items-center gap-3 text-slate-400 text-xs font-medium">
-                                        <i class="pi pi-calendar text-emerald-500"></i>
-                                        <span>Délivré le <span class="text-white">{{ cert.issued_at }}</span></span>
-                                    </div>
-                                    <div class="flex items-center gap-3 text-slate-400 text-xs font-medium">
-                                        <i class="pi pi-key text-emerald-500"></i>
-                                        <span>ID: <span class="text-white font-mono">{{ cert.certificate_code }}</span></span>
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div class="mt-auto flex gap-3">
-                                    <Button label="Télécharger PDF" icon="pi pi-download" @click="download(cert)"
-                                        class="flex-1 !bg-emerald-500 hover:!bg-emerald-400 !border-none !rounded-xl !py-3.5 !text-[10px] !font-black !uppercase !tracking-widest !text-[#0F172A] transition-all active:scale-95 shadow-lg shadow-emerald-500/20" />
-                                    
-                                    <Button icon="pi pi-external-link" @click="verify(cert)" outlined
-                                        class="!border-white/10 !text-white hover:!bg-white/5 !rounded-xl !px-4" 
-                                        v-tooltip.top="'Copier le lien de vérification'" />
-                                </div>
-                            </div>
-
-                            <!-- Decorative Seal -->
-                            <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full flex items-center justify-center rotate-12 pointer-events-none border border-white/5">
-                                <i class="pi pi-verified text-white/10 text-6xl"></i>
-                            </div>
-                        </div>
-                    </div>
+            <div class="page-container space-y-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <PageKpi label="Certificats obtenus" :value="meta?.total ?? certs.length" icon="pi-verified" color="emerald" />
+                    <PageKpi label="Score moyen" :value="`${meta?.avg_score ?? 0} %`" icon="pi-chart-bar" color="blue" />
+                    <PageKpi label="Meilleur score" :value="`${bestScore} %`" icon="pi-star" color="amber" />
+                    <PageKpi label="Dernier obtenu" :value="latest" icon="pi-calendar" color="slate" />
                 </div>
+
+                <div v-if="certs.length === 0" class="page-card-flush">
+                    <EmptyState
+                        icon="pi-verified"
+                        title="Votre premier certificat vous attend"
+                        description="Terminez toutes les leçons d'une formation et réussissez l'examen final pour obtenir un certificat vérifiable."
+                        action-label="Voir mes formations"
+                        :action-href="route('student.my-courses')"
+                    />
+                </div>
+
+                <ul v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6" aria-label="Liste de mes certificats">
+                    <li v-for="cert in certs" :key="cert.id" class="group relative bg-[#0F172A] rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/5 hover:-translate-y-1 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-transparent pointer-events-none" aria-hidden="true"></div>
+                        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full flex items-center justify-center rotate-12 pointer-events-none border border-white/5" aria-hidden="true">
+                            <i class="pi pi-verified text-white/10 text-6xl"></i>
+                        </div>
+
+                        <div class="p-6 md:p-8 relative z-10 flex flex-col h-full gap-6">
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="flex gap-4 items-center min-w-0">
+                                    <div class="w-14 h-14 shrink-0 bg-white rounded-xl overflow-hidden ring-2 ring-emerald-500/30 p-0.5">
+                                        <img :src="getImageUrl(cert.course_image)" alt="" loading="lazy" @error="handleImageError" class="w-full h-full object-cover rounded-[0.6rem]" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[0.6875rem] font-bold text-emerald-400 uppercase tracking-wider mb-1">Certificat SubnetCongo</p>
+                                        <h3 class="text-lg font-bold text-white leading-snug line-clamp-2">{{ cert.course_title }}</h3>
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <p class="text-3xl font-extrabold text-emerald-400 tabular-nums">{{ Math.round(cert.score) }} %</p>
+                                    <p class="text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-wider">Score</p>
+                                </div>
+                            </div>
+
+                            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div class="flex items-center gap-2 text-slate-400">
+                                    <i class="pi pi-calendar text-emerald-500" aria-hidden="true"></i>
+                                    <dt class="sr-only">Date de délivrance</dt>
+                                    <dd>Délivré le <span class="text-white">{{ cert.issued_at }}</span></dd>
+                                </div>
+                                <div class="flex items-center gap-2 text-slate-400 min-w-0">
+                                    <i class="pi pi-key text-emerald-500" aria-hidden="true"></i>
+                                    <dt class="sr-only">Code du certificat</dt>
+                                    <dd class="truncate">Code <span class="text-white font-mono">{{ cert.certificate_code }}</span></dd>
+                                </div>
+                            </dl>
+
+                            <div class="mt-auto flex gap-3">
+                                <Button label="Télécharger le PDF" icon="pi pi-download" severity="success" class="flex-1" @click="download(cert)" />
+                                <Button
+                                    icon="pi pi-link"
+                                    outlined
+                                    class="!border-white/20 !text-white hover:!bg-white/10"
+                                    aria-label="Copier le lien de vérification"
+                                    v-tooltip.top="'Copier le lien de vérification'"
+                                    @click="copyVerifyLink(cert)"
+                                />
+                            </div>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
-</AppLayout>
+    </AppLayout>
 </template>
 
 <style scoped>
