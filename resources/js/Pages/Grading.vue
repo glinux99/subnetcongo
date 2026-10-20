@@ -502,7 +502,7 @@ onMounted(() => {
             <!-- ============================================================================== -->
             <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
                 <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Évaluation & Suivi', class: 'font-semibold text-indigo-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
+                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Évaluation & Suivi', class: 'font-semibold text-blue-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
                     <div>
                         <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                             Console de Correction
@@ -536,7 +536,7 @@ onMounted(() => {
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-chart-line text-sm"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-chart-line text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Moyenne Globale</p>
                     </div>
                     <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.average || 74.2 }}%</h3>
@@ -544,7 +544,7 @@ onMounted(() => {
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-bolt text-sm"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-red-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-bolt text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">SLA Productivité</p>
                     </div>
                     <div class="flex items-baseline gap-2">
@@ -606,7 +606,7 @@ onMounted(() => {
 
                     <template #empty>
                         <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
-                            <div class="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
+                            <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
                                 <i class="pi pi-check-circle text-5xl text-emerald-400"></i>
                             </div>
                             <h3 class="text-xl font-bold text-slate-800 mb-2">Pile de correction vide</h3>
@@ -625,7 +625,7 @@ onMounted(() => {
                                     <div v-if="data.status === 'in_progress'" class="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full flex items-center justify-center" v-tooltip.top="'Brouillon en cours'"><i class="pi pi-pencil text-[8px] text-white"></i></div>
                                 </div>
                                 <div class="flex flex-col justify-center">
-                                    <div class="font-extrabold text-slate-800 text-base hover:text-indigo-600 cursor-pointer flex items-center gap-2" @click="openGrading(data)">
+                                    <div class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer flex items-center gap-2" @click="openGrading(data)">
                                         {{ data.student.name }}
                                         <Badge :value="data.student.cohort" severity="secondary" class="text-[9px] bg-slate-100 text-slate-600 border border-slate-200"></Badge>
                                     </div>
@@ -677,7 +677,7 @@ onMounted(() => {
                     <!-- LIGNE EXPANSIVE (Aperçu Historique Apprenant) -->
                     <template #expansion="{ data }">
                         <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
-                            <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-history text-indigo-500"></i> Historique académique de l'apprenant</h4>
+                            <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-history text-blue-500"></i> Historique académique de l'apprenant</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
@@ -808,7 +808,7 @@ onMounted(() => {
                                 <!-- Attribution manuelle des points (Optionnelle si Rubric) -->
                                 <div class="mt-8 flex justify-end items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                                     <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Points accordés :</span>
-                                    <InputNumber v-model="gradingForm.question_scores[q.id]" mode="decimal" showButtons :min="0" :max="q.question?.max_points || q.max_points" class="w-32" :pt="{ input: { class: 'text-center font-black text-indigo-600' } }" />
+                                    <InputNumber v-model="gradingForm.question_scores[q.id]" mode="decimal" showButtons :min="0" :max="q.question?.max_points || q.max_points" class="w-32" :pt="{ input: { class: 'text-center font-black text-blue-600' } }" />
                                 </div>
                             </div>
 
@@ -818,7 +818,7 @@ onMounted(() => {
                                     <template #header>
                                         <div class="flex items-center gap-2 text-xs font-bold text-emerald-600"><i class="pi pi-verified"></i> Afficher le Corrigé Type</div>
                                     </template>
-                                    <div class="p-5 bg-emerald-50/50 rounded-xl border border-emerald-100 text-sm text-emerald-800 leading-relaxed font-medium">
+                                    <div class="p-5 bg-red-50/50 rounded-xl border border-emerald-100 text-sm text-emerald-800 leading-relaxed font-medium">
                                         {{ q.question?.ideal_answer || q.ideal_answer }}
                                     </div>
                                 </AccordionTab>
@@ -849,14 +849,14 @@ onMounted(() => {
                                             </div>
                                             <div class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">Poids : {{ rubric.weight * 100 }}%</div>
                                         </div>
-                                        <div class="text-lg font-black" :class="(gradingForm.rubric_scores?.[rubric.key] ?? 0) >= (rubric.max/2) ? 'text-indigo-600' : 'text-rose-500'">
+                                        <div class="text-lg font-black" :class="(gradingForm.rubric_scores?.[rubric.key] ?? 0) >= (rubric.max/2) ? 'text-blue-600' : 'text-rose-500'">
                                             {{ gradingForm.rubric_scores?.[rubric.key] ?? 0 }}<span class="text-xs text-slate-400 font-normal">/{{ rubric.max }}</span>
                                         </div>
                                     </div>
                                     <Slider v-model="gradingForm.rubric_scores[rubric.key]" :min="0" :max="rubric.max" :step="0.5" class="w-full" />
                                     <!-- Description dynamique du niveau sélectionné -->
                                     <div class="p-3 bg-white rounded-lg border border-slate-100 text-[11px] text-slate-600 italic leading-snug">
-                                        <span class="font-bold text-indigo-500 not-italic mr-1">Statut:</span>
+                                        <span class="font-bold text-blue-500 not-italic mr-1">Statut:</span>
                                         {{ getRubricDescription(rubric.key, gradingForm.rubric_scores[rubric.key]) }}
                                     </div>
                                 </div>
@@ -871,13 +871,13 @@ onMounted(() => {
                                 <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Feedback Général</h3>
                                 <div class="flex gap-1">
                                     <Button icon="pi pi-list" class="p-button-text p-button-secondary p-button-sm" v-tooltip.top="'Utiliser un canevas prédéfini'" />
-                                    <Button icon="pi pi-sparkles" label="Assistant IA" class="p-button-outlined p-button-info p-button-sm font-bold text-xs bg-indigo-50" @click="generateAIFeedback" :loading="aiLoading" />
+                                    <Button icon="pi pi-sparkles" label="Assistant IA" class="p-button-outlined p-button-info p-button-sm font-bold text-xs bg-blue-50" @click="generateAIFeedback" :loading="aiLoading" />
                                 </div>
                             </div>
 
                             <!-- Smart Suggestion Area -->
-                            <div v-if="gradingForm.feedback === ''" class="mb-4 p-4 bg-indigo-50 rounded-xl border border-dashed border-indigo-200 text-center">
-                                <p class="text-xs text-indigo-600 font-medium italic">"L'élève a bien respecté les contraintes de temps mais manque de rigueur sur le typage PHP."</p>
+                            <div v-if="gradingForm.feedback === ''" class="mb-4 p-4 bg-blue-50 rounded-xl border border-dashed border-indigo-200 text-center">
+                                <p class="text-xs text-blue-600 font-medium italic">"L'élève a bien respecté les contraintes de temps mais manque de rigueur sur le typage PHP."</p>
                                 <Button label="Utiliser cette suggestion" class="p-button-text p-button-sm text-[10px] font-bold mt-1" />
                             </div>
 
@@ -943,7 +943,7 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <OverlayPanel ref="annotationPanel" class="w-[350px] shadow-2xl rounded-2xl border border-slate-200 p-0 overflow-hidden">
             <div class="p-5 bg-white">
-                <h4 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="pi pi-comment text-indigo-500"></i> Placer un marqueur</h4>
+                <h4 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="pi pi-comment text-blue-500"></i> Placer un marqueur</h4>
                 <Dropdown :options="['Excellent point', 'Conceptuellement faux', 'Hors sujet', 'Erreur de syntaxe']" placeholder="Tag contextuel..." class="w-full mb-3 border-slate-200 text-sm" />
                 <Textarea rows="3" class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm focus:bg-white transition-colors" placeholder="Détaillez votre remarque..." />
                 <div class="flex justify-end gap-2 mt-4">
@@ -979,7 +979,7 @@ onMounted(() => {
                     <div v-for="source in currentPlagiarismDetails" :key="source.source" class="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-sm">
                         <div class="flex items-center gap-3">
                             <div :class="`w-2 h-2 rounded-full ${source.color}`"></div>
-                            <a :href="source.url" target="_blank" class="text-sm font-bold text-slate-700 hover:text-indigo-600 cursor-pointer underline decoration-slate-200">{{ source.source }}</a>
+                            <a :href="source.url" target="_blank" class="text-sm font-bold text-slate-700 hover:text-blue-600 cursor-pointer underline decoration-slate-200">{{ source.source }}</a>
                         </div>
                         <Badge :value="`${source.match}%`" :severity="source.match > 10 ? 'danger' : 'warning'" />
                     </div>
@@ -1002,7 +1002,7 @@ onMounted(() => {
         <Sidebar v-model:visible="statisticsSidebar" position="right" class="w-full md:w-[500px] p-sidebar-custom">
             <template #header>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-chart-bar text-xl"></i></div>
+                    <div class="w-10 h-10 bg-indigo-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-chart-bar text-xl"></i></div>
                     <h2 class="text-xl font-bold text-slate-800">Analytique Cohorte</h2>
                 </div>
             </template>
@@ -1011,7 +1011,7 @@ onMounted(() => {
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-center">
                         <div class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">Moyenne Globale</div>
-                        <div class="text-3xl font-black text-indigo-600">74.2%</div>
+                        <div class="text-3xl font-black text-blue-600">74.2%</div>
                     </div>
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-center">
                         <div class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">Taux de Réussite</div>

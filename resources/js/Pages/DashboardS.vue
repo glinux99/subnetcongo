@@ -96,11 +96,11 @@ const activityData = computed(() => ({
         label: 'Heures d\'étude',
         data: props.activityChart?.data || [],
         fill: true,
-        borderColor: '#3E5EFF',
+        borderColor: '#2563EB',
         backgroundColor: 'rgba(62, 94, 255, 0.10)',
         tension: 0.35,
         borderWidth: 2,
-        pointBackgroundColor: '#3E5EFF',
+        pointBackgroundColor: '#2563EB',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 1.5,
         pointRadius: 3,
@@ -138,9 +138,9 @@ const getImageUrl = (path) => {
 };
 
 const getProgressColor = (p) => {
-    if (p >= 80) return '#2FBF71'; // succès
-    if (p >= 50) return '#F2A93B'; // en cours avancé
-    return '#3E5EFF'; // en cours
+    if (p >= 80) return '#DC2626'; // succès
+    if (p >= 50) return '#EF4444'; // en cours avancé
+    return '#2563EB'; // en cours
 };
 
 const getLevelLabel = (level) => {
@@ -150,16 +150,16 @@ const getLevelLabel = (level) => {
 
 const getResourceTypeIcon = (type) => {
     const map = {
-        pdf: 'pi-file-pdf text-rose-500',
-        doc: 'pi-file-word text-sky-500',
-        docx: 'pi-file-word text-sky-500',
-        xls: 'pi-file-excel text-emerald-500',
-        xlsx: 'pi-file-excel text-emerald-500',
-        ppt: 'pi-file-powerpoint text-amber-500',
-        pptx: 'pi-file-powerpoint text-amber-500',
-        zip: 'pi-box text-indigo-500',
-        mp4: 'pi-video text-indigo-500',
-        video: 'pi-video text-indigo-500',
+        pdf: 'pi-file-pdf text-red-500',
+        doc: 'pi-file-word text-blue-500',
+        docx: 'pi-file-word text-blue-500',
+        xls: 'pi-file-excel text-red-500',
+        xlsx: 'pi-file-excel text-red-500',
+        ppt: 'pi-file-powerpoint text-red-500',
+        pptx: 'pi-file-powerpoint text-red-500',
+        zip: 'pi-box text-blue-500',
+        mp4: 'pi-video text-blue-500',
+        video: 'pi-video text-blue-500',
     };
     return map[(type || '').toLowerCase()] || 'pi-file text-slate-400';
 };
@@ -214,7 +214,7 @@ const skillChartData = computed(() => ({
     labels: Object.keys(skillDistribution.value),
     datasets: [{
         data: Object.values(skillDistribution.value),
-        backgroundColor: ['#C7D2FE', '#F2A93B', '#3E5EFF', '#2FBF71'],
+        backgroundColor: ['#C7D2FE', '#EF4444', '#2563EB', '#DC2626'],
         borderWidth: 0,
     }]
 }));
@@ -372,14 +372,11 @@ watch(() => props.stats?.completion_rate, (v) => {
         <div class="min-h-screen bg-slate-50 font-sans pb-10">
 
             <!-- ═══════════════════════════════════════════════════
-                 HEADER GLOBAL — DARK ENTERPRISE
+                 HEADER GLOBAL — ULTRA PRO V50 UI
             ═══════════════════════════════════════════════════ -->
-            <div class="bg-slate-900 pt-8 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-xl border-b border-slate-800">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+            <div class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/80">
+                <div class="max-w-[1800px] mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-6">
 
-                <div class="max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div class="flex items-center gap-5">
                         <div class="relative">
                             <Avatar
@@ -387,44 +384,44 @@ watch(() => props.stats?.completion_rate, (v) => {
                                 :image="auth?.user?.profile_photo_url"
                                 shape="circle"
                                 size="large"
-                                class="w-16 h-16 border-2 border-white/10 ring-2 ring-indigo-500/30 bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-2xl font-black"
+                                class="w-14 h-14 border-2 border-white/10 ring-2 ring-blue-500/30 bg-gradient-to-br from-blue-600 to-blue-800 text-white text-2xl font-black shadow-xl shadow-blue-100 animate-pulse-slow"
                             />
-                            <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full" aria-hidden="true"></span>
+                            <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full" aria-hidden="true"></span>
                         </div>
                         <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                <h1 class="text-3xl font-black text-white tracking-tight">
-                                    {{ meta?.greeting || 'Bonjour' }}, {{ auth?.user?.name?.split(' ')[0] }} <span class="inline-block animate-pulse">👋</span>
-                                </h1>
-                                <Tag value="Apprenant" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Espace Apprenant</span>
+                                <Tag value="V50" class="!bg-blue-600 !text-white !border-none !text-[9px] !font-black !uppercase !tracking-widest" />
                             </div>
-                            <p class="text-slate-400 font-medium text-sm">{{ meta?.message || 'Reprenons où vous en étiez.' }}</p>
+                            <h1 class="text-2xl font-black text-slate-800 tracking-tight italic">
+                                {{ meta?.greeting || 'Bonjour' }}, {{ auth?.user?.name?.split(' ')[0] }} <span class="inline-block animate-pulse">👋</span>
+                            </h1>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2.5 flex-wrap">
-                        <Link :href="route('student.my-courses')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
-                            <i class="pi pi-book text-sm"></i> Mes cours
+                        <Link :href="route('student.my-courses')" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-book text-sm text-blue-600"></i> Mes cours
                         </Link>
-                        <Link :href="route('exams.learner.index')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
-                            <i class="pi pi-pencil text-sm"></i> Examens
+                        <Link :href="route('exams.learner.index')" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-pencil text-sm text-red-500"></i> Examens
                         </Link>
-                        <Link :href="route('student.certificates')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
-                            <i class="pi pi-verified text-sm"></i> Certificats
+                        <Link :href="route('student.certificates')" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                            <i class="pi pi-verified text-sm text-blue-600"></i> Certificats
                         </Link>
-                        <Link :href="route('student.progress')" class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
-                            <i class="pi pi-chart-line text-sm"></i> Progression
-                        </Link>
-                        <div class="flex items-stretch bg-white/5 backdrop-blur-md rounded-xl overflow-hidden border border-white/10 font-mono text-sm">
-                            <div class="flex items-center gap-2 px-3.5 py-2 border-r border-white/10" v-tooltip.bottom="'Points d\'expérience'">
-                                <i class="pi pi-bolt text-amber-400 text-xs"></i>
-                                <span class="text-white font-semibold">{{ stats?.xp ?? 0 }}</span>
-                                <span class="text-white/40 text-[11px]">xp</span>
+                        
+                        <div class="h-10 w-px bg-slate-200 mx-2"></div>
+
+                        <div class="flex items-stretch bg-slate-50 rounded-xl overflow-hidden border border-slate-200 font-mono text-sm">
+                            <div class="flex items-center gap-2 px-3.5 py-2 border-r border-slate-200" v-tooltip.bottom="'Points d\'expérience'">
+                                <i class="pi pi-bolt text-red-500 text-xs"></i>
+                                <span class="text-slate-800 font-bold">{{ stats?.xp ?? 0 }}</span>
+                                <span class="text-slate-400 text-[11px]">xp</span>
                             </div>
                             <div class="flex items-center gap-2 px-3.5 py-2" v-tooltip.bottom="'Jours consécutifs'">
-                                <i class="pi pi-calendar text-emerald-400 text-xs"></i>
-                                <span class="text-white font-semibold">{{ stats?.streak ?? 0 }}</span>
-                                <span class="text-white/40 text-[11px]">jours</span>
+                                <i class="pi pi-calendar text-blue-600 text-xs"></i>
+                                <span class="text-slate-800 font-bold">{{ stats?.streak ?? 0 }}</span>
+                                <span class="text-slate-400 text-[11px]">jours</span>
                             </div>
                         </div>
                     </div>
@@ -432,10 +429,10 @@ watch(() => props.stats?.completion_rate, (v) => {
             </div>
 
             <!-- ═══════════════════════════════════════════════════
-                 MAIN — WHITE FLOATING CARD
+                 MAIN CONTENT
             ═══════════════════════════════════════════════════ -->
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
-                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
+            <div class="max-w-[1800px] mx-auto px-6 mt-10 relative z-20">
+            
 
             <!-- ═══════════════════════════════════════════════════
                  ÉTAT DE CHARGEMENT
@@ -463,12 +460,12 @@ watch(() => props.stats?.completion_rate, (v) => {
                 ═══════════════════════════════════════════════════ -->
                 <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
                     <template v-for="stat in [
-                        { label: 'Cours inscrits', val: myCourses?.length ?? 0, icon: 'pi-book', border: 'hover:border-indigo-300', iconBg: 'bg-indigo-50', iconText: 'text-indigo-600', href: route('student.my-courses') },
+                        { label: 'Cours inscrits', val: myCourses?.length ?? 0, icon: 'pi-book', border: 'hover:border-blue-300', iconBg: 'bg-blue-50', iconText: 'text-blue-600', href: route('student.my-courses') },
                         { label: 'Supports', val: totalMaterials, icon: 'pi-file', border: 'hover:border-blue-300', iconBg: 'bg-blue-50', iconText: 'text-blue-600', action: 'materials' },
-                        { label: 'Vidéos', val: totalVideos, icon: 'pi-video', border: 'hover:border-rose-300', iconBg: 'bg-rose-50', iconText: 'text-rose-500', action: 'materials' },
-                        { label: 'Certificats', val: stats?.certificates ?? 0, icon: 'pi-verified', border: 'hover:border-emerald-300', iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', href: route('student.certificates') },
-                        { label: 'Heures d\'étude', val: (stats?.hours_studied ?? 0) + 'h', icon: 'pi-clock', border: 'hover:border-amber-300', iconBg: 'bg-amber-50', iconText: 'text-amber-500', href: route('student.progress') },
-                        { label: 'Rang', val: '#' + (stats?.rank ?? '—'), icon: 'pi-trophy', border: 'hover:border-violet-300', iconBg: 'bg-violet-50', iconText: 'text-violet-600', href: '#' }
+                        { label: 'Vidéos', val: totalVideos, icon: 'pi-video', border: 'hover:border-red-300', iconBg: 'bg-red-50', iconText: 'text-red-500', action: 'materials' },
+                        { label: 'Certificats', val: stats?.certificates ?? 0, icon: 'pi-verified', border: 'hover:border-red-300', iconBg: 'bg-red-50', iconText: 'text-red-600', href: route('student.certificates') },
+                        { label: 'Heures d\'étude', val: (stats?.hours_studied ?? 0) + 'h', icon: 'pi-clock', border: 'hover:border-red-300', iconBg: 'bg-red-50', iconText: 'text-red-500', href: route('student.progress') },
+                        { label: 'Rang', val: '#' + (stats?.rank ?? '—'), icon: 'pi-trophy', border: 'hover:border-blue-300', iconBg: 'bg-blue-50', iconText: 'text-blue-600', href: '#' }
                     ]" :key="stat.label">
                         <component :is="stat.href ? 'Link' : 'button'"
                                    :href="stat.href"
@@ -496,17 +493,17 @@ watch(() => props.stats?.completion_rate, (v) => {
                     <div class="lg:col-span-8 space-y-8">
 
                         <!-- HERO : REPRENDRE LE COURS -->
-                        <div v-if="continueLearning" class="bg-slate-900 rounded-xl relative overflow-hidden shadow-xl border border-slate-800">
-                            <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-600/20 rounded-full blur-[80px] pointer-events-none"></div>
-                            <div class="absolute bottom-0 left-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+                        <div v-if="continueLearning" class="bg-white border border-slate-200 shadow-sm rounded-xl relative overflow-hidden shadow-xl border border-slate-800">
+                            <div class="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+                            <div class="absolute bottom-0 left-0 w-72 h-72 bg-red-500/10 rounded-full blur-[60px] pointer-events-none"></div>
 
                             <div class="relative z-10 p-7 flex flex-col gap-5">
                                 <div class="flex items-center justify-between flex-wrap gap-3">
-                                    <span class="inline-flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span class="inline-flex items-center gap-2 text-[10px] font-black text-red-400 uppercase tracking-widest">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
                                         Dernier accès : {{ continueLearning.last_accessed || '—' }}
                                     </span>
-                                    <Tag value="En cours" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                    <Tag value="En cours" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                                 </div>
 
                                 <div class="flex items-start gap-5 flex-wrap md:flex-nowrap">
@@ -516,7 +513,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                              :alt="continueLearning.title" class="w-full h-full object-cover" />
                                     </div>
                                     <div class="min-w-0">
-                                        <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
+                                        <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-tight">
                                             {{ continueLearning.title }}
                                         </h2>
                                         <p class="text-sm text-slate-400 mt-1 font-medium">{{ continueLearning.instructor }}</p>
@@ -527,26 +524,26 @@ watch(() => props.stats?.completion_rate, (v) => {
                                     <div class="flex justify-between items-start gap-4 mb-3">
                                         <div class="min-w-0">
                                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Prochaine étape</p>
-                                            <p class="text-sm font-bold text-white truncate">
+                                            <p class="text-sm font-bold text-slate-800 truncate">
                                                 {{ continueLearning.next_lesson?.title ?? continueLearning.next_lesson ?? 'Cours terminé' }}
                                             </p>
                                         </div>
-                                        <span class="text-3xl font-black text-white shrink-0 font-mono">{{ Math.round(continueLearning.progress ?? 0) }}%</span>
+                                        <span class="text-3xl font-black text-slate-800 shrink-0 font-mono">{{ Math.round(continueLearning.progress ?? 0) }}%</span>
                                     </div>
                                     <ProgressBar
                                         :value="continueLearning.progress ?? 0"
                                         :showValue="false"
                                         style="height: 6px"
-                                        class="bg-white/10 rounded-full overflow-hidden [&_.p-progressbar-value]:bg-gradient-to-r [&_.p-progressbar-value]:from-indigo-500 [&_.p-progressbar-value]:to-purple-500"
+                                        class="bg-white/10 rounded-full overflow-hidden [&_.p-progressbar-value]:bg-gradient-to-r [&_.p-progressbar-value]:from-blue-500 [&_.p-progressbar-value]:to-purple-500"
                                     />
                                 </div>
 
                                 <div class="flex gap-2.5 flex-wrap">
                                     <Link v-if="getLessonPlayerUrl(continueLearning)" :href="getLessonPlayerUrl(continueLearning)">
-                                        <Button label="Reprendre la leçon" icon="pi pi-play" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3 shadow-lg shadow-indigo-500/30" />
+                                        <Button label="Reprendre la leçon" icon="pi pi-play" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3 shadow-lg shadow-blue-500/30" />
                                     </Link>
-                                    <Button label="Ressources" icon="pi pi-folder-open" class="!bg-white/10 hover:!bg-white/15 !border !border-white/15 !text-white !rounded-xl !font-bold !text-xs !px-4 !py-3" @click="openCourseHub(continueLearning)" />
-                                    <Button label="Poser une question" icon="pi pi-question-circle" class="!bg-amber-500/15 hover:!bg-amber-500/25 !border !border-amber-500/30 !text-amber-300 !rounded-xl !font-bold !text-xs !px-4 !py-3" @click="askQuestion(continueLearning)" />
+                                    <Button label="Ressources" icon="pi pi-folder-open" class="!bg-white/10 hover:!bg-white/15 !border !border-white/15 !text-slate-800 !rounded-xl !font-bold !text-xs !px-4 !py-3" @click="openCourseHub(continueLearning)" />
+                                    <Button label="Poser une question" icon="pi pi-question-circle" class="!bg-red-500/15 hover:!bg-red-500/25 !border !border-red-500/30 !text-red-300 !rounded-xl !font-bold !text-xs !px-4 !py-3" @click="askQuestion(continueLearning)" />
                                     <Link :href="route('student.my-courses')">
                                         <Button label="Tous mes cours" icon="pi pi-th-large" class="!bg-transparent hover:!bg-white/5 !border !border-white/15 !text-slate-300 !rounded-xl !font-bold !text-xs !px-4 !py-3" />
                                     </Link>
@@ -556,13 +553,13 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                         <!-- Aucun cours inscrit -->
                         <div v-else class="bg-white border-2 border-dashed border-slate-200 rounded-xl p-14 text-center">
-                            <div class="w-20 h-20 bg-indigo-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-                                <i class="pi pi-folder-open text-3xl text-indigo-400"></i>
+                            <div class="w-20 h-20 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i class="pi pi-folder-open text-3xl text-blue-400"></i>
                             </div>
                             <h3 class="text-xl font-black text-slate-800 mb-2">Aucune formation en cours</h3>
                             <p class="text-slate-500 text-sm mb-6">Vous n'avez pas encore de cours. Explorez le catalogue pour commencer.</p>
                             <Link :href="route('student.my-courses')">
-                                <Button label="Découvrir les formations" icon="pi pi-arrow-right" iconPos="right" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3" />
+                                <Button label="Découvrir les formations" icon="pi pi-arrow-right" iconPos="right" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3" />
                             </Link>
                         </div>
 
@@ -571,26 +568,26 @@ watch(() => props.stats?.completion_rate, (v) => {
                                  class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100">
                                 <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
                                         <i class="pi pi-pencil text-lg"></i>
                                     </div>
                                     Examens
                                 </h2>
-                                <Link :href="route('exams.learner.index')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">
+                                <Link :href="route('exams.learner.index')" class="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">
                                     Tout voir →
                                 </Link>
                             </div>
 
-                            <div v-if="inProgressExams?.length" class="p-6 bg-amber-50/40 border-b border-amber-100">
-                                <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+                            <div v-if="inProgressExams?.length" class="p-6 bg-red-50/40 border-b border-red-100">
+                                <p class="text-[10px] font-black text-red-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
                                     Reprendre où vous étiez
                                 </p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div v-for="exam in inProgressExams" :key="exam.attempt_uuid"
-                                         class="bg-white border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                                         class="bg-white border border-red-200 rounded-xl p-4 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <div class="w-10 h-10 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center shrink-0">
+                                            <div class="w-10 h-10 bg-red-100 text-red-700 rounded-xl flex items-center justify-center shrink-0">
                                                 <i class="pi pi-pencil text-sm"></i>
                                             </div>
                                             <div class="min-w-0">
@@ -598,7 +595,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                                 <p class="text-xs text-slate-500 truncate font-medium">{{ exam.course_title }}</p>
                                             </div>
                                         </div>
-                                        <Button label="Reprendre" icon="pi pi-play" size="small" class="!bg-amber-500 hover:!bg-amber-600 !border-none !text-white !font-black !uppercase !tracking-widest !text-[10px] !px-4 !py-2.5 shrink-0" @click="resumeExam(exam)" />
+                                        <Button label="Reprendre" icon="pi pi-play" size="small" class="!bg-red-500 hover:!bg-red-600 !border-none !text-slate-800 !font-black !uppercase !tracking-widest !text-[10px] !px-4 !py-2.5 shrink-0" @click="resumeExam(exam)" />
                                     </div>
                                 </div>
                             </div>
@@ -607,7 +604,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">À passer</p>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div v-for="exam in upcomingExams" :key="exam.id"
-                                         class="bg-slate-50/50 hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-4 transition-all group">
+                                         class="bg-slate-50/50 hover:bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-4 transition-all group">
                                         <div class="flex justify-between items-start mb-3 gap-2">
                                             <div class="min-w-0">
                                                 <p class="text-sm font-black text-slate-800 truncate">{{ exam.title }}</p>
@@ -620,7 +617,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                             <span class="flex items-center gap-1.5"><i class="pi pi-list text-[10px]"></i>{{ exam.questions_count }}q</span>
                                             <span class="flex items-center gap-1.5"><i class="pi pi-calendar text-[10px]"></i>{{ formatExamDate(exam.scheduled_at) }}</span>
                                         </div>
-                                        <Button label="Démarrer l'examen" icon="pi pi-arrow-right" iconPos="right" size="small" class="!bg-slate-900 hover:!bg-slate-800 w-full !border-none !font-black !uppercase !tracking-widest !text-[10px] !py-2.5" :disabled="exam.status === 'locked'" @click="startExam(exam)" />
+                                        <Button label="Démarrer l'examen" icon="pi pi-arrow-right" iconPos="right" size="small" class="!bg-white border border-slate-200 shadow-sm hover:!bg-slate-800 w-full !border-none !font-black !uppercase !tracking-widest !text-[10px] !py-2.5" :disabled="exam.status === 'locked'" @click="startExam(exam)" />
                                     </div>
                                 </div>
                             </div>
@@ -630,24 +627,24 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <section v-if="otherCourses.length > 0">
                             <div class="flex justify-between items-center mb-4">
                                 <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                                         <i class="pi pi-book text-lg"></i>
                                     </div>
                                     Autres formations
                                 </h2>
-                                <Link :href="route('student.my-courses')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">
+                                <Link :href="route('student.my-courses')" class="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">
                                     Tout voir →
                                 </Link>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div v-for="course in otherCourses" :key="course.id"
-                                     class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all group relative">
+                                     class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all group relative">
                                     <div class="flex gap-4">
-                                        <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-indigo-50 flex items-center justify-center">
+                                        <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-blue-50 flex items-center justify-center">
                                             <img v-if="getImageUrl(course.image || course.thumbnail)"
                                                  :src="getImageUrl(course.image || course.thumbnail)" :alt="course.title"
                                                  class="w-full h-full object-cover" />
-                                            <i v-else class="pi pi-book text-indigo-500 text-xl"></i>
+                                            <i v-else class="pi pi-book text-blue-500 text-xl"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <Tag :value="getLevelLabel(course.level)" severity="secondary" class="!text-[10px] !font-black !uppercase !tracking-widest mb-1.5" />
@@ -663,9 +660,9 @@ watch(() => props.stats?.completion_rate, (v) => {
                                         </div>
                                     </div>
                                     <div class="mt-3 flex gap-2 relative z-20">
-                                        <Button v-if="getLessonPlayerUrl(course)" label="Continuer" icon="pi pi-play" size="small" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !font-black !uppercase !tracking-widest !text-[10px] !px-4 !py-2.5" @click.stop="router.visit(getLessonPlayerUrl(course))" />
+                                        <Button v-if="getLessonPlayerUrl(course)" label="Continuer" icon="pi pi-play" size="small" class="!bg-blue-600 hover:!bg-blue-500 !border-none !font-black !uppercase !tracking-widest !text-[10px] !px-4 !py-2.5" @click.stop="router.visit(getLessonPlayerUrl(course))" />
                                         <Button label="Supports" icon="pi pi-download" size="small" outlined class="!border-slate-200 !text-slate-600 !font-bold !text-[10px] !uppercase !tracking-widest !px-3 !py-2.5" @click.stop="openCourseHub(course)" />
-                                        <Button label="Question" icon="pi pi-question-circle" size="small" outlined class="!border-amber-200 !text-amber-600 !font-bold !text-[10px] !uppercase !tracking-widest !px-3 !py-2.5" @click.stop="askQuestion(course)" />
+                                        <Button label="Question" icon="pi pi-question-circle" size="small" outlined class="!border-red-200 !text-red-600 !font-bold !text-[10px] !uppercase !tracking-widest !px-3 !py-2.5" @click.stop="askQuestion(course)" />
                                     </div>
                                     <Link v-if="getLessonPlayerUrl(course)" :href="getLessonPlayerUrl(course)"
                                           class="absolute inset-0 z-10" :aria-label="`Ouvrir ${course.title}`"></Link>
@@ -677,7 +674,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-center mb-5">
                                 <h2 class="text-lg font-black text-slate-800 flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
                                         <i class="pi pi-chart-line text-lg"></i>
                                     </div>
                                     Assiduité
@@ -724,7 +721,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                             {{ student.name }}
                         </p>
                         <span class="inline-flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                            <i :class="`pi pi-arrow-${student.trend === 'up' ? 'up text-emerald-500' : 'down text-red-600'} text-[7px]`"></i>
+                            <i :class="`pi pi-arrow-${student.trend === 'up' ? 'up text-red-500' : 'down text-red-600'} text-[7px]`"></i>
                             {{ student.trend === 'up' ? 'Ascendant' : 'Stable' }}
                         </span>
                     </div>
@@ -779,7 +776,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <div v-if="courseProgressBreakdown.length > 0" class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Progression par cours</h3>
-                                <Link :href="route('student.progress')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Détails →</Link>
+                                <Link :href="route('student.progress')" class="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">Détails →</Link>
                             </div>
                             <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 <div v-for="c in courseProgressBreakdown" :key="c.id" class="flex items-center gap-3">
@@ -818,20 +815,20 @@ watch(() => props.stats?.completion_rate, (v) => {
                         </div>
 
                         <!-- CERTIFICATS -->
-                        <div v-if="allCertificates.length > 0" class="bg-slate-900 rounded-xl p-6 text-white relative overflow-hidden">
-                            <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-[60px]"></div>
+                        <div v-if="allCertificates.length > 0" class="bg-white border border-slate-200 shadow-sm rounded-xl p-6 text-slate-800 relative overflow-hidden">
+                            <div class="absolute -top-10 -right-10 w-40 h-40 bg-red-500/10 rounded-full blur-[60px]"></div>
                             <div class="relative z-10">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-sm font-black flex items-center gap-2 uppercase tracking-widest">
-                                        <i class="pi pi-verified text-amber-400"></i> Mes certificats
+                                        <i class="pi pi-verified text-red-400"></i> Mes certificats
                                     </h3>
-                                    <Link :href="route('student.certificates')" class="text-[10px] font-black text-amber-400 uppercase tracking-widest hover:underline">Tout voir →</Link>
+                                    <Link :href="route('student.certificates')" class="text-[10px] font-black text-red-400 uppercase tracking-widest hover:underline">Tout voir →</Link>
                                 </div>
                                 <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                                     <div v-for="cert in allCertificates" :key="cert.id"
                                          class="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3 transition-colors">
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <div class="w-9 h-9 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center shrink-0">
+                                            <div class="w-9 h-9 bg-red-500/20 text-red-400 rounded-xl flex items-center justify-center shrink-0">
                                                 <i class="pi pi-award text-sm"></i>
                                             </div>
                                             <div class="min-w-0">
@@ -840,7 +837,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                             </div>
                                         </div>
                                         <button v-tooltip.left="'Télécharger le PDF'"
-                                                class="w-9 h-9 bg-amber-500 text-slate-900 rounded-xl flex items-center justify-center shrink-0 hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/30"
+                                                class="w-9 h-9 bg-red-500 text-slate-900 rounded-xl flex items-center justify-center shrink-0 hover:bg-red-400 transition-colors shadow-lg shadow-red-500/30"
                                                 @click="downloadCertificate(cert)"
                                                 :aria-label="`Télécharger le certificat ${cert.course_title}`">
                                             <i class="pi pi-download text-sm"></i>
@@ -855,24 +852,24 @@ watch(() => props.stats?.completion_rate, (v) => {
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3">Accès rapide</h3>
                             <nav class="space-y-1">
                                 <Link :href="route('student.my-courses')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
-                                    <div class="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
+                                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
                                     <span class="text-xs font-bold text-slate-700">Mes formations</span>
-                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-indigo-500"></i>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-blue-500"></i>
                                 </Link>
                                 <Link :href="route('exams.learner.index')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
-                                    <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center"><i class="pi pi-pencil text-xs"></i></div>
+                                    <div class="w-8 h-8 bg-red-50 text-red-600 rounded-lg flex items-center justify-center"><i class="pi pi-pencil text-xs"></i></div>
                                     <span class="text-xs font-bold text-slate-700">Passer un examen</span>
-                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-amber-500"></i>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-red-500"></i>
                                 </Link>
                                 <Link :href="route('student.certificates')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
-                                    <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center"><i class="pi pi-verified text-xs"></i></div>
+                                    <div class="w-8 h-8 bg-red-50 text-red-600 rounded-lg flex items-center justify-center"><i class="pi pi-verified text-xs"></i></div>
                                     <span class="text-xs font-bold text-slate-700">Mes certificats</span>
-                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-emerald-500"></i>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-red-500"></i>
                                 </Link>
                                 <Link :href="route('student.progress')" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group">
-                                    <div class="w-8 h-8 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center"><i class="pi pi-chart-line text-xs"></i></div>
+                                    <div class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center"><i class="pi pi-chart-line text-xs"></i></div>
                                     <span class="text-xs font-bold text-slate-700">Ma progression</span>
-                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-emerald-500"></i>
+                                    <i class="pi pi-chevron-right text-slate-300 text-[10px] ml-auto group-hover:text-red-500"></i>
                                 </Link>
                             </nav>
                         </div>
@@ -882,16 +879,16 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <div v-if="recentActivities && recentActivities.length > 0" class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center justify-between">
                                 Activité récente
-                                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                             </h3>
                             <Timeline :value="recentActivities" class="custom-timeline">
                                 <template #marker="slotProps">
                                     <span
-                                        class="flex w-8 h-8 items-center justify-center text-white rounded-xl shadow-md"
+                                        class="flex w-8 h-8 items-center justify-center text-slate-800 rounded-xl shadow-md"
                                         :class="{
-                                            'bg-emerald-500 shadow-emerald-500/30': slotProps.item.type === 'success',
-                                            'bg-indigo-500 shadow-indigo-500/30': slotProps.item.type === 'info',
-                                            'bg-amber-500 shadow-amber-500/30': slotProps.item.type === 'warning',
+                                            'bg-red-500 shadow-red-500/30': slotProps.item.type === 'success',
+                                            'bg-blue-500 shadow-blue-500/30': slotProps.item.type === 'info',
+                                            'bg-red-500 shadow-red-500/30': slotProps.item.type === 'warning',
                                             'bg-slate-400': !['success','info','warning'].includes(slotProps.item.type)
                                         }">
                                         <i :class="`pi ${slotProps.item.icon || 'pi-info-circle'} text-xs`"></i>
@@ -901,7 +898,7 @@ watch(() => props.stats?.completion_rate, (v) => {
                                     <div class="mb-5 ml-3">
                                         <p class="text-xs font-black text-slate-800 leading-snug">{{ slotProps.item.event }}</p>
                                         <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{{ slotProps.item.detail }}</p>
-                                        <span class="text-[10px] font-mono text-indigo-600 font-black uppercase tracking-widest">{{ slotProps.item.time }}</span>
+                                        <span class="text-[10px] font-mono text-blue-600 font-black uppercase tracking-widest">{{ slotProps.item.time }}</span>
                                     </div>
                                 </template>
                             </Timeline>
@@ -912,14 +909,11 @@ watch(() => props.stats?.completion_rate, (v) => {
 
                 </template>
             </div>
-            </div>
-        </div>
-
-        <!-- Q&A Dialog -->
+<!-- Q&A Dialog -->
         <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question" class="!rounded-xl" :closable="!askSubmitting">
             <div class="space-y-4 p-2">
-                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center gap-3">
-                    <i class="pi pi-book text-indigo-500"></i>
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center gap-3">
+                    <i class="pi pi-book text-blue-500"></i>
                     <div class="text-xs">
                         <p class="font-black text-slate-800">{{ askContext.course?.title }}</p>
                         <p v-if="askContext.lesson" class="text-slate-500">Leçon : {{ askContext.lesson.title }}</p>
@@ -945,23 +939,23 @@ watch(() => props.stats?.completion_rate, (v) => {
                         <input type="file" multiple class="hidden" @change="onAskFileChange" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.zip,.rar,.7z,.json,.xml" />
                     </label>
                     <div v-if="askFiles.length" class="mt-2 space-y-1.5">
-                        <div v-for="(f, i) in askFiles" :key="i" class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 text-xs">
-                            <i :class="f.type?.startsWith('image/') ? 'pi pi-image text-indigo-500' : 'pi pi-file text-indigo-500'"></i>
+                        <div v-for="(f, i) in askFiles" :key="i" class="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs">
+                            <i :class="f.type?.startsWith('image/') ? 'pi pi-image text-blue-500' : 'pi pi-file text-blue-500'"></i>
                             <span class="flex-1 truncate font-bold text-slate-700">{{ f.name }}</span>
                             <span class="text-[10px] font-mono text-slate-500">{{ formatFileSize(f.size) }}</span>
-                            <button type="button" @click="removeAskFile(i)" class="w-5 h-5 rounded-full bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">
+                            <button type="button" @click="removeAskFile(i)" class="w-5 h-5 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-slate-800 flex items-center justify-center transition-colors">
                                 <i class="pi pi-times text-[9px]"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div v-if="askErrors.form || askErrors.subject || askErrors.body" class="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3">
+                <div v-if="askErrors.form || askErrors.subject || askErrors.body" class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3">
                     {{ askErrors.form || askErrors.subject || askErrors.body }}
                 </div>
             </div>
             <template #footer>
                 <Button label="Annuler" outlined :disabled="askSubmitting" @click="showAskDialog = false" class="!rounded-xl" />
-                <Button :label="askSubmitting ? 'Envoi...' : 'Envoyer la question'" icon="pi pi-send" :loading="askSubmitting" @click="submitAskQuestion" class="!bg-gradient-to-r !from-indigo-500 !to-rose-500 !border-none !rounded-xl" />
+                <Button :label="askSubmitting ? 'Envoi...' : 'Envoyer la question'" icon="pi pi-send" :loading="askSubmitting" @click="submitAskQuestion" class="!bg-gradient-to-r !from-blue-500 !to-red-500 !border-none !rounded-xl" />
             </template>
         </Dialog>
     </AppLayout>

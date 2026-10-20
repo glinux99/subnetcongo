@@ -16,31 +16,45 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Mon Profil" />
-
     <AppLayout>
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-            <div class="md:col-span-12">
-                <div class="card bg-surface-0 shadow-sm border-round p-6">
-                    <h2 class="text-2xl font-bold mb-4 text-surface-900 border-b pb-4">Paramètres du profil</h2>
-                    
-                    <div class="flex flex-col gap-8">
-                        <div class="p-6 bg-surface-50 border border-surface-200 rounded-xl">
-                            <UpdateProfileInformationForm
-                                :must-verify-email="mustVerifyEmail"
-                                :status="status"
-                                class="max-w-2xl"
-                            />
-                        </div>
+        <Head title="Profil Utilisateur" />
 
-                        <div class="p-6 bg-surface-50 border border-surface-200 rounded-xl">
-                            <UpdatePasswordForm class="max-w-2xl" />
+        <div class="min-h-screen bg-[#F8FAFC] pb-20">
+            <!-- HEADER SECTION -->
+            <div class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/80">
+                <div class="max-w-[1800px] mx-auto px-6 py-4 flex justify-between items-center gap-6">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-xl shadow-blue-100">
+                            <i class="pi pi-user text-white text-2xl"></i>
                         </div>
-
-                        <div class="p-6 bg-red-50 border border-red-200 rounded-xl">
-                            <DeleteUserForm class="max-w-2xl" />
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Paramètres</span>
+                            </div>
+                            <h1 class="text-2xl font-black text-slate-800 tracking-tight italic">Profil Utilisateur</h1>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="max-w-[1200px] mx-auto px-6 mt-10 space-y-8">
+                <!-- PROFILE INFO FORM -->
+                <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm">
+                    <UpdateProfileInformationForm
+                        :must-verify-email="mustVerifyEmail"
+                        :status="status"
+                        class="max-w-xl"
+                    />
+                </div>
+
+                <!-- UPDATE PASSWORD FORM -->
+                <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm">
+                    <UpdatePasswordForm class="max-w-xl" />
+                </div>
+
+                <!-- DELETE USER FORM -->
+                <div class="bg-white rounded-[1rem] p-8 border border-red-100 shadow-sm">
+                    <DeleteUserForm class="max-w-xl" />
                 </div>
             </div>
         </div>

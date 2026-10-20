@@ -75,7 +75,7 @@ const copyVariable = (variable) => {
         <div class="page-bg min-h-screen font-sans pb-20">
             <!-- Header modernisé -->
             <div class="bg-[#0f172a] pt-8 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px]"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
                 <div class="max-w-[1200px] mx-auto relative z-10">
                     <Link :href="route('admin.email-templates.index')" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-6 transition-colors bg-slate-800/50 px-4 py-2 rounded-full backdrop-blur-sm">
                         <i class="pi pi-arrow-left text-xs"></i> Retour aux modèles
@@ -96,7 +96,7 @@ const copyVariable = (variable) => {
                                 :value="form.is_active ? 'Modèle Actif' : 'Modèle Inactif'"
                                 :class="[
                                     '!px-4 !py-2 !rounded-full !font-bold transition-colors duration-300',
-                                    form.is_active ? '!bg-emerald-500/20 !text-emerald-400 !border !border-emerald-500/30' : '!bg-slate-700/50 !text-slate-400 !border !border-slate-600'
+                                    form.is_active ? '!bg-blue-500/20 !text-blue-400 !border !border-blue-500/30' : '!bg-slate-700/50 !text-slate-400 !border !border-slate-600'
                                 ]"
                             />
                         </div>
@@ -108,15 +108,15 @@ const copyVariable = (variable) => {
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Main Formulaire -->
                     <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                             <form @submit.prevent="submit" class="flex flex-col h-full">
 
                                 <div class="p-6 md:p-8 space-y-6">
                                     <!-- Active Toggle (Design Repensé) -->
-                                    <div :class="['flex items-center justify-between p-5 rounded-2xl border transition-colors', form.is_active ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-200']">
+                                    <div :class="['flex items-center justify-between p-5 rounded-2xl border transition-colors', form.is_active ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-200']">
                                         <div>
-                                            <p :class="['font-bold text-base', form.is_active ? 'text-emerald-900' : 'text-slate-700']">Activation automatique</p>
-                                            <p :class="['text-sm mt-0.5', form.is_active ? 'text-emerald-600' : 'text-slate-500']">
+                                            <p :class="['font-bold text-base', form.is_active ? 'text-blue-900' : 'text-slate-700']">Activation automatique</p>
+                                            <p :class="['text-sm mt-0.5', form.is_active ? 'text-blue-600' : 'text-slate-500']">
                                                 {{ form.is_active ? 'Ce modèle sera utilisé par le système.' : 'Ce message est désactivé et ne sera pas envoyé.' }}
                                             </p>
                                         </div>
@@ -130,11 +130,11 @@ const copyVariable = (variable) => {
                                             <i class="pi pi-pencil absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                             <InputText
                                                 v-model="form.subject"
-                                                class="!rounded-xl w-full !pl-11 !py-3 !text-slate-800 !border-slate-200 focus:!border-indigo-500"
+                                                class="!rounded-xl w-full !pl-11 !py-3 !text-slate-800 !border-slate-200 focus:!border-blue-500"
                                                 placeholder="Saisissez l'objet du message..."
                                             />
                                         </div>
-                                        <p v-if="form.errors.subject" class="text-rose-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.subject }}</p>
+                                        <p v-if="form.errors.subject" class="text-red-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.subject }}</p>
                                     </div>
 
                                     <!-- Content (Simili-éditeur de code) -->
@@ -143,12 +143,12 @@ const copyVariable = (variable) => {
                                             <label class="block text-sm font-black text-slate-700">Contenu HTML</label>
                                             <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md font-mono">HTML Supporté</span>
                                         </div>
-                                        <div class="rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] shadow-inner focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
+                                        <div class="rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] shadow-inner focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
                                             <!-- Faux header type mac/éditeur -->
                                             <div class="bg-[#1e293b] px-4 py-2 flex items-center gap-2 border-b border-slate-700/50">
-                                                <div class="w-3 h-3 rounded-full bg-rose-500"></div>
-                                                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                                                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
                                                 <span class="ml-2 text-xs text-slate-400 font-mono tracking-widest uppercase">template.html</span>
                                             </div>
                                             <!-- CORRECTION ICI: Ajout de !text-slate-100 pour forcer le texte en blanc -->
@@ -159,7 +159,7 @@ const copyVariable = (variable) => {
                                                 placeholder="<div>Entrez votre HTML ici...</div>"
                                             />
                                         </div>
-                                        <p v-if="form.errors.content" class="text-rose-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.content }}</p>
+                                        <p v-if="form.errors.content" class="text-red-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.content }}</p>
                                     </div>
                                 </div>
 
@@ -169,7 +169,7 @@ const copyVariable = (variable) => {
                                         type="button"
                                         :label="showTestForm ? 'Fermer le test' : 'Tester l\'envoi'"
                                         :icon="showTestForm ? 'pi pi-times' : 'pi pi-send'"
-                                        :class="['!rounded-xl transition-all', showTestForm ? '!text-slate-500 hover:!bg-slate-200' : '!text-indigo-600 hover:!bg-indigo-50 !border-indigo-200']"
+                                        :class="['!rounded-xl transition-all', showTestForm ? '!text-slate-500 hover:!bg-slate-200' : '!text-blue-600 hover:!bg-blue-50 !border-blue-200']"
                                         outlined
                                         @click="showTestForm = !showTestForm"
                                     />
@@ -185,9 +185,9 @@ const copyVariable = (variable) => {
                         </div>
 
                         <!-- Formulaire de Test (Rendu conditionnel doux avec Animation) -->
-                        <div v-show="showTestForm" class="bg-indigo-50 rounded-3xl p-6 border border-indigo-100 transform transition-all duration-300 animate-fadein">
-                            <h3 class="text-sm font-black uppercase tracking-widest text-indigo-900 mb-4 flex items-center gap-2">
-                                <i class="pi pi-paper-plane text-indigo-600"></i> Envoyer un test
+                        <div v-show="showTestForm" class="bg-blue-50 rounded-3xl p-6 border border-blue-100 transform transition-all duration-300 animate-fadein">
+                            <h3 class="text-sm font-black uppercase tracking-widest text-blue-900 mb-4 flex items-center gap-2">
+                                <i class="pi pi-paper-plane text-blue-600"></i> Envoyer un test
                             </h3>
                             <div class="flex flex-col sm:flex-row gap-3">
                                 <div class="relative flex-1">
@@ -204,10 +204,10 @@ const copyVariable = (variable) => {
                                     label="Envoyer"
                                     @click="sendTest"
                                     :disabled="!testEmail"
-                                    class="!rounded-xl !bg-indigo-600 hover:!bg-indigo-700 !border-none shadow-md"
+                                    class="!rounded-xl !bg-blue-600 hover:!bg-blue-700 !border-none shadow-md"
                                 />
                             </div>
-                            <p class="text-xs text-indigo-600/70 mt-3">L'email sera envoyé avec les données actuelles (pensez à sauvegarder avant de tester si vous avez fait des modifications).</p>
+                            <p class="text-xs text-blue-600/70 mt-3">L'email sera envoyé avec les données actuelles (pensez à sauvegarder avant de tester si vous avez fait des modifications).</p>
                         </div>
                     </div>
 
@@ -215,7 +215,7 @@ const copyVariable = (variable) => {
                     <div class="space-y-6">
 
                         <!-- Informations de base -->
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                             <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2">
                                 <i class="pi pi-info-circle text-slate-400"></i> Métadonnées
                             </h3>
@@ -223,7 +223,7 @@ const copyVariable = (variable) => {
                                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Déclencheur</p>
                                     <p class="font-semibold text-slate-800 flex items-center gap-2">
-                                        <i class="pi pi-bolt text-amber-500"></i> {{ template.trigger_event }}
+                                        <i class="pi pi-bolt text-red-500"></i> {{ template.trigger_event }}
                                     </p>
                                 </div>
                                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -234,7 +234,7 @@ const copyVariable = (variable) => {
                         </div>
 
                         <!-- Variables (Améliorées UX) -->
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
                                     <i class="pi pi-code text-slate-400"></i> Variables
@@ -252,35 +252,35 @@ const copyVariable = (variable) => {
                                     :class="[
                                         'w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all duration-200 border',
                                         copiedVariable === variable
-                                            ? 'bg-emerald-50 border-emerald-200'
-                                            : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-sm'
+                                            ? 'bg-blue-50 border-blue-200'
+                                            : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-sm'
                                     ]"
                                 >
                                     <!-- CORRECTION ICI: Affichage des accolades {{ }} autour de la variable -->
-                                    <code :class="['font-mono font-bold text-xs', copiedVariable === variable ? 'text-emerald-600' : 'text-indigo-600']">
+                                    <code :class="['font-mono font-bold text-xs', copiedVariable === variable ? 'text-blue-600' : 'text-blue-600']">
                                         {{ variable }}
                                     </code>
-                                    <i :class="['pi text-xs', copiedVariable === variable ? 'pi-check text-emerald-500' : 'pi-copy text-slate-300']"></i>
+                                    <i :class="['pi text-xs', copiedVariable === variable ? 'pi-check text-blue-500' : 'pi-copy text-slate-300']"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Astuces HTML -->
-                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-3xl p-6">
-                            <h3 class="text-sm font-black text-indigo-900 mb-3 flex items-center gap-2">
+                        <div class="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-3xl p-6">
+                            <h3 class="text-sm font-black text-blue-900 mb-3 flex items-center gap-2">
                                 💡 Astuces d'édition
                             </h3>
-                            <ul class="text-xs text-indigo-800/80 space-y-2.5">
+                            <ul class="text-xs text-blue-800/80 space-y-2.5">
                                 <li class="flex items-start gap-2">
-                                    <i class="pi pi-check-circle mt-0.5 text-indigo-400"></i>
+                                    <i class="pi pi-check-circle mt-0.5 text-blue-400"></i>
                                     <span>Les variables sont dynamiques et se remplacent lors de l'envoi.</span>
                                 </li>
                                 <li class="flex items-start gap-2">
-                                    <i class="pi pi-check-circle mt-0.5 text-indigo-400"></i>
+                                    <i class="pi pi-check-circle mt-0.5 text-blue-400"></i>
                                     <span>Utilisez des balises <code>&lt;br&gt;</code> pour les sauts de ligne si vous n'utilisez pas de paragraphes.</span>
                                 </li>
                                 <li class="flex items-start gap-2">
-                                    <i class="pi pi-check-circle mt-0.5 text-indigo-400"></i>
+                                    <i class="pi pi-check-circle mt-0.5 text-blue-400"></i>
                                     <span>Évitez le CSS complexe, privilégiez le CSS en ligne (style="...").</span>
                                 </li>
                             </ul>

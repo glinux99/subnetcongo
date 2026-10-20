@@ -565,81 +565,122 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- TABLEAU DE BORD PRINCIPAL (HORS ÉDITEUR)                                       -->
         <!-- ============================================================================== -->
-        <div class="page-bg min-h-screen font-sans pb-20">
+            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4">
+            
+            <!-- Breadcrumb -->
+            <div class="flex items-center text-sm px-1 mb-2">
+                <Breadcrumb 
+                    :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Trust Center & Diplômes' }]" 
+                    class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+                />
+            </div>
 
-            <!-- EN-TÊTE DU MODULE -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                <div class="space-y-4 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Trust Center & Diplômes', class: 'font-bold text-red-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
-                    <div>
-                        <h1 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tight flex items-center gap-4">
-                            Trust Center
-                            <Badge value="Blockchain Ready" severity="success" class="text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1"></Badge>
+            <!-- 1. BANNIÈRE SOMBRE -->
+            <!-- Padding bottom (pb-24) large pour laisser la place aux cartes de remonter -->
+            <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
+                
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
+                    
+                    <!-- Partie Gauche (Titres) -->
+                    <div class="max-w-3xl">
+                        <!-- Badge -->
+                        <span class="inline-block border border-emerald-900/50 text-emerald-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-emerald-950/30 mb-4 uppercase">
+                            Blockchain Ready
+                        </span>
+
+                        <!-- Titre Principal (Italique, très gras, espacement réduit) -->
+                        <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
+                            <span class="text-white">TRUST</span>
+                            <span class="text-[#FF3B3B]">CENTER</span>
                         </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-3 leading-relaxed font-medium">
-                            Pilotez la valeur académique de votre institution. Le <strong>Quantum Engine</strong> vous permet de concevoir des diplômes HD avec un placement libre (Drag & Drop) des variables, QR Codes, et Signatures.
+
+                        <!-- Sous-titre -->
+                        <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
+                            Pilotez la valeur académique de votre institution. Le Quantum Engine vous permet de concevoir des diplômes HD avec un placement libre des variables, QR Codes et Signatures.
                         </p>
                     </div>
-                </div>
-                <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
-                    <Button label="Audit Log" icon="pi pi-history" class="p-button-outlined p-button-secondary bg-slate-50 text-slate-700 border-slate-200 shadow-sm font-bold w-full sm:w-auto px-6 py-3 rounded-xl hover:bg-slate-100 transition-all" />
-                    <Button label="Délivrer en masse" icon="pi pi-send" class="bg-red-600 hover:bg-red-700 border-none shadow-lg shadow-red-500/30 font-bold px-8 py-3 w-full sm:w-auto text-white rounded-xl transition-all hover:-translate-y-0.5" @click="openBulkIssuance" />
+
+                    <!-- Partie Droite (Boutons) -->
+                    <div class="flex flex-wrap items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
+                        <Button 
+                            label="Audit Log" 
+                            icon="pi pi-history" 
+                            class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
+                        />
+                        <Button 
+                            label="Délivrer en masse" 
+                            icon="pi pi-send" 
+                            @click="openBulkIssuance"
+                            class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
+                        />
+                    </div>
                 </div>
             </div>
 
-            <!-- KPI DASHBOARD -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-red-300 hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out opacity-50"></div>
+            <!-- 2. CARTES KPI (Chevauchement) -->
+            <!-- Le -mt-16 fait remonter les cartes sur la bannière sombre. Le z-20 les garde au premier plan -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
+                
+                <!-- KPI 1 : Total Délivrés -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                    <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
+                        <i class="pi pi-copy text-red-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Délivrés</div>
+                        <div class="flex items-end gap-2">
+                            <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.total_issued || '2,450' }}</div>
+                            <span class="text-[10px] font-bold text-emerald-500 mb-0.5 flex items-center"><i class="pi pi-arrow-up text-[8px] mr-1"></i>12%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2 : Taux de Réussite -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden">
+                    <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center relative z-10">
+                        <i class="pi pi-chart-pie text-emerald-500 text-sm"></i>
+                    </div>
                     <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shadow-sm border border-red-200"><i class="pi pi-copy text-lg"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Délivrés</p>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taux de Réussite</div>
+                        <div class="flex items-end gap-1">
+                            <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.success_rate || 78 }}</div>
+                            <span class="text-sm text-slate-400 font-bold mb-0.5">%</span>
                         </div>
-                        <div class="flex items-end gap-3">
-                            <h3 class="text-5xl font-black text-slate-800 tracking-tighter">{{ props.stats?.total_issued || '2,450' }}</h3>
-                            <span class="text-sm font-bold text-emerald-500 mb-1 flex items-center"><i class="pi pi-arrow-up text-[10px] mr-1"></i>12%</span>
+                    </div>
+                    <!-- Barre de progression minimaliste superposée au bas de la carte -->
+                    <ProgressBar :value="props.stats?.success_rate || 78" :showValue="false" class="absolute bottom-0 left-0 w-full h-1 border-none" :pt="{ value: { class: 'bg-emerald-500' } }"></ProgressBar>
+                </div>
+
+                <!-- KPI 3 : Vérifications Web -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                    <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
+                        <i class="pi pi-globe text-blue-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Vérifications Web</div>
+                        <div class="flex items-end gap-2">
+                            <div class="text-2xl font-black text-slate-800 leading-none">14.2k</div>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded">Vues</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm border border-emerald-200"><i class="pi pi-chart-pie text-lg"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Taux de Réussite</p>
-                        </div>
+                <!-- KPI 4 : Titres Révoqués -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                    <div class="w-8 h-8 rounded bg-rose-50 flex items-center justify-center">
+                        <i class="pi pi-shield-slash text-rose-500 text-sm"></i>
                     </div>
-                    <div class="mt-4">
-                        <div class="flex justify-between items-end mb-2">
-                            <h3 class="text-4xl font-black text-slate-800 tracking-tighter">{{ props.stats?.success_rate || 78 }}%</h3>
-                            <span class="text-xs text-slate-400 font-medium mb-1">Moyenne globale</span>
-                        </div>
-                        <ProgressBar :value="props.stats?.success_rate || 78" :showValue="false" class="h-2 bg-slate-100 rounded-full" color="#10b981"></ProgressBar>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Titres Révoqués</div>
+                        <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.revocation_rate || 14 }}</div>
                     </div>
                 </div>
-
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm border border-blue-200"><i class="pi pi-globe text-lg"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Vérifications Web</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-5xl font-black text-slate-800 tracking-tighter">14.2k</h3>
-                        <span class="text-xs text-slate-400 font-medium bg-slate-100 px-2 py-1 rounded-md">Vues employeurs</span>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-lg hover:border-rose-500 transition-all duration-300 relative overflow-hidden group">
-                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
-                    <div class="flex items-center gap-3 mb-6 relative z-10">
-                        <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30"><i class="pi pi-shield-slash text-lg"></i></div>
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">Titres Révoqués</p>
-                    </div>
-                    <h3 class="text-5xl font-black text-white tracking-tighter relative z-10">{{ props.stats?.revocation_rate || 14 }}</h3>
-                    <i class="pi pi-ban absolute -right-6 -bottom-6 text-[100px] text-white/5 group-hover:scale-110 group-hover:text-rose-500/10 transition-all duration-500"></i>
-                </div>
+                
             </div>
+        </div>
+        <div class="page-bg min-h-screen font-sans pb-20">
+
+        
 
             <!-- SYSTÈME D'ONGLETS PRINCIPAL -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-10">

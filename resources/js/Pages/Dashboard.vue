@@ -224,13 +224,13 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 <div class="max-w-[1800px] mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-6">
 
                     <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-xl shadow-indigo-100 animate-pulse-slow">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-xl shadow-blue-100 animate-pulse-slow">
                             <i class="pi pi-chart-bar text-white text-2xl"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Gouvernance SNC</span>
-                                <Badge :value="props.meta.version" severity="info" class="text-[9px] h-4" />
+                                <Badge :value="props.meta.version" severity="info" class="text-[9px] h-4 !bg-blue-600 !border-blue-600" />
                             </div>
                             <h1 class="text-2xl font-black text-slate-800 tracking-tight italic">{{ props.meta.greeting }}</h1>
                         </div>
@@ -239,13 +239,13 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     <div class="flex items-center gap-3">
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="activeFilters.search" @input="applyDeepFilters" placeholder="Rechercher une cohorte..." class="w-64 bg-slate-50 border-none rounded-xl font-bold" />
+                            <InputText v-model="activeFilters.search" @input="applyDeepFilters" placeholder="Rechercher une cohorte..." class="w-64 bg-slate-50 border-none rounded-xl font-bold focus:ring-blue-500" />
                         </IconField>
 
                         <div class="h-10 w-px bg-slate-200 mx-2"></div>
 
                         <Button icon="pi pi-filter" label="Filtres" class="p-button-outlined p-button-secondary rounded-xl font-black" @click="showFilterSidebar = true" />
-                        <Button icon="pi pi-cloud-download" label="Intelligence Export" class="p-button-primary rounded-xl font-black shadow-lg shadow-indigo-100" @click="showExportModal = true" />
+                        <Button icon="pi pi-cloud-download" label="Intelligence Export" class="!bg-blue-600 hover:!bg-blue-700 !border-none rounded-xl font-black shadow-lg shadow-blue-100 !text-white" @click="showExportModal = true" />
                         <Button icon="pi pi-refresh" class="p-button-secondary p-button-text rounded-xl" @click="purgeCache" v-tooltip.bottom="'Forcer le recalcul'" />
                     </div>
                 </div>
@@ -261,11 +261,11 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                         <div class="relative z-10">
                             <div class="flex justify-between items-start mb-6">
                                 <div class="w-12 h-12 bg-white/10 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/10">
-                                    <i class="pi pi-dollar text-emerald-400 text-xl"></i>
+                                    <i class="pi pi-dollar text-red-400 text-xl"></i>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Prédiction M+1</span>
-                                    <p class="text-emerald-400 font-black italic">{{ formatCurrency(props.kpis.revenue.predicted) }}</p>
+                                    <p class="text-red-400 font-black italic">{{ formatCurrency(props.kpis.revenue.predicted) }}</p>
                                 </div>
                             </div>
                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Chiffre d'Affaires {{ props.availableFilters.years[0] }}</h4>
@@ -284,17 +284,17 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     <!-- KPI : ÉTUDIANTS & CHURN -->
                     <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm relative group">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                                 <i class="pi pi-users text-xl"></i>
                             </div>
                             <div class="text-right">
                                 <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Taux d'Attrition</span>
-                                <p class="text-rose-500 font-black italic">{{ props.kpis.students.churn }}%</p>
+                                <p class="text-red-500 font-black italic">{{ props.kpis.students.churn }}%</p>
                             </div>
                         </div>
                         <h4 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Communauté Active</h4>
                         <h2 class="text-5xl font-black text-slate-800 tracking-tighter mb-4 italic">{{ formatNumber(props.kpis.students.total) }}</h2>
-                        <div class="flex items-center gap-2 text-emerald-500 font-bold text-sm">
+                        <div class="flex items-center gap-2 text-red-500 font-bold text-sm">
                             <i class="pi pi-arrow-up-right"></i>
                             <span>+{{ props.kpis.students.new_month }} ce mois-ci</span>
                         </div>
@@ -303,7 +303,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     <!-- KPI : RÉUSSITE ACADÉMIQUE -->
                     <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm relative group">
                         <div class="flex justify-between items-start mb-6">
-                            <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
                                 <i class="pi pi-graduation-cap text-xl"></i>
                             </div>
                             <Tag :value="props.kpis.academic.certificates_issued + ' Diplômes'" severity="warning" class="font-black text-[9px]" />
@@ -322,10 +322,10 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm relative overflow-hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                                <i class="pi pi-server text-indigo-500"></i> System Health
+                                <i class="pi pi-server text-blue-500"></i> System Health
                             </h3>
                             <div class="flex gap-1">
-                                <div v-for="i in 3" :key="i" class="w-1.5 h-1.5 rounded-full" :class="infraState.cpu < 80 ? 'bg-emerald-500' : 'bg-rose-500'"></div>
+                                <div v-for="i in 3" :key="i" class="w-1.5 h-1.5 rounded-full" :class="infraState.cpu < 80 ? 'bg-red-500' : 'bg-red-500'"></div>
                             </div>
                         </div>
 
@@ -379,11 +379,11 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                     </div>
                     <div class="mt-8 pt-8 border-t border-slate-100 grid grid-cols-2 gap-4">
                         <div class="text-center">
-                            <p class="text-2xl font-black text-rose-500 italic">42</p>
+                            <p class="text-2xl font-black text-red-500 italic">42</p>
                             <p class="text-[9px] font-black text-slate-400 uppercase">Cours Publics</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-2xl font-black text-emerald-500 italic">15.4K</p>
+                            <p class="text-2xl font-black text-red-500 italic">15.4K</p>
                             <p class="text-[9px] font-black text-slate-400 uppercase">Inscriptions</p>
                         </div>
                     </div>
@@ -397,7 +397,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
     <div class="bg-slate-900 rounded-[1rem] p-8 text-white shadow-xl flex flex-col justify-between">
         <div>
             <h3 class="text-lg font-black italic flex items-center gap-3 mb-8">
-                <i class="pi pi-bolt text-amber-400"></i> Live Metrics
+                <i class="pi pi-bolt text-red-400"></i> Live Metrics
             </h3>
             <div class="space-y-8">
                 <div>
@@ -421,9 +421,9 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             <p class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4">Temps d'activité (Uptime)</p>
             <p class="text-sm font-bold italic">{{ props.infra.uptime || 'Analysing...' }}</p>
             <div class="flex gap-2 mt-4">
-                <div class="flex-1 h-1 bg-emerald-500 rounded-full"></div>
-                <div class="flex-1 h-1 bg-emerald-500 rounded-full"></div>
-                <div class="flex-1 h-1 bg-emerald-500/20 rounded-full"></div>
+                <div class="flex-1 h-1 bg-red-500 rounded-full"></div>
+                <div class="flex-1 h-1 bg-red-500 rounded-full"></div>
+                <div class="flex-1 h-1 bg-red-500/20 rounded-full"></div>
             </div>
         </div>
     </div>
@@ -446,7 +446,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                         <h4 class="text-xs font-black text-slate-800 leading-tight mb-1">{{ slotProps.item.action }}</h4>
                         <p class="text-[10px] font-medium text-slate-400 italic mb-2">{{ slotProps.item.description }}</p>
                         <div class="flex items-center gap-2">
-                            <span class="text-[8px] font-black uppercase tracking-widest text-indigo-500">{{ slotProps.item.user }}</span>
+                            <span class="text-[8px] font-black uppercase tracking-widest text-blue-500">{{ slotProps.item.user }}</span>
                             <span class="text-[8px] font-bold text-slate-300">• {{ slotProps.item.time }}</span>
                         </div>
                     </div>
@@ -459,17 +459,17 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
     <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm flex flex-col">
         <h3 class="text-lg font-black italic text-slate-800 mb-8 flex items-center gap-3">
             <OverlayBadge :value="props.supportStatus.open_tickets" severity="danger">
-                <i class="pi pi-comment text-indigo-500"></i>
+                <i class="pi pi-comment text-blue-500"></i>
             </OverlayBadge>
             Tickets Ouverts
         </h3>
         <div class="space-y-4 flex-1 overflow-y-auto">
-            <div v-for="ticket in props.supportStatus.recent_tickets" :key="ticket.id" class="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-300 transition-all cursor-pointer group">
+            <div v-for="ticket in props.supportStatus.recent_tickets" :key="ticket.id" class="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-300 transition-all cursor-pointer group">
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-[9px] font-black text-slate-400 font-mono">#{{ ticket.id }}</span>
                     <Tag :value="ticket.priority" :severity="ticket.priority === 'High' ? 'danger' : 'info'" class="text-[8px] uppercase font-black" />
                 </div>
-                <p class="text-xs font-bold text-slate-700 leading-tight group-hover:text-indigo-600 mb-2">{{ ticket.subject }}</p>
+                <p class="text-xs font-bold text-slate-700 leading-tight group-hover:text-blue-600 mb-2">{{ ticket.subject }}</p>
                 <Badge :value="ticket.status" severity="secondary" class="text-[8px] font-black" />
             </div>
         </div>
@@ -485,7 +485,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             <div class="space-y-6">
                 <div v-for="student in props.leaderboard" :key="student.rank" class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <span class="w-6 text-sm font-black italic" :class="student.rank <= 3 ? 'text-amber-500' : 'text-slate-300'">{{ student.rank }}</span>
+                        <span class="w-6 text-sm font-black italic" :class="student.rank <= 3 ? 'text-red-500' : 'text-slate-300'">{{ student.rank }}</span>
                         <Avatar :image="student.avatar" shape="circle" size="large" />
                         <div>
                             <p class="text-xs font-black text-slate-800">{{ student.name }}</p>
@@ -496,7 +496,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm font-black text-indigo-600 italic">{{ student.score }}</p>
+                        <p class="text-sm font-black text-blue-600 italic">{{ student.score }}</p>
                         <span class="text-[8px] font-bold text-slate-300 uppercase">XP</span>
                     </div>
                 </div>
@@ -556,7 +556,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 
                         <Column field="students" header="APPRENANTS" sortable align="center">
                             <template #body="{data}">
-                                <div class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full font-black text-xs inline-block">
+                                <div class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full font-black text-xs inline-block">
                                     {{ formatNumber(data.students) }}
                                 </div>
                             </template>
@@ -564,7 +564,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
 
                         <Column field="revenue" header="CA GÉNÉRÉ" sortable align="right">
                             <template #body="{data}">
-                                <span class="font-black text-emerald-600 italic">{{ formatCurrency(data.revenue) }}</span>
+                                <span class="font-black text-red-600 italic">{{ formatCurrency(data.revenue) }}</span>
                             </template>
                         </Column>
 
@@ -595,13 +595,13 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                         <template #expansion="slotProps">
                             <div class="p-8 bg-slate-50 border-y border-slate-100 shadow-inner">
                                 <h5 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
-                                    <i class="pi pi-list text-indigo-500"></i> Distribution de Validation par Module
+                                    <i class="pi pi-list text-blue-500"></i> Distribution de Validation par Module
                                 </h5>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                                     <div v-for="mod in 4" :key="mod" class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                                         <div class="flex justify-between items-center mb-4">
                                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Module {{ mod }}</span>
-                                            <i class="pi pi-check-circle text-emerald-500"></i>
+                                            <i class="pi pi-check-circle text-red-500"></i>
                                         </div>
                                         <p class="text-sm font-bold text-slate-800 mb-2 italic">Architecture Infrastructure CCNA</p>
                                         <ProgressBar :value="75 - (mod * 10)" :showValue="false" class="h-1" color="#6366F1" />
@@ -628,7 +628,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
         <Sidebar v-model:visible="showFilterSidebar" position="right" class="w-full md:w-[450px] p-sidebar-custom">
             <template #header>
                 <div class="flex items-center gap-3">
-                    <i class="pi pi-filter text-xl text-indigo-600"></i>
+                    <i class="pi pi-filter text-xl text-blue-600"></i>
                     <h2 class="text-xl font-black italic text-slate-800">Intelligence Filters</h2>
                 </div>
             </template>
@@ -672,16 +672,16 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             </div>
             <div class="absolute bottom-0 left-0 w-full p-8 bg-white border-t border-slate-100 flex gap-4">
                 <Button label="Réinitialiser" class="p-button-text p-button-secondary flex-1 font-black" @click="activeFilters.category = 'all'; applyDeepFilters()" />
-                <Button label="Appliquer l'Analyse" class="p-button-primary flex-1 font-black rounded-xl shadow-xl shadow-indigo-100" @click="applyDeepFilters" />
+                <Button label="Appliquer l'Analyse" class="p-button-primary flex-1 font-black rounded-xl shadow-xl shadow-blue-100" @click="applyDeepFilters" />
             </div>
         </Sidebar>
 
         <!-- --- [DIALOG] MASSIVE EXPORT ENGINE --- -->
         <Dialog v-model:visible="showExportModal" modal header="SNC Massive Export Engine" :style="{ width: '550px' }" class="rounded-[1rem] overflow-hidden">
             <div class="p-8 space-y-8">
-                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 flex gap-4 items-start">
-                    <i class="pi pi-info-circle text-indigo-500 mt-1"></i>
-                    <p class="text-[11px] text-indigo-800 leading-relaxed font-bold italic">
+                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 flex gap-4 items-start">
+                    <i class="pi pi-info-circle text-blue-500 mt-1"></i>
+                    <p class="text-[11px] text-blue-800 leading-relaxed font-bold italic">
                         L'exportation utilise un moteur asynchrone (Chunked Stream). Vous pouvez exporter des millions de lignes sans impact sur les performances du serveur.
                     </p>
                 </div>
@@ -689,9 +689,9 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                 <div class="space-y-4">
                     <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Type de Données</h4>
                     <div class="grid grid-cols-1 gap-4">
-                        <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer group" @click="handleExport('payments')">
+                        <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-red-500 hover:bg-red-50 transition-all cursor-pointer group" @click="handleExport('payments')">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+                                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center">
                                     <i class="pi pi-file-excel text-xl"></i>
                                 </div>
                                 <div>
@@ -702,9 +702,9 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
                             <i class="pi pi-chevron-right text-slate-300 group-hover:translate-x-2 transition-transform"></i>
                         </div>
 
-                        <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer group" @click="handleExport('enrollments')">
+                        <div class="p-6 border border-slate-200 rounded-[1rem] flex items-center justify-between hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group" @click="handleExport('enrollments')">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
                                     <i class="pi pi-users text-xl"></i>
                                 </div>
                                 <div>
@@ -720,7 +720,7 @@ const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
             <template #footer v-if="isExporting">
                 <div class="w-full flex flex-col items-center gap-4 p-8 bg-slate-50">
                     <ProgressBar mode="indeterminate" class="w-full h-1" />
-                    <span class="text-xs font-black text-indigo-600 uppercase tracking-widest animate-pulse">Streaming des données en cours...</span>
+                    <span class="text-xs font-black text-blue-600 uppercase tracking-widest animate-pulse">Streaming des données en cours...</span>
                 </div>
             </template>
         </Dialog>

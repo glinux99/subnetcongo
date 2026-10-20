@@ -59,12 +59,12 @@ const destroy = () => {
         <Toast />
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-5xl mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
                     <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-rose-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg border border-white/10">
+                        <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg border border-white/10">
                             <i class="pi pi-id-card text-white text-3xl"></i>
                         </div>
                         <div>
@@ -83,9 +83,9 @@ const destroy = () => {
 
             <div class="max-w-5xl mx-auto px-4 lg:px-6 -mt-6 relative z-20 space-y-4">
                 <!-- Actions -->
-                <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center gap-3">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-wrap items-center gap-3">
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mr-auto">Actions</h3>
-                    <Button v-if="['pending','suspended','rejected'].includes(enrollment.status)" label="Approuver" icon="pi pi-check" @click="showApprove = true" class="!bg-emerald-500 hover:!bg-emerald-600 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5 !px-4" />
+                    <Button v-if="['pending','suspended','rejected'].includes(enrollment.status)" label="Approuver" icon="pi pi-check" @click="showApprove = true" class="!bg-blue-500 hover:!bg-blue-600 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5 !px-4" />
                     <Button v-if="enrollment.status === 'pending'" label="Refuser" icon="pi pi-times" severity="danger" outlined @click="showReject = true" class="!rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5 !px-4" />
                     <Button v-if="enrollment.status === 'active'" label="Révoquer l'accès" icon="pi pi-ban" severity="danger" outlined @click="showRevoke = true" class="!rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5 !px-4" />
                     <Button v-if="['suspended','rejected'].includes(enrollment.status)" label="Réactiver" icon="pi pi-refresh" severity="info" outlined @click="reactivate" class="!rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2.5 !px-4" />
@@ -94,10 +94,10 @@ const destroy = () => {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Étudiant -->
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                         <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Étudiant</h3>
                         <div class="flex items-center gap-3 mb-3">
-                            <Avatar :label="enrollment.user?.name?.charAt(0)" shape="circle" class="!w-12 !h-12 !bg-indigo-100 !text-indigo-700 !font-black" />
+                            <Avatar :label="enrollment.user?.name?.charAt(0)" shape="circle" class="!w-12 !h-12 !bg-blue-100 !text-blue-700 !font-black" />
                             <div>
                                 <p class="text-sm font-black text-slate-800">{{ enrollment.user?.name }}</p>
                                 <p class="text-xs text-slate-500">{{ enrollment.user?.email }}</p>
@@ -106,7 +106,7 @@ const destroy = () => {
                     </div>
 
                     <!-- Cours -->
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                         <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Cours</h3>
                         <p class="text-sm font-black text-slate-800">{{ enrollment.course?.title }}</p>
                         <p class="text-xs text-slate-500">Instructeur : {{ enrollment.course?.instructor?.name ?? '—' }}</p>
@@ -114,7 +114,7 @@ const destroy = () => {
                     </div>
 
                     <!-- Workflow -->
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm md:col-span-2">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:col-span-2">
                         <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Workflow</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                             <div>
@@ -131,21 +131,21 @@ const destroy = () => {
                             </div>
                             <div>
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Révoqué le</p>
-                                <p class="font-mono text-rose-600">{{ formatDate(enrollment.revoked_at) }}</p>
+                                <p class="font-mono text-red-600">{{ formatDate(enrollment.revoked_at) }}</p>
                             </div>
                         </div>
                         <div v-if="enrollment.admin_notes" class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Notes admin</p>
                             <p class="text-sm text-slate-700 whitespace-pre-line">{{ enrollment.admin_notes }}</p>
                         </div>
-                        <div v-if="enrollment.revoked_reason" class="mt-3 p-3 bg-rose-50 rounded-xl border border-rose-200">
-                            <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Motif de révocation</p>
-                            <p class="text-sm text-rose-700 whitespace-pre-line">{{ enrollment.revoked_reason }}</p>
+                        <div v-if="enrollment.revoked_reason" class="mt-3 p-3 bg-red-50 rounded-xl border border-red-200">
+                            <p class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Motif de révocation</p>
+                            <p class="text-sm text-red-700 whitespace-pre-line">{{ enrollment.revoked_reason }}</p>
                         </div>
                     </div>
 
                     <!-- Commande -->
-                    <div v-if="enrollment.order" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm md:col-span-2">
+                    <div v-if="enrollment.order" class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:col-span-2">
                         <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Commande associée</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                             <div>
@@ -180,7 +180,7 @@ const destroy = () => {
             </div>
             <template #footer>
                 <Button label="Annuler" outlined @click="showApprove = false" class="!rounded-xl" />
-                <Button :label="submitting ? '...' : 'Approuver'" icon="pi pi-check" :loading="submitting" @click="submit('approve')" class="!bg-emerald-500 hover:!bg-emerald-600 !border-none !rounded-xl" />
+                <Button :label="submitting ? '...' : 'Approuver'" icon="pi pi-check" :loading="submitting" @click="submit('approve')" class="!bg-blue-500 hover:!bg-blue-600 !border-none !rounded-xl" />
             </template>
         </Dialog>
 
@@ -200,7 +200,7 @@ const destroy = () => {
 
         <Dialog v-model:visible="showRevoke" modal :style="{ width: '500px' }" header="Révoquer l'accès" class="!rounded-3xl">
             <div class="p-2 space-y-3">
-                <p class="text-sm text-rose-600 font-bold">⚠ L'étudiant perdra immédiatement l'accès au cours.</p>
+                <p class="text-sm text-red-600 font-bold">⚠ L'étudiant perdra immédiatement l'accès au cours.</p>
                 <div>
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Motif (obligatoire)</label>
                     <Textarea v-model="reason" rows="3" class="w-full !rounded-xl" placeholder="Ex: Fraude, non-respect des règles..." />

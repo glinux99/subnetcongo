@@ -73,7 +73,8 @@ class AdminEmailController extends Controller
 
     public function show(Request $request, int $messageNumber)
     {
-        $email = $this->emailService->getEmail($messageNumber);
+       try {
+         $email = $this->emailService->getEmail($messageNumber);
 
         if (!$email) {
             return Redirect::route('admin.emails.index')
@@ -92,6 +93,10 @@ class AdminEmailController extends Controller
             'folders' => $folders,
             'messageNumber' => $messageNumber,
         ]);
+       } catch (\Throwable $th) {
+        //throw
+        return $th;
+       }
     }
 
 public function reply(Request $request, int $messageNumber)

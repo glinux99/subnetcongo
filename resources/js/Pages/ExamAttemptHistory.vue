@@ -48,7 +48,7 @@ const viewAttempt = (attempt) => {
 
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
                 <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-[80px] pointer-events-none"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-[1200px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
@@ -97,7 +97,7 @@ const viewAttempt = (attempt) => {
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
+                            <div class="w-10 h-10 bg-indigo-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
                             <h2 class="text-lg font-black text-slate-800">Tentatives ({{ attempts.length }})</h2>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ const viewAttempt = (attempt) => {
                         <p class="text-lg font-medium">Aucune tentative pour cet examen</p>
                         <p class="text-sm mt-1">Lancez l'examen pour commencer votre première tentative.</p>
                         <Link :href="route('exams.take', exam.id)" class="mt-6 inline-block">
-                            <Button label="Lancer l'examen" icon="pi pi-play-circle" class="!bg-indigo-600 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
+                            <Button label="Lancer l'examen" icon="pi pi-play-circle" class="!bg-blue-600 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
                         </Link>
                     </div>
 
@@ -124,7 +124,7 @@ const viewAttempt = (attempt) => {
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <div class="w-20 h-20 rounded-full flex items-center justify-center text-sm font-black"
-                                         :class="data.is_passed ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'">
+                                         :class="data.is_passed ? 'bg-emerald-100 text-red-600' : 'bg-rose-100 text-rose-600'">
                                         {{ data.score_percentage }}%
                                     </div>
                                     <div class="flex-1">
@@ -147,8 +147,8 @@ const viewAttempt = (attempt) => {
                         <Column header="Actions" style="min-width: 140px" :exportable="false">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
-                                    <Button icon="pi pi-eye" text @click="viewAttempt(data)" class="!text-indigo-600 hover:!bg-indigo-50 !rounded-xl" v-tooltip="'Voir le détail'" />
-                                    <Button v-if="data.result_id" icon="pi pi-chart-bar" text :href="route('exams.results', data.result_id)" class="!text-emerald-600 hover:!bg-emerald-50 !rounded-xl" v-tooltip="'Voir le résultat'" />
+                                    <Button icon="pi pi-eye" text @click="viewAttempt(data)" class="!text-blue-600 hover:!bg-indigo-50 !rounded-xl" v-tooltip="'Voir le détail'" />
+                                    <Button v-if="data.result_id" icon="pi pi-chart-bar" text :href="route('exams.results', data.result_id)" class="!text-red-600 hover:!bg-emerald-50 !rounded-xl" v-tooltip="'Voir le résultat'" />
                                 </div>
                             </template>
                         </Column>
@@ -158,7 +158,7 @@ const viewAttempt = (attempt) => {
                 <!-- Start New Attempt -->
                 <div class="mt-6 text-center">
                     <Link v-if="exam.attempts_allowed === 0 || attempts.length < exam.attempts_allowed" :href="route('exams.take', exam.id)">
-                        <Button label="Nouvelle tentative" icon="pi pi-plus-circle" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
+                        <Button label="Nouvelle tentative" icon="pi pi-plus-circle" class="!bg-blue-600 hover:!bg-indigo-500 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
                     </Link>
                     <div v-else class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-slate-600">
                         <i class="pi pi-lock text-2xl mb-2 block"></i>

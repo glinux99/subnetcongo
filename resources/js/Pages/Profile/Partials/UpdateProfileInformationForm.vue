@@ -1,4 +1,8 @@
 <script setup>
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
@@ -21,76 +25,76 @@ const form = useForm({
 <template>
     <section>
         <header>
-            <h2 class="text-xl font-bold text-surface-900 mb-2">Informations du Profil</h2>
-            <p class="text-sm text-surface-500 mb-6">
-                Mettez à jour les informations de profil et l'adresse e-mail de votre compte.
+            <h2 class="text-lg font-medium text-gray-900">Profile Information</h2>
+
+            <p class="mt-1 text-sm text-gray-600">
+                Update your account's profile information and email address.
             </p>
         </header>
 
-        <form @submit.prevent="form.patch(route('profile.update'))" class="flex flex-col gap-4">
+        <form @submit.prevent="form.patch(route('profile.update'))" class="mt-6 space-y-6">
             <div>
-                <label for="name" class="block text-surface-900 font-medium mb-2">Nom</label>
-                <InputText
+                <InputLabel for="name" value="Name" />
+
+                <TextInput
                     id="name"
                     type="text"
-                    class="w-full"
+                    class="mt-1 block w-full"
                     v-model="form.name"
                     required
                     autofocus
                     autocomplete="name"
                 />
-                <Message v-if="form.errors.name" severity="error" class="mt-2" :closable="false">{{ form.errors.name }}</Message>
+
+                <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <div>
-                <label for="email" class="block text-surface-900 font-medium mb-2">Adresse E-mail</label>
-                <InputText
+                <InputLabel for="email" value="Email" />
+
+                <TextInput
                     id="email"
                     type="email"
-                    class="w-full"
+                    class="mt-1 block w-full"
                     v-model="form.email"
                     required
                     autocomplete="username"
                 />
-                <Message v-if="form.errors.email" severity="error" class="mt-2" :closable="false">{{ form.errors.email }}</Message>
+
+                <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="text-sm mt-2 text-surface-800">
-                    Votre adresse e-mail n'est pas vérifiée.
+                <p class="text-sm mt-2 text-gray-800">
+                    Your email address is unverified.
                     <Link
                         :href="route('verification.send')"
                         method="post"
                         as="button"
-                        class="text-subnetblue hover:underline font-semibold ml-1"
+                        class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                        Cliquez ici pour renvoyer l'e-mail de vérification.
+                        Click here to re-send the verification email.
                     </Link>
                 </p>
 
-                <Message
-                    v-if="status === 'verification-link-sent'"
-                    severity="success"
-                    class="mt-4"
+                <div
+                    v-show="status === 'verification-link-sent'"
+                    class="mt-2 font-medium text-sm text-green-600"
                 >
-                    Un nouveau lien de vérification a été envoyé à votre adresse e-mail.
-                </Message>
+                    A new verification link has been sent to your email address.
+                </div>
             </div>
 
-            <div class="flex items-center gap-4 mt-4">
-                <Button type="submit" label="Enregistrer" icon="pi pi-save" :loading="form.processing"></Button>
+            <div class="flex items-center gap-4">
+                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
 
                 <Transition
-                    enter-active-class="transition duration-300 ease-out"
-                    enter-from-class="opacity-0 translate-y-2"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition duration-200 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 translate-y-2"
+                    enter-active-class="transition ease-in-out"
+                    enter-from-class="opacity-0"
+                    leave-active-class="transition ease-in-out"
+                    leave-to-class="opacity-0"
                 >
-                    <span v-if="form.recentlySuccessful" class="text-sm font-medium text-green-600 flex items-center gap-2">
-                        <i class="pi pi-check-circle"></i> Enregistré.
-                    </span>
+                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
                 </Transition>
             </div>
         </form>

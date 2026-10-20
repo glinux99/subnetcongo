@@ -304,7 +304,7 @@ class EmailService
         }
 
         if (empty($body)) {
-            $body = imap_htmlbody($this->connection, $messageNumber);
+            $body = imap_body($this->connection, $messageNumber);
         }
 
         return $body ?: '';
@@ -593,7 +593,7 @@ class EmailService
         $fullBody = $replyText . "\n" . $quotedText;
 
         try {
-            imap_mail(null, $replySubject, $fullBody, $this->buildHeaders($headers));
+            imap_mail($replySubject, $fullBody, $this->buildHeaders($headers));
             
             $this->markAsAnswered($messageNumber);
 

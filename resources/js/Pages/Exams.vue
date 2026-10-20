@@ -169,8 +169,8 @@ const examTypes = [
 ];
 
 const questionTypes = [
-    { label: 'Choix Multiples (QCM)', value: 'multiple_choice', icon: 'pi pi-list', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    { label: 'Vrai ou Faux', value: 'true_false', icon: 'pi pi-check-circle', color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    { label: 'Choix Multiples (QCM)', value: 'multiple_choice', icon: 'pi pi-list', color: 'text-blue-500', bg: 'bg-blue-50' },
+    { label: 'Vrai ou Faux', value: 'true_false', icon: 'pi pi-check-circle', color: 'text-red-500', bg: 'bg-red-50' },
     { label: 'Réponse Courte', value: 'short_answer', icon: 'pi pi-pencil', color: 'text-amber-500', bg: 'bg-amber-50' }
 ];
 
@@ -587,8 +587,8 @@ onMounted(() => {
             
             <!-- KPI 1 : Examens Actifs -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-verified text-indigo-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-verified text-blue-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Examens Actifs</h3>
@@ -598,15 +598,15 @@ onMounted(() => {
 
             <!-- KPI 2 : Tentatives (Ce mois) -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-users text-emerald-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-users text-red-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tentatives (Ce mois)</h3>
                     <div class="flex items-center gap-2">
                         <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.attempts?.toLocaleString() }}</p>
                         <!-- Le badge 'Live' est conservé et adapté pour tenir dans ce layout -->
-                        <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Live</span>
+                        <span class="text-[10px] font-bold text-red-500 bg-red-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Live</span>
                     </div>
                 </div>
             </div>
@@ -691,7 +691,7 @@ onMounted(() => {
                 <template #body="{ data }">
                     <div class="flex items-center gap-4 py-2">
                         <div class="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
-                             :class="data.type === 'Certification' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500'">
+                             :class="data.type === 'Certification' ? 'bg-blue-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500'">
                             <i :class="data.type === 'Certification' ? 'pi pi-verified' : 'pi pi-clock'" class="text-xl"></i>
                         </div>
                         <div class="flex flex-col justify-center">
@@ -711,7 +711,7 @@ onMounted(() => {
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
                         <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> Durée : <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
-                        <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-emerald-500"></i> Validation : <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
+                        <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-red-500"></i> Validation : <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
                     </div>
                 </template>
             </Column>
@@ -725,8 +725,8 @@ onMounted(() => {
             <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
                 <template #body="{ data }">
                     <div class="flex justify-end gap-1">
-                        <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Résultats & Analytics'" @click="analyticsDialog = true" />
-                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-indigo-50 hover:text-indigo-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
+                        <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-red-50" v-tooltip.top="'Résultats & Analytics'" @click="analyticsDialog = true" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-indigo-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
                         <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" v-tooltip.top="'Supprimer l\'examen'" @click="deleteExam(data.id)" />
                     </div>
                 </template>
@@ -737,7 +737,7 @@ onMounted(() => {
                 <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                     <div class="max-w-6xl mx-auto">
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-indigo-500"></i> Aperçu des Performances Cohorte</h4>
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-blue-500"></i> Aperçu des Performances Cohorte</h4>
                             <Button label="Générer Rapport Complet" icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-secondary bg-white font-bold text-xs" />
                         </div>
 
@@ -747,7 +747,7 @@ onMounted(() => {
                                     <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Score Moyen</div>
                                     <div class="text-3xl font-black text-slate-800 flex items-baseline gap-2">
                                         {{ data.avg_score }}%
-                                        <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">+2.4%</span>
+                                        <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded border border-emerald-100">+2.4%</span>
                                     </div>
                                 </div>
                                 <Knob :modelValue="data.avg_score" :size="70" readonly valueColor="#10B981" rangeColor="#f1f5f9" />
@@ -756,7 +756,7 @@ onMounted(() => {
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
                                 <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3">Sécurité & Proctoring</div>
                                 <div class="flex items-center gap-3 text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                    <i class="pi pi-shield text-indigo-500 text-lg"></i>
+                                    <i class="pi pi-shield text-blue-500 text-lg"></i>
                                     <div>
                                         <div>Niveau Actif</div>
                                         <div class="text-[10px] text-slate-400 font-normal">Standard (Focus Mode)</div>
@@ -828,7 +828,7 @@ onMounted(() => {
                     <div class="p-4 flex-1 space-y-2">
                         <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id"
                                 class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
-                                :class="[activeEditorTab === item.id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100']">
+                                :class="[activeEditorTab === item.id ? 'bg-blue-50 border border-indigo-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100']">
 
                             <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-md"></div>
 
@@ -869,7 +869,7 @@ onMounted(() => {
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">Identité de l'Évaluation</h3>
                                         <p class="text-xs text-slate-500 mt-1">Métadonnées et rattachement académique.</p>
@@ -921,7 +921,7 @@ onMounted(() => {
                             </div>
 
                             <!-- État Vide -->
-                            <div v-if="examForm.questions.length === 0" class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-indigo-300 hover:bg-indigo-50/30">
+                            <div v-if="examForm.questions.length === 0" class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-indigo-300 hover:bg-blue-50/30">
                                 <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
                                     <i class="pi pi-question text-4xl text-indigo-400"></i>
                                 </div>
@@ -940,7 +940,7 @@ onMounted(() => {
                                     <!-- En-tête de la question (Controls) -->
                                     <div class="bg-slate-50/80 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                                         <div class="flex items-center gap-4">
-                                            <div class="flex flex-col gap-1 text-slate-300 hover:text-indigo-500 transition-colors cursor-pointer" v-tooltip.top="'Réorganiser'">
+                                            <div class="flex flex-col gap-1 text-slate-300 hover:text-blue-500 transition-colors cursor-pointer" v-tooltip.top="'Réorganiser'">
                                                 <i class="pi pi-caret-up text-xs hover:scale-125" @click="moveQuestion(index, 'up')"></i>
                                                 <i class="pi pi-caret-down text-xs hover:scale-125" @click="moveQuestion(index, 'down')"></i>
                                             </div>
@@ -995,7 +995,7 @@ onMounted(() => {
                                         <!-- Zone de configuration des réponses -->
                                         <div class="lg:col-span-5 bg-slate-50/50 p-6 rounded-2xl border border-slate-100 shadow-inner">
                                             <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-                                                <label class="text-[11px] font-black text-indigo-500 uppercase tracking-widest">Logique de réponse</label>
+                                                <label class="text-[11px] font-black text-blue-500 uppercase tracking-widest">Logique de réponse</label>
                                                 <Badge v-if="q.type === 'multiple_choice'" :value="`${q.options.length} options`" severity="secondary" class="text-[9px]"></Badge>
                                             </div>
 
@@ -1014,7 +1014,7 @@ onMounted(() => {
                                                     <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm opacity-20 group-hover/opt:opacity-100 w-8 h-8 p-0 transition-opacity" v-tooltip.top="'Supprimer l\'option'" @click="removeOptionFromQuestion(index, oIdx)" />
                                                 </div>
 
-                                                <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-text p-button-sm font-bold text-indigo-600 w-full justify-start mt-2 hover:bg-indigo-50" @click="addOptionToQuestion(index)" />
+                                                <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-text p-button-sm font-bold text-indigo-600 w-full justify-start mt-2 hover:bg-blue-50" @click="addOptionToQuestion(index)" />
                                             </div>
 
                                             <!-- Vrai/Faux -->
@@ -1054,7 +1054,7 @@ onMounted(() => {
                             <!-- Bloc Règles classiques -->
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-sliders-h"></i></div>
+                                    <div class="w-8 h-8 rounded-lg bg-red-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-sliders-h"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">Règles de passage & Limites</h3>
                                         <p class="text-xs text-slate-500 mt-1">Définissez les conditions d'obtention de cet examen.</p>
@@ -1110,7 +1110,7 @@ onMounted(() => {
                             <div class="bg-slate-900 p-8 rounded-2xl shadow-xl text-white relative overflow-hidden border border-slate-800 group">
                                 <i class="pi pi-shield absolute -right-4 -bottom-4 text-[150px] text-white/5 group-hover:scale-110 transition-transform duration-1000 ease-out"></i>
                                 <div class="relative z-10">
-                                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-3"><div class="w-8 h-8 rounded bg-indigo-500/20 text-indigo-400 flex items-center justify-center"><i class="pi pi-lock"></i></div> Sécurité Anti-Triche (Proctoring)</h3>
+                                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-3"><div class="w-8 h-8 rounded bg-blue-500/20 text-indigo-400 flex items-center justify-center"><i class="pi pi-lock"></i></div> Sécurité Anti-Triche (Proctoring)</h3>
                                     <p class="text-slate-400 text-sm mb-8 max-w-2xl leading-relaxed">Configurez le niveau de surveillance logicielle pour les certifications officielles. Un niveau strict requiert que l'apprenant installe notre module navigateur sécurisé.</p>
 
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1118,7 +1118,7 @@ onMounted(() => {
                                              class="p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 relative"
                                              :class="examForm.settings.proctoring_mode === level.value ? 'bg-indigo-600/20 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500'">
 
-                                            <div v-if="examForm.settings.proctoring_mode === level.value" class="absolute -top-3 -right-3 w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg"><i class="pi pi-check text-[10px]"></i></div>
+                                            <div v-if="examForm.settings.proctoring_mode === level.value" class="absolute -top-3 -right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg"><i class="pi pi-check text-[10px]"></i></div>
 
                                             <div class="font-black text-sm mb-2" :class="examForm.settings.proctoring_mode === level.value ? 'text-indigo-300' : 'text-slate-300'">{{ level.label }}</div>
                                             <div class="text-xs leading-relaxed" :class="examForm.settings.proctoring_mode === level.value ? 'text-indigo-100' : 'text-slate-500'">{{ level.desc }}</div>
@@ -1132,8 +1132,8 @@ onMounted(() => {
                         <!-- TAB 4: AUDIT & VERSIONING                  -->
                         <!-- ========================================== -->
                         <div v-show="activeEditorTab === 'audit'" class="animate-fade-in space-y-8">
-                            <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 flex items-start gap-4 shadow-sm">
-                                <i class="pi pi-info-circle text-indigo-500 text-2xl mt-1"></i>
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-indigo-100 flex items-start gap-4 shadow-sm">
+                                <i class="pi pi-info-circle text-blue-500 text-2xl mt-1"></i>
                                 <div>
                                     <h4 class="font-bold text-indigo-900 mb-1">Traçabilité Académique (Immuable)</h4>
                                     <p class="text-sm text-indigo-700 leading-relaxed">Le système d'audit enregistre automatiquement chaque modification structurelle de l'examen. En cas de contestation d'un étudiant, vous pouvez prouver mathématiquement l'état exact des barèmes au moment précis de sa tentative.</p>
@@ -1259,7 +1259,7 @@ onMounted(() => {
                         <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-bolt text-5xl"></i></div>
                         <div class="text-xs font-bold text-indigo-200 uppercase tracking-widest mb-2 relative z-10">Fiabilité (Alpha Cronbach)</div>
                         <div class="text-4xl font-black relative z-10 flex items-baseline justify-center gap-2">
-                            0.82 <span class="text-[10px] bg-indigo-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Excellent</span>
+                            0.82 <span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Excellent</span>
                         </div>
                     </div>
                 </div>
@@ -1267,7 +1267,7 @@ onMounted(() => {
                 <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                         <div>
-                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="pi pi-chart-bar text-indigo-500"></i> Distribution Normale des Scores (Courbe de Gauss)</h4>
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> Distribution Normale des Scores (Courbe de Gauss)</h4>
                             <p class="text-xs text-slate-500 mt-1">Analyse de la répartition des résultats pour vérifier si l'examen n'est ni trop dur ni trop facile.</p>
                         </div>
                     </div>

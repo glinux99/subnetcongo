@@ -49,7 +49,7 @@ const dateRange = ref([new Date(new Date().setDate(new Date().getDate() - 30)), 
 
 // --- BREADCRUMBS ---
 const home = { icon: 'pi pi-home', to: '/' };
-const breadcrumbItems = ref([{ label: 'Reporting' }, { label: 'Analytique Avancée', class: 'font-bold text-indigo-600' }]);
+const breadcrumbItems = ref([{ label: 'Reporting' }, { label: 'Analytique Avancée', class: 'font-bold text-blue-600' }]);
 
 // --- OPTIONS DE FILTRES ---
 const categories = ref([
@@ -208,7 +208,7 @@ onMounted(() => {
                 <div class="space-y-2">
                     <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-4">
-                        <div class="bg-indigo-600 p-5 rounded-[1rem] shadow-2xl shadow-indigo-100 relative group">
+                        <div class="bg-blue-600 p-5 rounded-[1rem] shadow-2xl shadow-indigo-100 relative group">
                             <i class="pi pi-chart-bar text-white text-3xl"></i>
                             <div class="absolute -top-1 -right-1 flex h-4 w-4">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -347,7 +347,7 @@ onMounted(() => {
                         </Column>
                         <Column field="growth" header="Tendance">
                             <template #body="{ data }">
-                                <span :class="data.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'" class="font-bold">
+                                <span :class="data.growth >= 0 ? 'text-red-500' : 'text-rose-500'" class="font-bold">
                                     <i :class="data.growth >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="text-[10px] mr-1"></i>
                                     {{ Math.abs(data.growth) }}%
                                 </span>
@@ -383,7 +383,7 @@ onMounted(() => {
                                 <Divider />
                                 <div class="flex gap-4">
                                     <div class="text-center">
-                                        <p class="text-2xl font-black text-emerald-500">85</p>
+                                        <p class="text-2xl font-black text-red-500">85</p>
                                         <p class="text-[9px] uppercase font-bold text-slate-400">Promoteurs</p>
                                     </div>
                                     <div class="text-center border-x border-slate-200 px-4">

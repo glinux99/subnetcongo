@@ -41,24 +41,18 @@ const getCategoryIcon = (cat) => {
     return icons[cat] || '📧';
 };
 
-// Utilisation d'un 'computed' pour filtrer le tableau GROUPÉ directement
 const filteredGrouped = computed(() => {
     const result = {};
     const s = search.value.toLowerCase().trim();
 
-    // On sécurise le parcours au cas où props.grouped serait null
     for (const [category, tmpls] of Object.entries(props.grouped || {})) {
-
-        // 1. Filtre par catégorie
         if (selectedCategory.value && selectedCategory.value !== category) {
             continue;
         }
 
-        // 2. Filtre par recherche texte (sécurisé contre les valeurs nulles)
         const filteredTmpls = (tmpls || []).filter(t => {
             if (!s) return true;
 
-            // L'opérateur '?.' empêche l'erreur si le champ est null
             const matchName = t.name?.toLowerCase().includes(s);
             const matchSubject = t.subject?.toLowerCase().includes(s);
             const matchKey = t.key?.toLowerCase().includes(s);
@@ -66,7 +60,6 @@ const filteredGrouped = computed(() => {
             return matchName || matchSubject || matchKey;
         });
 
-        // On n'ajoute la catégorie au résultat final que s'il reste des modèles dedans
         if (filteredTmpls.length > 0) {
             result[category] = filteredTmpls;
         }
@@ -75,7 +68,6 @@ const filteredGrouped = computed(() => {
     return result;
 });
 
-// Vérifie rapidement s'il y a au moins un résultat pour l'affichage du "Empty State"
 const hasResults = computed(() => Object.keys(filteredGrouped.value).length > 0);
 
 const getEventLabel = (event) => {
@@ -95,129 +87,171 @@ const getEventLabel = (event) => {
 <template>
     <Head title="Modèles d'emails" />
     <AppLayout>
-        <div class="page-bg min-h-screen font-sans pb-20">
-            <!-- Header -->
-            <div class="bg-[#0f172a] pt-10 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/15 rounded-full blur-[100px]"></div>
-                <div class="max-w-[1500px] mx-auto relative z-10 flex justify-between items-center">
+        <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
+            
+            <!-- HEADER (Style uniforme avec Nouveau Message) -->
+            <div class="bg-[#11131f] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">
+                <div class="max-w-[1500px] mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    
+                    <!-- Titre & Sous-titre -->
                     <div>
-                        <h1 class="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-                            <span>📧</span> Modèles d'emails
+                        <div class="mb-3">
+                            <span class="border border-red-500/30 bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider">
+                                SYSTÈME
+                            </span>
+                        </div>
+                        <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase italic flex flex-wrap items-center gap-x-3">
+                            MODÈLES <span class="text-[#ef4444]">D'EMAILS</span>
                         </h1>
-                        <p class="text-slate-400 text-sm mt-1">Configurez les messages automatiques envoyés aux utilisateurs</p>
+                        <p class="text-slate-400 mt-3 text-sm italic max-w-xl">
+                            Configurez et gérez les messages automatiques envoyés à vos utilisateurs selon les différents événements de la plateforme.
+                        </p>
+                    </div>
+
+                    <!-- Statistiques rapides (Optionnel, ajoute du cachet) -->
+                    <div class="flex gap-4">
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-4 min-w-[120px]">
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Modèles</div>
+                            <div class="text-2xl font-black text-white">{{ templates?.length || 0 }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="max-w-[1500px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
-                <!-- Filters -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="flex-1 relative">
-                            <!-- Remplacement du wrapper classique par une icône absolute plus stable avec Tailwind -->
-                            <i class="pi pi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
-                            <InputText
-                                v-model="search"
-                                placeholder="Rechercher un modèle..."
-                                class="!rounded-xl w-full !pl-10 relative"
-                            />
-                        </div>
+                
+                <!-- Barre d'outils / Filtres (Épurée) -->
+                <div class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-2.5 mb-10 flex flex-col md:flex-row gap-3 items-center">
+                    <div class="relative w-full flex-1">
+                        <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+                        <InputText
+                            v-model="search"
+                            placeholder="Rechercher un modèle (nom, clé, sujet)..."
+                            class="!rounded-lg w-full !pl-11 !py-3 !border-none !bg-slate-50 focus:!bg-blue-50/50 transition-colors placeholder:text-slate-400 font-medium"
+                        />
+                    </div>
+                    <div class="w-full md:w-[280px]">
                         <Select
                             v-model="selectedCategory"
                             :options="categories"
                             optionLabel="label"
                             optionValue="value"
-                            placeholder="Catégorie"
-                            class="!rounded-xl min-w-[200px]"
+                            placeholder="Toutes les catégories"
+                            class="w-full !rounded-lg !border-none !bg-slate-50 !py-1 font-medium shadow-none"
                         />
                     </div>
                 </div>
 
-                <!-- Templates by Category -->
-                <!-- On itère maintenant sur "filteredGrouped" au lieu de "grouped" -->
-                <div v-for="(templates, category) in filteredGrouped" :key="category" class="mb-8">
-                    <div>
-                        <h2 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                            <span class="text-2xl">{{ getCategoryIcon(category) }}</span>
-                            {{ getCategoryLabel(category) }}
-                            <span class="text-sm font-normal text-slate-400">({{ templates.length }})</span>
-                        </h2>
+                <!-- Liste des modèles groupés -->
+                <div v-for="(templatesGroup, category) in filteredGrouped" :key="category" class="mb-12">
+                    
+                    <!-- Titre de catégorie stylisé -->
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-xl">
+                            {{ getCategoryIcon(category) }}
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black text-slate-800 tracking-tight">
+                                {{ getCategoryLabel(category) }}
+                            </h2>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                                {{ templatesGroup.length }} modèle{{ templatesGroup.length > 1 ? 's' : '' }}
+                            </p>
+                        </div>
+                        <div class="flex-1 h-px bg-slate-200 ml-4"></div>
+                    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div
-                                v-for="template in templates"
-                                :key="template.id"
-                                class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition group flex flex-col h-full"
-                            >
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="min-w-0 pr-3">
-                                        <h3 class="font-bold text-slate-900 group-hover:text-rose-600 transition truncate">
-                                            {{ template.name }}
-                                        </h3>
-                                        <p class="text-xs text-slate-500 font-mono mt-1 truncate">{{ template.key }}</p>
+                    <!-- Grille de cartes -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        <div
+                            v-for="template in templatesGroup"
+                            :key="template.id"
+                            class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full relative overflow-hidden"
+                        >
+                            <!-- Bande de couleur sur le côté si inactif -->
+                            <div v-if="!template.is_active" class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300"></div>
+                            <div v-else class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="min-w-0 pr-4">
+                                    <h3 class="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                                        {{ template.name }}
+                                    </h3>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-xs text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                            {{ template.key }}
+                                        </span>
                                     </div>
-                                    <Tag
-                                        :value="template.is_active ? 'Actif' : 'Inactif'"
-                                        :severity="template.is_active ? 'success' : 'secondary'"
-                                        class="!text-[10px] flex-shrink-0"
-                                    />
                                 </div>
+                                <Tag
+                                    :value="template.is_active ? 'Actif' : 'Inactif'"
+                                    :severity="template.is_active ? 'success' : 'secondary'"
+                                    class="!text-[10px] !font-bold !px-2 !py-0.5 flex-shrink-0 !rounded-md"
+                                />
+                            </div>
 
-                                <p class="text-sm text-slate-600 mb-4 line-clamp-2 flex-1">
-                                    {{ template.subject || '(Sans objet)' }}
+                            <div class="bg-slate-50 rounded-lg p-3 mb-5 flex-1 border border-slate-100">
+                                <p class="text-sm font-medium text-slate-700 line-clamp-2">
+                                    <span class="text-slate-400 font-normal mr-1">Sujet :</span>
+                                    {{ template.subject || '(Aucun objet défini)' }}
                                 </p>
+                            </div>
 
-                                <!-- Variables -->
-                                <div v-if="template.variables && template.variables.length" class="flex flex-wrap gap-1 mb-4">
+                            <!-- Variables -->
+                            <div class="mb-5">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Variables disponibles</p>
+                                <div v-if="template.variables && template.variables.length" class="flex flex-wrap gap-1.5">
                                     <span
                                         v-for="variable in template.variables.slice(0, 3)"
                                         :key="variable"
-                                        class="text-[10px] px-2 py-1 bg-slate-100 text-slate-600 rounded"
+                                        class="text-[10px] px-2 py-1 bg-blue-50 text-blue-700 font-mono rounded-md border border-blue-100"
                                     >
-                                        {{   variable  }}
+                                        {{ variable }}
                                     </span>
                                     <span
                                         v-if="template.variables.length > 3"
-                                        class="text-[10px] px-2 py-1 bg-slate-100 text-slate-500 rounded"
+                                        class="text-[10px] px-2 py-1 bg-slate-100 text-slate-600 font-bold rounded-md cursor-help border border-slate-200"
                                         v-tooltip.top="template.variables.slice(3).join(', ')"
                                     >
                                         +{{ template.variables.length - 3 }}
                                     </span>
                                 </div>
+                                <div v-else class="text-xs text-slate-400 italic">Aucune variable</div>
+                            </div>
 
-                                <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-                                    <span class="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
-                                        <i class="pi pi-bolt text-[10px] mr-1"></i>
-                                        {{ getEventLabel(template.trigger_event) }}
-                                    </span>
-                                    <Link :href="route('admin.email-templates.show', template.id)">
-                                        <Button
-                                            label="Modifier"
-                                            icon="pi pi-pencil"
-                                            size="small"
-                                            text
-                                            class="!rounded-xl hover:bg-slate-50"
-                                        />
-                                    </Link>
+                            <!-- Footer Carte -->
+                            <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                                <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+                                    <i class="pi pi-bolt text-red-500"></i>
+                                    {{ getEventLabel(template.trigger_event) }}
                                 </div>
+                                
+                                <Link :href="route('admin.email-templates.show', template.id)">
+                                    <button class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-blue-600 hover:text-white transition-colors duration-200" v-tooltip.top="'Modifier le modèle'">
+                                        <i class="pi pi-pencil text-sm"></i>
+                                    </button>
+                                </Link>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Empty State corrigé -->
-                <div v-if="!hasResults" class="text-center py-16">
-                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-inner">
+                <!-- Empty State (Amélioré) -->
+                <div v-if="!hasResults" class="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)]">
                         <i class="pi pi-search text-3xl text-slate-300"></i>
                     </div>
-                    <p class="text-slate-600 text-lg font-bold">Aucun modèle trouvé</p>
-                    <p class="text-sm text-slate-400 mt-1">Modifiez vos critères de recherche ou de catégorie.</p>
+                    <h3 class="text-xl font-black text-slate-800">Aucun modèle trouvé</h3>
+                    <p class="text-sm text-slate-500 mt-2 max-w-md mx-auto">
+                        Nous n'avons trouvé aucun modèle correspondant à vos critères. Essayez de modifier votre recherche ou de changer de catégorie.
+                    </p>
                     <Button
                         v-if="search || selectedCategory"
-                        label="Effacer les filtres"
-                        text
+                        label="Réinitialiser les filtres"
+                        icon="pi pi-refresh"
+                        outlined
                         @click="search = ''; selectedCategory = ''"
-                        class="mt-4"
+                        class="mt-6 !rounded-xl"
                     />
                 </div>
             </div>

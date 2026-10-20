@@ -2,9 +2,6 @@
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Button from 'primevue/button';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import Divider from 'primevue/divider';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -21,9 +18,10 @@ const props = defineProps({
 const showCc = ref(false);
 const showBcc = ref(false);
 const showTemplateMenu = ref(false);
+const fileInput = ref(null);
 
 const templates = [
-    { label: 'Réponse стандарт', subject: 'Re: ', body: '\n\n' },
+    { label: 'Réponse standard', subject: 'Re: ', body: '\n\n' },
     { label: 'Message de bienvenue', subject: 'Bienvenue sur SubnetCongo Academy', body: '\n\nBonjour,\n\nBienvenue sur SubnetCongo Academy !\n\nNous sommes ravis de vous compter parmi nos apprenants.\n\nCordialement,\nL\'équipe SubnetCongo' },
     { label: 'Suivi inscription', subject: 'Suivi de votre inscription', body: '\n\nBonjour,\n\nConcernant votre inscription, nous avons le plaisir de vous informer que...\n\nCordialement,\nL\'équipe SubnetCongo' },
     { label: 'Support technique', subject: 'Support technique - SubnetCongo', body: '\n\nBonjour,\n\nNous avons bien reçu votre demande de support.\n\nNotre équipe technique intervient dans les meilleurs délais.\n\nCordialement,\nL\'équipe Support SubnetCongo' },
@@ -35,16 +33,30 @@ const form = useForm({
     bcc: '',
     subject: props.prefill.subject || '',
     body: props.prefill.body || '',
+    attachments: []
 });
 
 const applyTemplate = (template) => {
-    if (!form.subject && template.subject) {
-        form.subject = template.subject;
-    }
-    if (!form.body) {
-        form.body = template.body;
-    }
+    if (!form.subject && template.subject) form.subject = template.subject;
+    if (!form.body) form.body = template.body;
     showTemplateMenu.value = false;
+};
+
+const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    form.attachments = [...form.attachments, ...files];
+};
+
+const removeAttachment = (index) => {
+    form.attachments.splice(index, 1);
+};
+
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
 const submit = () => {
@@ -60,213 +72,159 @@ const saveDraft = () => {
         body: form.body,
     }, {
         preserveScroll: true,
-        onSuccess: () => {
-            alert('Brouillon enregistré');
-        },
+        onSuccess: () => alert('Brouillon enregistré'),
     });
 };
 
 const discard = () => {
-    if (confirm('Abandonner cet email ?')) {
+    if (confirm('Êtes-vous sûr de vouloir abandonner ce message ?')) {
         router.visit(route('admin.emails.index'));
     }
 };
 
-const charCount = computed(() => form.body.length);
-const isValid = computed(() => {
-    return form.to && form.subject && form.body;
-});
+const isValid = computed(() => form.to && form.subject && form.body);
 </script>
 
 <template>
     <Head title="Nouveau message" />
     <AppLayout>
-        <div class="page-bg min-h-screen font-sans pb-20">
-            <!-- Header -->
-            <div class="bg-[#0f172a] pt-10 pb-16 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-600/15 rounded-full blur-[100px]"></div>
-                <div class="max-w-[1000px] mx-auto relative z-10">
-                    <Link :href="route('admin.emails.index')" class="text-slate-400 hover:text-white text-xs flex items-center gap-2 mb-4 transition">
-                        <i class="pi pi-arrow-left"></i> Retour à la boîte de réception
-                    </Link>
-                    <div class="flex items-center justify-between">
-                        <h1 class="text-2xl font-black text-white tracking-tight">
-                            <i class="pi pi-pencil text-rose-400 mr-3"></i>Nouveau message
-                        </h1>
-                        <div class="flex items-center gap-2">
-                            <Button
-                                label="Brouillon"
-                                icon="pi pi-save"
-                                outlined
-                                size="small"
-                                @click="saveDraft"
-                                class="!rounded-xl"
-                            />
-                            <Button
-                                label="Envoyer"
-                                icon="pi pi-send"
-                                size="small"
-                                :loading="form.processing"
-                                :disabled="!isValid"
-                                @click="submit"
-                                class="!bg-emerald-600 hover:!bg-emerald-500 !border-none !rounded-xl"
-                            />
+        <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
+            
+            <!-- HEADER (Inspiré de votre image) -->
+            <div class="bg-[#11131f] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">
+                <div class="max-w-[1000px] mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    
+                    <!-- Titre & Sous-titre -->
+                    <div>
+                        <div class="mb-3">
+                            <span class="border border-red-500/30 bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider">
+                                V11.5
+                            </span>
                         </div>
+                        <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase italic flex flex-wrap items-center gap-x-3">
+                            NOUVEAU <span class="text-[#ef4444]">MESSAGE</span>
+                        </h1>
+                        <p class="text-slate-400 mt-3 text-sm italic max-w-xl">
+                            Rédigez votre email. Les envois sont gérés dynamiquement et les brouillons peuvent être sauvegardés.
+                        </p>
+                    </div>
+
+                    <!-- Actions Haut Droite (Inspiré de l'image) -->
+                    <div class="flex items-center gap-3">
+                        <Link :href="route('admin.emails.index')" class="flex items-center gap-2 px-4 py-2.5 bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded-md text-sm font-medium transition duration-200">
+                            <i class="pi pi-arrow-left"></i> Retour (Boîte)
+                        </Link>
+                        <button @click="saveDraft" class="flex items-center gap-2 px-4 py-2.5 bg-[#ef4444] hover:bg-red-600 text-white rounded-md text-sm font-medium transition duration-200 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                            <i class="pi pi-save"></i> Brouillon
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="max-w-[1000px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
-                <!-- Composer -->
-                <div class="bg-white rounded-2xl shadow border border-slate-100 overflow-hidden">
-                    <!-- Toolbar -->
-                    <div class="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
-                        <div class="relative">
-                            <Button
-                                label="Modèle"
-                                icon="pi pi-file"
-                                outlined
-                                size="small"
-                                @click="showTemplateMenu = !showTemplateMenu"
-                                class="!rounded-xl"
-                            />
-                            <div
-                                v-if="showTemplateMenu"
-                                class="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-slate-200 py-1 min-w-[220px] z-50"
-                            >
-                                <button
-                                    v-for="tpl in templates"
-                                    :key="tpl.label"
-                                    @click="applyTemplate(tpl)"
-                                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition"
-                                >
-                                    {{ tpl.label }}
-                                </button>
-                            </div>
-                        </div>
-                        <Divider layout="vertical" />
-                        <div class="text-xs text-slate-500">
-                            {{ charCount }} caractères
+            <!-- COMPOSER (Inspiré de l'ergonomie Gmail, Chevauchant le header) -->
+            <div class="max-w-[1000px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden flex flex-col">
+                    
+                    <!-- Ligne "À" avec Cc/Cci intégrés -->
+                    <div class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
+                        <label class="text-slate-500 font-medium w-16 text-sm">À</label>
+                        <input v-model="form.to" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800 placeholder-slate-300" placeholder="destinataire@exemple.com">
+                        
+                        <!-- Toggle Cc / Cci -->
+                        <div class="flex items-center gap-3 text-xs font-semibold text-slate-500">
+                            <button v-if="!showCc" @click="showCc = true" class="hover:text-slate-800 hover:underline">Cc</button>
+                            <button v-if="!showBcc" @click="showBcc = true" class="hover:text-slate-800 hover:underline">Cci</button>
                         </div>
                     </div>
 
-                    <!-- Fields -->
-                    <div class="p-6 space-y-4">
-                        <!-- To -->
-                        <div class="flex items-center gap-4">
-                            <label class="w-16 text-sm font-black text-slate-500 flex-shrink-0">À</label>
-                            <InputText
-                                v-model="form.to"
-                                type="email"
-                                class="flex-1 !rounded-xl"
-                                placeholder="destinataire@email.com"
-                                :class="{ 'p-invalid': form.errors.to }"
-                            />
-                        </div>
+                    <!-- Ligne "Cc" -->
+                    <div v-if="showCc" class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
+                        <label class="text-slate-500 font-medium w-16 text-sm">Cc</label>
+                        <input v-model="form.cc" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800" placeholder="copie@exemple.com">
+                        <button @click="showCc = false; form.cc = ''" class="text-slate-400 hover:text-red-500"><i class="pi pi-times text-xs"></i></button>
+                    </div>
 
-                        <!-- CC Toggle -->
-                        <div class="flex items-center gap-4">
-                            <button
-                                @click="showCc = !showCc"
-                                class="w-16 text-sm text-slate-500 hover:text-rose-600 flex-shrink-0 text-left"
-                            >
-                                {{ showCc ? 'Cc' : '+ Cc' }}
+                    <!-- Ligne "Cci" -->
+                    <div v-if="showBcc" class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
+                        <label class="text-slate-500 font-medium w-16 text-sm">Cci</label>
+                        <input v-model="form.bcc" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800" placeholder="copie-cachee@exemple.com">
+                        <button @click="showBcc = false; form.bcc = ''" class="text-slate-400 hover:text-red-500"><i class="pi pi-times text-xs"></i></button>
+                    </div>
+
+                    <!-- Ligne "Objet" -->
+                    <div class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
+                        <input v-model="form.subject" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-semibold py-1.5 px-0 text-slate-800 placeholder-slate-400" placeholder="Objet">
+                    </div>
+
+                    <!-- Zone de texte principale (Body) -->
+                    <div class="flex-1 bg-white relative">
+                        <textarea 
+                            v-model="form.body" 
+                            rows="15"
+                            class="w-full h-full min-h-[350px] border-none focus:ring-0 bg-transparent p-6 text-sm text-slate-800 leading-relaxed font-sans resize-y placeholder-slate-300"
+                            placeholder="Rédigez votre message ici..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Zone d'affichage des pièces jointes -->
+                    <div v-if="form.attachments.length > 0" class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-2">
+                        <div v-for="(file, index) in form.attachments" :key="index" class="flex items-center gap-2 bg-white border border-slate-200 rounded-md px-3 py-1.5 shadow-sm">
+                            <i class="pi pi-file text-slate-400 text-xs"></i>
+                            <span class="text-xs font-medium text-slate-700 truncate max-w-[150px]">{{ file.name }}</span>
+                            <span class="text-[10px] text-slate-400">({{ formatFileSize(file.size) }})</span>
+                            <button @click="removeAttachment(index)" class="text-slate-400 hover:text-red-500 ml-1">
+                                <i class="pi pi-times text-xs"></i>
                             </button>
-                            <InputText
-                                v-if="showCc"
-                                v-model="form.cc"
-                                type="email"
-                                class="flex-1 !rounded-xl"
-                                placeholder="copie@email.com"
-                            />
-                        </div>
-
-                        <!-- BCC Toggle -->
-                        <div class="flex items-center gap-4">
-                            <button
-                                @click="showBcc = !showBcc"
-                                class="w-16 text-sm text-slate-500 hover:text-rose-600 flex-shrink-0 text-left"
-                            >
-                                {{ showBcc ? 'Bcc' : '+ Bcc' }}
-                            </button>
-                            <InputText
-                                v-if="showBcc"
-                                v-model="form.bcc"
-                                type="email"
-                                class="flex-1 !rounded-xl"
-                                placeholder="copie cachée@email.com"
-                            />
-                        </div>
-
-                        <!-- Subject -->
-                        <div class="flex items-center gap-4">
-                            <label class="w-16 text-sm font-black text-slate-500 flex-shrink-0">Sujet</label>
-                            <InputText
-                                v-model="form.subject"
-                                class="flex-1 !rounded-xl"
-                                placeholder="Objet du message"
-                                :class="{ 'p-invalid': form.errors.subject }"
-                            />
-                        </div>
-
-                        <p v-if="form.errors.to" class="text-rose-500 text-xs">{{ form.errors.to }}</p>
-                        <p v-if="form.errors.subject" class="text-rose-500 text-xs">{{ form.errors.subject }}</p>
-
-                        <Divider />
-
-                        <!-- Body -->
-                        <div>
-                            <Textarea
-                                v-model="form.body"
-                                rows="18"
-                                class="w-full !rounded-xl font-mono text-sm"
-                                placeholder="Tapez votre message ici..."
-                                :class="{ 'p-invalid': form.errors.body }"
-                            />
-                            <p v-if="form.errors.body" class="text-rose-500 text-xs mt-1">{{ form.errors.body }}</p>
                         </div>
                     </div>
 
-                    <!-- Footer -->
-                    <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100">
-                        <Button
-                            label="Abandonner"
-                            icon="pi pi-times"
-                            text
-                            severity="danger"
-                            @click="discard"
-                            class="!rounded-xl"
-                        />
-                        <div class="flex items-center gap-3">
+                    <!-- Barre d'outils (Footer) -->
+                    <div class="px-6 py-4 flex items-center justify-between bg-white border-t border-slate-100 rounded-b-xl">
+                        
+                        <!-- Actions principales (Envoyer & Outils) -->
+                        <div class="flex items-center gap-4">
+                            <!-- Bouton d'envoi style Gmail (Bleu) -->
                             <Button
-                                label="Brouillon"
-                                icon="pi pi-save"
-                                outlined
-                                @click="saveDraft"
-                                class="!rounded-xl"
-                            />
-                            <Button
-                                label="Envoyer l'email"
-                                icon="pi pi-send"
+                                label="Envoyer"
+                                @click="submit"
                                 :loading="form.processing"
                                 :disabled="!isValid"
-                                @click="submit"
-                                class="!bg-emerald-600 hover:!bg-emerald-500 !border-none !rounded-xl"
+                                class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-full !px-6 !py-2.5 !text-sm !font-bold shadow-md transition-transform active:scale-95"
                             />
+
+                            <!-- Menu Modèles -->
+                            <div class="relative">
+                                <button @click="showTemplateMenu = !showTemplateMenu" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition" title="Insérer un modèle">
+                                    <i class="pi pi-clipboard"></i>
+                                </button>
+                                <div v-if="showTemplateMenu" class="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 py-1 min-w-[250px] z-50">
+                                    <div class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">Modèles</div>
+                                    <button v-for="tpl in templates" :key="tpl.label" @click="applyTemplate(tpl)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 text-slate-700 transition">
+                                        {{ tpl.label }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Pièce jointe -->
+                            <button @click="$refs.fileInput.click()" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition" title="Joindre des fichiers">
+                                <i class="pi pi-paperclip"></i>
+                            </button>
+                            <input type="file" ref="fileInput" class="hidden" multiple @change="handleFileUpload">
+                        </div>
+
+                        <!-- Corbeille (Abandonner) -->
+                        <div>
+                            <button @click="discard" class="w-9 h-9 rounded-full hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-slate-400 transition" title="Supprimer ce brouillon">
+                                <i class="pi pi-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tips -->
-                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                    <h3 class="text-sm font-bold text-blue-800 mb-2">
-                        <i class="pi pi-info-circle mr-2"></i>Conseils d'envoi
-                    </h3>
-                    <ul class="text-xs text-blue-700 space-y-1">
-                        <li>• Utilisez le champ <strong>Cc</strong> pour envoyer une copie visible à d'autres destinataires</li>
-                        <li>• Utilisez le champ <strong>Bcc</strong> pour envoyer une copie cachée (les autres destinataires ne verront pas ces adresses)</li>
-                        <li>• Les modèles vous permettent de gagner du temps pour les réponses standards</li>
-                        <li>• Vous pouvez enregistrer un brouillon à tout moment</li>
+                <!-- Erreurs éventuelles -->
+                <div v-if="Object.keys(form.errors).length > 0" class="mt-4 bg-red-50 border border-red-200 text-red-600 rounded-lg p-4 text-sm">
+                    <ul class="list-disc pl-5">
+                        <li v-for="(error, key) in form.errors" :key="key">{{ error }}</li>
                     </ul>
                 </div>
             </div>

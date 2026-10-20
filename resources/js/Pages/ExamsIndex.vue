@@ -93,7 +93,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                     <div v-for="kpi in [
                         { label: 'Total Examens', val: stats.total, icon: 'pi-file', bg: 'bg-slate-100 text-slate-600' },
                         { label: 'Disponibles', val: stats.available, icon: 'pi-play-circle', bg: 'bg-red-50 text-red-600' },
-                        { label: 'Certifications', val: stats.passed, icon: 'pi-verified', bg: 'bg-emerald-50 text-emerald-600' },
+                        { label: 'Certifications', val: stats.passed, icon: 'pi-verified', bg: 'bg-emerald-50 text-blue-600' },
                         { label: 'Verrouillés', val: stats.locked, icon: 'pi-lock', bg: 'bg-rose-50 text-rose-600' },
                     ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-xl transition-all group">
                         <div :class="kpi.bg" class="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -181,7 +181,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                             </div>
 
                             <Link v-if="exam.results?.length" :href="route('exams.attempts', exam.id)">
-                                <Button icon="pi pi-history" text class="!text-slate-400 hover:!text-indigo-600" v-tooltip="'Historique des tentatives'" />
+                                <Button icon="pi pi-history" text class="!text-slate-400 hover:!text-blue-600" v-tooltip="'Historique des tentatives'" />
                             </Link>
                             <Link v-if="exam.results?.length" :href="route('exams.results', exam.results[0].id)">
                                 <Button icon="pi pi-chart-bar" text class="!text-slate-400 hover:!text-red-600" v-tooltip="'Mes performances'" />

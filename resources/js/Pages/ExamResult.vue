@@ -107,7 +107,7 @@ const getCorrectOptionTexts = (options) => {
                     <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-4">Historique</h2>
                     <Timeline :value="events" align="left">
                         <template #marker="slotProps">
-                            <span class="flex w-10 h-10 items-center justify-center text-white bg-indigo-500 rounded-2xl shadow-md shadow-indigo-500/30">
+                            <span class="flex w-10 h-10 items-center justify-center text-white bg-blue-500 rounded-2xl shadow-md shadow-indigo-500/30">
                                 <i :class="slotProps.item.icon" class="text-sm"></i>
                             </span>
                         </template>
@@ -249,7 +249,7 @@ const getCorrectOptionTexts = (options) => {
 
                     <div class="flex gap-3">
                         <Link :href="route('student.my-courses')">
-                            <Button label="Mes formations" icon="pi pi-book" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />
+                            <Button label="Mes formations" icon="pi pi-book" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />
                         </Link>
                         <Link :href="route('exams.learner.index')">
                             <Button label="Tous mes examens" icon="pi pi-list" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />

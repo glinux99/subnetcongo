@@ -101,17 +101,17 @@ const quickReject = (id) => {
             
             <!-- HEADER ULTIMATE V30 -->
             <div class="bg-[#0F172A] relative overflow-hidden pt-12 pb-24 px-8">
-                <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-rose-600/10 rounded-full blur-[120px]"></div>
-                <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/10 rounded-full blur-[100px]"></div>
+                <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[120px]"></div>
+                <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]"></div>
                 
                 <div class="max-w-[1600px] mx-auto relative z-10">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-8">
                         <div>
                             <div class="flex items-center gap-3 mb-4">
-                                <span class="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-rose-500/20">Enrollment Management</span>
+                                <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/20">Enrollment Management</span>
                             </div>
                             <h1 class="text-4xl font-black text-white tracking-tighter italic uppercase">
-                                Flux des <span class="text-rose-500">Inscriptions</span>
+                                Flux des <span class="text-red-500">Inscriptions</span>
                             </h1>
                             <p class="text-slate-400 mt-2 font-medium max-w-xl">Supervisez les admissions, validez les paiements et gérez les accès aux parcours de formation.</p>
                         </div>
@@ -123,7 +123,7 @@ const quickReject = (id) => {
                             </div>
                             <div class="px-6 py-2 text-center">
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nouveaux (24h)</p>
-                                <p class="text-rose-500 font-black text-xl italic">+{{ stats?.today ?? 0 }}</p>
+                                <p class="text-red-500 font-black text-xl italic">+{{ stats?.today ?? 0 }}</p>
                             </div>
                         </div>
                     </div>
@@ -135,13 +135,13 @@ const quickReject = (id) => {
                 <!-- KPI STRIP V30 -->
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                     <div v-for="kpi in [
-                        { label: 'En attente', val: stats?.pending, color: 'text-amber-500', bg: 'bg-amber-500/10', icon: 'pi-clock' },
-                        { label: 'Actives', val: stats?.active, color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: 'pi-check-circle' },
+                        { label: 'En attente', val: stats?.pending, color: 'text-red-500', bg: 'bg-red-500/10', icon: 'pi-clock' },
+                        { label: 'Actives', val: stats?.active, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: 'pi-check-circle' },
                         { label: 'Terminées', val: stats?.completed, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: 'pi-trophy' },
-                        { label: 'Suspendues', val: stats?.suspended, color: 'text-rose-500', bg: 'bg-rose-500/10', icon: 'pi-ban' },
+                        { label: 'Suspendues', val: stats?.suspended, color: 'text-red-500', bg: 'bg-red-500/10', icon: 'pi-ban' },
                         { label: 'Refusées', val: stats?.rejected, color: 'text-slate-400', bg: 'bg-slate-500/10', icon: 'pi-times-circle' },
                         { label: 'Total global', val: enrollments?.total, color: 'text-slate-900', bg: 'bg-slate-900/5', icon: 'pi-users' },
-                    ]" :key="kpi.label" class="bg-white p-5 rounded-[1rem] border border-slate-200/60 shadow-sm group hover:shadow-xl transition-all duration-500">
+                    ]" :key="kpi.label" class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 group hover:shadow-xl transition-all duration-500">
                         <div :class="[kpi.bg, kpi.color]" class="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-6 transition-transform">
                             <i :class="['pi', kpi.icon, 'text-lg']"></i>
                         </div>
@@ -150,7 +150,7 @@ const quickReject = (id) => {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[1rem] border border-slate-200/50 shadow-2xl overflow-hidden">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                     
                     <!-- TOOLBAR PRO -->
                     <div class="p-8 border-b border-slate-100 space-y-6">
@@ -171,7 +171,7 @@ const quickReject = (id) => {
                         <!-- BULK ACTION BAR -->
                         <div v-if="selected.length" class="flex items-center justify-between p-4 bg-[#0F172A] rounded-xl animate-fade-in shadow-2xl">
                             <div class="flex items-center gap-4 px-4 text-white">
-                                <div class="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center font-black text-xs">{{ selected.length }}</div>
+                                <div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-black text-xs">{{ selected.length }}</div>
                                 <span class="text-xs font-bold uppercase tracking-widest">Éléments sélectionnés</span>
                             </div>
                             <div class="flex gap-2">
@@ -192,7 +192,7 @@ const quickReject = (id) => {
                             <template #body="{ data }">
                                 <div class="flex items-center gap-4 py-2">
                                     <Avatar :image="data.user?.profile_photo_url" :label="data.user?.name?.charAt(0)" shape="circle" size="large" 
-                                            class="!bg-rose-50 !text-rose-600 !font-black border border-rose-100" />
+                                            class="!bg-red-50 !text-red-600 !font-black border border-red-100" />
                                     <div>
                                         <p class="font-black text-slate-800 tracking-tight">{{ data.user?.name }}</p>
                                         <p class="text-[10px] text-slate-400 font-medium">{{ data.user?.email }}</p>
@@ -267,7 +267,7 @@ const quickReject = (id) => {
         <!-- MODAL BULK V30 -->
         <Dialog v-model:visible="showBulkDialog" modal :header="`Action Groupée : ${bulkAction}`" :style="{ width: '450px' }" class="!rounded-[1rem]">
             <div class="p-6 text-center space-y-6">
-                <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center mx-auto shadow-inner">
+                <div class="w-16 h-16 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mx-auto shadow-inner">
                     <i :class="bulkAction === 'approve' ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'" class="text-2xl"></i>
                 </div>
                 <div>

@@ -40,37 +40,103 @@ const verify = (cert) => {
 
         <div class="page-bg min-h-screen font-sans pb-20">
             
-            <!-- HEADER ULTIMATE V30 (Prestige Dark) -->
-            <div class="bg-[#0F172A] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-                
-                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div>
-                        <div class="flex items-center gap-3 mb-4">
-                            <span class="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-emerald-500/20">Verified Credentials</span>
-                        </div>
-                        <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
-                            Mes <span class="text-emerald-500">Certifications</span>
-                        </h1>
-                        <p class="text-slate-400 mt-4 max-w-lg text-sm font-medium leading-relaxed">
-                            Vos accomplissements officiels. Chaque certificat est vérifiable via un code unique et reconnu par nos partenaires.
-                        </p>
-                    </div>
+      <!-- ============================================================================== -->
+<!-- HEADER & KPI (Style "Banque de Questions Centrale")                            -->
+<!-- ============================================================================== -->
+<div class="flex flex-col mb-12">
+    
+    <!-- 1. BANNIÈRE SOMBRE -->
+    <!-- Le padding bottom (pb-24) est important pour laisser la place aux cartes de remonter -->
+    <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
+        
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
+            
+            <!-- Partie Gauche (Titres) -->
+            <div class="max-w-3xl">
+                <!-- Petit Badge rouge sombre -->
+                <span class="inline-block border border-red-900/50 text-[#ff4d4d] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
+                    Verified Credentials
+                </span>
 
-                    <!-- KPI Cards Header -->
-                    <div class="flex items-center gap-4 bg-white/5 p-2 rounded-[1rem] border border-white/10 backdrop-blur-xl">
-                        <div class="px-8 py-3 text-center border-r border-white/10">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total</p>
-                            <p class="text-white font-black text-2xl italic">{{ meta?.total ?? 0 }}</p>
-                        </div>
-                        <div class="px-8 py-3 text-center">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Score Moyen</p>
-                            <p class="text-emerald-400 font-black text-2xl italic">{{ meta?.avg_score ?? 0 }}%</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Titre Principal (Italique, très gras, espacement réduit) -->
+                <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
+                    <span class="text-white">MES</span>
+                    <span class="text-[#FF3B3B]">CERTIFICATIONS</span>
+                </h1>
+
+                <!-- Sous-titre (Italique, gris clair) -->
+                <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
+                    Vos accomplissements officiels. Chaque certificat est vérifiable via un code unique et reconnu par nos partenaires.
+                </p>
             </div>
+
+            <!-- Partie Droite (Boutons) -->
+            <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
+                <Button 
+                    label="Exporter Profil" 
+                    icon="pi pi-download" 
+                    class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
+                />
+                <Button 
+                    label="Partager Réseau" 
+                    icon="pi pi-share-alt" 
+                    class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
+                />
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. CARTES KPI (Chevauchement) -->
+    <!-- Le -mt-16 fait remonter les cartes sur la bannière sombre. Le z-20 les garde au premier plan -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 md:px-6 -mt-16 relative z-20">
+        
+        <!-- KPI 1 -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div class="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">
+                <i class="pi pi-list text-indigo-500 text-sm"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Obtenu</div>
+                <div class="text-2xl font-black text-slate-800 leading-none">{{ meta?.total ?? 0 }}</div>
+            </div>
+        </div>
+
+        <!-- KPI 2 -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center">
+                <i class="pi pi-check-circle text-emerald-500 text-sm"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Score Moyen</div>
+                <div class="text-2xl font-black text-slate-800 leading-none">{{ meta?.avg_score ?? 0 }}<span class="text-sm text-slate-400 ml-1">%</span></div>
+            </div>
+        </div>
+
+        <!-- KPI 3 -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div class="w-8 h-8 rounded bg-amber-50 flex items-center justify-center">
+                <i class="pi pi-star text-amber-500 text-sm"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Validité Globale</div>
+                <div class="text-2xl font-black text-slate-800 leading-none">À jour</div>
+            </div>
+        </div>
+
+        <!-- KPI 4 -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div class="w-8 h-8 rounded bg-rose-50 flex items-center justify-center">
+                <i class="pi pi-share-alt text-rose-500 text-sm"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Partage Réseau</div>
+                <div class="text-2xl font-black text-slate-800 leading-none">Actif</div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+<!-- FIN HEADER & KPI -->
 
             <!-- MAIN CONTENT -->
             <div class="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
@@ -149,15 +215,82 @@ const verify = (cert) => {
 </template>
 
 <style scoped>
-.italic { font-style: italic; }
-:deep(.p-tag) {
-    border-radius: 8px;
+/* Scrollbar personnalisée façon macOS / SaaS Moderne */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
-:deep(.p-button.p-button-outlined) {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
 }
-:deep(.p-button.p-button-outlined:hover) {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.3);
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #94a3b8;
+}
+
+/* Animations d'entrée (Fade In) */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Customisation PrimeVue DataTable B2B */
+:deep(.p-datatable-custom .p-datatable-thead > tr > th) {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1.25rem 1rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+:deep(.p-datatable-custom .p-datatable-tbody > tr) {
+    transition: background-color 0.2s ease;
+}
+:deep(.p-datatable-custom .p-datatable-tbody > tr:hover) {
+    background-color: #f8fafc !important;
+}
+
+/* Timeline Custom (Audit Log) */
+:deep(.custom-timeline .p-timeline-event-opposite) {
+    display: none;
+}
+:deep(.custom-timeline .p-timeline-event-content) {
+    width: 100%;
+}
+:deep(.custom-timeline .p-timeline-event-separator) {
+    margin-right: 1rem;
+}
+
+/* Overrides UI Forms */
+:deep(.p-inputtext), :deep(.p-dropdown), :deep(.p-inputnumber-input) {
+    border-radius: 0.75rem;
+    border-color: #e2e8f0;
+}
+:deep(.p-inputtext:enabled:focus), :deep(.p-dropdown:not(.p-disabled).p-focus) {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.1);
+}
+
+/* Override Editor Toolbar */
+:deep(.p-editor-container .p-editor-toolbar) {
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+}
+:deep(.p-editor-container .p-editor-content) {
+    border-bottom-left-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+    border-color: #e2e8f0;
 }
 </style>

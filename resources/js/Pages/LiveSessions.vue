@@ -9,6 +9,9 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
+import Breadcrumb from 'primevue/breadcrumb';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
     sessions: Object,
@@ -17,6 +20,7 @@ const props = defineProps({
     meta: Object,
 });
 
+const toast = useToast();
 const search = ref(props.filters?.search ?? '');
 const provider = ref(props.filters?.provider ?? null);
 const status = ref(props.filters?.status ?? null);
@@ -84,165 +88,289 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
 <template>
     <AppLayout>
         <Head title="Sessions en direct" />
-       <div class="flex flex-col gap-2 mb-12">
+        <Toast position="top-right" />
         
-        <!-- Breadcrumb -->
-        <div class="flex items-center text-sm px-1 mb-2">
-            <Breadcrumb 
-                :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Sessions en direct' }]" 
-                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-            />
-        </div>
-
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
+        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
                 
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge Certifications -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        Live Classroom
-                    </span>
-
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">Sessions</span>
-                        <span class="text-[#E92B2B]">en direct</span>
-                    </h1>
-
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        Planifiez et gérez vos classes virtuelles Zoom, Meet, BBB ou Jitsi. Diffusez vos cours en temps réel et centralisez l'ensemble de vos replays.
-                    </p>
+                <!-- Breadcrumb -->
+                <div class="flex items-center text-sm px-1 mb-2">
+                    <Breadcrumb 
+                        :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Sessions en direct' }]" 
+                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
+                    />
                 </div>
 
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <Button 
-                        label="Actualiser" 
-                        icon="pi pi-sync" 
-                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
-                        @click="search_" 
-                    />
-                    <Button 
-                        label="Planifier une session" 
-                        icon="pi pi-plus" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                        @click="showCreate = true" 
-                    />
+                <!-- 1. BANNIÈRE SOMBRE -->
+                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
+                    
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
+                        
+                        <!-- Partie Gauche (Titres) -->
+                        <div class="max-w-3xl">
+                            <span class="inline-block border border-red-900/50 text-[#ff4d4d] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
+                                Live Classroom
+                            </span>
+
+                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
+                                <span class="text-white">SESSIONS</span>
+                                <span class="text-[#FF3B3B]">EN DIRECT</span>
+                            </h1>
+
+                            <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
+                                Planifiez et gérez vos classes virtuelles Zoom, Meet, BBB ou Jitsi. Diffusez vos cours en temps réel et centralisez l'ensemble de vos replays.
+                            </p>
+                        </div>
+
+                        <!-- Partie Droite (Boutons) -->
+                        <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
+                            <Button 
+                                label="Actualiser" 
+                                icon="pi pi-sync" 
+                                @click="search_"
+                                class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
+                            />
+                            <Button 
+                                label="Planifier une session" 
+                                icon="pi pi-plus" 
+                                @click="showCreate = true"
+                                class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. CARTES KPI (Chevauchement) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
+                    
+                    <!-- KPI 1 -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                        <div class="w-8 h-8 rounded bg-rose-50 flex items-center justify-center">
+                            <i class="pi pi-bolt text-rose-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">En direct</div>
+                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.live_now ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 2 -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                        <div class="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">
+                            <i class="pi pi-calendar text-indigo-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Planifiées aujourd'hui</div>
+                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.scheduled_today ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 3 -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                        <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center">
+                            <i class="pi pi-users text-emerald-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Audience Moyenne</div>
+                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.avg_attendance ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 4 -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
+                        <div class="w-8 h-8 rounded bg-amber-50 flex items-center justify-center">
+                            <i class="pi pi-server text-amber-500 text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Stockage Replays</div>
+                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.storage_used ?? '0 B' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================================== -->
+                <!-- ZONE DU TABLEAU (Filtres et DataTable)                                         -->
+                <!-- ============================================================================== -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative z-20 mt-6">
+                    
+                    <!-- Zone des filtres -->
+                    <div class="flex flex-wrap items-center gap-3 mb-6">
+                        <span class="p-input-icon-left flex-1 min-w-[200px]">
+                            <i class="pi pi-search text-slate-400"></i>
+                            <InputText v-model="search" placeholder="Rechercher une session..." class="w-full !rounded-xl border-slate-200" @keyup.enter="search_" />
+                        </span>
+                        <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" placeholder="Fournisseur" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
+                        <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" placeholder="Statut" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
+                        <Button label="Filtrer" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
+                    </div>
+
+                    <!-- DataTable -->
+                    <DataTable :value="sessions?.data ?? []" stripedRows paginator :rows="15" :totalRecords="sessions?.total ?? 0" :lazy="true" responsiveLayout="scroll" class="text-sm p-datatable-custom border-t border-slate-100 pt-4">
+                        <Column field="title" header="Titre" sortable>
+                            <template #body="{ data }">
+                                <div class="flex items-center gap-3">
+                                    <div :class="['w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm shadow-sm', providerColor(data.provider)]">
+                                        <i :class="data.provider === 'zoom' ? 'pi pi-video' : data.provider === 'meet' ? 'pi pi-google' : data.provider === 'bbb' ? 'pi pi-users' : data.provider === 'livekit' ? 'pi pi-camera' : 'pi pi-comments'"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-800">{{ data.title }}</div>
+                                        <div class="text-[10px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
+                                            <span>ID: {{ data.meeting_id ?? '—' }}</span>
+                                            <Tag v-if="!data.meeting_url && data.provider !== 'livekit'" value="Demo" severity="warning" class="!text-[8px] !py-0 !px-1" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column field="course.title" header="Cours lié">
+                            <template #body="{ data }">
+                                <span class="font-medium text-slate-600">{{ data.course?.title ?? '—' }}</span>
+                            </template>
+                        </Column>
+                        <Column field="instructor.name" header="Instructeur">
+                            <template #body="{ data }">
+                                <span class="font-bold text-slate-700">{{ data.instructor?.name ?? '—' }}</span>
+                            </template>
+                        </Column>
+                        <Column field="start_at" header="Démarrage" sortable>
+                            <template #body="{ data }">
+                                <span class="text-slate-500 font-medium">{{ formatDate(data.start_at) }}</span>
+                            </template>
+                        </Column>
+                        <Column field="duration" header="Durée">
+                            <template #body="{ data }">
+                                <span class="font-mono text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded">{{ data.duration ?? '—' }} min</span>
+                            </template>
+                        </Column>
+                        <Column field="status" header="Statut">
+                            <template #body="{ data }">
+                                <Tag :value="data.status" :severity="statusSeverity(data.status)" class="text-[10px] font-bold uppercase tracking-wider px-2" />
+                            </template>
+                        </Column>
+                        <Column header="Actions" :exportable="false" alignFrozen="right">
+                            <template #body="{ data }">
+                                <div class="flex items-center gap-1 justify-end">
+                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-play" rounded text severity="success" @click="startSession(data.id)" v-tooltip.top="'Démarrer la session'" />
+                                    <Button icon="pi pi-sync" rounded text severity="info" @click="syncRecordings(data.id)" v-tooltip.top="'Sync replays'" />
+                                    <Link :href="route('live-sessions.report', data.id)">
+                                        <Button icon="pi pi-chart-bar" rounded text severity="secondary" v-tooltip.top="'Rapport de présence'" />
+                                    </Link>
+                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-times" rounded text severity="warn" @click="cancelSession(data.id)" v-tooltip.top="'Annuler'" />
+                                    <Button icon="pi pi-trash" rounded text severity="danger" @click="destroySession(data.id)" v-tooltip.top="'Supprimer'" />
+                                </div>
+                            </template>
+                        </Column>
+                        <template #empty>
+                            <div class="text-center py-16 text-slate-400 flex flex-col items-center">
+                                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 mb-4 shadow-inner">
+                                    <i class="pi pi-video text-2xl text-slate-300"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">Aucune session planifiée</h3>
+                                <p class="text-sm text-slate-500">Cliquez sur "Planifier une session" en haut à droite pour commencer.</p>
+                            </div>
+                        </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
 
         <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- MODAL : PLANIFIER UNE SESSION                                                  -->
         <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
+        <Dialog v-model:visible="showCreate" modal header="Planifier une classe virtuelle" :style="{ width: '600px' }" class="!rounded-2xl" :pt="{ header: { class: 'border-b border-slate-100 pb-4' }, content: { class: 'pt-4' } }">
             
-            <!-- KPI 1 : En direct -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-bolt text-rose-500 text-lg"></i>
-                </div>
+            <div class="space-y-5">
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">En direct</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ kpis?.live_now ?? 0 }}</p>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Titre de la session <span class="text-red-500">*</span></label>
+                    <InputText v-model="form.title" class="w-full !rounded-xl border-slate-300" placeholder="Ex: Masterclass Cybersécurité - Semaine 4" />
                 </div>
-            </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Cours rattaché</label>
+                        <Select v-model="form.course_id" :options="courses" optionLabel="title" optionValue="id" placeholder="Sélectionner..." class="w-full !rounded-xl border-slate-300" />
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Instructeur</label>
+                        <Select v-model="form.instructor_id" :options="instructors" optionLabel="name" optionValue="id" placeholder="Sélectionner..." class="w-full !rounded-xl border-slate-300" />
+                    </div>
+                </div>
 
-            <!-- KPI 2 : Planifiées aujourd'hui -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-calendar text-indigo-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Planifiées aujourd'hui</h3>
-                    <div class="flex items-center gap-2">
-                        <p class="text-3xl font-extrabold text-slate-900">{{ kpis?.scheduled_today ?? 0 }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Date et Heure de début <span class="text-red-500">*</span></label>
+                        <!-- Utilisation de input HTML5 natif stylisé Tailwind pour le datetime -->
+                        <input v-model="form.start_at" type="datetime-local" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow" />
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Durée prévue (min)</label>
+                        <InputText v-model="form.duration" type="number" class="w-full !rounded-xl border-slate-300" />
                     </div>
                 </div>
-            </div>
 
-            <!-- KPI 3 : Audience Moyenne -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-users text-emerald-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Audience Moyenne</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ kpis?.avg_attendance ?? 0 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 4 : Stockage Replays -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-server text-amber-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Stockage Replays</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ kpis?.storage_used ?? '0 B' }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-        <Dialog v-model:visible="showCreate" modal header="Planifier une session live" :style="{ width: '600px' }" class="!rounded-3xl">
-            <div class="space-y-4 p-2">
-                <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Titre</label>
-                    <InputText v-model="form.title" class="w-full !rounded-xl" placeholder="Ex: Cours de networking - Semaine 4" />
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Cours</label>
-                        <Select v-model="form.course_id" :options="courses" optionLabel="title" optionValue="id" placeholder="Choisir" class="w-full" />
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Instructeur</label>
-                        <Select v-model="form.instructor_id" :options="instructors" optionLabel="name" optionValue="id" placeholder="Choisir" class="w-full" />
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Date / heure</label>
-                        <input v-model="form.start_at" type="datetime-local" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm" />
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Durée (min)</label>
-                        <InputText v-model="form.duration" type="number" class="w-full !rounded-xl" />
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Fournisseur</label>
-                        <Select v-model="form.provider" :options="providers" optionLabel="label" optionValue="value" class="w-full" :optionDisabled="p => !isProviderConfigured(p.value)">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Plateforme Visio</label>
+                        <Select v-model="form.provider" :options="providers" optionLabel="label" optionValue="value" class="w-full !rounded-xl border-slate-300 bg-white" :optionDisabled="p => !isProviderConfigured(p.value)">
                             <template #option="slotProps">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span :class="{'text-slate-400': !isProviderConfigured(slotProps.option.value)}">{{ slotProps.option.label }}</span>
-                                    <Tag v-if="!isProviderConfigured(slotProps.option.value)" value="Non configuré" severity="warning" class="!text-[8px] !py-0 !px-1" />
+                                <div class="flex items-center justify-between gap-2 w-full">
+                                    <span :class="{'text-slate-400': !isProviderConfigured(slotProps.option.value)}" class="font-bold">{{ slotProps.option.label }}</span>
+                                    <Tag v-if="!isProviderConfigured(slotProps.option.value)" value="Inactif" severity="warning" class="!text-[8px] !py-0 !px-1 uppercase" />
                                 </div>
                             </template>
                         </Select>
-                        <p v-if="!configuredProviders.length" class="text-xs text-rose-500 mt-1 font-medium">Aucun fournisseur vidéo n'est configuré. Vérifiez les paramètres système.</p>
+                        <p v-if="!configuredProviders.length" class="text-[10px] text-red-500 mt-1.5 font-bold">Aucun fournisseur vidéo n'est configuré.</p>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Max participants</label>
-                        <InputText v-model="form.max_participants" type="number" class="w-full !rounded-xl" />
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Max Participants</label>
+                        <InputText v-model="form.max_participants" type="number" class="w-full !rounded-xl border-slate-300 bg-white" />
                     </div>
                 </div>
+
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Code (optionnel)</label>
-                    <InputText v-model="form.passcode" class="w-full !rounded-xl" placeholder="Ex: 123456" />
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Code d'accès (Optionnel)</label>
+                    <InputText v-model="form.passcode" class="w-full !rounded-xl border-slate-300" placeholder="Laissez vide pour générer automatiquement" />
                 </div>
             </div>
+
             <template #footer>
-                <Button label="Annuler" outlined @click="showCreate = false" class="!rounded-xl" />
-                <Button :label="submitting ? 'Création...' : 'Créer la session'" :loading="submitting" @click="submit" class="!bg-gradient-to-r !from-indigo-500 !to-rose-500 !border-none !rounded-xl" />
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 w-full">
+                    <Button label="Annuler" text @click="showCreate = false" class="!text-slate-500 font-bold" />
+                    <Button :label="submitting ? 'Création en cours...' : 'Générer la session'" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
+                </div>
             </template>
         </Dialog>
     </AppLayout>
 </template>
+
+<style scoped>
+.italic { font-style: italic; }
+
+/* Customisation PrimeVue DataTable B2B */
+:deep(.p-datatable-custom .p-datatable-thead > tr > th) {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+:deep(.p-datatable-custom .p-datatable-tbody > tr) {
+    transition: background-color 0.2s ease;
+}
+:deep(.p-datatable-custom .p-datatable-tbody > tr:hover) {
+    background-color: #f8fafc !important;
+}
+
+/* Overrides UI Forms */
+:deep(.p-inputtext), :deep(.p-select) {
+    border-radius: 0.75rem;
+}
+:deep(.p-inputtext:enabled:focus), :deep(.p-select:not(.p-disabled).p-focus) {
+    border-color: #FF3B3B;
+    box-shadow: 0 0 0 0.2rem rgba(255, 59, 59, 0.1);
+}
+</style>

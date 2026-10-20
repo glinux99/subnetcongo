@@ -93,7 +93,7 @@ const submit = () => {
                 <form @submit.prevent="submit" class="space-y-8">
 
                     <!-- SECTION 1 : SOCIETE -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-12">
                             <div class="lg:col-span-4 bg-slate-50/50 p-8 border-r border-slate-100">
                                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
@@ -120,7 +120,7 @@ const submit = () => {
                     </div>
 
                     <!-- SECTION 2 : FISCALITE -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-12">
                             <div class="lg:col-span-4 bg-slate-50/50 p-8 border-r border-slate-100">
                                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
@@ -138,7 +138,7 @@ const submit = () => {
                     </div>
 
                     <!-- SECTION 3 : LOCALISATION -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-12">
                             <div class="lg:col-span-4 bg-slate-50/50 p-8 border-r border-slate-100">
                                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">

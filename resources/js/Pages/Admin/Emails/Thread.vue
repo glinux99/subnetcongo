@@ -45,7 +45,7 @@ const getAddressList = (addresses) => {
 };
 
 const getAvatarColor = (name) => {
-    const colors = ['bg-rose-100 text-rose-700', 'bg-blue-100 text-blue-700', 'bg-green-100 text-green-700', 'bg-purple-100 text-purple-700'];
+    const colors = ['bg-red-100 text-red-700', 'bg-blue-100 text-blue-700', 'bg-green-100 text-green-700', 'bg-purple-100 text-purple-700'];
     if (!name) return colors[0];
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -104,7 +104,7 @@ const goToEmail = (msgNumber) => {
                                 icon="pi pi-reply"
                                 size="small"
                                 @click="startReply(email.from?.[0]?.email)"
-                                class="!rounded-xl !bg-rose-500 !border-rose-500"
+                                class="!rounded-xl !bg-red-500 !border-red-500"
                             />
                             <Button
                                 label="Transférer"
@@ -126,7 +126,7 @@ const goToEmail = (msgNumber) => {
                         v-for="(msg, index) in thread"
                         :key="msg.message_number"
                         :id="`msg-${msg.message_number}`"
-                        class="bg-white rounded-2xl shadow border border-slate-100 overflow-hidden"
+                        class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden"
                     >
                         <!-- Message Header -->
                         <div class="p-4 flex items-start gap-4">
@@ -143,7 +143,7 @@ const goToEmail = (msgNumber) => {
                                         <p class="text-xs text-slate-500">À: {{ getAddressList(msg.to) }}</p>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <span v-if="msg.flagged" class="text-amber-500">
+                                        <span v-if="msg.flagged" class="text-red-500">
                                             <i class="pi pi-flag-fill"></i>
                                         </span>
                                         <span class="text-xs text-slate-400">{{ formatDate(msg.date) }}</span>
@@ -194,8 +194,8 @@ const goToEmail = (msgNumber) => {
                                     >
                                         <i :class="[
                                             'pi',
-                                            att.subtype === 'PDF' ? 'pi-file-pdf text-rose-500' :
-                                            att.subtype === 'JPEG' || att.subtype === 'PNG' ? 'pi-image text-emerald-500' :
+                                            att.subtype === 'PDF' ? 'pi-file-pdf text-red-500' :
+                                            att.subtype === 'JPEG' || att.subtype === 'PNG' ? 'pi-image text-blue-500' :
                                             'pi-file text-slate-500'
                                         ]"></i>
                                         <span class="text-slate-700">{{ att.filename }}</span>
@@ -207,7 +207,7 @@ const goToEmail = (msgNumber) => {
                 </div>
 
                 <!-- Reply Form -->
-                <div v-if="showReplyForm" class="bg-white rounded-2xl shadow border border-slate-100 p-6">
+                <div v-if="showReplyForm" class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                     <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">
                         <i class="pi pi-reply mr-2"></i>Répondre à {{ replyingTo }}
                     </h3>
@@ -225,11 +225,11 @@ const goToEmail = (msgNumber) => {
                         <div>
                             <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-1 block">Votre réponse</label>
                             <Textarea v-model="replyForm.reply_message" rows="8" class="w-full !rounded-xl" placeholder="Tapez votre réponse..." />
-                            <p v-if="replyForm.errors.reply_message" class="text-rose-500 text-xs mt-1">{{ replyForm.errors.reply_message }}</p>
+                            <p v-if="replyForm.errors.reply_message" class="text-red-500 text-xs mt-1">{{ replyForm.errors.reply_message }}</p>
                         </div>
                         <div class="flex justify-end gap-3">
                             <Button type="button" label="Annuler" icon="pi pi-times" outlined @click="showReplyForm = false" class="!rounded-xl" />
-                            <Button type="submit" label="Envoyer" icon="pi pi-send" :loading="replyForm.processing" class="!bg-emerald-600 hover:!bg-emerald-500 !border-none !rounded-xl" />
+                            <Button type="submit" label="Envoyer" icon="pi pi-send" :loading="replyForm.processing" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl" />
                         </div>
                     </form>
                 </div>
@@ -240,7 +240,7 @@ const goToEmail = (msgNumber) => {
                         label="Répondre à cette conversation"
                         icon="pi pi-reply"
                         @click="startReply(thread[thread.length - 1]?.from?.[0]?.email)"
-                        class="!rounded-xl !bg-rose-500 !border-rose-500"
+                        class="!rounded-xl !bg-red-500 !border-red-500"
                     />
                 </div>
             </div>

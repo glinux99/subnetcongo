@@ -22,7 +22,7 @@
         <div class="hidden lg:flex items-center gap-1 bg-slate-100 p-1.5 rounded-lg border border-white/50 shadow-inner">
           <template v-for="item in navLinks" :key="item.name">
             <div class="relative group">
-              <Link :href="item.href" class="px-6 py-2.5 rounded-[1rem] text-sm font-black text-slate-600 hover:text-subnetblue hover:bg-white transition-all duration-300 flex items-center gap-2">
+              <Link :href="item.href" class="px-6 py-2.5 rounded-[1rem] text-sm font-black text-slate-600 hover:text-[#003399] hover:bg-white transition-all duration-300 flex items-center gap-2">
                 {{ item.name }}
                 <i v-if="item.submenu" class="pi pi-chevron-down text-[10px] group-hover:rotate-180 transition-transform"></i>
               </Link>
@@ -41,16 +41,16 @@
         <div class="flex items-center gap-3">
           <div class="hidden xl:flex flex-col items-end mr-4 text-right">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Besoin d'aide ?</span>
-            <span :class="['text-sm font-black leading-none transition-colors', scrolled ? 'text-subnetblue' : 'text-white']">+243 973 359 648</span>
+            <span :class="['text-sm font-black leading-none transition-colors', scrolled ? 'text-[#003399]' : 'text-white']">+243 973 359 648</span>
           </div>
 
-          <button @click="goToClient" class="hidden md:flex items-center gap-2 px-5 py-3 text-sm font-black text-subnetblue bg-white/90 hover:bg-white rounded-lg transition-all shadow-sm">
+          <button @click="goToClient" class="hidden md:flex items-center gap-2 px-5 py-3 text-sm font-black text-[#003399] bg-white/90 hover:bg-white rounded-lg transition-all shadow-sm">
             <i class="pi pi-user-circle"></i> Espace Client
           </button>
 
-          <button @click="goToLogin" class="relative group overflow-hidden bg-subnetred text-white px-8 py-4 rounded-lg font-black shadow-xl transition-all hover:scale-105 active:scale-95">
+          <button @click="goToLogin" class="relative group overflow-hidden bg-[#EE1C25] text-white px-8 py-4 rounded-lg font-black shadow-xl transition-all hover:scale-105 active:scale-95">
             <span class="relative z-10 flex items-center gap-2">Académie <i class="pi pi-arrow-right"></i></span>
-            <div class="absolute inset-0 bg-subnetblue translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
+            <div class="absolute inset-0 bg-[#003399] translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
           </button>
         </div>
       </div>
@@ -66,7 +66,7 @@
             <div v-if="isMenuOpen" class="absolute left-0 top-0 h-full w-[300px] sm:w-[400px] bg-white shadow-2xl pointer-events-auto flex flex-col">
                 <div class="p-8 flex justify-between items-center border-b border-slate-50 bg-slate-50/50">
                     <img src="https://subnetcongo.net/assets/media/logos/logo.png" class="h-10 w-auto" />
-                    <button @click="isMenuOpen = false" class="w-12 h-12 flex items-center justify-center rounded-lg bg-white text-slate-400 hover:text-subnetred shadow-sm transition-all border border-slate-100">
+                    <button @click="isMenuOpen = false" class="w-12 h-12 flex items-center justify-center rounded-lg bg-white text-slate-400 hover:text-red-500 shadow-sm transition-all border border-slate-100">
                         <i class="pi pi-times"></i>
                     </button>
                 </div>
@@ -74,7 +74,7 @@
                 <div class="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
                     <div v-for="(item, idx) in navLinks" :key="item.name">
                         <Link :href="item.href" @click="isMenuOpen = false"
-                           class="flex items-center justify-between p-5 rounded-[1rem] bg-slate-50 hover:bg-subnetblue group transition-all duration-300">
+                           class="flex items-center justify-between p-5 rounded-[1rem] bg-slate-50 hover:bg-[#003399] group transition-all duration-300">
                             <span class="font-black text-slate-700 group-hover:text-white flex items-center gap-3">
                                 <i :class="['pi text-lg', item.icon || 'pi-circle-fill text-[8px]']"></i>
                                 {{ item.name }}
@@ -86,7 +86,7 @@
 
                 <div class="p-8 bg-slate-900 text-white">
                     <div class="flex justify-between items-center mb-6">
-                        <a v-for="s in ['facebook', 'linkedin', 'twitter', 'whatsapp']" :key="s" href="#" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-subnetred transition-all">
+                        <a v-for="s in ['facebook', 'linkedin', 'twitter', 'whatsapp']" :key="s" href="#" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-red-500 transition-all">
                             <i :class="`pi pi-${s}`"></i>
                         </a>
                     </div>
@@ -109,7 +109,7 @@
         <div class="mb-16 p-8 lg:p-12 rounded-xl border border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent flex flex-col lg:flex-row items-center justify-between gap-8">
             <div class="max-w-2xl">
                 <h2 class="text-3xl lg:text-4xl font-bold text-white mb-4">
-                    Restez à la pointe de la <span class="text-subnetred italic">Tech en RDC.</span>
+                    Restez à la pointe de la <span class="text-[#E11D48] italic">Tech en RDC.</span>
                 </h2>
                 <p class="text-slate-400 text-lg">
                     Rejoignez notre communauté pour recevoir les alertes Starlink et nos bourses d'études.
@@ -130,7 +130,7 @@
             <div class="lg:col-span-3 space-y-8">
                 <div class="flex flex-col gap-1">
                     <h1 class="text-xl font-black text-white italic tracking-tighter">
-                        SubNet<span class="text-subnetred">Congo</span>
+                        SubNet<span class="text-[#E11D48]">Congo</span>
                     </h1>
                     <span class="text-[10px] text-slate-500 uppercase tracking-[0.3em]">Technologie du futur</span>
                 </div>
@@ -140,10 +140,10 @@
                 <!-- Socials -->
                 <div class="flex gap-3 mt-8">
                     <a v-for="soc in [
-                        { icon: 'facebook', link: identity.social_facebook, color: 'hover:bg-subnetblue' },
+                        { icon: 'facebook', link: identity.social_facebook, color: 'hover:bg-blue-600' },
                         { icon: 'twitter', link: identity.social_twitter, color: 'hover:bg-black' },
-                        { icon: 'linkedin', link: identity.social_linkedin, color: 'hover:bg-subnetblue' },
-                        { icon: 'youtube', link: identity.social_youtube, color: 'hover:bg-subnetred' }
+                        { icon: 'linkedin', link: identity.social_linkedin, color: 'hover:bg-blue-700' },
+                        { icon: 'youtube', link: identity.social_youtube, color: 'hover:bg-red-600' }
                     ]" :key="soc.icon" :href="soc.link"
                        class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)]"
                        :class="soc.color">
@@ -156,20 +156,20 @@
             <div class="lg:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8 relative inline-block">
                     Solutions
-                    <span class="absolute -bottom-2 left-0 w-6 h-[2px] bg-subnetred"></span>
+                    <span class="absolute -bottom-2 left-0 w-6 h-[2px] bg-[#E11D48]"></span>
                 </h4>
                 <ul class="space-y-4 text-sm font-medium">
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Internet Satellite
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Internet Satellite
                     </li>
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Starlink Business
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Starlink Business
                     </li>
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Fibre Optique
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Fibre Optique
                     </li>
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Audit Réseau
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Audit Réseau
                     </li>
                 </ul>
             </div>
@@ -178,20 +178,20 @@
             <div class="lg:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-[0.2em] text-white mb-8 relative inline-block">
                     Académie
-                    <span class="absolute -bottom-2 left-0 w-6 h-[2px] bg-subnetred"></span>
+                    <span class="absolute -bottom-2 left-0 w-6 h-[2px] bg-[#E11D48]"></span>
                 </h4>
                 <ul class="space-y-4 text-sm font-medium">
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Catalogue Cours
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Catalogue Cours
                     </li>
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Espace Étudiant
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Espace Étudiant
                     </li>
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Certifications
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Certifications
                     </li>
                     <li class="flex items-center gap-2 group cursor-pointer hover:text-white transition-colors">
-                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-subnetred"></span> Recrutement
+                        <span class="w-1 h-1 rounded-full bg-slate-700 group-hover:bg-[#E11D48]"></span> Recrutement
                     </li>
                 </ul>
             </div>
@@ -200,7 +200,7 @@
             <div class="lg:col-span-5 lg:flex lg:justify-end">
                 <div class="w-full max-w-sm p-8 rounded-3xl bg-[#0A0F1C] border border-white/5 shadow-2xl space-y-6">
                     <div class="flex items-center gap-4 border-b border-white/5 pb-6">
-                        <div class="w-10 h-10 rounded-full border border-subnetred/50 flex items-center justify-center text-subnetred">
+                        <div class="w-10 h-10 rounded-full border border-red-500/50 flex items-center justify-center text-[#E11D48]">
                             <i class="pi pi-verified text-lg"></i>
                         </div>
                         <div>
@@ -285,6 +285,6 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); });
 
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+::-webkit-scrollbar-thumb { background: #003399; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #EE1C25; }
 </style>
