@@ -1,20 +1,20 @@
 <?php
 
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\LessonController;
-use App\Http\Controllers\WebSettingController;
+use App\Http\Controllers\Content\WebSettingController;
+use App\Http\Controllers\Elearning\CategoryController;
+use App\Http\Controllers\Elearning\LessonController;
 use App\Http\Controllers\Auth\SocialiteController;
-use App\Http\Controllers\CertificateController;
-use App\Http\Controllers\CourseController;
+use App\Http\Controllers\Elearning\CertificateController;
+use App\Http\Controllers\Elearning\CourseController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ExamAttemptController;
-use App\Http\Controllers\ExamController;
-use App\Http\Controllers\GradingController;
-use App\Http\Controllers\LearningPathController;
-use App\Http\Controllers\LiveSessionController;
-use App\Http\Controllers\MediaLibraryController;
-use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\Elearning\ExamAttemptController;
+use App\Http\Controllers\Elearning\ExamController;
+use App\Http\Controllers\Elearning\GradingController;
+use App\Http\Controllers\Elearning\LearningPathController;
+use App\Http\Controllers\Elearning\LiveSessionController;
+use App\Http\Controllers\Elearning\MediaLibraryController;
+use App\Http\Controllers\Elearning\ModuleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StudentReportController;
 use Inertia\Inertia;
@@ -24,7 +24,7 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\Elearning\QuestionController;
 use App\Http\Controllers\RealizationController;
 use App\Http\Controllers\SalesReportController;
 use App\Models\Permission;
@@ -35,7 +35,7 @@ Route::get('/test-health', function () {
 });
 
 // LiveKit health check (public)
-Route::get('livekit-health', [App\Http\Controllers\LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
+Route::get('livekit-health', [App\Http\Controllers\Elearning\LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
 
 
 /*
@@ -142,7 +142,7 @@ Route::middleware(['auth'])->group(function () {
   Route::put('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.updatePassword');
   Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     // LiveKit health check (public)
-    Route::get('livekit-health', [LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
+    Route::get('livekit-health', [App\Http\Controllers\Elearning\LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
 
     // 2. Gestion E-learning
     Route::middleware(['has_role:superadmin,admin,instructor,cohort-assistant'])->group(function () {
@@ -189,7 +189,7 @@ Route::middleware(['auth'])->group(function () {
 
     // 3. Administration du Site Web
     Route::prefix('web')->name('web.')->middleware(['has_role:superadmin,admin,editor'])->group(function () {
-        Route::resource('pages', App\Http\Controllers\Web\PageController::class);
+        Route::resource('pages', App\Http\Controllers\Content\PageController::class);
         Route::resource('blog', App\Http\Controllers\Web\BlogController::class);
         Route::resource('menus', App\Http\Controllers\Web\MenuController::class);
         Route::resource('testimonials', App\Http\Controllers\Web\TestimonialController::class);
@@ -230,25 +230,25 @@ Route::middleware(['auth'])->group(function () {
 
     // ===== MARKETPLACE =====
     Route::prefix('marketplace')->name('marketplace.')->group(function () {
-        Route::get('/', [App\Http\Controllers\MarketplaceController::class, 'index'])->name('index');
-        Route::get('/cart', [App\Http\Controllers\MarketplaceController::class, 'cart'])->name('cart');
-        Route::post('/cart/enroll-free', [App\Http\Controllers\MarketplaceController::class, 'enrollFreeCart'])->name('cart.enroll-free');
-        Route::post('/country', [App\Http\Controllers\MarketplaceController::class, 'setCountry'])->name('country.set');
-        Route::get('/checkout', [App\Http\Controllers\MarketplaceController::class, 'checkout'])->name('checkout');
-        Route::post('/checkout/process', [App\Http\Controllers\MarketplaceController::class, 'processCheckout'])->name('process');
-        Route::post('/checkout/request-validation', [App\Http\Controllers\MarketplaceController::class, 'requestEnrollmentCart'])->name('request-validation');
-        Route::get('/confirmation/{order}', [App\Http\Controllers\MarketplaceController::class, 'confirmation'])->name('confirmation');
-        Route::post('/cart/{course}/add', [App\Http\Controllers\MarketplaceController::class, 'addToCart'])->name('cart.add');
-        Route::delete('/cart/{course}/remove', [App\Http\Controllers\MarketplaceController::class, 'removeFromCart'])->name('cart.remove');
-        Route::post('/wishlist/{course}/toggle', [App\Http\Controllers\MarketplaceController::class, 'toggleWishlist'])->name('wishlist.toggle');
-        Route::post('/course/{course}/review', [App\Http\Controllers\MarketplaceController::class, 'review'])->name('review');
-        Route::post('/course/{course}/enroll-free', [App\Http\Controllers\MarketplaceController::class, 'enrollFree'])->name('enroll-free');
-        Route::post('/course/{course}/request-enrollment', [App\Http\Controllers\MarketplaceController::class, 'requestEnrollment'])->name('request-enrollment');
-        Route::get('/{course}', [App\Http\Controllers\MarketplaceController::class, 'show'])->name('show');
+        Route::get('/', [App\Http\Controllers\Billing\MarketplaceController::class, 'index'])->name('index');
+        Route::get('/cart', [App\Http\Controllers\Billing\MarketplaceController::class, 'cart'])->name('cart');
+        Route::post('/cart/enroll-free', [App\Http\Controllers\Billing\MarketplaceController::class, 'enrollFreeCart'])->name('cart.enroll-free');
+        Route::post('/country', [App\Http\Controllers\Billing\MarketplaceController::class, 'setCountry'])->name('country.set');
+        Route::get('/checkout', [App\Http\Controllers\Billing\MarketplaceController::class, 'checkout'])->name('checkout');
+        Route::post('/checkout/process', [App\Http\Controllers\Billing\MarketplaceController::class, 'processCheckout'])->name('process');
+        Route::post('/checkout/request-validation', [App\Http\Controllers\Billing\MarketplaceController::class, 'requestEnrollmentCart'])->name('request-validation');
+        Route::get('/confirmation/{order}', [App\Http\Controllers\Billing\MarketplaceController::class, 'confirmation'])->name('confirmation');
+        Route::post('/cart/{course}/add', [App\Http\Controllers\Billing\MarketplaceController::class, 'addToCart'])->name('cart.add');
+        Route::delete('/cart/{course}/remove', [App\Http\Controllers\Billing\MarketplaceController::class, 'removeFromCart'])->name('cart.remove');
+        Route::post('/wishlist/{course}/toggle', [App\Http\Controllers\Billing\MarketplaceController::class, 'toggleWishlist'])->name('wishlist.toggle');
+        Route::post('/course/{course}/review', [App\Http\Controllers\Billing\MarketplaceController::class, 'review'])->name('review');
+        Route::post('/course/{course}/enroll-free', [App\Http\Controllers\Billing\MarketplaceController::class, 'enrollFree'])->name('enroll-free');
+        Route::post('/course/{course}/request-enrollment', [App\Http\Controllers\Billing\MarketplaceController::class, 'requestEnrollment'])->name('request-enrollment');
+        Route::get('/{course}', [App\Http\Controllers\Billing\MarketplaceController::class, 'show'])->name('show');
     });
 
     // ===== WEBHOOKS PAIEMENT (sans middleware auth) =====
-    Route::post('/webhooks/payment/{provider}', [App\Http\Controllers\MarketplaceController::class, 'webhook'])
+    Route::post('/webhooks/payment/{provider}', [App\Http\Controllers\Billing\MarketplaceController::class, 'webhook'])
         ->name('webhooks.payment')
         ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
@@ -329,7 +329,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forums/threads/{id}/resolve', [App\Http\Controllers\Social\ForumController::class, 'resolveThread'])->name('forums.threads.resolve');
         Route::post('forums/groups', [App\Http\Controllers\Social\ForumController::class, 'storeGroup'])->name('forums.groups.store');
         Route::post('forums/threads/{id}/upvote', [App\Http\Controllers\Social\ForumController::class, 'upvoteThread'])->name('forums.threads.upvote');
-        Route::resource('support', App\Http\Controllers\Social\SupportTicketController::class);
     });
 
     // 5. Marketing & Ventes
