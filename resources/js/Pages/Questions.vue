@@ -279,7 +279,7 @@ const getTypeIcon = (type) => {
     return icons[type] || 'pi pi-question';
 };
 const getTypeColor = (type) => {
-    const colors = { multiple_choice: 'text-indigo-500 bg-indigo-50', true_false: 'text-emerald-500 bg-emerald-50', short_answer: 'text-amber-500 bg-amber-50', matching: 'text-blue-500 bg-blue-50', coding: 'text-slate-700 bg-slate-200' };
+    const colors = { multiple_choice: 'text-blue-500 bg-blue-50', true_false: 'text-emerald-500 bg-emerald-50', short_answer: 'text-amber-500 bg-amber-50', matching: 'text-blue-500 bg-blue-50', coding: 'text-slate-700 bg-slate-200' };
     return colors[type] || 'text-slate-500 bg-slate-100';
 };
 
@@ -377,8 +377,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             
             <!-- KPI 1 : Total Items -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-list text-indigo-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-list text-blue-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Items</h3>
@@ -410,8 +410,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
             <!-- KPI 4 : À Réviser -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-exclamation-triangle text-rose-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-exclamation-triangle text-red-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">À Réviser</h3>
@@ -485,7 +485,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <Column field="question_text" header="Énoncé de l'Item" style="min-width: 25rem; background-color: #f8fafc;">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1 py-2">
-                        <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-indigo-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || 'Énoncé non défini'"></div>
+                        <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || 'Énoncé non défini'"></div>
 
                         <!-- Aperçu des options / réponses en ligne -->
                         <div v-if="data.options && data.options.length" class="flex flex-wrap gap-1 mt-1">
@@ -537,8 +537,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <div class="flex justify-end gap-1">
                         <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Analyse psychométrique'" @click="analyticsDialog = true" />
                         <Button icon="pi pi-copy" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50" v-tooltip.top="'Cloner'" @click="duplicateQuestion(data.id)" />
-                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-indigo-50 hover:text-indigo-600" @click="editQuestion(data)" />
-                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" @click="confirmDelete(data.id)" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" @click="editQuestion(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" @click="confirmDelete(data.id)" />
                     </div>
                 </template>
             </Column>
@@ -550,18 +550,18 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
     <!-- ============================================================================== -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
         <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-indigo-500"></i> Répartition par Difficulté</h3>
+            <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> Répartition par Difficulté</h3>
             <Chart type="bar" :data="chartData" :options="chartOptions" class="h-48" />
         </div>
-        <div class="bg-indigo-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden border border-indigo-800 flex flex-col justify-between">
+        <div class="bg-blue-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden border border-blue-800 flex flex-col justify-between">
             <i class="pi pi-bolt absolute -right-6 -bottom-6 text-9xl text-white/5 rotate-12"></i>
             <div class="relative z-10">
-                <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-indigo-100"><i class="pi pi-sparkles text-amber-400"></i> Conseil IA Pédagogique</h3>
-                <p class="text-indigo-200 text-sm leading-relaxed">
+                <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-blue-100"><i class="pi pi-sparkles text-amber-400"></i> Conseil IA Pédagogique</h3>
+                <p class="text-blue-200 text-sm leading-relaxed">
                     Votre banque manque de questions de type "Expert" (Seulement 15%). Pour vos certifications finales, nous recommandons d'équilibrer la base avec plus d'items d'analyse complexe (ex: Format Rédaction).
                 </p>
             </div>
-            <Button label="Générer avec l'IA" class="p-button-sm p-button-outlined p-button-secondary bg-white text-indigo-900 border-none font-bold mt-6 w-full hover:bg-indigo-50" />
+            <Button label="Générer avec l'IA" class="p-button-sm p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold mt-6 w-full hover:bg-blue-50" />
         </div>
     </div>
 </div>
@@ -573,10 +573,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
             <!-- WORKSPACE HEADER -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
-                <div class="absolute top-0 left-0 h-0.5 bg-indigo-600 transition-all duration-500" :style="{ width: isFormValid ? '100%' : '40%' }"></div>
+                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isFormValid ? '100%' : '40%' }"></div>
 
                 <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
                         <i class="pi pi-th-large text-lg"></i>
                     </div>
                     <div>
@@ -603,12 +603,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <div class="p-4 flex-1 space-y-2">
                         <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id"
                                 class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
-                                :class="[activeEditorTab === item.id ? 'bg-indigo-50 border border-indigo-100' : 'hover:bg-slate-50 border border-transparent']">
+                                :class="[activeEditorTab === item.id ? 'bg-blue-50 border border-blue-100' : 'hover:bg-slate-50 border border-transparent']">
 
-                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-md"></div>
-                            <i :class="[item.icon, 'text-xl mt-0.5 transition-colors', activeEditorTab === item.id ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
+                            <i :class="[item.icon, 'text-xl mt-0.5 transition-colors', activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
                             <div>
-                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-indigo-800' : 'text-slate-700']">{{ item.label }}</div>
+                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div>
                                 <div class="text-[11px] font-medium text-slate-500 leading-tight">{{ item.description }}</div>
                             </div>
                         </button>
@@ -636,15 +636,15 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </div>
 
                                 <div class="space-y-2 mb-6">
-                                    <label class="block text-sm font-bold text-slate-700">Énoncé principal (Stem) <span class="text-rose-500">*</span></label>
+                                    <label class="block text-sm font-bold text-slate-700">Énoncé principal (Stem) <span class="text-red-500">*</span></label>
                                     <Editor ref="editorRef" v-model="form.question_text" editorStyle="height: 200px" placeholder="Rédigez la question ici..." @load="forceEditorLoad" />
-                                    <small class="text-rose-500 font-bold" v-if="form.errors.question_text">{{ form.errors.question_text }}</small>
+                                    <small class="text-red-500 font-bold" v-if="form.errors.question_text">{{ form.errors.question_text }}</small>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
                                     <div class="space-y-2">
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Barème (Points)</label>
-                                        <InputNumber v-model="form.points" mode="decimal" :minFractionDigits="1" class="w-full" :pt="{ input: { class: 'text-center font-bold text-indigo-600' } }" />
+                                        <InputNumber v-model="form.points" mode="decimal" :minFractionDigits="1" class="w-full" :pt="{ input: { class: 'text-center font-bold text-blue-600' } }" />
                                     </div>
                                     <div class="space-y-2">
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Difficulté</label>
@@ -663,14 +663,14 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                     <h3 class="text-lg font-bold text-slate-800">Paramétrage de la Réponse</h3>
-                                    <Tag :value="getTypeLabel(form.type)" class="bg-indigo-50 text-indigo-600 border border-indigo-100" />
+                                    <Tag :value="getTypeLabel(form.type)" class="bg-blue-50 text-blue-600 border border-blue-100" />
                                 </div>
 
                                 <!-- QCM -->
                                 <div v-if="['multiple_choice', 'mcq_single', 'mcq_multiple'].includes(form.type)" class="space-y-4">
                                     <div v-for="(opt, idx) in form.options" :key="idx"
                                          class="flex items-start gap-4 p-4 rounded-xl border transition-all bg-slate-50"
-                                         :class="opt.is_correct ? 'border-emerald-300 shadow-[0_0_0_2px_rgba(16,185,129,0.1)] bg-white' : 'border-slate-200 hover:border-indigo-200'">
+                                         :class="opt.is_correct ? 'border-emerald-300 shadow-[0_0_0_2px_rgba(16,185,129,0.1)] bg-white' : 'border-slate-200 hover:border-blue-200'">
 
                                         <div class="pt-2 flex flex-col items-center">
                                             <RadioButton :name="'opt'" :value="true" :modelValue="!!(opt.is_correct == true || opt.is_correct == 1 || opt.is_correct == '1')" @update:modelValue="toggleExclusiveCorrect(idx)" />
@@ -684,7 +684,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                                         <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded mt-1" @click="removeOption(idx)" />
                                     </div>
-                                    <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-outlined p-button-secondary bg-white text-indigo-600 font-bold mt-2 w-full" @click="addOption" />
+                                    <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-outlined p-button-secondary bg-white text-blue-600 font-bold mt-2 w-full" @click="addOption" />
                                 </div>
 
                                 <!-- Vrai/Faux -->
@@ -710,7 +710,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                         <InputText v-model="pair.value" placeholder="Élément B correspondant" class="flex-1" />
                                         <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm" @click="removePair(pidx)" />
                                     </div>
-                                    <Button label="Ajouter une paire" icon="pi pi-plus" class="p-button-text font-bold text-indigo-600" @click="addPair" />
+                                    <Button label="Ajouter une paire" icon="pi pi-plus" class="p-button-text font-bold text-blue-600" @click="addPair" />
                                 </div>
 
                                 <Divider class="my-8" />
@@ -776,8 +776,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <Dialog v-model:visible="analyticsDialog" modal header="Analyse Statistique de l'Item" class="w-full md:w-[700px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-6 space-y-6">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-md text-center">
-                        <div class="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-1">Indice de Difficulté (p)</div>
+                    <div class="bg-blue-600 text-white p-6 rounded-xl shadow-md text-center">
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-blue-200 mb-1">Indice de Difficulté (p)</div>
                         <div class="text-3xl font-black">0.42</div>
                     </div>
                     <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-sm text-center">
@@ -806,7 +806,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <Dialog v-model:visible="importDialog" modal header="Importer des Items (GIFT / CSV)" class="w-full md:w-[600px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-8 text-center space-y-6">
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto border border-indigo-100">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mx-auto border border-blue-100">
                     <i class="pi pi-upload text-2xl"></i>
                 </div>
                 <div>

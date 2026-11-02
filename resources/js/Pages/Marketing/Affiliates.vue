@@ -111,9 +111,9 @@ const performanceChartData = ref({
             label: 'Commissions Générées ($)',
             data: [1200, 1900, 1700, 2400, 3100, 2800, 3500],
             fill: false,
-            borderColor: '#F97316', // Orange SubNetCongo
+            borderColor: '#2563EB', // Orange SubNetCongo
             tension: 0.4,
-            pointBackgroundColor: '#F97316'
+            pointBackgroundColor: '#2563EB'
         },
         {
             label: 'Nouveaux Affiliés',
@@ -192,7 +192,7 @@ onMounted(() => {
             <!-- EN-TETE -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="flex items-center gap-5">
-                    <div class="bg-orange-500 p-4 rounded-2xl shadow-lg shadow-orange-100">
+                    <div class="bg-blue-600 p-4 rounded-2xl shadow-lg shadow-blue-500/20">
                         <i class="pi pi-share-alt text-white text-3xl"></i>
                     </div>
                     <div>
@@ -202,18 +202,18 @@ onMounted(() => {
                 </div>
                 <div class="flex gap-3">
                     <Button label="Paramètres des Paliers" icon="pi pi-cog" class="p-button-outlined p-button-secondary border-2" @click="openSettings" />
-                    <Button label="Nouvelle Campagne" icon="pi pi-megaphone" class="p-button-warning shadow-md px-6" />
+                    <Button label="Nouvelle Campagne" icon="pi pi-megaphone" class="!bg-blue-600 hover:!bg-blue-700 !border-none !text-white shadow-md px-6" />
                 </div>
             </header>
 
             <!-- KPI CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <Card v-for="kpi in [
-                    { label: 'Partenaires Actifs', val: '1,284', icon: 'pi-users', color: 'indigo', trend: '+12%' },
-                    { label: 'Ventes Affiliées', val: totalSalesCount, icon: 'pi-shopping-cart', color: 'orange', trend: '+24%' },
-                    { label: 'Commissions à Payer', val: '4,150.00 $', icon: 'pi-wallet', color: 'rose', trend: '-5%' },
+                    { label: 'Partenaires Actifs', val: '1,284', icon: 'pi-users', color: 'blue', trend: '+12%' },
+                    { label: 'Ventes Affiliées', val: totalSalesCount, icon: 'pi-shopping-cart', color: 'red', trend: '+24%' },
+                    { label: 'Commissions à Payer', val: '4,150.00 $', icon: 'pi-wallet', color: 'red', trend: '-5%' },
                     { label: 'Revenu Net Généré', val: '42,900 $', icon: 'pi-chart-bar', color: 'emerald', trend: '+18%' }
-                ]" :key="kpi.label" class="border-none shadow-sm rounded-3xl overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+                ]" :key="kpi.label" class="border-none shadow-sm rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-300">
                     <template #content>
                         <div class="flex justify-between items-center mb-4">
                             <div :class="`p-3 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600` ">
@@ -230,13 +230,13 @@ onMounted(() => {
             <!-- PERFORMANCE GRAPH -->
             <div class="grid grid-cols-12 gap-8 mb-10">
                 <div class="col-span-12 lg:col-span-8">
-                    <Card class="h-full border-none shadow-sm rounded-3xl">
+                    <Card class="h-full border-none shadow-sm rounded-xl">
                         <template #title>
                             <div class="flex justify-between items-center px-4 pt-2">
                                 <span class="text-xl font-black text-slate-800">Evolution du Programme</span>
                                 <div class="flex gap-2">
                                     <Button label="Jour" class="p-button-text p-button-sm text-slate-400" />
-                                    <Button label="Mois" class="p-button-sm bg-indigo-50 text-indigo-600 border-none font-bold" />
+                                    <Button label="Mois" class="p-button-sm bg-blue-50 text-blue-600 border-none font-bold" />
                                 </div>
                             </div>
                         </template>
@@ -249,14 +249,14 @@ onMounted(() => {
                 </div>
 
                 <div class="col-span-12 lg:col-span-4">
-                    <Card class="h-full border-none shadow-sm rounded-3xl bg-slate-900 text-white overflow-hidden">
+                    <Card class="h-full border-none shadow-sm rounded-xl bg-slate-900 text-white overflow-hidden">
                         <template #content>
                             <div class="relative z-10">
                                 <h3 class="text-2xl font-bold mb-6">Top Formations <br/><span class="text-orange-400">par Affiliation</span></h3>
                                 <div class="space-y-6">
                                     <div v-for="course in [
                                         { name: 'Devenir Freelance Web', share: 45, color: 'bg-orange-500' },
-                                        { name: 'IA & Productivité', share: 32, color: 'bg-indigo-500' },
+                                        { name: 'IA & Productivité', share: 32, color: 'bg-blue-500' },
                                         { name: 'Excel pour Entreprise', share: 18, color: 'bg-emerald-500' }
                                     ]" :key="course.name">
                                         <div class="flex justify-between text-sm mb-2 font-medium">
@@ -281,7 +281,7 @@ onMounted(() => {
             </div>
 
             <!-- TABLEAU DES AFFILIES -->
-            <Card class="border-none shadow-sm rounded-3xl overflow-hidden">
+            <Card class="border-none shadow-sm rounded-xl overflow-hidden">
                 <template #content>
                     <DataTable 
                         v-model:filters="filters"
@@ -322,13 +322,13 @@ onMounted(() => {
                                             <p class="text-[10px] text-slate-400 font-bold uppercase">{{ sale.date }}</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-black text-indigo-600">{{ sale.commission }} $</p>
+                                            <p class="font-black text-blue-600">{{ sale.commission }} $</p>
                                             <p class="text-[9px] text-slate-300 font-bold">COMMISSION</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mt-4 flex justify-end">
-                                    <Button label="Voir tout l'historique de vente" icon="pi pi-external-link" class="p-button-text p-button-sm font-bold text-indigo-500" />
+                                    <Button label="Voir tout l'historique de vente" icon="pi pi-external-link" class="p-button-text p-button-sm font-bold text-blue-500" />
                                 </div>
                             </div>
                         </template>
@@ -361,7 +361,7 @@ onMounted(() => {
 
                         <Column field="stats.conversions" header="VENTES" sortable class="text-center" style="min-width: 8rem">
                             <template #body="{ data }">
-                                <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg font-black">{{ data.stats.conversions }}</span>
+                                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-black">{{ data.stats.conversions }}</span>
                             </template>
                         </Column>
 
@@ -401,7 +401,7 @@ onMounted(() => {
             <Dialog v-model:visible="displayDetailsDialog" :modal="true" :style="{ width: '850px' }" header="Gestion Partenaire" class="p-fluid affiliate-modal" v-if="currentAffiliate">
                 <div class="grid grid-cols-12 gap-6 pt-4">
                     <!-- Sidebar Profil -->
-                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
                         <div class="text-center mb-6">
                             <Avatar :image="currentAffiliate.user.avatar" size="xlarge" shape="circle" class="border-4 border-white shadow-xl mb-4" />
                             <h3 class="text-xl font-black text-slate-800">{{ currentAffiliate.user.name }}</h3>
@@ -420,7 +420,7 @@ onMounted(() => {
                         <div class="space-y-4">
                             <div class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm">
                                 <span class="text-xs font-bold text-slate-400 uppercase">Taux de conversion</span>
-                                <span class="font-black text-indigo-600">{{ currentAffiliate.stats.conversion_rate }}%</span>
+                                <span class="font-black text-blue-600">{{ currentAffiliate.stats.conversion_rate }}%</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm">
                                 <span class="text-xs font-bold text-slate-400 uppercase">Total Clics</span>
@@ -465,10 +465,10 @@ onMounted(() => {
 
                             <TabPanel header="Liens & Assets">
                                 <div class="space-y-4 pt-4">
-                                    <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                                        <label class="block text-xs font-bold text-indigo-400 uppercase mb-2 tracking-widest">Lien d'affiliation principal</label>
+                                    <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                        <label class="block text-xs font-bold text-blue-400 uppercase mb-2 tracking-widest">Lien d'affiliation principal</label>
                                         <div class="flex gap-2">
-                                            <InputText readonly value="https://subnetcongo.cd/ref/aff-28492" class="flex-1 bg-white border-none font-medium text-indigo-700" />
+                                            <InputText readonly value="https://subnetcongo.cd/ref/aff-28492" class="flex-1 bg-white border-none font-medium text-blue-700" />
                                             <Button icon="pi pi-copy" class="p-button-indigo" />
                                         </div>
                                     </div>

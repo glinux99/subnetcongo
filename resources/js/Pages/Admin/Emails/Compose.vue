@@ -96,8 +96,8 @@ const isValid = computed(() => form.to && form.subject && form.body);
 </script>
 
 <template>
-    <Head title="Nouveau message" />
     <AppLayout>
+        <Head title="Nouveau message" />
         <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
             
             <!-- HEADER (Inspiré de votre image) -->

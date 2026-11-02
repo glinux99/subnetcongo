@@ -29,7 +29,13 @@ class AffiliateSeeder extends Seeder
 
         foreach ($instructors->take(3) as $index => $instructor) {
             $tier = $tiers[$index % count($tiers)];
-            
+
+            // Vérifier si l'affilié existe déjà
+            $existingAffiliate = Affiliate::where('user_id', $instructor->id)->first();
+            if ($existingAffiliate) {
+                continue;
+            }
+
             $affiliate = Affiliate::create([
                 'user_id' => $instructor->id,
                 'referral_code' => strtoupper(Str::slug($instructor->name)) . rand(100, 999),
@@ -68,7 +74,13 @@ class AffiliateSeeder extends Seeder
         // Create a few more affiliates from students
         foreach ($students->take(5) as $index => $student) {
             $tier = $tiers[array_rand($tiers)];
-            
+
+            // Vérifier si l'affilié existe déjà
+            $existingAffiliate = Affiliate::where('user_id', $student->id)->first();
+            if ($existingAffiliate) {
+                continue;
+            }
+
             $affiliate = Affiliate::create([
                 'user_id' => $student->id,
                 'referral_code' => strtoupper(Str::slug($student->name)) . rand(100, 999),

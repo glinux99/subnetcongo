@@ -142,7 +142,7 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                                         <span class="font-black text-slate-700">{{ Math.round(data.progress_percent ?? 0) }}%</span>
                                     </div>
                                     <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                        <div class="h-full bg-indigo-500" :style="`width: ${data.progress_percent ?? 0}%`"></div>
+                                        <div class="h-full bg-blue-500" :style="`width: ${data.progress_percent ?? 0}%`"></div>
                                     </div>
                                 </div>
                             </template>
@@ -154,7 +154,7 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                         </Column>
                         <Column header="Notes admin" :exportable="false">
                             <template #body="{ data }">
-                                <p v-if="data.revoked_reason" class="text-xs text-rose-600 italic truncate" v-tooltip.bottom="data.revoked_reason">🚫 {{ data.revoked_reason }}</p>
+                                <p v-if="data.revoked_reason" class="text-xs text-red-600 italic truncate" v-tooltip.bottom="data.revoked_reason">🚫 {{ data.revoked_reason }}</p>
                                 <p v-else-if="data.admin_notes" class="text-xs text-slate-500 italic truncate" v-tooltip.bottom="data.admin_notes">💬 {{ data.admin_notes }}</p>
                                 <span v-else class="text-slate-300 text-xs">—</span>
                             </template>
@@ -163,7 +163,7 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1">
                                     <Link v-if="data.status === 'active' || data.status === 'completed'" :href="route('student.my-courses')">
-                                        <Button label="Continuer" icon="pi pi-play" size="small" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2 !px-3" />
+                                        <Button label="Continuer" icon="pi pi-play" size="small" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest !py-2 !px-3" />
                                     </Link>
                                     <Button v-if="data.status === 'pending'" label="Annuler" icon="pi pi-times" size="small" severity="danger" outlined @click="cancelEnrollment(data.id)" class="!rounded-xl !text-[10px] !font-black !uppercase !tracking-widest" />
                                 </div>
@@ -179,7 +179,7 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                 </div>
 
                 <!-- Footer : contact admin -->
-                <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm mt-6 flex flex-wrap items-center gap-4">
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm mt-6 flex flex-wrap items-center gap-4">
                     <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center">
                         <i class="pi pi-headphones text-xl"></i>
                     </div>

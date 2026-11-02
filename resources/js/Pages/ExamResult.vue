@@ -64,11 +64,11 @@ const getCorrectOptionTexts = (options) => {
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[100px] pointer-events-none"
-                     :class="passed ? 'bg-emerald-600/15' : 'bg-rose-600/15'"></div>
+                     :class="passed ? 'bg-emerald-600/15' : 'bg-red-600/15'"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-[900px] mx-auto relative z-10 flex items-center gap-5">
                     <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border border-white/10"
-                         :class="passed ? 'bg-gradient-to-br from-emerald-500 to-amber-500' : 'bg-gradient-to-br from-rose-500 to-orange-500'">
+                         :class="passed ? 'bg-gradient-to-br from-emerald-600 to-blue-600' : 'bg-gradient-to-br from-red-600 to-red-800'">
                         <i :class="passed ? 'pi pi-check-circle text-white text-3xl' : 'pi pi-times-circle text-white text-3xl'"></i>
                     </div>
                     <div>
@@ -83,19 +83,19 @@ const getCorrectOptionTexts = (options) => {
             </div>
 
             <div class="max-w-[900px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 text-center">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
                             <Knob v-model="score" :size="140" :strokeWidth="10" :readonly="true"
-                                  :valueColor="passed ? '#10B981' : '#F43F5E'" rangeColor="#F1F5F9" />
+                                  :valueColor="passed ? '#059669' : '#DC2626'" rangeColor="#F1F5F9" />
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">Score final</p>
                         </div>
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note</p>
                             <p class="text-5xl font-black text-slate-800 font-mono">{{ grade }}</p>
                             <p class="text-sm text-slate-500 mt-2">{{ result?.feedback }}</p>
                         </div>
-                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Points</p>
                             <p class="text-5xl font-black text-slate-800 font-mono">{{ result?.total_points ?? 0 }}</p>
                             <p class="text-sm text-slate-500 mt-2">Temps passé : {{ attempt?.formatted_time_spent ?? '—' }}</p>
@@ -107,7 +107,7 @@ const getCorrectOptionTexts = (options) => {
                     <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-4">Historique</h2>
                     <Timeline :value="events" align="left">
                         <template #marker="slotProps">
-                            <span class="flex w-10 h-10 items-center justify-center text-white bg-blue-500 rounded-2xl shadow-md shadow-indigo-500/30">
+                            <span class="flex w-10 h-10 items-center justify-center text-white bg-blue-500 rounded-2xl shadow-md shadow-blue-500/30">
                                 <i :class="slotProps.item.icon" class="text-sm"></i>
                             </span>
                         </template>
@@ -131,7 +131,7 @@ const getCorrectOptionTexts = (options) => {
                                     <div class="flex items-center justify-between gap-4 w-full">
                                         <div class="flex items-center gap-3 min-w-0 flex-1">
                                             <span class="text-xs font-black px-2 py-1 rounded-lg border"
-                                                  :class="q.is_correct ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'">
+                                                  :class="q.is_correct ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'">
                                                 {{ q.is_correct ? '✓ Correct' : '✗ Incorrect' }}
                                             </span>
                                             <span class="text-sm font-bold text-slate-800 truncate">Q{{ idx + 1 }} : {{ q.text }}</span>
@@ -148,7 +148,7 @@ const getCorrectOptionTexts = (options) => {
                                             <div class="flex items-center gap-2 mb-2">
                                                 <i class="pi pi-user text-slate-500"></i>
                                                 <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Votre réponse</span>
-                                                <span v-if="!q.is_correct" class="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Incorrect</span>
+                                                <span v-if="!q.is_correct" class="text-[9px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded">Incorrect</span>
                                                 <span v-else-if="q.user_answer !== null && q.user_answer !== ''" class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Correct</span>
                                                 <span v-else class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Non répondue</span>
                                             </div>
@@ -218,7 +218,7 @@ const getCorrectOptionTexts = (options) => {
                                                    :class="[
                                                        opt.is_correct ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200',
                                                        q.user_answer !== null && String(q.user_answer).includes(String(opt.id)) ? 'ring-2' : '',
-                                                       q.user_answer !== null && String(q.user_answer).includes(String(opt.id)) && opt.is_correct ? 'ring-emerald-500' : 'ring-rose-500'
+                                                       q.user_answer !== null && String(q.user_answer).includes(String(opt.id)) && opt.is_correct ? 'ring-emerald-500' : 'ring-red-500'
                                                    ]">
                                                 <RadioButton v-if="q.type === 'multiple_choice' || q.type === 'true_false'" 
                                                              :value="String(opt.id)" 

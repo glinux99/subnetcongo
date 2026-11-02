@@ -54,18 +54,18 @@ const changeCountry = (code) => {
 
             <!-- HEADER -->
             <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/15 rounded-full blur-[100px]"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px]"></div>
                 <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-pink-500/10 rounded-full blur-[80px]"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row md:items-center gap-5 justify-between">
                     <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-violet-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30 border border-white/10">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30 border border-white/10">
                             <i class="pi pi-shopping-cart text-white text-3xl"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-1 flex-wrap">
                                 <h1 class="text-3xl font-black text-white tracking-tight">Mon Panier</h1>
-                                <Tag :value="`${cart?.count ?? 0} article(s)`" class="!bg-violet-500/20 !text-violet-300 !border !border-violet-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <Tag :value="`${cart?.count ?? 0} article(s)`" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                             </div>
                             <p class="text-slate-400 font-medium text-sm">Cours gratuits = inscription immédiate · Cours payants = paiement ou validation admin.</p>
                         </div>
@@ -98,7 +98,7 @@ const changeCountry = (code) => {
 
             <!-- MAIN -->
             <div class="max-w-[1100px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
 
                     <div v-if="!hasItems" class="text-center py-16">
                         <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -107,7 +107,7 @@ const changeCountry = (code) => {
                         <h3 class="text-xl font-black text-slate-700">Votre panier est vide</h3>
                         <p class="text-slate-400 text-sm mt-2 mb-6">Découvrez nos cours et commencez votre apprentissage.</p>
                         <Link :href="route('marketplace.index')">
-                            <Button label="Explorer le marketplace" icon="pi pi-search" class="!bg-violet-600 hover:!bg-violet-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !px-5 !py-3" />
+                            <Button label="Explorer le marketplace" icon="pi pi-search" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !px-5 !py-3" />
                         </Link>
                     </div>
 
@@ -155,7 +155,7 @@ const changeCountry = (code) => {
                         <!-- ════════════ COURS PAYANTS ════════════ -->
                         <section v-if="hasPaid">
                             <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center">
+                                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
                                     <i class="pi pi-credit-card text-xl"></i>
                                 </div>
                                 <div>
@@ -172,13 +172,13 @@ const changeCountry = (code) => {
                                             <h4 class="font-black text-sm text-slate-800 truncate tracking-tight">{{ item.course?.title }}</h4>
                                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ item.course?.instructor?.name }}</p>
                                         </div>
-                                        <p class="text-lg font-black text-violet-600 font-mono">{{ formatLocal(item.price_local) }}</p>
+                                        <p class="text-lg font-black text-blue-600 font-mono">{{ formatLocal(item.price_local) }}</p>
                                         <Button icon="pi pi-trash" severity="danger" text rounded @click="remove(item.course?.id)" />
                                     </div>
                                 </div>
 
                                 <aside class="lg:col-span-1">
-                                    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sticky top-6">
+                                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sticky top-6">
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Résumé</h3>
                                             <Tag :value="cart?.currency" severity="info" class="!font-black !text-[10px] !uppercase !tracking-widest" />
@@ -195,9 +195,9 @@ const changeCountry = (code) => {
                                         </div>
                                         <div class="flex justify-between py-4 text-lg">
                                             <span class="font-black">Total</span>
-                                            <span class="font-black text-violet-600 font-mono">{{ formatLocal(cart?.total_local) }}</span>
+                                            <span class="font-black text-blue-600 font-mono">{{ formatLocal(cart?.total_local) }}</span>
                                         </div>
-                                        <Button label="Passer commande" icon="pi pi-credit-card" @click="checkout" class="!bg-violet-600 hover:!bg-violet-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full" />
+                                        <Button label="Passer commande" icon="pi pi-credit-card" @click="checkout" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full" />
                                         <p class="text-[10px] text-slate-400 text-center mt-3 font-black uppercase tracking-widest">
                                             <i class="pi pi-shield text-emerald-500 mr-1"></i> Paiement sécurisé SSL
                                         </p>

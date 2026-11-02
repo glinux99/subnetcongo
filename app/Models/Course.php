@@ -26,7 +26,7 @@ class Course extends Model
     public const LEVEL_ALL = 'all';
 
     protected $fillable = [
-        'title', 'slug', 'description', 'thumbnail_path', 'price', 'promo_price',
+        'title', 'slug', 'description', 'thumbnail_path', 'image', 'price', 'promo_price',
         'level', 'status', 'is_featured', 'short_info', 'tags', 'seo_metadata',
         'instructor_id', 'category_id', 'created_by', 'preview_video_url',
         'requires_enrollment', 'certificate_enabled', 'duration_minutes',
@@ -188,6 +188,18 @@ public function resources(): \Illuminate\Database\Eloquent\Relations\MorphMany
                 if (empty($value)) return null;
                 if (filter_var($value, FILTER_VALIDATE_URL)) return $value;
                 return Storage::disk('media')->url($value);
+            },
+        );
+    }
+
+    /**
+     * Accessor pour l'image (compatibilité avec le frontend qui utilise 'image')
+     */
+    protected function image(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                return $this->thumbnail_path;
             },
         );
     }

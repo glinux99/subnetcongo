@@ -122,8 +122,8 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
 
                 <!-- KPI 2 : Pages Indexées -->
                 <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                    <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                        <i class="pi pi-sitemap text-indigo-500 text-lg"></i>
+                    <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                        <i class="pi pi-sitemap text-blue-500 text-lg"></i>
                     </div>
                     <div>
                         <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pages Indexées</h3>
@@ -133,8 +133,8 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
 
                 <!-- KPI 3 : Erreurs Crawl -->
                 <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                    <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                        <i class="pi pi-exclamation-triangle text-rose-500 text-lg"></i>
+                    <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                        <i class="pi pi-exclamation-triangle text-red-500 text-lg"></i>
                     </div>
                     <div>
                         <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Erreurs de Crawl</h3>
@@ -169,7 +169,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <!-- Configuration Meta -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                                <i class="pi pi-pencil text-indigo-500"></i> Balises Meta (Page d'accueil)
+                                <i class="pi pi-pencil text-blue-500"></i> Balises Meta (Page d'accueil)
                             </h2>
 
                             <div class="space-y-6">
@@ -214,7 +214,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <!-- SERP Google Preview -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                                <i class="pi pi-google text-indigo-500"></i> Aperçu Google
+                                <i class="pi pi-google text-blue-500"></i> Aperçu Google
                             </h2>
 
                             <!-- Simulation de la recherche Google -->
@@ -244,7 +244,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <!-- Paramètres Techniques (Robots, Sitemap) -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                                <i class="pi pi-wrench text-indigo-500"></i> Fichiers Techniques
+                                <i class="pi pi-wrench text-blue-500"></i> Fichiers Techniques
                             </h2>
 
                             <div class="space-y-5">

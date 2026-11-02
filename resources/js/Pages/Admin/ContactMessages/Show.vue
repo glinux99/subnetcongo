@@ -45,8 +45,8 @@ const formatDate = (iso) => {
 </script>
 
 <template>
-    <Head :title="`Message #${message.ticket_number}`" />
     <AppLayout>
+        <Head :title="`Message #${message.ticket_number}`" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             

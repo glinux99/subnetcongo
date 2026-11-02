@@ -218,7 +218,7 @@ const activeCount = computed(() => {
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
-                        <i class="pi pi-credit-card text-indigo-600 text-2xl"></i>
+                        <i class="pi pi-credit-card text-blue-600 text-2xl"></i>
                         Abonnements & Plans
                     </h1>
                     <p class="text-slate-500 font-medium mt-1">Gérez vos revenus récurrents et les offres tarifaires</p>
@@ -256,12 +256,12 @@ const activeCount = computed(() => {
                                 <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Abonnements Actifs</span>
                                 <div class="text-3xl font-black text-slate-800">{{ activeCount }}</div>
                             </div>
-                            <div class="bg-indigo-50 p-3 rounded-xl">
-                                <i class="pi pi-users text-indigo-600"></i>
+                            <div class="bg-blue-50 p-3 rounded-xl">
+                                <i class="pi pi-users text-blue-600"></i>
                             </div>
                         </div>
                         <div class="mt-4 flex items-center text-xs">
-                            <span class="text-indigo-500 font-bold mr-2">1,240 total</span>
+                            <span class="text-blue-500 font-bold mr-2">1,240 total</span>
                             <span class="text-slate-400 font-medium text-[10px]">CLIENTS PAYANTS</span>
                         </div>
                     </template>
@@ -274,12 +274,12 @@ const activeCount = computed(() => {
                                 <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Taux d'Attrition (Churn)</span>
                                 <div class="text-3xl font-black text-slate-800">2.1%</div>
                             </div>
-                            <div class="bg-rose-50 p-3 rounded-xl">
-                                <i class="pi pi-sync text-rose-600"></i>
+                            <div class="bg-red-50 p-3 rounded-xl">
+                                <i class="pi pi-sync text-red-600"></i>
                             </div>
                         </div>
                         <div class="mt-4 flex items-center text-xs">
-                            <span class="text-rose-500 font-bold mr-2">-0.5%</span>
+                            <span class="text-red-500 font-bold mr-2">-0.5%</span>
                             <span class="text-slate-400 font-medium text-[10px]">AMÉLIORATION</span>
                         </div>
                     </template>
@@ -502,7 +502,7 @@ const activeCount = computed(() => {
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Plan actuel</label>
-                                        <div class="text-lg font-black text-indigo-600">{{ subDetail.plan.name }}</div>
+                                        <div class="text-lg font-black text-blue-600">{{ subDetail.plan.name }}</div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Dernier Paiement</label>
@@ -525,10 +525,10 @@ const activeCount = computed(() => {
 
                             <Divider />
 
-                            <div class="flex justify-between items-center bg-rose-50 p-4 rounded-xl mt-4">
+                            <div class="flex justify-between items-center bg-red-50 p-4 rounded-xl mt-4">
                                 <div>
-                                    <h4 class="font-bold text-rose-800">Zone de Danger</h4>
-                                    <p class="text-xs text-rose-600">L'annulation prendra effet à la fin du cycle de facturation actuel.</p>
+                                    <h4 class="font-bold text-red-800">Zone de Danger</h4>
+                                    <p class="text-xs text-red-600">L'annulation prendra effet à la fin du cycle de facturation actuel.</p>
                                 </div>
                                 <Button :label="subDetail.status === 'Active' ? 'Résilier l\'abonnement' : 'Réactiver'"
                                     :class="subDetail.status === 'Active' ? 'p-button-danger p-button-outlined' : 'p-button-success'"
@@ -563,7 +563,7 @@ const activeCount = computed(() => {
                         <TabPanel header="Logs d'activité">
                             <div class="space-y-4 py-4">
                                 <div class="flex gap-3 text-sm">
-                                    <div class="text-indigo-500"><i class="pi pi-circle-fill text-[8px]"></i></div>
+                                    <div class="text-blue-500"><i class="pi pi-circle-fill text-[8px]"></i></div>
                                     <div>
                                         <span class="font-bold">Changement de carte</span> - 12/02/2025
                                         <p class="text-slate-400 text-xs">Utilisateur a mis à jour ses informations bancaires.</p>
@@ -590,9 +590,9 @@ const activeCount = computed(() => {
             <footer class="mt-12 text-center text-slate-400 text-sm pb-8">
                 <p>&copy; 2026 SubNetCongo Analytics. Tous droits réservés.</p>
                 <div class="flex justify-center gap-4 mt-2">
-                    <a href="#" class="hover:text-indigo-500">Conditions d'utilisation</a>
+                    <a href="#" class="hover:text-blue-500">Conditions d'utilisation</a>
                     <span>•</span>
-                    <a href="#" class="hover:text-indigo-500">Politique de confidentialité</a>
+                    <a href="#" class="hover:text-blue-500">Politique de confidentialité</a>
                 </div>
             </footer>
 

@@ -587,8 +587,8 @@ onBeforeUnmount(() => {
         <nav class="sticky top-0 z-[100] bg-white/90 backdrop-blur-xl border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
             <div class="flex items-center gap-5">
                 <div class="relative">
-                    <Avatar :image="user.avatar" :label="user.name?.charAt(0)" size="large" shape="circle" class="border-2 border-indigo-100 shadow-sm" />
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white" :class="isOnline ? 'bg-emerald-500' : 'bg-rose-500'"></div>
+                    <Avatar :image="user.avatar" :label="user.name?.charAt(0)" size="large" shape="circle" class="border-2 border-blue-100 shadow-sm" />
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white" :class="isOnline ? 'bg-emerald-500' : 'bg-red-500'"></div>
                 </div>
                 <div class="hidden md:block">
                     <h1 class="text-sm font-black text-slate-800 leading-none mb-1 uppercase tracking-tight">{{ exam.title }}</h1>
@@ -605,13 +605,13 @@ onBeforeUnmount(() => {
             <div class="flex flex-col items-center">
                 <div :class="[
                     'flex items-center gap-4 px-6 py-2 rounded-2xl border-2 transition-all duration-300',
-                    timeLeft < 300 ? 'bg-rose-50 border-rose-200 text-rose-600 animate-pulse' : 'bg-slate-900 border-slate-800 text-white'
+                    timeLeft < 300 ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' : 'bg-slate-900 border-slate-800 text-white'
                 ]">
                     <i class="pi pi-clock font-bold"></i>
                     <span class="text-2xl font-black font-mono tracking-tighter tabular-nums">{{ formattedTime }}</span>
                 </div>
                 <div class="w-full mt-2 h-1 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-indigo-500 transition-all duration-1000" :style="{ width: progress + '%' }"></div>
+                    <div class="h-full bg-blue-500 transition-all duration-1000" :style="{ width: progress + '%' }"></div>
                 </div>
             </div>
 
@@ -626,7 +626,7 @@ onBeforeUnmount(() => {
 
                 <Button icon="pi pi-calculator" @click="calculatorVisible = true" rounded text severity="secondary" v-tooltip.bottom="'Calculatrice'" />
                 <Button icon="pi pi-file-edit" @click="showNotepad = true" rounded text severity="secondary" v-tooltip.bottom="'Brouillon'" />
-                <Button label="Terminer" severity="danger" class="font-black px-6 shadow-lg shadow-rose-100" @click="confirmSubmission" v-if="currentStep === 'testing'" />
+                <Button label="Terminer" severity="danger" class="font-black px-6 shadow-lg shadow-red-100" @click="confirmSubmission" v-if="currentStep === 'testing'" />
             </div>
         </nav>
 
@@ -636,7 +636,7 @@ onBeforeUnmount(() => {
             <div v-if="currentStep === 'intro'" class="max-w-4xl mx-auto py-10 animate-fade-in">
                 <Card class="border-none shadow-2xl rounded-[1rem] overflow-hidden">
                     <template #header>
-                        <div class="h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-900 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                        <div class="h-48 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 flex flex-col items-center justify-center text-white relative overflow-hidden">
                             <div class="absolute inset-0 opacity-10 pattern-dots scale-150"></div>
                             <i class="pi pi-verified text-6xl mb-4 opacity-50"></i>
                             <h2 class="text-4xl font-black tracking-tighter">Prêt pour l'évaluation ?</h2>
@@ -645,21 +645,21 @@ onBeforeUnmount(() => {
                     <template #content>
                         <div class="p-6 md:p-10">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center transition-transform hover:scale-105">
-                                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
+                                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-list text-xl"></i>
                                     </div>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Items</p>
                                     <p class="text-2xl font-black text-slate-800">{{ questions.length }} Questions</p>
                                 </div>
-                                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center transition-transform hover:scale-105">
+                                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
                                     <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-stopwatch text-xl"></i>
                                     </div>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Durée</p>
                                     <p class="text-2xl font-black text-slate-800">{{ exam.duration_minutes }} Minutes</p>
                                 </div>
-                                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center transition-transform hover:scale-105">
+                                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
                                     <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-shield-check text-xl"></i>
                                     </div>
@@ -668,8 +668,8 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
 
-                            <div class="bg-indigo-50/50 p-8 rounded-3xl border border-indigo-100/50 mb-10 prose prose-slate max-w-none">
-                                <h3 class="text-indigo-900 font-black mb-4 flex items-center gap-2">
+                            <div class="bg-blue-50/50 p-8 rounded-xl border border-blue-100/50 mb-10 prose prose-slate max-w-none">
+                                <h3 class="text-blue-900 font-black mb-4 flex items-center gap-2">
                                     <i class="pi pi-info-circle"></i> Instructions de l'examinateur
                                 </h3>
                                 <div v-html="exam.description" class="text-slate-600 leading-relaxed"></div>
@@ -693,7 +693,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <!-- UN SEUL BOUTON : avec gestion du chargement -->
-                            <Button label="Lancer l'Évaluation" icon="pi pi-bolt" size="large" class="w-full py-6 text-2xl font-black rounded-[1rem] shadow-2xl shadow-indigo-200" @click="handleStartClick" :loading="isStarting" />
+                            <Button label="Lancer l'Évaluation" icon="pi pi-bolt" size="large" class="w-full py-6 text-2xl font-black rounded-[1rem] shadow-2xl shadow-blue-200" @click="handleStartClick" :loading="isStarting" />
                             <p class="text-center text-[11px] text-slate-400 mt-8 font-bold uppercase tracking-widest">Code de conduite Subnet Congo v12.4 s'applique</p>
                         </div>
                     </template>
@@ -711,8 +711,8 @@ onBeforeUnmount(() => {
                         <video ref="webcamVideo" autoplay muted playsinline class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all"></video>
                         <div class="absolute top-4 left-4 flex items-center gap-2">
                             <span class="flex h-3 w-3 relative">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                             </span>
                             <Tag value="REC" severity="danger" class="font-black text-[10px]" />
                         </div>
@@ -738,8 +738,8 @@ onBeforeUnmount(() => {
                                 @click="jumpToQuestion(idx)"
                                 :class="[
                                     'h-11 rounded-xl text-xs font-black transition-all flex items-center justify-center border-2',
-                                    currentIndex === idx ? 'bg-indigo-600 text-white border-indigo-600 scale-110 shadow-lg shadow-indigo-100 z-10' :
-                                    isAnswered(q.id) ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-white text-slate-400 border-slate-100 hover:border-indigo-200',
+                                    currentIndex === idx ? 'bg-blue-600 text-white border-blue-600 scale-110 shadow-lg shadow-blue-100 z-10' :
+                                    isAnswered(q.id) ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-white text-slate-400 border-slate-100 hover:border-blue-200',
                                     flaggedQuestions.includes(q.id) ? 'ring-2 ring-amber-400 ring-offset-2' : ''
                                 ]">
                                 {{ idx + 1 }}
@@ -763,9 +763,9 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
 
-                        <div v-if="isSyncing" class="mt-8 p-4 bg-indigo-50 rounded-2xl flex items-center gap-3">
-                            <i class="pi pi-spin pi-spinner text-indigo-600 text-sm"></i>
-                            <span class="text-[10px] font-black text-indigo-700 uppercase">Synchronisation...</span>
+                        <div v-if="isSyncing" class="mt-8 p-4 bg-blue-50 rounded-2xl flex items-center gap-3">
+                            <i class="pi pi-spin pi-spinner text-blue-600 text-sm"></i>
+                            <span class="text-[10px] font-black text-blue-700 uppercase">Synchronisation...</span>
                         </div>
                         <div v-else-if="lastSaved" class="mt-8 text-center">
                             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
@@ -785,7 +785,7 @@ onBeforeUnmount(() => {
                         <div class="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
                             <div class="flex items-center gap-6">
                                 <!-- Index Circulaire -->
-                                <div class="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-200 relative">
+                                <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-blue-200 relative">
                                     {{ currentIndex + 1 }}
                                     <div class="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center" v-if="isAnswered(currentQuestion?.id)">
                                         <i class="pi pi-check text-[10px]"></i>
@@ -827,7 +827,7 @@ onBeforeUnmount(() => {
                                 <h2 class="text-2xl md:text-4xl font-bold text-slate-800 leading-[1.3] mb-6">
                                     {{ currentQuestion?.question_text }}
                                 </h2>
-                                <div v-if="currentQuestion?.attachment" class="rounded-3xl overflow-hidden border border-slate-200 mb-8 max-w-2xl">
+                                <div v-if="currentQuestion?.attachment" class="rounded-xl overflow-hidden border border-slate-200 mb-8 max-w-2xl">
                                     <img :src="currentQuestion.attachment" class="w-full h-auto object-cover" alt="Illustration question" />
                                 </div>
                             </div>
@@ -842,14 +842,14 @@ onBeforeUnmount(() => {
                                          :class="[
                                             'group relative p-10 rounded-[1rem] border-2 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 overflow-hidden',
                                             answers[currentQuestion.id] === option ?
-                                                (option ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-100' : 'bg-rose-50 border-rose-500 shadow-xl shadow-rose-100') :
+                                                (option ? 'bg-emerald-50 border-emerald-500 shadow-xl shadow-emerald-100' : 'bg-red-50 border-red-500 shadow-xl shadow-red-100') :
                                                 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50'
                                          ]">
                                         <div :class="['w-16 h-16 rounded-2xl flex items-center justify-center text-2xl transition-all',
-                                                    answers[currentQuestion.id] === option ? (option ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white') : 'bg-slate-100 text-slate-400']">
+                                                    answers[currentQuestion.id] === option ? (option ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white') : 'bg-slate-100 text-slate-400']">
                                             <i :class="option ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
                                         </div>
-                                        <span :class="['text-2xl font-black uppercase tracking-tighter', answers[currentQuestion.id] === option ? (option ? 'text-emerald-700' : 'text-rose-700') : 'text-slate-600']">
+                                        <span :class="['text-2xl font-black uppercase tracking-tighter', answers[currentQuestion.id] === option ? (option ? 'text-emerald-700' : 'text-red-700') : 'text-slate-600']">
                                             {{ option ? 'Vrai / Correct' : 'Faux / Incorrect' }}
                                         </span>
                                         <!-- Tick de sélection -->
@@ -865,13 +865,13 @@ onBeforeUnmount(() => {
                                          @click="handleAnswerInput(currentQuestion.id, opt.id)"
                                          :class="[
                                             'group p-6 rounded-[1rem] border-2 cursor-pointer transition-all duration-300 flex items-center gap-6',
-                                            answers[currentQuestion.id] === opt.id ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-100' : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50'
+                                            answers[currentQuestion.id] === opt.id ? 'bg-blue-50 border-blue-500 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50'
                                          ]">
                                         <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black transition-all border-2"
-                                             :class="answers[currentQuestion.id] === opt.id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-400 border-slate-200'">
+                                             :class="answers[currentQuestion.id] === opt.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-400 border-slate-200'">
                                             {{ String.fromCharCode(65 + idx) }}
                                         </div>
-                                        <span :class="['text-lg font-bold', answers[currentQuestion.id] === opt.id ? 'text-indigo-900' : 'text-slate-600']">
+                                        <span :class="['text-lg font-bold', answers[currentQuestion.id] === opt.id ? 'text-blue-900' : 'text-slate-600']">
                                             {{ opt.option_text }}
                                         </span>
                                     </div>
@@ -893,12 +893,12 @@ onBeforeUnmount(() => {
                                          }"
                                          :class="[
                                             'group p-6 rounded-[1rem] border-2 cursor-pointer transition-all flex items-center gap-6',
-                                            answers[currentQuestion.id]?.includes(opt.id) ? 'bg-indigo-50 border-indigo-500 shadow-md' : 'bg-white border-slate-100 hover:border-slate-300'
+                                            answers[currentQuestion.id]?.includes(opt.id) ? 'bg-blue-50 border-blue-500 shadow-md' : 'bg-white border-slate-100 hover:border-slate-300'
                                          ]">
                                         <div class="flex items-center justify-center">
                                             <Checkbox :modelValue="answers[currentQuestion.id]" :value="opt.id" class="p-checkbox-lg" />
                                         </div>
-                                        <span :class="['text-lg font-bold', answers[currentQuestion.id]?.includes(opt.id) ? 'text-indigo-900' : 'text-slate-700']">
+                                        <span :class="['text-lg font-bold', answers[currentQuestion.id]?.includes(opt.id) ? 'text-blue-900' : 'text-slate-700']">
                                             {{ opt.option_text }}
                                         </span>
                                     </div>
@@ -910,7 +910,7 @@ onBeforeUnmount(() => {
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Votre Réponse</label>
                                         <InputText
                                             v-model="answers[currentQuestion.id]"
-                                            class="w-full p-6 text-xl font-medium border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white transition-all shadow-sm placeholder-slate-400"
+                                            class="w-full p-6 text-xl font-medium border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white transition-all shadow-sm placeholder-slate-400"
                                             placeholder="Saisissez votre réponse ici..."
                                             @input="handleAnswerInput(currentQuestion.id, $event.target.value)"
                                         />
@@ -922,7 +922,7 @@ onBeforeUnmount(() => {
                                 <div v-if="currentQuestion?.type === 'matching'" class="space-y-4 max-w-5xl">
                                     <div class="grid grid-cols-1 gap-4">
                                         <div v-for="leftItem in currentQuestion.pairs.left" :key="leftItem.id"
-                                             class="flex flex-col md:flex-row items-stretch md:items-center gap-4 bg-white p-4 rounded-3xl border border-slate-200 hover:border-indigo-300 transition-colors">
+                                             class="flex flex-col md:flex-row items-stretch md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors">
 
                                             <!-- Élément fixe (Gauche) -->
                                             <div class="flex-1 flex items-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
@@ -942,7 +942,7 @@ onBeforeUnmount(() => {
                                                     optionLabel="text"
                                                     optionValue="id"
                                                     placeholder="Associer à..."
-                                                    class="w-full rounded-2xl p-4 border-2 border-slate-100 hover:border-indigo-200 transition-all"
+                                                    class="w-full rounded-2xl p-4 border-2 border-slate-100 hover:border-blue-200 transition-all"
                                                     @change="saveToLocalBackup"
                                                 />
                                             </div>
@@ -952,15 +952,15 @@ onBeforeUnmount(() => {
 
                                 <!-- 6. TYPE: ORDERING (ORDONNANCEMENT) -->
                                 <div v-if="currentQuestion?.type === 'ordering'" class="space-y-6 max-w-2xl mx-auto text-center">
-                                    <div class="bg-indigo-50 p-4 rounded-2xl mb-6 inline-flex items-center gap-2">
-                                        <i class="pi pi-sort-alt text-indigo-600"></i>
-                                        <span class="text-xs font-black text-indigo-700 uppercase">Faites glisser les éléments pour les ordonner</span>
+                                    <div class="bg-blue-50 p-4 rounded-2xl mb-6 inline-flex items-center gap-2">
+                                        <i class="pi pi-sort-alt text-blue-600"></i>
+                                        <span class="text-xs font-black text-blue-700 uppercase">Faites glisser les éléments pour les ordonner</span>
                                     </div>
 
                                     <OrderList v-model="answers[currentQuestion.id]" listStyle="height:auto" @reorder="saveToLocalBackup" class="custom-order-list">
                                         <template #item="slotProps">
-                                            <div class="flex items-center p-6 bg-white border-2 border-slate-100 rounded-2xl gap-6 shadow-sm hover:border-indigo-400 transition-all cursor-move mb-3">
-                                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100">
+                                            <div class="flex items-center p-6 bg-white border-2 border-slate-100 rounded-2xl gap-6 shadow-sm hover:border-blue-400 transition-all cursor-move mb-3">
+                                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-100">
                                                     <i class="pi pi-bars"></i>
                                                 </div>
                                                 <span class="font-bold text-slate-700 text-lg">{{ slotProps.item.option_text }}</span>
@@ -978,7 +978,7 @@ onBeforeUnmount(() => {
                                     <Textarea
                                         v-model="answers[currentQuestion.id]"
                                         rows="12"
-                                        class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[1rem] focus:border-indigo-500 transition-all bg-slate-50/50 shadow-inner"
+                                        class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[1rem] focus:border-blue-500 transition-all bg-slate-50/50 shadow-inner"
                                         placeholder="Rédigez votre réponse de manière détaillée ici..."
                                         @input="handleAnswerInput(currentQuestion.id, $event.target.value)"
                                     />
@@ -996,7 +996,7 @@ onBeforeUnmount(() => {
                         <!-- ========================================== -->
                         <div class="px-10 py-10 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                             <Button label="Question Précédente" icon="pi pi-arrow-left" text size="large"
-                                    class="font-black text-slate-500 hover:text-indigo-600 p-4 rounded-2xl"
+                                    class="font-black text-slate-500 hover:text-blue-600 p-4 rounded-2xl"
                                     @click="prevQuestion" :disabled="currentIndex === 0" />
 
                             <div class="flex items-center gap-6">
@@ -1012,28 +1012,28 @@ onBeforeUnmount(() => {
                                         :icon="currentIndex === questions.length - 1 ? 'pi pi-verified' : 'pi pi-arrow-right'"
                                         iconPos="right" size="large"
                                         :severity="currentIndex === questions.length - 1 ? 'success' : 'primary'"
-                                        class="px-12 py-5 text-xl font-black rounded-2xl shadow-xl shadow-indigo-100 transition-transform active:scale-95"
+                                        class="px-12 py-5 text-xl font-black rounded-2xl shadow-xl shadow-blue-100 transition-transform active:scale-95"
                                         @click="nextQuestion" />
                             </div>
                         </div>
                     </div>
 
                     <!-- LOG DE SÉCURITÉ IA (VISIBLE SI INCIDENTS) -->
-                    <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[1rem] p-8 border-2 border-rose-100 shadow-lg animate-fade-in">
+                    <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[1rem] p-8 border-2 border-red-100 shadow-lg animate-fade-in">
                         <div class="flex items-center justify-between mb-6">
-                            <h5 class="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2">
+                            <h5 class="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
                                 <i class="pi pi-shield"></i> Surveillance Intégrité Académique
                             </h5>
                             <span class="text-[10px] font-bold text-slate-400 uppercase">Événements récents</span>
                         </div>
                         <div class="space-y-3">
                             <div v-for="(log, i) in proctoringLogs.slice(0, 2)" :key="i"
-                                 class="flex items-center justify-between p-4 bg-rose-50/50 rounded-xl border border-rose-100">
+                                 class="flex items-center justify-between p-4 bg-red-50/50 rounded-xl border border-red-100">
                                 <div class="flex items-center gap-3">
-                                    <i class="pi pi-exclamation-triangle text-rose-500"></i>
-                                    <span class="text-xs font-bold text-rose-800">{{ log.event }}</span>
+                                    <i class="pi pi-exclamation-triangle text-red-500"></i>
+                                    <span class="text-xs font-bold text-red-800">{{ log.event }}</span>
                                 </div>
-                                <span class="text-[10px] font-mono text-rose-400">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
+                                <span class="text-[10px] font-mono text-red-400">{{ new Date(log.timestamp).toLocaleTimeString() }}</span>
                             </div>
                         </div>
                     </div>
@@ -1058,20 +1058,20 @@ onBeforeUnmount(() => {
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <div v-for="(q, idx) in questions" :key="q.id"
                                 @click="jumpToQuestion(idx)"
-                                class="p-6 rounded-3xl border-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-95 group"
+                                class="p-6 rounded-xl border-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-95 group"
                                 :class="[
-                                    isAnswered(q.id) ? 'bg-white border-slate-100 hover:border-indigo-500' : 'bg-rose-50 border-rose-100 hover:border-rose-400',
+                                    isAnswered(q.id) ? 'bg-white border-slate-100 hover:border-blue-500' : 'bg-red-50 border-red-100 hover:border-red-400',
                                     flaggedQuestions.includes(q.id) ? 'ring-2 ring-amber-400 ring-offset-4' : ''
                                 ]">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm"
-                                         :class="isAnswered(q.id) ? 'bg-slate-100 text-slate-500' : 'bg-rose-200 text-rose-700'">
+                                         :class="isAnswered(q.id) ? 'bg-slate-100 text-slate-500' : 'bg-red-200 text-red-700'">
                                         {{ idx + 1 }}
                                     </div>
                                     <i v-if="flaggedQuestions.includes(q.id)" class="pi pi-flag-fill text-amber-500"></i>
-                                    <i :class="['pi', isAnswered(q.id) ? 'pi-check-circle text-emerald-500' : 'pi-exclamation-circle text-rose-500']"></i>
+                                    <i :class="['pi', isAnswered(q.id) ? 'pi-check-circle text-emerald-500' : 'pi-exclamation-circle text-red-500']"></i>
                                 </div>
-                                <p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+                                <p class="text-sm font-bold text-slate-800 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
                                     {{ q.question_text }}
                                 </p>
                                 <div class="text-[10px] font-black uppercase text-slate-400">
@@ -1081,7 +1081,7 @@ onBeforeUnmount(() => {
                         </div>
 
                         <div class="mt-20 p-12 bg-slate-900 rounded-[3rem] text-white flex flex-col md:flex-row items-center gap-12 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                             <div class="flex-1 text-center md:text-left relative z-10">
                                 <h3 class="text-3xl font-black mb-4 tracking-tight">Prêt pour la certification ?</h3>
                                 <p class="text-slate-400 leading-relaxed max-w-xl">
@@ -1089,7 +1089,7 @@ onBeforeUnmount(() => {
                                     Le processus est irréversible.
                                 </p>
                             </div>
-                            <Button label="Envoyer maintenant" icon="pi pi-check-circle" size="large" severity="success" class="px-12 py-6 text-2xl font-black rounded-3xl shadow-2xl relative z-10" @click="confirmSubmission" />
+                            <Button label="Envoyer maintenant" icon="pi pi-check-circle" size="large" severity="success" class="px-12 py-6 text-2xl font-black rounded-xl shadow-2xl relative z-10" @click="confirmSubmission" />
                         </div>
                     </div>
                 </div>
@@ -1108,14 +1108,14 @@ onBeforeUnmount(() => {
             </template>
             <div class="grid grid-cols-4 gap-3 p-4">
                 <button v-for="(q, idx) in questions" :key="q.id" @click="jumpToQuestion(idx)"
-                    :class="['h-14 rounded-2xl font-black transition-all border-2', currentIndex === idx ? 'bg-indigo-600 text-white' : 'bg-slate-50']">
+                    :class="['h-14 rounded-2xl font-black transition-all border-2', currentIndex === idx ? 'bg-blue-600 text-white' : 'bg-slate-50']">
                     {{ idx + 1 }}
                 </button>
             </div>
         </Sidebar>
 
         <!-- Brouillon / Notepad -->
-        <Dialog v-model:visible="showNotepad" header="Brouillon Personnel (Non noté)" :style="{width: '600px'}" modal class="rounded-3xl overflow-hidden shadow-2xl">
+        <Dialog v-model:visible="showNotepad" header="Brouillon Personnel (Non noté)" :style="{width: '600px'}" modal class="rounded-xl overflow-hidden shadow-2xl">
             <div class="p-2">
                 <Textarea v-model="notepadContent" rows="15" class="w-full font-mono text-sm p-6 bg-slate-50 border-none focus:ring-0 rounded-2xl" placeholder="Notez vos idées ici..." />
                 <div class="mt-4 flex justify-end">
@@ -1125,7 +1125,7 @@ onBeforeUnmount(() => {
         </Dialog>
 
         <!-- Calculatrice (Simplifiée) -->
-        <Dialog v-model:visible="calculatorVisible" header="Calculatrice Scientifique" :style="{width: '320px'}" modal class="rounded-3xl overflow-hidden shadow-2xl" position="topright">
+        <Dialog v-model:visible="calculatorVisible" header="Calculatrice Scientifique" :style="{width: '320px'}" modal class="rounded-xl overflow-hidden shadow-2xl" position="topright">
              <div class="p-4 bg-slate-900 rounded-2xl">
                  <div class="h-20 bg-slate-800 rounded-xl mb-4 flex items-center justify-end px-6 text-white text-3xl font-mono overflow-hidden">
                      {{ calculatorDisplay }}
@@ -1133,10 +1133,10 @@ onBeforeUnmount(() => {
                  <div class="grid grid-cols-4 gap-2">
                      <button v-for="n in ['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+']" :key="n"
                              @click="handleCalculatorInput(n)"
-                             class="h-12 rounded-lg bg-slate-700 text-white font-bold hover:bg-indigo-500 transition-colors">
+                             class="h-12 rounded-lg bg-slate-700 text-white font-bold hover:bg-blue-500 transition-colors">
                          {{ n }}
                      </button>
-                     <button @click="clearCalculator" class="col-span-4 h-12 rounded-lg bg-rose-500 text-white font-bold uppercase text-xs">Effacer</button>
+                     <button @click="clearCalculator" class="col-span-4 h-12 rounded-lg bg-red-500 text-white font-bold uppercase text-xs">Effacer</button>
                  </div>
              </div>
         </Dialog>

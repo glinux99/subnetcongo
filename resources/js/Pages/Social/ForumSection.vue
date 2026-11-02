@@ -354,12 +354,12 @@ const copyLink = (id) => {
             <Button
                 label="Nouvelle Discussion"
                 icon="pi pi-plus"
-                class="w-full p-button-primary p-button-lg font-black rounded-2xl shadow-lg shadow-indigo-500/30 hover:scale-[1.02] transition-transform"
+                class="w-full p-button-primary p-button-lg font-black rounded-2xl shadow-lg shadow-blue-500/30 hover:scale-[1.02] transition-transform"
                 @click="openNewThread"
             />
 
             <!-- Panel Filtres -->
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-6 flex flex-col gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200/60 p-6 flex flex-col gap-6">
                 <div>
                     <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Recherche globale</h3>
                     <IconField iconPosition="left">
@@ -367,12 +367,12 @@ const copyLink = (id) => {
                         <InputText
                             v-model="forumFilters.search"
                             placeholder="Mots-clés, erreurs..."
-                            class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-indigo-500"
+                            class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500"
                         />
                     </IconField>
                 </div>
 
-                <button @click="newCategoryDialog = true" type="button" class="w-full text-indigo-600 hover:bg-indigo-50 border border-indigo-100 p-2 rounded-xl font-bold text-xs transition-all">+ Gérer les catégories</button>
+                <button @click="newCategoryDialog = true" type="button" class="w-full text-blue-600 hover:bg-blue-50 border border-blue-100 p-2 rounded-xl font-bold text-xs transition-all">+ Gérer les catégories</button>
 
                 <Divider class="m-0" />
 
@@ -383,7 +383,7 @@ const copyLink = (id) => {
             </div>
 
             <!-- Panel Statistiques -->
-            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-lg p-6 text-white relative overflow-hidden">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
                 <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 blur-2xl rounded-full"></div>
                 <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
                     <i class="pi pi-chart-bar"></i> Statistiques du Forum
@@ -402,7 +402,7 @@ const copyLink = (id) => {
         </aside>
 
         <!-- ZONE PRINCIPALE : Liste des Threads -->
-        <main class="flex-1 bg-white rounded-3xl shadow-sm border border-slate-200/60 flex flex-col overflow-hidden relative">
+        <main class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200/60 flex flex-col overflow-hidden relative">
 
             <!-- Loading Overlay -->
             <div v-if="isLoading" class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -422,7 +422,7 @@ const copyLink = (id) => {
                         v-for="sort in sortOptions" :key="sort.value"
                         @click="forumFilters.sort = sort.value"
                         class="px-4 py-2 text-sm font-bold rounded-lg transition-all"
-                        :class="forumFilters.sort === sort.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                        :class="forumFilters.sort === sort.value ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
                     >
                         {{ sort.label }}
                     </button>
@@ -459,7 +459,7 @@ const copyLink = (id) => {
                 <!-- Les Cartes de Threads -->
                 <div
                     v-for="thread in props.threads.data" :key="thread.id"
-                    class="group bg-white p-5 mb-3 rounded-2xl border border-slate-200/60 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer relative flex gap-4 sm:gap-6"
+                    class="group bg-white p-5 mb-3 rounded-2xl border border-slate-200/60 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer relative flex gap-4 sm:gap-6"
                     @click="openThread(thread)"
                 >
                     <!-- Badges Absolus -->
@@ -472,7 +472,7 @@ const copyLink = (id) => {
                             @click="toggleUpvote(thread.id, $event)"
                             class="w-12 h-12 rounded-xl flex flex-col items-center justify-center transition-colors border"
                             :class="(optimisticVotes[thread.id]?.voted || thread.has_voted)
-                                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                                ? 'bg-blue-50 border-blue-200 text-blue-600'
                                 : 'bg-slate-50 border-transparent text-slate-400 hover:bg-slate-100 hover:text-slate-600'"
                         >
                             <i class="pi pi-angle-up text-xl -mb-1 font-bold"></i>
@@ -489,7 +489,7 @@ const copyLink = (id) => {
                             <Tag v-if="thread.is_resolved" icon="pi pi-check" value="RÉSOLU" class="bg-emerald-100 text-emerald-700 text-[10px] uppercase font-black" />
                         </div>
 
-                        <h3 class="text-lg sm:text-xl font-black text-slate-800 mb-1 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1 pr-8">
+                        <h3 class="text-lg sm:text-xl font-black text-slate-800 mb-1 leading-tight group-hover:text-blue-600 transition-colors line-clamp-1 pr-8">
                             {{ thread.title }}
                         </h3>
 
@@ -500,7 +500,7 @@ const copyLink = (id) => {
                         <!-- Footer de la carte -->
                         <div class="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
                             <div class="flex items-center gap-3">
-                                <Avatar :label="getInitials(thread.author?.name)" :image="thread.author?.avatar" shape="circle" size="small" class="w-7 h-7 bg-indigo-100 text-indigo-700 font-bold text-xs" />
+                                <Avatar :label="getInitials(thread.author?.name)" :image="thread.author?.avatar" shape="circle" size="small" class="w-7 h-7 bg-blue-100 text-blue-700 font-bold text-xs" />
                                 <div class="text-xs">
                                     <span class="font-bold text-slate-700">{{ thread.author?.name || 'Utilisateur' }}</span>
                                     <span class="text-slate-400 mx-1">•</span>
@@ -512,7 +512,7 @@ const copyLink = (id) => {
                                 <div class="flex items-center gap-1.5" v-tooltip.top="'Vues'">
                                     <i class="pi pi-eye"></i> {{ thread.views_count || 0 }}
                                 </div>
-                                <div class="flex items-center gap-1.5" :class="{'text-indigo-500': thread.replies_count > 0}" v-tooltip.top="'Réponses'">
+                                <div class="flex items-center gap-1.5" :class="{'text-blue-500': thread.replies_count > 0}" v-tooltip.top="'Réponses'">
                                     <i class="pi pi-comments"></i> {{ thread.replies_count || 0 }}
                                 </div>
 
@@ -559,7 +559,7 @@ const copyLink = (id) => {
 >
     <template #header>
         <div class="flex items-center gap-3 w-full pr-12">
-            <Tag v-if="currentThread?.category" :value="currentThread.category.name" class="bg-indigo-50 text-indigo-700 uppercase font-black" />
+            <Tag v-if="currentThread?.category" :value="currentThread.category.name" class="bg-blue-50 text-blue-700 uppercase font-black" />
             <span class="text-sm font-medium text-slate-400">Discussion #{{ currentThread?.id }}</span>
             <div class="ml-auto flex gap-2">
                 <Button icon="pi pi-refresh" text rounded severity="secondary" @click="openThread(currentThread)" v-tooltip.left="'Actualiser les réponses'" />
@@ -580,11 +580,11 @@ const copyLink = (id) => {
                     <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-6 pb-8">
 
                         <!-- POST ORIGINAL (OP) -->
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden relative">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden relative">
                             <!-- En-tête OP -->
                             <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
                                 <div class="flex items-center gap-4">
-                                    <Avatar :label="getInitials(currentThread.author?.name)" :image="currentThread.author?.avatar" size="large" shape="circle" class="bg-indigo-600 text-white font-black shadow-md w-12 h-12 text-lg" />
+                                    <Avatar :label="getInitials(currentThread.author?.name)" :image="currentThread.author?.avatar" size="large" shape="circle" class="bg-blue-600 text-white font-black shadow-md w-12 h-12 text-lg" />
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <h3 class="font-black text-slate-800 text-lg">{{ currentThread.author?.name }}</h3>
@@ -606,7 +606,7 @@ const copyLink = (id) => {
                             <!-- Contenu OP -->
                             <div class="p-6 md:p-8">
                                 <h1 class="text-2xl md:text-3xl font-black text-slate-800 mb-6 leading-tight">{{ currentThread.title }}</h1>
-                                <div class="prose prose-slate max-w-none prose-headings:font-black prose-a:text-indigo-600 prose-img:rounded-xl" v-html="currentThread.content"></div>
+                                <div class="prose prose-slate max-w-none prose-headings:font-black prose-a:text-blue-600 prose-img:rounded-xl" v-html="currentThread.content"></div>
 
                                 <!-- Pièces jointes OP (Sujet principal) -->
                                 <div v-if="currentThread.attachments?.length || currentThread.attachment_path" class="mt-8 pt-6 border-t border-slate-100">
@@ -626,7 +626,7 @@ const copyLink = (id) => {
                                         <!-- Cas du fichier unique stocké en base (ForumTopic) -->
                                         <a v-if="currentThread.attachment_path" :href="'/media/' + currentThread.attachment_path" target="_blank" download
                                            class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-colors">
-                                            <i class="pi pi-file text-indigo-400 text-xl"></i>
+                                            <i class="pi pi-file text-blue-400 text-xl"></i>
                                             <div>
                                                 <div class="text-sm font-bold text-slate-700">{{ currentThread.attachment_name || 'Télécharger le document' }}</div>
                                                 <div class="text-xs text-slate-500">Fichier joint</div>
@@ -674,7 +674,7 @@ const copyLink = (id) => {
                                         <div v-if="reply.attachment_path" class="mt-4 pt-3 border-t border-slate-50">
                                             <a :href="'/media/' + reply.attachment_path" target="_blank" download
                                                class="inline-flex items-center gap-3 p-2 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100 transition-colors text-xs font-bold text-slate-600">
-                                                <i class="pi pi-paperclip text-indigo-500"></i>
+                                                <i class="pi pi-paperclip text-blue-500"></i>
                                                 <span class="truncate max-w-[200px]">{{ reply.attachment_name || 'Fichier joint' }}</span>
                                                 <i class="pi pi-download ml-1 text-[10px]"></i>
                                             </a>
@@ -690,7 +690,7 @@ const copyLink = (id) => {
             <!-- FORMULAIRE DE RÉPONSE (Fixe en bas grâce à shrink-0, plus d'absolute) -->
             <div v-if="!currentThread.is_locked" class="shrink-0 bg-white border-t border-slate-200 p-4 md:p-6 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] z-20">
                 <div class="max-w-4xl mx-auto flex gap-4 items-start">
-                    <Avatar :label="getInitials(currentUser.name)" shape="circle" class="hidden sm:flex w-10 h-10 bg-indigo-100 text-indigo-700 shrink-0" />
+                    <Avatar :label="getInitials(currentUser.name)" shape="circle" class="hidden sm:flex w-10 h-10 bg-blue-100 text-blue-700 shrink-0" />
                     <div class="flex-1 space-y-3">
                         <Editor v-model="replyForm.content" :formats="editorFormats" editorStyle="height: 120px" class="rounded-xl border-slate-200" placeholder="Rédigez votre réponse détaillée ici..." />
 
@@ -705,7 +705,7 @@ const copyLink = (id) => {
                             <FileUpload mode="basic" name="attachments[]" :multiple="true" :maxFileSize="5000000" customUpload @select="e => handleFileUpload(e, replyForm)"
                                         chooseLabel="Joindre un fichier" chooseIcon="pi pi-paperclip" class="p-button-text p-button-secondary p-button-sm font-bold" />
 
-                            <Button label="Répondre" icon="pi pi-send" class="p-button-primary rounded-xl px-6 font-black shadow-md shadow-indigo-500/20"
+                            <Button label="Répondre" icon="pi pi-send" class="p-button-primary rounded-xl px-6 font-black shadow-md shadow-blue-500/20"
                                     @click="submitReply" :loading="replyForm.processing" :disabled="!replyForm.content.replace(/<[^>]*>?/gm, '').trim()" />
                         </div>
                     </div>
@@ -729,7 +729,7 @@ const copyLink = (id) => {
             header="Lancer une nouvelle discussion"
             :style="{ width: '100%', maxWidth: '800px' }"
             :pt="{
-                root: { class: 'rounded-3xl shadow-2xl' },
+                root: { class: 'rounded-xl shadow-2xl' },
                 header: { class: 'bg-slate-50 border-b border-slate-100 px-8 py-5' },
                 title: { class: 'text-xl font-black text-slate-800' },
                 content: { class: 'p-8 space-y-6' },
@@ -749,7 +749,7 @@ const copyLink = (id) => {
                         Titre de la discussion <span class="text-red-500">*</span>
                     </label>
                     <InputText v-model="threadForm.title" placeholder="Ex: Comment résoudre l'erreur 404 sur mon projet ?"
-                               class="w-full rounded-xl p-3 border-slate-200 focus:ring-indigo-500 font-medium"
+                               class="w-full rounded-xl p-3 border-slate-200 focus:ring-blue-500 font-medium"
                                :class="{'p-invalid': threadForm.errors.title}" />
                     <small v-if="threadForm.errors.title" class="p-error block mt-1">{{ threadForm.errors.title }}</small>
                 </div>
@@ -758,7 +758,7 @@ const copyLink = (id) => {
                 <div class="col-span-1 space-y-2">
                     <label class="font-black text-slate-700 text-xs uppercase tracking-wider flex justify-between">
                         Catégorie <span class="text-red-500">*</span>
-                        <button v-if="isInstructor" @click="newCategoryDialog = true" type="button" class="text-indigo-600 hover:underline lowercase font-bold transition-all hover:text-indigo-800">+ créer</button>
+                        <button v-if="isInstructor" @click="newCategoryDialog = true" type="button" class="text-blue-600 hover:underline lowercase font-bold transition-all hover:text-blue-800">+ créer</button>
                     </label>
                     <Dropdown v-model="threadForm.category_id" :options="categories" optionLabel="name" optionValue="id"
                               placeholder="Choisir..." class="w-full rounded-xl h-[46px] border-slate-200"
@@ -773,7 +773,7 @@ const copyLink = (id) => {
                         <template #empty>
                             <div class="p-4 text-center flex flex-col items-center gap-2">
                                 <p class="text-xs text-slate-400 italic">Aucune catégorie disponible.</p>
-                                <button v-if="isInstructor" @click="newCategoryDialog = true" type="button" class="text-indigo-600 font-bold text-xs hover:underline">+ Créer une catégorie</button>
+                                <button v-if="isInstructor" @click="newCategoryDialog = true" type="button" class="text-blue-600 font-bold text-xs hover:underline">+ Créer une catégorie</button>
                             </div>
                         </template>
                     </Dropdown>
@@ -832,7 +832,7 @@ const copyLink = (id) => {
             <template #footer>
                 <div class="flex justify-between items-center w-full">
                     <Button label="Annuler" text severity="secondary" @click="newThreadDialog = false" class="font-bold rounded-xl" />
-                    <Button label="Publier le sujet" icon="pi pi-send" class="p-button-primary px-8 py-3 font-black rounded-xl shadow-lg shadow-indigo-500/30"
+                    <Button label="Publier le sujet" icon="pi pi-send" class="p-button-primary px-8 py-3 font-black rounded-xl shadow-lg shadow-blue-500/30"
                             @click="submitThread" :loading="threadForm.processing" />
                 </div>
             </template>
@@ -841,7 +841,7 @@ const copyLink = (id) => {
         <!-- ==================================================================================== -->
         <!-- DIALOG : NOUVELLE CATÉGORIE (ADMINISTRATION)                                         -->
         <!-- ==================================================================================== -->
-        <Dialog v-model:visible="newCategoryDialog" modal header="📐 Paramétrage de Catégorie" :style="{ width: '450px' }" class="rounded-3xl shadow-2xl">
+        <Dialog v-model:visible="newCategoryDialog" modal header="📐 Paramétrage de Catégorie" :style="{ width: '450px' }" class="rounded-xl shadow-2xl">
             <div class="flex flex-col gap-6 py-4">
                 <div class="space-y-2">
                     <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Désignation</label>
@@ -870,17 +870,17 @@ const copyLink = (id) => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
-                    <input type="checkbox" v-model="categoryForm.is_active" class="w-5 h-5 accent-indigo-600 cursor-pointer" />
+                <div class="flex items-center gap-4 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
+                    <input type="checkbox" v-model="categoryForm.is_active" class="w-5 h-5 accent-blue-600 cursor-pointer" />
                     <div class="flex flex-col">
-                        <span class="text-xs font-black text-indigo-900 uppercase">Activer immédiatement</span>
-                        <span class="text-[10px] text-indigo-500 font-medium italic">Rendre visible dans la liste du forum.</span>
+                        <span class="text-xs font-black text-blue-900 uppercase">Activer immédiatement</span>
+                        <span class="text-[10px] text-blue-500 font-medium italic">Rendre visible dans la liste du forum.</span>
                     </div>
                 </div>
             </div>
             <template #footer>
                 <Button label="Annuler" text severity="secondary" @click="newCategoryDialog = false" class="font-bold rounded-xl" />
-                <Button label="Créer la catégorie" icon="pi pi-plus-circle" @click="submitCategory" :loading="categoryForm.processing" class="p-button-primary rounded-xl px-6 font-black shadow-lg shadow-indigo-200" />
+                <Button label="Créer la catégorie" icon="pi pi-plus-circle" @click="submitCategory" :loading="categoryForm.processing" class="p-button-primary rounded-xl px-6 font-black shadow-lg shadow-blue-200" />
             </template>
         </Dialog>
     </div>

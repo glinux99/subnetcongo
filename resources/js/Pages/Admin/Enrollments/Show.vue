@@ -176,7 +176,7 @@ const destroy = () => {
             </div>
         </div>
 
-        <Dialog v-model:visible="showApprove" modal :style="{ width: '500px' }" header="Approuver l'inscription" class="!rounded-3xl">
+        <Dialog v-model:visible="showApprove" modal :style="{ width: '500px' }" header="Approuver l'inscription" class="!rounded-xl">
             <div class="p-2 space-y-3">
                 <p class="text-sm text-slate-600">L'étudiant aura immédiatement accès au cours et sera notifié.</p>
                 <div>
@@ -190,7 +190,7 @@ const destroy = () => {
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="showReject" modal :style="{ width: '500px' }" header="Refuser l'inscription" class="!rounded-3xl">
+        <Dialog v-model:visible="showReject" modal :style="{ width: '500px' }" header="Refuser l'inscription" class="!rounded-xl">
             <div class="p-2 space-y-3">
                 <p class="text-sm text-slate-600">L'étudiant sera notifié du refus avec le motif ci-dessous.</p>
                 <div>
@@ -204,7 +204,7 @@ const destroy = () => {
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="showRevoke" modal :style="{ width: '500px' }" header="Révoquer l'accès" class="!rounded-3xl">
+        <Dialog v-model:visible="showRevoke" modal :style="{ width: '500px' }" header="Révoquer l'accès" class="!rounded-xl">
             <div class="p-2 space-y-3">
                 <p class="text-sm text-red-600 font-bold">⚠ L'étudiant perdra immédiatement l'accès au cours.</p>
                 <div>

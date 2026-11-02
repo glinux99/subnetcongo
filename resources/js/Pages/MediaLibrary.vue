@@ -116,7 +116,7 @@ const home = { icon: 'pi pi-home', to: '/' };
 const breadcrumbItems = computed(() => {
     const items = [{ label: 'Bibliothèque Média' }];
     if (serverFilters.folder !== '/') {
-        items.push({ label: serverFilters.folder, class: 'font-bold text-indigo-600' });
+        items.push({ label: serverFilters.folder, class: 'font-bold text-blue-600' });
     }
     return items;
 });
@@ -218,8 +218,8 @@ const downloadMedia = (id) => {
 
 const getFileIcon = (type) => {
     const map = {
-        video: 'pi pi-play-circle text-rose-500',
-        image: 'pi pi-image text-indigo-500',
+        video: 'pi pi-play-circle text-red-500',
+        image: 'pi pi-image text-blue-500',
         pdf: 'pi pi-file-pdf text-amber-500',
         audio: 'pi pi-volume-up text-emerald-500'
     };
@@ -238,12 +238,12 @@ const getFileIcon = (type) => {
                 <div class="space-y-2">
                     <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-6">
-                        <div class="bg-indigo-600 p-5 rounded-[1.2rem] shadow-2xl shadow-indigo-100 rotate-2 hover:rotate-0 transition-all duration-500">
+                        <div class="bg-blue-600 p-5 rounded-[1.2rem] shadow-2xl shadow-blue-100 rotate-2 hover:rotate-0 transition-all duration-500">
                             <i class="pi pi-cloud text-white text-3xl"></i>
                         </div>
                         <div>
                             <h1 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Médiathèque Cloud xx</h1>
-                            <p class="text-slate-500 font-medium italic">Stockage objet S3 & Distribution CDN <span class="text-indigo-600 font-bold underline">SubnetCongo</span>.</p>
+                            <p class="text-slate-500 font-medium italic">Stockage objet S3 & Distribution CDN <span class="text-blue-600 font-bold underline">SubnetCongo</span>.</p>
                         </div>
                     </div>
                 </div>
@@ -251,7 +251,7 @@ const getFileIcon = (type) => {
                 <div class="flex flex-wrap gap-3 bg-white p-3 rounded-[1.2rem] border border-slate-100 shadow-sm">
                     <Button label="Nouveau Dossier" icon="pi pi-folder-plus" class="p-button-text p-button-secondary rounded-xl font-bold" @click="folderDialog = true" />
                     <Divider layout="vertical" />
-                    <Button label="Propager des Assets" icon="pi pi-plus-circle" class="p-button-primary shadow-xl shadow-indigo-200 px-10 rounded-2xl font-black italic" @click="uploadDialog = true" />
+                    <Button label="Propager des Assets" icon="pi pi-plus-circle" class="p-button-primary shadow-xl shadow-blue-200 px-10 rounded-2xl font-black italic" @click="uploadDialog = true" />
                 </div>
             </header>
 
@@ -265,11 +265,11 @@ const getFileIcon = (type) => {
                         <i class="pi pi-database absolute -right-10 -bottom-10 text-[15rem] text-white/5 rotate-12 transition-transform duration-1000 group-hover:rotate-0"></i>
 
                         <div class="relative z-10">
-                            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 mb-8 italic">Infrastructure Cloud</h3>
+                            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-blue-300 mb-8 italic">Infrastructure Cloud</h3>
 
                             <div class="flex items-baseline gap-2 mb-4">
                                 <span class="text-5xl font-black italic tracking-tighter">{{ storageValue }}</span>
-                                <span class="text-indigo-400 font-bold text-xl uppercase">{{ storageUnit }}</span>
+                                <span class="text-blue-400 font-bold text-xl uppercase">{{ storageUnit }}</span>
                             </div>
 
                             <div class="space-y-4">
@@ -293,13 +293,13 @@ const getFileIcon = (type) => {
 
                         <div class="space-y-3">
                             <div v-for="cat in [
-                                { id: 'image', label: 'Photothèque', icon: 'pi pi-image', color: 'text-indigo-500', bg: 'bg-indigo-50' },
-                                { id: 'video', label: 'Vidéothèque', icon: 'pi pi-play-circle', color: 'text-rose-500', bg: 'bg-rose-50' },
+                                { id: 'image', label: 'Photothèque', icon: 'pi pi-image', color: 'text-blue-500', bg: 'bg-blue-50' },
+                                { id: 'video', label: 'Vidéothèque', icon: 'pi pi-play-circle', color: 'text-red-500', bg: 'bg-red-50' },
                                 { id: 'pdf', label: 'Documents PDF', icon: 'pi pi-file-pdf', color: 'text-amber-500', bg: 'bg-amber-50' },
                                 { id: 'audio', label: 'Archives Audio', icon: 'pi pi-volume-up', color: 'text-emerald-500', bg: 'bg-emerald-50' }
                             ]" :key="cat.id"
                                 @click="serverFilters.category = cat.id"
-                                :class="['flex items-center justify-between p-4 rounded-[1rem] transition-all cursor-pointer group', serverFilters.category === cat.id ? 'bg-indigo-600 text-white shadow-xl translate-x-2' : 'hover:bg-slate-50']">
+                                :class="['flex items-center justify-between p-4 rounded-[1rem] transition-all cursor-pointer group', serverFilters.category === cat.id ? 'bg-blue-600 text-white shadow-xl translate-x-2' : 'hover:bg-slate-50']">
 
                                 <div class="flex items-center gap-4">
                                     <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm', serverFilters.category === cat.id ? 'bg-white/20 text-white' : cat.bg + ' ' + cat.color]">
@@ -315,15 +315,15 @@ const getFileIcon = (type) => {
                     </div>
 
                     <!-- Cloud Folders List -->
-                    <div class="bg-indigo-900 rounded-[3rem] p-8 text-white shadow-xl">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-indigo-300 mb-6">Dossiers Cloud</h3>
+                    <div class="bg-blue-900 rounded-[3rem] p-8 text-white shadow-xl">
+                        <h3 class="text-xs font-black uppercase tracking-widest text-blue-300 mb-6">Dossiers Cloud</h3>
                         <ScrollPanel style="height: 250px">
                             <div class="space-y-2 pr-4">
                                 <div v-for="folder in props.folders" :key="folder"
                                     @click="selectFolder(folder)"
                                     class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-colors cursor-pointer group">
-                                    <i :class="['pi', serverFilters.folder === folder ? 'pi-folder-open text-amber-400' : 'pi-folder text-indigo-400']"></i>
-                                    <span :class="['text-xs font-bold truncate', serverFilters.folder === folder ? 'text-white' : 'text-indigo-100']">{{ folder }}</span>
+                                    <i :class="['pi', serverFilters.folder === folder ? 'pi-folder-open text-amber-400' : 'pi-folder text-blue-400']"></i>
+                                    <span :class="['text-xs font-bold truncate', serverFilters.folder === folder ? 'text-white' : 'text-blue-100']">{{ folder }}</span>
                                 </div>
                             </div>
                         </ScrollPanel>
@@ -337,13 +337,13 @@ const getFileIcon = (type) => {
                     <div class="bg-white p-6 rounded-[1rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="flex items-center gap-6 w-full md:w-auto">
                             <div class="flex bg-slate-100 p-1.5 rounded-[1.2rem] shadow-inner">
-                                <Button icon="pi pi-th-large" @click="layout = 'grid'" :class="['p-button-sm p-button-text px-4', layout === 'grid' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-400']" />
-                                <Button icon="pi pi-list" @click="layout = 'list'" :class="['p-button-sm p-button-text px-4', layout === 'list' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-400']" />
+                                <Button icon="pi pi-th-large" @click="layout = 'grid'" :class="['p-button-sm p-button-text px-4', layout === 'grid' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400']" />
+                                <Button icon="pi pi-list" @click="layout = 'list'" :class="['p-button-sm p-button-text px-4', layout === 'list' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400']" />
                             </div>
                             <Divider layout="vertical" class="hidden md:block h-8" />
                             <IconField iconPosition="left" class="flex-1 md:w-[400px]">
                                 <InputIcon class="pi pi-search" />
-                                <InputText v-model="serverFilters.search" placeholder="Rechercher par nom, tag ou description..." class="w-full border-none ring-1 ring-slate-100 rounded-2xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-indigo-100 transition-all p-4" />
+                                <InputText v-model="serverFilters.search" placeholder="Rechercher par nom, tag ou description..." class="w-full border-none ring-1 ring-slate-100 rounded-2xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all p-4" />
                             </IconField>
                         </div>
 
@@ -360,7 +360,7 @@ const getFileIcon = (type) => {
 
                     <!-- Current Path Display -->
                     <div class="flex items-center gap-4 px-4">
-                        <div class="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full shadow-sm">
+                        <div class="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full shadow-sm">
                             <i class="pi pi-home text-xs"></i>
                             <span class="text-[10px] font-black uppercase tracking-widest">Root</span>
                         </div>
@@ -379,7 +379,7 @@ const getFileIcon = (type) => {
                             class="group relative bg-white border border-slate-100 rounded-[3.5rem] p-5 hover:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.2)] hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden">
 
                             <!-- Header Decoration -->
-                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                             <!-- Thumbnail Wrapper -->
                             <div class="aspect-square bg-slate-50 rounded-[1rem] overflow-hidden flex items-center justify-center relative border border-slate-50 shadow-inner">
@@ -390,7 +390,7 @@ const getFileIcon = (type) => {
                                 </div>
 
                                 <!-- Overlay Tools -->
-                                <div class="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
+                                <div class="absolute inset-0 bg-blue-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
                                     <Button icon="pi pi-copy" class="p-button-rounded p-button-white shadow-2xl" v-tooltip.top="'Lien CDN'" @click.stop="copyCdnUrl(file)" />
                                     <Button icon="pi pi-download" class="p-button-rounded p-button-white shadow-2xl" @click.stop="downloadMedia(file.id)" />
                                 </div>
@@ -402,7 +402,7 @@ const getFileIcon = (type) => {
 
                             <!-- File Details Footer -->
                             <div class="mt-6 px-2">
-                                <h4 class="text-sm font-black text-slate-800 truncate mb-2 group-hover:text-indigo-600 transition-colors">{{ file.name }}</h4>
+                                <h4 class="text-sm font-black text-slate-800 truncate mb-2 group-hover:text-blue-600 transition-colors">{{ file.name }}</h4>
                                 <div class="flex justify-between items-center">
                                     <div class="flex items-center gap-2">
                                         <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
@@ -428,11 +428,11 @@ const getFileIcon = (type) => {
                                             <i v-else :class="getFileIcon(data.type)" class="text-xl"></i>
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="text-base font-black text-slate-700 hover:text-indigo-600 cursor-pointer transition-colors" @click="openInspector(data)">{{ data.name }}</span>
+                                            <span class="text-base font-black text-slate-700 hover:text-blue-600 cursor-pointer transition-colors" @click="openInspector(data)">{{ data.name }}</span>
                                             <div class="flex items-center gap-3 mt-1">
                                                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ data.mime_type }}</span>
                                                 <Divider layout="vertical" class="h-2 m-0" />
-                                                <span class="text-[9px] font-bold text-indigo-400 uppercase">{{ data.author || 'Système' }}</span>
+                                                <span class="text-[9px] font-bold text-blue-400 uppercase">{{ data.author || 'Système' }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -489,14 +489,14 @@ const getFileIcon = (type) => {
 
             <!-- --- SECTION : GUIDE DE L'ADMINISTRATEUR --- -->
             <section class="mt-20 grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div class="lg:col-span-2 bg-indigo-900 p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden group">
+                <div class="lg:col-span-2 bg-blue-900 p-12 rounded-[4rem] text-white shadow-2xl relative overflow-hidden group">
                     <i class="pi pi-bolt absolute -right-10 -bottom-10 text-[18rem] text-white/5 rotate-12 transition-transform duration-700 group-hover:rotate-0"></i>
                     <div class="relative z-10">
                         <div class="flex items-center gap-4 mb-8">
                             <Badge value="Conseil SNC" severity="warning" class="font-black px-4 py-1" />
                             <h3 class="text-3xl font-black tracking-tighter italic uppercase">Optimisation du stockage</h3>
                         </div>
-                        <p class="text-indigo-100 text-xl leading-relaxed mb-10 max-w-2xl font-medium">
+                        <p class="text-blue-100 text-xl leading-relaxed mb-10 max-w-2xl font-medium">
                             Pour garantir une lecture fluide sur mobile en Afrique Centrale, nous recommandons de convertir vos vidéos en <span class="text-amber-400 font-bold underline">HLS (m3u8)</span>.
                             Le moteur SubNetCongo peut automatiser cette tâche lors de l'upload.
                         </p>
@@ -525,7 +525,7 @@ const getFileIcon = (type) => {
         <Dialog v-model:visible="uploadDialog" modal header="Téléverser vers le Cloud S3" :style="{width: '700px'}" class="rounded-[3.5rem] overflow-hidden">
             <template #header>
                 <div class="flex items-center gap-4 p-4">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                    <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <i class="pi pi-upload text-xl"></i>
                     </div>
                     <div>
@@ -536,8 +536,8 @@ const getFileIcon = (type) => {
             </template>
 
             <form @submit.prevent="handleUpload" class="p-8 space-y-8">
-                <div class="p-16 border-4 border-dashed border-indigo-100 bg-indigo-50/30 rounded-[4rem] text-center flex flex-col items-center justify-center space-y-6 hover:bg-white hover:border-indigo-400 transition-all cursor-pointer group relative">
-                    <div class="w-24 h-24 bg-white rounded-[1rem] flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-transform duration-500">
+                <div class="p-16 border-4 border-dashed border-blue-100 bg-blue-50/30 rounded-[4rem] text-center flex flex-col items-center justify-center space-y-6 hover:bg-white hover:border-blue-400 transition-all cursor-pointer group relative">
+                    <div class="w-24 h-24 bg-white rounded-[1rem] flex items-center justify-center text-blue-600 shadow-xl group-hover:scale-110 transition-transform duration-500">
                         <i class="pi pi-cloud-upload text-4xl"></i>
                     </div>
                     <div>
@@ -550,22 +550,22 @@ const getFileIcon = (type) => {
 
                     <div v-if="uploadForm.files.length > 0" class="w-full">
                         <Divider />
-                        <h4 class="text-xs font-black text-indigo-600 uppercase mb-4">{{ uploadForm.files.length }} fichiers sélectionnés</h4>
+                        <h4 class="text-xs font-black text-blue-600 uppercase mb-4">{{ uploadForm.files.length }} fichiers sélectionnés</h4>
                         <div class="flex flex-wrap gap-2 justify-center">
-                            <Chip v-for="file in uploadForm.files" :key="file.name" :label="file.name" icon="pi pi-file" class="bg-white border border-indigo-100 text-[9px] font-bold" />
+                            <Chip v-for="file in uploadForm.files" :key="file.name" :label="file.name" icon="pi pi-file" class="bg-white border border-blue-100 text-[9px] font-bold" />
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-8">
-                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between shadow-inner">
+                    <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between shadow-inner">
                         <div>
                             <span class="text-sm font-black text-slate-700 block italic">Fichiers Privés</span>
                             <p class="text-[9px] text-slate-400 uppercase font-bold">Visible uniquement par vous</p>
                         </div>
                         <InputSwitch v-model="uploadForm.is_private" />
                     </div>
-                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between shadow-inner">
+                    <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between shadow-inner">
                         <div>
                             <span class="text-sm font-black text-slate-700 block italic">Auto-Optimisation</span>
                             <p class="text-[9px] text-slate-400 uppercase font-bold">Compression WebP intelligente</p>
@@ -575,7 +575,7 @@ const getFileIcon = (type) => {
                 </div>
 
                 <div v-if="uploadForm.processing" class="space-y-2">
-                    <div class="flex justify-between text-[10px] font-black uppercase text-indigo-600 italic">
+                    <div class="flex justify-between text-[10px] font-black uppercase text-blue-600 italic">
                         <span>Flux de données vers S3...</span>
                         <span>{{ uploadForm.progress?.percentage || 0 }}%</span>
                     </div>
@@ -588,7 +588,7 @@ const getFileIcon = (type) => {
                     <Button type="button" label="Annuler" class="p-button-text p-button-secondary font-black italic uppercase" @click="uploadDialog = false" />
                     <Button type="submit" label="Lancer la Synchronisation" icon="pi pi-check-circle"
                         :loading="uploadForm.processing"
-                        class="p-button-primary px-12 py-4 rounded-[1rem] shadow-2xl shadow-indigo-200 font-black italic text-lg"
+                        class="p-button-primary px-12 py-4 rounded-[1rem] shadow-2xl shadow-blue-200 font-black italic text-lg"
                         @click="handleUpload" />
                 </div>
             </template>
@@ -605,7 +605,7 @@ const getFileIcon = (type) => {
                     <div class="relative z-10">
                         <div class="aspect-video bg-white/5 rounded-[1rem] shadow-2xl overflow-hidden mb-8 border border-white/10 flex items-center justify-center group relative">
                             <img v-if="metadataForm.id" :src="props.assets?.data?.find(f => f.id === metadataForm.id)?.thumbnail" class="w-full h-full object-contain" />
-                            <div class="absolute inset-0 bg-indigo-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                            <div class="absolute inset-0 bg-blue-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                 <Button icon="pi pi-eye" label="Plein écran" class="p-button-white p-button-text font-black uppercase italic" />
                             </div>
                         </div>
@@ -622,7 +622,7 @@ const getFileIcon = (type) => {
                         <!-- Metadata Fields -->
                         <div class="space-y-6">
                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest italic flex items-center gap-3">
-                                <i class="pi pi-pencil text-indigo-500"></i> Édition des Métadonnées
+                                <i class="pi pi-pencil text-blue-500"></i> Édition des Métadonnées
                             </h4>
 
                             <div class="field">
@@ -642,7 +642,7 @@ const getFileIcon = (type) => {
 
                             <div class="field">
                                 <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-2 tracking-widest italic">Notes & Description Longue</label>
-                                <Textarea v-model="metadataForm.description" rows="4" placeholder="Détails internes sur l'utilisation de cet asset..." class="w-full rounded-3xl border-slate-200 p-4 shadow-sm" />
+                                <Textarea v-model="metadataForm.description" rows="4" placeholder="Détails internes sur l'utilisation de cet asset..." class="w-full rounded-xl border-slate-200 p-4 shadow-sm" />
                             </div>
                         </div>
 
@@ -650,10 +650,10 @@ const getFileIcon = (type) => {
 
                         <!-- Cloud Info Section -->
                         <div class="space-y-6">
-                            <div class="p-6 bg-slate-50 border border-slate-100 rounded-3xl space-y-4">
+                            <div class="p-6 bg-slate-50 border border-slate-100 rounded-xl space-y-4">
                                 <div class="flex justify-between items-center">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Emplacement AWS-S3</span>
-                                    <span class="text-[9px] font-mono text-indigo-600 bg-indigo-50 px-2 py-1 rounded">eu-west-3</span>
+                                    <span class="text-[9px] font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">eu-west-3</span>
                                 </div>
                                 <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-inner overflow-hidden">
                                     <p class="text-[10px] font-mono text-slate-500 break-all leading-relaxed">{{ props.assets?.data?.find(f => f.id === metadataForm.id)?.cdn_url || 'URL Non disponible' }}</p>
@@ -662,11 +662,11 @@ const getFileIcon = (type) => {
                                     @click="copyCdnUrl(props.assets?.data?.find(f => f.id === metadataForm.id))" />
                             </div>
 
-                            <div class="bg-indigo-900 p-8 rounded-[3rem] text-white shadow-xl relative overflow-hidden group">
+                            <div class="bg-blue-900 p-8 rounded-[3rem] text-white shadow-xl relative overflow-hidden group">
                                 <i class="pi pi-qrcode absolute -right-4 -bottom-4 text-7xl text-white/5 transition-transform group-hover:rotate-12"></i>
                                 <div class="relative z-10">
                                     <h5 class="text-lg font-black italic tracking-tighter mb-2">Partage Mobile Rapide</h5>
-                                    <p class="text-[10px] text-indigo-200 font-medium leading-relaxed italic mb-6">
+                                    <p class="text-[10px] text-blue-200 font-medium leading-relaxed italic mb-6">
                                         Générez un QR Code dynamique pour permettre aux élèves d'accéder à ce média via un support physique ou externe.
                                     </p>
                                     <Button label="Générer QR-Code SNC" icon="pi pi-qr-code" class="p-button-white p-button-outlined w-full rounded-2xl font-black italic" />
@@ -681,7 +681,7 @@ const getFileIcon = (type) => {
                     <Button label="Annuler" class="p-button-text p-button-secondary font-black italic flex-1 uppercase" @click="fileSidebar = false" />
                     <Button label="Enregistrer les Métadonnées" icon="pi pi-save"
                         :loading="metadataForm.processing"
-                        class="p-button-primary px-10 py-5 rounded-[1.2rem] shadow-2xl shadow-indigo-200 flex-[2] font-black italic text-lg tracking-tighter"
+                        class="p-button-primary px-10 py-5 rounded-[1.2rem] shadow-2xl shadow-blue-200 flex-[2] font-black italic text-lg tracking-tighter"
                         @click="updateMetadata" />
                 </div>
             </div>
@@ -699,7 +699,7 @@ const getFileIcon = (type) => {
                     <InputText v-model="folderForm.name" placeholder="Ex: Vidéos Chapitre 01" class="w-full p-4 rounded-2xl border-slate-200 text-center font-bold text-lg shadow-sm" autofocus />
                 </div>
 
-                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100">
                     <p class="text-[10px] text-slate-500 text-center font-medium italic leading-relaxed">
                         Note : Les dossiers sont "virtuels". L'interface se déplacera dans ce dossier et il sera créé physiquement lors du premier upload.
                     </p>

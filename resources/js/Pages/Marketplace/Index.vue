@@ -95,105 +95,105 @@ const formatPrice = (price) => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER ULTIMATE V30 (Premium Dark Mesh) -->
-            <div class="bg-[#0F172A] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">
-                <div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-                <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+            <div class="bg-[#0F172A] pt-8 sm:pt-12 pb-20 sm:pb-24 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
+                <div class="absolute top-[-10%] right-[-10%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-blue-600/20 rounded-full blur-[100px] sm:blur-[120px] pointer-events-none"></div>
+                <div class="absolute bottom-[-10%] left-[-5%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-blue-600/10 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none"></div>
 
-                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
                     <div class="text-center md:text-left">
-                        <div class="flex items-center justify-center md:justify-start gap-3 mb-4">
-                            <span class="px-3 py-1 bg-violet-500/10 border border-violet-500/20 rounded-full text-[10px] font-black text-violet-400 uppercase tracking-widest">Digital Learning Hub</span>
+                        <div class="flex items-center justify-center md:justify-start gap-2 sm:gap-3 mb-3 sm:mb-4">
+                            <span class="px-2 sm:px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-[9px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest">Digital Learning Hub</span>
                         </div>
-                        <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
-                            Catalogue <span class="text-violet-500">Marketplace</span>
+                        <h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
+                            Catalogue <span class="text-blue-500">Marketplace</span>
                         </h1>
-                        <p class="text-slate-400 mt-4 max-w-lg text-sm font-medium leading-relaxed">
+                        <p class="text-slate-400 mt-3 sm:mt-4 max-w-lg text-xs sm:text-sm font-medium leading-relaxed">
                             Apprenez des meilleurs experts tech en RDC. Des formations certifiantes pour propulser votre carrière.
                         </p>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <Link :href="route('marketplace.cart')" class="group relative px-6 py-3 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-3 transition-all">
-                            <i class="pi pi-shopping-cart text-white text-lg group-hover:scale-110 transition-transform"></i>
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <Link :href="route('marketplace.cart')" class="group relative px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 transition-all">
+                            <i class="pi pi-shopping-cart text-white text-base sm:text-lg group-hover:scale-110 transition-transform"></i>
                             <div class="text-left">
-                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Panier</p>
+                                <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Panier</p>
                                 <p class="text-white font-bold text-xs">{{ props.cartCount || 0 }} article(s)</p>
                             </div>
-                            <span v-if="props.cartCount" class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#0F172A]">{{ props.cartCount }}</span>
+                            <span v-if="props.cartCount" class="absolute -top-1.5 sm:-top-2 -right-1.5 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#0F172A]">{{ props.cartCount }}</span>
                         </Link>
                     </div>
                 </div>
 
                 <!-- Global Search Pro -->
-                <div class="max-w-3xl mx-auto mt-10 relative z-10">
+                <div class="max-w-3xl mx-auto mt-6 sm:mt-10 relative z-10">
                     <IconField iconPosition="left">
                         <InputIcon class="pi pi-search text-slate-400" />
                         <InputText v-model="search" @keyup.enter="apply" placeholder="Qu'allez-vous maîtriser aujourd'hui ?"
-                            class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-xl !py-5 !pl-14 !text-white placeholder:!text-slate-500 focus:!bg-white/10 focus:!border-violet-500/50 transition-all" />
+                            class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-xl !py-3.5 sm:!py-5 !pl-12 sm:!pl-14 !text-white placeholder:!text-slate-500 focus:!bg-white/10 focus:!border-blue-500/50 transition-all text-sm sm:text-base" />
                     </IconField>
                 </div>
             </div>
 
             <!-- CONTENT SECTION -->
-            <div class="max-w-11xl mx-auto px-6 -mt-12 relative z-20">
-                <div class="bg-white rounded-[1rem] shadow-2xl border border-slate-200/50 p-8 lg:p-10">
+            <div class="max-w-11xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-12 relative z-20">
+                <div class="bg-white rounded-[1rem] shadow-2xl border border-slate-200/50 p-4 sm:p-6 lg:p-10">
 
                     <!-- KPI STRIP (Premium Cards) -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
                         <div v-for="stat in [
-                            { label: 'Cours dispos', val: stats.total, icon: 'shopping-bag', color: 'bg-violet-50 text-violet-600' },
+                            { label: 'Cours dispos', val: stats.total, icon: 'shopping-bag', color: 'bg-blue-50 text-blue-600' },
                             { label: 'Gratuits', val: stats.free, icon: 'gift', color: 'bg-emerald-50 text-emerald-600' },
                             { label: 'Certifiants', val: stats.paid, icon: 'star', color: 'bg-amber-50 text-amber-600' },
-                            { label: 'Rating Global', val: stats.avg_rating, icon: 'verified', color: 'bg-indigo-50 text-indigo-600', suffix: '/5' }
-                        ]" :key="stat.label" class="p-6 rounded-xl border border-slate-100 bg-white hover:shadow-lg transition-all group">
-                            <div :class="stat.color" class="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i :class="`pi pi-${stat.icon}`"></i>
+                            { label: 'Rating Global', val: stats.avg_rating, icon: 'verified', color: 'bg-blue-50 text-blue-600', suffix: '/5' }
+                        ]" :key="stat.label" class="p-3 sm:p-6 rounded-xl border border-slate-100 bg-white hover:shadow-lg transition-all group">
+                            <div :class="stat.color" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-2 sm:mb-4 group-hover:scale-110 transition-transform">
+                                <i :class="`pi pi-${stat.icon} text-sm sm:text-base`"></i>
                             </div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{{ stat.label }}</p>
-                            <h3 class="text-2xl font-black text-slate-800">{{ stat.val }}<span v-if="stat.suffix" class="text-sm opacity-50">{{ stat.suffix }}</span></h3>
+                            <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 sm:mb-1">{{ stat.label }}</p>
+                            <h3 class="text-lg sm:text-2xl font-black text-slate-800">{{ stat.val }}<span v-if="stat.suffix" class="text-xs sm:text-sm opacity-50">{{ stat.suffix }}</span></h3>
                         </div>
                     </div>
 
-                    <div class="flex flex-col lg:flex-row gap-10">
+                    <div class="flex flex-col lg:flex-row gap-6 sm:gap-10">
                         <!-- Sidebar Filters -->
-                        <aside class="lg:w-72 space-y-8">
+                        <aside class="lg:w-72 space-y-6 sm:space-y-8">
                             <div class="sticky top-10">
-                                <h3 class="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2 mb-6">
-                                    <span class="w-2 h-2 bg-violet-600 rounded-full"></span> Filtres Avancés
+                                <h3 class="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2 mb-4 sm:mb-6">
+                                    <span class="w-2 h-2 bg-blue-600 rounded-full"></span> Filtres Avancés
                                 </h3>
 
-                                <div class="space-y-6">
+                                <div class="space-y-4 sm:space-y-6">
                                     <div v-for="f in [{l:'Catégorie', m:category, o:props.categories, p:'Toutes'}, {l:'Niveau', m:level, o:levelOptions}, {l:'Prix', m:priceRange, o:priceOptions}]" :key="f.l">
                                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">{{ f.l }}</label>
-                                        <Select v-model="f.m" :options="f.o" :optionLabel="f.l === 'Catégorie' ? 'name' : 'label'" :optionValue="f.l === 'Catégorie' ? 'id' : 'value'" :placeholder="f.p" class="w-full !rounded-xl !bg-slate-50 border-none" />
+                                        <Select v-model="f.m" :options="f.o" :optionLabel="f.l === 'Catégorie' ? 'name' : 'label'" :optionValue="f.l === 'Catégorie' ? 'id' : 'value'" :placeholder="f.p" class="w-full !rounded-xl !bg-slate-50 border-none text-sm" />
                                     </div>
 
-                                    <Button label="Filtrer les résultats" icon="pi pi-sliders-h" @click="apply" class="!bg-[#0F172A] hover:!bg-black !border-none !rounded-xl !w-full !py-4 !text-xs !font-black !uppercase !tracking-widest transition-all active:scale-95 shadow-xl" />
+                                    <Button label="Filtrer les résultats" icon="pi pi-sliders-h" @click="apply" class="!bg-[#0F172A] hover:!bg-black !border-none !rounded-xl !w-full !py-3 sm:!py-4 !text-xs !font-black !uppercase !tracking-widest transition-all active:scale-95 shadow-xl" />
                                 </div>
                             </div>
                         </aside>
 
                         <!-- Course Grid -->
                         <div class="flex-1">
-                            <div class="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
-                                <p class="text-sm font-medium text-slate-500">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 border-b border-slate-100 pb-4 sm:pb-6 gap-2">
+                                <p class="text-xs sm:text-sm font-medium text-slate-500">
                                     Affichage de <span class="text-slate-900 font-bold">{{ props.courses?.data?.length || 0 }}</span> sur <span class="text-slate-900 font-bold">{{ props.courses?.total || 0 }}</span> cours
                                 </p>
-                                <Select v-model="sort" :options="sortOptions" optionLabel="label" optionValue="value" @change="apply" class="!w-48 !bg-transparent border-none !text-xs !font-bold" />
+                                <Select v-model="sort" :options="sortOptions" optionLabel="label" optionValue="value" @change="apply" class="!w-full sm:!w-48 !bg-transparent border-none !text-xs !font-bold" />
                             </div>
 
                             <!-- Empty State -->
-                            <div v-if="!props.courses?.data?.length" class="py-20 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-                                <i class="pi pi-search text-5xl text-slate-300 mb-6 block"></i>
-                                <h4 class="text-xl font-black text-slate-800">Aucun résultat trouvé</h4>
-                                <p class="text-slate-500 text-sm mt-2">Essayez d'ajuster vos filtres de recherche.</p>
+                            <div v-if="!props.courses?.data?.length" class="py-16 sm:py-20 text-center bg-slate-50 rounded-[2rem] sm:rounded-[3rem] border-2 border-dashed border-slate-200">
+                                <i class="pi pi-search text-4xl sm:text-5xl text-slate-300 mb-4 sm:mb-6 block"></i>
+                                <h4 class="text-lg sm:text-xl font-black text-slate-800">Aucun résultat trouvé</h4>
+                                <p class="text-slate-500 text-xs sm:text-sm mt-2">Essayez d'ajuster vos filtres de recherche.</p>
                             </div>
 
                             <!-- Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                                <div v-for="course in props.courses.data" :key="course.id" class="group bg-white rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-violet-200 transition-all duration-500 overflow-hidden">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8">
+                                <div v-for="course in props.courses.data" :key="course.id" class="group bg-white rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all duration-500 overflow-hidden">
                                     <!-- Image avec gestion d'erreur -->
-                                    <div class="relative h-48 overflow-hidden bg-slate-100">
+                                    <div class="relative h-36 sm:h-48 overflow-hidden bg-slate-100">
                                         <Link :href="route('marketplace.show', course.id)">
                                             <img
                                                 :src="getImageUrl(course.thumbnail_path || course.image)"
@@ -202,48 +202,48 @@ const formatPrice = (price) => {
                                                 alt="Course Thumbnail"
                                             />
                                         </Link>
-                                        <div class="absolute top-4 right-4">
-                                            <button @click="toggleWishlist(course)" class="w-10 h-10 bg-white/90 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg hover:bg-white transition-colors">
-                                                <i :class="props.wishlistIds?.includes(course.id) ? 'pi pi-heart-fill text-rose-500' : 'pi pi-heart text-slate-400'" class="text-sm"></i>
+                                        <div class="absolute top-3 sm:top-4 right-3 sm:right-4">
+                                            <button @click="toggleWishlist(course)" class="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg hover:bg-white transition-colors">
+                                                <i :class="props.wishlistIds?.includes(course.id) ? 'pi pi-heart-fill text-red-500' : 'pi pi-heart text-slate-400'" class="text-xs sm:text-sm"></i>
                                             </button>
                                         </div>
-                                        <div class="absolute bottom-4 left-4 flex gap-2">
-                                            <Tag v-if="props.enrolledIds?.includes(course.id)" value="Déjà inscrit" severity="success" class="!rounded-lg !text-[8px] !font-black !px-2 !uppercase" />
-                                            <Tag v-else :value="course.level || 'Tous niveaux'" class="!bg-slate-900/80 !text-white !rounded-lg !text-[8px] !font-black !px-2 !uppercase" />
+                                        <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 flex gap-1.5 sm:gap-2">
+                                            <Tag v-if="props.enrolledIds?.includes(course.id)" value="Déjà inscrit" severity="success" class="!rounded-lg !text-[7px] sm:!text-[8px] !font-black !px-1.5 sm:!px-2 !uppercase" />
+                                            <Tag v-else :value="course.level || 'Tous niveaux'" class="!bg-slate-900/80 !text-white !rounded-lg !text-[7px] sm:!text-[8px] !font-black !px-1.5 sm:!px-2 !uppercase" />
                                         </div>
                                     </div>
 
-                                    <div class="p-6 space-y-4">
+                                    <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
                                         <div class="space-y-1">
-                                            <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest">{{ course.category?.name || 'Technologie' }}</p>
+                                            <p class="text-[9px] sm:text-[10px] font-black text-blue-600 uppercase tracking-widest">{{ course.category?.name || 'Technologie' }}</p>
                                             <Link :href="route('marketplace.show', course.id)">
-                                                <h3 class="text-sm font-black text-slate-800 leading-tight line-clamp-2 hover:text-violet-600 transition-colors tracking-tight">
+                                                <h3 class="text-xs sm:text-sm font-black text-slate-800 leading-tight line-clamp-2 hover:text-blue-600 transition-colors tracking-tight">
                                                     {{ course.title }}
                                                 </h3>
                                             </Link>
                                         </div>
 
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-6 h-6 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
+                                        <div class="flex items-center gap-2 sm:gap-3">
+                                            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
                                                 <img :src="course.instructor?.avatar || 'https://ui-avatars.com/api/?name=' + course.instructor?.name" @error="handleImageError" class="w-full h-full object-cover" />
                                             </div>
-                                            <span class="text-xs font-bold text-slate-500 italic">{{ course.instructor?.name }}</span>
+                                            <span class="text-[10px] sm:text-xs font-bold text-slate-500 italic">{{ course.instructor?.name }}</span>
                                         </div>
 
                                         <div class="flex justify-between items-center pt-2">
-                                            <div class="flex items-center gap-2">
-                                                <Rating :modelValue="4.5" readonly :stars="5" :cancel="false" class="text-[10px]" />
-                                                <span class="text-[10px] font-bold text-slate-400">(240)</span>
+                                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                                <Rating :modelValue="4.5" readonly :stars="5" :cancel="false" class="text-[9px] sm:text-[10px]" />
+                                                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400">(240)</span>
                                             </div>
-                                            <span class="text-lg font-black text-slate-900">{{ formatPrice(course.price) }}</span>
+                                            <span class="text-base sm:text-lg font-black text-slate-900">{{ formatPrice(course.price) }}</span>
                                         </div>
 
                                         <div class="pt-2">
                                             <Button v-if="!props.enrolledIds?.includes(course.id)"
                                                 label="Ajouter au panier" icon="pi pi-shopping-cart" @click="addToCart(course)"
-                                                class="w-full !rounded-xl !bg-[#F1F5F9] !text-[#0F172A] hover:!bg-violet-600 hover:!text-white !border-none !text-[10px] !font-black !uppercase !tracking-widest !py-3.5 transition-all" />
+                                                class="w-full !rounded-xl !bg-[#F1F5F9] !text-[#0F172A] hover:!bg-blue-600 hover:!text-white !border-none !text-[9px] sm:!text-[10px] !font-black !uppercase !tracking-widest !py-2.5 sm:!py-3.5 transition-all" />
                                             <Link v-else :href="route('student.my-courses')" class="w-full">
-                                                <Button label="Reprendre le cours" icon="pi pi-play" class="w-full !rounded-xl !bg-emerald-500 !border-none !text-[10px] !font-black !uppercase !tracking-widest !py-3.5" />
+                                                <Button label="Reprendre le cours" icon="pi pi-play" class="w-full !rounded-xl !bg-emerald-500 !border-none !text-[9px] sm:!text-[10px] !font-black !uppercase !tracking-widest !py-2.5 sm:!py-3.5" />
                                             </Link>
                                         </div>
                                     </div>
@@ -251,11 +251,11 @@ const formatPrice = (price) => {
                             </div>
 
                             <!-- Pagination -->
-                            <div v-if="props.courses?.last_page > 1" class="flex justify-center mt-16">
-                                <nav class="flex gap-2 p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+                            <div v-if="props.courses?.last_page > 1" class="flex justify-center mt-12 sm:mt-16">
+                                <nav class="flex gap-1.5 sm:gap-2 p-2 bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100">
                                     <Link v-for="link in props.courses.links" :key="link.label" :href="link.url"
-                                        :class="['px-4 py-2 rounded-xl text-xs font-black transition-all',
-                                            link.active ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20' : 'hover:bg-slate-50 text-slate-500']"
+                                        :class="['px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black transition-all',
+                                            link.active ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'hover:bg-slate-50 text-slate-500']"
                                         v-html="link.label"
                                     />
                                 </nav>

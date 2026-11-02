@@ -73,7 +73,7 @@ import { computed } from 'vue';
                         </div>
 
                         <div v-if="identity.social_facebook !== '#' || identity.social_twitter !== '#' || identity.social_linkedin !== '#' || identity.social_youtube !== '#'" class="flex items-start gap-4 p-4 rounded-2xl bg-slate-50">
-                            <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
                                 <i class="pi pi-share-alt text-xl"></i>
                             </div>
                             <div class="flex-1">
@@ -138,13 +138,13 @@ import { computed } from 'vue';
                     <div>
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Nom complet *</label>
                         <input v-model="form.name" type="text" placeholder="Jean-Paul Mulumba" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required />
-                        <p v-if="form.errors.name" class="text-rose-500 text-xs mt-1">{{ form.errors.name }}</p>
+                        <p v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Email *</label>
                             <input v-model="form.email" type="email" placeholder="exemple@email.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required />
-                            <p v-if="form.errors.email" class="text-rose-500 text-xs mt-1">{{ form.errors.email }}</p>
+                            <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
                         </div>
                         <div>
                             <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Téléphone</label>
@@ -154,12 +154,12 @@ import { computed } from 'vue';
                     <div>
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Sujet *</label>
                         <input v-model="form.subject" type="text" placeholder="Ex : Demande de partenariat" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required />
-                        <p v-if="form.errors.subject" class="text-rose-500 text-xs mt-1">{{ form.errors.subject }}</p>
+                        <p v-if="form.errors.subject" class="text-red-500 text-xs mt-1">{{ form.errors.subject }}</p>
                     </div>
                     <div>
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Message *</label>
                         <textarea v-model="form.message" placeholder="Votre message..." rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none" required></textarea>
-                        <p v-if="form.errors.message" class="text-rose-500 text-xs mt-1">{{ form.errors.message }}</p>
+                        <p v-if="form.errors.message" class="text-red-500 text-xs mt-1">{{ form.errors.message }}</p>
                     </div>
                     <button type="submit" :disabled="form.processing" class="w-full px-6 py-4 bg-[#003399] text-white font-black rounded-xl hover:bg-blue-800 transition disabled:opacity-50">
                         <i class="pi pi-send mr-2"></i>{{ form.processing ? 'Envoi...' : 'Envoyer le message' }}

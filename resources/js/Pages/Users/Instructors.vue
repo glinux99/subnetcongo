@@ -321,7 +321,7 @@ const getSeverity = (status) => {
         'Actif': { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
         'En intégration': { bg: 'bg-blue-50 text-blue-700 border-blue-200' },
         'Inactif': { bg: 'bg-slate-50 text-slate-700 border-slate-200' },
-        'Suspendu': { bg: 'bg-rose-50 text-rose-700 border-rose-200' }
+        'Suspendu': { bg: 'bg-red-50 text-red-700 border-red-200' }
     };
     return map[status] || map['Inactif'];
 };
@@ -484,8 +484,8 @@ onMounted(() => {
             
             <!-- KPI 1 : Effectif Instructeurs -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-briefcase text-indigo-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-briefcase text-blue-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Experts</h3>
@@ -521,8 +521,8 @@ onMounted(() => {
 
             <!-- KPI 4 : Commissions Versées -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-wallet text-rose-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-wallet text-red-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Commissions</h3>
@@ -613,11 +613,11 @@ onMounted(() => {
                             <div class="flex items-center gap-4 py-2">
                                 <div class="relative cursor-pointer group" @click="viewProfile(data)">
                                     <Avatar v-if="data.avatar_path" :image="data.avatar_path" shape="circle" size="xlarge" class="border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
-                                    <Avatar v-else :label="data.name.charAt(0).toUpperCase()" shape="circle" size="xlarge" class="bg-indigo-100 text-indigo-700 font-black border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
+                                    <Avatar v-else :label="data.name.charAt(0).toUpperCase()" shape="circle" size="xlarge" class="bg-blue-100 text-blue-700 font-black border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
                                     <span :class="['absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-white', data.status === 'Actif' ? 'bg-emerald-500' : 'bg-slate-300']"></span>
                                 </div>
                                 <div class="flex flex-col justify-center">
-                                    <span class="font-extrabold text-slate-800 text-base hover:text-indigo-600 cursor-pointer transition-colors" @click="editInstructor(data)">
+                                    <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors" @click="editInstructor(data)">
                                         {{ data.name }}
                                     </span>
                                     <div class="text-xs text-slate-500 flex items-center gap-3 mt-0.5">
@@ -651,7 +651,7 @@ onMounted(() => {
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
                                     <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-book text-slate-400"></i> Cours affectés</span>
-                                    <span class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{{ data.assigned_courses_count || 0 }}</span>
+                                    <span class="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{{ data.assigned_courses_count || 0 }}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs w-36">
                                     <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-users text-slate-400"></i> Total Élèves</span>
@@ -679,9 +679,9 @@ onMounted(() => {
                     <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-chart-line" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Profil Complet 360°'" @click="viewProfile(data)" />
+                                <Button icon="pi pi-chart-line" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Profil Complet 360°'" @click="viewProfile(data)" />
                                 <Button icon="pi pi-user-edit" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Modifier le dossier RH'" @click="editInstructor(data)" />
-                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Archiver le contrat'" @click="confirmDeleteInstructor(data)" />
+                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="'Archiver le contrat'" @click="confirmDeleteInstructor(data)" />
                             </div>
                         </template>
                     </Column>
@@ -692,7 +692,7 @@ onMounted(() => {
                             <div class="max-w-7xl mx-auto">
                                 <div class="flex items-center justify-between mb-6">
                                     <h4 class="font-bold text-slate-800 text-lg flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="pi pi-book"></i></div>
+                                        <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-book"></i></div>
                                         Portfolio Pédagogique Actif
                                     </h4>
                                     <div class="flex gap-2">
@@ -766,10 +766,10 @@ onMounted(() => {
             <!-- WORKSPACE HEADER (FIXE) -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
                 <!-- Ligne de progression UI -->
-                <div class="absolute top-0 left-0 h-0.5 bg-indigo-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '33%' }"></div>
+                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '33%' }"></div>
 
                 <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
                         <i class="pi pi-user-edit text-lg"></i>
                     </div>
                     <div>
@@ -806,14 +806,14 @@ onMounted(() => {
                             class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
                             :class="[
                                 activeEditorTab === item.id
-                                    ? 'bg-indigo-50 border border-indigo-100 shadow-sm'
+                                    ? 'bg-blue-50 border border-blue-100 shadow-sm'
                                     : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'
                             ]"
                         >
-                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-md"></div>
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
 
                             <div class="relative mt-0.5">
-                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
+                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
                                 <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center bg-white">
                                     <i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px] bg-white rounded-full"></i>
                                     <i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px] bg-white rounded-full"></i>
@@ -821,7 +821,7 @@ onMounted(() => {
                             </div>
 
                             <div class="flex-1">
-                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-indigo-800' : 'text-slate-700']">{{ item.label }}</div>
+                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div>
                                 <div class="text-[11px] font-medium text-slate-500 leading-tight">{{ item.description }}</div>
                             </div>
                         </button>
@@ -850,7 +850,7 @@ onMounted(() => {
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in" role="tabpanel">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">État Civil & Coordonnées</h3>
                                         <p class="text-xs text-slate-500 mt-1">Identité légale et moyens de contact.</p>
@@ -859,12 +859,12 @@ onMounted(() => {
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     <div class="col-span-1 md:col-span-2 space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Nom Complet de l'Expert <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Nom Complet de l'Expert <span class="text-red-500">*</span></label>
                                         <InputText v-model="instructorForm.name" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50 focus:bg-white transition-colors" placeholder="Ex: Alphonse Kabongo" :class="{'p-invalid': instructorForm.errors?.name || (!instructorForm.name && instructorForm.isDirty)}" />
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Adresse Email Professionnelle <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Adresse Email Professionnelle <span class="text-red-500">*</span></label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-envelope text-slate-400" />
                                             <InputText v-model="instructorForm.email" type="email" class="w-full bg-slate-50 focus:bg-white" placeholder="alphonse.k@subnet.cd" :class="{'p-invalid': instructorForm.errors?.email}" />
@@ -904,7 +904,7 @@ onMounted(() => {
 
                                 <div class="grid grid-cols-1 gap-6">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Domaines de Spécialité <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Domaines de Spécialité <span class="text-red-500">*</span></label>
                                         <MultiSelect v-model="instructorForm.specialties" :options="props.specialtiesList" optionLabel="label" optionValue="value" placeholder="Sélectionnez les compétences clés..." display="chip" class="w-full bg-slate-50" :class="{'p-invalid': !instructorForm.specialties.length}" filter />
                                         <small class="text-slate-500 text-[11px]">Sert à classifier l'instructeur dans l'annuaire public.</small>
                                     </div>
@@ -943,7 +943,7 @@ onMounted(() => {
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Photo de Profil Officielle</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-                                    <div class="flex flex-col items-center justify-center p-8 bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl relative group hover:bg-indigo-50/50 hover:border-indigo-300 transition-colors">
+                                    <div class="flex flex-col items-center justify-center p-8 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl relative group hover:bg-blue-50/50 hover:border-blue-300 transition-colors">
 
                                         <Avatar v-if="instructorForm.avatar" :image="typeof instructorForm.avatar === 'string' ? instructorForm.avatar : URL.createObjectURL(instructorForm.avatar)" size="xlarge" shape="circle" class="w-40 h-40 shadow-2xl ring-4 ring-white mb-6 object-cover" />
                                         <div v-else class="w-40 h-40 rounded-full bg-white flex items-center justify-center shadow-inner border border-slate-200 mb-6 text-slate-300">
@@ -981,7 +981,7 @@ onMounted(() => {
 
                                 <div class="grid grid-cols-1 gap-8">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Statut du Contrat <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Statut du Contrat <span class="text-red-500">*</span></label>
                                         <Dropdown v-model="instructorForm.status" :options="props.statuses" class="w-full md:w-1/2 font-medium bg-slate-50">
                                             <template #value="slotProps">
                                                 <div class="flex items-center gap-2">
@@ -1026,9 +1026,9 @@ onMounted(() => {
 
                                 <div class="space-y-4">
                                     <!-- Blocage Compte -->
-                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200 hover:border-rose-200 transition-colors">
+                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200 hover:border-red-200 transition-colors">
                                         <div class="flex gap-4">
-                                            <div class="w-10 h-10 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-lock"></i></div>
+                                            <div class="w-10 h-10 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-lock"></i></div>
                                             <div>
                                                 <div class="font-bold text-slate-800 text-sm">Bannir / Suspendre l'accès</div>
                                                 <div class="text-xs text-slate-500 mt-1 leading-tight max-w-md">L'instructeur ne pourra plus accéder à son tableau de bord, ni modifier ses cours. Ses cours actuels resteront en ligne sauf intervention.</div>
@@ -1066,7 +1066,7 @@ onMounted(() => {
                     <Button label="Fermer" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50" @click="instructorDialog = false" />
 
                     <div class="relative group">
-                        <Button label="Enregistrer le Profil" icon="pi pi-check-circle" class="p-button-primary shadow-lg shadow-indigo-500/30 font-bold px-8 text-sm" @click="saveInstructor" :loading="instructorForm.processing" :disabled="!isEntireFormValid" />
+                        <Button label="Enregistrer le Profil" icon="pi pi-check-circle" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveInstructor" :loading="instructorForm.processing" :disabled="!isEntireFormValid" />
                     </div>
                 </div>
             </div>
@@ -1088,7 +1088,7 @@ onMounted(() => {
         >
             <template #header>
                 <div class="flex items-center gap-4 w-full">
-                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
                         <i class="pi pi-id-card text-xl"></i>
                     </div>
                     <div class="flex-1">
@@ -1100,27 +1100,27 @@ onMounted(() => {
 
             <div v-if="currentInstructor" class="flex flex-col h-full relative">
                 <!-- Hero Header -->
-                <div class="bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-700 p-8 text-white rounded-b-[2rem] shadow-lg relative overflow-hidden flex-shrink-0">
+                <div class="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-700 p-8 text-white rounded-b-[2rem] shadow-lg relative overflow-hidden flex-shrink-0">
                     <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
                     <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
 
                     <div class="relative z-10 flex flex-col items-center text-center">
                         <Avatar v-if="currentInstructor.avatar_path" :image="currentInstructor.avatar_path" size="xlarge" shape="circle" class="ring-4 ring-white/30 mb-4 w-28 h-28 shadow-2xl bg-white object-cover" />
-                        <Avatar v-else :label="currentInstructor.name?.charAt(0).toUpperCase()" size="xlarge" shape="circle" class="ring-4 ring-white/30 mb-4 w-28 h-28 shadow-2xl bg-white text-indigo-600 font-black text-4xl" />
+                        <Avatar v-else :label="currentInstructor.name?.charAt(0).toUpperCase()" size="xlarge" shape="circle" class="ring-4 ring-white/30 mb-4 w-28 h-28 shadow-2xl bg-white text-blue-600 font-black text-4xl" />
 
                         <h2 class="text-2xl font-black mb-1">{{ currentInstructor.name }}</h2>
                         <div class="flex items-center justify-center gap-2 mb-4">
                             <Tag :value="currentInstructor.status" class="bg-white/20 text-white border border-white/30 px-3 py-1 text-xs" />
-                            <span class="text-indigo-200 text-xs font-mono bg-black/20 px-2 py-1 rounded">Comm: {{ currentInstructor.commission_rate || 70 }}%</span>
+                            <span class="text-blue-200 text-xs font-mono bg-black/20 px-2 py-1 rounded">Comm: {{ currentInstructor.commission_rate || 70 }}%</span>
                         </div>
 
                         <div class="grid grid-cols-3 w-full mt-4 gap-3">
                             <div class="bg-black/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10 shadow-inner">
-                                <p class="text-[9px] text-indigo-200 uppercase font-bold tracking-widest mb-1">Ventes (Élèves)</p>
+                                <p class="text-[9px] text-blue-200 uppercase font-bold tracking-widest mb-1">Ventes (Élèves)</p>
                                 <p class="text-xl font-black">{{ currentInstructor.total_students || 0 }}</p>
                             </div>
                             <div class="bg-black/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10 shadow-inner">
-                                <p class="text-[9px] text-indigo-200 uppercase font-bold tracking-widest mb-1">Cours Actifs</p>
+                                <p class="text-[9px] text-blue-200 uppercase font-bold tracking-widest mb-1">Cours Actifs</p>
                                 <p class="text-xl font-black">{{ currentInstructor.assigned_courses_count || 0 }}</p>
                             </div>
                             <div class="bg-black/10 backdrop-blur-sm rounded-2xl p-3 border border-emerald-500/30 shadow-inner text-emerald-300">
@@ -1156,7 +1156,7 @@ onMounted(() => {
                                             <a v-if="parseJSON(currentInstructor.social).linkedin" :href="parseJSON(currentInstructor.social).linkedin" target="_blank" class="w-10 h-10 rounded-full bg-[#0077b5]/10 text-[#0077b5] flex items-center justify-center hover:bg-[#0077b5] hover:text-white transition-colors">
                                                 <i class="pi pi-linkedin"></i>
                                             </a>
-                                            <a v-if="parseJSON(currentInstructor.social).website" :href="parseJSON(currentInstructor.social).website" target="_blank" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors">
+                                            <a v-if="parseJSON(currentInstructor.social).website" :href="parseJSON(currentInstructor.social).website" target="_blank" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
                                                 <i class="pi pi-globe"></i>
                                             </a>
                                         </div>
@@ -1166,7 +1166,7 @@ onMounted(() => {
                                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                     <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-tags"></i> Spécialités</h4>
                                     <div class="flex flex-wrap gap-2">
-                                        <Tag v-for="spec in parseJSON(currentInstructor.specialties)" :key="spec" :value="spec.name || spec" class="bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold px-3 py-1" />
+                                        <Tag v-for="spec in parseJSON(currentInstructor.specialties)" :key="spec" :value="spec.name || spec" class="bg-blue-50 text-blue-700 border border-blue-100 font-bold px-3 py-1" />
                                         <span v-if="!parseJSON(currentInstructor.specialties).length" class="text-sm text-slate-400 italic">Aucune spécialité renseignée.</span>
                                     </div>
                                 </div>
@@ -1216,7 +1216,7 @@ onMounted(() => {
             <template #footer>
                 <div class="flex justify-between items-center w-full px-2 mt-1">
                     <Button label="Fermer" class="p-button-text p-button-secondary font-bold" @click="profileSidebar = false" />
-                    <Button label="Modifier Profil" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-indigo-500/30 rounded-xl" @click="editInstructor(currentInstructor); profileSidebar = false" />
+                    <Button label="Modifier Profil" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-blue-500/30 rounded-xl" @click="editInstructor(currentInstructor); profileSidebar = false" />
                 </div>
             </template>
         </Dialog>

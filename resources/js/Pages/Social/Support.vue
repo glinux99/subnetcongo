@@ -47,9 +47,9 @@ const activeTab = ref(0);
 
 // --- CONFIGURATION OPTIONS ---
 const priorities = ref([
-    { label: 'Urgente', value: 'URGENT', color: 'rose' },
-    { label: 'Haute', value: 'HIGH', color: 'orange' },
-    { label: 'Moyenne', value: 'MEDIUM', color: 'indigo' },
+    { label: 'Urgente', value: 'URGENT', color: 'red' },
+    { label: 'Haute', value: 'HIGH', color: 'red' },
+    { label: 'Moyenne', value: 'MEDIUM', color: 'blue' },
     { label: 'Basse', value: 'LOW', color: 'slate' }
 ]);
 
@@ -198,7 +198,7 @@ onMounted(() => {
             <!-- HEADER -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="flex items-center gap-6">
-                    <div class="bg-indigo-600 p-4 rounded-3xl shadow-xl shadow-indigo-100 -rotate-3 transition-transform hover:rotate-0">
+                    <div class="bg-blue-600 p-4 rounded-xl shadow-xl shadow-blue-100 -rotate-3 transition-transform hover:rotate-0">
                         <i class="pi pi-headphones text-white text-3xl"></i>
                     </div>
                     <div>
@@ -207,7 +207,7 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="flex gap-3">
-                    <Button label="Réponses Types (Macros)" icon="pi pi-bolt" class="p-button-outlined p-button-indigo border-2 font-bold" @click="displayMacrosDialog = true" />
+                    <Button label="Réponses Types (Macros)" icon="pi pi-bolt" class="p-button-outlined p-button-primary border-2 font-bold" @click="displayMacrosDialog = true" />
                     <Button label="Nouveau Ticket" icon="pi pi-plus" class="p-button-primary shadow-lg px-6 font-bold" />
                 </div>
             </header>
@@ -215,10 +215,10 @@ onMounted(() => {
             <!-- KPI DASHBOARD -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <div v-for="kpi in [
-                    { label: 'Tickets Ouverts', val: openTicketsCount, icon: 'pi-envelope', color: 'indigo', trend: 'En baisse' },
+                    { label: 'Tickets Ouverts', val: openTicketsCount, icon: 'pi-envelope', color: 'blue', trend: 'En baisse' },
                     { label: 'Temps de réponse', val: avgResponseTime, icon: 'pi-clock', color: 'amber', trend: '-10 min' },
                     { label: 'Satisfaction (CSAT)', val: '4.8/5', icon: 'pi-star-fill', color: 'emerald', trend: '+0.2' },
-                    { label: 'Taux de Résolution', val: '94%', icon: 'pi-check-circle', color: 'rose', trend: 'Stable' }
+                    { label: 'Taux de Résolution', val: '94%', icon: 'pi-check-circle', color: 'red', trend: 'Stable' }
                 ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-xl transition-all duration-300">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
@@ -289,7 +289,7 @@ onMounted(() => {
                                 <Column field="subject" header="SUJET DU TICKET" style="min-width: 20rem">
                                     <template #body="{ data }">
                                         <div class="flex flex-col gap-1">
-                                            <span class="font-black text-slate-700 text-sm hover:text-indigo-600 cursor-pointer transition-colors" @click="viewTicket(data)">{{ data.subject }}</span>
+                                            <span class="font-black text-slate-700 text-sm hover:text-blue-600 cursor-pointer transition-colors" @click="viewTicket(data)">{{ data.subject }}</span>
                                             <div class="flex items-center gap-2">
                                                 <Tag :value="data.category" class="bg-slate-100 text-slate-500 uppercase font-black text-[8px] px-2" />
                                                 <span class="text-[9px] text-slate-400 italic">Créé {{ data.created_at }}</span>
@@ -327,10 +327,10 @@ onMounted(() => {
                 <div class="col-span-12 lg:col-span-3 space-y-8">
 
                     <!-- LOAD CHART -->
-                    <Card class="border-none shadow-sm rounded-3xl bg-slate-900 text-white overflow-hidden">
+                    <Card class="border-none shadow-sm rounded-xl bg-slate-900 text-white overflow-hidden">
                         <template #title>
                             <div class="px-2 pt-2">
-                                <span class="text-xs font-black uppercase tracking-widest text-indigo-400">Charge de Support</span>
+                                <span class="text-xs font-black uppercase tracking-widest text-blue-400">Charge de Support</span>
                                 <p class="text-xl font-black text-white">Activité en direct</p>
                             </div>
                         </template>
@@ -353,7 +353,7 @@ onMounted(() => {
                     </Card>
 
                     <!-- AGENTS LIST -->
-                    <Card class="border-none shadow-sm rounded-3xl">
+                    <Card class="border-none shadow-sm rounded-xl">
                         <template #title><span class="text-base font-black text-slate-800 px-4">Équipe Support</span></template>
                         <template #content>
                             <div class="space-y-4 px-2">
@@ -370,12 +370,12 @@ onMounted(() => {
                     </Card>
 
                     <!-- QUICK TIPS -->
-                    <div class="p-6 bg-indigo-50 rounded-[1rem] border border-indigo-100 space-y-4">
+                    <div class="p-6 bg-blue-50 rounded-[1rem] border border-blue-100 space-y-4">
                         <div class="flex items-center gap-3">
-                            <i class="pi pi-lightbulb text-indigo-500 text-2xl"></i>
-                            <h4 class="font-black text-indigo-900 text-lg">Conseils</h4>
+                            <i class="pi pi-lightbulb text-blue-500 text-2xl"></i>
+                            <h4 class="font-black text-blue-900 text-lg">Conseils</h4>
                         </div>
-                        <p class="text-xs text-indigo-700 font-medium leading-relaxed">
+                        <p class="text-xs text-blue-700 font-medium leading-relaxed">
                             Les tickets <b>URGENTS</b> concernant les paiements sont traités en priorité haute par le système automatique de SubNetCongo.
                         </p>
                     </div>
@@ -408,7 +408,7 @@ onMounted(() => {
                                     </div>
                                     <div class="flex justify-between text-xs font-bold">
                                         <span class="text-slate-400">ID Cours</span>
-                                        <span class="text-indigo-600 underline">#LMS-2849</span>
+                                        <span class="text-blue-600 underline">#LMS-2849</span>
                                     </div>
                                     <div class="flex justify-between text-xs font-bold">
                                         <span class="text-slate-400">ID Commande</span>
@@ -441,7 +441,7 @@ onMounted(() => {
                                 <ScrollPanel style="width: 100%; height: 350px" class="pr-3">
                                     <div class="space-y-6 py-4">
                                         <div v-for="msg in currentTicket.messages" :key="msg.id" :class="`flex flex-col ${msg.sender === 'agent' ? 'items-end' : 'items-start'}` ">
-                                            <div :class="`max-w-[80%] p-4 rounded-3xl shadow-sm text-sm ${msg.sender === 'agent' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-tl-none'}` ">
+                                            <div :class="`max-w-[80%] p-4 rounded-xl shadow-sm text-sm ${msg.sender === 'agent' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-tl-none'}` ">
                                                 {{ msg.text }}
                                             </div>
                                             <span class="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">{{ msg.sender === 'agent' ? 'Vous' : currentTicket.user.name }} • {{ msg.date }}</span>
@@ -451,14 +451,14 @@ onMounted(() => {
 
                                 <Divider />
 
-                                <div class="bg-white p-4 rounded-3xl border-2 border-slate-100">
+                                <div class="bg-white p-4 rounded-xl border-2 border-slate-100">
                                     <Editor v-model="responseText" editorStyle="height: 100px" placeholder="Écrire une réponse à l'élève..." class="border-none" />
                                     <div class="flex justify-between items-center mt-3">
                                         <div class="flex gap-2">
                                             <Button icon="pi pi-paperclip" class="p-button-text p-button-secondary p-button-sm" />
-                                            <Button icon="pi pi-bolt" label="Macros" class="p-button-text p-button-indigo p-button-sm font-black" @click="displayMacrosDialog = true" />
+                                            <Button icon="pi pi-bolt" label="Macros" class="p-button-text p-button-primary p-button-sm font-black" @click="displayMacrosDialog = true" />
                                         </div>
-                                        <Button label="Envoyer la réponse" icon="pi pi-send" class="p-button-primary px-8 shadow-lg shadow-indigo-100 font-black rounded-xl" @click="sendReply" />
+                                        <Button label="Envoyer la réponse" icon="pi pi-send" class="p-button-primary px-8 shadow-lg shadow-blue-100 font-black rounded-xl" @click="sendReply" />
                                     </div>
                                 </div>
                             </TabPanel>
@@ -517,15 +517,15 @@ onMounted(() => {
                             { title: 'Validation Paiement', text: 'Bonjour, votre paiement a bien été validé...' },
                             { title: 'Demande de Remboursement', text: 'Nous avons bien reçu votre demande de remboursement...' },
                             { title: 'Problème Technique Vidéo', text: 'Veuillez vider le cache de votre navigateur...' }
-                        ]" :key="macro.title" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-indigo-400 cursor-pointer transition-colors group" @click="responseText = macro.text; displayMacrosDialog = false">
+                        ]" :key="macro.title" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-blue-400 cursor-pointer transition-colors group" @click="responseText = macro.text; displayMacrosDialog = false">
                             <div class="flex justify-between items-center">
                                 <span class="font-black text-slate-800 text-sm tracking-tight">{{ macro.title }}</span>
-                                <i class="pi pi-chevron-right text-slate-300 group-hover:text-indigo-500 transition-colors"></i>
+                                <i class="pi pi-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
                             </div>
                             <p class="text-xs text-slate-400 mt-1 truncate">{{ macro.text }}</p>
                         </div>
                     </div>
-                    <Button label="Gérer les macros" icon="pi pi-cog" class="p-button-outlined p-button-indigo w-full border-2 border-dashed font-black" />
+                    <Button label="Gérer les macros" icon="pi pi-cog" class="p-button-outlined p-button-primary w-full border-2 border-dashed font-black" />
                 </div>
             </Dialog>
 
@@ -633,12 +633,12 @@ onMounted(() => {
 }
 
 /* Colors Priority */
-.bg-rose-500 { background-color: #f43f5e; }
-.text-rose-600 { color: #e11d48; }
-.bg-orange-500 { background-color: #f97316; }
-.text-orange-600 { color: #ea580c; }
-.bg-indigo-500 { background-color: #6366f1; }
-.text-indigo-600 { color: #4f46e5; }
+.bg-red-500 { background-color: #f43f5e; }
+.text-red-600 { color: #e11d48; }
+.bg-orange-500 { background-color: #2563EB; }
+.text-orange-600 { color: #DC2626; }
+.bg-blue-500 { background-color: #6366f1; }
+.text-blue-600 { color: #4f46e5; }
 
 /* Custom ScrollPanel */
 :deep(.p-scrollpanel-bar) {

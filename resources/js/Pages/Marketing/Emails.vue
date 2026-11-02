@@ -213,7 +213,7 @@ onMounted(() => {
             <!-- HEADER -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="flex items-center gap-5">
-                    <div class="bg-indigo-600 p-4 rounded-3xl shadow-xl shadow-indigo-100 rotate-2">
+                    <div class="bg-blue-600 p-4 rounded-xl shadow-xl shadow-blue-100 rotate-2">
                         <i class="pi pi-envelope text-white text-3xl"></i>
                     </div>
                     <div>
@@ -251,7 +251,7 @@ onMounted(() => {
             <!-- ANALYTICS VISUALS -->
             <div class="grid grid-cols-12 gap-8 mb-10">
                 <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-3xl overflow-hidden h-full">
+                    <Card class="border-none shadow-sm rounded-xl overflow-hidden h-full">
                         <template #title>
                             <div class="flex justify-between items-center px-4 pt-2">
                                 <span class="text-xl font-black text-slate-800 tracking-tight">Volume & Engagement Hebdomadaire</span>
@@ -266,7 +266,7 @@ onMounted(() => {
                     </Card>
                 </div>
                 <div class="col-span-12 lg:col-span-4">
-                    <Card class="border-none shadow-sm rounded-3xl h-full flex flex-col justify-center">
+                    <Card class="border-none shadow-sm rounded-xl h-full flex flex-col justify-center">
                         <template #title><span class="text-xl font-black text-slate-800 px-4">Statut de Délivrance</span></template>
                         <template #content>
                             <div class="h-[250px] relative">
@@ -282,7 +282,7 @@ onMounted(() => {
                                     <span class="font-black text-slate-800">24,380 emails</span>
                                 </div>
                                 <div class="flex justify-between text-xs">
-                                    <span class="font-bold text-slate-500"><i class="pi pi-circle-fill text-rose-500 mr-2 text-[8px]"></i> Rejetés</span>
+                                    <span class="font-bold text-slate-500"><i class="pi pi-circle-fill text-red-500 mr-2 text-[8px]"></i> Rejetés</span>
                                     <span class="font-black text-slate-800">470 emails</span>
                                 </div>
                             </div>
@@ -324,7 +324,7 @@ onMounted(() => {
                                 </Column>
                                 <Column field="trigger" header="DÉCLENCHEUR" style="min-width: 12rem">
                                     <template #body="{ data }">
-                                        <div class="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full w-fit">
+                                        <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full w-fit">
                                             <i :class="getTriggerIcon(data.trigger)" class="text-xs"></i>
                                             <span class="text-[10px] font-black uppercase">{{ data.trigger.replace('_', ' ') }}</span>
                                         </div>
@@ -374,17 +374,17 @@ onMounted(() => {
                             </div>
                         </template>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
-                            <div @click="openNewTemplate" class="border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center p-8 hover:bg-slate-50 cursor-pointer transition-colors group">
-                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-all">
+                            <div @click="openNewTemplate" class="border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center p-8 hover:bg-slate-50 cursor-pointer transition-colors group">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500 transition-all">
                                     <i class="pi pi-plus text-2xl"></i>
                                 </div>
-                                <span class="mt-4 font-black text-slate-500 group-hover:text-indigo-600">Nouveau Modèle</span>
+                                <span class="mt-4 font-black text-slate-500 group-hover:text-blue-600">Nouveau Modèle</span>
                             </div>
 
-                            <div v-for="tpl in templates" :key="tpl.id" class="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden group hover:shadow-xl transition-all">
+                            <div v-for="tpl in templates" :key="tpl.id" class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden group hover:shadow-xl transition-all">
                                 <div class="h-40 bg-slate-100 relative overflow-hidden flex items-center justify-center text-slate-300">
                                     <i class="pi pi-envelope text-6xl opacity-20"></i>
-                                    <div class="absolute inset-0 bg-indigo-600/80 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="absolute inset-0 bg-blue-600/80 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button icon="pi pi-eye" class="p-button-rounded p-button-sm p-button-white" @click="displayPreviewDialog = true" />
                                         <Button icon="pi pi-pencil" class="p-button-rounded p-button-sm p-button-white" />
                                     </div>
@@ -475,9 +475,9 @@ onMounted(() => {
                         <Dropdown v-model="currentAutomation.template_id" :options="templates" optionLabel="name" optionValue="id" placeholder="Choisir un template..." class="rounded-xl" />
                     </div>
 
-                    <div class="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 flex items-center gap-4">
-                        <i class="pi pi-info-circle text-2xl text-indigo-500"></i>
-                        <p class="text-xs font-medium text-indigo-700 leading-relaxed">
+                    <div class="p-6 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-4">
+                        <i class="pi pi-info-circle text-2xl text-blue-500"></i>
+                        <p class="text-xs font-medium text-blue-700 leading-relaxed">
                             Cette automation sera active immédiatement. Tous les futurs utilisateurs correspondant au déclencheur recevront l'email après le délai défini.
                         </p>
                     </div>
@@ -487,7 +487,7 @@ onMounted(() => {
                         <Button label="Envoyer Test" icon="pi pi-send" class="p-button-text p-button-secondary font-bold" @click="testEmail" />
                         <div class="flex gap-2">
                             <Button label="Annuler" class="p-button-text p-button-secondary" @click="displayAutomationDialog = false" />
-                            <Button label="Enregistrer Automation" icon="pi pi-check" class="p-button-primary px-8 shadow-lg shadow-indigo-100" @click="saveAutomation" />
+                            <Button label="Enregistrer Automation" icon="pi pi-check" class="p-button-primary px-8 shadow-lg shadow-blue-100" @click="saveAutomation" />
                         </div>
                     </div>
                 </template>
@@ -517,7 +517,7 @@ onMounted(() => {
                         <div class="p-4 bg-white rounded-2xl shadow-sm space-y-4">
                             <h4 class="text-[10px] font-black text-slate-400 uppercase">Variables dynamiques</h4>
                             <div class="flex flex-wrap gap-2">
-                                <Tag v-for="tag in ['{user_name}', '{course_title}', '{reset_link}', '{cert_url}']" :key="tag" :value="tag" class="cursor-pointer hover:bg-indigo-500" />
+                                <Tag v-for="tag in ['{user_name}', '{course_title}', '{reset_link}', '{cert_url}']" :key="tag" :value="tag" class="cursor-pointer hover:bg-blue-500" />
                             </div>
                         </div>
 
@@ -528,10 +528,10 @@ onMounted(() => {
 
                     <!-- Editor Space -->
                     <div class="col-span-12 lg:col-span-9 flex flex-col gap-4">
-                        <div class="flex-1 rounded-3xl overflow-hidden border border-slate-200">
+                        <div class="flex-1 rounded-xl overflow-hidden border border-slate-200">
                             <Editor v-model="currentTemplate.content" editorStyle="height: 60vh" />
                         </div>
-                        <div class="bg-slate-900 p-6 rounded-3xl text-white flex justify-between items-center">
+                        <div class="bg-slate-900 p-6 rounded-xl text-white flex justify-between items-center">
                             <div class="flex items-center gap-4">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                                 <span class="text-sm font-bold">Aperçu en temps réel activé</span>
@@ -551,7 +551,7 @@ onMounted(() => {
                     <div class="w-full bg-white shadow-2xl rounded-xl overflow-hidden max-w-[400px] border border-slate-200">
                         <div class="bg-slate-50 p-3 border-b border-slate-100 flex items-center gap-2">
                             <div class="flex gap-1">
-                                <div class="w-2 h-2 rounded-full bg-rose-400"></div>
+                                <div class="w-2 h-2 rounded-full bg-red-400"></div>
                                 <div class="w-2 h-2 rounded-full bg-amber-400"></div>
                                 <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
                             </div>

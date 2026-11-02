@@ -70,8 +70,8 @@ const copyVariable = (variable) => {
 </script>
 
 <template>
-    <Head :title="`Modifier - ${template.name}`" />
     <AppLayout>
+        <Head :title="`Modifier - ${template.name}`" />
         <div class="page-bg min-h-screen font-sans pb-20">
             <!-- Header modernisé -->
             <div class="bg-[#0f172a] pt-8 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
@@ -185,7 +185,7 @@ const copyVariable = (variable) => {
                         </div>
 
                         <!-- Formulaire de Test (Rendu conditionnel doux avec Animation) -->
-                        <div v-show="showTestForm" class="bg-blue-50 rounded-3xl p-6 border border-blue-100 transform transition-all duration-300 animate-fadein">
+                        <div v-show="showTestForm" class="bg-blue-50 rounded-xl p-6 border border-blue-100 transform transition-all duration-300 animate-fadein">
                             <h3 class="text-sm font-black uppercase tracking-widest text-blue-900 mb-4 flex items-center gap-2">
                                 <i class="pi pi-paper-plane text-blue-600"></i> Envoyer un test
                             </h3>
@@ -266,7 +266,7 @@ const copyVariable = (variable) => {
                         </div>
 
                         <!-- Astuces HTML -->
-                        <div class="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-3xl p-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-50 border border-blue-100 rounded-xl p-6">
                             <h3 class="text-sm font-black text-blue-900 mb-3 flex items-center gap-2">
                                 💡 Astuces d'édition
                             </h3>

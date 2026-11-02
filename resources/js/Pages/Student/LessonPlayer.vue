@@ -242,157 +242,231 @@ const submitAsk = () => {
 <template>
     <AppLayout>
         <Head :title="lesson?.title || 'Leçon'" />
+        <!-- Skip link pour accessibilité -->
+        <a href="#lesson-content" class="sr-only-focusable absolute top-4 left-4 z-50 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">
+            Aller au contenu
+        </a>
+
         <div class="page-bg min-h-screen font-sans pb-20">
 
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+            <header class="page-header" role="banner">
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" aria-hidden="true"></div>
+                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none" aria-hidden="true"></div>
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none" aria-hidden="true"></div>
                 <div class="max-w-[1600px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
                     <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 border border-white/10">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10" aria-hidden="true">
                             <i class="pi pi-play text-white text-3xl"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-1 flex-wrap">
                                 <h1 class="text-3xl font-black text-white tracking-tight">{{ lesson?.title }}</h1>
-                                <Tag :value="lesson?.type" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <Tag :value="lesson?.type" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                             </div>
                             <p class="text-slate-400 font-medium text-sm">{{ course?.title }} · {{ course?.instructor }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 text-white/80 text-[10px] font-black uppercase tracking-widest">
-                        <i class="pi pi-clock text-indigo-400"></i>
+                        <i class="pi pi-clock text-blue-400" aria-hidden="true"></i>
                         <span>Temps passé : {{ Math.floor(timeSpent / 60) }}m {{ timeSpent % 60 }}s</span>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
+            <main id="lesson-content" class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20" role="main">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-8 space-y-5">
                         <!-- Module Intro & Content (affiché avant la leçon) -->
-                        <div v-if="module" class="space-y-5">
+                        <section v-if="module" class="space-y-5" aria-labelledby="module-title">
                             <!-- Module Intro Video -->
-                            <div v-if="module.intro_video_url" class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl aspect-video flex items-center justify-center">
+                            <div v-if="module.intro_video_url" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl aspect-video flex items-center justify-center">
                                 <div v-if="getYouTubeEmbedUrl(module.intro_video_url)" class="w-full h-full">
-                                    <iframe :src="getYouTubeEmbedUrl(module.intro_video_url)" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    <iframe
+                                        :src="getYouTubeEmbedUrl(module.intro_video_url)"
+                                        class="w-full h-full"
+                                        title="Vidéo d'introduction du module"
+                                        frameborder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen
+                                        loading="lazy"
+                                    ></iframe>
                                 </div>
                                 <div v-else-if="module.intro_video_url.startsWith('http')" class="w-full h-full">
-                                    <video :src="module.intro_video_url" controls class="w-full h-full bg-black"></video>
+                                    <video
+                                        :src="module.intro_video_url"
+                                        controls
+                                        class="w-full h-full bg-black"
+                                        title="Vidéo d'introduction du module"
+                                    ></video>
                                 </div>
-                                <div v-else class="text-center text-white/70 p-8">
-                                    <i class="pi pi-video text-5xl mb-3 block"></i>
+                                <div v-else class="text-center text-white/70 p-8" role="alert">
+                                    <i class="pi pi-video text-5xl mb-3 block" aria-hidden="true"></i>
                                     <p class="text-sm">Vidéo d'introduction non disponible.</p>
                                 </div>
                             </div>
 
                             <!-- Module Text Content -->
-                            <div v-if="module.text_content || module.description" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-                                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
-                                    <i class="pi pi-book text-indigo-500"></i>
-                                    <h3 class="text-lg font-black text-slate-800">{{ module.title }}</h3>
-                                </div>
-                                <div v-if="module.description" class="text-slate-600 text-sm leading-relaxed border-l-4 border-indigo-500 pl-4 py-2 bg-indigo-50 rounded-r-xl">
+                            <article v-if="module.text_content || module.description" class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+                                <header class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                                    <i class="pi pi-book text-blue-500" aria-hidden="true"></i>
+                                    <h2 id="module-title" class="text-lg font-black text-slate-800">{{ module.title }}</h2>
+                                </header>
+                                <div v-if="module.description" class="text-slate-600 text-sm leading-relaxed border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r-xl">
                                     {{ module.description }}
                                 </div>
                                 <div v-if="module.text_content" class="prose prose-sm max-w-none text-slate-700" v-html="module.text_content"></div>
-                            </div>
-                        </div>
+                            </article>
+                        </section>
 
                         <!-- Video Player -->
-                        <div v-if="lesson?.type === 'video'" class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl aspect-video flex items-center justify-center">
-                            <video v-if="lesson?.video_url" ref="videoRef" :src="lesson.video_url" controls class="w-full h-full bg-black"
-                                @timeupdate="onTimeUpdate" @loadedmetadata="onLoadedMeta" @play="onPlay" @pause="onPause" @ended="onEnded" />
-                            <div v-else class="text-center text-white/70 p-8">
-                                <i class="pi pi-video text-5xl mb-3 block"></i>
+                        <section v-if="lesson?.type === 'video'" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl aspect-video flex items-center justify-center" aria-labelledby="video-title">
+                            <video
+                                v-if="lesson?.video_url"
+                                ref="videoRef"
+                                :src="lesson.video_url"
+                                controls
+                                class="w-full h-full bg-black"
+                                :title="lesson?.title"
+                                @timeupdate="onTimeUpdate"
+                                @loadedmetadata="onLoadedMeta"
+                                @play="onPlay"
+                                @pause="onPause"
+                                @ended="onEnded"
+                            ></video>
+                            <div v-else class="text-center text-white/70 p-8" role="alert">
+                                <i class="pi pi-video text-5xl mb-3 block" aria-hidden="true"></i>
                                 <p class="text-sm">Vidéo non disponible pour cette leçon.</p>
                             </div>
-                        </div>
+                            <h2 id="video-title" class="sr-only">{{ lesson?.title }}</h2>
+                        </section>
 
                         <!-- Document Viewer -->
-                        <div v-else-if="lesson?.type === 'document'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-3">
-                                <i class="pi pi-file-pdf text-rose-500"></i>
-                                <span class="text-sm font-black text-slate-700 uppercase tracking-wider">{{ lesson?.document_title || 'Document' }}</span>
-                            </div>
+                        <section v-else-if="lesson?.type === 'document'" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" aria-labelledby="document-title">
+                            <header class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-3">
+                                <i class="pi pi-file-pdf text-red-500" aria-hidden="true"></i>
+                                <h2 id="document-title" class="text-sm font-black text-slate-700 uppercase tracking-wider">{{ lesson?.document_title || 'Document' }}</h2>
+                            </header>
                             <div class="p-6">
                                 <div v-if="lesson?.document_url" class="space-y-4">
-                                    <a :href="getDocumentUrl(lesson.document_url)" target="_blank" class="flex items-center gap-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors">
-                                        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600"><i class="pi pi-download"></i></div>
+                                    <a
+                                        :href="getDocumentUrl(lesson.document_url)"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    >
+                                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600" aria-hidden="true">
+                                            <i class="pi pi-download"></i>
+                                        </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-sm font-bold text-slate-800 truncate">Ouvrir le document</div>
                                             <div class="text-[10px] text-slate-500 font-mono truncate">{{ getDocumentUrl(lesson.document_url) }}</div>
                                         </div>
-                                        <i class="pi pi-external-link text-slate-400"></i>
+                                        <i class="pi pi-external-link text-slate-400" aria-hidden="true"></i>
                                     </a>
                                 </div>
-                                <div v-else class="text-sm text-slate-400 italic text-center py-8">
-                                    <i class="pi pi-file text-4xl mb-3 block text-slate-300"></i>
+                                <div v-else class="text-sm text-slate-400 italic text-center py-8" role="alert">
+                                    <i class="pi pi-file text-4xl mb-3 block text-slate-300" aria-hidden="true"></i>
                                     Aucun document disponible pour cette leçon.
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
                         <!-- Quiz Player -->
-                        <div v-else-if="parsedQuiz" class="bg-white rounded-3xl border border-emerald-200 shadow-sm overflow-hidden">
-                            <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 flex items-center gap-3">
-                                <i class="pi pi-check-square text-white text-lg"></i>
+                        <section v-else-if="parsedQuiz" class="bg-white rounded-xl border border-emerald-200 shadow-sm overflow-hidden" aria-labelledby="quiz-title">
+                            <header class="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 flex items-center gap-3">
+                                <i class="pi pi-check-square text-white text-lg" aria-hidden="true"></i>
                                 <div>
-                                    <span class="text-sm font-black text-white uppercase tracking-wider">{{ parsedQuiz.quiz_title || 'Quiz' }}</span>
+                                    <h2 id="quiz-title" class="text-sm font-black text-white uppercase tracking-wider">{{ parsedQuiz.quiz_title || 'Quiz' }}</h2>
                                     <p class="text-[10px] text-white/80">{{ parsedQuiz.questions?.length || 0 }} questions</p>
                                 </div>
-                            </div>
+                            </header>
                             <div class="p-6 space-y-6">
-                                <div v-if="!quizSubmitted" class="space-y-6">
-                                    <div v-for="(q, qIdx) in parsedQuiz.questions" :key="qIdx" class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                                <form v-if="!quizSubmitted" @submit.prevent="submitQuiz" class="space-y-6">
+                                    <fieldset v-for="(q, qIdx) in parsedQuiz.questions" :key="qIdx" class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                                        <legend class="sr-only">Question {{ qIdx + 1 }}</legend>
                                         <div class="flex items-start gap-3 mb-4">
-                                            <span class="text-xs font-black text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-100">Q{{ qIdx + 1 }}</span>
-                                            <p class="text-sm font-bold text-slate-800 flex-1">{{ q.text }}</p>
+                                            <span class="text-xs font-black text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-100" aria-hidden="true">Q{{ qIdx + 1 }}</span>
+                                            <p class="text-sm font-bold text-slate-800 flex-1" :id="`question-${qIdx}`">{{ q.text }}</p>
                                         </div>
-                                        
+
                                         <!-- QCM -->
-                                        <div v-if="q.type === 'multiple_choice'" class="space-y-2">
-                                            <label v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors">
-                                                <RadioButton v-model="quizAnswers[qIdx]" :value="String(oIdx)" />
-                                                <span class="text-sm text-slate-700">{{ opt }}</span>
+                                        <div v-if="q.type === 'multiple_choice'" class="space-y-2" role="radiogroup" :aria-labelledby="`question-${qIdx}`">
+                                            <label
+                                                v-for="(opt, oIdx) in q.options"
+                                                :key="oIdx"
+                                                class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2"
+                                            >
+                                                <RadioButton
+                                                    v-model="quizAnswers[qIdx]"
+                                                    :value="String(oIdx)"
+                                                    :inputId="`q${qIdx}-opt${oIdx}`"
+                                                    :name="`question-${qIdx}`"
+                                                />
+                                                <span :for="`q${qIdx}-opt${oIdx}`" class="text-sm text-slate-700">{{ opt }}</span>
                                             </label>
                                         </div>
-                                        
+
                                         <!-- Vrai/Faux -->
-                                        <div v-else-if="q.type === 'true_false'" class="flex gap-3">
-                                            <label class="flex-1 flex items-center justify-center gap-2 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors" :class="{'border-emerald-500 bg-emerald-50': quizAnswers[qIdx] === 'true'}">
-                                                <RadioButton v-model="quizAnswers[qIdx]" value="true" />
-                                                <span class="text-sm font-bold text-slate-700">VRAI</span>
+                                        <div v-else-if="q.type === 'true_false'" class="flex gap-3" role="radiogroup" :aria-labelledby="`question-${qIdx}`">
+                                            <label
+                                                class="flex-1 flex items-center justify-center gap-2 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2"
+                                                :class="{'border-emerald-500 bg-emerald-50': quizAnswers[qIdx] === 'true'}"
+                                            >
+                                                <RadioButton
+                                                    v-model="quizAnswers[qIdx]"
+                                                    value="true"
+                                                    :inputId="`q${qIdx}-true`"
+                                                    :name="`question-${qIdx}`"
+                                                />
+                                                <span :for="`q${qIdx}-true`" class="text-sm font-bold text-slate-700">VRAI</span>
                                             </label>
-                                            <label class="flex-1 flex items-center justify-center gap-2 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors" :class="{'border-emerald-500 bg-emerald-50': quizAnswers[qIdx] === 'false'}">
-                                                <RadioButton v-model="quizAnswers[qIdx]" value="false" />
-                                                <span class="text-sm font-bold text-slate-700">FAUX</span>
+                                            <label
+                                                class="flex-1 flex items-center justify-center gap-2 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2"
+                                                :class="{'border-emerald-500 bg-emerald-50': quizAnswers[qIdx] === 'false'}"
+                                            >
+                                                <RadioButton
+                                                    v-model="quizAnswers[qIdx]"
+                                                    value="false"
+                                                    :inputId="`q${qIdx}-false`"
+                                                    :name="`question-${qIdx}`"
+                                                />
+                                                <span :for="`q${qIdx}-false`" class="text-sm font-bold text-slate-700">FAUX</span>
                                             </label>
                                         </div>
-                                        
+
                                         <!-- Réponse courte -->
                                         <div v-else-if="q.type === 'short_answer'" class="space-y-1">
-                                            <label class="text-[10px] font-bold text-slate-500 uppercase">Votre réponse</label>
-                                            <InputText v-model="quizAnswers[qIdx]" class="w-full" placeholder="Saisissez votre réponse..." />
+                                            <label :for="`q${qIdx}-answer`" class="text-[10px] font-bold text-slate-500 uppercase">Votre réponse</label>
+                                            <InputText
+                                                v-model="quizAnswers[qIdx]"
+                                                :id="`q${qIdx}-answer`"
+                                                class="w-full"
+                                                placeholder="Saisissez votre réponse..."
+                                                :aria-labelledby="`question-${qIdx}`"
+                                            />
                                         </div>
-                                    </div>
-                                    <Button label="Soumettre le quiz" icon="pi pi-check" class="!bg-emerald-500 !border-none !rounded-xl !text-white !font-black !uppercase !tracking-widest" @click="submitQuiz" />
-                                </div>
-                                
+                                    </fieldset>
+                                    <Button
+                                        type="submit"
+                                        label="Soumettre le quiz"
+                                        icon="pi pi-check"
+                                        class="!bg-emerald-500 !border-none !rounded-xl !text-white !font-black !uppercase !tracking-widest"
+                                    />
+                                </form>
+
                                 <!-- Quiz Results -->
-                                <div v-else class="text-center space-y-4">
-                                    <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-2xl font-black" :class="quizScore >= 70 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'">
+                                <div v-else class="text-center space-y-4" role="alert" aria-live="polite">
+                                    <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-2xl font-black" :class="quizScore >= 70 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'">
                                         {{ quizScore }}%
                                     </div>
                                     <p class="text-sm font-bold text-slate-700">{{ quizScore >= 70 ? 'Bravo ! Vous avez réussi ce quiz.' : 'Vous n\'avez pas atteint le seuil de réussite.' }}</p>
                                     <Button label="Réessayer" icon="pi pi-redo" class="!bg-slate-100 !text-slate-700 !border-slate-200 !rounded-xl" @click="resetQuiz" />
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
                         <!-- Text/HTML Content -->
-                        <div v-else class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                        <div v-else class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <div v-if="lesson?.content" class="prose prose-sm max-w-none text-slate-700" v-html="lesson.content"></div>
                             <div v-else class="text-sm text-slate-400 italic">Aucun contenu textuel pour cette leçon.</div>
                         </div>
@@ -400,9 +474,9 @@ const submitAsk = () => {
 
                     <aside class="lg:col-span-4 space-y-5">
                         <!-- Q&A du cours -->
-                        <div class="bg-gradient-to-br from-amber-50 to-rose-50 rounded-3xl p-5 border border-amber-200 shadow-sm">
+                        <div class="bg-gradient-to-br from-amber-50 to-red-50 rounded-xl p-5 border border-amber-200 shadow-sm">
                             <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-rose-500 rounded-xl flex items-center justify-center text-white shadow-md">
+                                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-red-500 rounded-xl flex items-center justify-center text-white shadow-md">
                                     <i class="pi pi-question-circle text-lg"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -412,23 +486,23 @@ const submitAsk = () => {
                             </div>
                             <p class="text-xs text-slate-600 mb-3">L'instructeur vous répond généralement sous 24-48h.</p>
                             <div class="flex gap-2">
-                                <Button label="Poser une question" icon="pi pi-plus" @click="openAsk" class="!flex-1 !bg-gradient-to-r !from-amber-500 !to-rose-500 !border-none !rounded-xl !text-white !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
+                                <Button label="Poser une question" icon="pi pi-plus" @click="openAsk" class="!flex-1 !bg-gradient-to-r !from-amber-500 !to-red-500 !border-none !rounded-xl !text-white !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
                                 <Link :href="route('student.questions.index')" class="inline-flex">
                                     <Button icon="pi pi-list" outlined class="!rounded-xl !text-amber-700 !border-amber-200" v-tooltip.bottom="'Mes questions'" />
                                 </Link>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                             <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
+                                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
                                 <div>
                                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Plan du cours</h3>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ completedCount }}/{{ lessons?.length ?? 0 }} leçons</p>
                                 </div>
                             </div>
                             <div class="space-y-1 max-h-96 overflow-y-auto pr-1">
-                                <Link v-for="l in lessons" :key="l.id" :href="route('student.lesson-player', { course: course.id, lesson: l.id })" :class="['flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors', l.id === lesson?.id ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'hover:bg-slate-50 text-slate-700 border border-transparent']">
+                                <Link v-for="l in lessons" :key="l.id" :href="route('student.lesson-player', { course: course.id, lesson: l.id })" :class="['flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors', l.id === lesson?.id ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-slate-50 text-slate-700 border border-transparent']">
                                     <span class="flex items-center gap-2 min-w-0">
                                         <i :class="l.is_completed ? 'pi pi-check-circle text-emerald-500' : 'pi pi-circle text-slate-300'" class="text-xs"></i>
                                         <span class="truncate">{{ l.title }}</span>
@@ -439,7 +513,7 @@ const submitAsk = () => {
                         </div>
 
                         <!-- Module Quiz Attempts -->
-                        <div v-if="module && module.has_quiz && moduleQuizAttempts && moduleQuizAttempts.length > 0" class="bg-white rounded-3xl p-5 border border-emerald-200 shadow-sm">
+                        <div v-if="module && module.has_quiz && moduleQuizAttempts && moduleQuizAttempts.length > 0" class="bg-white rounded-xl p-5 border border-emerald-200 shadow-sm">
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><i class="pi pi-check-square text-lg"></i></div>
                                 <div>
@@ -450,7 +524,7 @@ const submitAsk = () => {
                             <div class="space-y-2">
                                 <div v-for="attempt in moduleQuizAttempts" :key="attempt.id" class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center" :class="attempt.score >= 50 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center" :class="attempt.score >= 50 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'">
                                             <span class="text-xs font-black">{{ attempt.score }}%</span>
                                         </div>
                                         <div>
@@ -458,22 +532,22 @@ const submitAsk = () => {
                                             <div class="text-[9px] text-slate-400">{{ new Date(attempt.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) }}</div>
                                         </div>
                                     </div>
-                                    <span class="text-[9px] font-black" :class="attempt.score >= 50 ? 'text-emerald-600' : 'text-rose-600'">
+                                    <span class="text-[9px] font-black" :class="attempt.score >= 50 ? 'text-emerald-600' : 'text-red-600'">
                                         {{ attempt.score >= 50 ? 'Réussi' : 'Échoué' }}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                             <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center"><i class="pi pi-file text-lg"></i></div>
+                                <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"><i class="pi pi-file text-lg"></i></div>
                                 <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Supports ({{ courseMaterials.length }})</h3>
                             </div>
                             <div v-if="courseMaterials.length === 0" class="text-xs text-slate-400 italic text-center py-4">Aucun support pour ce cours.</div>
                             <div v-else class="space-y-2">
                                 <button v-for="m in courseMaterials" :key="m.id" type="button" class="flex items-center gap-2 p-2.5 hover:bg-slate-50 rounded-xl w-full text-left transition-colors" @click="downloadMaterial(m)">
-                                    <i class="pi pi-download text-indigo-500 text-xs"></i>
+                                    <i class="pi pi-download text-blue-500 text-xs"></i>
                                     <span class="text-xs font-bold text-slate-700 truncate flex-1">{{ m.title }}</span>
                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ m.type }}</span>
                                 </button>
@@ -481,10 +555,10 @@ const submitAsk = () => {
                         </div>
                     </aside>
                 </div>
-            </div>
+            </main>
         </div>
 
-        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question sur cette leçon" class="!rounded-3xl" :closable="!askSubmitting">
+        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question sur cette leçon" class="!rounded-xl" :closable="!askSubmitting">
             <div class="space-y-4 p-2">
                 <div class="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex items-center gap-3">
                     <i class="pi pi-info-circle text-amber-500"></i>
@@ -510,23 +584,23 @@ const submitAsk = () => {
                         <input type="file" multiple class="hidden" @change="onAskFileChange" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.zip,.rar,.7z,.json,.xml" />
                     </label>
                     <div v-if="askFiles.length" class="mt-2 space-y-1.5">
-                        <div v-for="(f, i) in askFiles" :key="i" class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 text-xs">
-                            <i :class="f.type?.startsWith('image/') ? 'pi pi-image text-indigo-500' : 'pi pi-file text-indigo-500'"></i>
+                        <div v-for="(f, i) in askFiles" :key="i" class="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs">
+                            <i :class="f.type?.startsWith('image/') ? 'pi pi-image text-blue-500' : 'pi pi-file text-blue-500'"></i>
                             <span class="flex-1 truncate font-bold text-slate-700">{{ f.name }}</span>
                             <span class="text-[10px] font-mono text-slate-500">{{ formatFileSize(f.size) }}</span>
-                            <button type="button" @click="removeAskFile(i)" class="w-5 h-5 rounded-full bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-colors">
+                            <button type="button" @click="removeAskFile(i)" class="w-5 h-5 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors">
                                 <i class="pi pi-times text-[9px]"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div v-if="askErrors.form || askErrors.subject || askErrors.body" class="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3">
+                <div v-if="askErrors.form || askErrors.subject || askErrors.body" class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-3">
                     {{ askErrors.form || askErrors.subject || askErrors.body }}
                 </div>
             </div>
             <template #footer>
                 <Button label="Annuler" outlined :disabled="askSubmitting" @click="showAskDialog = false" class="!rounded-xl" />
-                <Button :label="askSubmitting ? 'Envoi...' : 'Envoyer la question'" icon="pi pi-send" :loading="askSubmitting" @click="submitAsk" class="!bg-gradient-to-r !from-amber-500 !to-rose-500 !border-none !rounded-xl" />
+                <Button :label="askSubmitting ? 'Envoi...' : 'Envoyer la question'" icon="pi pi-send" :loading="askSubmitting" @click="submitAsk" class="!bg-gradient-to-r !from-amber-500 !to-red-500 !border-none !rounded-xl" />
             </template>
         </Dialog>
     </AppLayout>

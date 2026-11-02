@@ -90,11 +90,11 @@ const requestAdminValidation = () => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px]"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px]"></div>
                 <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px]"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-[1100px] mx-auto relative z-10 flex items-center gap-5">
-                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 border border-white/10">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10">
                         <i class="pi pi-credit-card text-white text-3xl"></i>
                     </div>
                     <div>
@@ -108,15 +108,15 @@ const requestAdminValidation = () => {
             </div>
 
             <div class="max-w-[1100px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
-                    <div v-if="formError" class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm font-bold flex items-center gap-2">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
+                    <div v-if="formError" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-bold flex items-center gap-2">
                         <i class="pi pi-exclamation-triangle"></i>{{ formError }}
                     </div>
 
                     <form @submit.prevent class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 space-y-5">
                             <!-- PAYS & DEVISE -->
-                            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                                 <h3 class="font-black text-slate-800 mb-4 flex items-center gap-3">
                                     <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-globe text-lg"></i></div>
                                     Pays &amp; devise
@@ -160,9 +160,9 @@ const requestAdminValidation = () => {
                             </div>
 
                             <!-- BILLING -->
-                            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                                 <h3 class="font-black text-slate-800 mb-4 flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-user text-lg"></i></div>
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-user text-lg"></i></div>
                                     Informations de facturation
                                 </h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -178,7 +178,7 @@ const requestAdminValidation = () => {
                             </div>
 
                             <!-- PAYMENT -->
-                            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                                 <h3 class="font-black text-slate-800 mb-4 flex items-center gap-3">
                                     <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><i class="pi pi-wallet text-lg"></i></div>
                                     Mode de paiement
@@ -193,15 +193,15 @@ const requestAdminValidation = () => {
                                     <InputText v-model="form.phone_number" :placeholder="(selectedCountry?.phone ?? '+243') + ' 81 234 5678'" class="w-full !rounded-xl" />
                                 </div>
                                 <p class="text-xs text-slate-500 mt-3 leading-relaxed flex items-start gap-2">
-                                    <i class="pi pi-info-circle text-indigo-500 mt-0.5"></i>
+                                    <i class="pi pi-info-circle text-blue-500 mt-0.5"></i>
                                     Vous recevrez une notification sur votre téléphone pour confirmer le paiement. En cas d'échec, un administrateur peut valider manuellement votre inscription.
                                 </p>
                             </div>
                         </div>
 
                         <aside class="lg:col-span-1">
-                            <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl p-6 sticky top-6 text-white relative overflow-hidden">
-                                <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+                            <div class="bg-slate-900 rounded-xl border border-slate-800 shadow-xl p-6 sticky top-6 text-white relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
                                 <div class="flex items-center justify-between mb-4 relative z-10">
                                     <h3 class="font-black text-white uppercase tracking-widest text-sm">Résumé</h3>
                                     <Tag :value="currency ?? 'USD'" severity="info" class="!font-black !text-[10px] !uppercase !tracking-widest" />
@@ -220,7 +220,7 @@ const requestAdminValidation = () => {
                                 </div>
                                 <div class="flex justify-between py-4 text-lg font-black relative z-10 border-t border-white/10">
                                     <span>Total</span>
-                                    <span class="text-indigo-400 font-mono">{{ formatLocal(cart?.total_local) }}</span>
+                                    <span class="text-blue-400 font-mono">{{ formatLocal(cart?.total_local) }}</span>
                                 </div>
 
                                 <!-- DEUX BOUTONS : Payer maintenant OU Demander validation admin -->
@@ -231,7 +231,7 @@ const requestAdminValidation = () => {
                                         icon="pi pi-lock"
                                         :loading="submitting"
                                         :disabled="requestingValidation"
-                                        class="!bg-indigo-500 hover:!bg-indigo-400 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full"
+                                        class="!bg-blue-500 hover:!bg-blue-400 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full"
                                     />
                                     <Button
                                         type="button"

@@ -89,7 +89,7 @@ class CourseController extends Controller
                     ?? null;
                 return $course;
             });
-
+       
             return Inertia::render('Courses', [
                 'courses'      => $courses,
                 'stats'        => $this->getAdvancedStats(),
@@ -182,7 +182,6 @@ class CourseController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            return $e->getMessage();
             Log::error("[LMS] Store Failure: " . $e->getMessage(), ['exception' => $e]);
             return back()->with('error', "Erreur critique : " . $e->getMessage())->withInput();
         }
@@ -195,8 +194,13 @@ class CourseController extends Controller
      */
     public function update(Request $request, Course $course)
     {
-        $this->prepareAndSanitize($request);
-        $validated = $this->validateCourseRequest($request, $course->id);
+    
+       try {
+            $this->prepareAndSanitize($request);
+            $validated = $this->validateCourseRequest($request, $course->id);
+        } catch (\Throwable $th) {
+            return $th->getMessage();
+        }
 
         DB::beginTransaction();
         try {
@@ -212,7 +216,6 @@ class CourseController extends Controller
                 }
                 $validated['thumbnail_path'] = $this->uploadAsset($request->file('thumbnail'), 'thumbnails');
             }
-
             // Mise à jour des données atomiques
             $course->update(collect($validated)->except(['sections', 'thumbnail', 'resources'])->toArray());
 
@@ -712,7 +715,7 @@ class CourseController extends Controller
             'sections'            => 'nullable|array',
             'resources'           => 'nullable|array',
             'seo_metadata'        => 'nullable|array',
-            'tags'                => 'nullable|array',
+            'tags'                => 'nullable',
             'requires_enrollment' => 'boolean',
             'certificate_enabled' => 'boolean',
             'is_featured'         => 'boolean',
@@ -720,6 +723,7 @@ class CourseController extends Controller
             'final_exam_weight'   => 'nullable|numeric|min:0|max:100',
             'passing_score_20'    => 'nullable|numeric|min:0|max:20',
             'quiz_weight_total'   => 'nullable|numeric|min:0|max:100',
+            "thumbnail_path" => "nullable|string|max:255",
         ]);
     }
 

@@ -366,7 +366,7 @@ onMounted(() => loadEnginTypes());
                 severity="indigo"
                 @click="saveEngin"
                 :loading="form.processing"
-                class="px-10 h-14 rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs"
+                class="px-10 h-14 rounded-2xl shadow-xl shadow-blue-100 font-black uppercase tracking-widest text-xs"
             />
         </div>
     </template>

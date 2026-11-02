@@ -146,7 +146,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex flex-col gap-2">
                         <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t('common.total', { item: 'Unités' }) }}</span>
                         <div class="flex items-center justify-between">
@@ -245,7 +245,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
             <template #footer>
                 <div class="flex justify-between items-center w-full px-8 py-5 bg-slate-50 border-t border-slate-100">
                     <Button :label="t('common.cancel')" icon="pi pi-times" text severity="secondary" @click="hideDialog" class="font-bold uppercase text-[10px] tracking-widest" />
-                    <Button :label="editing ? t('common.update') : t('common.save')" icon="pi pi-check-circle" severity="indigo" class="px-10 h-14 rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs" @click="saveUnit" :loading="form.processing" />
+                    <Button :label="editing ? t('common.update') : t('common.save')" icon="pi pi-check-circle" severity="indigo" class="px-10 h-14 rounded-2xl shadow-xl shadow-blue-100 font-black uppercase tracking-widest text-xs" @click="saveUnit" :loading="form.processing" />
                 </div>
             </template>
         </Dialog>

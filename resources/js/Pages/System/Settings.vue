@@ -177,7 +177,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
             <!-- --- STICKY HEADER (Le cœur de la nouvelle UX) --- -->
             <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-xl shadow-inner flex items-center justify-center">
+                    <div class="w-12 h-12 bg-blue-600 rounded-xl shadow-inner flex items-center justify-center">
                         <i class="pi pi-cog text-white text-xl"></i>
                     </div>
                     <div>
@@ -266,7 +266,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                             
                                             <div class="pt-4">
                                                 <label class="block text-xs font-bold text-slate-600 uppercase mb-4 text-center">Logo Officiel</label>
-                                                <div class="border-2 border-dashed border-slate-300 bg-slate-50 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-indigo-400 transition-colors">
+                                                <div class="border-2 border-dashed border-slate-300 bg-slate-50 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-blue-400 transition-colors">
                                                     <img :src="form.branding.logo_url" class="h-12 object-contain" alt="Logo" />
                                                     <FileUpload mode="basic" name="logo" @uploader="onLogoUpload" customUpload :auto="true" chooseLabel="Changer" class="p-button-outlined p-button-sm !rounded-lg" />
                                                 </div>
@@ -287,7 +287,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                     <div class="space-y-6">
                                         <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-6">Automatisation & Accès</h3>
                                         
-                                        <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
+                                        <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                             <div>
                                                 <span class="font-bold text-slate-800 block">Auto-inscription post-paiement</span>
                                                 <p class="text-xs text-slate-500 mt-1">L'élève accède au cours dès validation financière.</p>
@@ -295,7 +295,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                             <InputSwitch v-model="form.lms.auto_enroll_on_payment" />
                                         </div>
 
-                                        <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
+                                        <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                             <div>
                                                 <span class="font-bold text-slate-800 block">Mode Aperçu (Preview)</span>
                                                 <p class="text-xs text-slate-500 mt-1">Les non-inscrits peuvent voir les modules gratuits.</p>
@@ -303,7 +303,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                             <InputSwitch v-model="form.lms.allow_course_preview" />
                                         </div>
 
-                                        <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
+                                        <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                             <div>
                                                 <span class="font-bold text-slate-800 block">Filigrane Vidéo (Anti-piratage)</span>
                                                 <p class="text-xs text-slate-500 mt-1">Incruste l'ID de l'élève sur le lecteur vidéo.</p>
@@ -461,12 +461,12 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                         <!-- --- TAB 6: MAINTENANCE (DANGER ZONE) --- -->
                         <TabPanel>
-                            <template #header><i class="pi pi-exclamation-triangle text-rose-500 mr-2"></i> Système</template>
+                            <template #header><i class="pi pi-exclamation-triangle text-red-500 mr-2"></i> Système</template>
                             <div class="p-8 lg:p-12 space-y-10">
                                 
                                 <!-- Zone Danger -->
-                                <div class="bg-white border border-rose-200 rounded-3xl p-8 lg:p-10 shadow-sm relative overflow-hidden">
-                                    <div class="absolute top-0 left-0 w-2 h-full bg-rose-500"></div>
+                                <div class="bg-white border border-red-200 rounded-xl p-8 lg:p-10 shadow-sm relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-2 h-full bg-red-500"></div>
                                     
                                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                                         <div>

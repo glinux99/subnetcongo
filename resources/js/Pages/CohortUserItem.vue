@@ -36,7 +36,7 @@ const emit = defineEmits(['add', 'remove']);
         <Button
             v-else
             icon="pi pi-times"
-            class="p-button-rounded p-button-text p-button-danger opacity-50 group-hover:opacity-100 hover:bg-rose-50 flex-shrink-0 w-8 h-8"
+            class="p-button-rounded p-button-text p-button-danger opacity-50 group-hover:opacity-100 hover:bg-red-50 flex-shrink-0 w-8 h-8"
             @click="emit('remove', user)" v-tooltip.top="'Retirer'"
         />
     </div>

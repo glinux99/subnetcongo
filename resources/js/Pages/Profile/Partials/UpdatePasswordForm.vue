@@ -1,8 +1,7 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
+import Message from 'primevue/message';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -22,11 +21,9 @@ const updatePassword = () => {
         onError: () => {
             if (form.errors.password) {
                 form.reset('password', 'password_confirmation');
-                passwordInput.value.focus();
             }
             if (form.errors.current_password) {
                 form.reset('current_password');
-                currentPasswordInput.value.focus();
             }
         },
     });
@@ -36,68 +33,73 @@ const updatePassword = () => {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">Update Password</h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay secure.
+            <h2 class="text-xl font-black text-slate-800 tracking-tight">Mettre à jour le Mot de Passe</h2>
+            <p class="mt-1 text-sm text-slate-500 font-medium">
+                Assurez-vous que votre compte utilise un mot de passe robuste et sécurisé.
             </p>
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="current_password" value="Current Password" />
-
-                <TextInput
+                <label for="current_password" class="block text-xs font-black uppercase tracking-widest text-slate-600 mb-2">Mot de passe actuel</label>
+                <InputText
                     id="current_password"
-                    ref="currentPasswordInput"
                     v-model="form.current_password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="w-full !rounded-xl"
                     autocomplete="current-password"
                 />
-
-                <InputError :message="form.errors.current_password" class="mt-2" />
+                <Message v-if="form.errors.current_password" severity="error" size="small" variant="simple" class="mt-1">
+                    {{ form.errors.current_password }}
+                </Message>
             </div>
 
             <div>
-                <InputLabel for="password" value="New Password" />
-
-                <TextInput
+                <label for="password" class="block text-xs font-black uppercase tracking-widest text-slate-600 mb-2">Nouveau mot de passe</label>
+                <InputText
                     id="password"
-                    ref="passwordInput"
                     v-model="form.password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="w-full !rounded-xl"
                     autocomplete="new-password"
                 />
-
-                <InputError :message="form.errors.password" class="mt-2" />
+                <Message v-if="form.errors.password" severity="error" size="small" variant="simple" class="mt-1">
+                    {{ form.errors.password }}
+                </Message>
             </div>
 
             <div>
-                <InputLabel for="password_confirmation" value="Confirm Password" />
-
-                <TextInput
+                <label for="password_confirmation" class="block text-xs font-black uppercase tracking-widest text-slate-600 mb-2">Confirmer le mot de passe</label>
+                <InputText
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="w-full !rounded-xl"
                     autocomplete="new-password"
                 />
-
-                <InputError :message="form.errors.password_confirmation" class="mt-2" />
+                <Message v-if="form.errors.password_confirmation" severity="error" size="small" variant="simple" class="mt-1">
+                    {{ form.errors.password_confirmation }}
+                </Message>
             </div>
 
-            <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+            <div class="flex items-center gap-4 pt-2">
+                <Button
+                    type="submit"
+                    label="Mettre à jour"
+                    icon="pi pi-lock"
+                    :loading="form.processing"
+                    class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !px-5 !py-3 shadow-lg shadow-blue-500/20"
+                />
 
                 <Transition
-                    enter-active-class="transition ease-in-out"
+                    enter-active-class="transition ease-in-out duration-300"
                     enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
+                    leave-active-class="transition ease-in-out duration-300"
                     leave-to-class="opacity-0"
                 >
-                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
+                    <p v-if="form.recentlySuccessful" class="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                        <i class="pi pi-check-circle"></i> Mot de passe mis à jour.
+                    </p>
                 </Transition>
             </div>
         </form>

@@ -42,8 +42,8 @@ const formatDate = (iso) => {
 </script>
 
 <template>
-    <Head title="Messages du site web" />
     <AppLayout>
+        <Head title="Messages du site web" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             

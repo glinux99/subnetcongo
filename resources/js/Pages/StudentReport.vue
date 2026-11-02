@@ -260,7 +260,7 @@ const getStatusProps = (s: string) => {
                                             </div>
                                         </template>
                                         <template #content="slotProps">
-                                            <div class="p-6 bg-white rounded-3xl shadow-sm border border-slate-200 mb-6 group hover:shadow-lg transition-all">
+                                            <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200 mb-6 group hover:shadow-lg transition-all">
                                                 <h4 class="text-sm font-black text-slate-800 italic uppercase mb-1">{{ slotProps.item.status }}</h4>
                                                 <p class="text-xs text-slate-500 font-medium leading-relaxed mb-3">{{ slotProps.item.description }}</p>
                                                 <span class="text-[10px] font-black text-slate-400 tracking-widest italic">{{ slotProps.item.date }}</span>

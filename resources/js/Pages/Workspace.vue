@@ -314,14 +314,14 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                         <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 sticky top-32">
 
                             <h3 class="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
-                                <i class="pi pi-calculator text-indigo-500"></i> Synthèse de Notation
+                                <i class="pi pi-calculator text-blue-500"></i> Synthèse de Notation
                             </h3>
 
                             <div class="space-y-6">
 
                                 <!-- Note Finale -->
                                 <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden">
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
                                     <div class="flex justify-between items-center mb-4">
                                         <label for="final_grade" class="block text-sm font-bold text-slate-700">Note Globale</label>
                                         <div class="flex items-center gap-2">
@@ -332,7 +332,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
 
                                     <div class="flex items-end gap-2">
                                         <InputNumber id="final_grade" v-model="gradingForm.final_grade"
-                                            class="w-full" inputClass="text-3xl font-black text-indigo-600 !p-3"
+                                            class="w-full" inputClass="text-3xl font-black text-blue-600 !p-3"
                                             :min="0" :max="submission.assignment.max_points"
                                             :disabled="autoCalculate" />
                                         <span class="text-2xl font-bold text-slate-400 mb-2">/ {{ submission.assignment.max_points }}</span>

@@ -241,7 +241,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div v-for="(val, key) in stats" :key="key" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
+                <div v-for="(val, key) in stats" :key="key" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="flex flex-column gap-2">
                         <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t(`labels.stats.${key}`) }}</span>
                         <div class="flex items-center justify-between">
@@ -412,7 +412,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                                     </div>
                                 </div>
                             </div>
-                            <div v-else class="text-center py-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                            <div v-else class="text-center py-8 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
                                 <p class="text-slate-400 text-sm italic">Aucune caractéristique définie pour ce label.</p>
                             </div>
                         </div>
@@ -427,7 +427,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                 <div class="flex justify-between items-center w-full px-8 py-5 bg-slate-50 border-t border-slate-100">
                     <Button :label="t('common.cancel')" icon="pi pi-times" text severity="secondary" @click="labelDialog = false" class="font-bold uppercase text-[10px] tracking-widest" />
                     <Button :label="editing ? t('common.update') : t('common.save')" icon="pi pi-check-circle" severity="indigo"
-                            class="px-10 h-14 rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs"
+                            class="px-10 h-14 rounded-2xl shadow-xl shadow-blue-100 font-black uppercase tracking-widest text-xs"
                             @click="saveLabel" :loading="form.processing" />
                 </div>
                 </template>

@@ -53,13 +53,13 @@ const viewAttempt = (attempt) => {
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-[1200px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
                     <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 border border-white/10">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10">
                             <i class="pi pi-history text-white text-3xl"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-1 flex-wrap">
                                 <h1 class="text-3xl font-black text-white tracking-tight">{{ exam?.title ?? 'Examen' }}</h1>
-                                <Tag value="Historique des tentatives" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <Tag value="Historique des tentatives" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                             </div>
                             <p class="text-slate-400 font-medium text-sm">{{ exam?.course?.title ?? 'Cours' }} · Seuil : {{ exam?.pass_percentage ?? 70 }}%</p>
                         </div>
@@ -72,7 +72,7 @@ const viewAttempt = (attempt) => {
 
             <div class="max-w-[1200px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
                 <!-- Exam Summary -->
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-center">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tentatives totales</p>
@@ -94,10 +94,10 @@ const viewAttempt = (attempt) => {
                 </div>
 
                 <!-- Attempts History -->
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-indigo-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
+                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
                             <h2 class="text-lg font-black text-slate-800">Tentatives ({{ attempts.length }})</h2>
                         </div>
                     </div>
@@ -124,7 +124,7 @@ const viewAttempt = (attempt) => {
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <div class="w-20 h-20 rounded-full flex items-center justify-center text-sm font-black"
-                                         :class="data.is_passed ? 'bg-emerald-100 text-red-600' : 'bg-rose-100 text-rose-600'">
+                                         :class="data.is_passed ? 'bg-emerald-100 text-red-600' : 'bg-red-100 text-red-600'">
                                         {{ data.score_percentage }}%
                                     </div>
                                     <div class="flex-1">
@@ -147,7 +147,7 @@ const viewAttempt = (attempt) => {
                         <Column header="Actions" style="min-width: 140px" :exportable="false">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
-                                    <Button icon="pi pi-eye" text @click="viewAttempt(data)" class="!text-blue-600 hover:!bg-indigo-50 !rounded-xl" v-tooltip="'Voir le détail'" />
+                                    <Button icon="pi pi-eye" text @click="viewAttempt(data)" class="!text-blue-600 hover:!bg-blue-50 !rounded-xl" v-tooltip="'Voir le détail'" />
                                     <Button v-if="data.result_id" icon="pi pi-chart-bar" text :href="route('exams.results', data.result_id)" class="!text-red-600 hover:!bg-emerald-50 !rounded-xl" v-tooltip="'Voir le résultat'" />
                                 </div>
                             </template>
@@ -158,7 +158,7 @@ const viewAttempt = (attempt) => {
                 <!-- Start New Attempt -->
                 <div class="mt-6 text-center">
                     <Link v-if="exam.attempts_allowed === 0 || attempts.length < exam.attempts_allowed" :href="route('exams.take', exam.id)">
-                        <Button label="Nouvelle tentative" icon="pi pi-plus-circle" class="!bg-blue-600 hover:!bg-indigo-500 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
+                        <Button label="Nouvelle tentative" icon="pi pi-plus-circle" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
                     </Link>
                     <div v-else class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-slate-600">
                         <i class="pi pi-lock text-2xl mb-2 block"></i>

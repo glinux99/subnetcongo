@@ -91,8 +91,8 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
 
             <!-- HEADER GLOBAL -->
             <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-violet-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
 
                 <div class="max-w-[1600px] mx-auto relative z-10">
@@ -103,7 +103,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                     </div>
                     <div class="flex items-center gap-3 mb-3 flex-wrap">
                         <h1 class="text-3xl font-black text-white tracking-tight">{{ course.title }}</h1>
-                        <Tag :value="course.level || 'Tous niveaux'" class="!bg-indigo-500/20 !text-indigo-300 !border !border-indigo-500/30 !text-[10px] !font-black !uppercase !tracking-widest capitalize" />
+                        <Tag :value="course.level || 'Tous niveaux'" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest capitalize" />
                     </div>
                     <p class="text-slate-300 text-base leading-relaxed mb-6 max-w-3xl">{{ course.short_description }}</p>
                     <div class="flex items-center gap-6 text-sm flex-wrap">
@@ -116,7 +116,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                         <span class="text-slate-300 font-medium">{{ course.enrollments_count ?? 0 }} apprenants</span>
                     </div>
                     <div class="flex items-center gap-3 mt-6">
-                        <Avatar :label="course.instructor?.name?.[0]" :image="course.instructor?.avatar_url" shape="circle" class="!bg-indigo-500 !text-white !w-10 !h-10" />
+                        <Avatar :label="course.instructor?.name?.[0]" :image="course.instructor?.avatar_url" shape="circle" class="!bg-blue-500 !text-white !w-10 !h-10" />
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instructeur</p>
                             <p class="font-black text-white text-sm">{{ course.instructor?.name }}</p>
@@ -127,28 +127,28 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
 
             <!-- MAIN -->
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Description & Curriculum -->
                         <main class="lg:col-span-2 space-y-6">
-                            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-7">
                                 <h2 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="pi pi-info-circle text-lg"></i></div>
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-info-circle text-lg"></i></div>
                                     À propos de ce cours
                                 </h2>
                                 <div class="prose prose-sm max-w-none text-slate-600 leading-relaxed" v-html="course.description"></div>
                             </div>
 
-                            <div v-if="course.modules?.length" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+                            <div v-if="course.modules?.length" class="bg-white rounded-xl border border-slate-200 shadow-sm p-7">
                                 <h2 class="text-xl font-black text-slate-800 mb-4 flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
                                     Programme
                                 </h2>
                                 <div class="space-y-2">
                                     <div v-for="(module, i) in course.modules" :key="module.id" class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <span class="w-9 h-9 bg-violet-100 text-violet-600 rounded-xl flex items-center justify-center font-black text-xs shrink-0">{{ i + 1 }}</span>
+                                            <span class="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs shrink-0">{{ i + 1 }}</span>
                                             <div class="min-w-0">
                                                 <p class="font-black text-sm text-slate-800">{{ module.title }}</p>
                                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ module.lessons_count ?? 0 }} leçons</p>
@@ -159,7 +159,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                                 </div>
                             </div>
 
-                            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-7">
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-7">
                                 <div class="flex justify-between items-center mb-6">
                                     <h2 class="text-xl font-black text-slate-800 flex items-center gap-3">
                                         <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center"><i class="pi pi-star text-lg"></i></div>
@@ -171,7 +171,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                                 <div v-else class="space-y-4">
                                     <div v-for="review in reviews" :key="review.id" class="border-b border-slate-100 pb-4 last:border-0">
                                         <div class="flex items-center gap-3 mb-2">
-                                            <Avatar :label="review.user?.name?.[0]" shape="circle" class="!bg-gradient-to-br !from-violet-500 !to-indigo-500 !text-white !w-9 !h-9 !text-xs !font-black" />
+                                            <Avatar :label="review.user?.name?.[0]" shape="circle" class="!bg-gradient-to-br !from-blue-500 !to-blue-500 !text-white !w-9 !h-9 !text-xs !font-black" />
                                             <div>
                                                 <p class="font-black text-sm">{{ review.user?.name }}</p>
                                                 <Rating :modelValue="review.rating" readonly :stars="5" class="text-xs" />
@@ -185,27 +185,27 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
 
                         <!-- Sidebar Achat -->
                         <aside class="lg:col-span-1">
-                            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sticky top-6">
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-xl p-6 sticky top-6">
                                 <img :src="getImageUrl(course.thumbnail_path || course.image)" class="w-full rounded-2xl mb-5 shadow-lg" />
                                 <div class="text-center mb-5">
-                                    <p class="text-5xl font-black text-violet-600 font-mono">{{ formatPrice(course.effective_price ?? course.price) }}</p>
+                                    <p class="text-5xl font-black text-blue-600 font-mono">{{ formatPrice(course.effective_price ?? course.price) }}</p>
                                     <p v-if="course.discount_price" class="text-sm text-slate-400 line-through mt-1">{{ formatPrice(course.price) }}</p>
                                 </div>
                                 <div class="space-y-3 mb-5 pb-5 border-b border-slate-100">
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
-                                        <div class="w-8 h-8 bg-violet-50 text-violet-600 rounded-lg flex items-center justify-center"><i class="pi pi-clock text-xs"></i></div>
+                                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-clock text-xs"></i></div>
                                         <span class="font-bold">{{ course.duration_hours ?? 0 }}h de contenu</span>
                                     </div>
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
-                                        <div class="w-8 h-8 bg-violet-50 text-violet-600 rounded-lg flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
+                                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
                                         <span class="font-bold">{{ course.lessons_count ?? 0 }} leçons</span>
                                     </div>
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
-                                        <div class="w-8 h-8 bg-violet-50 text-violet-600 rounded-lg flex items-center justify-center"><i class="pi pi-globe text-xs"></i></div>
+                                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-globe text-xs"></i></div>
                                         <span class="font-bold">{{ course.language ?? 'Français' }}</span>
                                     </div>
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
-                                        <div class="w-8 h-8 bg-violet-50 text-violet-600 rounded-lg flex items-center justify-center"><i class="pi pi-verified text-xs"></i></div>
+                                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-verified text-xs"></i></div>
                                         <span class="font-bold">Certificat inclus</span>
                                     </div>
                                 </div>
@@ -221,8 +221,8 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
 
                                     <!-- 2) PAYANT : ajouter au panier OU demande d'inscription (validation admin) -->
                                     <template v-if="!isFree && !isEnrolled && enrollmentStatus !== 'pending'">
-                                        <Button label="Ajouter au panier" icon="pi pi-shopping-cart" @click="addToCart" class="!bg-violet-600 hover:!bg-violet-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full" />
-                                        <Button label="Demander l'inscription" icon="pi pi-send" outlined @click="openRequest" class="!border-indigo-200 !text-indigo-600 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
+                                        <Button label="Ajouter au panier" icon="pi pi-shopping-cart" @click="addToCart" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full" />
+                                        <Button label="Demander l'inscription" icon="pi pi-send" outlined @click="openRequest" class="!border-blue-200 !text-blue-600 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
                                     </template>
 
                                     <!-- 3) Si déjà inscrit -->
@@ -235,7 +235,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                                     <Button :label="isInWishlist ? 'Retirer des favoris' : 'Ajouter aux favoris'" :icon="isInWishlist ? 'pi pi-heart-fill' : 'pi pi-heart'" @click="toggleWishlist" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
 
                                     <p v-if="!authUser" class="text-[10px] text-center text-slate-400 mt-2">
-                                        <Link :href="route('login')" class="text-indigo-600 font-black uppercase tracking-widest hover:underline">Connectez-vous</Link> pour vous inscrire.
+                                        <Link :href="route('login')" class="text-blue-600 font-black uppercase tracking-widest hover:underline">Connectez-vous</Link> pour vous inscrire.
                                     </p>
                                 </div>
                                 <div class="mt-5 p-4 bg-slate-50 rounded-2xl text-center">
@@ -252,23 +252,23 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
             <section v-if="relatedCourses?.length" class="max-w-[1600px] mx-auto px-6 mt-8">
                 <h2 class="text-2xl font-black text-slate-800 mb-6">Cours similaires</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <Link v-for="rc in relatedCourses" :key="rc.id" :href="route('marketplace.show', rc.id)" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-xl hover:border-violet-300 transition-all group">
+                    <Link v-for="rc in relatedCourses" :key="rc.id" :href="route('marketplace.show', rc.id)" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all group">
                         <img :src="getImageUrl(rc.thumbnail_path || rc.image)" class="h-32 w-full object-cover group-hover:scale-105 transition" />
                         <div class="p-4">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ rc.instructor?.name }}</p>
                             <h4 class="text-sm font-black text-slate-800 line-clamp-2 mb-2 tracking-tight">{{ rc.title }}</h4>
-                            <p class="text-base font-black text-violet-600 font-mono">{{ formatPrice(rc.effective_price ?? rc.price) }}</p>
+                            <p class="text-base font-black text-blue-600 font-mono">{{ formatPrice(rc.effective_price ?? rc.price) }}</p>
                         </div>
                     </Link>
                 </div>
             </section>
         </div>
 
-        <Dialog v-model:visible="showRequestDialog" modal :style="{ width: '560px' }" header="Demander l'inscription" class="!rounded-3xl" :closable="!reqSubmitting">
+        <Dialog v-model:visible="showRequestDialog" modal :style="{ width: '560px' }" header="Demander l'inscription" class="!rounded-xl" :closable="!reqSubmitting">
             <div class="space-y-3 p-2">
-                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center gap-3">
-                    <i class="pi pi-info-circle text-indigo-500"></i>
-                    <p class="text-xs text-indigo-700">Pour ce cours payant, votre demande sera envoyée à l'administrateur. L'accès sera validé après vérification de votre paiement.</p>
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3 flex items-center gap-3">
+                    <i class="pi pi-info-circle text-blue-500"></i>
+                    <p class="text-xs text-blue-700">Pour ce cours payant, votre demande sera envoyée à l'administrateur. L'accès sera validé après vérification de votre paiement.</p>
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Méthode de paiement</label>
@@ -304,7 +304,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
             </div>
             <template #footer>
                 <Button label="Annuler" outlined :disabled="reqSubmitting" @click="showRequestDialog = false" class="!rounded-xl" />
-                <Button :label="reqSubmitting ? 'Envoi...' : 'Envoyer la demande'" icon="pi pi-send" :loading="reqSubmitting" @click="submitRequest" class="!bg-gradient-to-r !from-indigo-500 !to-violet-500 !border-none !rounded-xl" />
+                <Button :label="reqSubmitting ? 'Envoi...' : 'Envoyer la demande'" icon="pi pi-send" :loading="reqSubmitting" @click="submitRequest" class="!bg-gradient-to-r !from-blue-500 !to-blue-500 !border-none !rounded-xl" />
             </template>
         </Dialog>
     </AppLayout>

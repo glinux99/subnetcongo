@@ -34,8 +34,8 @@ const formatDate = (iso) => { if(!iso) return ''; try { return new Date(iso).toL
 </script>
 
 <template>
-    <Head :title="`Ticket ${ticket.ticket_number}`" />
     <AppLayout>
+        <Head :title="`Ticket ${ticket.ticket_number}`" />
         <div class="page-bg min-h-screen">
             <header class="page-header">
                 <div class="page-header-orb-1" aria-hidden="true"></div>
@@ -87,7 +87,7 @@ const formatDate = (iso) => { if(!iso) return ''; try { return new Date(iso).toL
                             :invalid="!!replyForm.errors.message"
                             :aria-describedby="replyForm.errors.message ? 'ticket-reply-error' : undefined"
                         />
-                        <p v-if="replyForm.errors.message" id="ticket-reply-error" class="text-rose-600 dark:text-rose-400 text-xs" role="alert">{{ replyForm.errors.message }}</p>
+                        <p v-if="replyForm.errors.message" id="ticket-reply-error" class="text-red-600 dark:text-red-400 text-xs" role="alert">{{ replyForm.errors.message }}</p>
                         <div class="flex justify-end">
                             <Button type="submit" label="Envoyer la réponse" icon="pi pi-send" :loading="replyForm.processing" :disabled="!replyForm.message.trim()" />
                         </div>

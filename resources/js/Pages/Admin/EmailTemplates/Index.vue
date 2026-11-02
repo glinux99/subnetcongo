@@ -85,8 +85,8 @@ const getEventLabel = (event) => {
 </script>
 
 <template>
-    <Head title="Modèles d'emails" />
     <AppLayout>
+        <Head title="Modèles d'emails" />
         <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
             
             <!-- HEADER (Style uniforme avec Nouveau Message) -->

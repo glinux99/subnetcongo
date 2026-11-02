@@ -665,8 +665,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                 <!-- KPI 4 : Titres Révoqués -->
                 <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                    <div class="w-8 h-8 rounded bg-rose-50 flex items-center justify-center">
-                        <i class="pi pi-shield-slash text-rose-500 text-sm"></i>
+                    <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
+                        <i class="pi pi-shield-slash text-red-500 text-sm"></i>
                     </div>
                     <div>
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Titres Révoqués</div>
@@ -681,7 +681,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         
 
             <!-- SYSTÈME D'ONGLETS PRINCIPAL -->
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-10">
                 <div class="flex border-b border-slate-100 bg-slate-50/80 px-6 pt-4 gap-2">
                     <button @click="activeMainTab = 'log'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'log' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
                         <i class="pi pi-list"></i> Registre des Émissions
@@ -770,7 +770,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                     <Button icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100 w-10 h-10" v-tooltip.top="'Télécharger PDF HD'" @click="downloadPdf(data.id)" />
                                     <Button icon="pi pi-share-alt" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600 w-10 h-10" v-tooltip.top="'Lien Public / Partage'" @click="openVerificationLink(data.verification_hash)" />
                                     <Button v-if="data.status === 'Active'" icon="pi pi-calendar-times" class="p-button-text p-button-warning p-button-rounded hover:bg-amber-50 hover:text-amber-600 w-10 h-10" v-tooltip.top="'Définir une date d\'expiration'" @click="openExpirationDialog(data)" />
-                                    <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50 hover:text-rose-600 w-10 h-10" v-tooltip.top="'Révoquer le diplôme'" @click="handleRevocation(data)" />
+                                    <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50 hover:text-red-600 w-10 h-10" v-tooltip.top="'Révoquer le diplôme'" @click="handleRevocation(data)" />
                                 </div>
                             </template>
                         </Column>
@@ -792,7 +792,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
 
                         <!-- CARTE : AJOUTER -->
-                        <div class="bg-transparent border-2 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center p-8 min-h-[320px] cursor-pointer hover:bg-red-50/50 hover:border-red-400 hover:shadow-lg transition-all duration-300 group" @click="openDesigner(null)">
+                        <div class="bg-transparent border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-8 min-h-[320px] cursor-pointer hover:bg-red-50/50 hover:border-red-400 hover:shadow-lg transition-all duration-300 group" @click="openDesigner(null)">
                             <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-200 group-hover:text-red-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                                 <i class="pi pi-plus text-3xl"></i>
                             </div>
@@ -801,7 +801,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         </div>
 
                         <!-- BOUCLE DES TEMPLATES EXISTANTS -->
-                        <div v-for="template in templates" :key="template.id" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden group hover:border-red-400 hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+                        <div v-for="template in templates" :key="template.id" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group hover:border-red-400 hover:shadow-xl transition-all duration-300 flex flex-col h-full">
 
                             <!-- Miniatura CSS -->
                             <div class="h-48 bg-slate-100 flex items-center justify-center p-6 relative overflow-hidden transition-transform duration-500 group-hover:scale-105" :style="{ backgroundColor: `#${template.background_color?.replace('#','')}` }">
@@ -833,7 +833,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                     <Button label="Éditer le design" icon="pi pi-pencil" class="p-button-outlined text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400 font-bold w-full mr-2 rounded-xl" @click="openDesigner(template)" />
                                     <div class="flex gap-1">
                                         <Button icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded w-10 h-10 hover:bg-slate-100 text-slate-400 hover:text-slate-700" v-tooltip.top="'Dupliquer ce modèle'" @click="duplicateTemplate(template)" />
-                                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded w-10 h-10 hover:bg-rose-50 text-slate-300 hover:text-rose-500" v-tooltip.top="'Supprimer définitivement'" @click="deleteTemplate(template.id)" />
+                                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded w-10 h-10 hover:bg-red-50 text-slate-300 hover:text-red-500" v-tooltip.top="'Supprimer définitivement'" @click="deleteTemplate(template.id)" />
                                     </div>
                                 </div>
                             </div>
@@ -993,7 +993,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                         <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-none">
                                             <i :class="{
                                                 'pi pi-font text-blue-400': el.type === 'text',
-                                                'pi pi-image text-purple-400': el.type === 'image',
+                                                'pi pi-image text-blue-400': el.type === 'image',
                                                 'pi pi-shield text-emerald-400': el.type === 'logo',
                                                 'pi pi-pencil text-amber-400': el.type === 'signature',
                                                 'pi pi-qrcode text-slate-400': el.type === 'qr'
@@ -1103,7 +1103,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <!-- Render: CUSTOM IMAGE -->
                                 <div v-if="el.type === 'image'" class="w-full h-full pointer-events-none flex items-center justify-center">
                                     <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
-                                    <div v-else class="w-full h-full bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center text-indigo-300">
+                                    <div v-else class="w-full h-full bg-blue-50 border border-blue-100 flex flex-col items-center justify-center text-blue-300">
                                         <i class="pi pi-image text-3xl mb-1"></i><span class="text-[8px] font-bold uppercase">Image Libre</span>
                                     </div>
                                 </div>
@@ -1493,7 +1493,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- DIALOGUES SECONDAIRES (Émission Massive & Révocation)                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="bulkIssuanceDialog" modal header="Moteur d'Émission Massive" :style="{width: '650px'}" class="rounded-3xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <Dialog v-model:visible="bulkIssuanceDialog" modal header="Moteur d'Émission Massive" :style="{width: '650px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
             <div class="p-8 space-y-8">
 
                 <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex gap-4 items-start">
@@ -1510,7 +1510,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <Dropdown v-model="bulkIssueForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Rechercher une formation finalisée..." class="w-full bg-slate-50 border-slate-200 rounded-xl" filter>
                             <template #option="slotProps">
                                 <div class="flex items-center gap-3 py-1">
-                                    <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
+                                    <div class="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
                                     <span class="font-bold text-slate-700">{{ slotProps.option.title }}</span>
                                 </div>
                             </template>
@@ -1556,7 +1556,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="expirationDialog" modal header="Définir une Date d'Expiration" :style="{width: '450px'}" class="rounded-3xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <Dialog v-model:visible="expirationDialog" modal header="Définir une Date d'Expiration" :style="{width: '450px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
             <div class="p-8 space-y-6">
                 <div class="flex items-start gap-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
                     <i class="pi pi-exclamation-triangle text-amber-500 text-xl mt-1"></i>
@@ -1581,10 +1581,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="revocationDialog" modal header="Protocole de Révocation" :style="{width: '550px'}" class="rounded-3xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <Dialog v-model:visible="revocationDialog" modal header="Protocole de Révocation" :style="{width: '550px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
             <div class="p-8 text-center flex flex-col items-center">
-                <div class="w-24 h-24 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-rose-100 relative">
-                    <div class="absolute inset-0 rounded-full border-2 border-rose-500 border-dashed animate-[spin_10s_linear_infinite] opacity-20"></div>
+                <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-red-100 relative">
+                    <div class="absolute inset-0 rounded-full border-2 border-red-500 border-dashed animate-[spin_10s_linear_infinite] opacity-20"></div>
                     <i class="pi pi-shield-slash text-4xl relative z-10"></i>
                 </div>
 
@@ -1595,15 +1595,15 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                 <div class="w-full text-left space-y-3 mb-8 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <label class="block text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                        <i class="pi pi-align-left text-rose-400"></i> Motif Officiel de Révocation <span class="text-rose-500">*</span>
+                        <i class="pi pi-align-left text-red-400"></i> Motif Officiel de Révocation <span class="text-red-500">*</span>
                     </label>
                     <Textarea v-model="revocationForm.reason" rows="3" placeholder="Ex: Fraude lors de l'examen final, erreur administrative..." class="w-full rounded-xl p-3 border-slate-200 bg-slate-50 focus:bg-white transition-colors text-sm" />
                 </div>
 
-                <div class="w-full flex items-center justify-between p-5 rounded-2xl border transition-colors cursor-pointer" :class="revocationForm.confirm_action ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-200'" @click="revocationForm.confirm_action = !revocationForm.confirm_action">
+                <div class="w-full flex items-center justify-between p-5 rounded-2xl border transition-colors cursor-pointer" :class="revocationForm.confirm_action ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'" @click="revocationForm.confirm_action = !revocationForm.confirm_action">
                     <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full" :class="revocationForm.confirm_action ? 'bg-rose-500 animate-pulse' : 'bg-slate-300'"></div>
-                        <span class="text-sm font-bold transition-colors" :class="revocationForm.confirm_action ? 'text-rose-700' : 'text-slate-600'">Je confirme l'invalidation définitive</span>
+                        <div class="w-2 h-2 rounded-full" :class="revocationForm.confirm_action ? 'bg-red-500 animate-pulse' : 'bg-slate-300'"></div>
+                        <span class="text-sm font-bold transition-colors" :class="revocationForm.confirm_action ? 'text-red-700' : 'text-slate-600'">Je confirme l'invalidation définitive</span>
                     </div>
                     <InputSwitch v-model="revocationForm.confirm_action" @click.stop />
                 </div>
@@ -1611,7 +1611,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <template #footer>
                 <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
                     <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="revocationDialog = false" />
-                    <Button label="Confirmer la Révocation" icon="pi pi-exclamation-triangle" :disabled="!revocationForm.confirm_action" class="bg-rose-600 hover:bg-rose-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-rose-500/20 transition-all disabled:opacity-50 disabled:hover:bg-rose-600" @click="submitRevocation" />
+                    <Button label="Confirmer la Révocation" icon="pi pi-exclamation-triangle" :disabled="!revocationForm.confirm_action" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50 disabled:hover:bg-red-600" @click="submitRevocation" />
                 </div>
             </template>
         </Dialog>

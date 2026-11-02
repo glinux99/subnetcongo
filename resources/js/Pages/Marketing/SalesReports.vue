@@ -211,7 +211,7 @@ onMounted(() => {
             <!-- HEADER SECTION -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="flex items-center gap-6">
-                    <div class="bg-emerald-600 p-4 rounded-3xl shadow-xl shadow-emerald-100 -rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+                    <div class="bg-emerald-600 p-4 rounded-xl shadow-xl shadow-emerald-100 -rotate-3 hover:rotate-0 transition-transform cursor-pointer">
                         <i class="pi pi-chart-bar text-white text-3xl"></i>
                     </div>
                     <div>
@@ -256,7 +256,7 @@ onMounted(() => {
             <!-- ANALYTICS SECTION -->
             <div class="grid grid-cols-12 gap-8 mb-10">
                 <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-3xl overflow-hidden h-full">
+                    <Card class="border-none shadow-sm rounded-xl overflow-hidden h-full">
                         <template #title>
                             <div class="flex justify-between items-center px-4 pt-4">
                                 <div>
@@ -278,7 +278,7 @@ onMounted(() => {
                 </div>
 
                 <div class="col-span-12 lg:col-span-4 space-y-8">
-                    <Card class="border-none shadow-sm rounded-3xl h-1/2">
+                    <Card class="border-none shadow-sm rounded-xl h-1/2">
                         <template #title><span class="text-lg font-black text-slate-800 px-4 pt-4">Ventes par Catégorie</span></template>
                         <template #content>
                             <div class="h-[200px] relative">
@@ -291,14 +291,14 @@ onMounted(() => {
                         </template>
                     </Card>
 
-                    <Card class="border-none shadow-sm rounded-3xl h-1/2 bg-slate-900 text-white overflow-hidden">
+                    <Card class="border-none shadow-sm rounded-xl h-1/2 bg-slate-900 text-white overflow-hidden">
                         <template #content>
                             <div class="relative z-10 p-2">
                                 <h4 class="text-xl font-bold mb-4">Top Méthodes de <br/><span class="text-emerald-400 font-black italic">Paiement</span></h4>
                                 <div class="space-y-4">
                                     <div v-for="g in [
                                         { name: 'M-Pesa / Orange', val: 55, color: 'bg-emerald-500' },
-                                        { name: 'Cartes Bancaires', val: 30, color: 'bg-indigo-500' },
+                                        { name: 'Cartes Bancaires', val: 30, color: 'bg-blue-500' },
                                         { name: 'PayPal', val: 15, color: 'bg-amber-500' }
                                     ]" :key="g.name" class="space-y-1">
                                         <div class="flex justify-between text-xs font-bold uppercase tracking-tighter">
@@ -377,7 +377,7 @@ onMounted(() => {
                             <template #body="{ data }">
                                 <div class="flex flex-col">
                                     <span class="font-bold text-slate-700 text-sm truncate max-w-[200px]">{{ data.course.title }}</span>
-                                    <span class="text-[10px] font-black uppercase text-indigo-400 tracking-widest">{{ data.course.category }}</span>
+                                    <span class="text-[10px] font-black uppercase text-blue-400 tracking-widest">{{ data.course.category }}</span>
                                 </div>
                             </template>
                         </Column>
@@ -434,11 +434,11 @@ onMounted(() => {
             <Dialog v-model:visible="displayDetailDialog" :modal="true" :style="{ width: '750px' }" header="Détails de la Transaction" class="p-fluid sales-detail-modal" v-if="currentTransaction">
                 <div class="pt-6">
                     <!-- Invoice Summary Top -->
-                    <div class="flex justify-between items-center bg-slate-50 p-6 rounded-3xl border border-slate-100 mb-8">
+                    <div class="flex justify-between items-center bg-slate-50 p-6 rounded-xl border border-slate-100 mb-8">
                         <div>
                             <span class="text-[10px] font-black text-slate-400 uppercase block mb-1">RÉFÉRENCE FACTURE</span>
                             <h2 class="text-2xl font-black text-slate-800">{{ currentTransaction.invoice_ref }}</h2>
-                            <p class="text-xs font-bold text-indigo-500 mt-1 uppercase tracking-widest">Transaction {{ currentTransaction.status }}</p>
+                            <p class="text-xs font-bold text-blue-500 mt-1 uppercase tracking-widest">Transaction {{ currentTransaction.status }}</p>
                         </div>
                         <div class="text-right">
                             <span class="text-4xl font-black text-slate-800">{{ formatCurrency(currentTransaction.amount) }}</span>
@@ -467,9 +467,9 @@ onMounted(() => {
                                     </div>
                                     <div>
                                         <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Produit</h4>
-                                        <div class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
-                                            <p class="font-bold text-indigo-700">{{ currentTransaction.course.title }}</p>
-                                            <p class="text-xs font-medium text-indigo-400">Accès à vie • Licence Standard</p>
+                                        <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
+                                            <p class="font-bold text-blue-700">{{ currentTransaction.course.title }}</p>
+                                            <p class="text-xs font-medium text-blue-400">Accès à vie • Licence Standard</p>
                                         </div>
                                     </div>
                                 </div>
@@ -491,7 +491,7 @@ onMounted(() => {
                                     </div>
                                     <div class="flex justify-between text-lg pt-4">
                                         <span class="font-black text-slate-800">Total payé TTC</span>
-                                        <span class="font-black text-indigo-600">{{ formatCurrency(currentTransaction.amount) }}</span>
+                                        <span class="font-black text-blue-600">{{ formatCurrency(currentTransaction.amount) }}</span>
                                     </div>
                                     
                                     <div class="mt-8 p-4 bg-amber-50 rounded-2xl flex items-start gap-3 border border-amber-100">

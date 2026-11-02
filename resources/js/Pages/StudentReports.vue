@@ -110,7 +110,7 @@ const openQuickView = (s) => { selectedStudent.value = s; showQuickView.value = 
                         { l: 'Moyenne Cohorte', v: stats.avg_score + '%', i: 'pi-percentage', c: 'text-red-600', bg: 'bg-red-50' },
                         { l: 'Actifs (Real-time)', v: stats.active_now, i: 'pi-bolt', c: 'text-emerald-600', bg: 'bg-emerald-50' },
                         { l: 'Certifications', v: stats.total_certifications, i: 'pi-verified', c: 'text-blue-600', bg: 'bg-blue-50' },
-                        { l: 'Profils à risque', v: stats.at_risk_students, i: 'pi-exclamation-triangle', c: 'text-rose-600', bg: 'bg-rose-50' }
+                        { l: 'Profils à risque', v: stats.at_risk_students, i: 'pi-exclamation-triangle', c: 'text-red-600', bg: 'bg-red-50' }
                     ]" :key="kpi.l" class="bg-white p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
                         <div class="relative z-10">
                             <div :class="kpi.bg" class="w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">

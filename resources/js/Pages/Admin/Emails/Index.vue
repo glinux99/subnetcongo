@@ -139,8 +139,8 @@ const moveToTrash = (messageNumber) => {
 </script>
 
 <template>
-    <Head title="Boîte email" />
     <AppLayout>
+        <Head title="Boîte email" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             

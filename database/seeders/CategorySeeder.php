@@ -44,13 +44,15 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $cat) {
-            Category::create([
-                'name' => $cat['name'],
-                'slug' => Str::slug($cat['name']),
-                'icon' => $cat['icon'],
-                'description' => $cat['description'],
-                'is_active' => true,
-            ]);
+            Category::firstOrCreate(
+                ['slug' => Str::slug($cat['name'])],
+                [
+                    'name' => $cat['name'],
+                    'icon' => $cat['icon'],
+                    'description' => $cat['description'],
+                    'is_active' => true,
+                ]
+            );
         }
     }
 }

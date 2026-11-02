@@ -114,7 +114,7 @@ const quickReject = (id) => {
                             <p class="text-slate-400 mt-2 font-medium max-w-xl">Supervisez les admissions, validez les paiements et gérez les accès aux parcours de formation.</p>
                         </div>
                         
-                        <div class="flex items-center gap-4 bg-white/5 p-2 rounded-3xl border border-white/10 backdrop-blur-xl">
+                        <div class="flex items-center gap-4 bg-white/5 p-2 rounded-xl border border-white/10 backdrop-blur-xl">
                             <div class="px-6 py-2 text-center border-r border-white/10">
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Taux de conversion</p>
                                 <p class="text-white font-black text-xl italic">84%</p>

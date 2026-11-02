@@ -617,7 +617,7 @@ const generateSlug = () => {
 };
 
 const getLevelColor = (level) => {
-    const map = { 'Beginner': 'text-emerald-500 bg-emerald-50 border-emerald-200', 'Intermediate': 'text-blue-500 bg-blue-50 border-blue-200', 'Advanced': 'text-amber-500 bg-amber-50 border-amber-200', 'Expert': 'text-rose-500 bg-rose-50 border-rose-200' };
+    const map = { 'Beginner': 'text-emerald-500 bg-emerald-50 border-emerald-200', 'Intermediate': 'text-blue-500 bg-blue-50 border-blue-200', 'Advanced': 'text-amber-500 bg-amber-50 border-amber-200', 'Expert': 'text-red-500 bg-red-50 border-red-200' };
     return map[level] || 'text-slate-500 bg-slate-50 border-slate-200';
 };
 
@@ -762,8 +762,8 @@ onMounted(() => {
             
             <!-- KPI 1 : Parcours Actifs -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-violet-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-map text-violet-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-map text-blue-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Parcours Actifs</h3>
@@ -795,8 +795,8 @@ onMounted(() => {
 
             <!-- KPI 4 : MRR (Parcours) -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-wallet text-rose-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-wallet text-red-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">MRR (Parcours)</h3>
@@ -863,7 +863,7 @@ onMounted(() => {
                             <i v-else class="pi pi-map text-2xl text-slate-300 z-0"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="font-extrabold text-slate-800 text-base hover:text-violet-600 cursor-pointer transition-colors truncate" @click="editPath(data)">
+                            <div class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors truncate" @click="editPath(data)">
                                 {{ data.name }}
                             </div>
                             <div class="flex items-center gap-2 mt-1 flex-wrap">
@@ -901,7 +901,7 @@ onMounted(() => {
             <Column field="metrics" header="Volume Pédagogique" style="min-width: 12rem; background-color: #f8fafc;">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
-                        <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-book text-indigo-400"></i> {{ data.courses_count_cache || data.courses?.length || 0 }} Cours inclus</div>
+                        <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-book text-blue-400"></i> {{ data.courses_count_cache || data.courses?.length || 0 }} Cours inclus</div>
                         <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-clock text-amber-400"></i> {{ Math.floor(data.total_duration_minutes / 60) }}h {{ data.total_duration_minutes % 60 }}m</div>
                     </div>
                 </template>
@@ -917,8 +917,8 @@ onMounted(() => {
                 <template #body="{ data }">
                     <div class="flex justify-end gap-2">
                         <Button label="Cohorte" icon="pi pi-users" class="p-button-outlined p-button-sm p-button-info font-bold bg-white hover:bg-blue-50" v-tooltip.top="'Gérer les étudiants inscrits'" @click="openCohortManager(data)" />
-                        <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-violet-600 hover:bg-violet-50 transition-colors" v-tooltip.top="'Configurer le parcours'" @click="editPath(data)" />
-                        <Button icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" v-tooltip.top="'Archiver le parcours'" @click="confirmArchive(data)" />
+                        <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors" v-tooltip.top="'Configurer le parcours'" @click="editPath(data)" />
+                        <Button icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors" v-tooltip.top="'Archiver le parcours'" @click="confirmArchive(data)" />
                     </div>
                 </template>
             </Column>
@@ -930,7 +930,7 @@ onMounted(() => {
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                             <div>
                                 <h4 class="font-black text-slate-800 text-xl flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center"><i class="pi pi-sitemap"></i></div>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-sitemap"></i></div>
                                     Structure du Cursus
                                 </h4>
                                 <p class="text-sm text-slate-500 mt-1">Séquence d'apprentissage linéaire configurée pour ce parcours.</p>
@@ -940,19 +940,19 @@ onMounted(() => {
 
                         <div v-if="data.courses && data.courses.length > 0" class="relative pl-2 md:pl-0">
                             <!-- Ligne de connexion verticale (Timeline) -->
-                            <div class="absolute left-7 top-6 bottom-6 w-1 bg-violet-200 rounded-full hidden md:block"></div>
+                            <div class="absolute left-7 top-6 bottom-6 w-1 bg-blue-200 rounded-full hidden md:block"></div>
 
                             <div class="space-y-5 relative z-10">
                                 <div v-for="(course, idx) in data.courses" :key="'syl_'+course.id" class="flex flex-col md:flex-row items-start md:items-center gap-5 group">
                                     <!-- Numéro d'étape (Node de la timeline) -->
-                                    <div class="w-14 h-14 rounded-full bg-white border-4 border-violet-100 text-violet-600 font-black text-lg flex items-center justify-center flex-shrink-0 z-10 shadow-sm group-hover:border-violet-400 group-hover:bg-violet-50 transition-all duration-300 hidden md:flex relative">
+                                    <div class="w-14 h-14 rounded-full bg-white border-4 border-blue-100 text-blue-600 font-black text-lg flex items-center justify-center flex-shrink-0 z-10 shadow-sm group-hover:border-blue-400 group-hover:bg-blue-50 transition-all duration-300 hidden md:flex relative">
                                         {{ idx + 1 }}
-                                        <div v-if="idx !== data.courses.length -1" class="absolute -bottom-5 left-1/2 w-0.5 h-4 bg-violet-200"></div>
+                                        <div v-if="idx !== data.courses.length -1" class="absolute -bottom-5 left-1/2 w-0.5 h-4 bg-blue-200"></div>
                                     </div>
 
                                     <!-- Carte du cours détaillée -->
-                                    <div class="flex-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-5 group-hover:shadow-md group-hover:border-violet-300 transition-all w-full relative overflow-hidden">
-                                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-violet-400 transition-colors"></div>
+                                    <div class="flex-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-5 group-hover:shadow-md group-hover:border-blue-300 transition-all w-full relative overflow-hidden">
+                                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-blue-400 transition-colors"></div>
 
                                         <div class="w-24 h-16 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 relative">
                                             <img v-if="course.thumbnail_path" :src="course.thumbnail_path" class="w-full h-full object-cover" />
@@ -977,7 +977,7 @@ onMounted(() => {
                                 </div>
                             </div>
                         </div>
-                        <div v-else class="text-center p-12 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                        <div v-else class="text-center p-12 bg-white rounded-xl border-2 border-dashed border-slate-200">
                             <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="pi pi-link text-4xl text-slate-300"></i></div>
                             <h5 class="font-bold text-slate-700 text-lg">Syllabus vide</h5>
                             <p class="text-sm text-slate-500 max-w-sm mx-auto mt-2">Ce parcours ne contient aucun cours actuellement. Accédez à l'éditeur pour construire la séquence d'apprentissage.</p>
@@ -1015,7 +1015,7 @@ onMounted(() => {
                 <div class="absolute right-0 top-0 bottom-0 w-64 bg-gradient-to-l from-blue-50 to-transparent pointer-events-none"></div>
 
                 <div class="flex items-center gap-5 relative z-10">
-                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
                         <i class="pi pi-users text-2xl"></i>
                     </div>
                     <div>
@@ -1040,7 +1040,7 @@ onMounted(() => {
                 </button>
                 <button @click="cohortActiveTab = 'ajouter'" class="py-4 border-b-2 font-bold text-sm transition-colors relative flex items-center gap-2" :class="cohortActiveTab === 'ajouter' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'">
                     <i class="pi pi-user-plus"></i> Inscrire des utilisateurs
-                    <span v-if="cohortForm.user_ids.length > 0" class="absolute -top-1 -right-4 w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span v-if="cohortForm.user_ids.length > 0" class="absolute -top-1 -right-4 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                 </button>
                 <button @click="cohortActiveTab = 'analytics'" class="py-4 border-b-2 font-bold text-sm transition-colors relative flex items-center gap-2" :class="cohortActiveTab === 'analytics' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'">
                     <i class="pi pi-chart-line"></i> Performance Globale
@@ -1122,7 +1122,7 @@ onMounted(() => {
 
                                 <Column alignFrozen="right" :frozen="true" style="width: 4rem; text-align: center">
                                     <template #body="{ data }">
-                                        <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger p-button-sm opacity-50 hover:opacity-100 hover:bg-rose-50" v-tooltip.left="'Retirer l\'accès'" @click="stageUserForRemoval(data)" />
+                                        <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger p-button-sm opacity-50 hover:opacity-100 hover:bg-red-50" v-tooltip.left="'Retirer l\'accès'" @click="stageUserForRemoval(data)" />
                                     </template>
                                 </Column>
                             </DataTable>
@@ -1256,7 +1256,7 @@ onMounted(() => {
             <!-- HEADER WORKSPACE ARCHITECTE -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center text-violet-600 shadow-inner border border-violet-200"><i class="pi pi-map text-xl"></i></div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-inner border border-blue-200"><i class="pi pi-map text-xl"></i></div>
                     <div>
                         <h2 class="text-xl font-black text-slate-800 leading-tight">{{ pathForm.id ? 'Éditeur de Parcours' : 'Créer un Cursus' }}</h2>
                         <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5 font-medium">
@@ -1277,18 +1277,18 @@ onMounted(() => {
                         v-for="tab in editorTabs" :key="tab.id"
                         @click="activeTab = tab.id"
                         class="w-full flex items-start gap-4 px-4 py-4 rounded-xl transition-all duration-300 text-left relative overflow-hidden group"
-                        :class="activeTab === tab.id ? 'bg-violet-50 border border-violet-200 shadow-sm' : 'hover:bg-slate-50 border border-transparent'"
+                        :class="activeTab === tab.id ? 'bg-blue-50 border border-blue-200 shadow-sm' : 'hover:bg-slate-50 border border-transparent'"
                     >
-                        <div v-if="activeTab === tab.id" class="absolute left-0 top-0 bottom-0 w-1.5 bg-violet-600"></div>
-                        <i :class="[tab.icon, activeTab === tab.id ? 'text-violet-600' : 'text-slate-400 group-hover:text-slate-600']" class="text-xl mt-0.5 transition-colors"></i>
+                        <div v-if="activeTab === tab.id" class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+                        <i :class="[tab.icon, activeTab === tab.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']" class="text-xl mt-0.5 transition-colors"></i>
                         <div class="flex-1">
-                            <div class="font-bold text-sm" :class="activeTab === tab.id ? 'text-violet-900' : 'text-slate-700'">{{ tab.label }}</div>
-                            <div class="text-[10px] mt-1 leading-tight" :class="activeTab === tab.id ? 'text-violet-600/80' : 'text-slate-500'">{{ tab.desc }}</div>
+                            <div class="font-bold text-sm" :class="activeTab === tab.id ? 'text-blue-900' : 'text-slate-700'">{{ tab.label }}</div>
+                            <div class="text-[10px] mt-1 leading-tight" :class="activeTab === tab.id ? 'text-blue-600/80' : 'text-slate-500'">{{ tab.desc }}</div>
                         </div>
 
                         <!-- Indicateurs de Validation -->
-                        <i v-if="tab.id === 'general' && !isTabGeneralValid" class="pi pi-exclamation-circle text-rose-500 absolute right-3 top-1/2 -translate-y-1/2 text-sm"></i>
-                        <i v-if="tab.id === 'curriculum' && !isTabCurriculumValid" class="pi pi-exclamation-circle text-rose-500 absolute right-3 top-1/2 -translate-y-1/2 text-sm"></i>
+                        <i v-if="tab.id === 'general' && !isTabGeneralValid" class="pi pi-exclamation-circle text-red-500 absolute right-3 top-1/2 -translate-y-1/2 text-sm"></i>
+                        <i v-if="tab.id === 'curriculum' && !isTabCurriculumValid" class="pi pi-exclamation-circle text-red-500 absolute right-3 top-1/2 -translate-y-1/2 text-sm"></i>
                         <i v-if="tab.id === 'general' && isTabGeneralValid" class="pi pi-check-circle text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2 text-sm"></i>
                         <i v-if="tab.id === 'curriculum' && isTabCurriculumValid" class="pi pi-check-circle text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2 text-sm"></i>
                     </button>
@@ -1299,10 +1299,10 @@ onMounted(() => {
                     <!-- CONTENU ONGLET 1: GENERAL (Réduit pour espace, identique au prompt initial) -->
                     <div v-show="activeTab === 'general'" class="max-w-4xl mx-auto space-y-6 animate-fade-in">
                         <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                            <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-100 pb-4"><div class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div> Identité Globale</h3>
+                            <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-100 pb-4"><div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div> Identité Globale</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="col-span-2 space-y-2">
-                                    <label class="block text-sm font-bold text-slate-700">Nom du Parcours <span class="text-rose-500">*</span></label>
+                                    <label class="block text-sm font-bold text-slate-700">Nom du Parcours <span class="text-red-500">*</span></label>
                                     <InputText v-model="pathForm.name" @input="generateSlug" class="w-full p-4 font-black text-lg bg-slate-50 border-slate-300 focus:bg-white" placeholder="Ex: Masterclass Développement Web Full-Stack..." :class="{'p-invalid': pathForm.name.length > 0 && pathForm.name.length < 4}" />
                                 </div>
                                 <div class="col-span-2 space-y-2">
@@ -1310,7 +1310,7 @@ onMounted(() => {
                                     <div class="border border-slate-200 rounded-xl overflow-hidden shadow-inner"><Editor v-model="pathForm.description" editorStyle="height: 250px" /></div>
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-bold text-slate-700">Catégorie Métier <span class="text-rose-500">*</span></label>
+                                    <label class="block text-sm font-bold text-slate-700">Catégorie Métier <span class="text-red-500">*</span></label>
                                     <div class="flex gap-2">
                                         <Dropdown v-model="pathForm.category_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Sélectionnez..." class="flex-1 font-bold bg-slate-50" filter :class="{'p-invalid': !pathForm.category_id}" />
                                         <Button icon="pi pi-plus" class="p-button-outlined p-button-secondary bg-white" v-tooltip.top="'Créer une nouvelle catégorie'" @click="openCategoryDialog" />
@@ -1327,11 +1327,11 @@ onMounted(() => {
                     <!-- CONTENU ONGLET 2: CURRICULUM (Réduit pour espace, identique au prompt initial) -->
                     <div v-show="activeTab === 'curriculum'" class="h-full flex flex-col max-w-6xl mx-auto animate-fade-in">
                         <!-- ... (Contenu identique à l'original: Dual Pane avec vuedraggable) ... -->
-                        <div class="bg-violet-50 border border-violet-100 rounded-xl p-4 mb-6 flex items-start gap-4 shadow-sm">
-                            <i class="pi pi-info-circle text-violet-500 text-xl mt-0.5"></i>
+                        <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6 flex items-start gap-4 shadow-sm">
+                            <i class="pi pi-info-circle text-blue-500 text-xl mt-0.5"></i>
                             <div>
-                                <h4 class="font-bold text-violet-900 text-sm">Constructeur de Séquence</h4>
-                                <p class="text-xs text-violet-700 mt-1 leading-relaxed">Faites glisser les cours de la gauche vers la droite pour construire la séquence d'apprentissage idéale.</p>
+                                <h4 class="font-bold text-blue-900 text-sm">Constructeur de Séquence</h4>
+                                <p class="text-xs text-blue-700 mt-1 leading-relaxed">Faites glisser les cours de la gauche vers la droite pour construire la séquence d'apprentissage idéale.</p>
                             </div>
                         </div>
                         <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[500px]">
@@ -1348,16 +1348,16 @@ onMounted(() => {
                                 </div>
                             </div>
                             <!-- PANE DROITE (SYLLABUS) -->
-                            <div class="bg-white rounded-2xl border-2 border-violet-200 shadow-sm flex flex-col overflow-hidden relative">
-                                <div class="p-4 border-b border-slate-100 bg-violet-50 flex items-center justify-between">
-                                    <h3 class="font-black text-violet-900 text-sm"><i class="pi pi-list mr-2"></i>Programme du Parcours</h3>
+                            <div class="bg-white rounded-2xl border-2 border-blue-200 shadow-sm flex flex-col overflow-hidden relative">
+                                <div class="p-4 border-b border-slate-100 bg-blue-50 flex items-center justify-between">
+                                    <h3 class="font-black text-blue-900 text-sm"><i class="pi pi-list mr-2"></i>Programme du Parcours</h3>
                                 </div>
                                 <div class="flex-1 overflow-y-auto p-4 bg-slate-50 custom-scrollbar">
                                     <draggable v-model="pathSyllabusList" item-key="id" handle=".drag-handle" class="space-y-3">
                                         <template #item="{ element: course, index }">
                                             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
                                                 <i class="pi pi-bars drag-handle text-slate-300 cursor-move"></i>
-                                                <div class="w-6 h-6 rounded-full bg-violet-100 text-violet-700 font-black text-[10px] flex items-center justify-center">{{ index + 1 }}</div>
+                                                <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-black text-[10px] flex items-center justify-center">{{ index + 1 }}</div>
                                                 <div class="flex-1 min-w-0 font-bold text-slate-800 text-sm truncate">{{ course.title }}</div>
                                                 <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-sm p-button-danger" @click="removeCourseFromPath(course)" />
                                             </div>
@@ -1374,7 +1374,7 @@ onMounted(() => {
                         <!-- Vignette du Parcours -->
                         <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                             <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
-                                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-image"></i></div>
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-image"></i></div>
                                 Vignette du Parcours (Couverture)
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -1502,11 +1502,11 @@ onMounted(() => {
                 <div class="text-xs text-slate-500 font-medium flex items-center gap-2">
                     Validation Architecture:
                     <span v-if="isPathValid" class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><i class="pi pi-check"></i> Prêt pour publication</span>
-                    <span v-else class="text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-100 flex items-center gap-1"><i class="pi pi-times"></i> Informations manquantes</span>
+                    <span v-else class="text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 flex items-center gap-1"><i class="pi pi-times"></i> Informations manquantes</span>
                 </div>
                 <div class="flex gap-3">
                     <Button label="Enregistrer Brouillon" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white" @click="savePath('draft')" :loading="pathForm.processing" />
-                    <Button label="Publier le Parcours" icon="pi pi-rocket" class="p-button-primary bg-violet-600 border-violet-600 hover:bg-violet-700 font-bold px-8 shadow-lg shadow-violet-500/30 transition-transform hover:-translate-y-0.5" @click="savePath('publish')" :loading="pathForm.processing" :disabled="!isPathValid" />
+                    <Button label="Publier le Parcours" icon="pi pi-rocket" class="p-button-primary bg-blue-600 border-blue-600 hover:bg-blue-700 font-bold px-8 shadow-lg shadow-violet-500/30 transition-transform hover:-translate-y-0.5" @click="savePath('publish')" :loading="pathForm.processing" :disabled="!isPathValid" />
                 </div>
             </div>
         </Dialog>
@@ -1528,7 +1528,7 @@ onMounted(() => {
 
                 <div class="space-y-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700">Nom de la catégorie <span class="text-rose-500">*</span></label>
+                        <label class="block text-sm font-bold text-slate-700">Nom de la catégorie <span class="text-red-500">*</span></label>
                         <InputText v-model="categoryForm.name" @input="generateCategorySlug" placeholder="Ex: Développement Web, Management..." class="w-full p-3 font-bold text-slate-800 bg-white border-slate-300" autofocus :class="{'p-invalid': categoryForm.errors?.name}" />
                     </div>
 

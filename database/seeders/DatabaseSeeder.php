@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Lancer les Seeders statiques
+        // 1. Lancer les Seeders statiques (configurations de base)
         $this->call([
             CategorySeeder::class,
             RoleSeeder::class,      // Gère les rôles et permissions (créé au début)
@@ -27,36 +27,52 @@ class DatabaseSeeder extends Seeder
             AffiliateSeeder::class,             // Affiliés et parrainages
         ]);
 
-        $this->command->info('Rôles, Utilisateurs et Configurations créés !');
+        $this->command->info('✓ Rôles, Utilisateurs et Configurations créés !');
 
-        // 2. Récupérer les formateurs pour leur assigner des cours
-        $instructors = User::role('instructor')->get();
+        // 2. Créer les templates de certificats
+        $this->call([
+            CertificateTemplateSeeder::class,
+        ]);
 
-        if ($instructors->count() > 0) {
-            $this->command->info('Génération des cours en cours... (ça peut prendre quelques secondes)');
+        $this->command->info('✓ Templates de certificats créés !');
 
-            // Pour chaque formateur, on crée entre 2 et 4 cours
-            foreach ($instructors as $instructor) {
+        // 3. Créer les cours professionnels
+        $this->call([
+            CourseSeeder::class,
+        ]);
 
-                Course::factory(rand(1, 2))->create([
-                    'instructor_id' => $instructor->id
-                ])->each(function ($course) {
+        $this->command->info('✓ Cours professionnels créés !');
 
-                    // Pour chaque cours, on crée entre 3 et 5 modules
-                    $modules = Module::factory(rand(3, 5))->create([
-                        'course_id' => $course->id
-                    ]);
+        // 4. Créer les modules et leçons pour chaque cours
+        $this->call([
+            ModuleLessonSeeder::class,
+        ]);
 
-                    // Pour chaque module, on crée entre 2 et 6 leçons
-                    foreach ($modules as $index => $module) {
-                        Lesson::factory(rand(1, 2))->create([
-                            'module_id' => $module->id,
-                            'order' => $index + 1 // Assure un ordre logique
-                        ]);
-                    }
-                });
-            }
-            $this->command->info('Cours, Modules et Leçons générés avec succès ! 🚀');
-        }
+        $this->command->info('✓ Modules et leçons créés !');
+
+        // 5. Créer les examens et questions pour les cours payants
+        $this->call([
+            ExamSeeder::class,
+        ]);
+
+        $this->command->info('✓ Examens et questions créés !');
+
+        // 6. Inscrire les étudiants aux cours
+        $this->call([
+            EnrollmentSeeder::class,
+        ]);
+
+        $this->command->info('✓ Inscriptions des étudiants créées !');
+
+        $this->command->newLine();
+        $this->command->info('🎉 Seeding terminé avec succès !');
+        $this->command->info('📊 Résumé :');
+        $this->command->info('  - 8 instructeurs');
+        $this->command->info('  - 20 étudiants');
+        $this->command->info('  - 20 cours (gratuits et payants)');
+        $this->command->info('  - Modules et leçons pour chaque cours');
+        $this->command->info('  - Examens avec questions');
+        $this->command->info('  - 5 templates de certificats');
+        $this->command->info('  - Inscriptions des étudiants');
     }
 }

@@ -140,8 +140,8 @@ const hasHtml = computed(() => {
 </script>
 
 <template>
-    <Head :title="email.subject || 'Lecture Email'" />
     <AppLayout>
+        <Head :title="email.subject || 'Lecture Email'" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             

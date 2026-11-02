@@ -505,7 +505,7 @@ const seoPreviewDescLes = computed(() => lessonForm.seo_metadata.description || 
 
 // Definition des types de leçons
 const lessonTypesDef = [
-    { label: 'Vidéo', value: 'video', icon: 'pi pi-video', color: 'text-rose-500', bg: 'bg-rose-50' },
+    { label: 'Vidéo', value: 'video', icon: 'pi pi-video', color: 'text-red-500', bg: 'bg-red-50' },
     { label: 'Document', value: 'document', icon: 'pi pi-file-pdf', color: 'text-blue-500', bg: 'bg-blue-50' },
     { label: 'Quiz / QCM', value: 'quiz', icon: 'pi pi-question-circle', color: 'text-emerald-500', bg: 'bg-emerald-50' },
     { label: 'Devoir (Upload)', value: 'assignment', icon: 'pi pi-cloud-upload', color: 'text-amber-500', bg: 'bg-amber-50' }
@@ -579,8 +579,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
             
             <!-- KPI 1 : Modules -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-folder-open text-indigo-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-folder-open text-blue-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Modules</h3>
@@ -601,8 +601,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
 
             <!-- KPI 3 : Heures de vidéo -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-video text-rose-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-video text-red-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Heures de Vidéo</h3>
@@ -641,7 +641,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                 <!-- Filtre par Cours -->
                 <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par Formation" class="w-full sm:w-72 bg-white border-slate-200" showClear filter>
                     <template #value="slotProps">
-                        <div v-if="slotProps.value" class="flex items-center gap-2 text-indigo-700 font-bold text-sm">
+                        <div v-if="slotProps.value" class="flex items-center gap-2 text-blue-700 font-bold text-sm">
                             <i class="pi pi-book"></i>
                             <span class="truncate max-w-[200px]">{{ props.courses.find(c => c.id === slotProps.value)?.title }}</span>
                         </div>
@@ -694,13 +694,13 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                         </div>
 
                         <div>
-                            <div class="font-extrabold text-slate-800 text-base leading-tight hover:text-indigo-600 cursor-pointer" @click="editModule(data)">
+                            <div class="font-extrabold text-slate-800 text-base leading-tight hover:text-blue-600 cursor-pointer" @click="editModule(data)">
                                 {{ data.title }}
                                 <i v-if="data.is_locked" class="pi pi-lock text-amber-500 text-xs ml-1" v-tooltip.top="'Module verrouillé (prérequis strict)'"></i>
                             </div>
                             <div class="flex items-center gap-2 mt-1">
                                 <!-- Badge du cours parent -->
-                                <div class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded font-bold flex items-center gap-1 max-w-[200px] truncate" v-tooltip.top="'Cours associé'">
+                                <div class="bg-blue-50 border border-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded font-bold flex items-center gap-1 max-w-[200px] truncate" v-tooltip.top="'Cours associé'">
                                     <i class="pi pi-book text-[9px]"></i> {{ getCourseName(data.course_id) }}
                                 </div>
                             </div>
@@ -730,8 +730,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                         <Button icon="pi pi-plus" class="p-button-text p-button-success p-button-rounded bg-emerald-50 hover:bg-emerald-100 w-8 h-8" v-tooltip.top="'Ajouter une leçon'" @click="openNewLesson(data.id)" />
                         <div class="w-px h-5 bg-slate-200 self-center mx-1"></div>
                         <Button icon="pi pi-arrow-right-arrow-left" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Transférer vers un autre cours'" @click="openTransferDialog(data)" />
-                        <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Configurer le module'" @click="editModule(data)" />
-                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Purger ce module'" @click="confirmDeleteModule(data)" />
+                        <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Configurer le module'" @click="editModule(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="'Purger ce module'" @click="confirmDeleteModule(data)" />
                     </div>
                 </template>
             </Column>
@@ -742,7 +742,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                     <div class="max-w-6xl mx-auto">
                         <div class="flex items-center justify-between mb-6">
                             <h4 class="font-black text-slate-800 text-lg flex items-center gap-2">
-                                <i class="pi pi-list text-indigo-500"></i> Sommaire du Module
+                                <i class="pi pi-list text-blue-500"></i> Sommaire du Module
                             </h4>
                             <Button label="Nouvelle Leçon" icon="pi pi-plus" class="p-button-sm p-button-success shadow-sm font-bold" @click="openNewLesson(data.id)" />
                         </div>
@@ -758,7 +758,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                                 <template #item="{ element: lesson, index }">
                                     <div class="flex items-center p-3 hover:bg-slate-50 transition-colors group">
 
-                                        <i class="pi pi-bars lesson-drag text-slate-300 cursor-move hover:text-indigo-500 p-3 flex-shrink-0" v-tooltip.top="'Ordonner'"></i>
+                                        <i class="pi pi-bars lesson-drag text-slate-300 cursor-move hover:text-blue-500 p-3 flex-shrink-0" v-tooltip.top="'Ordonner'"></i>
 
                                         <div class="w-8 h-8 rounded-full text-[10px] font-black flex items-center justify-center mr-4 bg-slate-100 text-slate-400 flex-shrink-0 border border-slate-200">
                                             {{ index + 1 }}
@@ -769,7 +769,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                                         </div>
 
                                         <div class="flex-1 min-w-0 pr-4">
-                                            <div class="font-bold text-slate-800 text-base truncate hover:text-indigo-600 cursor-pointer" @click="editLesson(lesson, data.id)">
+                                            <div class="font-bold text-slate-800 text-base truncate hover:text-blue-600 cursor-pointer" @click="editLesson(lesson, data.id)">
                                                 {{ lesson.title }}
                                             </div>
                                             <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
@@ -787,8 +787,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                                         </div>
 
                                         <div class="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary text-slate-500 hover:bg-indigo-50 hover:text-indigo-600" @click="editLesson(lesson, data.id)" />
-                                            <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger text-slate-500 hover:bg-rose-50 hover:text-rose-600" @click="confirmDeleteLesson(lesson)" />
+                                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary text-slate-500 hover:bg-blue-50 hover:text-blue-600" @click="editLesson(lesson, data.id)" />
+                                            <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger text-slate-500 hover:bg-red-50 hover:text-red-600" @click="confirmDeleteLesson(lesson)" />
                                         </div>
                                     </div>
                                 </template>
@@ -822,7 +822,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
             <!-- HEADER -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20">
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600"><i class="pi pi-folder-open text-lg"></i></div>
+                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600"><i class="pi pi-folder-open text-lg"></i></div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800">{{ moduleForm.id ? 'Modifier le Module' : 'Créer un Module' }}</h2>
                         <div class="text-[11px] text-slate-500 mt-0.5">Structurez les chapitres de votre formation</div>
@@ -839,11 +839,11 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                         v-for="tab in moduleTabs" :key="tab.id"
                         @click="activeModuleTab = tab.id"
                         class="w-full flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative"
-                        :class="activeModuleTab === tab.id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent'"
+                        :class="activeModuleTab === tab.id ? 'bg-blue-50 border border-blue-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent'"
                     >
-                        <i :class="[tab.icon, activeModuleTab === tab.id ? 'text-indigo-600' : 'text-slate-400']" class="text-xl mt-0.5"></i>
+                        <i :class="[tab.icon, activeModuleTab === tab.id ? 'text-blue-600' : 'text-slate-400']" class="text-xl mt-0.5"></i>
                         <div class="flex-1">
-                            <div class="font-bold text-sm" :class="activeModuleTab === tab.id ? 'text-indigo-800' : 'text-slate-700'">{{ tab.label }}</div>
+                            <div class="font-bold text-sm" :class="activeModuleTab === tab.id ? 'text-blue-800' : 'text-slate-700'">{{ tab.label }}</div>
                             <div class="text-[10px] text-slate-500 mt-0.5">{{ tab.desc }}</div>
                         </div>
                         <i v-if="tab.id === 'general' && isModuleGeneralValid" class="pi pi-check-circle text-emerald-500 absolute right-4 top-5 text-sm"></i>
@@ -857,10 +857,10 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
                             <h3 class="font-bold text-lg border-b border-slate-100 pb-3">Association au Cours</h3>
                             <div class="space-y-2">
-                                <label class="block text-sm font-bold text-slate-700">Sélectionnez le cours parent <span class="text-rose-500">*</span></label>
+                                <label class="block text-sm font-bold text-slate-700">Sélectionnez le cours parent <span class="text-red-500">*</span></label>
                                 <Dropdown v-model="moduleForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Lier à une formation existante..." class="w-full font-bold" filter :class="{'p-invalid': !moduleForm.course_id}">
                                     <template #value="slotProps">
-                                        <div v-if="slotProps.value" class="flex items-center gap-2"><i class="pi pi-book text-indigo-500"></i> {{ getCourseName(slotProps.value) }}</div>
+                                        <div v-if="slotProps.value" class="flex items-center gap-2"><i class="pi pi-book text-blue-500"></i> {{ getCourseName(slotProps.value) }}</div>
                                         <span v-else class="text-slate-400">Choisir un cours...</span>
                                     </template>
                                 </Dropdown>
@@ -871,7 +871,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
                             <h3 class="font-bold text-lg border-b border-slate-100 pb-3">Identité du Module</h3>
                             <div class="space-y-2">
-                                <label class="block text-sm font-bold text-slate-700">Titre (Nom du chapitre) <span class="text-rose-500">*</span></label>
+                                <label class="block text-sm font-bold text-slate-700">Titre (Nom du chapitre) <span class="text-red-500">*</span></label>
                                 <InputText v-model="moduleForm.title" @input="generateSlug(moduleForm)" class="w-full p-3 font-bold bg-slate-50" placeholder="Ex: Introduction au Cloud Computing..." :class="{'p-invalid': moduleForm.title.length < 3}" />
                             </div>
                             <div class="space-y-2">
@@ -1043,7 +1043,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                             </div>
 
                             <div class="space-y-2 pt-4 border-t border-slate-100">
-                                <label class="block text-sm font-bold text-slate-700">Titre de la leçon <span class="text-rose-500">*</span></label>
+                                <label class="block text-sm font-bold text-slate-700">Titre de la leçon <span class="text-red-500">*</span></label>
                                 <InputText v-model="lessonForm.title" @input="generateSlug(lessonForm)" class="w-full p-4 font-bold text-lg bg-slate-50" placeholder="Leçon 1 : Les concepts de base..." />
                             </div>
 
@@ -1093,8 +1093,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
 
                             <!-- Video Section -->
                             <div v-if="lessonForm.type === 'video'" class="space-y-6">
-                                <div class="bg-rose-50 border border-rose-100 p-6 rounded-xl">
-                                    <h4 class="font-bold text-rose-900 mb-4 flex items-center gap-2"><i class="pi pi-youtube"></i> Source de la Vidéo</h4>
+                                <div class="bg-red-50 border border-red-100 p-6 rounded-xl">
+                                    <h4 class="font-bold text-red-900 mb-4 flex items-center gap-2"><i class="pi pi-youtube"></i> Source de la Vidéo</h4>
                                     <div class="flex flex-col md:flex-row gap-4 mb-4">
                                         <SelectButton v-model="lessonForm.video_source" :options="['youtube', 'vimeo', 'custom']" class="flex-shrink-0" />
                                         <InputText v-model="lessonForm.video_url" class="w-full font-mono text-sm" placeholder="https://..." />
@@ -1126,7 +1126,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
                             <h3 class="font-bold text-lg border-b border-slate-100 pb-3 mb-6 flex items-center gap-2"><i class="pi pi-download"></i> Fichiers Téléchargeables</h3>
 
                             <div class="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
-                                <i class="pi pi-cloud-upload text-5xl text-indigo-300 mb-4 block"></i>
+                                <i class="pi pi-cloud-upload text-5xl text-blue-300 mb-4 block"></i>
                                 <h4 class="text-slate-700 font-bold mb-1">Ajouter des ressources</h4>
                                 <p class="text-xs text-slate-500 mb-6">PDF, ZIP, Code source (Max 50MB)</p>
                                 <FileUpload mode="basic" customUpload @select="onAttachmentUpload" auto chooseLabel="Parcourir..." class="p-button-outlined" />

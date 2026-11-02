@@ -418,7 +418,7 @@ watch(
         </OverlayPanel>
         <Dialog v-model:visible="isModalOpen" modal position="right" :header="false" :closable="false" :style="{ width: '60vw' }" class="quantum-dialog" :pt="{ mask: { style: 'backdrop-filter: blur(4px)' } }" :draggable="false">
             <!-- Loading Overlay -->
-            <div v-if="form.processing" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-3xl">
+            <div v-if="form.processing" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-xl">
                 <i class="pi pi-spin pi-spinner text-5xl text-primary-500"></i>
             </div>
 
@@ -513,7 +513,7 @@ watch(
 
                         <div>
                             <span class="v11-header-label">{{ t('users.form.safetyData') }}</span>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 p-6 bg-slate-50 rounded-xl border border-slate-100">
                                 <InputText id="pointure" v-model="form.pointure" class="v11-input-ultimate !bg-white" :placeholder="t('users.placeholders.shoeSize')" :invalid="!!form.errors.pointure" />
                                 <small class="p-error">{{ form.errors.pointure }}</small>
                                 <InputText id="size" v-model="form.size" class="v11-input-ultimate !bg-white" :placeholder="t('users.placeholders.clothingSize')" :invalid="!!form.errors.size" />
@@ -521,7 +521,7 @@ watch(
                             </div>
                         </div>
 
-                        <div class="p-6 bg-blue-50/30 rounded-3xl border border-blue-100">
+                        <div class="p-6 bg-blue-50/30 rounded-xl border border-blue-100">
                             <span class="v11-header-label !text-blue-700">{{ t('users.form.accountSecurity') }}</span>
                             <p v-if="form.id" class="text-xs text-slate-500 mt-2">{{ t('users.form.passwordHelp') }}</p>
                             <div class="grid grid-cols-2 gap-6 mt-4">

@@ -305,9 +305,9 @@ const isImageAttachment = (fileName) => {
 const getAttachmentIcon = (fileName) => {
     if (!fileName) return 'pi pi-file';
     const ext = fileName.split('.').pop().toLowerCase();
-    if (ext === 'pdf') return 'pi pi-file-pdf text-rose-500';
+    if (ext === 'pdf') return 'pi pi-file-pdf text-red-500';
     if (['zip', 'rar'].includes(ext)) return 'pi pi-box text-amber-500';
-    if (isImageAttachment(fileName)) return 'pi pi-image text-indigo-500';
+    if (isImageAttachment(fileName)) return 'pi pi-image text-blue-500';
     return 'pi pi-file text-slate-500';
 };
 const handleCategoryFilter = (catId) => {
@@ -326,18 +326,18 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
-            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden flex-shrink-0 shadow-xl border-b border-indigo-900/50">
-                <div class="absolute -right-32 -top-32 w-[40rem] h-[40rem] bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+            <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-blue-900 text-white pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden flex-shrink-0 shadow-xl border-b border-blue-900/50">
+                <div class="absolute -right-32 -top-32 w-[40rem] h-[40rem] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none"></div>
                 <div class="absolute -left-20 bottom-0 w-[30rem] h-[30rem] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
 
                 <div class="relative z-20 max-w-[1600px] 2xl:max-w-[95%] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
                     <div class="flex items-center gap-6">
                         <div class="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
-                            <i class="pi pi-globe text-3xl text-indigo-300"></i>
+                            <i class="pi pi-globe text-3xl text-blue-300"></i>
                         </div>
                         <div>
                             <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-white mb-1">Communauté</h1>
-                            <p class="text-indigo-200/90 font-medium text-sm max-w-lg leading-relaxed">
+                            <p class="text-blue-200/90 font-medium text-sm max-w-lg leading-relaxed">
                                 {{ isInstructor ? "Espace Professeur : Gérez vos évaluations, animez vos groupes et interagissez avec les étudiants." : "Espace Étudiant : Discutez, collaborez sur le forum et remettez vos devoirs." }}
                             </p>
                         </div>
@@ -345,16 +345,16 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 
                     <div class="flex flex-wrap gap-4">
                         <div class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-2xl flex items-center gap-5 hover:bg-white/10 transition-all cursor-pointer shadow-lg group" @click="activeHubSection = 'chat'">
-                            <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><i class="pi pi-envelope text-xl"></i></div>
+                            <div class="w-12 h-12 bg-red-500/20 text-red-400 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><i class="pi pi-envelope text-xl"></i></div>
                             <div>
-                                <p class="text-[10px] uppercase font-black text-indigo-200 tracking-widest mb-0.5">Messages</p>
+                                <p class="text-[10px] uppercase font-black text-blue-200 tracking-widest mb-0.5">Messages</p>
                                 <p class="text-2xl font-black leading-none text-white">{{ props.stats.unread_messages }}</p>
                             </div>
                         </div>
                         <div v-if="!isInstructor" class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-2xl flex items-center gap-5 hover:bg-white/10 transition-all cursor-pointer shadow-lg group" @click="activeHubSection = 'assignments'">
                             <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><i class="pi pi-file-edit text-xl"></i></div>
                             <div>
-                                <p class="text-[10px] uppercase font-black text-indigo-200 tracking-widest mb-0.5">Devoirs Dûs</p>
+                                <p class="text-[10px] uppercase font-black text-blue-200 tracking-widest mb-0.5">Devoirs Dûs</p>
                                 <p class="text-2xl font-black leading-none text-white">{{ props.stats.pending_assignments }}</p>
                             </div>
                         </div>
@@ -365,10 +365,10 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
             <div class="flex-1 max-w-[1600px] 2xl:max-w-[95%] mx-auto w-full px-4 lg:px-8 -mt-12 relative z-30 flex flex-col lg:flex-row gap-8 items-start">
 
                 <aside class="w-full lg:w-80 flex-shrink-0 sticky top-24">
-                    <div class="bg-white/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 p-5">
+                    <div class="bg-white/90 backdrop-blur-xl rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 p-5">
 
                         <div class="flex items-center gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 mb-6 shadow-sm">
-                            <Avatar :image="currentUser?.avatar" :label="!currentUser?.avatar ? getInitials(currentUser?.name) : ''" shape="circle" size="large" class="bg-indigo-600 text-white font-black shadow-md border-2 border-white" />
+                            <Avatar :image="currentUser?.avatar" :label="!currentUser?.avatar ? getInitials(currentUser?.name) : ''" shape="circle" size="large" class="bg-blue-600 text-white font-black shadow-md border-2 border-white" />
                             <div class="flex flex-col overflow-hidden">
                                 <span class="font-black text-slate-800 text-sm truncate">{{ currentUser?.name }}</span>
                                 <Tag :value="isInstructor ? 'INSTRUCTEUR' : 'APPRENANT'" :severity="isInstructor ? 'info' : 'success'" class="text-[9px] font-black tracking-widest mt-1 w-max px-2 py-0.5 shadow-sm" />
@@ -376,28 +376,28 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                         </div>
 
                         <div class="space-y-2">
-                            <button @click="activeHubSection = 'forum'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'forum' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-comments text-lg" :class="activeHubSection === 'forum' ? 'text-indigo-200' : 'text-slate-400'"></i> Espace Forum</div>
+                            <button @click="activeHubSection = 'forum'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'forum' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
+                                <div class="flex items-center gap-3"><i class="pi pi-comments text-lg" :class="activeHubSection === 'forum' ? 'text-blue-200' : 'text-slate-400'"></i> Espace Forum</div>
                             </button>
-                            <button @click="activeHubSection = 'chat'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'chat' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-send text-lg" :class="activeHubSection === 'chat' ? 'text-indigo-200' : 'text-slate-400'"></i> Messagerie</div>
+                            <button @click="activeHubSection = 'chat'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'chat' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
+                                <div class="flex items-center gap-3"><i class="pi pi-send text-lg" :class="activeHubSection === 'chat' ? 'text-blue-200' : 'text-slate-400'"></i> Messagerie</div>
                                 <Badge v-if="props.stats.unread_messages > 0" :value="props.stats.unread_messages" severity="danger" />
                             </button>
-                            <button @click="activeHubSection = 'assignments'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'assignments' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-file-edit text-lg" :class="activeHubSection === 'assignments' ? 'text-indigo-200' : 'text-slate-400'"></i> {{ isInstructor ? 'Évaluations' : 'Mes Devoirs' }}</div>
+                            <button @click="activeHubSection = 'assignments'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'assignments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
+                                <div class="flex items-center gap-3"><i class="pi pi-file-edit text-lg" :class="activeHubSection === 'assignments' ? 'text-blue-200' : 'text-slate-400'"></i> {{ isInstructor ? 'Évaluations' : 'Mes Devoirs' }}</div>
                             </button>
-                            <button v-if="!isInstructor" @click="activeHubSection = 'courses'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'courses' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-video text-lg" :class="activeHubSection === 'courses' ? 'text-indigo-200' : 'text-slate-400'"></i> Mes Cours</div>
+                            <button v-if="!isInstructor" @click="activeHubSection = 'courses'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'courses' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
+                                <div class="flex items-center gap-3"><i class="pi pi-video text-lg" :class="activeHubSection === 'courses' ? 'text-blue-200' : 'text-slate-400'"></i> Mes Cours</div>
                             </button>
                         </div>
 
                         <div class="mt-8 border-t border-slate-100 pt-6">
                             <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">Filtres Forum</h3>
                             <div class="flex flex-col gap-1 px-1">
-                                <button @click="handleCategoryFilter(null)" :class="['flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200', !props.filters.category ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800']">
+                                <button @click="handleCategoryFilter(null)" :class="['flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200', !props.filters.category ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800']">
                                     <span class="flex items-center gap-3"><i class="pi pi-objects-column"></i> Toutes les catégories</span>
                                 </button>
-                                <button v-for="cat in categories" :key="cat.id" @click="handleCategoryFilter(cat.id)" :class="['flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200', props.filters.category === cat.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800']">
+                                <button v-for="cat in categories" :key="cat.id" @click="handleCategoryFilter(cat.id)" :class="['flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200', props.filters.category === cat.id ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800']">
                                     <span class="flex items-center gap-3">
                                         <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="{ backgroundColor: cat.color || '#6366f1' }"></span>
                                         {{ cat.name }}
@@ -415,11 +415,11 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                     <ForumSection v-show="activeHubSection === 'forum'" class="w-full" :threads="threads" :categories="categories" :currentUser="currentUser" :isInstructor="isInstructor" />
 
                     <!-- MESSAGERIE & CHAT -->
-                    <div v-show="activeHubSection === 'chat'" class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 overflow-hidden h-[calc(100vh-14rem)] min-h-[600px] max-h-[900px] flex flex-col md:flex-row animate-fade-in relative">
+                    <div v-show="activeHubSection === 'chat'" class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 overflow-hidden h-[calc(100vh-14rem)] min-h-[600px] max-h-[900px] flex flex-col md:flex-row animate-fade-in relative">
 
                         <div v-if="isAppLoading" class="absolute inset-0 bg-white/70 backdrop-blur-md z-30 flex items-center justify-center">
-                            <div class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 border border-slate-100">
-                                <i class="pi pi-spin pi-spinner text-4xl text-indigo-600"></i>
+                            <div class="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4 border border-slate-100">
+                                <i class="pi pi-spin pi-spinner text-4xl text-blue-600"></i>
                                 <span class="font-black text-slate-700 text-sm">Synchronisation...</span>
                             </div>
                         </div>
@@ -428,38 +428,38 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <div class="p-5 md:p-6 bg-white border-b border-slate-100 shadow-sm z-10">
                                 <div class="flex justify-between items-center mb-5">
                                     <h2 class="text-xl font-black text-slate-800">Messagerie</h2>
-                                    <Button icon="pi pi-users" class="p-button-rounded p-button-secondary p-button-text bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600" v-tooltip.top="'Créer un groupe'" @click="openCreateGroupDialog" />
+                                    <Button icon="pi pi-users" class="p-button-rounded p-button-secondary p-button-text bg-slate-50 hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="'Créer un groupe'" @click="openCreateGroupDialog" />
                                 </div>
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search text-slate-400" />
-                                    <InputText v-model="chatSearchQuery" placeholder="Rechercher un contact..." class="w-full rounded-2xl bg-slate-50 border-slate-200 focus:border-indigo-500 transition-colors font-medium" />
+                                    <InputText v-model="chatSearchQuery" placeholder="Rechercher un contact..." class="w-full rounded-2xl bg-slate-50 border-slate-200 focus:border-blue-500 transition-colors font-medium" />
                                 </IconField>
                             </div>
 
                             <div class="flex border-b border-slate-200 bg-white">
-                                <button @click="activeChatTab = 'contacts'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'contacts' ? 'text-indigo-700 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">Contacts</button>
-                                <button @click="activeChatTab = 'groups'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'groups' ? 'text-indigo-700 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">Groupes</button>
+                                <button @click="activeChatTab = 'contacts'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'contacts' ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">Contacts</button>
+                                <button @click="activeChatTab = 'groups'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'groups' ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">Groupes</button>
                             </div>
 
                             <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
                                 <template v-if="activeChatTab === 'contacts'">
-                                    <div v-for="contact in filteredContacts" :key="contact.id" @click="selectChatSession(contact, 'contact')" class="p-3 md:p-4 rounded-2xl flex items-center gap-4 cursor-pointer transition-all duration-200 border border-transparent" :class="currentChatSession?.id === contact.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50' : 'hover:bg-white hover:border-slate-200 hover:shadow-sm text-slate-700'">
+                                    <div v-for="contact in filteredContacts" :key="contact.id" @click="selectChatSession(contact, 'contact')" class="p-3 md:p-4 rounded-2xl flex items-center gap-4 cursor-pointer transition-all duration-200 border border-transparent" :class="currentChatSession?.id === contact.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-white hover:border-slate-200 hover:shadow-sm text-slate-700'">
                                         <div class="relative shrink-0">
-                                            <Avatar :image="contact.avatar_path" :label="!contact.avatar_path ? getInitials(contact.name) : ''" shape="circle" size="large" class="shadow-sm font-black text-lg" :class="currentChatSession?.id === contact.id ? 'bg-white/20 text-white border border-white/30' : 'bg-slate-100 text-indigo-600 border border-slate-200'" />
-                                            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 border-2 rounded-full" :class="[contact.is_online ? 'bg-emerald-500' : 'bg-slate-300', currentChatSession?.id === contact.id ? 'border-indigo-600' : 'border-white']"></span>
+                                            <Avatar :image="contact.avatar_path" :label="!contact.avatar_path ? getInitials(contact.name) : ''" shape="circle" size="large" class="shadow-sm font-black text-lg" :class="currentChatSession?.id === contact.id ? 'bg-white/20 text-white border border-white/30' : 'bg-slate-100 text-blue-600 border border-slate-200'" />
+                                            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 border-2 rounded-full" :class="[contact.is_online ? 'bg-emerald-500' : 'bg-slate-300', currentChatSession?.id === contact.id ? 'border-blue-600' : 'border-white']"></span>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <h4 class="font-bold text-sm truncate" :class="currentChatSession?.id === contact.id ? 'text-white' : 'text-slate-800'">{{ contact.name }}</h4>
-                                            <p class="text-[10px] uppercase font-bold tracking-widest mt-1" :class="currentChatSession?.id === contact.id ? 'text-indigo-200' : 'text-slate-400'">{{ contact.role }}</p>
+                                            <p class="text-[10px] uppercase font-bold tracking-widest mt-1" :class="currentChatSession?.id === contact.id ? 'text-blue-200' : 'text-slate-400'">{{ contact.role }}</p>
                                         </div>
                                     </div>
                                 </template>
                                 <template v-else>
-                                    <div v-for="group in filteredGroups" :key="group.id" @click="selectChatSession(group, 'group')" class="p-3 md:p-4 rounded-2xl flex items-center gap-4 cursor-pointer transition-all duration-200 border border-transparent" :class="currentChatSession?.id === group.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50' : 'hover:bg-white hover:border-slate-200 hover:shadow-sm text-slate-700'">
+                                    <div v-for="group in filteredGroups" :key="group.id" @click="selectChatSession(group, 'group')" class="p-3 md:p-4 rounded-2xl flex items-center gap-4 cursor-pointer transition-all duration-200 border border-transparent" :class="currentChatSession?.id === group.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200/50' : 'hover:bg-white hover:border-slate-200 hover:shadow-sm text-slate-700'">
                                         <Avatar icon="pi pi-users" shape="circle" size="large" class="shadow-sm shrink-0" :class="currentChatSession?.id === group.id ? 'bg-white/20 text-white border border-white/30' : 'bg-slate-100 text-slate-500 border border-slate-200'" />
                                         <div class="flex-1 min-w-0">
                                             <h4 class="font-bold text-sm truncate" :class="currentChatSession?.id === group.id ? 'text-white' : 'text-slate-800'">{{ group.name }}</h4>
-                                            <p class="text-[10px] uppercase font-bold tracking-widest mt-1" :class="currentChatSession?.id === group.id ? 'text-indigo-200' : 'text-slate-400'">{{ group.members_count }} membres</p>
+                                            <p class="text-[10px] uppercase font-bold tracking-widest mt-1" :class="currentChatSession?.id === group.id ? 'text-blue-200' : 'text-slate-400'">{{ group.members_count }} membres</p>
                                         </div>
                                     </div>
                                 </template>
@@ -470,7 +470,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <template v-if="currentChatSession">
                                 <div class="p-4 md:p-6 border-b border-slate-100 bg-white/90 backdrop-blur-xl shadow-sm z-20 flex justify-between items-center">
                                     <div class="flex items-center gap-4">
-                                        <Avatar :image="currentChatSession.avatar_path" :label="getInitials(currentChatSession.name)" shape="circle" size="large" class="bg-indigo-50 text-indigo-700 font-black border border-indigo-100 shadow-sm" />
+                                        <Avatar :image="currentChatSession.avatar_path" :label="getInitials(currentChatSession.name)" shape="circle" size="large" class="bg-blue-50 text-blue-700 font-black border border-blue-100 shadow-sm" />
                                         <div>
                                             <h3 class="font-black text-slate-800 text-lg leading-tight">{{ currentChatSession.name }}</h3>
                                             <div class="flex items-center gap-2 mt-1">
@@ -487,17 +487,17 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                 <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/50" ref="chatScrollContainer">
                                     <div v-for="msg in messages" :key="msg.id" class="flex flex-col animate-fade-in" :class="msg.sender_id === currentUser.id ? 'items-end' : 'items-start'">
                                         <div class="max-w-[85%] lg:max-w-[70%] flex flex-col gap-1.5">
-                                            <div :class="[msg.sender_id === currentUser.id ? 'bg-indigo-600 text-white rounded-l-2xl rounded-tr-2xl shadow-md shadow-indigo-200' : 'bg-white text-slate-800 rounded-r-2xl rounded-tl-2xl border border-slate-200 shadow-sm', 'p-4 md:p-5']">
+                                            <div :class="[msg.sender_id === currentUser.id ? 'bg-blue-600 text-white rounded-l-2xl rounded-tr-2xl shadow-md shadow-blue-200' : 'bg-white text-slate-800 rounded-r-2xl rounded-tl-2xl border border-slate-200 shadow-sm', 'p-4 md:p-5']">
                                                 <p v-if="msg.content" class="text-[15px] leading-relaxed whitespace-pre-line font-medium">{{ msg.content }}</p>
 
                                                 <a v-if="msg.attachment_path" :href="msg.attachment_path" target="_blank" class="block rounded-xl overflow-hidden transition-transform hover:scale-[1.02] shadow-sm" :class="{'mt-4': msg.content}">
                                                     <img v-if="isImageAttachment(msg.attachment_name)" :src="msg.attachment_path" class="w-full h-auto max-h-72 object-cover border border-black/5 rounded-xl" alt="Pièce jointe">
-                                                    <div v-else class="p-3.5 flex items-center gap-3 rounded-xl border" :class="msg.sender_id === currentUser.id ? 'bg-indigo-700/50 border-indigo-500/50' : 'bg-slate-50 border-slate-200'">
+                                                    <div v-else class="p-3.5 flex items-center gap-3 rounded-xl border" :class="msg.sender_id === currentUser.id ? 'bg-blue-700/50 border-blue-500/50' : 'bg-slate-50 border-slate-200'">
                                                         <i :class="getAttachmentIcon(msg.attachment_name)" class="text-2xl drop-shadow-sm"></i>
                                                         <div class="flex-1 min-w-0">
-                                                            <p class="text-xs font-bold truncate" :class="msg.sender_id === currentUser.id ? 'text-indigo-50' : 'text-slate-700'">{{ msg.attachment_name }}</p>
+                                                            <p class="text-xs font-bold truncate" :class="msg.sender_id === currentUser.id ? 'text-blue-50' : 'text-slate-700'">{{ msg.attachment_name }}</p>
                                                         </div>
-                                                        <i class="pi pi-download text-sm" :class="msg.sender_id === currentUser.id ? 'text-indigo-200' : 'text-slate-400'"></i>
+                                                        <i class="pi pi-download text-sm" :class="msg.sender_id === currentUser.id ? 'text-blue-200' : 'text-slate-400'"></i>
                                                     </div>
                                                 </a>
                                             </div>
@@ -509,18 +509,18 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                 </div>
 
                                 <div class="p-4 md:p-6 bg-white border-t border-slate-100 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                                    <div v-if="chatForm.attachment" class="mb-4 mx-2 p-3 bg-indigo-50 rounded-xl flex items-center justify-between border border-indigo-100 shadow-sm animate-fade-in">
+                                    <div v-if="chatForm.attachment" class="mb-4 mx-2 p-3 bg-blue-50 rounded-xl flex items-center justify-between border border-blue-100 shadow-sm animate-fade-in">
                                         <div class="flex items-center gap-3 overflow-hidden">
-                                            <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-indigo-600"><i class="pi pi-paperclip"></i></div>
-                                            <span class="text-xs font-black text-indigo-800 truncate">{{ chatForm.attachment.name }}</span>
+                                            <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-blue-600"><i class="pi pi-paperclip"></i></div>
+                                            <span class="text-xs font-black text-blue-800 truncate">{{ chatForm.attachment.name }}</span>
                                         </div>
-                                        <Button icon="pi pi-times" text rounded size="small" severity="danger" class="hover:bg-rose-100" @click="chatForm.attachment = null" />
+                                        <Button icon="pi pi-times" text rounded size="small" severity="danger" class="hover:bg-red-100" @click="chatForm.attachment = null" />
                                     </div>
 
-                                    <div class="flex items-end gap-3 bg-slate-50 p-2.5 rounded-3xl border border-slate-200 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:bg-white transition-all shadow-sm">
-                                        <FileUpload mode="basic" auto customUpload @select="handleChatFileUpload" chooseIcon="pi pi-paperclip" class="p-button-rounded p-button-text text-slate-500 hover:text-indigo-600 hover:bg-slate-100 w-12 h-12 flex-shrink-0" v-tooltip.top="'Joindre un fichier'" />
+                                    <div class="flex items-end gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:bg-white transition-all shadow-sm">
+                                        <FileUpload mode="basic" auto customUpload @select="handleChatFileUpload" chooseIcon="pi pi-paperclip" class="p-button-rounded p-button-text text-slate-500 hover:text-blue-600 hover:bg-slate-100 w-12 h-12 flex-shrink-0" v-tooltip.top="'Joindre un fichier'" />
                                         <Textarea v-model="chatForm.message" autoResize rows="1" placeholder="Écrivez votre message..." class="flex-1 bg-transparent border-none shadow-none focus:ring-0 py-3.5 px-3 text-slate-700 font-medium resize-none max-h-32 custom-scrollbar text-[15px]" @keyup.enter.prevent="sendChatMessage" />
-                                        <Button icon="pi pi-send" rounded class="p-button-primary shadow-lg shadow-indigo-200 w-12 h-12 flex-shrink-0" @click="sendChatMessage" :loading="chatForm.processing" :disabled="!chatForm.message.trim() && !chatForm.attachment" />
+                                        <Button icon="pi pi-send" rounded class="p-button-primary shadow-lg shadow-blue-200 w-12 h-12 flex-shrink-0" @click="sendChatMessage" :loading="chatForm.processing" :disabled="!chatForm.message.trim() && !chatForm.attachment" />
                                     </div>
                                 </div>
                             </template>
@@ -528,7 +528,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <template v-else>
                                 <div class="flex-1 flex flex-col items-center justify-center text-center text-slate-400 bg-slate-50/50 p-8">
                                     <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-6 shadow-sm">
-                                        <i class="pi pi-comments text-5xl text-indigo-200 transform -scale-x-100"></i>
+                                        <i class="pi pi-comments text-5xl text-blue-200 transform -scale-x-100"></i>
                                     </div>
                                     <h3 class="text-2xl font-black text-slate-700">Vos Conversations</h3>
                                     <p class="text-sm max-w-sm mt-3 text-slate-500 font-medium leading-relaxed">Sélectionnez un contact ou un groupe dans le menu de gauche pour commencer à discuter en temps réel.</p>
@@ -541,7 +541,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                     <div v-show="activeHubSection === 'assignments'" class="animate-fade-in space-y-6">
                         <template v-if="!isInstructor">
                             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                <div v-if="!assignments.length" class="col-span-full p-20 text-center bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center">
+                                <div v-if="!assignments.length" class="col-span-full p-20 text-center bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
                                     <div class="w-28 h-28 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border-8 border-emerald-100/50">
                                         <i class="pi pi-check text-5xl text-emerald-500"></i>
                                     </div>
@@ -549,14 +549,14 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <p class="text-slate-500 mt-2 font-medium">Vous n'avez aucun devoir en attente pour le moment.</p>
                                 </div>
 
-                                <div v-for="assignment in assignments" :key="assignment.id" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col relative overflow-hidden group">
+                                <div v-for="assignment in assignments" :key="assignment.id" class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col relative overflow-hidden group">
                                     <div class="absolute top-0 left-0 w-full h-1.5 transition-colors" :class="assignment.status === 'pending' ? 'bg-amber-400' : 'bg-emerald-500'"></div>
                                     <div class="flex gap-4 mb-5 mt-2">
-                                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100 shrink-0" :class="assignment.type === 'quiz' ? 'bg-amber-50 text-amber-500' : 'bg-indigo-50 text-indigo-600'">
+                                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner border border-slate-100 shrink-0" :class="assignment.type === 'quiz' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-600'">
                                             <i class="text-2xl" :class="assignment.type === 'quiz' ? 'pi pi-bolt' : 'pi pi-file-pdf'"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="font-black text-slate-800 text-lg leading-tight mb-2 group-hover:text-indigo-600 transition-colors truncate">{{ assignment.title }}</h4>
+                                            <h4 class="font-black text-slate-800 text-lg leading-tight mb-2 group-hover:text-blue-600 transition-colors truncate">{{ assignment.title }}</h4>
                                             <Tag :value="assignment.course?.title" class="bg-slate-100 text-slate-600 text-[9px] font-black tracking-widest" />
                                         </div>
                                     </div>
@@ -566,10 +566,10 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <div class="flex items-center justify-between mt-auto pt-5 border-t border-slate-100">
                                         <div class="flex flex-col">
                                             <span class="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Échéance</span>
-                                            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5"><i class="pi pi-calendar text-indigo-500"></i> {{ formatDate(assignment.due_date) }}</span>
+                                            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5"><i class="pi pi-calendar text-blue-500"></i> {{ formatDate(assignment.due_date) }}</span>
                                         </div>
 
-                                        <Button v-if="assignment.status === 'pending'" :label="assignment.type === 'quiz' ? 'Passer' : 'Remettre'" :icon="assignment.type === 'quiz' ? 'pi pi-play' : 'pi pi-upload'" class="p-button-primary font-black rounded-xl px-6 shadow-md shadow-indigo-200" @click="assignment.type === 'quiz' ? openTakeQuiz(assignment) : openAssignmentSubmission(assignment)" />
+                                        <Button v-if="assignment.status === 'pending'" :label="assignment.type === 'quiz' ? 'Passer' : 'Remettre'" :icon="assignment.type === 'quiz' ? 'pi pi-play' : 'pi pi-upload'" class="p-button-primary font-black rounded-xl px-6 shadow-md shadow-blue-200" @click="assignment.type === 'quiz' ? openTakeQuiz(assignment) : openAssignmentSubmission(assignment)" />
                                         <div v-else-if="assignment.status === 'graded'" class="bg-emerald-50 text-emerald-700 rounded-xl px-5 py-2.5 font-black border border-emerald-200 flex items-center gap-2 shadow-sm">
                                             <i class="pi pi-check-circle"></i> {{ assignment.score }}/100
                                         </div>
@@ -580,14 +580,14 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                         </template>
 
                         <template v-else>
-                            <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 overflow-hidden">
+                            <div class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 overflow-hidden">
                                 <div class="p-6 md:p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center bg-white gap-4">
                                     <div>
                                         <h3 class="text-2xl font-black text-slate-800">Centre d'Évaluations</h3>
                                         <p class="text-sm text-slate-500 mt-1 font-medium">Créez des devoirs, concevez des quiz et notez les copies soumises.</p>
                                     </div>
                                     <div class="flex flex-wrap gap-3">
-                                        <Button label="Nouveau Devoir" icon="pi pi-plus" class="p-button-primary font-black rounded-xl shadow-md shadow-indigo-200 px-6" @click="openCreateAssignment" />
+                                        <Button label="Nouveau Devoir" icon="pi pi-plus" class="p-button-primary font-black rounded-xl shadow-md shadow-blue-200 px-6" @click="openCreateAssignment" />
                                         <Button label="Nouveau Quiz" icon="pi pi-bolt" class="p-button-warning bg-amber-500 border-amber-500 hover:bg-amber-600 font-black rounded-xl shadow-md shadow-amber-200 px-6" @click="openCreateQuiz" />
                                     </div>
                                 </div>
@@ -603,11 +603,11 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <Column field="title" header="Évaluation" style="min-width: 25rem">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-5 py-3">
-                                                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100" :class="data.type === 'quiz' ? 'bg-amber-50 text-amber-500' : 'bg-indigo-50 text-indigo-500'">
+                                                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100" :class="data.type === 'quiz' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'">
                                                     <i :class="data.type === 'quiz' ? 'pi pi-bolt' : 'pi pi-file-edit'" class="text-xl"></i>
                                                 </div>
                                                 <div class="flex flex-col">
-                                                    <span class="font-black text-slate-800 text-[15px] hover:text-indigo-600 cursor-pointer transition-colors">{{ data.title }}</span>
+                                                    <span class="font-black text-slate-800 text-[15px] hover:text-blue-600 cursor-pointer transition-colors">{{ data.title }}</span>
                                                     <span class="text-xs text-slate-500 mt-1 font-medium">{{ data.course?.title }}</span>
                                                 </div>
                                             </div>
@@ -616,7 +616,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <Column header="Échéance" style="min-width: 14rem">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-2 text-[13px] font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-max border border-slate-100">
-                                                <i class="pi pi-calendar text-indigo-400"></i>
+                                                <i class="pi pi-calendar text-blue-400"></i>
                                                 {{ formatDate(data.due_date) }}
                                             </div>
                                         </template>
@@ -641,18 +641,18 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 
         <Drawer v-model:visible="submitAssignmentDialog" position="right" class="w-full md:w-[500px] !bg-slate-50" header="Remise de Travail">
             <div v-if="currentAssignment" class="flex flex-col h-full space-y-6 pt-4">
-                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
                     <h3 class="font-black text-slate-800 text-xl">{{ currentAssignment.title }}</h3>
-                    <p class="text-[13px] font-bold text-slate-500 flex items-center gap-2 mt-3 bg-slate-50 w-max px-3 py-1.5 rounded-lg"><i class="pi pi-clock text-indigo-500"></i> Limite : {{ formatDate(currentAssignment.due_date) }}</p>
+                    <p class="text-[13px] font-bold text-slate-500 flex items-center gap-2 mt-3 bg-slate-50 w-max px-3 py-1.5 rounded-lg"><i class="pi pi-clock text-blue-500"></i> Limite : {{ formatDate(currentAssignment.due_date) }}</p>
                 </div>
 
-                <div class="border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-3xl p-12 text-center relative hover:bg-indigo-50 transition-colors shadow-inner group">
+                <div class="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl p-12 text-center relative hover:bg-blue-50 transition-colors shadow-inner group">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm group-hover:scale-110 transition-transform">
-                        <i class="pi pi-cloud-upload text-4xl text-indigo-500"></i>
+                        <i class="pi pi-cloud-upload text-4xl text-blue-500"></i>
                     </div>
-                    <p class="font-black text-indigo-900 text-lg mb-1">Uploader votre document</p>
-                    <p class="text-sm font-medium text-indigo-600/70">Glissez-déposez ou cliquez pour parcourir</p>
+                    <p class="font-black text-blue-900 text-lg mb-1">Uploader votre document</p>
+                    <p class="text-sm font-medium text-blue-600/70">Glissez-déposez ou cliquez pour parcourir</p>
 
                     <FileUpload mode="basic" auto customUpload @select="onAssignmentSelect" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
 
@@ -661,40 +661,40 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0"><i class="pi pi-file-check text-2xl"></i></div>
                             <span class="font-black text-sm text-slate-800 truncate">{{ assignmentSubmitForm.submitted_file.name }}</span>
                         </div>
-                        <Button icon="pi pi-trash" text rounded severity="danger" class="bg-rose-50 hover:bg-rose-100" @click.stop="assignmentSubmitForm.submitted_file = null" />
+                        <Button icon="pi pi-trash" text rounded severity="danger" class="bg-red-50 hover:bg-red-100" @click.stop="assignmentSubmitForm.submitted_file = null" />
                     </div>
                 </div>
 
                 <div class="space-y-3">
                     <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Commentaire pour le professeur (Optionnel)</label>
-                    <Textarea v-model="assignmentSubmitForm.student_comment" rows="5" placeholder="Ajouter une note ou des précisions..." class="w-full rounded-3xl border-slate-200 bg-white p-5 font-medium focus:border-indigo-500 shadow-sm" />
+                    <Textarea v-model="assignmentSubmitForm.student_comment" rows="5" placeholder="Ajouter une note ou des précisions..." class="w-full rounded-xl border-slate-200 bg-white p-5 font-medium focus:border-blue-500 shadow-sm" />
                 </div>
 
                 <div class="mt-auto pt-6 border-t border-slate-200">
-                    <Button label="Confirmer l'envoi du devoir" icon="pi pi-send" class="w-full p-button-primary shadow-lg shadow-indigo-200 font-black rounded-2xl py-4 text-lg" @click="submitStudentAssignment" :loading="assignmentSubmitForm.processing" :disabled="!assignmentSubmitForm.submitted_file" />
+                    <Button label="Confirmer l'envoi du devoir" icon="pi pi-send" class="w-full p-button-primary shadow-lg shadow-blue-200 font-black rounded-2xl py-4 text-lg" @click="submitStudentAssignment" :loading="assignmentSubmitForm.processing" :disabled="!assignmentSubmitForm.submitted_file" />
                 </div>
             </div>
         </Drawer>
 
         <Dialog v-model:visible="takeQuizDialog" modal maximized header="Passer l'Interrogation" class="bg-slate-50" :pt="{ header: { class: 'bg-white border-b border-slate-200 shadow-sm z-10 py-5' }, title: {class: 'font-black text-xl text-slate-800'} }">
             <div v-if="currentQuizToTake" class="max-w-[1000px] mx-auto py-10 space-y-8 pb-36">
-                <div class="bg-white p-8 md:p-10 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400"></div>
                     <h2 class="text-3xl font-black text-slate-800 mb-2">{{ currentQuizToTake.title }}</h2>
                     <p class="text-slate-600 font-medium mb-6">{{ currentQuizToTake.instructions }}</p>
                     <div class="flex items-center gap-6 text-sm">
-                        <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-book text-indigo-500"></i> {{ currentQuizToTake.course?.title }}</div>
-                        <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-clock text-rose-500"></i> Limite : {{ formatDate(currentQuizToTake.due_date) }}</div>
+                        <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-book text-blue-500"></i> {{ currentQuizToTake.course?.title }}</div>
+                        <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-clock text-red-500"></i> Limite : {{ formatDate(currentQuizToTake.due_date) }}</div>
                     </div>
                 </div>
 
-                <div v-for="(question, qIndex) in currentQuizToTake.questions" :key="question.id" class="bg-white p-8 md:p-10 rounded-3xl border border-slate-200 shadow-sm animate-fade-in">
+                <div v-for="(question, qIndex) in currentQuizToTake.questions" :key="question.id" class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-sm animate-fade-in">
                     <div class="flex items-start gap-5">
-                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-black shrink-0">{{ qIndex + 1 }}</div>
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black shrink-0">{{ qIndex + 1 }}</div>
                         <div class="flex-1">
                             <p class="font-bold text-lg text-slate-800 leading-relaxed mb-6">{{ question.text }}</p>
                             <div class="space-y-4">
-                                <div v-for="option in question.options" :key="option.id" class="flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer" :class="quizSubmissionForm.answers[question.id] === option.id ? 'border-indigo-500 bg-indigo-50 shadow-md' : 'border-slate-200 bg-white hover:border-indigo-300'">
+                                <div v-for="option in question.options" :key="option.id" class="flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer" :class="quizSubmissionForm.answers[question.id] === option.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-slate-200 bg-white hover:border-blue-300'">
                                     <RadioButton v-model="quizSubmissionForm.answers[question.id]" :inputId="`opt-${option.id}`" name="`q-${question.id}`" :value="option.id" />
                                     <label :for="`opt-${option.id}`" class="ml-4 font-bold text-slate-700 cursor-pointer flex-1">{{ option.text }}</label>
                                 </div>
@@ -709,7 +709,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                     <Button
                         label="Soumettre mes réponses"
                         icon="pi pi-check-circle"
-                        class="p-button-primary shadow-lg shadow-indigo-200/50 font-black rounded-xl px-10 py-4 text-white text-lg"
+                        class="p-button-primary shadow-lg shadow-blue-200/50 font-black rounded-xl px-10 py-4 text-white text-lg"
                         @click="submitStudentQuiz"
                         :loading="quizSubmissionForm.processing" />
                 </div>
@@ -719,7 +719,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
         <Dialog v-model:visible="createQuizDialog" modal maximized header="⚡ Constructeur d'Interrogation" class="bg-slate-50" :pt="{ header: { class: 'bg-white border-b border-slate-200 shadow-sm z-10 py-5' }, title: {class: 'font-black text-xl text-slate-800'} }">
             <div class="max-w-[1000px] mx-auto py-10 space-y-8 pb-36">
 
-                <div class="bg-white p-8 md:p-10 rounded-3xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] grid grid-cols-1 md:grid-cols-2 gap-8 relative overflow-hidden">
+                <div class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] grid grid-cols-1 md:grid-cols-2 gap-8 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400"></div>
                     <div class="col-span-1 md:col-span-2 space-y-3">
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Titre de l'évaluation</label>
@@ -735,9 +735,9 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                     </div>
                 </div>
 
-                <div v-for="(question, qIndex) in quizCreateForm.questions" :key="question.id" class="bg-white p-8 md:p-10 rounded-3xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative group animate-fade-in">
+                <div v-for="(question, qIndex) in quizCreateForm.questions" :key="question.id" class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative group animate-fade-in">
                     <div class="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button icon="pi pi-trash" text rounded severity="danger" class="bg-rose-50 w-10 h-10" v-tooltip.top="'Supprimer cette question'" @click="removeQuizQuestion(qIndex)" />
+                        <Button icon="pi pi-trash" text rounded severity="danger" class="bg-red-50 w-10 h-10" v-tooltip.top="'Supprimer cette question'" @click="removeQuizQuestion(qIndex)" />
                     </div>
 
                     <div class="space-y-4 w-full md:pr-16">
@@ -745,7 +745,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center font-black">{{ qIndex + 1 }}</div>
                             <span class="text-xs font-black uppercase tracking-widest text-slate-400">Question</span>
                         </div>
-                        <Textarea v-model="question.text" autoResize rows="2" placeholder="Saisissez l'intitulé complet de la question..." class="w-full font-black text-xl text-slate-800 bg-transparent border-b-2 border-slate-200 focus:border-amber-400 rounded-none px-0 py-3 shadow-none focus:ring-0 transition-colors" :class="{'border-rose-400 placeholder-rose-300': !question.text}" />
+                        <Textarea v-model="question.text" autoResize rows="2" placeholder="Saisissez l'intitulé complet de la question..." class="w-full font-black text-xl text-slate-800 bg-transparent border-b-2 border-slate-200 focus:border-amber-400 rounded-none px-0 py-3 shadow-none focus:ring-0 transition-colors" :class="{'border-red-400 placeholder-rose-300': !question.text}" />
                     </div>
 
                     <div class="mt-10 space-y-4 pl-4 md:pl-11 border-l-2 border-slate-100">
@@ -753,14 +753,14 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all shadow-sm shrink-0 hover:scale-110" :class="option.is_correct ? 'border-emerald-500 bg-emerald-500 text-white shadow-emerald-200' : 'border-slate-300 bg-white hover:border-emerald-400'" @click="setCorrectOption(qIndex, optIndex)" v-tooltip.left="'Cocher pour définir comme bonne réponse'">
                                 <i class="pi pi-check text-sm" v-show="option.is_correct"></i>
                             </div>
-                            <InputText v-model="option.text" placeholder="Proposition de réponse..." class="flex-1 rounded-2xl bg-slate-50 border-slate-200 p-4 focus:border-emerald-400 font-bold text-slate-700" :class="{'border-rose-300': !option.text}" />
+                            <InputText v-model="option.text" placeholder="Proposition de réponse..." class="flex-1 rounded-2xl bg-slate-50 border-slate-200 p-4 focus:border-emerald-400 font-bold text-slate-700" :class="{'border-red-300': !option.text}" />
                             <Button icon="pi pi-times" text rounded severity="secondary" class="hover:bg-slate-100 shrink-0 w-10 h-10 text-slate-400" @click="removeQuestionOption(qIndex, optIndex)" :disabled="question.options.length <= 2" />
                         </div>
-                        <Button label="Ajouter une proposition" icon="pi pi-plus" text class="font-black text-indigo-600 mt-4 px-4 py-3 rounded-xl hover:bg-indigo-50" @click="addQuestionOption(qIndex)" />
+                        <Button label="Ajouter une proposition" icon="pi pi-plus" text class="font-black text-blue-600 mt-4 px-4 py-3 rounded-xl hover:bg-blue-50" @click="addQuestionOption(qIndex)" />
                     </div>
                 </div>
 
-                <Button label="Ajouter une nouvelle question" icon="pi pi-plus-circle" class="w-full p-button-outlined p-button-secondary border-dashed border-2 bg-white hover:bg-slate-50 py-8 font-black text-slate-600 rounded-3xl text-lg transition-all shadow-sm" @click="addQuizQuestion" />
+                <Button label="Ajouter une nouvelle question" icon="pi pi-plus-circle" class="w-full p-button-outlined p-button-secondary border-dashed border-2 bg-white hover:bg-slate-50 py-8 font-black text-slate-600 rounded-xl text-lg transition-all shadow-sm" @click="addQuizQuestion" />
             </div>
 
             <template #footer>

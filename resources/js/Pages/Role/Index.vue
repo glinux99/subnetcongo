@@ -207,7 +207,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
             <!-- ============================================================================== -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div class="flex items-center gap-5">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 shadow-xl shadow-indigo-200">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 shadow-xl shadow-blue-200">
                         <i class="pi pi-shield text-2xl text-white"></i>
                     </div>
                     <div>
@@ -219,7 +219,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                 </div>
                 <div class="flex gap-3 w-full md:w-auto">
                     <Button v-show="can(['create role'])" label="Créer un Rôle" icon="pi pi-plus"
-                            class="p-button-primary shadow-lg shadow-indigo-500/30 font-black rounded-xl px-6 w-full md:w-auto" @click="openCreate" />
+                            class="p-button-primary shadow-lg shadow-blue-500/30 font-black rounded-xl px-6 w-full md:w-auto" @click="openCreate" />
                 </div>
             </div>
 
@@ -227,7 +227,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
             <!-- STATS CARDS -->
             <!-- ============================================================================== -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                <div class="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-colors">
+                <div class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-colors">
                     <div>
                         <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Définis</div>
                         <div class="text-4xl font-black text-slate-800">{{ stats.total }}</div>
@@ -235,7 +235,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                     <div class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform"><i class="pi pi-users text-2xl text-slate-500"></i></div>
                 </div>
 
-                <div class="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
+                <div class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
                     <div>
                         <div class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Accès Super-Admin</div>
                         <div class="text-4xl font-black text-slate-800">{{ stats.fullAccess }}</div>
@@ -243,7 +243,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                     <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-transform"><i class="pi pi-verified text-2xl text-emerald-500"></i></div>
                 </div>
 
-                <div class="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-amber-300 transition-colors">
+                <div class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-amber-300 transition-colors">
                     <div>
                         <div class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Accès Limités</div>
                         <div class="text-4xl font-black text-slate-800">{{ stats.customAccess }}</div>
@@ -255,7 +255,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
             <!-- ============================================================================== -->
             <!-- DATATABLE -->
             <!-- ============================================================================== -->
-            <div class="overflow-hidden border border-slate-200 rounded-3xl bg-white shadow-sm">
+            <div class="overflow-hidden border border-slate-200 rounded-xl bg-white shadow-sm">
                 <DataTable lazy :value="roles.data" :rows="roles.per_page" :totalRecords="roles.total"
                            @page="onPageChange" paginator class="p-datatable-lg custom-datatable"
                            :first="(roles.current_page - 1) * roles.per_page" responsiveLayout="scroll">
@@ -282,23 +282,23 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
                             <!-- NOM -->
                             <div v-if="field === 'name'" class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs" :class="rowData.name.toLowerCase() === 'admin' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs" :class="rowData.name.toLowerCase() === 'admin' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'">
                                     {{ rowData.name.charAt(0).toUpperCase() }}
                                 </div>
                                 <span class="font-black text-slate-800 text-sm">{{ rowData.name }}</span>
                             </div>
 
                             <!-- GUARD -->
-                            <Tag v-else-if="field === 'guard_name'" :value="rowData.guard_name" class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-black tracking-widest uppercase px-2 py-0.5" />
+                            <Tag v-else-if="field === 'guard_name'" :value="rowData.guard_name" class="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-black tracking-widest uppercase px-2 py-0.5" />
 
                             <!-- PERMISSIONS (Clickable) -->
                             <div v-else-if="field === 'permissions'" @click="viewPermissions(rowData)" class="cursor-pointer group inline-flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-200">
                                 <Badge v-if="rowData.permissions.length === props.permissions.length" value="FULL ACCESS" severity="success" class="text-[9px] tracking-widest font-black" />
                                 <div v-else class="flex items-center gap-2">
-                                    <span class="text-xs font-black text-slate-600 group-hover:text-indigo-600">{{ rowData.permissions.length }}</span>
+                                    <span class="text-xs font-black text-slate-600 group-hover:text-blue-600">{{ rowData.permissions.length }}</span>
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Règles</span>
                                 </div>
-                                <i class="pi pi-external-link text-[10px] text-slate-300 group-hover:text-indigo-400"></i>
+                                <i class="pi pi-external-link text-[10px] text-slate-300 group-hover:text-blue-400"></i>
                             </div>
 
                             <!-- DATE -->
@@ -311,8 +311,8 @@ watch(() => cloneDeep(data.params), debounce(() => {
                     <Column header="Actions" alignFrozen="right" frozen style="width: 8rem" align="center">
                         <template #body="slotProps">
                             <div class="flex justify-center gap-2">
-                                <Button v-show="can(['update role'])" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600" @click="openEdit(slotProps.data)" v-tooltip.top="'Modifier'" />
-                                <Button v-show="can(['delete role'])" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger bg-rose-50 hover:bg-rose-100" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Supprimer'" />
+                                <Button v-show="can(['update role'])" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-blue-50 hover:text-blue-600" @click="openEdit(slotProps.data)" v-tooltip.top="'Modifier'" />
+                                <Button v-show="can(['delete role'])" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger bg-red-50 hover:bg-red-100" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Supprimer'" />
                             </div>
                         </template>
                     </Column>
@@ -323,11 +323,11 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <!-- ============================================================================== -->
         <!-- DIALOG : CREATE / UPDATE ROLE (Unified Form) -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="roleModalOpen" modal :style="{ width: '800px' }" class="p-fluid rounded-3xl custom-dialog bg-slate-50">
+        <Dialog v-model:visible="roleModalOpen" modal :style="{ width: '800px' }" class="p-fluid rounded-xl custom-dialog bg-slate-50">
             <!-- Header personnalisé -->
             <template #header>
                 <div class="flex items-center gap-4 w-full pr-4">
-                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
                         <i :class="isEditing ? 'pi pi-pencil' : 'pi pi-plus'" class="text-xl"></i>
                     </div>
                     <div class="flex-1">
@@ -341,15 +341,15 @@ watch(() => cloneDeep(data.params), debounce(() => {
                 <!-- Infos basiques -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
                     <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Nom du rôle <span class="text-rose-500">*</span></label>
+                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Nom du rôle <span class="text-red-500">*</span></label>
                         <InputText v-model="roleForm.name" class="w-full rounded-xl border-slate-300 font-bold p-3" placeholder="Ex: Rédacteur Web" autofocus />
-                        <small v-if="roleForm.errors.name" class="text-rose-500 font-bold">{{ roleForm.errors.name }}</small>
+                        <small v-if="roleForm.errors.name" class="text-red-500 font-bold">{{ roleForm.errors.name }}</small>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Contexte (Guard)</label>
                         <div class="flex bg-slate-100 p-1 rounded-xl">
                             <button v-for="g in ['web', 'api']" :key="g" @click="roleForm.guard_name = g" type="button"
-                                    :class="roleForm.guard_name === g ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'"
+                                    :class="roleForm.guard_name === g ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'"
                                     class="flex-1 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all border border-transparent">
                                 {{ g }}
                             </button>
@@ -377,12 +377,12 @@ watch(() => cloneDeep(data.params), debounce(() => {
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 h-[300px] overflow-y-auto p-2 custom-scrollbar">
                             <div v-for="permission in filteredPermissions" :key="permission.id"
                                  class="flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none"
-                                 :class="roleForm.permissions.includes(permission.id) ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'"
+                                 :class="roleForm.permissions.includes(permission.id) ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'"
                                  @click="roleForm.permissions.includes(permission.id) ? roleForm.permissions = roleForm.permissions.filter(id => id !== permission.id) : roleForm.permissions.push(permission.id)">
 
                                 <Checkbox v-model="roleForm.permissions" :inputId="'perm'+permission.id" :value="permission.id" @click.stop />
                                 <div class="flex flex-col flex-1">
-                                    <label :for="'perm'+permission.id" class="text-xs font-bold cursor-pointer" :class="roleForm.permissions.includes(permission.id) ? 'text-indigo-900' : 'text-slate-700'">{{ permission.name }}</label>
+                                    <label :for="'perm'+permission.id" class="text-xs font-bold cursor-pointer" :class="roleForm.permissions.includes(permission.id) ? 'text-blue-900' : 'text-slate-700'">{{ permission.name }}</label>
                                 </div>
                             </div>
                             <div v-if="filteredPermissions.length === 0" class="col-span-full text-center p-8 text-slate-400 text-sm font-medium">
@@ -405,7 +405,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <!-- ============================================================================== -->
         <!-- DIALOG : VIEW PERMISSIONS (Read-Only) -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="permissionDialog" modal :style="{ width: '600px' }" class="p-fluid rounded-3xl custom-dialog">
+        <Dialog v-model:visible="permissionDialog" modal :style="{ width: '600px' }" class="p-fluid rounded-xl custom-dialog">
             <template #header>
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center"><i class="pi pi-lock-open text-lg"></i></div>
@@ -446,19 +446,19 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <!-- ============================================================================== -->
         <!-- DIALOG : CONFIRM DELETE -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="deleteDialog" modal :style="{ width: '450px' }" class="p-fluid rounded-3xl custom-dialog" :closable="false">
+        <Dialog v-model:visible="deleteDialog" modal :style="{ width: '450px' }" class="p-fluid rounded-xl custom-dialog" :closable="false">
             <div class="p-6 flex flex-col items-center text-center pt-8">
-                <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6 border border-rose-100">
-                    <i class="pi pi-exclamation-triangle text-4xl text-rose-500"></i>
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-red-100">
+                    <i class="pi pi-exclamation-triangle text-4xl text-red-500"></i>
                 </div>
                 <h2 class="text-2xl font-black text-slate-800 mb-2">Suppression définitive</h2>
                 <p class="text-sm text-slate-500 leading-relaxed mb-8">
-                    Êtes-vous sûr de vouloir supprimer le rôle <span class="font-black text-rose-600">"{{ selectedRole?.name }}"</span> ? Les utilisateurs associés perdront ces privilèges immédiatement.
+                    Êtes-vous sûr de vouloir supprimer le rôle <span class="font-black text-red-600">"{{ selectedRole?.name }}"</span> ? Les utilisateurs associés perdront ces privilèges immédiatement.
                 </p>
 
                 <div class="flex gap-3 w-full">
                     <Button label="Annuler" class="p-button-outlined p-button-secondary font-bold flex-1 rounded-xl py-3" @click="deleteDialog = false" />
-                    <Button label="Oui, Supprimer" class="p-button-danger font-black flex-1 rounded-xl py-3 shadow-lg shadow-rose-500/30" @click="executeDelete" />
+                    <Button label="Oui, Supprimer" class="p-button-danger font-black flex-1 rounded-xl py-3 shadow-lg shadow-red-500/30" @click="executeDelete" />
                 </div>
             </div>
         </Dialog>

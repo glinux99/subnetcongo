@@ -12,7 +12,7 @@ const formatPrice = (p) => new Intl.NumberFormat('fr-FR', { style: 'currency', c
     <AppLayout>
         <Head title="Commande confirmée" />
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-10 max-w-xl w-full text-center">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-xl p-10 max-w-xl w-full text-center">
                 <div class="w-24 h-24 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <i class="pi pi-check-circle text-emerald-500 text-5xl"></i>
                 </div>
@@ -25,7 +25,7 @@ const formatPrice = (p) => new Intl.NumberFormat('fr-FR', { style: 'currency', c
                     </div>
                     <div class="flex justify-between text-sm py-1.5">
                         <span class="text-slate-500 font-bold">Montant</span>
-                        <span class="font-black text-violet-600 font-mono">{{ formatPrice(order?.amount) }}</span>
+                        <span class="font-black text-blue-600 font-mono">{{ formatPrice(order?.amount) }}</span>
                     </div>
                     <div class="flex justify-between text-sm py-1.5 items-center">
                         <span class="text-slate-500 font-bold">Statut</span>
@@ -34,7 +34,7 @@ const formatPrice = (p) => new Intl.NumberFormat('fr-FR', { style: 'currency', c
                 </div>
                 <div class="flex gap-3">
                     <Link :href="route('student.my-courses')" class="flex-1">
-                        <Button label="Mes cours" icon="pi pi-play" class="!bg-indigo-600 hover:!bg-indigo-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
+                        <Button label="Mes cours" icon="pi pi-play" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
                     </Link>
                     <Link :href="route('marketplace.index')" class="flex-1">
                         <Button label="Continuer" icon="pi pi-shopping-bag" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />

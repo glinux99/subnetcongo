@@ -16,7 +16,7 @@ const props = defineProps({
 
 // Widgets actuellement sur la page
 const widgetTypes = ref([
-    { key: 'hero_slider',  label: 'Hero Slider',     desc: 'Slides pleine page avec CTAs (géré depuis Landing).', icon: 'pi pi-images', color: 'text-indigo-500', bg: 'bg-indigo-50', active: true },
+    { key: 'hero_slider',  label: 'Hero Slider',     desc: 'Slides pleine page avec CTAs (géré depuis Landing).', icon: 'pi pi-images', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
     { key: 'course_grid',  label: 'Grille de cours', desc: 'Affiche les cours publiés (géré sur Academy).', icon: 'pi pi-th-large', color: 'text-emerald-500', bg: 'bg-emerald-50', active: true },
     { key: 'stats',        label: 'Statistiques',    desc: 'Compteurs agrégés (étudiants, cours, etc.).', icon: 'pi pi-chart-bar', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
     { key: 'testimonials', label: 'Témoignages',     desc: 'Carousel des témoignages approuvés.', icon: 'pi pi-comments', color: 'text-amber-500', bg: 'bg-amber-50', active: false },
@@ -24,8 +24,8 @@ const widgetTypes = ref([
 
 // Catalogue des widgets disponibles (non encore ajoutés)
 const availableWidgets = ref([
-    { key: 'blog_feed',    label: 'Fil d\'actualité', desc: '3 derniers articles de blog publiés.', icon: 'pi pi-megaphone', color: 'text-rose-500', bg: 'bg-rose-50', active: true },
-    { key: 'cta',          label: 'Appel à l\'action', desc: 'Bandeau CTA final (inscription / découverte).', icon: 'pi pi-bolt', color: 'text-purple-500', bg: 'bg-purple-50', active: true },
+    { key: 'blog_feed',    label: 'Fil d\'actualité', desc: '3 derniers articles de blog publiés.', icon: 'pi pi-megaphone', color: 'text-red-500', bg: 'bg-red-50', active: true },
+    { key: 'cta',          label: 'Appel à l\'action', desc: 'Bandeau CTA final (inscription / découverte).', icon: 'pi pi-bolt', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
     { key: 'realizations', label: 'Réalisations',    desc: 'Carrousel des projets terrain publiés.', icon: 'pi pi-briefcase', color: 'text-cyan-500', bg: 'bg-cyan-50', active: false },
     { key: 'faq',          label: 'FAQ',             desc: 'Questions/réponses configurables.', icon: 'pi pi-question-circle', color: 'text-slate-500', bg: 'bg-slate-100', active: true },
     { key: 'partners',     label: 'Partenaires',     desc: 'Bandeau défilant des logos partenaires.', icon: 'pi pi-star', color: 'text-yellow-500', bg: 'bg-yellow-50', active: true },
@@ -177,7 +177,7 @@ const removeWidget = (index) => {
 
                         <!-- Contenu (Texte) -->
                         <div class="flex-1 mb-6">
-                            <h3 class="text-lg font-black text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">{{ w.label }}</h3>
+                            <h3 class="text-lg font-black text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{{ w.label }}</h3>
                             <p class="text-slate-500 text-sm leading-relaxed">{{ w.desc }}</p>
                         </div>
 
@@ -222,17 +222,17 @@ const removeWidget = (index) => {
                     <div 
                         v-for="(w, index) in availableWidgets" 
                         :key="w.key"
-                        class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all cursor-pointer group"
+                        class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer group"
                         @click="addWidget(index)"
                     >
                         <div :class="`w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center shadow-sm ${w.bg} ${w.color}`">
                             <i :class="`${w.icon} text-lg`"></i>
                         </div>
                         <div class="flex-1">
-                            <h4 class="font-bold text-slate-800 text-sm group-hover:text-indigo-700">{{ w.label }}</h4>
+                            <h4 class="font-bold text-slate-800 text-sm group-hover:text-blue-700">{{ w.label }}</h4>
                             <p class="text-[11px] text-slate-500 line-clamp-1">{{ w.desc }}</p>
                         </div>
-                        <i class="pi pi-plus-circle text-slate-300 group-hover:text-indigo-500 text-xl transition-colors"></i>
+                        <i class="pi pi-plus-circle text-slate-300 group-hover:text-blue-500 text-xl transition-colors"></i>
                     </div>
                 </div>
 

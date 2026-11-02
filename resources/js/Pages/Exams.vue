@@ -622,8 +622,8 @@ onMounted(() => {
 
             <!-- KPI 4 : Alertes Anti-Triche -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-shield text-rose-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-shield text-red-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Alertes Anti-Triche</h3>
@@ -689,11 +689,11 @@ onMounted(() => {
                 <template #body="{ data }">
                     <div class="flex items-center gap-4 py-2">
                         <div class="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
-                             :class="data.type === 'Certification' ? 'bg-blue-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500'">
+                             :class="data.type === 'Certification' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-50 text-slate-500'">
                             <i :class="data.type === 'Certification' ? 'pi pi-verified' : 'pi pi-clock'" class="text-xl"></i>
                         </div>
                         <div class="flex flex-col justify-center">
-                            <span class="font-extrabold text-slate-800 text-base hover:text-indigo-600 cursor-pointer transition-colors" @click="editExam(data)">
+                            <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors" @click="editExam(data)">
                                 {{ data.title }}
                                 </span>
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
@@ -724,8 +724,8 @@ onMounted(() => {
                 <template #body="{ data }">
                     <div class="flex justify-end gap-1">
                         <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-red-50" v-tooltip.top="'Résultats & Analytics'" @click="analyticsDialog = true" />
-                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-indigo-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
-                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-rose-50" v-tooltip.top="'Supprimer l\'examen'" @click="deleteExam(data.id)" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" v-tooltip.top="'Supprimer l\'examen'" @click="deleteExam(data.id)" />
                     </div>
                 </template>
             </Column>
@@ -785,10 +785,10 @@ onMounted(() => {
 
             <!-- WORKSPACE HEADER (Fixe) -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
-                <div class="absolute top-0 left-0 h-0.5 bg-indigo-600 transition-all duration-500" :style="{ width: isFormValid ? '100%' : '30%' }"></div>
+                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isFormValid ? '100%' : '30%' }"></div>
 
                 <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
                         <i class="pi pi-verified text-lg"></i>
                     </div>
                     <div>
@@ -807,7 +807,7 @@ onMounted(() => {
                 <div class="flex items-center gap-4">
                     <div class="flex flex-col items-end border-r border-slate-200 pr-4 hidden sm:flex">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Points</span>
-                        <span class="text-lg font-black text-indigo-600">{{ calculateTotalPoints }} pts</span>
+                        <span class="text-lg font-black text-blue-600">{{ calculateTotalPoints }} pts</span>
                     </div>
                     <Button icon="pi pi-external-link" class="p-button-text p-button-secondary p-button-sm hidden md:flex font-bold" v-tooltip.bottom="'Prévisualiser côté apprenant'" />
                     <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="examDialog = false" v-tooltip.bottom="'Fermer l\'espace'" />
@@ -826,16 +826,16 @@ onMounted(() => {
                     <div class="p-4 flex-1 space-y-2">
                         <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id"
                                 class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
-                                :class="[activeEditorTab === item.id ? 'bg-blue-50 border border-indigo-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100']">
+                                :class="[activeEditorTab === item.id ? 'bg-blue-50 border border-blue-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100']">
 
-                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-md"></div>
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
 
                             <div class="relative mt-0.5">
-                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
+                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
                             </div>
 
                             <div class="flex-1">
-                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-indigo-800' : 'text-slate-700']">{{ item.label }}</div>
+                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div>
                                 <div class="text-[11px] font-medium text-slate-500 leading-tight">{{ item.description }}</div>
                             </div>
                         </button>
@@ -867,7 +867,7 @@ onMounted(() => {
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">Identité de l'Évaluation</h3>
                                         <p class="text-xs text-slate-500 mt-1">Métadonnées et rattachement académique.</p>
@@ -876,21 +876,21 @@ onMounted(() => {
 
                                 <div class="space-y-6">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Titre de l'examen <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Titre de l'examen <span class="text-red-500">*</span></label>
                                         <InputText v-model="examForm.title" class="w-full p-4 text-lg font-bold bg-slate-50 border-slate-300 focus:bg-white transition-colors" placeholder="Ex: Certification Finale Cloud Computing..." :class="{'p-invalid': examForm.errors.title}" />
-                                        <small v-if="examForm.errors.title" class="text-rose-500 font-bold block mt-1">{{ examForm.errors.title }}</small>
+                                        <small v-if="examForm.errors.title" class="text-red-500 font-bold block mt-1">{{ examForm.errors.title }}</small>
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
                                         <div class="space-y-2">
                                             <label class="block text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-book text-slate-400"></i> Lier à un Parcours (Cours)</label>
                                             <Dropdown v-model="examForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Sélectionnez un cours..." class="w-full border-slate-300 font-medium bg-white" filter showClear :class="{'p-invalid': examForm.errors.course_id}" />
-                                            <small v-if="examForm.errors.course_id" class="text-rose-500 font-bold">{{ examForm.errors.course_id }}</small>
+                                            <small v-if="examForm.errors.course_id" class="text-red-500 font-bold">{{ examForm.errors.course_id }}</small>
                                         </div>
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700">Type d'Évaluation <span class="text-rose-500">*</span></label>
+                                            <label class="block text-sm font-bold text-slate-700">Type d'Évaluation <span class="text-red-500">*</span></label>
                                             <SelectButton v-model="examForm.type" :options="examTypes" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 text-xs font-bold py-2 bg-white' } }" />
-                                            <small v-if="examForm.errors.type" class="text-rose-500 font-bold">{{ examForm.errors.type }}</small>
+                                            <small v-if="examForm.errors.type" class="text-red-500 font-bold">{{ examForm.errors.type }}</small>
                                         </div>
                                     </div>
 
@@ -912,16 +912,16 @@ onMounted(() => {
                             <!-- Header fixe du constructeur -->
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-30">
                                 <div>
-                                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="pi pi-list text-indigo-600"></i> Banque d'Items Locale ({{ examForm.questions.length }})</h3>
+                                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="pi pi-list text-blue-600"></i> Banque d'Items Locale ({{ examForm.questions.length }})</h3>
                                     <p class="text-sm text-slate-500 mt-1">Structurez les questions de cette évaluation spécifique.</p>
                                 </div>
                                 <Button label="Importer de la Banque Globale" icon="pi pi-cloud-download" class="p-button-outlined p-button-secondary bg-slate-50 text-slate-700 font-bold text-sm shadow-sm" @click="questionBankDialog = true" />
                             </div>
 
                             <!-- État Vide -->
-                            <div v-if="examForm.questions.length === 0" class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-indigo-300 hover:bg-blue-50/30">
-                                <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
-                                    <i class="pi pi-question text-4xl text-indigo-400"></i>
+                            <div v-if="examForm.questions.length === 0" class="bg-white p-16 rounded-xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-blue-300 hover:bg-blue-50/30">
+                                <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
+                                    <i class="pi pi-question text-4xl text-blue-400"></i>
                                 </div>
                                 <h4 class="text-2xl font-black text-slate-800 mb-3">Syllabus Vierge</h4>
                                 <p class="text-slate-500 mb-8 max-w-md text-base leading-relaxed">Commencez à structurer votre examen en ajoutant des questions depuis les types disponibles ci-dessous.</p>
@@ -933,7 +933,7 @@ onMounted(() => {
                             <!-- Liste des Questions -->
                             <div v-else class="space-y-8 pb-10">
 
-                                <div v-for="(q, index) in examForm.questions" :key="q.id" :id="q.id" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 hover:border-indigo-300 hover:shadow-md relative group/question">
+                                <div v-for="(q, index) in examForm.questions" :key="q.id" :id="q.id" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 hover:border-blue-300 hover:shadow-md relative group/question">
 
                                     <!-- En-tête de la question (Controls) -->
                                     <div class="bg-slate-50/80 px-4 py-3 flex items-center justify-between border-b border-slate-200">
@@ -960,7 +960,7 @@ onMounted(() => {
                                         <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
                                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valeur:</span>
-                                                <InputNumber v-model="q.points" :min="0.25" mode="decimal" :minFractionDigits="1" class="w-16" :pt="{ input: { class: 'p-1 text-center font-black text-sm border-none shadow-none text-indigo-600' } }" />
+                                                <InputNumber v-model="q.points" :min="0.25" mode="decimal" :minFractionDigits="1" class="w-16" :pt="{ input: { class: 'p-1 text-center font-black text-sm border-none shadow-none text-blue-600' } }" />
                                                 <span class="text-[10px] font-bold text-slate-400">pts</span>
                                             </div>
 
@@ -1007,12 +1007,12 @@ onMounted(() => {
                                                         <RadioButton :name="'q_'+index" :value="true" v-model="opt.is_correct" @change="setExclusiveCorrectOption(index, oIdx)" />
                                                     </div>
 
-                                                    <InputText v-model="opt.option_text" class="flex-1 border-transparent hover:border-slate-200 focus:border-indigo-400 focus:bg-slate-50 text-sm font-bold text-slate-700 p-2 shadow-none transition-colors" placeholder="Saisir l'option..." />
+                                                    <InputText v-model="opt.option_text" class="flex-1 border-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-slate-50 text-sm font-bold text-slate-700 p-2 shadow-none transition-colors" placeholder="Saisir l'option..." />
 
                                                     <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm opacity-20 group-hover/opt:opacity-100 w-8 h-8 p-0 transition-opacity" v-tooltip.top="'Supprimer l\'option'" @click="removeOptionFromQuestion(index, oIdx)" />
                                                 </div>
 
-                                                <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-text p-button-sm font-bold text-indigo-600 w-full justify-start mt-2 hover:bg-blue-50" @click="addOptionToQuestion(index)" />
+                                                <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-text p-button-sm font-bold text-blue-600 w-full justify-start mt-2 hover:bg-blue-50" @click="addOptionToQuestion(index)" />
                                             </div>
 
                                             <!-- Vrai/Faux -->
@@ -1036,10 +1036,10 @@ onMounted(() => {
                                 </div>
 
                                 <!-- Zone d'ajout bas de page (Plus gros) -->
-                                <div class="flex flex-col items-center py-10 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 mt-8 hover:bg-slate-50 hover:border-indigo-200 transition-colors">
+                                <div class="flex flex-col items-center py-10 bg-slate-50/50 rounded-xl border-2 border-dashed border-slate-200 mt-8 hover:bg-slate-50 hover:border-blue-200 transition-colors">
                                     <h5 class="text-sm font-bold text-slate-500 mb-6">Ajouter un nouvel item au syllabus</h5>
                                     <div class="flex flex-wrap justify-center gap-4">
-                                        <Button v-for="t in questionTypes" :key="t.value" :label="t.label" :icon="t.icon" class="p-button-outlined p-button-secondary font-bold bg-white shadow-sm border-slate-300 hover:border-indigo-400 hover:text-indigo-600 px-6 py-3" @click="addNewQuestion(t.value)" />
+                                        <Button v-for="t in questionTypes" :key="t.value" :label="t.label" :icon="t.icon" class="p-button-outlined p-button-secondary font-bold bg-white shadow-sm border-slate-300 hover:border-blue-400 hover:text-blue-600 px-6 py-3" @click="addNewQuestion(t.value)" />
                                     </div>
                                 </div>
                             </div>
@@ -1064,9 +1064,9 @@ onMounted(() => {
                                         <label class="block text-sm font-bold text-slate-700">Durée allouée (Chronomètre)</label>
                                         <div class="flex items-center gap-6 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner">
                                             <Slider v-model="examForm.duration_minutes" :min="5" :max="240" :step="5" class="flex-1" />
-                                            <div class="font-black text-indigo-600 text-xl w-20 text-right bg-white py-1 px-2 rounded-lg border border-indigo-100 shadow-sm">{{ examForm.duration_minutes }} <span class="text-[10px] uppercase text-indigo-400">min</span></div>
+                                            <div class="font-black text-blue-600 text-xl w-20 text-right bg-white py-1 px-2 rounded-lg border border-blue-100 shadow-sm">{{ examForm.duration_minutes }} <span class="text-[10px] uppercase text-blue-400">min</span></div>
                                         </div>
-                                        <small v-if="examForm.errors.duration_minutes" class="text-rose-500 font-bold">{{ examForm.errors.duration_minutes }}</small>
+                                        <small v-if="examForm.errors.duration_minutes" class="text-red-500 font-bold">{{ examForm.errors.duration_minutes }}</small>
                                     </div>
 
                                     <div class="space-y-2">
@@ -1075,12 +1075,12 @@ onMounted(() => {
                                             <Slider v-model="examForm.passing_score" :min="0" :max="100" class="flex-1" />
                                             <div class="font-black text-emerald-600 text-xl w-20 text-right bg-white py-1 px-2 rounded-lg border border-emerald-100 shadow-sm">{{ examForm.passing_score }} <span class="text-[10px] uppercase text-emerald-400">%</span></div>
                                         </div>
-                                        <small v-if="examForm.errors.passing_score" class="text-rose-500 font-bold">{{ examForm.errors.passing_score }}</small>
+                                        <small v-if="examForm.errors.passing_score" class="text-red-500 font-bold">{{ examForm.errors.passing_score }}</small>
                                     </div>
                                 </div>
 
                                 <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="flex items-center justify-between p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors cursor-pointer" @click="examForm.settings.shuffle_questions = !examForm.settings.shuffle_questions">
+                                    <div class="flex items-center justify-between p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-blue-200 transition-colors cursor-pointer" @click="examForm.settings.shuffle_questions = !examForm.settings.shuffle_questions">
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 bg-slate-50 border border-slate-100 text-slate-500 rounded-full flex items-center justify-center flex-shrink-0"><i class="pi pi-sort-alt"></i></div>
                                             <div>
@@ -1091,7 +1091,7 @@ onMounted(() => {
                                         <ToggleSwitch v-model="examForm.settings.shuffle_questions" @click.stop />
                                     </div>
 
-                                    <div class="flex items-center justify-between p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors cursor-pointer" @click="examForm.settings.show_results_instantly = !examForm.settings.show_results_instantly">
+                                    <div class="flex items-center justify-between p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-blue-200 transition-colors cursor-pointer" @click="examForm.settings.show_results_instantly = !examForm.settings.show_results_instantly">
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 bg-slate-50 border border-slate-100 text-blue-500 rounded-full flex items-center justify-center flex-shrink-0"><i class="pi pi-eye"></i></div>
                                             <div>
@@ -1108,18 +1108,18 @@ onMounted(() => {
                             <div class="bg-slate-900 p-8 rounded-2xl shadow-xl text-white relative overflow-hidden border border-slate-800 group">
                                 <i class="pi pi-shield absolute -right-4 -bottom-4 text-[150px] text-white/5 group-hover:scale-110 transition-transform duration-1000 ease-out"></i>
                                 <div class="relative z-10">
-                                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-3"><div class="w-8 h-8 rounded bg-blue-500/20 text-indigo-400 flex items-center justify-center"><i class="pi pi-lock"></i></div> Sécurité Anti-Triche (Proctoring)</h3>
+                                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-3"><div class="w-8 h-8 rounded bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="pi pi-lock"></i></div> Sécurité Anti-Triche (Proctoring)</h3>
                                     <p class="text-slate-400 text-sm mb-8 max-w-2xl leading-relaxed">Configurez le niveau de surveillance logicielle pour les certifications officielles. Un niveau strict requiert que l'apprenant installe notre module navigateur sécurisé.</p>
 
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div v-for="level in proctoringLevels" :key="level.value" @click="examForm.settings.proctoring_mode = level.value"
                                              class="p-5 rounded-xl border-2 cursor-pointer transition-all duration-300 relative"
-                                             :class="examForm.settings.proctoring_mode === level.value ? 'bg-indigo-600/20 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500'">
+                                             :class="examForm.settings.proctoring_mode === level.value ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-800/50 border-slate-700 hover:border-slate-500'">
 
                                             <div v-if="examForm.settings.proctoring_mode === level.value" class="absolute -top-3 -right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg"><i class="pi pi-check text-[10px]"></i></div>
 
-                                            <div class="font-black text-sm mb-2" :class="examForm.settings.proctoring_mode === level.value ? 'text-indigo-300' : 'text-slate-300'">{{ level.label }}</div>
-                                            <div class="text-xs leading-relaxed" :class="examForm.settings.proctoring_mode === level.value ? 'text-indigo-100' : 'text-slate-500'">{{ level.desc }}</div>
+                                            <div class="font-black text-sm mb-2" :class="examForm.settings.proctoring_mode === level.value ? 'text-blue-300' : 'text-slate-300'">{{ level.label }}</div>
+                                            <div class="text-xs leading-relaxed" :class="examForm.settings.proctoring_mode === level.value ? 'text-blue-100' : 'text-slate-500'">{{ level.desc }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1130,11 +1130,11 @@ onMounted(() => {
                         <!-- TAB 4: AUDIT & VERSIONING                  -->
                         <!-- ========================================== -->
                         <div v-show="activeEditorTab === 'audit'" class="animate-fade-in space-y-8">
-                            <div class="bg-blue-50 p-6 rounded-2xl border border-indigo-100 flex items-start gap-4 shadow-sm">
+                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-start gap-4 shadow-sm">
                                 <i class="pi pi-info-circle text-blue-500 text-2xl mt-1"></i>
                                 <div>
-                                    <h4 class="font-bold text-indigo-900 mb-1">Traçabilité Académique (Immuable)</h4>
-                                    <p class="text-sm text-indigo-700 leading-relaxed">Le système d'audit enregistre automatiquement chaque modification structurelle de l'examen. En cas de contestation d'un étudiant, vous pouvez prouver mathématiquement l'état exact des barèmes au moment précis de sa tentative.</p>
+                                    <h4 class="font-bold text-blue-900 mb-1">Traçabilité Académique (Immuable)</h4>
+                                    <p class="text-sm text-blue-700 leading-relaxed">Le système d'audit enregistre automatiquement chaque modification structurelle de l'examen. En cas de contestation d'un étudiant, vous pouvez prouver mathématiquement l'état exact des barèmes au moment précis de sa tentative.</p>
                                 </div>
                             </div>
 
@@ -1180,7 +1180,7 @@ onMounted(() => {
                     <Button label="Enregistrer Brouillon" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 shadow-sm border-slate-300" @click="saveExam('Draft')" :loading="isSaving" />
 
                     <div class="relative group">
-                        <Button label="Mettre en Ligne (Publier)" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-indigo-500/30 font-bold px-8" @click="saveExam('Active')" :loading="isSaving" :disabled="!isFormValid" />
+                        <Button label="Mettre en Ligne (Publier)" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8" @click="saveExam('Active')" :loading="isSaving" :disabled="!isFormValid" />
                         <!-- Tooltip custom si bloqué -->
                         <div v-if="!isFormValid" class="absolute bottom-full right-0 mb-3 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                             Complétez le titre et ajoutez au moins une question pour activer le bouton de publication.
@@ -1253,9 +1253,9 @@ onMounted(() => {
                         <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">Médiane Globale</div>
                         <div class="text-4xl font-black text-slate-800 relative z-10">74.2%</div>
                     </div>
-                    <div class="bg-indigo-600 p-6 rounded-xl shadow-lg shadow-indigo-500/20 text-center text-white flex flex-col justify-center relative overflow-hidden group">
+                    <div class="bg-blue-600 p-6 rounded-xl shadow-lg shadow-blue-500/20 text-center text-white flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-bolt text-5xl"></i></div>
-                        <div class="text-xs font-bold text-indigo-200 uppercase tracking-widest mb-2 relative z-10">Fiabilité (Alpha Cronbach)</div>
+                        <div class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-2 relative z-10">Fiabilité (Alpha Cronbach)</div>
                         <div class="text-4xl font-black relative z-10 flex items-baseline justify-center gap-2">
                             0.82 <span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Excellent</span>
                         </div>

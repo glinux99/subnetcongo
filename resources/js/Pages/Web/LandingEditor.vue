@@ -138,7 +138,7 @@ const handleMainPick = (e) => { slideForm.main_image_file = e.target.files[0]; m
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px]"></div>
                 <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
                     <div class="flex items-center gap-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-red-600 to-rose-400 rounded-xl flex items-center justify-center shadow-2xl rotate-3">
+                        <div class="w-16 h-16 bg-gradient-to-br from-red-600 to-red-400 rounded-xl flex items-center justify-center shadow-2xl rotate-3">
                             <i class="pi pi-desktop text-white text-3xl"></i>
                         </div>
                         <div>

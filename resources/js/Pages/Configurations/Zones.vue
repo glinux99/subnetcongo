@@ -441,7 +441,7 @@ const deleteSelectedZones = () => {
                     <Button :label="t('common.cancel')" icon="pi pi-times" text severity="secondary" @click="zoneDialog = false" class="font-bold uppercase text-[10px] tracking-widest" />
                     <Button :label="editing ? t('common.update') : t('common.save')"
                             icon="pi pi-check-circle" severity="indigo"
-                            class="px-10 h-14 rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs"
+                            class="px-10 h-14 rounded-2xl shadow-xl shadow-blue-100 font-black uppercase tracking-widest text-xs"
                             @click="saveZone" :loading="loading" />
                 </div>
             </template>

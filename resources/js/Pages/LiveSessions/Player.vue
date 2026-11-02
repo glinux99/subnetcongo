@@ -25,7 +25,7 @@ const providerLabel = computed(() => {
 
 const providerColor = computed(() => {
     const p = props.session?.provider;
-    return ({ zoom: 'from-blue-500 to-blue-700', meet: 'from-emerald-500 to-emerald-700', bbb: 'from-indigo-500 to-indigo-700', jitsi: 'from-slate-600 to-slate-800', livekit: 'from-rose-500 to-rose-700' })[p] ?? 'from-indigo-500 to-rose-500';
+    return ({ zoom: 'from-blue-500 to-blue-700', meet: 'from-emerald-500 to-emerald-700', bbb: 'from-blue-500 to-blue-700', jitsi: 'from-slate-600 to-slate-800', livekit: 'from-red-500 to-red-700' })[p] ?? 'from-blue-500 to-red-500';
 });
 
 const joinUrl = computed(() => props.session?.meeting_url);
@@ -73,8 +73,8 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
 
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
+                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none"></div>
                 <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                 <div class="max-w-[1600px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
                     <div class="flex items-center gap-5">
@@ -90,8 +90,8 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
                         </div>
                     </div>
                     <div class="flex items-center gap-3 text-white/80 text-[10px] font-black uppercase tracking-widest">
-                        <div class="bg-rose-500/20 text-rose-300 px-3 py-1.5 rounded-full border border-rose-500/30 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
+                        <div class="bg-red-500/20 text-red-300 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                             EN DIRECT
                         </div>
                         <span v-if="!isMock" class="bg-blue-500/20 text-blue-300 px-3 py-1.5 rounded-full border border-blue-500/30">Session réelle</span>
@@ -102,11 +102,11 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
             </div>
 
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
-                <div v-if="isLiveKit" class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
+                <div v-if="isLiveKit" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-6">
                     <VideoConference :session="session" :user="user" />
                 </div>
 
-                <div v-else-if="isMock" class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
+                <div v-else-if="isMock" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-6">
                     <div class="aspect-video flex flex-col items-center justify-center text-white/80 p-8 text-center">
                         <i class="pi pi-info-circle text-6xl mb-4 text-amber-400"></i>
                         <h2 class="text-2xl font-black mb-2">{{ session?.title }}</h2>
@@ -115,26 +115,26 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
                     </div>
                 </div>
 
-                <div v-else class="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl mb-6">
+                <div v-else class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-6">
                     <div class="aspect-video flex flex-col items-center justify-center text-white/80 p-8 text-center">
-                        <i class="pi pi-video text-6xl mb-4 text-indigo-400"></i>
+                        <i class="pi pi-video text-6xl mb-4 text-blue-400"></i>
                         <h2 class="text-2xl font-black mb-2">{{ session?.title }}</h2>
                         <p class="text-sm mb-6">Cliquez ci-dessous pour rejoindre la salle virtuelle dans un nouvel onglet sécurisé.</p>
-                        <Button label="Rejoindre la session" icon="pi pi-external-link" @click="openInNewTab" class="!bg-gradient-to-r !from-indigo-500 !to-rose-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 !px-6" />
+                        <Button label="Rejoindre la session" icon="pi pi-external-link" @click="openInNewTab" class="!bg-gradient-to-r !from-blue-500 !to-red-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 !px-6" />
                         <p class="text-[10px] text-white/40 mt-4 font-mono">{{ joinUrl }}</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                         <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Instructeur</div>
                         <div class="text-lg font-black text-slate-800">{{ session?.instructor?.name ?? '—' }}</div>
                     </div>
-                    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                         <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Durée</div>
                         <div class="text-lg font-black text-slate-800">{{ session?.duration ?? '—' }} min</div>
                     </div>
-                    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                         <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Capacité</div>
                         <div class="text-lg font-black text-slate-800">{{ session?.max_participants ?? '—' }} participants</div>
                     </div>

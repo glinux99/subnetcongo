@@ -185,7 +185,7 @@ const exportAsPdf = () => {
         head: [['Champ', 'Valeur']],
         body: profileData,
         theme: 'striped',
-        headStyles: { fillColor: [22, 160, 133] },
+        headStyles: { fillColor: [37, 99, 235] },
     });
 
     doc.save(`profil-${props.user.name.replace(/\s+/g, '_').toLowerCase()}.pdf`);
@@ -216,12 +216,12 @@ const exportAsPdf = () => {
                 <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none select-none z-10">
                     <h2 class="text-[7vw] font-black uppercase tracking-tighter text-transparent"
                         style="-webkit-text-stroke: 2px white;">
-                        Virunga Energies
+                        SUBNETCONGO
                     </h2>
                 </div>
 
                 <div class="absolute -top-24 -left-24 w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] z-10"></div>
-                <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] z-10"></div>
+                <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] z-10"></div>
 
                 <div class="max-w-7xl mx-auto h-full relative px-6 flex flex-col justify-center items-center md:items-start z-20">
                     <div class="flex flex-col md:flex-row items-center gap-8 mt-12">
@@ -261,7 +261,7 @@ const exportAsPdf = () => {
             </div>
 
             <div class="max-w-7xl mx-auto px-4 md:px-6 -mt-12 relative z-20">
-                <div class="bg-white rounded-3xl shadow-2xl border border-slate-200/50 overflow-hidden">
+                <div class="bg-white rounded-xl shadow-2xl border border-slate-200/50 overflow-hidden">
 
                     <TabView v-model:activeIndex="activeTab" class="custom-tabs">
 
@@ -321,7 +321,7 @@ const exportAsPdf = () => {
                                     </div>
 
                                     <div class="lg:col-span-4 space-y-6 ">
-                                        <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                                        <div class="bg-slate-50 p-8 rounded-xl border border-slate-100">
                                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Aperçu du Profil</h4>
                                             <div class="space-y-4">
                                                 <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
@@ -354,7 +354,7 @@ const exportAsPdf = () => {
                         <!-- ONGLET SUPER ADMIN : Rôles, Permissions & Finances -->
                         <TabPanel v-if="isSuperAdmin">
                             <template #header>
-                                <div class="flex items-center gap-2 px-4 py-2 text-indigo-600">
+                                <div class="flex items-center gap-2 px-4 py-2 text-blue-600">
                                     <i class="pi pi-key text-lg"></i>
                                     <span class="font-bold uppercase tracking-widest text-xs">Accès & Privilèges</span>
                                     <Tag value="Admin" severity="info" class="ml-2 !text-[10px]"></Tag>
@@ -367,7 +367,7 @@ const exportAsPdf = () => {
                                     <!-- Rôles & Permissions Spatie -->
                                     <div class="space-y-6">
                                         <h3 class="text-2xl font-black text-slate-800 flex items-center gap-3">
-                                            <span class="w-2 h-8 bg-indigo-500 rounded-full"></span>
+                                            <span class="w-2 h-8 bg-blue-500 rounded-full"></span>
                                             Contrôle des Accès (Spatie)
                                         </h3>
                                         
@@ -413,7 +413,7 @@ const exportAsPdf = () => {
                                 <div class="flex justify-end pt-10 border-t border-slate-100 mt-10">
                                     <Button @click="submitAdminData" label="Appliquer les privilèges" icon="pi pi-shield"
                                         :loading="adminForm.processing"
-                                        class="!bg-indigo-600 !border-none !rounded-xl !py-4 !px-8 shadow-2xl shadow-indigo-200 hover:!scale-105 transition-all" />
+                                        class="!bg-blue-600 !border-none !rounded-xl !py-4 !px-8 shadow-2xl shadow-blue-200 hover:!scale-105 transition-all" />
                                 </div>
                             </div>
                         </TabPanel>
@@ -503,7 +503,7 @@ const exportAsPdf = () => {
                                     <div class="p-10 bg-primary-950 rounded-xl text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
                                         <div class="space-y-2 text-center md:text-left">
                                             <h3 class="text-2xl font-black">Exporter mes données</h3>
-                                            <p class="text-indigo-200 text-sm">Téléchargez l'intégralité de vos informations au format JSON ou PDF.</p>
+                                            <p class="text-blue-200 text-sm">Téléchargez l'intégralité de vos informations au format JSON ou PDF.</p>
                                         </div>
                                         <div class="flex gap-2">
                                             <Button label="JSON" icon="pi pi-code" @click="exportAsJson" class="!bg-white/10 !text-white !rounded-xl !py-3 !px-6 font-black border-none hover:!bg-white/20" />

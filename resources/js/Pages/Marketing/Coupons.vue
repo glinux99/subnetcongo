@@ -167,7 +167,7 @@ onMounted(() => {
             <!-- HEADER AVEC TAILWIND -->
             <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                 <div class="flex items-center gap-4">
-                    <div class="bg-indigo-600 p-4 rounded-2xl shadow-xl shadow-indigo-100 rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+                    <div class="bg-blue-600 p-4 rounded-2xl shadow-xl shadow-blue-100 rotate-3 hover:rotate-0 transition-transform cursor-pointer">
                         <i class="pi pi-ticket text-white text-3xl"></i>
                     </div>
                     <div>
@@ -187,7 +187,7 @@ onMounted(() => {
                     { label: 'Économies Clients', val: totalSavedByUsers + ' $', icon: 'pi-wallet', color: 'emerald' },
                     { label: 'Taux d\'Utilisation', val: '64%', icon: 'pi-percentage', color: 'amber' },
                     { label: 'Coupons Expirés', val: '12', icon: 'pi-clock', color: 'rose' }
-                ]" :key="kpi.label" class="border-none shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-shadow">
+                ]" :key="kpi.label" class="border-none shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                     <template #content>
                         <div class="flex justify-between items-center">
                             <div>
@@ -203,7 +203,7 @@ onMounted(() => {
             </div>
 
             <!-- MAIN DATA TABLE -->
-            <Card class="border-none shadow-sm rounded-3xl overflow-hidden">
+            <Card class="border-none shadow-sm rounded-xl overflow-hidden">
                 <template #content>
                     <DataTable 
                         v-model:filters="filters"
@@ -231,7 +231,7 @@ onMounted(() => {
                         <Column field="code" header="CODE" style="min-width: 12rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
-                                    <div class="px-3 py-1.5 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg font-mono font-black text-indigo-600 tracking-wider text-sm">
+                                    <div class="px-3 py-1.5 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg font-mono font-black text-blue-600 tracking-wider text-sm">
                                         {{ data.code }}
                                     </div>
                                     <Button icon="pi pi-copy" class="p-button-rounded p-button-text p-button-secondary p-button-sm" v-tooltip.top="'Copier'" @click="copyToClipboard(data.code)" />
@@ -267,7 +267,7 @@ onMounted(() => {
                             <template #body="{ data }">
                                 <div class="flex flex-col">
                                     <span class="font-bold text-slate-700 text-sm">{{ new Date(data.end_date).toLocaleDateString() }}</span>
-                                    <span class="text-[10px] text-rose-400 font-bold uppercase" v-if="data.status === 'expired'">Expiré</span>
+                                    <span class="text-[10px] text-red-400 font-bold uppercase" v-if="data.status === 'expired'">Expiré</span>
                                     <span class="text-[10px] text-emerald-400 font-bold uppercase" v-else>Valide</span>
                                 </div>
                             </template>
@@ -336,7 +336,7 @@ onMounted(() => {
                     </div>
 
                     <!-- Colonne Droite (Config Dates et Options) -->
-                    <div class="col-span-12 md:col-span-5 bg-slate-50 p-6 rounded-3xl border border-slate-100 flex flex-col gap-6">
+                    <div class="col-span-12 md:col-span-5 bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col gap-6">
                         <div class="field">
                             <label class="font-black text-slate-400 text-[10px] mb-2 block uppercase">Date de début</label>
                             <Calendar v-model="coupon.start_date" showIcon class="w-full" />
@@ -368,7 +368,7 @@ onMounted(() => {
                 <template #footer>
                     <div class="flex justify-between items-center w-full border-t border-slate-100 pt-6">
                         <Button label="Annuler" icon="pi pi-times" class="p-button-text p-button-secondary font-bold" @click="hideDialog" />
-                        <Button label="Créer le Coupon" icon="pi pi-check" class="p-button-primary px-10 shadow-lg shadow-indigo-100" @click="saveCoupon" />
+                        <Button label="Créer le Coupon" icon="pi pi-check" class="p-button-primary px-10 shadow-lg shadow-blue-100" @click="saveCoupon" />
                     </div>
                 </template>
             </Dialog>
@@ -377,18 +377,18 @@ onMounted(() => {
             <Dialog v-model:visible="displayStatsDialog" :modal="true" :style="{width: '450px'}" header="Performance du Coupon" class="p-fluid">
                 <div class="pt-4 space-y-8">
                     <div class="text-center">
-                        <div class="inline-block px-4 py-2 bg-indigo-50 rounded-full text-indigo-600 font-black tracking-widest text-lg border-2 border-indigo-100 mb-2">
+                        <div class="inline-block px-4 py-2 bg-blue-50 rounded-full text-blue-600 font-black tracking-widest text-lg border-2 border-blue-100 mb-2">
                             WELCOME2026
                         </div>
                         <p class="text-slate-400 text-sm">Géré depuis 14 mois</p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
                             <span class="text-[10px] font-black text-slate-400 uppercase block mb-1">Inscriptions</span>
                             <span class="text-2xl font-black text-slate-800">145</span>
                         </div>
-                        <div class="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
                             <span class="text-[10px] font-black text-slate-400 uppercase block mb-1">Conversion</span>
                             <span class="text-2xl font-black text-emerald-500">12.4%</span>
                         </div>
@@ -396,16 +396,16 @@ onMounted(() => {
 
                     <div>
                         <h4 class="font-black text-slate-800 text-sm mb-4 flex items-center gap-2">
-                            <i class="pi pi-chart-line text-indigo-500"></i> Économie cumulée par les élèves
+                            <i class="pi pi-chart-line text-blue-500"></i> Économie cumulée par les élèves
                         </h4>
                         <div class="flex items-end gap-1 mb-2">
-                            <span class="text-4xl font-black text-indigo-600">2,840.00</span>
-                            <span class="text-xl font-bold text-indigo-400 pb-1">$</span>
+                            <span class="text-4xl font-black text-blue-600">2,840.00</span>
+                            <span class="text-xl font-bold text-blue-400 pb-1">$</span>
                         </div>
                         <ProgressBar :value="75" :showValue="false" style="height: 10px" class="rounded-full" />
                     </div>
 
-                    <div class="bg-slate-900 p-6 rounded-3xl text-white">
+                    <div class="bg-slate-900 p-6 rounded-xl text-white">
                         <h5 class="font-bold text-slate-400 text-xs uppercase mb-4 tracking-tighter">Profil type utilisateur</h5>
                         <div class="flex items-center gap-4">
                             <div class="flex -space-x-3">

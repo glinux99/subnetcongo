@@ -150,7 +150,7 @@ onMounted(() => {
             <!-- --- STICKY HEADER --- -->
             <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm mb-8">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-xl shadow-inner flex items-center justify-center">
+                    <div class="w-12 h-12 bg-blue-600 rounded-xl shadow-inner flex items-center justify-center">
                         <i class="pi pi-globe text-white text-xl"></i>
                     </div>
                     <div>
@@ -170,7 +170,7 @@ onMounted(() => {
                     <template v-else>
                         <Button label="Retour" icon="pi pi-arrow-left" class="p-button-text p-button-secondary font-bold" @click="viewMode = 'list'" />
                         <Button label="Nouvelle Clé" icon="pi pi-plus" class="p-button-outlined p-button-secondary font-bold !rounded-xl" @click="displayKeyDialog = true" />
-                        <Button label="Traduction IA (SubNet)" icon="pi pi-bolt" class="bg-indigo-600 hover:bg-indigo-700 text-white border-none font-bold shadow-md !rounded-xl" @click="autoTranslateMissing" />
+                        <Button label="Traduction IA (SubNet)" icon="pi pi-bolt" class="bg-blue-600 hover:bg-blue-700 text-white border-none font-bold shadow-md !rounded-xl" @click="autoTranslateMissing" />
                     </template>
                 </div>
             </header>
@@ -249,7 +249,7 @@ onMounted(() => {
 
                                 <Column alignFrozen="right" frozen style="width: 8rem">
                                     <template #body="{ data }">
-                                        <Button label="Éditer" icon="pi pi-pencil" class="p-button-text p-button-sm font-bold text-indigo-600" @click="editTranslations(data)" />
+                                        <Button label="Éditer" icon="pi pi-pencil" class="p-button-text p-button-sm font-bold text-blue-600" @click="editTranslations(data)" />
                                     </template>
                                 </Column>
                             </DataTable>
@@ -313,7 +313,7 @@ onMounted(() => {
                             <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
                                 <div class="flex justify-between items-center text-xs font-semibold">
                                     <span class="text-slate-500">Clés orphelines</span>
-                                    <span class="text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded">124 alertes</span>
+                                    <span class="text-red-500 font-bold bg-red-50 px-2 py-0.5 rounded">124 alertes</span>
                                 </div>
                             </div>
                         </div>
@@ -334,9 +334,9 @@ onMounted(() => {
                                         { user: 'Sarah', action: 'Traduit auth.login', date: 'Il y a 4h' },
                                         { user: 'AI Bot', action: 'Auto-traduction', date: 'Hier' }
                                     ]" :key="log.date" class="relative pl-5 border-l border-slate-700">
-                                        <div class="absolute -left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border-2 border-slate-900"></div>
+                                        <div class="absolute -left-1.5 top-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-slate-900"></div>
                                         <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ log.date }}</p>
-                                        <p class="text-xs font-medium text-slate-200 mt-0.5"><span class="text-indigo-300 font-bold">{{ log.user }}</span> {{ log.action }}</p>
+                                        <p class="text-xs font-medium text-slate-200 mt-0.5"><span class="text-blue-300 font-bold">{{ log.user }}</span> {{ log.action }}</p>
                                     </div>
                                 </div>
                             </ScrollPanel>
@@ -372,7 +372,7 @@ onMounted(() => {
                 </div>
                 <template #footer>
                     <Button label="Annuler" @click="displayLangDialog = false" class="p-button-text p-button-secondary font-bold" />
-                    <Button label="Ajouter la langue" class="bg-indigo-600 hover:bg-indigo-700 text-white border-none !rounded-lg font-bold shadow-md" @click="saveLanguage" />
+                    <Button label="Ajouter la langue" class="bg-blue-600 hover:bg-blue-700 text-white border-none !rounded-lg font-bold shadow-md" @click="saveLanguage" />
                 </template>
             </Dialog>
 
@@ -394,7 +394,7 @@ onMounted(() => {
                 </div>
                 <template #footer>
                     <Button label="Annuler" @click="displayKeyDialog = false" class="p-button-text p-button-secondary font-bold" />
-                    <Button label="Enregistrer" class="bg-indigo-600 hover:bg-indigo-700 text-white border-none !rounded-lg font-bold shadow-md" @click="displayKeyDialog = false" />
+                    <Button label="Enregistrer" class="bg-blue-600 hover:bg-blue-700 text-white border-none !rounded-lg font-bold shadow-md" @click="displayKeyDialog = false" />
                 </template>
             </Dialog>
 

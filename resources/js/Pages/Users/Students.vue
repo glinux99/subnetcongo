@@ -342,7 +342,7 @@ const getSeverity = (status) => {
     const map = {
         'Actif': { color: 'success', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
         'Inactif': { color: 'secondary', bg: 'bg-slate-50 text-slate-700 border-slate-200' },
-        'Suspendu': { color: 'danger', bg: 'bg-rose-50 text-rose-700 border-rose-200' },
+        'Suspendu': { color: 'danger', bg: 'bg-red-50 text-red-700 border-red-200' },
         'Diplômé': { color: 'info', bg: 'bg-blue-50 text-blue-700 border-blue-200' }
     };
     return map[status] || map['Inactif'];
@@ -487,11 +487,11 @@ onBeforeUnmount(() => {
         <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
             
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-users text-6xl text-indigo-600"></i></div>
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-users text-6xl text-blue-600"></i></div>
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-users text-sm"></i></div>
+                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-users text-sm"></i></div>
                             <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Effectif Global</p>
                         </div>
                         <div class="flex items-baseline gap-2">
@@ -637,12 +637,12 @@ onBeforeUnmount(() => {
                                 <!-- Avatar cliquable -->
                                 <div class="relative cursor-pointer group" @click="viewProfile(data)">
                                     <Avatar v-if="data.avatar_path" :image="data.avatar_path" shape="circle" size="xlarge" class="border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
-                                    <Avatar v-else :label="data.name.charAt(0).toUpperCase()" shape="circle" size="xlarge" class="bg-indigo-100 text-indigo-700 font-black border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
+                                    <Avatar v-else :label="data.name.charAt(0).toUpperCase()" shape="circle" size="xlarge" class="bg-blue-100 text-blue-700 font-black border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
                                     <span :class="['absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-white', data.status === 'Actif' ? 'bg-emerald-500' : 'bg-slate-300']"></span>
                                 </div>
                                 <div class="flex flex-col justify-center">
                                     <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="font-extrabold text-slate-800 text-base hover:text-indigo-600 cursor-pointer transition-colors" @click="editStudent(data)">
+                                        <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors" @click="editStudent(data)">
                                             {{ data.name }}
                                         </span>
                                         <i v-if="data.certificates > 0" class="pi pi-verified text-blue-500 text-xs" v-tooltip.top="`${data.certificates} Certificat(s)`"></i>
@@ -672,7 +672,7 @@ onBeforeUnmount(() => {
                             <div class="flex flex-col w-full gap-1.5">
                                 <div class="flex justify-between text-[11px] font-bold text-slate-500">
                                     <span class="flex items-center gap-1">
-                                        <i :class="props.levels.find(l => l.value === data.level)?.icon" class="text-indigo-400"></i>
+                                        <i :class="props.levels.find(l => l.value === data.level)?.icon" class="text-blue-400"></i>
                                         {{ data.level || 'Débutant' }}
                                     </span>
                                     <span :class="data.score >= 80 ? 'text-emerald-600' : 'text-slate-600'">{{ data.score }} pts</span>
@@ -697,9 +697,9 @@ onBeforeUnmount(() => {
                     <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-eye" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50" v-tooltip.top="'Profil Complet'" @click="viewProfile(data)" />
+                                <Button icon="pi pi-eye" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Profil Complet'" @click="viewProfile(data)" />
                                 <Button icon="pi pi-user-edit" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Gérer le dossier'" @click="editStudent(data)" />
-                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50" v-tooltip.top="'Purger l\'apprenant'" @click="confirmDeleteStudent(data)" />
+                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="'Purger l\'apprenant'" @click="confirmDeleteStudent(data)" />
                             </div>
                         </template>
                     </Column>
@@ -710,7 +710,7 @@ onBeforeUnmount(() => {
                             <div class="max-w-7xl mx-auto">
                                 <div class="flex items-center justify-between mb-6">
                                     <h4 class="font-bold text-slate-800 text-lg flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center"><i class="pi pi-book"></i></div>
+                                        <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-book"></i></div>
                                         Cahier de Progression : Parcours Actifs
                                     </h4>
                                     <Button label="Ouvrir le dossier complet" icon="pi pi-folder-open" class="p-button-outlined p-button-sm p-button-secondary bg-white shadow-sm font-bold" @click="viewProfile(data)" />
@@ -720,21 +720,21 @@ onBeforeUnmount(() => {
                                     <!-- Section Learning Paths (Parcours d'apprentissage) -->
                                     <div v-if="data.learning_paths && data.learning_paths.length > 0" class="mb-10">
                                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <i class="pi pi-map text-indigo-400"></i> Parcours d'apprentissage inscrits
+                                            <i class="pi pi-map text-blue-400"></i> Parcours d'apprentissage inscrits
                                         </p>
                                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            <div v-for="path in data.learning_paths" :key="path.id" class="bg-white p-5 rounded-2xl border border-indigo-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden group border-l-4 border-l-indigo-500">
+                                            <div v-for="path in data.learning_paths" :key="path.id" class="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden group border-l-4 border-l-indigo-500">
                                                 <div class="flex justify-between items-start mb-4">
                                                     <div>
                                                         <h5 class="font-black text-slate-800 text-sm leading-tight">{{ path.name }}</h5>
                                                         <p class="text-[10px] text-slate-500 mt-1 font-bold"><i class="pi pi-calendar-plus mr-1"></i>Inscrit le {{ formatDate(path.pivot?.enrolled_at) }}</p>
                                                     </div>
-                                                    <div class="bg-indigo-50 text-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center shadow-inner"><i class="pi pi-map"></i></div>
+                                                    <div class="bg-blue-50 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center shadow-inner"><i class="pi pi-map"></i></div>
                                                 </div>
                                                 <div class="space-y-2">
                                                     <div class="flex justify-between items-center text-[10px] font-black uppercase">
                                                         <span class="text-slate-400">Progression Globale</span>
-                                                        <span class="text-indigo-600">{{ path.pivot?.progress || 0 }}%</span>
+                                                        <span class="text-blue-600">{{ path.pivot?.progress || 0 }}%</span>
                                                     </div>
                                                     <ProgressBar :value="path.pivot?.progress || 0" :showValue="false" class="h-1.5 bg-slate-100" color="#6366f1" />
                                                 </div>
@@ -765,7 +765,7 @@ onBeforeUnmount(() => {
                                                 <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
                                                     <div class="flex justify-between items-center text-xs font-bold mb-2">
                                                         <span class="text-slate-600">Progression individuelle</span>
-                                                        <span :class="course.pivot?.progress === 100 ? 'text-emerald-600' : 'text-indigo-600'">{{ course.pivot?.progress || 0 }}%</span>
+                                                        <span :class="course.pivot?.progress === 100 ? 'text-emerald-600' : 'text-blue-600'">{{ course.pivot?.progress || 0 }}%</span>
                                                     </div>
                                                     <ProgressBar :value="course.pivot?.progress || 0" :showValue="false" class="h-1.5" :color="course.pivot?.progress === 100 ? '#10b981' : '#6366f1'" />
                                                 </div>
@@ -809,10 +809,10 @@ onBeforeUnmount(() => {
             <!-- WORKSPACE HEADER (FIXE) -->
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
                 <!-- Ligne de progression UI -->
-                <div class="absolute top-0 left-0 h-0.5 bg-indigo-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '50%' }"></div>
+                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '50%' }"></div>
 
                 <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
                         <i class="pi pi-user-edit text-lg"></i>
                     </div>
                     <div>
@@ -849,14 +849,14 @@ onBeforeUnmount(() => {
                             class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
                             :class="[
                                 activeEditorTab === item.id
-                                    ? 'bg-indigo-50 border border-indigo-100 shadow-sm'
+                                    ? 'bg-blue-50 border border-blue-100 shadow-sm'
                                     : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'
                             ]"
                         >
-                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-md"></div>
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
 
                             <div class="relative mt-0.5">
-                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
+                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
                                 <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center bg-white">
                                     <i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px] bg-white rounded-full"></i>
                                     <i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px] bg-white rounded-full"></i>
@@ -864,7 +864,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <div class="flex-1">
-                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-indigo-800' : 'text-slate-700']">{{ item.label }}</div>
+                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div>
                                 <div class="text-[11px] font-medium text-slate-500 leading-tight">{{ item.description }}</div>
                             </div>
                         </button>
@@ -893,7 +893,7 @@ onBeforeUnmount(() => {
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in" role="tabpanel">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">État Civil & Coordonnées</h3>
                                         <p class="text-xs text-slate-500 mt-1">Identité légale et moyens de contact.</p>
@@ -902,12 +902,12 @@ onBeforeUnmount(() => {
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     <div class="col-span-1 md:col-span-2 space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Nom Complet <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Nom Complet <span class="text-red-500">*</span></label>
                                         <InputText v-model="studentForm.name" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50 focus:bg-white transition-colors" placeholder="Ex: Jean Lumumba" :class="{'p-invalid': studentForm.errors?.name || (!studentForm.name && studentForm.isDirty)}" />
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Adresse Email <span class="text-rose-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">Adresse Email <span class="text-red-500">*</span></label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-envelope text-slate-400" />
                                             <InputText v-model="studentForm.email" type="email" class="w-full bg-slate-50 focus:bg-white" placeholder="jean.lumumba@email.com" :class="{'p-invalid': studentForm.errors?.email}" />
@@ -918,7 +918,7 @@ onBeforeUnmount(() => {
                                     <div class="space-y-2">
                                         <label class="block text-sm font-bold text-slate-700">
                                             {{ studentForm.id ? 'Modifier le mot de passe' : 'Mot de passe initial' }}
-                                            <span v-if="!studentForm.id" class="text-rose-500">*</span>
+                                            <span v-if="!studentForm.id" class="text-red-500">*</span>
                                         </label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-lock text-slate-400" />
@@ -927,7 +927,7 @@ onBeforeUnmount(() => {
                                         <small v-if="studentForm.id" class="text-slate-500 text-[11px]">Laissez vide pour conserver le mot de passe actuel.</small>
                                         <div v-if="studentForm.id" class="flex items-center gap-2 mt-2">
                                             <Checkbox v-model="studentForm.send_credentials" :binary="true" inputId="send_creds" />
-                                            <label for="send_creds" class="text-[11px] font-bold text-indigo-600 cursor-pointer">Renvoyer les identifiants par email</label>
+                                            <label for="send_creds" class="text-[11px] font-bold text-blue-600 cursor-pointer">Renvoyer les identifiants par email</label>
                                         </div>
                                     </div>
 
@@ -1015,7 +1015,7 @@ onBeforeUnmount(() => {
                                         <div class="space-y-4">
                                             <div class="flex justify-between">
                                                 <label class="block text-sm font-bold text-slate-700">Progression globale forcée (%)</label>
-                                                <span class="font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-sm"><span class="…">
+                                                <span class="font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-sm"><span class="…">
                                                 {{ studentForm.processing ? 'Calcul en cours...' : studentForm.progress + '%' }}
                                                 </span>
                                                 </span>
@@ -1039,7 +1039,7 @@ onBeforeUnmount(() => {
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Photo de Profil (Avatar)</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-                                    <div class="flex flex-col items-center justify-center p-6 bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl relative group hover:bg-indigo-50/50 hover:border-indigo-300 transition-colors">
+                                    <div class="flex flex-col items-center justify-center p-6 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl relative group hover:bg-blue-50/50 hover:border-blue-300 transition-colors">
 
                                         <Avatar v-if="avatarPreview" :image="avatarPreview" size="xlarge" shape="circle" class="w-32 h-32 shadow-xl ring-4 ring-white mb-4" />
                                         <div v-else class="w-32 h-32 rounded-full bg-white flex items-center justify-center shadow-inner border border-slate-200 mb-4 text-slate-300">
@@ -1070,9 +1070,9 @@ onBeforeUnmount(() => {
 
                                 <div class="space-y-4">
                                     <!-- Blocage Compte -->
-                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200 hover:border-rose-200 transition-colors">
+                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200 hover:border-red-200 transition-colors">
                                         <div class="flex gap-4">
-                                            <div class="w-10 h-10 bg-white border border-slate-200 text-rose-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-lock"></i></div>
+                                            <div class="w-10 h-10 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-lock"></i></div>
                                             <div>
                                                 <div class="font-bold text-slate-800 text-sm">Suspendre le compte</div>
                                                 <div class="text-xs text-slate-500 mt-1 leading-tight max-w-md">L'étudiant ne pourra plus se connecter au portail ni accéder à ses cours. Ses données sont conservées.</div>
@@ -1110,7 +1110,7 @@ onBeforeUnmount(() => {
                     <Button label="Annuler les modifications" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50" @click="studentDialog = false" />
 
                     <div class="relative group">
-                        <Button label="Enregistrer le Dossier" icon="pi pi-save" class="p-button-primary shadow-lg shadow-indigo-500/30 font-bold px-8 text-sm" @click="saveStudent" :loading="studentForm.processing" :disabled="!isEntireFormValid" />
+                        <Button label="Enregistrer le Dossier" icon="pi pi-save" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveStudent" :loading="studentForm.processing" :disabled="!isEntireFormValid" />
                     </div>
                 </div>
             </div>
@@ -1119,12 +1119,12 @@ onBeforeUnmount(() => {
         <!-- DIALOG INSCRIPTION CURSUS -->
         <Dialog v-model:visible="enrollmentDialog" modal header="Inscrire à un cursus" :style="{ width: '450px' }" class="p-fluid rounded-2xl">
             <div class="space-y-6 pt-4">
-                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm">
                         <i class="pi pi-book text-xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Nouveau cursus pour</p>
+                        <p class="text-xs font-bold text-blue-400 uppercase tracking-widest">Nouveau cursus pour</p>
                         <p class="font-black text-slate-800">{{ enrichedStudents.find(s => s.id === enrollmentForm.user_id)?.name }}</p>
                     </div>
                 </div>
@@ -1161,7 +1161,7 @@ onBeforeUnmount(() => {
     <!-- Header personnalisé -->
     <template #header>
         <div class="flex items-center gap-4 w-full">
-            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
+            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
                 <i class="pi pi-id-card text-xl"></i>
             </div>
             <div class="flex-1">
@@ -1175,31 +1175,31 @@ onBeforeUnmount(() => {
     <div v-if="currentStudent" class="flex flex-col h-full relative">
 
         <!-- Hero Header (En-tête dégradé) -->
-        <div class="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 text-white rounded-b-[2rem] shadow-sm relative overflow-hidden flex-shrink-0">
+        <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-8 text-white rounded-b-[2rem] shadow-sm relative overflow-hidden flex-shrink-0">
             <!-- Effets visuels d'arrière-plan -->
             <div class="absolute -right-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
-            <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-indigo-900/20 rounded-full blur-2xl"></div>
+            <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-900/20 rounded-full blur-2xl"></div>
 
             <div class="relative z-10 flex flex-col items-center text-center">
                 <Avatar v-if="currentStudent.avatar_path" :image="currentStudent.avatar_path" size="xlarge" shape="circle" class="ring-4 ring-white/20 mb-4 w-24 h-24 shadow-2xl bg-white" />
-                <Avatar v-else :label="currentStudent.name?.charAt(0).toUpperCase()" size="xlarge" shape="circle" class="ring-4 ring-white/20 mb-4 w-24 h-24 shadow-2xl bg-white text-indigo-600 font-black text-4xl" />
+                <Avatar v-else :label="currentStudent.name?.charAt(0).toUpperCase()" size="xlarge" shape="circle" class="ring-4 ring-white/20 mb-4 w-24 h-24 shadow-2xl bg-white text-blue-600 font-black text-4xl" />
 
                 <h2 class="text-2xl font-black mb-1 tracking-tight">{{ currentStudent.name }}</h2>
-                <p class="text-sm text-indigo-200 mb-4 font-medium">{{ currentStudent.email }}</p>
+                <p class="text-sm text-blue-200 mb-4 font-medium">{{ currentStudent.email }}</p>
                 <Tag :value="currentStudent.level || 'Débutant'" class="bg-white/20 text-white border border-white/30 px-4 py-1 text-xs font-black tracking-widest uppercase rounded-full shadow-sm" />
 
                 <!-- Statistiques KPI -->
                 <div class="grid grid-cols-3 w-full mt-8 gap-3">
                     <div class="bg-black/10 backdrop-blur-sm border border-white/10 rounded-2xl p-3 hover:bg-black/20 transition-colors">
-                        <p class="text-[10px] text-indigo-200 uppercase font-black tracking-widest mb-1">Score</p>
+                        <p class="text-[10px] text-blue-200 uppercase font-black tracking-widest mb-1">Score</p>
                         <p class="text-2xl font-black">{{ currentStudent.score || 0 }}</p>
                     </div>
                     <div class="bg-black/10 backdrop-blur-sm border border-white/10 rounded-2xl p-3 hover:bg-black/20 transition-colors">
-                        <p class="text-[10px] text-indigo-200 uppercase font-black tracking-widest mb-1">Certifs</p>
+                        <p class="text-[10px] text-blue-200 uppercase font-black tracking-widest mb-1">Certifs</p>
                         <p class="text-2xl font-black">{{ currentStudent.certificates || 0 }}</p>
                     </div>
                     <div class="bg-black/10 backdrop-blur-sm border border-white/10 rounded-2xl p-3 hover:bg-black/20 transition-colors">
-                        <p class="text-[10px] text-indigo-200 uppercase font-black tracking-widest mb-1">Présence</p>
+                        <p class="text-[10px] text-blue-200 uppercase font-black tracking-widest mb-1">Présence</p>
                         <p class="text-2xl font-black">{{ currentStudent.average_attendance || 0 }}%</p>
                     </div>
                 </div>
@@ -1213,7 +1213,7 @@ onBeforeUnmount(() => {
                 <TabPanel header="Aperçu & Contact">
                     <div class="space-y-4 pt-2">
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
-                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-map-marker text-indigo-400"></i> Coordonnées</h4>
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-map-marker text-blue-400"></i> Coordonnées</h4>
                             <div class="space-y-4">
                                 <div class="flex items-center gap-4 text-slate-600">
                                     <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-500"><i class="pi pi-phone"></i></div>
@@ -1227,7 +1227,7 @@ onBeforeUnmount(() => {
                         </div>
 
                         <div v-if="currentStudent.bio" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-colors">
-                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-info-circle text-indigo-400"></i> Biographie</h4>
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i class="pi pi-info-circle text-blue-400"></i> Biographie</h4>
                             <p class="text-sm text-slate-600 leading-relaxed font-medium bg-slate-50 p-4 rounded-xl border border-slate-100">"{{ currentStudent.bio }}"</p>
                         </div>
                     </div>
@@ -1241,9 +1241,9 @@ onBeforeUnmount(() => {
                             <!-- Learning Paths in Sidebar View -->
                             <div v-if="currentStudent.learning_paths && currentStudent.learning_paths.length" class="space-y-3">
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Parcours d'apprentissage</p>
-                                <div v-for="path in currentStudent.learning_paths" :key="path.id" class="p-4 bg-indigo-50/30 border border-indigo-100 rounded-2xl shadow-sm hover:border-indigo-300 transition-colors group">
+                                <div v-for="path in currentStudent.learning_paths" :key="path.id" class="p-4 bg-blue-50/30 border border-blue-100 rounded-2xl shadow-sm hover:border-blue-300 transition-colors group">
                                     <div class="flex items-center gap-4 mb-3">
-                                        <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center border border-indigo-200 group-hover:scale-105 transition-transform"><i class="pi pi-map text-lg"></i></div>
+                                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:scale-105 transition-transform"><i class="pi pi-map text-lg"></i></div>
                                         <div class="flex-1 min-w-0">
                                             <p class="font-black text-sm text-slate-800 truncate">{{ path.name }}</p>
                                             <p class="text-[9px] text-slate-400 mt-1 font-bold uppercase tracking-widest">Inscrit le {{ formatDate(path.pivot?.enrolled_at) }}</p>
@@ -1254,9 +1254,9 @@ onBeforeUnmount(() => {
                             </div>
 
                             <p v-if="currentStudent.enrolled_courses && currentStudent.enrolled_courses.length" class="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Cours Individuels</p>
-                            <div v-for="course in currentStudent.enrolled_courses" :key="course.id" class="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-indigo-300 transition-colors group">
+                            <div v-for="course in currentStudent.enrolled_courses" :key="course.id" class="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-blue-300 transition-colors group">
                                 <div class="flex items-center gap-4 mb-4">
-                                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-transform"><i class="pi pi-book text-xl"></i></div>
+                                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 group-hover:scale-110 transition-transform"><i class="pi pi-book text-xl"></i></div>
                                     <div class="flex-1 min-w-0">
                                         <p class="font-black text-sm text-slate-800 truncate" :title="course.title">{{ course.title }}</p>
                                         <p class="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest"><i class="pi pi-calendar text-[9px] mr-1"></i> Inscrit le {{ formatDate(course.pivot?.enrolled_at) }}</p>
@@ -1264,7 +1264,7 @@ onBeforeUnmount(() => {
                                 </div>
                                 <div class="flex items-center justify-between text-xs font-black mb-2">
                                     <span class="text-slate-400 uppercase tracking-widest text-[9px]">Progression</span>
-                                    <span class="text-indigo-600">{{ course.pivot?.progress || 0 }}%</span>
+                                    <span class="text-blue-600">{{ course.pivot?.progress || 0 }}%</span>
                                 </div>
                                 <ProgressBar :value="course.pivot?.progress || 0" :showValue="false" class="h-1.5 bg-slate-100" color="#4f46e5" />
                             </div>
@@ -1287,7 +1287,7 @@ onBeforeUnmount(() => {
     <template #footer>
         <div class="flex justify-between items-center w-full px-2 mt-1">
             <Button label="Fermer" class="p-button-text p-button-secondary font-bold" @click="profileSidebar = false" />
-            <Button label="Éditer le profil" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-indigo-500/30 rounded-xl" @click="editStudent(currentStudent); profileSidebar = false" />
+            <Button label="Éditer le profil" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-blue-500/30 rounded-xl" @click="editStudent(currentStudent); profileSidebar = false" />
         </div>
     </template>
 </Dialog>

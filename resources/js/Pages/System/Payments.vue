@@ -123,8 +123,8 @@ const getProviderStyle = (provider) => {
 </script>
 
 <template>
-    <Head title="Passerelles de Paiement - SubNetCongo" />
     <AppLayout>
+        <Head title="Passerelles de Paiement - SubNetCongo" />
 
         <div class="bg-slate-50/50 min-h-screen pb-20">
 
@@ -166,7 +166,7 @@ const getProviderStyle = (provider) => {
                             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Transactions</p>
                             <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.total_transactions }}</div>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                             <i class="pi pi-arrow-right-arrow-left text-xl"></i>
                         </div>
                     </div>
@@ -292,7 +292,7 @@ const getProviderStyle = (provider) => {
 
                     <div class="field">
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Webhook URL (Écouteur)</label>
-                        <InputText v-model="gatewayConfig.webhook_url" class="w-full !rounded-lg font-mono text-sm text-indigo-600 bg-slate-50" readonly />
+                        <InputText v-model="gatewayConfig.webhook_url" class="w-full !rounded-lg font-mono text-sm text-blue-600 bg-slate-50" readonly />
                         <small class="text-slate-400 mt-1 block">Copiez cette URL dans le tableau de bord de votre fournisseur.</small>
                     </div>
                 </div>

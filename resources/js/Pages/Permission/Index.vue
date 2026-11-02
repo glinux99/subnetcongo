@@ -134,7 +134,7 @@ const onPageChange = (event) => {
                     </div>
                 </div>
                 <div class="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5">
-                    <div class="w-14 h-14 rounded-xl bg-purple-50 flex items-center justify-center"><i class="pi pi-bolt text-2xl text-purple-500"></i></div>
+                    <div class="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center"><i class="pi pi-bolt text-2xl text-blue-500"></i></div>
                     <div>
                         <div class="text-2xl font-black text-slate-800">{{ stats.api }}</div>
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guard API</div>

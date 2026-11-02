@@ -136,7 +136,7 @@ const getRubricDescription = (key, value) => {
 };
 
 const currentPlagiarismDetails = ref([
-    { source: 'github.com/laravel/framework', match: 14, url: '#', color: 'bg-rose-500' },
+    { source: 'github.com/laravel/framework', match: 14, url: '#', color: 'bg-red-500' },
     { source: 'stackoverflow.com/q/45874', match: 8, url: '#', color: 'bg-amber-500' }
 ]);
 
@@ -504,7 +504,7 @@ onMounted(() => {
                     <div>
                         <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                             Console de Correction
-                            <Badge value="Instructor Space" severity="info" class="text-[10px] bg-indigo-100 text-indigo-700 border border-indigo-200"></Badge>
+                            <Badge value="Instructor Space" severity="info" class="text-[10px] bg-blue-100 text-blue-700 border border-blue-200"></Badge>
                         </h1>
                         <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
                             Gérez la file d'attente des copies, évaluez avec des grilles critériées, détectez les similarités et fournissez un feedback riche aux apprenants.
@@ -521,18 +521,18 @@ onMounted(() => {
             <!-- KPI DASHBOARD                                                                  -->
             <!-- ============================================================================== -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all duration-300 hover:shadow-md">
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-red-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center"><i class="pi pi-inbox text-sm"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="pi pi-inbox text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Attente Correction</p>
                     </div>
                     <div class="flex items-baseline gap-2">
                         <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.pending || 12 }}</h3>
-                        <span class="text-xs font-medium text-rose-500 bg-rose-50 px-2 py-1 rounded-md">+2 urgentes</span>
+                        <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-md">+2 urgentes</span>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all duration-300 hover:shadow-md">
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-chart-line text-sm"></i></div>
                         <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Moyenne Globale</p>
@@ -648,7 +648,7 @@ onMounted(() => {
                     <Column field="urgency" header="Priorité" style="background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
-                                <div v-if="data.urgency === 'critical'" class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+                                <div v-if="data.urgency === 'critical'" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                                 <Tag :value="data.urgency" :severity="getUrgencySeverity(data.urgency)" class="text-[10px] font-bold uppercase tracking-wider px-2 py-1" />
                             </div>
                         </template>
@@ -701,7 +701,7 @@ onMounted(() => {
             <!-- ============================================================================== -->
             <!-- AI & ASSISTANT SECTION (FOOTER BANNER)                                         -->
             <!-- ============================================================================== -->
-            <div class="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-2xl p-8 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-xl relative overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-900 to-slate-900 rounded-2xl p-8 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-xl relative overflow-hidden">
                 <i class="pi pi-bolt absolute -right-4 -bottom-4 text-[150px] text-white/5 rotate-12"></i>
                 <div class="relative z-10 flex items-start gap-6 lg:w-2/3">
                     <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-white backdrop-blur-sm border border-white/20 flex-shrink-0">
@@ -709,13 +709,13 @@ onMounted(() => {
                     </div>
                     <div>
                         <h3 class="text-2xl font-black text-white mb-2">Auto-Grading & Assistant IA (SNC-AI)</h3>
-                        <p class="text-indigo-100 text-sm leading-relaxed max-w-2xl">
+                        <p class="text-blue-100 text-sm leading-relaxed max-w-2xl">
                             Gagnez du temps sur les questions ouvertes. Activez l'analyse sémantique pour générer des suggestions de feedback constructives pré-remplies basées sur votre grille critériée.
                         </p>
                     </div>
                 </div>
                 <div class="relative z-10 w-full lg:w-auto">
-                    <Button label="Configurer l'Assistant IA" icon="pi pi-cog" class="p-button-outlined p-button-secondary bg-white text-indigo-900 border-none font-bold px-8 py-3 w-full shadow-lg" />
+                    <Button label="Configurer l'Assistant IA" icon="pi pi-cog" class="p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold px-8 py-3 w-full shadow-lg" />
                 </div>
             </div>
 
@@ -751,7 +751,7 @@ onMounted(() => {
                     <div class="flex flex-col items-end border-r border-slate-200 pr-6 hidden md:flex">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Note Calculée</span>
                         <div class="flex items-baseline gap-1">
-                            <span class="text-2xl font-black" :class="gradingForm.total_points >= 50 ? 'text-emerald-600' : 'text-rose-600'">{{ gradingForm.total_points }}</span>
+                            <span class="text-2xl font-black" :class="gradingForm.total_points >= 50 ? 'text-emerald-600' : 'text-red-600'">{{ gradingForm.total_points }}</span>
                             <span class="text-sm font-bold text-slate-400">/ 100</span>
                         </div>
                     </div>
@@ -767,7 +767,7 @@ onMounted(() => {
                     <div class="max-w-4xl mx-auto space-y-8">
 
                         <!-- Message Alerte Plagiat -->
-                        <Message v-if="activeSubmission?.similarity_score > 20" severity="error" icon="pi pi-exclamation-triangle" class="border border-rose-200 shadow-sm rounded-xl">
+                        <Message v-if="activeSubmission?.similarity_score > 20" severity="error" icon="pi pi-exclamation-triangle" class="border border-red-200 shadow-sm rounded-xl">
                             <span class="font-bold">Intégrité Compromise :</span> Un taux de similarité de {{ activeSubmission.similarity_score }}% a été détecté. Veuillez examiner les sources avant validation.
                         </Message>
 
@@ -795,7 +795,7 @@ onMounted(() => {
 
                                 <!-- Text Selection Wrapper (Simulation d'annotation) -->
                                 <div class="relative group/answer">
-                                    <div class="absolute -left-3 top-0 bottom-0 w-1 bg-indigo-200 rounded-full group-hover/answer:bg-indigo-400 transition-colors"></div>
+                                    <div class="absolute -left-3 top-0 bottom-0 w-1 bg-blue-200 rounded-full group-hover/answer:bg-blue-400 transition-colors"></div>
 
                                     <div class="text-slate-800 leading-relaxed text-[15px] pl-4 font-serif">
                                         <pre v-if="q.student_answer" class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-sm font-mono overflow-x-auto border border-slate-800">{{ q.student_answer }}</pre>
@@ -847,7 +847,7 @@ onMounted(() => {
                                             </div>
                                             <div class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">Poids : {{ rubric.weight * 100 }}%</div>
                                         </div>
-                                        <div class="text-lg font-black" :class="(gradingForm.rubric_scores?.[rubric.key] ?? 0) >= (rubric.max/2) ? 'text-blue-600' : 'text-rose-500'">
+                                        <div class="text-lg font-black" :class="(gradingForm.rubric_scores?.[rubric.key] ?? 0) >= (rubric.max/2) ? 'text-blue-600' : 'text-red-500'">
                                             {{ gradingForm.rubric_scores?.[rubric.key] ?? 0 }}<span class="text-xs text-slate-400 font-normal">/{{ rubric.max }}</span>
                                         </div>
                                     </div>
@@ -874,22 +874,22 @@ onMounted(() => {
                             </div>
 
                             <!-- Smart Suggestion Area -->
-                            <div v-if="gradingForm.feedback === ''" class="mb-4 p-4 bg-blue-50 rounded-xl border border-dashed border-indigo-200 text-center">
+                            <div v-if="gradingForm.feedback === ''" class="mb-4 p-4 bg-blue-50 rounded-xl border border-dashed border-blue-200 text-center">
                                 <p class="text-xs text-blue-600 font-medium italic">"L'élève a bien respecté les contraintes de temps mais manque de rigueur sur le typage PHP."</p>
                                 <Button label="Utiliser cette suggestion" class="p-button-text p-button-sm text-[10px] font-bold mt-1" />
                             </div>
 
                             <!-- Audio Feedback Simulator -->
                             <div :class="['p-4 rounded-xl mb-4 flex items-center justify-between cursor-pointer transition-all border shadow-sm select-none',
-                                 isRecording ? 'bg-rose-50 border-rose-300 text-rose-700 scale-[0.98]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300']"
+                                 isRecording ? 'bg-red-50 border-red-300 text-red-700 scale-[0.98]' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300']"
                                  @mousedown="startVoiceRecord" @mouseup="stopVoiceRecord" @mouseleave="stopVoiceRecord">
                                 <div class="flex items-center gap-3">
-                                    <div :class="['w-8 h-8 rounded-full flex items-center justify-center', isRecording ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400']">
+                                    <div :class="['w-8 h-8 rounded-full flex items-center justify-center', isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400']">
                                         <i class="pi pi-microphone"></i>
                                     </div>
                                     <div>
                                         <div class="text-sm font-bold">{{ isRecording ? 'Enregistrement en cours...' : 'Feedback Audio' }}</div>
-                                        <div class="text-[10px] font-medium uppercase" :class="isRecording ? 'text-rose-500' : 'text-slate-400'">{{ isRecording ? formatTime(recordTime) : 'Maintenir pour parler' }}</div>
+                                        <div class="text-[10px] font-medium uppercase" :class="isRecording ? 'text-red-500' : 'text-slate-400'">{{ isRecording ? formatTime(recordTime) : 'Maintenir pour parler' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -957,7 +957,7 @@ onMounted(() => {
         <Sidebar v-model:visible="plagiarismSidebar" position="right" class="w-full md:w-[500px] p-sidebar-custom">
             <template #header>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center"><i class="pi pi-shield text-xl"></i></div>
+                    <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center"><i class="pi pi-shield text-xl"></i></div>
                     <h2 class="text-xl font-bold text-slate-800">Rapport d'Intégrité SNC</h2>
                 </div>
             </template>
@@ -965,9 +965,9 @@ onMounted(() => {
 
                 <!-- Score Global -->
                 <div class="bg-white border border-slate-200 p-8 rounded-2xl text-center shadow-sm relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-2" :class="activeSubmission?.similarity_score > 20 ? 'bg-rose-500' : 'bg-amber-400'"></div>
+                    <div class="absolute top-0 left-0 w-full h-2" :class="activeSubmission?.similarity_score > 20 ? 'bg-red-500' : 'bg-amber-400'"></div>
                     <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Taux de Similarité</div>
-                    <div class="text-6xl font-black mb-4" :class="activeSubmission?.similarity_score > 20 ? 'text-rose-600' : 'text-amber-500'">{{ activeSubmission?.similarity_score || 22 }}%</div>
+                    <div class="text-6xl font-black mb-4" :class="activeSubmission?.similarity_score > 20 ? 'text-red-600' : 'text-amber-500'">{{ activeSubmission?.similarity_score || 22 }}%</div>
                     <p class="text-sm text-slate-600 font-medium leading-relaxed">Cette copie présente des segments identiques à des publications existantes sur internet ou dans la base interne.</p>
                 </div>
 
@@ -1000,7 +1000,7 @@ onMounted(() => {
         <Sidebar v-model:visible="statisticsSidebar" position="right" class="w-full md:w-[500px] p-sidebar-custom">
             <template #header>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-chart-bar text-xl"></i></div>
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-chart-bar text-xl"></i></div>
                     <h2 class="text-xl font-bold text-slate-800">Analytique Cohorte</h2>
                 </div>
             </template>

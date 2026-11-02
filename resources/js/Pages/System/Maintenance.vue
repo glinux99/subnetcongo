@@ -25,7 +25,7 @@ const activeTab = ref(props.view === 'logs' ? 1 : props.view === 'phpinfo' ? 2 :
 const getProgressColor = (percent) => {
     if (percent < 70) return 'bg-emerald-500';
     if (percent < 90) return 'bg-amber-500';
-    return 'bg-rose-500';
+    return 'bg-red-500';
 };
 
 const severityMap = {
@@ -37,8 +37,8 @@ const severityMap = {
 </script>
 
 <template>
-    <Head title="Maintenance Serveur" />
     <AppLayout>
+        <Head title="Maintenance Serveur" />
         <div class="py-8 px-4 sm:px-8 bg-slate-50 min-h-screen">
             <div class="max-w-[1600px] mx-auto space-y-8">
 
@@ -57,7 +57,7 @@ const severityMap = {
                             </span>
                             <span class="text-slate-300">|</span>
                             <span class="flex items-center gap-1.5">
-                                <i class="pi pi-server text-indigo-500"></i> PHP {{ php_version }}
+                                <i class="pi pi-server text-blue-500"></i> PHP {{ php_version }}
                             </span>
                         </div>
                     </div>
@@ -137,7 +137,7 @@ const severityMap = {
                                             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Base de données</p>
                                             <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.database?.size || 'N/A' }}</p>
                                         </div>
-                                        <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                                        <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
                                             <i class="pi pi-table text-xl"></i>
                                         </div>
                                     </div>
@@ -216,7 +216,7 @@ const severityMap = {
                                     <!-- Header Terminal -->
                                     <div class="bg-[#1e293b] px-4 py-3 flex items-center justify-between border-b border-slate-700">
                                         <div class="flex gap-2">
-                                            <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
                                             <div class="w-3 h-3 rounded-full bg-amber-500"></div>
                                             <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
                                         </div>

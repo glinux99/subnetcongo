@@ -1,9 +1,9 @@
 <template>
-    <Card class="border-none shadow-sm rounded-3xl overflow-hidden">
+    <Card class="border-none shadow-sm rounded-xl overflow-hidden">
         <template #title>
             <div class="flex flex-wrap justify-between items-center gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-6 bg-purple-500 rounded-full"></div>
+                    <div class="w-2 h-6 bg-blue-500 rounded-full"></div>
                     <span class="text-xl font-black text-slate-800">{{ chartData.title }}</span>
                 </div>
                 <div class="flex items-center gap-2">

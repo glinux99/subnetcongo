@@ -56,7 +56,7 @@ const statusSeverity = (s) => ({
 }[s] ?? 'secondary');
 
 const providerColor = (p) => ({
-    zoom: 'bg-blue-500', meet: 'bg-emerald-500', bbb: 'bg-indigo-600', jitsi: 'bg-slate-700', livekit: 'bg-rose-500'
+    zoom: 'bg-blue-500', meet: 'bg-emerald-500', bbb: 'bg-blue-600', jitsi: 'bg-slate-700', livekit: 'bg-red-500'
 }[p] ?? 'bg-slate-500');
 
 const formatDate = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -159,8 +159,8 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     
                     <!-- KPI 1 -->
                     <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-rose-50 flex items-center justify-center">
-                            <i class="pi pi-bolt text-rose-500 text-sm"></i>
+                        <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
+                            <i class="pi pi-bolt text-red-500 text-sm"></i>
                         </div>
                         <div>
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">En direct</div>
@@ -170,8 +170,8 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
 
                     <!-- KPI 2 -->
                     <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">
-                            <i class="pi pi-calendar text-indigo-500 text-sm"></i>
+                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
+                            <i class="pi pi-calendar text-blue-500 text-sm"></i>
                         </div>
                         <div>
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Planifiées aujourd'hui</div>
@@ -314,7 +314,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Date et Heure de début <span class="text-red-500">*</span></label>
                         <!-- Utilisation de input HTML5 natif stylisé Tailwind pour le datetime -->
-                        <input v-model="form.start_at" type="datetime-local" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow" />
+                        <input v-model="form.start_at" type="datetime-local" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-shadow" />
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Durée prévue (min)</label>

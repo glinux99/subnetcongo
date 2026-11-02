@@ -96,8 +96,8 @@ const truncate = (str, len = 80) => {
 </script>
 
 <template>
-    <Head title="Logs d'audit" />
     <AppLayout>
+        <Head title="Logs d'audit" />
         <div class="py-10 px-6 lg:px-12">
             <div class="max-w-[1600px] mx-auto space-y-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -127,7 +127,7 @@ const truncate = (str, len = 80) => {
                             <Column field="user.name" header="UTILISATEUR" style="min-width: 14rem">
                                 <template #body="{ data }">
                                     <div class="flex items-center gap-2">
-                                        <Avatar icon="pi pi-user" shape="circle" class="bg-indigo-100 text-indigo-600" size="small" />
+                                        <Avatar icon="pi pi-user" shape="circle" class="bg-blue-100 text-blue-600" size="small" />
                                         <span class="font-semibold text-slate-700">{{ data.user?.name || 'Système' }}</span>
                                     </div>
                                 </template>

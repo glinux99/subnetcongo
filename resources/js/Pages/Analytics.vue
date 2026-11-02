@@ -206,11 +206,11 @@ onMounted(() => {
                 <div class="space-y-2">
                     <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-4">
-                        <div class="bg-blue-600 p-5 rounded-[1rem] shadow-2xl shadow-indigo-100 relative group">
+                        <div class="bg-blue-600 p-5 rounded-[1rem] shadow-2xl shadow-blue-100 relative group">
                             <i class="pi pi-chart-bar text-white text-3xl"></i>
                             <div class="absolute -top-1 -right-1 flex h-4 w-4">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-rose-500"></span>
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
                             </div>
                         </div>
                         <div>
@@ -225,7 +225,7 @@ onMounted(() => {
                     <Divider layout="vertical" />
                     <Button label="Exporter" icon="pi pi-upload" class="p-button-outlined p-button-secondary rounded-xl" @click="exportMenu.toggle($event)" />
                     <Menu ref="exportMenu" :model="exportItems" :popup="true" />
-                    <Button label="Rafraîchir" icon="pi pi-sync" class="p-button-primary shadow-xl shadow-indigo-200 px-6 rounded-xl font-bold" @click="runGlobalAudit" :loading="loading" />
+                    <Button label="Rafraîchir" icon="pi pi-sync" class="p-button-primary shadow-xl shadow-blue-200 px-6 rounded-xl font-bold" @click="runGlobalAudit" :loading="loading" />
                 </div>
             </header>
 
@@ -328,7 +328,7 @@ onMounted(() => {
                         <Column field="title" header="Titre du Cours">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
                                     <span class="font-bold text-slate-700">{{ data.title }}</span>
                                 </div>
                             </template>
@@ -345,7 +345,7 @@ onMounted(() => {
                         </Column>
                         <Column field="growth" header="Tendance">
                             <template #body="{ data }">
-                                <span :class="data.growth >= 0 ? 'text-red-500' : 'text-rose-500'" class="font-bold">
+                                <span :class="data.growth >= 0 ? 'text-red-500' : 'text-red-500'" class="font-bold">
                                     <i :class="data.growth >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="text-[10px] mr-1"></i>
                                     {{ Math.abs(data.growth) }}%
                                 </span>
@@ -368,7 +368,7 @@ onMounted(() => {
                     <TabPanel>
                         <template #header>
                             <div class="flex items-center gap-2 py-2 px-4">
-                                <i class="pi pi-heart-fill text-rose-400"></i>
+                                <i class="pi pi-heart-fill text-red-400"></i>
                                 <span class="font-bold text-sm">Satisfaction & NPS</span>
                             </div>
                         </template>
@@ -389,7 +389,7 @@ onMounted(() => {
                                         <p class="text-[9px] uppercase font-bold text-slate-400">Passifs</p>
                                     </div>
                                     <div class="text-center">
-                                        <p class="text-2xl font-black text-rose-500">3</p>
+                                        <p class="text-2xl font-black text-red-500">3</p>
                                         <p class="text-[9px] uppercase font-bold text-slate-400">Détracteurs</p>
                                     </div>
                                 </div>
@@ -412,15 +412,15 @@ onMounted(() => {
                     <TabPanel>
                         <template #header>
                             <div class="flex items-center gap-2 py-2 px-4">
-                                <i class="pi pi-verified text-indigo-400"></i>
+                                <i class="pi pi-verified text-blue-400"></i>
                                 <span class="font-bold text-sm">Qualité Académique</span>
                             </div>
                         </template>
                         <div class="p-10">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100">
-                                    <p class="text-xs font-bold text-indigo-400 uppercase mb-2">Taux de Réussite global</p>
-                                    <h4 class="text-3xl font-black text-indigo-900">88.4%</h4>
+                                <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
+                                    <p class="text-xs font-bold text-blue-400 uppercase mb-2">Taux de Réussite global</p>
+                                    <h4 class="text-3xl font-black text-blue-900">88.4%</h4>
                                 </div>
                                 <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100">
                                     <p class="text-xs font-bold text-emerald-400 uppercase mb-2">Diplômes émis (30j)</p>
@@ -459,13 +459,13 @@ onMounted(() => {
             <div class="grid grid-cols-12 gap-8">
                 <div class="col-span-12 lg:col-span-4 bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100">
                     <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                        <i class="pi pi-history text-indigo-500"></i>
+                        <i class="pi pi-history text-blue-500"></i>
                         Flux d'activité
                     </h2>
                     <ScrollPanel style="height: 350px">
                         <div class="space-y-6">
                             <div v-for="i in 6" :key="i" class="flex gap-4 p-4 hover:bg-slate-50 rounded-xl transition-all cursor-pointer group">
-                                <Avatar image="https://i.pravatar.cc/150?u=a" shape="circle" class="ring-2 ring-indigo-50 group-hover:ring-indigo-200 transition-all" />
+                                <Avatar image="https://i.pravatar.cc/150?u=a" shape="circle" class="ring-2 ring-blue-50 group-hover:ring-blue-200 transition-all" />
                                 <div>
                                     <p class="text-sm font-bold text-slate-800">Jean-Pierre K. <span class="font-normal text-slate-500">s'est inscrit à</span> UX Design</p>
                                     <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Il y a 2 minutes • Kinshasa</p>
@@ -475,11 +475,11 @@ onMounted(() => {
                     </ScrollPanel>
                 </div>
 
-                <div class="col-span-12 lg:col-span-8 bg-indigo-900 rounded-[3rem] p-10 text-white flex flex-col md:flex-row items-center gap-10 shadow-2xl relative overflow-hidden">
+                <div class="col-span-12 lg:col-span-8 bg-blue-900 rounded-[3rem] p-10 text-white flex flex-col md:flex-row items-center gap-10 shadow-2xl relative overflow-hidden">
                     <div class="absolute -left-20 -top-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
                     <div class="relative z-10 space-y-4 max-w-lg">
                         <h2 class="text-3xl font-black italic tracking-tight">Besoin d'un rapport personnalisé ?</h2>
-                        <p class="text-indigo-200 text-sm leading-relaxed font-medium">L'outil d'exportation avancée vous permet de générer des rapports PDF complets incluant les revenus, le churn et les performances par province pour présentation en conseil d'administration.</p>
+                        <p class="text-blue-200 text-sm leading-relaxed font-medium">L'outil d'exportation avancée vous permet de générer des rapports PDF complets incluant les revenus, le churn et les performances par province pour présentation en conseil d'administration.</p>
                         <div class="flex gap-4 pt-4">
                             <Button label="Générer Rapport Annuel" icon="pi pi-file-pdf" class="p-button-white p-button-raised rounded-xl px-6" />
                             <Button label="Assistance Data" icon="pi pi-question-circle" class="p-button-text p-button-plain text-white font-bold" />
@@ -487,7 +487,7 @@ onMounted(() => {
                     </div>
                     <div class="relative z-10 flex-1 hidden md:flex items-center justify-center">
                         <div class="w-48 h-48 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
-                            <i class="pi pi-database text-6xl text-indigo-300"></i>
+                            <i class="pi pi-database text-6xl text-blue-300"></i>
                         </div>
                     </div>
                 </div>

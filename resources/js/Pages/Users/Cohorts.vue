@@ -285,7 +285,7 @@ const studentMenuItems = computed(() => [
     { label: 'Transférer de cohorte', icon: 'pi pi-arrow-right-arrow-left', command: () => openTransferDialog(selectedStudentForAction.value) },
     { label: 'Suspendre l\'accès', icon: 'pi pi-lock', command: () => suspendStudent(selectedStudentForAction.value) },
     { separator: true },
-    { label: 'Retirer du groupe', icon: 'pi pi-trash', class: 'text-rose-500', command: () => confirmRemoveStudent(selectedStudentForAction.value) }
+    { label: 'Retirer du groupe', icon: 'pi pi-trash', class: 'text-red-500', command: () => confirmRemoveStudent(selectedStudentForAction.value) }
 ]);
 const suspendStudent = (student) => {
     router.patch(route('users.cohorts.members.suspend', { cohort: currentCohort.value.id, student: student.id }), {}, {
@@ -436,7 +436,7 @@ const savePrerequisites = () => {
 // ======================================================================================
 // UTILITAIRES
 // ======================================================================================
-const getSeverity = (s) => ({ 'Actif': { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'pi-check-circle' }, 'Programmé': { bg: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'pi-calendar' }, 'Terminé': { bg: 'bg-slate-50 text-slate-700 border-slate-200', icon: 'pi-flag-fill' }, 'Suspendu': { bg: 'bg-rose-50 text-rose-700 border-rose-200', icon: 'pi-lock' } }[s] || { bg: 'bg-slate-50 text-slate-700', icon: 'pi-info' });
+const getSeverity = (s) => ({ 'Actif': { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'pi-check-circle' }, 'Programmé': { bg: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'pi-calendar' }, 'Terminé': { bg: 'bg-slate-50 text-slate-700 border-slate-200', icon: 'pi-flag-fill' }, 'Suspendu': { bg: 'bg-red-50 text-red-700 border-red-200', icon: 'pi-lock' } }[s] || { bg: 'bg-slate-50 text-slate-700', icon: 'pi-info' });
 const formatDate = (date) => date ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date)) : '-';
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
 onMounted(() => { setTimeout(() => loading.value = false, 400); });
@@ -506,8 +506,8 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             
             <!-- KPI 1 : Total Groupes -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-indigo-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-objects-column text-indigo-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
+                    <i class="pi pi-objects-column text-blue-500 text-lg"></i>
                 </div>
                 <div>
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Groupes</h3>
@@ -539,18 +539,18 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
             <!-- KPI 4 : Complétion Moyenne (avec barre de progression intégrée) -->
             <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden">
-                <div class="w-10 h-10 rounded-md bg-rose-50 flex items-center justify-center mb-2 z-10 relative">
-                    <i class="pi pi-chart-line text-rose-500 text-lg"></i>
+                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-2 z-10 relative">
+                    <i class="pi pi-chart-line text-red-500 text-lg"></i>
                 </div>
                 <div class="z-10 relative">
                     <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Complétion Moyenne</h3>
                     <div class="flex items-end gap-2">
                         <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.avg_cohort_completion || 0 }}</p>
-                        <span class="text-xs font-bold text-rose-500 mb-1">%</span>
+                        <span class="text-xs font-bold text-red-500 mb-1">%</span>
                     </div>
                 </div>
                 <!-- Barre de progression de fond -->
-                <ProgressBar :value="props.stats.avg_cohort_completion || 0" :showValue="false" class="absolute bottom-0 left-0 w-full h-1 border-none" :pt="{ value: { class: 'bg-rose-500' } }"></ProgressBar>
+                <ProgressBar :value="props.stats.avg_cohort_completion || 0" :showValue="false" class="absolute bottom-0 left-0 w-full h-1 border-none" :pt="{ value: { class: 'bg-red-500' } }"></ProgressBar>
             </div>
             
         </div>
@@ -577,7 +577,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <Column field="name" header="Identité" style="min-width: 20rem;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1 py-2">
-                                <span class="font-black text-slate-800 text-lg hover:text-indigo-600 cursor-pointer" @click="openProfileDialog(data)">{{ data.name }}</span>
+                                <span class="font-black text-slate-800 text-lg hover:text-blue-600 cursor-pointer" @click="openProfileDialog(data)">{{ data.name }}</span>
                                 <div class="flex items-center gap-2">
                                     <Tag :value="data.status" :class="getSeverity(data.status).bg" class="text-[9px] uppercase font-bold border px-2 py-0.5" />
                                     <span v-if="data.is_private" class="text-[10px] text-amber-500 font-bold"><i class="pi pi-lock text-[9px]"></i> Privé</span>
@@ -589,7 +589,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <Column field="instructor" header="Équipe Pédagogique" style="min-width: 15rem;">
                         <template #body="{ data }">
                             <div v-if="data.instructor" class="flex items-center gap-3">
-                                <Avatar :image="data.instructor.avatar_path" :label="data.instructor.name.charAt(0)" shape="circle" class="bg-indigo-50 text-indigo-700" />
+                                <Avatar :image="data.instructor.avatar_path" :label="data.instructor.name.charAt(0)" shape="circle" class="bg-blue-50 text-blue-700" />
                                 <div><span class="font-bold text-slate-700 text-sm block">{{ data.instructor.name }}</span><span class="text-[9px] uppercase tracking-widest text-slate-400">Instructeur Principal</span></div>
                             </div>
                             <span v-else class="text-xs text-slate-400 italic">Non assigné</span>
@@ -600,14 +600,14 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         <template #body="{ data }">
                             <div class="flex flex-col w-full gap-1">
                                 <div class="flex justify-between text-[10px] font-bold"><span class="text-slate-500">Membres: {{ data.members_count || 0 }}/{{ data.max_students }}</span><span class="text-emerald-500">Score: {{ data.avg_score || 0 }}%</span></div>
-                                <ProgressBar :value="data.avg_completion || 0" :showValue="false" class="h-1.5 bg-slate-100 [&>div]:bg-indigo-500" />
+                                <ProgressBar :value="data.avg_completion || 0" :showValue="false" class="h-1.5 bg-slate-100 [&>div]:bg-blue-500" />
                             </div>
                         </template>
                     </Column>
 
                     <Column header="Actions" alignFrozen="right" :frozen="true" style="width: 10rem; text-align: right;">
                         <template #body="{ data }">
-                            <Button icon="pi pi-chart-pie" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-indigo-600" v-tooltip="'Vue 360°'" @click="openProfileDialog(data)" />
+                            <Button icon="pi pi-chart-pie" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600" v-tooltip="'Vue 360°'" @click="openProfileDialog(data)" />
                             <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500" v-tooltip="'Configurer'" @click="editCohort(data)" />
                         </template>
                     </Column>
@@ -615,10 +615,10 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <!-- LIGNE EXPANSIVE (APERÇU DU CURRICULUM) -->
                     <template #expansion="{ data }">
                         <div class="p-6 bg-slate-50/80 border-y border-slate-200 shadow-inner">
-                            <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-4"><i class="pi pi-book text-indigo-600"></i> Curriculum Assigné</h4>
+                            <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-4"><i class="pi pi-book text-blue-600"></i> Curriculum Assigné</h4>
                             <div v-if="data.assigned_courses?.length" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div v-for="course in data.assigned_courses" :key="course.id" class="bg-white p-4 rounded-xl border border-slate-200 flex items-start gap-3 shadow-sm">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0"><i class="pi pi-video"></i></div>
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0"><i class="pi pi-video"></i></div>
                                     <div><div class="font-bold text-sm text-slate-800 line-clamp-1">{{ course.title }}</div><div class="text-xs text-slate-500"><i class="pi pi-clock"></i> {{ course.duration || 0 }}h</div></div>
                                 </div>
                             </div>
@@ -634,9 +634,9 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <!-- ============================================================================== -->
         <Dialog v-model:visible="cohortEditorDialog" modal :closable="false" :draggable="false" :style="{ width: '95vw', maxWidth: '1200px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[85vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
-                <div class="absolute top-0 left-0 h-0.5 bg-indigo-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '25%' }"></div>
+                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '25%' }"></div>
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center text-white"><i class="pi pi-objects-column"></i></div>
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white"><i class="pi pi-objects-column"></i></div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight">{{ cohortForm.id ? 'Configuration de la Cohorte' : 'Générer une Nouvelle Cohorte' }}</h2>
                         <div class="text-[11px] font-medium text-slate-500 mt-0.5">Étape active : {{ editorMenu.find(m => m.id === activeEditorTab)?.label }}</div>
@@ -650,10 +650,10 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-sm">
                     <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Étapes</div>
                     <div class="p-4 flex-1 space-y-2">
-                        <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id" class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden" :class="activeEditorTab === item.id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'">
-                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-md"></div>
-                            <div class="relative mt-0.5"><i :class="[item.icon, activeEditorTab === item.id ? 'text-indigo-600' : 'text-slate-400']" class="text-xl"></i><div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center bg-white"><i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px]"></i><i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px]"></i></div></div>
-                            <div class="flex-1"><div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-indigo-800' : 'text-slate-700']">{{ item.label }}</div><div class="text-[11px] text-slate-500 leading-tight">{{ item.description }}</div></div>
+                        <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id" class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden" :class="activeEditorTab === item.id ? 'bg-blue-50 border border-blue-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'">
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
+                            <div class="relative mt-0.5"><i :class="[item.icon, activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400']" class="text-xl"></i><div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center bg-white"><i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px]"></i><i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px]"></i></div></div>
+                            <div class="flex-1"><div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div><div class="text-[11px] text-slate-500 leading-tight">{{ item.description }}</div></div>
                         </button>
                     </div>
                 </div>
@@ -664,11 +664,11 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-id-card text-indigo-500"></i> Informations Générales</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-id-card text-blue-500"></i> Informations Générales</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Nom de la promotion <span class="text-rose-500">*</span></label><InputText v-model="cohortForm.name" class="w-full p-4 text-lg font-bold bg-slate-50" placeholder="Ex: Masterclass Dev 2026" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Nom de la promotion <span class="text-red-500">*</span></label><InputText v-model="cohortForm.name" class="w-full p-4 text-lg font-bold bg-slate-50" placeholder="Ex: Masterclass Dev 2026" /></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-2">Description</label><Editor v-model="cohortForm.description" editorStyle="height: 150px" /></div>
-                                    <div class="w-full md:w-1/2"><label class="block text-sm font-bold text-slate-700 mb-2">Statut <span class="text-rose-500">*</span></label><Dropdown v-model="cohortForm.status" :options="props.statuses" class="w-full font-medium bg-slate-50" /></div>
+                                    <div class="w-full md:w-1/2"><label class="block text-sm font-bold text-slate-700 mb-2">Statut <span class="text-red-500">*</span></label><Dropdown v-model="cohortForm.status" :options="props.statuses" class="w-full font-medium bg-slate-50" /></div>
                                 </div>
                             </div>
                         </div>
@@ -677,17 +677,17 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-users text-blue-500"></i> Équipe Pédagogique</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Instructeur Référent <span class="text-rose-500">*</span></label><Dropdown v-model="cohortForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" filter class="w-full bg-slate-50" placeholder="Rechercher..." /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Instructeur Référent <span class="text-red-500">*</span></label><Dropdown v-model="cohortForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" filter class="w-full bg-slate-50" placeholder="Rechercher..." /></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-2">Tuteurs / Assistants (Optionnel)</label><MultiSelect v-model="cohortForm.assistant_ids" :options="props.instructorsList" optionLabel="name" optionValue="id" filter display="chip" class="w-full bg-slate-50" placeholder="Sélectionner des assistants..." /></div>
                                 </div>
                             </div>
                         </div>
 
                         <div v-show="activeEditorTab === 'curriculum'" class="space-y-8 animate-fade-in">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-purple-500">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-book text-purple-500"></i> Curriculum & Évaluation</h3>
+                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600">
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-book text-blue-500"></i> Curriculum & Évaluation</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Cours assignés à la cohorte <span class="text-rose-500">*</span></label><MultiSelect v-model="cohortForm.courses" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-slate-50" placeholder="Sélectionner les modules..." /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Cours assignés à la cohorte <span class="text-red-500">*</span></label><MultiSelect v-model="cohortForm.courses" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-slate-50" placeholder="Sélectionner les modules..." /></div>
                                     <Divider />
                                     <div><label class="block text-sm font-bold text-slate-700 mb-2">Score minimum de validation (%)</label><InputNumber v-model="cohortForm.pass_percentage" :min="0" :max="100" suffix=" %" showButtons class="w-40 bg-slate-50" /></div>
                                     <Divider />
@@ -704,7 +704,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-calendar text-emerald-500"></i> Calendrier</h3>
                                 <div class="grid grid-cols-2 gap-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Début officiel <span class="text-rose-500">*</span></label><Calendar v-model="cohortForm.start_date" dateFormat="dd/mm/yy" showIcon class="w-full" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Début officiel <span class="text-red-500">*</span></label><Calendar v-model="cohortForm.start_date" dateFormat="dd/mm/yy" showIcon class="w-full" /></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-2">Fin (Optionnel)</label><Calendar v-model="cohortForm.end_date" dateFormat="dd/mm/yy" showIcon class="w-full" :minDate="cohortForm.start_date" /></div>
                                 </div>
                             </div>
@@ -714,8 +714,8 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-cog text-amber-500"></i> Paramètres & Inscriptions</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Capacité Maximale <span class="text-rose-500">*</span></label><InputNumber v-model="cohortForm.max_students" showButtons class="w-40 bg-slate-50" /></div>
-                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-indigo-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-lock"></i></div><div><div class="font-bold text-slate-800 text-sm">Cohorte Privée</div><div class="text-xs text-slate-500 max-w-md">Masquer du catalogue public.</div></div></div><ToggleSwitch v-model="cohortForm.is_private" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Capacité Maximale <span class="text-red-500">*</span></label><InputNumber v-model="cohortForm.max_students" showButtons class="w-40 bg-slate-50" /></div>
+                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-blue-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-lock"></i></div><div><div class="font-bold text-slate-800 text-sm">Cohorte Privée</div><div class="text-xs text-slate-500 max-w-md">Masquer du catalogue public.</div></div></div><ToggleSwitch v-model="cohortForm.is_private" /></div>
                                     <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-emerald-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-sync"></i></div><div><div class="font-bold text-slate-800 text-sm">Inscription Automatique</div><div class="text-xs text-slate-500 max-w-md">Email automatique d'accès.</div></div></div><ToggleSwitch v-model="cohortForm.auto_enrollment" /></div>
                                 </div>
                             </div>
@@ -742,9 +742,9 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             <div class="flex-none h-[100px] bg-slate-900 border-b border-slate-800 flex items-center justify-between px-8 z-20 shadow-lg relative">
                 <i class="pi pi-objects-column absolute -bottom-10 -right-10 text-9xl text-white/5 pointer-events-none"></i>
                 <div class="flex items-center gap-6 relative z-10">
-                    <div class="w-14 h-14 bg-indigo-500/20 border border-indigo-400/30 rounded-2xl flex items-center justify-center shadow-inner"><i class="pi pi-building text-2xl text-indigo-300"></i></div>
+                    <div class="w-14 h-14 bg-blue-500/20 border border-blue-400/30 rounded-2xl flex items-center justify-center shadow-inner"><i class="pi pi-building text-2xl text-blue-300"></i></div>
                     <div>
-                        <div class="flex items-center gap-3 mb-1"><Tag :value="currentCohort?.status" severity="info" class="text-[9px] uppercase font-bold tracking-widest bg-indigo-500/30 text-indigo-100 border border-indigo-400" /><span class="text-[10px] text-slate-400 font-mono">#ID-{{ currentCohort?.id }}</span></div>
+                        <div class="flex items-center gap-3 mb-1"><Tag :value="currentCohort?.status" severity="info" class="text-[9px] uppercase font-bold tracking-widest bg-blue-500/30 text-blue-100 border border-blue-400" /><span class="text-[10px] text-slate-400 font-mono">#ID-{{ currentCohort?.id }}</span></div>
                         <h2 class="text-2xl font-black text-white m-0 tracking-tight">{{ currentCohort?.name }}</h2>
                     </div>
                 </div>
@@ -763,7 +763,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-users"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Effectif actuel</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.members_count || cohortMembers.length }} / {{ currentCohort.max_students }}</h3></div></div>
                                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-check-circle"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Complétion Moy.</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.avg_completion || 0 }}%</h3></div></div>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-calendar-clock"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Début Officiel</p><h3 class="text-xl font-black text-slate-800">{{ formatDate(currentCohort.start_date) }}</h3></div></div>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-calendar-clock"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Début Officiel</p><h3 class="text-xl font-black text-slate-800">{{ formatDate(currentCohort.start_date) }}</h3></div></div>
                             </div>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 class="font-bold text-slate-700 mb-4">Progression dans le temps</h4><Chart type="line" :data="profileCharts.line" class="h-64" /></div>
@@ -837,7 +837,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         <ProgressBar
                             :value="data.pivot?.progress ?? 0"
                             :showValue="false"
-                            class="w-full h-2 [&>div]:bg-indigo-500"
+                            class="w-full h-2 [&>div]:bg-blue-500"
                         />
                         <span class="text-xs font-bold text-slate-600 w-12 text-right">{{ data.pivot?.progress ?? 0 }}%</span>
                     </div>
@@ -894,10 +894,10 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                                <div v-for="session in cohortLiveSessions" :key="session.id" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-colors">
-                                    <div class="flex justify-between items-start mb-4"><Tag :value="session.status" :severity="session.status === 'à venir' ? 'info' : 'secondary'" class="text-[9px] uppercase font-bold" /><div class="bg-indigo-50 p-1.5 rounded-lg text-indigo-500 w-8 h-8 flex items-center justify-center"><i class="pi pi-desktop"></i></div></div>
+                                <div v-for="session in cohortLiveSessions" :key="session.id" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-colors">
+                                    <div class="flex justify-between items-start mb-4"><Tag :value="session.status" :severity="session.status === 'à venir' ? 'info' : 'secondary'" class="text-[9px] uppercase font-bold" /><div class="bg-blue-50 p-1.5 rounded-lg text-blue-500 w-8 h-8 flex items-center justify-center"><i class="pi pi-desktop"></i></div></div>
                                     <h4 class="font-bold text-slate-800 text-lg mb-1">{{ session.title }}</h4>
-                                    <p class="text-xs font-bold text-indigo-600 mb-4 flex items-center gap-2"><i class="pi pi-calendar"></i> {{ formatDate(session.start_at) }} </p>
+                                    <p class="text-xs font-bold text-blue-600 mb-4 flex items-center gap-2"><i class="pi pi-calendar"></i> {{ formatDate(session.start_at) }} </p>
                                     <Button label="Rejoindre" icon="pi pi-external-link" class="p-button-sm p-button-outlined p-button-indigo w-full font-bold" @click="window.open(session.meeting_url, '_blank')" />
                                 </div>
                                 <div v-if="cohortLiveSessions.length === 0" class="col-span-3 text-center p-8 border border-dashed border-slate-300 rounded-xl text-slate-500">Aucune session live programmée.</div>
@@ -910,7 +910,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div v-for="doc in cohortDocuments" :key="doc.id" class="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-4 shadow-sm hover:bg-slate-50 cursor-pointer group" @click="downloadDocument(doc)">
-                                    <div class="w-10 h-10 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center shrink-0">
+                                    <div class="w-10 h-10 bg-red-50 text-red-500 rounded-lg flex items-center justify-center shrink-0">
                                         <i :class="getDocIcon(doc.type)" class="text-xl"></i>
                                     </div>
                                     <div class="overflow-hidden flex-1">
@@ -933,7 +933,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             </div>
                             <div v-if="cohortPrerequisites.length > 0" class="space-y-3">
                                 <div v-for="courseId in cohortPrerequisites" :key="courseId" class="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 shadow-sm">
-                                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0"><i class="pi pi-book"></i></div>
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0"><i class="pi pi-book"></i></div>
                                     <div class="flex-1">
                                         <div class="font-bold text-slate-800">{{ props.coursesList.find(c => c.id === courseId)?.title || 'Cours inconnu' }}</div>
                                         <div class="text-xs text-slate-500">{{ props.coursesList.find(c => c.id === courseId)?.duration || '' }}h</div>
@@ -963,13 +963,13 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <!-- DIALOG : AJOUT D'ÉTUDIANTS -->
         <Dialog v-model:visible="addStudentDialog" modal :closable="false" :draggable="false" :style="{ width: '800px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[70vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-user-plus text-indigo-600"></i> Enrôler des Étudiants</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-user-plus text-blue-600"></i> Enrôler des Étudiants</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="addStudentDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
                 <InlineMessage severity="info" class="w-full mb-8">Les étudiants sélectionnés auront immédiatement accès au curriculum de la cohorte.</InlineMessage>
                 <div class="field mb-8">
-                    <label class="font-bold text-slate-700 text-sm block mb-3">Rechercher dans la base globale <span class="text-rose-500">*</span></label>
+                    <label class="font-bold text-slate-700 text-sm block mb-3">Rechercher dans la base globale <span class="text-red-500">*</span></label>
                     <MultiSelect v-model="studentEnrollForm.student_ids" :options="props.allStudentsList" optionLabel="name" optionValue="id" filter display="chip" placeholder="Tapez le nom d'un étudiant..." class="w-full bg-white p-1">
                         <template #option="slotProps"><div class="flex items-center gap-3"><Avatar :image="slotProps.option.avatar_path" shape="circle" size="small" /><div><div class="font-bold text-sm">{{ slotProps.option.name }}</div><div class="text-[10px] text-slate-500">{{ slotProps.option.email }}</div></div></div></template>
                     </MultiSelect>
@@ -994,7 +994,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
                 <InlineMessage severity="warn" class="w-full mb-8">Attention : Cet étudiant sera retiré de la cohorte actuelle et déplacé vers la nouvelle destination.</InlineMessage>
                 <div class="field mb-8">
-                    <label class="font-bold text-slate-700 text-sm block mb-3">Cohorte de destination <span class="text-rose-500">*</span></label>
+                    <label class="font-bold text-slate-700 text-sm block mb-3">Cohorte de destination <span class="text-red-500">*</span></label>
                     <Dropdown v-model="transferFormObject.to_cohort_id" :options="props.cohorts.data.filter(c => c.id !== currentCohort?.id)" optionLabel="name" optionValue="id" placeholder="Sélectionnez une cohorte..." class="w-full bg-white" />
                 </div>
                 <div class="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -1011,33 +1011,33 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <!-- DIALOG : CREATION SESSION LIVE -->
         <Dialog v-model:visible="liveSessionDialog" modal :closable="false" :draggable="false" :style="{ width: '600px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[80vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-video text-indigo-600"></i> Planifier un Live</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-video text-blue-600"></i> Planifier un Live</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="liveSessionDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-2">
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Titre de la session <span class="text-rose-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">Titre de la session <span class="text-red-500">*</span></label>
                         <InputText v-model="liveSessionForm.title" class="w-full bg-white" placeholder="Ex: Masterclass Q&A" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Cours <span class="text-rose-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">Cours <span class="text-red-500">*</span></label>
                         <Dropdown v-model="liveSessionForm.course_id" :options="currentCohort?.assigned_courses" optionLabel="title" optionValue="id" placeholder="Choisir le cours" class="w-full bg-white" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Instructeur <span class="text-rose-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">Instructeur <span class="text-red-500">*</span></label>
                         <Dropdown v-model="liveSessionForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" placeholder="Choisir l'expert" class="w-full bg-white" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Date & Heure <span class="text-rose-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">Date & Heure <span class="text-red-500">*</span></label>
                         <Calendar v-model="liveSessionForm.start_at" showTime hourFormat="24" dateFormat="dd/mm/yy" class="w-full" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Durée (minutes) <span class="text-rose-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">Durée (minutes) <span class="text-red-500">*</span></label>
                         <InputNumber v-model="liveSessionForm.duration" :min="15" :max="480" showButtons class="w-full" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Fournisseur <span class="text-rose-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">Fournisseur <span class="text-red-500">*</span></label>
                         <Dropdown v-model="liveSessionForm.provider" :options="[{label: 'Zoom Video', value: 'zoom'}, {label: 'Google Meet', value: 'meet'}, {label: 'BigBlueButton', value: 'bbb'}, {label: 'Jitsi Meet', value: 'jitsi'}]" optionLabel="label" optionValue="value" class="w-full bg-white" />
                     </div>
                     <div>
@@ -1057,8 +1057,8 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         <span class="text-xs font-bold text-slate-700">Enregistrer automatiquement</span>
                     </div>
                 </div>
-                <div class="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 grid grid-cols-2 gap-4">
-                    <div class="flex items-center justify-between col-span-2 text-[10px] font-bold text-indigo-700 uppercase tracking-widest border-b border-indigo-100 pb-2">Réglages Salle</div>
+                <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-100 grid grid-cols-2 gap-4">
+                    <div class="flex items-center justify-between col-span-2 text-[10px] font-bold text-blue-700 uppercase tracking-widest border-b border-blue-100 pb-2">Réglages Salle</div>
                     <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Host Vidéo</span> <ToggleSwitch v-model="liveSessionForm.settings.host_video" trueValue="1" falseValue="0" /></div>
                     <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Client Vidéo</span> <ToggleSwitch v-model="liveSessionForm.settings.participant_video" trueValue="1" falseValue="0" /></div>
                     <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Muet Entrée</span> <ToggleSwitch v-model="liveSessionForm.settings.mute_upon_entry" trueValue="1" falseValue="0" /></div>
@@ -1079,8 +1079,8 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </div>
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-6">
                 <InlineMessage severity="warn" class="w-full mb-4">Ce message sera envoyé à tous les membres de la cohorte.</InlineMessage>
-                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">Sujet de l'annonce <span class="text-rose-500">*</span></label><InputText v-model="messageForm.subject" class="w-full font-bold bg-white p-3" autofocus /></div>
-                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">Contenu détaillé <span class="text-rose-500">*</span></label><Editor v-model="messageForm.body" editorStyle="height: 200px" /></div>
+                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">Sujet de l'annonce <span class="text-red-500">*</span></label><InputText v-model="messageForm.subject" class="w-full font-bold bg-white p-3" autofocus /></div>
+                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">Contenu détaillé <span class="text-red-500">*</span></label><Editor v-model="messageForm.body" editorStyle="height: 200px" /></div>
                 <div class="flex items-center gap-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex items-center gap-3"><ToggleSwitch v-model="messageForm.send_email" inputId="sendMail" /><label for="sendMail" class="text-sm font-bold text-slate-700 cursor-pointer">Par Email</label></div>
                     <div class="flex items-center gap-3"><ToggleSwitch v-model="messageForm.send_notification" inputId="sendNotif" /><label for="sendNotif" class="text-sm font-bold text-slate-700 cursor-pointer">Notification Push</label></div>

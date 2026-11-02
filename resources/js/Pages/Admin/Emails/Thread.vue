@@ -45,7 +45,7 @@ const getAddressList = (addresses) => {
 };
 
 const getAvatarColor = (name) => {
-    const colors = ['bg-red-100 text-red-700', 'bg-blue-100 text-blue-700', 'bg-green-100 text-green-700', 'bg-purple-100 text-purple-700'];
+    const colors = ['bg-red-100 text-red-700', 'bg-blue-100 text-blue-700', 'bg-green-100 text-green-700', 'bg-blue-100 text-blue-700'];
     if (!name) return colors[0];
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -82,8 +82,8 @@ const goToEmail = (msgNumber) => {
 </script>
 
 <template>
-    <Head title="Conversation" />
     <AppLayout>
+        <Head title="Conversation" />
         <div class="page-bg min-h-screen font-sans pb-20">
             <!-- Header -->
             <div class="bg-[#0f172a] pt-10 pb-16 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">

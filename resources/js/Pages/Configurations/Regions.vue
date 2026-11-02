@@ -258,7 +258,7 @@ const onFilter = (event) => {
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div v-for="(val, key) in stats" :key="key" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
+                <div v-for="(val, key) in stats" :key="key" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
                     <div class="flex flex-column gap-2">
                         <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ statLabels[key] }}</span>
                         <div class="flex items-center justify-between">
@@ -479,7 +479,7 @@ const onFilter = (event) => {
                     <Button :label="t('common.cancel')" icon="pi pi-times" text severity="secondary" @click="labelDialog = false" class="font-bold uppercase text-[10px] tracking-widest" />
                     <Button :label="editing ? t('common.update') : t('common.save')"
                             icon="pi pi-check-circle" severity="indigo"
-                            class="px-10 h-14 rounded-2xl shadow-xl shadow-indigo-100 font-black uppercase tracking-widest text-xs"
+                            class="px-10 h-14 rounded-2xl shadow-xl shadow-blue-100 font-black uppercase tracking-widest text-xs"
                             @click="saveRegion" :loading="loading" />
                 </div>
             </template>

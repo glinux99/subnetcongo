@@ -70,7 +70,7 @@ const formatDate = (iso) => {
                         
                         <!-- Partie Gauche (Titres) -->
                         <div class="max-w-3xl">
-                            <span class="inline-block border border-indigo-900/50 text-indigo-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-indigo-950/30 mb-4 uppercase">
+                            <span class="inline-block border border-blue-900/50 text-blue-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-blue-950/30 mb-4 uppercase">
                                 Help Desk
                             </span>
 
@@ -108,8 +108,8 @@ const formatDate = (iso) => {
                     
                     <!-- KPI 1 -->
                     <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center">
-                            <i class="pi pi-list text-indigo-500 text-sm"></i>
+                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
+                            <i class="pi pi-list text-blue-500 text-sm"></i>
                         </div>
                         <div>
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Demandes</div>
@@ -218,7 +218,7 @@ const formatDate = (iso) => {
                                     
                                     <td class="py-4 px-4 text-right whitespace-nowrap">
                                         <Link :href="route('student.support.show', t.id)">
-                                            <Button label="Ouvrir" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-indigo-50 !text-indigo-600 !border-none hover:!bg-indigo-100 transition-colors" />
+                                            <Button label="Ouvrir" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-blue-50 !text-blue-600 !border-none hover:!bg-blue-100 transition-colors" />
                                         </Link>
                                     </td>
                                 </tr>
@@ -243,7 +243,7 @@ const formatDate = (iso) => {
                         <Link v-for="(l, i) in tickets.links" :key="i" :href="l.url || '#'" v-html="l.label"
                             :class="[
                                 'px-3 py-2 rounded-xl text-xs font-black transition-colors', 
-                                l.active ? '!bg-indigo-600 !text-white shadow-md' : '!bg-slate-100 !text-slate-600 hover:!bg-slate-200', 
+                                l.active ? '!bg-blue-600 !text-white shadow-md' : '!bg-slate-100 !text-slate-600 hover:!bg-slate-200', 
                                 !l.url && 'opacity-50 cursor-not-allowed'
                             ]" 
                         />

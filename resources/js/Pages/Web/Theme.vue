@@ -142,8 +142,8 @@ const submit = () => {
                         <div class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
                             <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
                                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-md bg-indigo-50 flex items-center justify-center">
-                                        <i class="pi pi-id-card text-indigo-500"></i>
+                                    <div class="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
+                                        <i class="pi pi-id-card text-blue-500"></i>
                                     </div>
                                     Informations Générales
                                 </h2>
@@ -152,19 +152,19 @@ const submit = () => {
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Nom du site</label>
                                     <InputText v-model="form.site_name" class="w-full bg-slate-50 border-slate-200 font-medium" placeholder="Ex: SubnetCongo" />
-                                    <p v-if="form.errors.site_name" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.site_name }}</p>
+                                    <p v-if="form.errors.site_name" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.site_name }}</p>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Slogan (Tagline)</label>
                                     <InputText v-model="form.site_tagline" class="w-full bg-slate-50 border-slate-200 font-medium" placeholder="Ex: Leader de la formation IT" />
-                                    <p v-if="form.errors.site_tagline" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.site_tagline }}</p>
+                                    <p v-if="form.errors.site_tagline" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.site_tagline }}</p>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Description (SEO)</label>
                                     <Textarea v-model="form.site_description" rows="4" class="w-full bg-slate-50 border-slate-200 font-medium resize-none" placeholder="Décrivez votre activité pour les moteurs de recherche..."></Textarea>
-                                    <p v-if="form.errors.site_description" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.site_description }}</p>
+                                    <p v-if="form.errors.site_description" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.site_description }}</p>
                                 </div>
                             </div>
                         </div>
@@ -186,7 +186,7 @@ const submit = () => {
                                         <InputIcon class="pi pi-facebook text-slate-400" />
                                         <InputText v-model="form.social_facebook" type="url" placeholder="https://facebook.com/..." class="w-full bg-slate-50 border-slate-200 font-medium" />
                                     </IconField>
-                                    <p v-if="form.errors.social_facebook" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.social_facebook }}</p>
+                                    <p v-if="form.errors.social_facebook" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.social_facebook }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">LinkedIn</label>
@@ -245,11 +245,11 @@ const submit = () => {
                                             <i class="pi pi-image text-xl text-slate-400"></i>
                                         </div>
                                         <label class="cursor-pointer inline-block mt-2">
-                                            <span class="text-sm font-bold px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">Changer le logo</span>
+                                            <span class="text-sm font-bold px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">Changer le logo</span>
                                             <input type="file" class="hidden" accept="image/*" @change="e => handleFileChange(e, 'logo')" />
                                         </label>
                                     </div>
-                                    <p v-if="form.errors.logo" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.logo }}</p>
+                                    <p v-if="form.errors.logo" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.logo }}</p>
                                 </div>
 
                                 <!-- Favicon -->
@@ -258,11 +258,11 @@ const submit = () => {
                                     <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors relative flex flex-col items-center justify-center">
                                         <img v-if="faviconPreview" :src="faviconPreview" class="h-10 w-10 object-contain mb-3 rounded" alt="Favicon preview" />
                                         <label class="cursor-pointer">
-                                            <span class="text-xs font-bold text-indigo-600 hover:text-indigo-700 underline">Changer l'icône</span>
+                                            <span class="text-xs font-bold text-blue-600 hover:text-blue-700 underline">Changer l'icône</span>
                                             <input type="file" class="hidden" accept="image/x-icon,image/png" @change="e => handleFileChange(e, 'favicon')" />
                                         </label>
                                     </div>
-                                    <p v-if="form.errors.favicon" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.favicon }}</p>
+                                    <p v-if="form.errors.favicon" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.favicon }}</p>
                                 </div>
                             </div>
                         </div>
@@ -284,7 +284,7 @@ const submit = () => {
                                         <InputIcon class="pi pi-at text-slate-400" />
                                         <InputText v-model="form.contact_email" type="email" placeholder="contact@domaine.com" class="w-full bg-slate-50 border-slate-200 font-medium" />
                                     </IconField>
-                                    <p v-if="form.errors.contact_email" class="text-rose-500 text-xs font-bold mt-1">{{ form.errors.contact_email }}</p>
+                                    <p v-if="form.errors.contact_email" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.contact_email }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Téléphone</label>

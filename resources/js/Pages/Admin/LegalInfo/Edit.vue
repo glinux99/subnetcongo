@@ -44,8 +44,8 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Identité Légale | Dashboard Admin" />
     <AppLayout>
+        <Head title="Identité Légale | Dashboard Admin" />
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER ULTIMATE V30 -->
