@@ -1,0 +1,71 @@
+﻿===NET/LISTEN===
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 127.0.0.1:6666          0.0.0.0:*               LISTEN      471/update
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      155/portmap
+tcp        0      0 0.0.0.0:10000           0.0.0.0:*               LISTEN      502/
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      474/lighttpd
+tcp        0      0 0.0.0.0:21              0.0.0.0:*               LISTEN      196/vsftpd
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      181/dropbear
+tcp        0      0 0.0.0.0:6239            0.0.0.0:*               LISTEN      484/redis-server 0.
+tcp        0      0 :::22                   :::*                    LISTEN      181/dropbear
+tcp        0      0 :::23                   :::*                    LISTEN      192/telnetd
+===SSHD===
+  181 root     /usr/sbin/dropbear -R
+21940 root     /usr/sbin/dropbear -R
+22910 root     /usr/sbin/dropbear -R
+===FIREWALL===
+===GPRS/SIM/WWAN===
+/dev/ppp
+/dev/ttyUSB0
+/dev/ttyUSB1
+/dev/ttyUSB2
+15:apn = 
+19:ping_check_addr = 8.8.8.8
+20:ping_check_interval = 0
+fep_bind=0
+fep_addr = 153.67.138.227
+fep_dns = 
+fep_port = 47610
+fep1_addr = 153.67.138.227
+fep1_port = 47610
+local_bind=0
+local_addr=123.88.6.218
+local_dns=
+local_port=3761
+fep_channel=3
+plc_channel=2
+plc_identify=1
+plc_interval=5
+apn = 
+dialnum = *99
+user = 
+passwd = 
+ping_check_addr = 8.8.8.8
+ping_check_interval = 0
+eth_addr=192.168.202.159
+gw_addr=192.168.202.254
+eth_mask=255.255.0.0
+listen_port=10000
+dhcp_enable=0
+mac_addr=00:e0:66:11:00:10
+serial_number=123456789
+device_type=
+timezone=Etc/GMT-2
+calendar=1
+dst_being=0000000000000000
+dst_end=0000000000000000
+dst_deviation=60
+dst_enable=0
+dst_flag=0
+dst_open=0
+clock_time_shift_limit=60
+GPS_time_shift_limit=60
+A_area_code(hex)=2606
+A_ter_addr=10
+workmode=1
+led_mode = 1
+net_scan_mode = 0
+===ROUTES/DNS===
+nameserver 8.8.8.8
+nameserver 221.5.88.88

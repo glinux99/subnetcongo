@@ -1197,7 +1197,6 @@ onBeforeUnmount(() => {
                         <template #body="{ data }">
                             <div class="flex items-center gap-4 py-2">
                                 <!-- Thumbnail -->
-                                    {{data.thumbnail_path}}
                                 <div class="w-24 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 relative group cursor-pointer" @click="editCourse(data)">
                                     <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Vignette du cours" />
                                     <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
@@ -1352,75 +1351,128 @@ onBeforeUnmount(() => {
                         </div>
                     </template>
                 </DataTable>
-            </PageCard>
             </div>
 
-        <!-- DIALOG ÉDITEUR DE COURS -->
+        </div>
+
+
+        <!-- ============================================================================== -->
+        <!-- DIALOG ÉDITEUR ULTRA PRO (COURSE ARCHITECT WORKSPACE)                          -->
+        <!-- Layout strict : Full height contraint, Stepper à gauche, Contenu scrollable    -->
+        <!-- ============================================================================== -->
         <Dialog
             v-model:visible="courseDialog"
             modal
-            :closable="true"
+            :closable="false"
             :draggable="false"
-            :style="{ width: '90vw', maxWidth: '1200px' }"
-            contentClass="p-0 bg-white rounded-2xl"
-            headerClass="border-b border-slate-200 p-6"
-            class="rounded-2xl shadow-xl"
+            :style="{ width: '95vw', maxWidth: '1400px' }"
+            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[90vh]"
+            headerClass="hidden"
+            class="rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
         >
-            <template #header>
-                <div class="flex items-center justify-between w-full">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                            <i class="pi pi-book text-indigo-600 text-xl"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800">{{ courseForm.id ? 'Modifier le cours' : 'Créer un nouveau cours' }}</h2>
-                            <p class="text-sm text-slate-500">{{ courseForm.title || 'Sans titre' }}</p>
-                        </div>
-                    </div>
-                    <Tag v-if="courseForm.status" :severity="getStatusBadgeDef(courseForm.status).severity" :value="getStatusBadgeDef(courseForm.status).label" />
-                </div>
-            </template>
+            <!-- WORKSPACE HEADER (FIXE) -->
+            <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
+                <!-- Ligne de progression simulée en haut -->
+                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '30%' }"></div>
 
-            <!-- Contenu principal -->
-            <div class="p-6 max-h-[70vh] overflow-y-auto">
-                <div class="space-y-6">
-                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <p class="text-slate-600">Formulaire de cours simplifié pour le CRUD.</p>
-                        <p class="text-sm text-slate-500 mt-2">Complétez les informations basiques du cours.</p>
+                <div class="flex items-center gap-5">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+                        <i class="pi pi-hammer text-lg"></i>
                     </div>
+                    <div>
+                        <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
+                            {{ courseForm.id ? 'Éditeur de Parcours' : 'Création Pédagogique' }}
+                            <Tag v-if="courseForm.status" :severity="getStatusBadgeDef(courseForm.status).severity" :value="getStatusBadgeDef(courseForm.status).label" class="text-[9px] uppercase tracking-wider px-2 py-0.5"></Tag>
+                        </h2>
+                        <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
+                            <span class="truncate max-w-[200px] md:max-w-[400px]">{{ courseForm.title || 'Cours sans titre' }}</span>
+                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> Enregistré à {{ formatDate(lastSavedAt) }}</span>
+                            <span v-else-if="courseForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> Modifications en cours...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <Button icon="pi pi-external-link" label="Aperçu visuel" class="p-button-text p-button-secondary p-button-sm hidden lg:flex font-bold" v-tooltip.bottom="'Prévisualiser la page de vente du cours'" />
+                    <div class="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="courseDialog = false" v-tooltip.bottom="'Fermer l\'espace de travail'" />
                 </div>
             </div>
 
-            <!-- Footer -->
-            <template #footer>
-                <div class="flex justify-between items-center p-6 border-t border-slate-200">
-                    <Button label="Annuler" class="p-button-text p-button-secondary" @click="courseDialog = false" />
-                    <Button label="Enregistrer" @click="saveCourse('draft')" :loading="courseForm.processing" />
-                </div>
-            </template>
-        </Dialog>
+            <!-- WORKSPACE BODY (FLEX ROW) -->
+            <div class="flex-1 flex overflow-hidden relative">
 
-        <!-- DIALOG ANALYTICS -->
-        <Dialog v-model:visible="analyticsDialog" header="Statistiques" :style="{ width: '600px' }" modal>
-            <div class="p-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-50 p-4 rounded-xl">
-                        <div class="text-2xl font-bold text-slate-800">{{ props.stats.total_courses || 0 }}</div>
-                        <div class="text-sm text-slate-500">Cours</div>
+                <!-- SIDEBAR DE NAVIGATION (STEPPER) -->
+                <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
+                    <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100">
+                        Phases de conception
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-xl">
-                        <div class="text-2xl font-bold text-slate-800">{{ props.stats.total_students || 0 }}</div>
-                        <div class="text-sm text-slate-500">Étudiants</div>
+
+                    <div class="p-4 flex-1 space-y-2">
+                        <button
+                            v-for="(item, index) in editorMenu" :key="item.id"
+                            @click="activeEditorTab = item.id"
+                            class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
+                            :class="[
+                                activeEditorTab === item.id
+                                    ? 'bg-blue-50 border border-blue-100 shadow-sm'
+                                    : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'
+                            ]"
+                        >
+                            <!-- Ligne active verticale -->
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
+
+                            <!-- Icon & Validation State -->
+                            <div class="relative mt-0.5">
+                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center bg-white">
+                                    <i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px] bg-white rounded-full"></i>
+                                    <i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px] bg-white rounded-full"></i>
+                                </div>
+                            </div>
+
+                            <!-- Text content -->
+                            <div class="flex-1">
+                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div>
+                                <div class="text-[11px] font-medium text-slate-500 leading-tight">{{ item.description }}</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Sidebar Footer (Global Status) -->
+                    <div class="p-6 border-t border-slate-200 bg-slate-50 mt-auto">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" :class="isEntireFormValid ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'">
+                                <i :class="isEntireFormValid ? 'pi pi-check' : 'pi pi-exclamation-triangle'" class="text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-800">{{ isEntireFormValid ? 'Prêt à publier' : 'Informations requises' }}</div>
+                                <div class="text-[10px] text-slate-500 leading-tight mt-0.5">
+                                    {{ isEntireFormValid ? 'Tous les critères obligatoires sont remplis.' : 'Complétez les sections avec un avertissement.' }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <template #footer>
-                <Button label="Fermer" class="p-button-text p-button-secondary" @click="analyticsDialog = false" />
-            </template>
-        </Dialog>
 
-    </AppLayout>
-</template>
+                <!-- ZONE DE CONTENU PRINCIPALE (SCROLLABLE) -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-slate-50">
+                    <div class="max-w-6xl mx-auto p-6 lg:p-10 pb-24 space-y-8 min-h-full">
+
+                        <!-- ========================================== -->
+                        <!-- TAB 1 : INFORMATIONS GÉNÉRALES             -->
+                        <!-- ========================================== -->
+                        <div v-show="activeEditorTab === 'general'" class="space-y-8" role="tabpanel">
+
+                            <!-- Section: Identité visuelle du cours -->
+                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Identité & Positionnement</h3>
+                                        <p class="text-xs text-slate-500 mt-1">Les informations de base visibles sur la marketplace.</p>
+                                    </div>
+                                </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     <!-- Titre -->
@@ -1666,7 +1718,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <!-- État vide du Curriculum -->
-                            <div v-if="courseForm.sections.length === 0" class="bg-white p-16 rounded-xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-blue-300 hover:bg-blue-50/30">
+                            <div v-if="courseForm.sections.length === 0" class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-blue-300 hover:bg-blue-50/30">
                                 <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
                                     <i class="pi pi-objects-column text-4xl text-blue-400"></i>
                                 </div>
@@ -2096,7 +2148,7 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- ÉTAT VIDE -->
-    <div v-else class="bg-white p-16 rounded-xl border-2 border-dashed border-slate-200 text-center flex flex-col items-center justify-center min-h-[400px]">
+    <div v-else class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-200 text-center flex flex-col items-center justify-center min-h-[400px]">
         <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
             <i class="pi pi-paperclip text-4xl"></i>
         </div>
@@ -2324,22 +2376,51 @@ onBeforeUnmount(() => {
             </div>
         </Dialog>
 
-        <!-- DIALOG CATÉGORIE -->
-        <Dialog v-model:visible="categoryDialog" header="Nouvelle catégorie" :style="{ width: '500px' }" modal>
-            <div class="space-y-4 p-4">
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-slate-700">Nom</label>
-                    <InputText v-model="categoryForm.name" class="w-full" placeholder="Ex: Développement Web" />
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-slate-700">Slug</label>
-                    <InputText v-model="categoryForm.slug" class="w-full font-mono text-sm" placeholder="developpement-web" />
+        <!-- ============================================================================== -->
+        <!-- DIALOG CRÉATION DE CATÉGORIE (TAXONOMIE)                                       -->
+        <!-- ============================================================================== -->
+        <Dialog v-model:visible="categoryDialog" header="Créer une catégories" :modal="true" :style="{ width: '500px' }" :draggable="false" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="bg-slate-50 p-0" headerClass="bg-white border-b border-slate-100 px-6 py-4">
+            <div class="p-6 space-y-6">
+                <!-- Message info -->
+                <Message severity="info" :closable="false" class="m-0 border border-blue-100 bg-blue-50 text-blue-800">
+                    Les catégories structurent le catalogue. Une hiérarchie claire améliore l'expérience utilisateur.
+                </Message>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Nom de la catégorie <span class="text-red-500">*</span></label>
+                        <InputText v-model="categoryForm.name" @input="generateCategorySlug" placeholder="Ex: Développement Web, Management..." class="w-full p-3 font-bold text-slate-800 bg-white border-slate-300" autofocus :class="{'p-invalid': categoryForm.errors?.name}" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Identifiant URL (Slug)</label>
+                        <InputText v-model="categoryForm.slug" placeholder="developpement-web" class="w-full p-2 text-sm font-mono text-slate-500 bg-slate-100 border-transparent" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Catégorie Parente (Optionnel)</label>
+                        <Dropdown v-model="categoryForm.parent_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Catégorie racine..." class="w-full border-slate-300 bg-white" showClear filter />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-700">Description courte (SEO)</label>
+                        <Textarea v-model="categoryForm.description" rows="2" class="w-full bg-white border-slate-300" placeholder="Décrivez le contenu de cette catégorie..." />
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 mt-2">
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Visibilité publique</div>
+                            <div class="text-[11px] text-slate-500">Activer l'affichage dans le menu principal.</div>
+                        </div>
+                        <ToggleSwitch v-model="categoryForm.is_active" />
+                    </div>
                 </div>
             </div>
+
             <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="Annuler" class="p-button-text p-button-secondary" @click="categoryDialog = false" />
-                    <Button label="Créer" @click="saveCategory" :loading="savingCategory" />
+                <div class="flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
+                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
+                    <Button label="Créer la catégorie" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
                 </div>
             </template>
         </Dialog>

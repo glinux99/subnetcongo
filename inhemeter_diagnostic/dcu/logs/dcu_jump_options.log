@@ -1,0 +1,77 @@
+﻿===TOOLS===
+/usr/bin/ssh
+/usr/bin/dbclient
+/usr/bin/scp
+/usr/bin/nc
+/usr/bin/wget
+/bin/busybox
+BusyBox v1.23.2 (2020-02-18 17:05:36 CST) multi-call binary.
+BusyBox is copyrighted by many authors between 1998-2012.
+Licensed under GPLv2. See source distribution for detailed
+copyright notices.
+
+===SSH_CLIENT===
+OpenSSH_7.1p1, OpenSSL 1.0.2d 9 Jul 2015
+Dropbear v2015.67
+===CRON===
+/etc/init.d:
+S01logging
+S10udev
+S13portmap
+S20urandom
+S30dbus
+S40network
+S50dropbear
+S50sshd
+S50telnet
+S70vsftpd
+S80mount-opt
+S81web.sh
+S85qt.sh
+S86resolv
+S90start_userapp.sh
+app.recover
+app.update
+gpio_product_identifier.sh
+homemd5.check
+hostapd.sh
+iconfig
+init_network
+libmd5.check2
+log_backup_to_SD.sh
+monitor.sh
+rcK
+rcS
+relay_control
+root
+scan_memory.sh
+socketcand
+task.sh
+tz_config
+update
+update.check
+update_file.check
+usb.update
+*/5 * * * * /etc/init.d/monitor.sh
+*/5 * * * * /sbin/logrotate /etc/logrotate.conf -s /var/log/ram_log/archive/logrotate.status
+*/20 * * * * /etc/init.d/log_backup_to_SD.sh
+#*/30 * * * * /usr/sbin/corefileproc.sh AutoChk
+#*/1 * * * * /etc/init.d/scan_memory.sh 70 >>/opt/log/scan_memory.log
+===FEP===
+1:fep_bind=0
+2:fep_addr = 153.67.138.227
+3:fep_dns = 
+4:fep_port = 47610
+5:fep1_addr = 153.67.138.227
+6:fep1_port = 47610
+7:local_bind=0
+8:local_addr=123.88.6.218
+9:local_dns=
+10:local_port=3761
+11:fep_channel=3
+24:listen_port=10000
+===TRAF_CAPS===
+30104: Vol SEQ:reverse
+30105: Cur SEQ:reverse
+30106: A_PW:reverse
+34648:reversed:%d;

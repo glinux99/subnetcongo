@@ -46,8 +46,7 @@ class SocialiteController extends Controller
                         'password' => Hash::make(str()->random(24)), // Mot de passe aléatoire
                     ]);
                     // Assignation d'un rôle par défaut pour les nouveaux utilisateurs
-                    // $user->assignRole('visitor');
-                    $user->assignRole('superadmin');
+                    $user->assignRole('student');
                 }
 
                 // Dans tous les cas (utilisateur trouvé par email ou nouvellement créé),

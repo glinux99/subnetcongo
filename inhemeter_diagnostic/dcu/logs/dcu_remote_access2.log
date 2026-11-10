@@ -1,0 +1,256 @@
+﻿===TRAFF_GPRS_STATUS===
+223:[2026-11-09 18:01:28][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+225:[2026-11-09 18:01:28] ###### GPRS USB POWER OFF #########
+227:[2026-11-09 18:01:29][kernel:info] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+228:[2026-11-09 18:01:29] ###### GPRS POWER OFF #########
+229:[2026-11-09 18:01:29][kernel:info] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+230:[2026-11-09 18:01:29][kernel:info] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+233:[2026-11-09 18:01:29] ls /dev/ttyUSB* res(0) != 3
+234:[2026-11-09 18:01:29] GPRS module is not powered on.
+236:[2026-11-09 18:01:31] ###### GPRS USB POWER ON #########
+237:[2026-11-09 18:01:31] ###### GPRS POWER ON #########
+242:[2026-11-09 18:01:34] ###### GPRS RESET LOW #########
+243:[2026-11-09 18:01:34] ###### GPRS RESET HIGHT #########
+244:[2026-11-09 18:01:34] ###### GPRS SETTUP #########
+247:[2026-11-09 18:01:35] ls /dev/ttyUSB* res(0) != 3
+248:[2026-11-09 18:01:35] GPRS module is not powered on.
+253:[2026-11-09 18:01:37] obj_gprs_pre_get_apn  id=0
+254:[2026-11-09 18:01:37] apn=,user=,passw=
+263:[2026-11-09 18:01:37] ls /dev/ttyUSB* res(0) != 3
+264:[2026-11-09 18:01:37] GPRS module is not powered on.
+265:[2026-11-09 18:01:37] obj_gprs_pre_dial_task :gprs usb dev fail :1
+267:[2026-11-09 18:01:40] obj_gprs_pre_dial_task :gprs usb dev fail :2
+272:[2026-11-09 18:01:43] ls /dev/ttyUSB* res(0) != 3
+273:[2026-11-09 18:01:43] GPRS module is not powered on.
+275:[2026-11-09 18:01:43] obj_gprs_pre_dial_task :gprs usb dev fail :3
+281:[2026-11-09 18:01:46] open dev /dev/ttyUSB2 :fd=34 succeed!
+301:[2026-11-09 18:01:54] reset gprs count time[p_dial->try_time=3592][sytem start time=3600]
+319:[2026-11-09 18:02:04] reset gprs count time[p_dial->try_time=3592][sytem start time=3610]
+322:[2026-11-09 18:02:06] obj_gprs_pre_dial_task GET_INFO ret:-1
+328:[2026-11-09 18:02:12] enter_end_task:[timeout]reset the GPRS module task!
+329:[2026-11-09 18:02:12] ###### GPRS USB POWER OFF #########
+330:[2026-11-09 18:02:12] ###### GPRS POWER OFF #########
+333:[2026-11-09 18:02:12][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+334:[2026-11-09 18:02:12][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+336:[2026-11-09 18:02:12] ###### GPRS USB POWER OFF #########
+338:[2026-11-09 18:02:13][kernel:info] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+339:[2026-11-09 18:02:13] ###### GPRS POWER OFF #########
+340:[2026-11-09 18:02:13][kernel:info] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+341:[2026-11-09 18:02:13][kernel:info] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+342:[2026-11-09 18:02:13] ls /dev/ttyUSB* res(0) != 3
+343:[2026-11-09 18:02:13] GPRS module is not powered on.
+344:[2026-11-09 18:02:15] ###### GPRS USB POWER ON #########
+345:[2026-11-09 18:02:15] ###### GPRS POWER ON #########
+351:[2026-11-09 18:02:18] ###### GPRS RESET LOW #########
+353:[2026-11-09 18:02:18] ###### GPRS RESET HIGHT #########
+354:[2026-11-09 18:02:18] ###### GPRS SETTUP #########
+357:[2026-11-09 18:02:19] ls /dev/ttyUSB* res(0) != 3
+358:[2026-11-09 18:02:19] GPRS module is not powered on.
+361:[2026-11-09 18:02:21] obj_gprs_pre_get_apn  id=0
+362:[2026-11-09 18:02:21] apn=,user=,passw=
+371:[2026-11-09 18:02:21] ls /dev/ttyUSB* res(0) != 3
+372:[2026-11-09 18:02:21] GPRS module is not powered on.
+373:[2026-11-09 18:02:21] obj_gprs_pre_dial_task :gprs usb dev fail :1
+383:[2026-11-09 18:02:24] obj_gprs_pre_dial_task :gprs usb dev fail :2
+390:[2026-11-09 18:02:27] ls /dev/ttyUSB* res(0) != 3
+391:[2026-11-09 18:02:27] GPRS module is not powered on.
+392:[2026-11-09 18:02:27] obj_gprs_pre_dial_task :gprs usb dev fail :3
+398:[2026-11-09 18:02:30] open dev /dev/ttyUSB2 :fd=3 succeed!
+419:[2026-11-09 18:02:34] reset gprs count time[p_dial->try_time=3636][sytem start time=3640]
+429:[2026-11-09 18:02:44] reset gprs count time[p_dial->try_time=3636][sytem start time=3650]
+431:[2026-11-09 18:02:46] obj_gprs_pre_dial_task GET_INFO ret:-1
+441:[2026-11-09 18:02:54] reset gprs count time[p_dial->try_time=3636][sytem start time=3660]
+443:[2026-11-09 18:02:56] enter_end_task:[timeout]reset the GPRS module task!
+444:[2026-11-09 18:02:56] ###### GPRS USB POWER OFF #########
+445:[2026-11-09 18:02:56] ###### GPRS POWER OFF #########
+448:[2026-11-09 18:02:56][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+451:[2026-11-09 18:02:56] ###### GPRS USB POWER OFF #########
+453:[2026-11-09 18:02:57] ###### GPRS POWER OFF #########
+454:[2026-11-09 18:02:57][kernel:info] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+455:[2026-11-09 18:02:57][kernel:info] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+456:[2026-11-09 18:02:57][kernel:info] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+458:[2026-11-09 18:02:57] ls /dev/ttyUSB* res(0) != 3
+459:[2026-11-09 18:02:57] GPRS module is not powered on.
+461:[2026-11-09 18:02:59] ###### GPRS USB POWER ON #########
+462:[2026-11-09 18:02:59] ###### GPRS POWER ON #########
+470:[2026-11-09 18:03:02] ###### GPRS RESET LOW #########
+471:[2026-11-09 18:03:02] ###### GPRS RESET HIGHT #########
+472:[2026-11-09 18:03:02] ###### GPRS SETTUP #########
+475:[2026-11-09 18:03:03] ls /dev/ttyUSB* res(0) != 3
+476:[2026-11-09 18:03:03] GPRS module is not powered on.
+479:[2026-11-09 18:03:05] obj_gprs_pre_get_apn  id=0
+480:[2026-11-09 18:03:05] apn=,user=,passw=
+489:[2026-11-09 18:03:05] ls /dev/ttyUSB* res(0) != 3
+490:[2026-11-09 18:03:05] GPRS module is not powered on.
+491:[2026-11-09 18:03:05] obj_gprs_pre_dial_task :gprs usb dev fail :1
+495:[2026-11-09 18:03:08] obj_gprs_pre_dial_task :gprs usb dev fail :2
+499:[2026-11-09 18:03:11] ls /dev/ttyUSB* res(0) != 3
+500:[2026-11-09 18:03:11] GPRS module is not powered on.
+502:[2026-11-09 18:03:11] obj_gprs_pre_dial_task :gprs usb dev fail :3
+519:[2026-11-09 18:03:14] open dev /dev/ttyUSB2 :fd=31 succeed!
+537:[2026-11-09 18:03:24] reset gprs count time[p_dial->try_time=3680][sytem start time=3690]
+540:[2026-11-09 18:03:25] obj_gprs_pre_dial_task GET_INFO ret:-1
+556:[2026-11-09 18:03:34] reset gprs count time[p_dial->try_time=3680][sytem start time=3700]
+562:[2026-11-09 18:03:40] enter_end_task:[timeout]reset the GPRS module task!
+563:[2026-11-09 18:03:40] ###### GPRS USB POWER OFF #########
+564:[2026-11-09 18:03:40] ###### GPRS POWER OFF #########
+567:[2026-11-09 18:03:40][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+569:[2026-11-09 18:03:40][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+570:[2026-11-09 18:03:40][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+571:[2026-11-09 18:03:40] ###### GPRS USB POWER OFF #########
+573:[2026-11-09 18:03:41] ###### GPRS POWER OFF #########
+577:[2026-11-09 18:03:41] ls /dev/ttyUSB* res(0) != 3
+578:[2026-11-09 18:03:41] GPRS module is not powered on.
+580:[2026-11-09 18:03:43] ###### GPRS USB POWER ON #########
+581:[2026-11-09 18:03:43] ###### GPRS POWER ON #########
+587:[2026-11-09 18:03:46] ###### GPRS RESET LOW #########
+588:[2026-11-09 18:03:46] ###### GPRS RESET HIGHT #########
+589:[2026-11-09 18:03:46] ###### GPRS SETTUP #########
+591:[2026-11-09 18:03:47] ls /dev/ttyUSB* res(0) != 3
+592:[2026-11-09 18:03:47] GPRS module is not powered on.
+597:[2026-11-09 18:03:49] obj_gprs_pre_get_apn  id=0
+598:[2026-11-09 18:03:49] apn=,user=,passw=
+607:[2026-11-09 18:03:49] ls /dev/ttyUSB* res(0) != 3
+608:[2026-11-09 18:03:49] GPRS module is not powered on.
+609:[2026-11-09 18:03:49] obj_gprs_pre_dial_task :gprs usb dev fail :1
+610:[2026-11-09 18:03:52] obj_gprs_pre_dial_task :gprs usb dev fail :2
+618:[2026-11-09 18:03:55] ls /dev/ttyUSB* res(0) != 3
+619:[2026-11-09 18:03:55] GPRS module is not powered on.
+620:[2026-11-09 18:03:55][kernel:info] usb 2-1: GSM modem (1-port) converter now attached to ttyUSB0
+621:[2026-11-09 18:03:55] obj_gprs_pre_dial_task :gprs usb dev fail :3
+622:[2026-11-09 18:03:55][kernel:info] usb 2-1: GSM modem (1-port) converter now attached to ttyUSB1
+623:[2026-11-09 18:03:55][kernel:info] usb 2-1: GSM modem (1-port) converter now attached to ttyUSB2
+626:[2026-11-09 18:03:58] open dev /dev/ttyUSB2 :fd=31 succeed!
+644:[2026-11-09 18:04:04] obj_gprs_pre_dial_task GET_INFO ret:-1
+645:[2026-11-09 18:04:04] reset gprs count time[p_dial->try_time=3724][sytem start time=3730]
+654:[2026-11-09 18:04:14] reset gprs count time[p_dial->try_time=3724][sytem start time=3740]
+664:[2026-11-09 18:04:24] enter_end_task:[timeout]reset the GPRS module task!
+665:[2026-11-09 18:04:24] ###### GPRS USB POWER OFF #########
+666:[2026-11-09 18:04:24] ###### GPRS POWER OFF #########
+667:[2026-11-09 18:04:24] reset gprs count time[p_dial->try_time=3724][sytem start time=3750]
+671:[2026-11-09 18:04:24][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+672:[2026-11-09 18:04:24][kernel:err] option1 ttyUSB2: usb_wwan_indat_callback: resubmit read urb failed. (-19)
+674:[2026-11-09 18:04:24] ###### GPRS USB POWER OFF #########
+676:[2026-11-09 18:04:25] ###### GPRS POWER OFF #########
+681:[2026-11-09 18:04:25] ls /dev/ttyUSB* res(0) != 3
+682:[2026-11-09 18:04:25] GPRS module is not powered on.
+684:[2026-11-09 18:04:27] ###### GPRS USB POWER ON #########
+685:[2026-11-09 18:04:27] ###### GPRS POWER ON #########
+691:[2026-11-09 18:04:30] ###### GPRS RESET LOW #########
+692:[2026-11-09 18:04:30] ###### GPRS RESET HIGHT #########
+693:[2026-11-09 18:04:30] ###### GPRS SETTUP #########
+695:[2026-11-09 18:04:31] ls /dev/ttyUSB* res(0) != 3
+696:[2026-11-09 18:04:31] GPRS module is not powered on.
+708:[2026-11-09 18:04:33] obj_gprs_pre_get_apn  id=0
+709:[2026-11-09 18:04:33] apn=,user=,passw=
+718:[2026-11-09 18:04:33] ls /dev/ttyUSB* res(0) != 3
+719:[2026-11-09 18:04:33] GPRS module is not powered on.
+720:[2026-11-09 18:04:33] obj_gprs_pre_dial_task :gprs usb dev fail :1
+723:[2026-11-09 18:04:36] obj_gprs_pre_dial_task :gprs usb dev fail :2
+731:[2026-11-09 18:04:39] ls /dev/ttyUSB* res(0) != 3
+732:[2026-11-09 18:04:39] GPRS module is not powered on.
+733:[2026-11-09 18:04:39][kernel:info] usb 2-1: GSM modem (1-port) converter now attached to ttyUSB0
+734:[2026-11-09 18:04:39] obj_gprs_pre_dial_task :gprs usb dev fail :3
+735:[2026-11-09 18:04:39][kernel:info] usb 2-1: GSM modem (1-port) converter now attached to ttyUSB1
+736:[2026-11-09 18:04:39][kernel:info] usb 2-1: GSM modem (1-port) converter now attached to ttyUSB2
+739:[2026-11-09 18:04:42] open dev /dev/ttyUSB2 :fd=31 succeed!
+752:[2026-11-09 18:04:44] obj_gprs_pre_dial_task GET_INFO ret:-1
+758:[2026-11-09 18:04:44] reset gprs count time[p_dial->try_time=3768][sytem start time=3770]
+766:[2026-11-09 18:04:54] reset gprs count time[p_dial->try_time=3768][sytem start time=3780]
+779:[2026-11-09 18:05:04] obj_gprs_pre_dial_task GET_INFO ret:-1
+783:[2026-11-09 18:05:04] reset gprs count time[p_dial->try_time=3768][sytem start time=3790]
+===PORT_10000_BIND===
+tcp        0      0 0.0.0.0:10000           0.0.0.0:*               LISTEN      502/
+===SERVICES_EXPOSED===
+7:sqlite3_bind_int
+17:sqlite3_bind_text
+429:bind
+25474:-000*00000%0000
+26300:INHEIHM-50001000
+26304:INHEIHM-50001000
+26316:INHEIHM-50001000
+26373:INHEIHM-50001000
+26420:INHEIHM-50001000
+26456:INHEIHM-50001000
+26484:INHEIHM-50001000
+26563:INHEIHM-50001000
+26783:INHEIHM-50001000
+26949:0.0.0.0
+27047:INHEIHM-50001000
+27110:INHEIHM-50001000
+27113:INHEIHM-50001000
+27165:INHEIHM-50001000
+27231:bind(%d) failed !! - errno <%d>
+27480:INHEIHM-50001000
+27483:INHEIHM-50001000
+27516:INHEIHM-50001000
+27612:INHEIHM-50001000
+27624:INHEIHM-50001000
+27668:IH51-000000-0000
+27856:INHEIHM-50001000
+27906:INHEIHM-50001000
+27910:INHEIHM-50001000
+27924:INHEIHM-50001000
+27927:INHEIHM-50001000
+27930:INHEIHM-50001000
+28055:INHEIHM-50001000
+28181:INHEIHM-50001000
+28209:INHEIHM-50001000
+28242:INHEIHM-50001000
+28245:INHEIHM-50001000
+28248:INHEIHM-50001000
+28257:INHEIHM-50001000
+28296:INHEIHM-50001000
+28300:INHEIHM-50001000
+28303:INHEIHM-50001000
+28306:INHEIHM-50001000
+28356:INHEIHM-50001000
+28359:INHEIHM-50001000
+28362:INHEIHM-50001000
+28377:0000000000000000
+28378:0000000000000000
+28389:fep_bind
+28395:local_bind
+28411:listen_port
+28449:0D209000000000000020000000000000%s: %d %02X  
+28566:INHEIHM-50001000
+28594:INHEIHM-50001000
+28892:INHEIHM-50001000
+29224:INHEIHM-50001000
+29346:INHEIHM-50001000
+29379:INHEIHM-50001000
+29384:INHEIHM-50001000
+29671:INHEIHM-50001000
+29702:INHEIHM-50001000
+===VPN/TUN===
+===SMARTTOOLS_PROTO===
+26380-%s len error:%d
+26381:transparent down event frame :
+26382:transparent 3761 event to up :
+26383:transparent event to up :
+26384:transparent down frame :
+26385:transparent to up :
+26386-%s: len=%d
+26387-%s:not hdlc traff frame
+--
+26410-down_make_traff_frame
+26411:down_make_event_frame_transparent
+26412:down_make_traff_frame_transparent
+26413-find_dlms_meter_event
+26414-down_deal_pro3762_meter_event
+--
+28234-%s:start with index[%d]
+28235:transparent_broadcast_frame
+28236:transparent_broadcast_frame
+28237-obj_cmdbr_broadcast_timing
+28238-obj_cmdbr_push_broadcast
+--
+33327-sql1 != ((void *)0)
+33328:INSERT INTO basicParaTbl (dataid,name,value)VALUES ("034f0002","basic_V",230000),("034f0102","basic_I",10000),("034f0502","basic_freq",50000),("034f0202","Max_I",100000)
+33329-sql != ((void *)0)
+33330-/opt/home/httpd/store/metering_database/metering_para.db
+--
+37932-17CProfileCosemList
+37933:0000010000FF
+37934-|Profile
+37935-0/%d

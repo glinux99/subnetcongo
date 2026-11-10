@@ -428,6 +428,7 @@ Route::prefix('curriculum')->group(function () {
         Route::post('/{messageNumber}/archive', [App\Http\Controllers\Admin\AdminEmailController::class, 'archive'])->name('archive');
         Route::post('/{messageNumber}/unarchive', [App\Http\Controllers\Admin\AdminEmailController::class, 'unarchive'])->name('unarchive');
         Route::post('/{messageNumber}/trash',   [App\Http\Controllers\Admin\AdminEmailController::class, 'moveToTrash'])->name('trash');
+        Route::post('/{messageNumber}/permanentlyDelete', [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->name('permanentlyDelete');
         Route::delete('/{messageNumber}',       [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->name('destroy');
         Route::get('/folders',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'getFolders'])->name('folders');
         Route::post('/search',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'search'])->name('search');

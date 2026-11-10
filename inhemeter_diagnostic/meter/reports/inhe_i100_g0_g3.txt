@@ -1,0 +1,23 @@
+
+=== Inhemeter i100 g0 c18 LOW pw=b'12345678' ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c1 LOW pw=b'12345678' ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c1 NONE pw=None ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c16 LOW pw=b'12345678' ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c16 NONE pw=None ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c96 LOW pw=b'12345678' ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c97 LOW pw=b'12345678' ===
+  FAIL: 
+
+=== Inhemeter i100 g0 c102 LOW pw=b'12345678' ===

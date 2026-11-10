@@ -1,0 +1,20 @@
+﻿===BUSCTL/DLMS TASK SEC===
+no_busctl
+sh: busctl: not found
+===TASK===
+15829-%s() L%d: upgrade Uninitialize id:%d success!!!
+15830:gmac-high
+15831-%s() L%d: errcode %d, need repir[%d] frame counter!!!
+15832-1;0.0.43.1.6.255;2
+15833-1;0.0.43.1.0.255;2
+--
+15890-;SERVERID:1
+15891:;PASSWORD:12345678
+15892-%s() L%d: delete %s fail!!!
+15893-%s() L%d: id:%d, packet_decode errcode[%d]
+15894-broadcast-authen
+===RUNTIME PSK LOGS===
+/tmp/ram_log/traff/traff.log:243:[2026-11-09 17:02:23] get_lit_down_config:plc_psk_tmp=171;16;52;17;69;17;27;195;193;45;232;255;17;20;34;4; 
+/tmp/ram_log/traff/traff.log:244:[2026-11-09 17:02:23] get_lit_down_config:the plc_psk_len=16  
+/tmp/ram_log/traff/traff.log:716:[2026-11-09 17:02:55] ======================init:plc_psk=AB10341145111BC3C12DE8FF11142204
+/tmp/ram_log/plugin/plugin.log:13:[2026-11-09 17:02:32][plugin:debug] InitDBus() L81: InitDBus register:mod_g3_psk : [method]g3 psk config..

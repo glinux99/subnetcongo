@@ -1,0 +1,26 @@
+﻿===REDIS_NODES===
+plus_routine
+module_max_node_num
+plus_online_list
+---plus_online_list---
++OK
+*3
+$12
+000260600010
+$12
+037990133045
+$12
+037990133102
+---plus_routine---
++OK
+*3
+$191
+{"index":0,"meterno":"037990133102","node":"037990133102","farther":"000000000000","ipv6":"","status":"online","datetime":"2026-11-09 17:08:14","region":"null","phase":"null","comtype":"PLC"}
+$191
+{"index":1,"meterno":"037990133045","node":"037990133045","farther":"000000000000","ipv6":"","status":"online","datetime":"2026-11-09 17:08:20","region":"null","phase":"null","comtype":"PLC"}
+$192
+{"index":2,"meterno":"000260600010","node":"000260600010","farther":"FFFFFFFFFFFF","ipv6":"","status":"online","datetime":"2026-11-09 17:10:30","region":"null","phase":"null","comtype":"null"}
+===DBUS_NODES===
+Error org.freedesktop.DBus.Error.NoReply: Did not receive a reply. Possible causes include: the remote application did not send a reply, the message bus security policy blocked the reply, the reply timeout expired, or the network connection was broken.
+---channel---
+Error org.freedesktop.DBus.Error.NoReply: Did not receive a reply. Possible causes include: the remote application did not send a reply, the message bus security policy blocked the reply, the reply timeout expired, or the network connection was broken.

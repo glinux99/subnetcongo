@@ -1,0 +1,31 @@
+=== Inhemeter i100 g0 COM5 scan ===
+IEC ident: b'/IHM5\\2Inhe Meter\r\n'
+
+=== TRY c1 LOW 12345678 mode=E ===
+  FAIL: no ident b''
+
+=== TRY c1 NONE mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c16 LOW 12345678 mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c16 NONE mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c18 LOW 12345678 mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c32 LOW 12345678 mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c48 LOW 12345678 mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c100 LOW 12345678 mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c102 LOW 12345678 mode=E ===
+  FAIL: hdlc timeout
+
+=== TRY c17 LOW 12345678 mode=E ===

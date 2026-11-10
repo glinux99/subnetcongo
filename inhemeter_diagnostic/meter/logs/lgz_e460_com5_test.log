@@ -1,0 +1,54 @@
+=== Landis+Gyr E460S COM5 comprehensive test === 2026-11-09T14:01:16.647802
+Python 3.13.13 (tags/v3.13.13:01104ce, Apr  7 2026, 19:25:48) [MSC v.1944 64 bit (AMD64)]
+pyserial 3.5
+gurux_dlms OK
+
+--- IEC 300 7E1 standard ---
+
+--- IEC 300 7E1 addr1 ---
+
+--- IEC 300 7E1 addr2 ---
+
+--- IEC 300 7E1 addr0 ---
+
+--- IEC 300 7E1 addr9 ---
+
+--- IEC 300 7E1 LF ---
+
+--- IEC 300 7E1 NUL+std ---
+
+--- IEC 300 7E1 wakeup? ---
+
+--- IEC 300 7N1 standard ---
+
+--- IEC 300 7N1 addr1 ---
+
+--- IEC 300 7N1 addr2 ---
+
+--- IEC 300 7N1 addr0 ---
+
+--- IEC 300 7N1 addr9 ---
+
+--- IEC 300 7N1 LF ---
+
+--- IEC 300 7N1 NUL+std ---
+
+--- IEC 300 7N1 wakeup? ---
+
+--- IEC 300 8N1 standard ---
+
+--- IEC 300 8N1 addr1 ---
+
+--- IEC 300 8N1 addr2 ---
+
+--- IEC 300 8N1 addr0 ---
+
+--- IEC 300 8N1 addr9 ---
+
+--- IEC 300 8N1 LF ---
+
+--- IEC 300 8N1 NUL+std ---
+
+--- IEC 300 8N1 wakeup? ---
+
+--- IEC 600 7E1 standard ---

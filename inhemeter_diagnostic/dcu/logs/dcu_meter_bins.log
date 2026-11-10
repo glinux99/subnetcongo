@@ -1,0 +1,7 @@
+﻿plink.exe : FATAL ERROR: Server refused to start a shell/command
+Au caractère Ligne:15 : 125
++ ... 2;$i++){ $o=& $plink -ssh -pw root -batch -hostkey $hk -m $tmp root@1 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FATAL ERROR: Se...a shell/command:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

@@ -1,0 +1,18 @@
+﻿# DCU PSK findings (2026-11-09 remote session from home)
+- DCU: 192.168.202.159 (root/root), IHM-5000, up, services traff/plugin_module/metering/task running.
+- PLC G3 PSK configured on DCU and loaded by traff at startup:
+  - `/opt/home/httpd/html/lit_down_config.cfg` (symlink/path on web/store):
+    - `plc_psk = 171;16;52;17;69;17;27;195;193;45;232;255;17;20;34;4;`
+    - `plc_psk_len = 16`
+  - `/tmp/ram_log/traff/traff.log` (2026-11-09 17:02:23/55):
+    - `get_lit_down_config:plc_psk_tmp=171;16;52;17;69;17;27;195;193;45;232;255;17;20;34;4;`
+    - `get_lit_down_config:the plc_psk_len=16`
+    - `======================init:plc_psk=AB10341145111BC3C12DE8FF11142204`
+- Decoded PSK (16 bytes): `AB 10 34 11 45 11 1B C3 C1 2D E8 FF 11 14 22 04` / hex `AB10341145111BC3C12DE8FF11142204`.
+- Mechanism evidence (strings/logs, no unsafe reconfiguration performed):
+  - `traff` contains `RSS:set psk ok`, `init:plc_psk`, `g3_psk=`, `mod_g3_psk` and parses `lit_down_config.cfg` (`plc_psk`, `plc_psk_len`).
+  - `plugin_module` registered D-Bus method `mod_g3_psk` at startup (`/tmp/ram_log/plugin/plugin.log`: `[method]g3 psk config`).
+  - `rss_g3/renesas_dcu` contains `psk_set/psk_get/adp psk/p3762 set psk` strings (PSK passed to Renesas G3 stack/module path).
+  - `task`/DLMS config shows `gmac-high` and `;PASSWORD:12345678` patterns; Redis has no PSK key; `con_config.cfg` has no PSK.
+- Interpretation: DCU holds G3-PLC network PSK in `lit_down_config.cfg`; `traff` loads it and the plugin/Renesas stack apply it to the G3 module/network (and can receive `mod_g3_psk` via D-Bus). This is network/PLC security (G3 PSK), distinct from DLMS HLS client-1 auth/ciphering keys on the meter (still not matched on optical today; optical unavailable at home).
+- Evidence files: `dcu/logs/dcu_psk_probe1.log`, `dcu/logs/dcu_psk_probe2.log`, `dcu/logs/dcu_psk_handoff_20261109_153750.log`.

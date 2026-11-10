@@ -1,0 +1,82 @@
+
+########################################################################
+#  CLIENT DLMS 18  (authentification : LOW)
+########################################################################
+[+] Association reussie. Identification optique : /IHM5\2Inhe Meter
+
+--- A. ASSOCIATION VIEW ---
+[*] 2055 objets. Classes : 1:101, 3:1373, 4:540, 7:18, 8:1, 9:2, 11:3, 15:6, 17:1, 18:1, 20:2, 23:2, 64:4, 70:1
+[-] Aucun objet CPL/RF/IP declare dans la vue de ce client.
+
+--- B/C. LECTURE DES OBJETS G3-PLC / RF / IP / PRIME / S-FSK (valeurs en decimal) ---
+[-] G3-PLC    c90  0.0.29.0.0.255   MAC layer counters                 -> absent (code 4 object-undefined)
+[-] G3-PLC    c91  0.0.29.1.0.255   MAC setup                          -> absent (code 4 object-undefined)
+[-] G3-PLC    c92  0.0.29.2.0.255   6LoWPAN adaptation layer setup     -> absent (code 4 object-undefined)
+[-] G3-PLC-RF c160 0.0.29.3.0.255   Hybrid RF MAC counters (a confirme -> absent (code 4 object-undefined)
+[-] G3-PLC-RF c161 0.0.29.4.0.255   Hybrid RF MAC setup (a confirmer)  -> absent (code 4 object-undefined)
+[-] G3-PLC-RF c162 0.0.29.5.0.255   Hybrid 6LoWPAN (a confirmer)       -> absent (code 4 object-undefined)
+[~] Wi-SUN    c95  0.0.25.8.0.255   Wi-SUN setup (a confirmer)         -> absent (existence seulement : test d'existence via classe 1 : code 4 object-undefined)
+[~] Wi-SUN    c96  0.0.25.9.0.255   Wi-SUN diagnostic (a confirmer)    -> absent (existence seulement : test d'existence via classe 1 : code 4 object-undefined)
+[~] Wi-SUN    c97  0.0.25.10.0.255  RPL diagnostic (a confirmer)       -> absent (existence seulement : test d'existence via classe 1 : code 4 object-undefined)
+[~] Wi-SUN    c98  0.0.25.11.0.255  MPL diagnostic (a confirmer)       -> absent (existence seulement : test d'existence via classe 1 : code 4 object-undefined)
+[-] IP        c41  0.0.25.0.0.255   TCP-UDP setup                      -> absent (code 4 object-undefined)
+[-] IP        c42  0.0.25.1.0.255   IPv4 setup                         -> absent (code 4 object-undefined)
+[-] IP        c43  0.0.25.2.0.255   MAC address setup                  -> absent (code 4 object-undefined)
+[-] IP        c48  0.0.25.7.0.255   IPv6 setup                         -> absent (code 4 object-undefined)
+[-] PRIME     c80  0.0.28.0.0.255   LLC SSCS setup                     -> absent (code 4 object-undefined)
+[-] PRIME     c81  0.0.28.1.0.255   PHY counters                       -> absent (code 4 object-undefined)
+[-] PRIME     c82  0.0.28.2.0.255   MAC setup                          -> absent (code 4 object-undefined)
+[-] PRIME     c83  0.0.28.3.0.255   MAC functional params              -> absent (code 4 object-undefined)
+[-] PRIME     c84  0.0.28.4.0.255   MAC counters                       -> absent (code 4 object-undefined)
+[-] PRIME     c85  0.0.28.5.0.255   MAC network admin data             -> absent (code 4 object-undefined)
+[-] PRIME     c86  0.0.28.6.0.255   Application identification         -> absent (code 4 object-undefined)
+[-] S-FSK     c50  0.0.26.0.0.255   Phy&MAC setup                      -> absent (code 4 object-undefined)
+[-] S-FSK     c51  0.0.26.1.0.255   Active initiator                   -> absent (code 4 object-undefined)
+[-] S-FSK     c52  0.0.26.2.0.255   MAC sync timeouts                  -> absent (code 4 object-undefined)
+[-] S-FSK     c53  0.0.26.3.0.255   MAC counters                       -> absent (code 4 object-undefined)
+[-] S-FSK     c55  0.0.26.5.0.255   LLC setup                          -> absent (code 4 object-undefined)
+[-] S-FSK     c56  0.0.26.6.0.255   Reporting system list              -> absent (code 4 object-undefined)
+
+--- D. BALAYAGE OBIS DE COMMUNICATION (0.0/0.1 . 25..29 . 0..15 . 0 . 255) ---
+[*] Balayage termine : 0 objet(s) existant(s). Statuts : {'ABSENT': 137}
+
+--- E. IDENTITE (EUI-64 / MAC / IPv4 / IPv6) ---
+   0.0.43.0.0.255 client_system_title              : 00:00:00:00:00:00:00:00  ascii=''
+   0.0.43.0.0.255 server_system_title              : 49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'
+   0.0.43.0.1.255 client_system_title              : 00:00:00:00:00:00:00:00  ascii=''
+   0.0.43.0.1.255 server_system_title              : 49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'
+   0.0.43.0.2.255 client_system_title              : 00:00:00:00:00:00:00:00  ascii=''
+   0.0.43.0.2.255 server_system_title              : 49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'
+   0.0.43.0.3.255 client_system_title              : 00:00:00:00:00:00:00:00  ascii=''
+   0.0.43.0.3.255 server_system_title              : 49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'
+   -> Compare l'EUI-64 / system title avec la liste des noeuds du DCU.
+
+--- F. HPLC : OBJETS PROPRIETAIRES & MOTS-CLES (pas de classe COSEM HPLC standard) ---
+[+] 0.0.128.0.30.255 classe   1 a2 = 1 [proprietaire]
+[+] 1.0.128.0.8.255  classe   1 a2 = 000000000000 [proprietaire]
+[+] 1.0.128.13.2.255 classe   3 a2 = 60 [proprietaire]
+[+] 1.0.128.13.2.255 classe   3 a3 = [0; 7] [proprietaire]
+[+] 0.0.96.1.8.255   classe   1 a2 = [48]
+
+--- G. VERDICT POUR CE CLIENT ---
+   G3-PLC    : non trouve
+   G3-PLC-RF : non trouve
+   Wi-SUN    : non trouve
+   IP        : non trouve
+   PRIME     : non trouve
+   S-FSK     : non trouve
+   HPLC      : 5 objet(s) proprietaire(s) lu(s), 0 mot(s)-cle(s) : a valider avec la fiche fabricant
+
+========================================================================
+  SYNTHESE GLOBALE
+========================================================================
+Client  18 (low ) : G3-PLC = non trouve | RF hybride = non trouve | Wi-SUN = non trouve | IP = non trouve
+
+CONCLUSION : aucune lecture directe G3-PLC reussie avec les clients testes.
+  - 'PRESENT mais ACCES REFUSE' = l'objet existe : il faut un client / mot de passe
+    plus privilegie (voir la table des associations, classe 15).
+  - 'absent' partout = ces objets ne sont pas exposes en DLMS par ce firmware ;
+    la confirmation passe alors par le DCU (liste des noeuds, EUI-64, PAN ID)
+    ou par la documentation Inhemeter de ce modele.
+RAPPEL : une adresse IPv4 ne prouve pas le G3-PLC (G3 = IPv6 + EUI-64).
+         L'HPLC n'a pas de classe COSEM standard : seul le fabricant peut le confirmer.

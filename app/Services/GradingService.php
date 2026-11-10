@@ -18,10 +18,33 @@ class GradingService
      * @param int $userId
      * @return float|null Score out of 20, or null if not enough data
      */
+    /**
+     * Get the final exam of a course (final_exam_id, sinon repéré via is_final_exam).
+     */
+    private function getFinalExam(Course $course): ?Exam
+    {
+        if (! $course->has_final_exam) {
+            return null;
+        }
+
+        return Exam::find($course->final_exam_id)
+            ?? Exam::where('course_id', $course->id)
+                ->where('is_final_exam', true)
+                ->latest('id')
+                ->first();
+    }
+
+    /**
+     * Calculate the final certificate score for a student in a course.
+     *
+     * @param Course $course
+     * @param int $userId
+     * @return float|null Score out of 20, or null if not enough data
+     */
     public function calculateFinalScore(Course $course, int $userId): ?float
     {
-        $modules = $course->modules()->where('has_quiz', true)->get();
-        $finalExam = $course->has_final_exam ? Exam::find($course->final_exam_id) : null;
+        $modules = $course->modules()->where('quiz_weight', '>', 0)->get();
+        $finalExam = $this->getFinalExam($course);
 
         $totalWeight = 0;
         $weightedScore = 0.0;
@@ -53,13 +76,19 @@ class GradingService
     }
 
     /**
+     * Get the quiz exam attached to a module (Exam.module_id).
+     */
+    private function getModuleQuiz(Module $module): ?Exam
+    {
+        return Exam::where('module_id', $module->id)->latest('id')->first();
+    }
+
+    /**
      * Get the best exam result for a module quiz.
      */
     private function getModuleBestResult(Module $module, int $userId): ?ExamResult
     {
-        if (!$module->quiz_id) return null;
-
-        $exam = Exam::find($module->quiz_id);
+        $exam = $this->getModuleQuiz($module);
         if (!$exam) return null;
 
         return $this->getExamResult($exam, $userId);
@@ -105,19 +134,20 @@ class GradingService
             'passed' => false,
         ];
 
-        $modules = $course->modules()->where('has_quiz', true)->get();
-        $finalExam = $course->has_final_exam ? Exam::find($course->final_exam_id) : null;
+        $modules = $course->modules()->where('quiz_weight', '>', 0)->get();
+        $finalExam = $this->getFinalExam($course);
 
         foreach ($modules as $module) {
             if ($module->quiz_weight <= 0) continue;
 
+            $moduleQuiz = $this->getModuleQuiz($module);
             $result = $this->getModuleBestResult($module, $userId);
             $scoreOutOf20 = $result ? ($result->score_percentage / 100) * 20 : null;
 
             $breakdown['modules'][] = [
                 'module_id' => $module->id,
                 'module_title' => $module->title,
-                'quiz_id' => $module->quiz_id,
+                'quiz_id' => $moduleQuiz?->id,
                 'weight' => $module->quiz_weight,
                 'score_out_of_20' => $scoreOutOf20,
                 'score_percentage' => $result ? $result->score_percentage : null,

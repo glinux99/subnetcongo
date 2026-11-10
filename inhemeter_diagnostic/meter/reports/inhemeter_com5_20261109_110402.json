@@ -1,0 +1,357 @@
+{
+  "date": "2026-11-09T11:07:19.351761",
+  "port": "COM5",
+  "results": [
+    {
+      "client": 18,
+      "auth": "low",
+      "connected": true,
+      "probes": [
+        {
+          "family": "G3-PLC",
+          "desc": "MAC layer counters",
+          "class": 90,
+          "obis": "0.0.29.0.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "G3-PLC",
+          "desc": "MAC setup",
+          "class": 91,
+          "obis": "0.0.29.1.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "G3-PLC",
+          "desc": "6LoWPAN adaptation layer setup",
+          "class": 92,
+          "obis": "0.0.29.2.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "G3-PLC-RF",
+          "desc": "Hybrid RF MAC counters (a confirmer)",
+          "class": 160,
+          "obis": "0.0.29.3.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "G3-PLC-RF",
+          "desc": "Hybrid RF MAC setup (a confirmer)",
+          "class": 161,
+          "obis": "0.0.29.4.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "G3-PLC-RF",
+          "desc": "Hybrid 6LoWPAN (a confirmer)",
+          "class": 162,
+          "obis": "0.0.29.5.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "Wi-SUN",
+          "desc": "Wi-SUN setup (a confirmer)",
+          "class": 95,
+          "obis": "0.0.25.8.0.255",
+          "status": "ABSENT",
+          "message": "test d'existence via classe 1 : code 4 object-undefined",
+          "attrs": {},
+          "existence_only": true,
+          "in_view": false
+        },
+        {
+          "family": "Wi-SUN",
+          "desc": "Wi-SUN diagnostic (a confirmer)",
+          "class": 96,
+          "obis": "0.0.25.9.0.255",
+          "status": "ABSENT",
+          "message": "test d'existence via classe 1 : code 4 object-undefined",
+          "attrs": {},
+          "existence_only": true,
+          "in_view": false
+        },
+        {
+          "family": "Wi-SUN",
+          "desc": "RPL diagnostic (a confirmer)",
+          "class": 97,
+          "obis": "0.0.25.10.0.255",
+          "status": "ABSENT",
+          "message": "test d'existence via classe 1 : code 4 object-undefined",
+          "attrs": {},
+          "existence_only": true,
+          "in_view": false
+        },
+        {
+          "family": "Wi-SUN",
+          "desc": "MPL diagnostic (a confirmer)",
+          "class": 98,
+          "obis": "0.0.25.11.0.255",
+          "status": "ABSENT",
+          "message": "test d'existence via classe 1 : code 4 object-undefined",
+          "attrs": {},
+          "existence_only": true,
+          "in_view": false
+        },
+        {
+          "family": "IP",
+          "desc": "TCP-UDP setup",
+          "class": 41,
+          "obis": "0.0.25.0.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "IP",
+          "desc": "IPv4 setup",
+          "class": 42,
+          "obis": "0.0.25.1.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "IP",
+          "desc": "MAC address setup",
+          "class": 43,
+          "obis": "0.0.25.2.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "IP",
+          "desc": "IPv6 setup",
+          "class": 48,
+          "obis": "0.0.25.7.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "LLC SSCS setup",
+          "class": 80,
+          "obis": "0.0.28.0.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "PHY counters",
+          "class": 81,
+          "obis": "0.0.28.1.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "MAC setup",
+          "class": 82,
+          "obis": "0.0.28.2.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "MAC functional params",
+          "class": 83,
+          "obis": "0.0.28.3.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "MAC counters",
+          "class": 84,
+          "obis": "0.0.28.4.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "MAC network admin data",
+          "class": 85,
+          "obis": "0.0.28.5.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "PRIME",
+          "desc": "Application identification",
+          "class": 86,
+          "obis": "0.0.28.6.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "S-FSK",
+          "desc": "Phy&MAC setup",
+          "class": 50,
+          "obis": "0.0.26.0.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "S-FSK",
+          "desc": "Active initiator",
+          "class": 51,
+          "obis": "0.0.26.1.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "S-FSK",
+          "desc": "MAC sync timeouts",
+          "class": 52,
+          "obis": "0.0.26.2.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "S-FSK",
+          "desc": "MAC counters",
+          "class": 53,
+          "obis": "0.0.26.3.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "S-FSK",
+          "desc": "LLC setup",
+          "class": 55,
+          "obis": "0.0.26.5.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        },
+        {
+          "family": "S-FSK",
+          "desc": "Reporting system list",
+          "class": 56,
+          "obis": "0.0.26.6.0.255",
+          "status": "ABSENT",
+          "message": "code 4 object-undefined",
+          "attrs": {},
+          "in_view": false
+        }
+      ],
+      "sweep": [],
+      "identity": {
+        "0.0.43.0.0.255 client_system_title": "00:00:00:00:00:00:00:00  ascii=''",
+        "0.0.43.0.0.255 server_system_title": "49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'",
+        "0.0.43.0.1.255 client_system_title": "00:00:00:00:00:00:00:00  ascii=''",
+        "0.0.43.0.1.255 server_system_title": "49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'",
+        "0.0.43.0.2.255 client_system_title": "00:00:00:00:00:00:00:00  ascii=''",
+        "0.0.43.0.2.255 server_system_title": "49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'",
+        "0.0.43.0.3.255 client_system_title": "00:00:00:00:00:00:00:00  ascii=''",
+        "0.0.43.0.3.255 server_system_title": "49:48:4D:01:75:5F:52:35  ascii='IHM u_R5'"
+      },
+      "vendor": [
+        {
+          "obis": "0.0.128.0.30.255",
+          "class": 1,
+          "attr": 2,
+          "decimal": "1"
+        },
+        {
+          "obis": "1.0.128.0.8.255",
+          "class": 1,
+          "attr": 2,
+          "decimal": "000000000000"
+        },
+        {
+          "obis": "1.0.128.13.2.255",
+          "class": 3,
+          "attr": 2,
+          "decimal": "60"
+        },
+        {
+          "obis": "1.0.128.13.2.255",
+          "class": 3,
+          "attr": 3,
+          "decimal": "[0; 7]"
+        },
+        {
+          "obis": "0.0.96.1.8.255",
+          "class": 1,
+          "attr": 2,
+          "decimal": "[48]"
+        }
+      ],
+      "keywords": [],
+      "view_classes": {
+        "1": 101,
+        "3": 1373,
+        "4": 540,
+        "7": 18,
+        "8": 1,
+        "9": 2,
+        "11": 3,
+        "15": 6,
+        "17": 1,
+        "18": 1,
+        "20": 2,
+        "23": 2,
+        "64": 4,
+        "70": 1
+      },
+      "optical_ident": "/IHM5\\2Inhe Meter",
+      "verdict": {
+        "G3-PLC": "non trouve",
+        "G3-PLC-RF": "non trouve",
+        "Wi-SUN": "non trouve",
+        "IP": "non trouve",
+        "PRIME": "non trouve",
+        "S-FSK": "non trouve",
+        "HPLC": "5 objet(s) proprietaire(s) lu(s), 0 mot(s)-cle(s) : a valider avec la fiche fabricant"
+      }
+    }
+  ]
+}

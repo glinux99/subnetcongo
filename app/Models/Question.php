@@ -122,6 +122,32 @@ class Question extends Model
     }
 
     /**
+     * La colonne `options` (JSON, inutilisée) masque la relation options().
+     * On force l'accès à la relation pour que $question->options retourne
+     * toujours une Collection de QuestionOption (correction des examens, etc.).
+     */
+    public function getOptionsAttribute($value)
+    {
+        // Valeur assignée manuellement (ex: options mélangées pour un examen)
+        if ($value instanceof \Illuminate\Support\Collection) {
+            return $value;
+        }
+
+        if ($this->relationLoaded('options')) {
+            return $this->relations['options'];
+        }
+
+        $relation = $this->options()->get();
+
+        if ($relation->isNotEmpty() || $value === null) {
+            return $relation;
+        }
+
+        // Fallback : ancienne colonne JSON si jamais remplie
+        return collect(is_string($value) ? json_decode($value, true) : $value);
+    }
+
+    /**
      * Get the attempts for this question.
      */
     public function attempts(): HasMany

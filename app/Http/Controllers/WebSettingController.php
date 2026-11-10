@@ -171,10 +171,28 @@ class WebSettingController extends Controller
 
         $about = WebSetting::where('group', 'about')->get()->pluck('value', 'key')->toArray();
 
+        $testimonials = Testimonial::query()
+            ->where('is_approved', true)
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get()
+            ->map(fn ($t) => [
+                'id'      => $t->id,
+                'name'    => $t->name ?? $t->author_name ?? 'Apprenant',
+                'role'    => $t->role ?? '',
+                'avatar'  => $t->avatar ?? $t->author_avatar ?? null,
+                'content' => $t->content ?? $t->message ?? '',
+                'rating'  => (int) ($t->rating ?? 5),
+            ])->toArray();
+
+        $technologies = \App\Models\LandingTechnology::active()->get()->toArray();
+
         return Inertia::render('Web/About', array_merge($props, [
-            'page'  => $page,
-            'about' => $about,
-            'team'  => User::role(['instructor', 'admin'])->limit(8)->get(['id', 'name', 'avatar', 'bio'])->toArray(),
+            'page'          => $page,
+            'about'         => $about,
+            'team'          => User::role(['instructor', 'admin'])->limit(8)->get(['id', 'name', 'avatar', 'bio'])->toArray(),
+            'testimonials'  => $testimonials,
+            'technologies'  => $technologies,
             'stats' => [
                 'students'    => User::role('student')->count(),
                 'instructors' => User::role('instructor')->count(),
@@ -188,13 +206,18 @@ class WebSettingController extends Controller
     {
         $props = $this->sharedProps();
 
+        $sort = request('sort', 'newest');
+
         $courses = Course::query()
             ->with(['instructor:id,name', 'category:id,name,slug'])
             ->published()
             ->when(request('category'), fn ($q, $slug) => $q->whereHas('category', fn ($q2) => $q2->where('slug', $slug)))
             ->when(request('level'), fn ($q, $l) => $q->where('level', $l))
             ->when(request('search'), fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
-            ->orderByDesc('published_at')
+            ->when($sort === 'price_asc', fn ($q) => $q->orderBy('price'))
+            ->when($sort === 'price_desc', fn ($q) => $q->orderByDesc('price'))
+            ->when($sort === 'title', fn ($q) => $q->orderBy('title'))
+            ->when($sort === 'newest' || ! in_array($sort, ['price_asc', 'price_desc', 'title']), fn ($q) => $q->orderByDesc('published_at'))
             ->paginate(12)
             ->withQueryString();
 
@@ -210,6 +233,7 @@ class WebSettingController extends Controller
         $props = $this->sharedProps();
 
         $posts = BlogPost::query()
+            ->with(['author:id,name', 'category:id,name,slug'])
             ->where('is_published', true)
             ->when(request('search'), fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
             ->when(request('category'), fn ($q, $slug) => $q->whereHas('category', fn ($q2) => $q2->where('slug', $slug)))
@@ -217,12 +241,26 @@ class WebSettingController extends Controller
             ->paginate(9)
             ->withQueryString();
 
-        $featured = BlogPost::where('is_published', true)->orderByDesc('published_at')->limit(3)->get(['id', 'title', 'slug', 'excerpt', 'featured_image', 'published_at'])->toArray();
+        $featured = BlogPost::query()
+            ->with(['author:id,name', 'category:id,name,slug'])
+            ->where('is_published', true)
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get(['id', 'title', 'slug', 'excerpt', 'content', 'thumbnail', 'featured_image', 'published_at', 'author_id', 'category_id'])
+            ->toArray();
+
+        $blogCategories = \App\Models\BlogCategory::query()
+            ->where('is_active', true)
+            ->withCount(['posts' => fn ($q) => $q->where('is_published', true)])
+            ->orderBy('order')
+            ->get(['id', 'name', 'slug'])
+            ->toArray();
 
         return Inertia::render('Web/Blog', array_merge($props, [
-            'posts'    => $posts,
-            'featured' => $featured,
-            'filters'  => request()->all(),
+            'posts'          => $posts,
+            'featured'       => $featured,
+            'blogCategories' => $blogCategories,
+            'filters'        => request()->all(),
         ]));
     }
 
@@ -241,13 +279,24 @@ class WebSettingController extends Controller
         $items = Realization::query()
             ->where('is_published', true)
             ->when(request('search'), fn ($q, $s) => $q->where('title', 'like', "%{$s}%"))
+            ->when(request('category'), fn ($q, $c) => $q->where('category', $c))
             ->orderByDesc('created_at')
             ->paginate(12)
             ->withQueryString();
 
+        $categories = Realization::query()
+            ->where('is_published', true)
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category')
+            ->toArray();
+
         return Inertia::render('Web/Realizations', array_merge($props, [
-            'realizations' => $items,
-            'filters'      => request()->all(),
+            'realizations'         => $items,
+            'realizationCategories' => $categories,
+            'filters'              => request()->all(),
         ]));
     }
 

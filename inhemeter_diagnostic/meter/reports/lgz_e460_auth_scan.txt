@@ -1,0 +1,90 @@
+
+=== TRY c16s1 LOW ===
+  UA OK
+  AARE OK *** ASSOCIATED ***
+  objects=25
+
+  -- c91 0.0.29.1.0.255
+    2 MAC_short_address: None
+    3 MAC_RC_coord: ERR ? list index out of range
+    4 PAN_ID: ERR ? list index out of range
+
+  -- c92 0.0.29.2.0.255
+    2 max_hops: None
+    3 weak_lqi: ERR ? list index out of range
+    4 security_level: ERR ? list index out of range
+
+  -- c90 0.0.29.0.0.255
+    2 a2: None
+    3 a3: ERR ? list index out of range
+    4 a4: ERR ? list index out of range
+
+  -- c64 0.0.43.0.0.255
+    2 security_policy: None
+    3 security_suite: ERR ? list index out of range
+    4 client_system_title(EUI?): ERR ? list index out of range
+
+  -- c43 0.0.25.2.0.255
+    2 MAC_address: None
+    3 a3: ERR ? list index out of range
+    4 a4: ERR ? list index out of range
+
+  -- c48 0.0.25.7.0.255
+    2 a2: None
+    3 a3: ERR ? list index out of range
+    4 a4: ERR ? list index out of range
+
+  -- c42 0.0.25.1.0.255
+    2 a2: None
+    3 a3: ERR ? list index out of range
+    4 a4: ERR ? list index out of range
+
+  -- c41 0.0.25.0.0.255
+    2 a2: None
+    3 a3: ERR ? list index out of range
+    4 a4: ERR ? list index out of range
+
+  -- extra OBIS scan (hits with value) --
+
+  DONE c16s1 LOW
+
+=== TRY c16s17 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c1s1 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c1s17 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c32s1 LOW ===
+  UA OK
+  FAIL: Connection is permanently rejected
+Authentication failure.
+
+=== TRY c32s17 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c48s1 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c48s17 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c100s1 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c100s17 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c102s1 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c102s17 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c17s1 LOW ===
+  FAIL: hdlc timeout
+
+=== TRY c17s17 LOW ===
+  FAIL: hdlc timeout

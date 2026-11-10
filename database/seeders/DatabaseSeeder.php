@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             LandingContentSeeder::class,        // Slides / technologies / stats de la landing
             WebSettingsSeeder::class,           // Paramètres web (identité, contact, social, about, hero, legal, privacy)
             AffiliateSeeder::class,             // Affiliés et parrainages
+            EmailTemplateSeeder::class,         // Templates d'emails
         ]);
 
         $this->command->info('✓ Rôles, Utilisateurs et Configurations créés !');

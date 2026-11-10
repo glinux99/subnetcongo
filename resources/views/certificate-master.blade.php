@@ -164,24 +164,25 @@
             $w = (isset($el['width']) && $el['width'] !== null) ? $el['width'] . 'px' : '100%';
             $h = (isset($el['height']) && $el['height'] !== null) ? $el['height'] . 'px' : 'auto';
 
-            $opacity = isset($el['opacity']) ? ($el['opacity'] / 100) : 1;
-            $zIndex  = 10 + $index;
+            $opacity = isset($el['opacity']) && is_numeric($el['opacity']) ? ((float)$el['opacity'] / 100) : 1;
+            $zIndex  = 10 + (int) $index;
+            $elType  = $el['type'] ?? null;
 
             /**
              * LOGIQUE DES IMAGES (Logo, Signatures, Images Custom)
              * Le front peut envoyer l'image directement en Base64 dans "content"
              */
             $imgContent = null;
-            if (in_array($el['type'], ['logo', 'signature', 'image'])) {
+            if (in_array($elType, ['logo', 'signature', 'image'])) {
                 // 1. On cherche d'abord si l'image est dans le JSON (Glissée via le Studio)
                 if (!empty($el['content']) && strpos($el['content'], 'data:image') === 0) {
                     $imgContent = $el['content'];
                 }
                 // 2. Sinon, on utilise l'upload classique du backend comme solution de secours
-                elseif ($el['type'] === 'logo' && !empty($logo)) {
+                elseif ($elType === 'logo' && !empty($logo)) {
                     $imgContent = $logo;
                 }
-                elseif ($el['type'] === 'signature' && !empty($signature)) {
+                elseif ($elType === 'signature' && !empty($signature)) {
                     $imgContent = $signature;
                 }
             }
@@ -191,7 +192,7 @@
         <div class="quantum-element" style="left: {{ $x }}px; top: {{ $y }}px; width: {{ $w }}; height: {{ $h }}; z-index: {{ $zIndex }}; opacity: {{ $opacity }};">
 
             <!-- ========= RENDU : TEXTE ========= -->
-            @if($el['type'] === 'text')
+            @if($elType === 'text')
                 @php
                     $style = $el['style'] ?? [];
                     $fs    = $style['fontSize'] ?? 16;
@@ -212,13 +213,13 @@
                 </div>
 
             <!-- ========= RENDU : IMAGES, LOGO, SIGNATURE ========= -->
-            @elseif(in_array($el['type'], ['logo', 'signature', 'image']))
+            @elseif(in_array($elType, ['logo', 'signature', 'image']))
                 @if(!empty($imgContent))
                     <img src="{{ $imgContent }}">
                 @endif
 
             <!-- ========= RENDU : QR CODE ========= -->
-            @elseif($el['type'] === 'qr')
+            @elseif($elType === 'qr')
                 @if(isset($qr_code) && !empty($qr_code))
                     <div style="text-align: center;">
                         <div style="background-color: #ffffff; padding: 5px; box-sizing: border-box; display: inline-block; width: 100%;">

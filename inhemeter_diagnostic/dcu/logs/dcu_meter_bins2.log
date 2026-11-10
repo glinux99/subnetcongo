@@ -1,0 +1,10 @@
+﻿===BIN_METER_CTX===
+###/opt/home/httpd/store/param/itemdb.bin
+
+###/opt/home/httpd/store/param/meterdb.bin
+
+###/opt/home/httpd/store/param/msecuritydb.bin
+
+###/opt/home/httpd/store/metering_database/metering_para.db
+
+===PLUGIN_MOD_SIG===

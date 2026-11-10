@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Email\EmailService;
+use App\Models\SentEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -56,7 +57,7 @@ class AdminEmailController extends Controller
             ]);
         }
 
-        return Inertia::render('Admin/Emails/Index', [
+        return Inertia::render('Admin/Emails/Gmail', [
             'emails' => $data['emails'],
             'pagination' => [
                 'page' => $data['page'],
@@ -88,7 +89,7 @@ class AdminEmailController extends Controller
 
         $folders = $this->emailService->getFolders();
 
-        return Inertia::render('Admin/Emails/Show', [
+        return Inertia::render('Admin/Emails/GmailShow', [
             'email' => $email,
             'folders' => $folders,
             'messageNumber' => $messageNumber,
@@ -244,7 +245,7 @@ public function reply(Request $request, int $messageNumber)
 
     public function compose(Request $request)
     {
-        return Inertia::render('Admin/Emails/Compose', [
+        return Inertia::render('Admin/Emails/GmailCompose', [
             'prefill' => [
                 'to' => $request->input('to', ''),
                 'subject' => $request->input('subject', ''),
@@ -299,6 +300,29 @@ public function reply(Request $request, int $messageNumber)
                 }
             });
 
+            // Enregistrer l'email envoyé
+            try {
+                SentEmail::create([
+                    'user_id' => auth()->id(),
+                    'to' => $to,
+                    'cc' => !empty($cc) ? $cc : null,
+                    'bcc' => !empty($bcc) ? $bcc : null,
+                    'subject' => $validated['subject'],
+                    'body' => $validated['body'],
+                    'attachments' => $request->hasFile('attachments') ? array_map(function($file) {
+                        return [
+                            'name' => $file->getClientOriginalName(),
+                            'size' => $file->getSize(),
+                            'mime' => $file->getMimeType(),
+                        ];
+                    }, $request->file('attachments')) : null,
+                    'status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Impossible d\'enregistrer l\'email envoyé', ['error' => $e->getMessage()]);
+            }
+
             Log::info('Email envoyé avec succès', [
                 'to' => $to,
                 'subject' => $validated['subject'],
@@ -322,13 +346,102 @@ public function reply(Request $request, int $messageNumber)
     {
         $validated = $request->validate([
             'to' => 'nullable|string',
+            'cc' => 'nullable|string',
+            'bcc' => 'nullable|string',
             'subject' => 'nullable|string|max:255',
             'body' => 'nullable|string|max:50000',
         ]);
 
-        Log::info('Brouillon enregistré', $validated);
+        try {
+            $to = $this->parseEmails($validated['to'] ?? '');
+            $cc = $this->parseEmails($validated['cc'] ?? '');
+            $bcc = $this->parseEmails($validated['bcc'] ?? '');
 
-        return Redirect::back()->with('success', 'Brouillon enregistré avec succès.');
+            SentEmail::create([
+                'user_id' => auth()->id(),
+                'to' => $to,
+                'cc' => !empty($cc) ? $cc : null,
+                'bcc' => !empty($bcc) ? $bcc : null,
+                'subject' => $validated['subject'] ?? '',
+                'body' => $validated['body'] ?? '',
+                'status' => 'draft',
+            ]);
+
+            Log::info('Brouillon enregistré', $validated);
+
+            return Redirect::back()->with('success', 'Brouillon enregistré avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la sauvegarde du brouillon', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Erreur lors de la sauvegarde du brouillon.');
+        }
+    }
+
+    public function sentEmails(Request $request)
+    {
+        $page = (int) $request->input('page', 1);
+        $perPage = (int) $request->input('per_page', 20);
+        $status = $request->input('status');
+
+        $query = SentEmail::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc');
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $emails = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $stats = [
+            'total' => SentEmail::where('user_id', auth()->id())->count(),
+            'sent' => SentEmail::where('user_id', auth()->id())->where('status', 'sent')->count(),
+            'failed' => SentEmail::where('user_id', auth()->id())->where('status', 'failed')->count(),
+            'drafts' => SentEmail::where('user_id', auth()->id())->where('status', 'draft')->count(),
+        ];
+
+        return Inertia::render('Admin/Emails/Sent', [
+            'emails' => $emails->items(),
+            'pagination' => [
+                'page' => $emails->currentPage(),
+                'per_page' => $emails->perPage(),
+                'total' => $emails->total(),
+                'total_pages' => $emails->lastPage(),
+            ],
+            'stats' => $stats,
+            'filters' => $request->all(['status']),
+        ]);
+    }
+
+    public function showSentEmail(int $id)
+    {
+        $email = SentEmail::where('user_id', auth()->id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$email) {
+            return Redirect::route('admin.emails.sent')
+                ->with('error', 'Email non trouvé.');
+        }
+
+        return Inertia::render('Admin/Emails/SentShow', [
+            'email' => $email,
+        ]);
+    }
+
+    public function deleteSentEmail(int $id)
+    {
+        $email = SentEmail::where('user_id', auth()->id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$email) {
+            return Redirect::route('admin.emails.sent')
+                ->with('error', 'Email non trouvé.');
+        }
+
+        $email->delete();
+
+        return Redirect::route('admin.emails.sent')
+            ->with('success', 'Email supprimé avec succès.');
     }
 
     public function archive(int $messageNumber)
@@ -365,7 +478,7 @@ public function reply(Request $request, int $messageNumber)
         $originalBody = strip_tags($originalEmail['text_body'] ?: $originalEmail['body'] ?: '');
         $quotedText .= $originalBody;
 
-        return Inertia::render('Admin/Emails/Compose', [
+        return Inertia::render('Admin/Emails/GmailCompose', [
             'prefill' => [
                 'to' => '',
                 'subject' => $subject,

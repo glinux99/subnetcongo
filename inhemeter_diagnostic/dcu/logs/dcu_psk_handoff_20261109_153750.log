@@ -1,0 +1,174 @@
+﻿===TIME/DCU===
+Mon Nov  9 15:37:55 +02 2026
+IH
+ 15:37:55 up 23:36,  0 users,  load average: 0.49, 0.61, 0.69
+===PSK_RELATED_STRINGS===
+---traff---
+27731-RSS:set whitelist ok
+27732:RSS:set psk ok
+27733-set net max=%d
+--
+27763-get_top_info ok,end
+27764:rss set psk ok ,need reset
+27765-plc rss init param,
+--
+28269-%s not running
+28270:======================init:plc_psk=%s
+28271-PLC_INSERT_S
+--
+28482-plc_a_time
+28483:plc_psk_len
+28484:%s:plc_psk_len=%d  
+28485:plc_psk
+28486:%s:plc_psk_tmp=%s 
+28487-%02X
+28488:%s:the plc_psk_len=%d  
+28489-sim_pin
+--
+28551-/tmp/litdownconfig.lock
+28552:plc_psk_tmp=%s 
+28553-%s:file not exist=%s
+--
+31964-load lit conf ok
+31965:g3_psk=
+31966-%02X
+--
+32844-%s: recevie buffer bits != 16  
+32845:set:plc_psk=%s
+32846-dlms down net max:[%d] 
+--
+36226-mod_upgrade
+36227:mod_g3_psk
+36228-update_topo
+---plugin---
+---update/daemon/test---
+##/opt/home/work/update
+1404:plc_psk_len
+1405:%s:plc_psk_len=%d  
+1406:plc_psk
+1407:%s:plc_psk_tmp=%s 
+1409:%s:the plc_psk_len=%d  
+1473:plc_psk_tmp=%s 
+3543:plc_psk_tmp
+3629:plc_psk_len
+3655:d_psk
+3666:plc_psk
+5259:set_g3_psk
+##/opt/home/work/daemon
+4529:plc_psk
+4599:plc_psk_len
+4725:set_g3_psk
+##/opt/home/work/test
+4786:plc_psk
+4847:plc_psk_len
+4962:set_g3_psk
+===G3_CONF===
+# in this config document, all the note, we msut use "#" at begining.
+
+# enable save route table.
+en_save_r_table =1
+
+# enable save device table.
+en_save_d_table =1
+
+# save device table frq(min), it not be zero, 
+# if have save indcation will be delay.
+save_d_table_frq =5
+
+# enable open roll call  mechanism.
+en_roll_call =1
+
+# en enable offline broadcast when poweron.
+en_b_offline =1
+
+# setting debug level, there 6 level options: eDBG_OFF(0), eDBG_LOW(1), 
+# eDBG_NOM(2), eDBG_INFO(3), eDBG_ALARM(4), eDBG_ERR(5),
+en_dbg_level =2
+
+# CA power param
+ca_tx_filter_scale =11490
+ca_tx_power =9
+ca_tx_default_att =0
+ca_phy_preamble_gain =27
+ca_phy_digital_gain =24
+
+# FCC power param
+fcc_tx_filter_scale =513
+fcc_tx_power =9
+fcc_tx_default_att =0
+fcc_phy_preamble_gain =25
+fcc_phy_digital_gain =22
+
+# force uplayer read meter or module data,
+# use for mulitcast private protocol.
+force_uplayer_mread =0
+
+# enable 3762 data req port have deny respone if not succeed.
+en_p3762_dat_deny_res =0
+
+# 3762 data req if use multicast mode, timeout(sec) for 3762 deny.
+p3762_mread_timeout =30
+
+# 3762 data req if use unicast mode, timeout(sec) for 3762 deny.
+p3762_uread_timeout =120
+white_list_open =0
+white_list_enable =0
+mixed_inst_open =0
+node_limit_rc =31
+node_limit_acc_rc =501
+keep_silence =0
+up_jion_enable=1===REDIS_KEYS===
++OK
+*25
+$7
+RTC_VOL
+$13
+LIB_DLMSMETER
+$11
+dcu_version
+$13
+user_password
+$8
+workmode
+$7
+BAT_VOL
+$19
+module_software_ver
+$12
+task_version
+$11
+module_name
+$12
+ETH0_CABLE_S
+$12
+mixed_switch
+$12
+PLC_INSERT_S
+$22
+terminal_serial_number
+$19
+coprocessor_version
+$18
+ftp_module_version
+$12
+plus_routine
+$19
+module_max_node_num
+$18
+developer_password
+$13
+GPRS_INSERT_S
+$13
+plugin_static
+$16
+coprocessor_temp
+$16
+whitelist_switch
+$13
+network_scale
+$16
+plus_online_list
+$15
+networking_time
+===INTROSPECT_TIMEOUT_NOTE===
+inhe.dcu.downlink introspection timed out in previous attempts

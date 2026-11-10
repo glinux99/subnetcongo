@@ -1,0 +1,72 @@
+=== Landis+Gyr E460S COM5 focused scan === 2026-11-09T14:04:59.052715
+
+-- try HDLC 9600 c=16 s=1 0 pw=None
+  UA OK
+  AARE OK -> ASSOCIATED
+
+ASSOCIATED via c=16 s=1 0 pw=None
+
+=== ASSOCIATION VIEW: 25 objects ===
+classes: {1: 6, 7: 2, 12: 1, 15: 2, 17: 1, 70: 1, 111: 2, 112: 5, 113: 4, 115: 1}
+
+=== COMM OBJECTS IN VIEW ===
+
+=== DIRECT PROBES (incl not in view) ===
+[OK      ] c90 0.0.29.0.0.255 G3 MAC counters << -> None
+           a3: ERR
+           a4: ERR
+           a5: ERR
+           a6: ERR
+           a7: ERR
+           a8: ERR
+           a9: ERR
+           a10: ERR
+           a11: ERR
+[OK      ] c91 0.0.29.1.0.255 G3 MAC setup << -> None
+           a3: ERR
+           a4: ERR
+           a5: ERR
+           a6: ERR
+           a7: ERR
+           a8: ERR
+           a9: ERR
+           a10: ERR
+           a11: ERR
+[OK      ] c92 0.0.29.2.0.255 6LoWPAN setup << -> None
+           a3: ERR
+           a4: ERR
+           a5: ERR
+           a6: ERR
+           a7: ERR
+           a8: ERR
+           a9: ERR
+           a10: ERR
+           a11: ERR
+[OK      ] c43 0.0.25.2.0.255 MAC addr << -> None
+[OK      ] c48 0.0.25.7.0.255 IPv6 << -> None
+[OK      ] c42 0.0.25.1.0.255 IPv4 << -> None
+[OK      ] c41 0.0.25.0.0.255 TCPUDP << -> None
+[OK      ] c64 0.0.43.0.0.255 sec setup << -> None
+           a3: ERR
+           a4: ERR
+           a5: ERR
+           a6: ERR
+           a7: ERR
+           a8: ERR
+           a9: ERR
+           a10: ERR
+           a11: ERR
+[OK      ] c160 0.0.29.3.0.255 G3 hybrid RF? << -> None
+[OK      ] c161 0.0.29.4.0.255 G3 hybrid? << -> None
+[OK      ] c162 0.0.29.5.0.255 G3 hybrid? << -> None
+[OK      ] c1 0.0.96.1.0.255 serial << -> None
+[OK      ] c1 0.0.96.1.1.255 model << -> None
+[OK      ] c1 0.0.96.1.2.255 fw << -> None
+[OK      ] c1 0.0.42.0.0.255 logical name << -> bytes[16] 0x4c475a31303230303630333432363131 ascii='LGZ1020060342611'
+[OK      ] c1 1.0.0.2.0.255 fw id << -> None
+
+=== DCU COMPARISON (from live DCU) ===
+DCU: IHM-5000, PAN_ID=0010 (from DCU ID), local-1 HPLC, sf V0.0.03-260616, band target CENELEC A, whitelist off, mixed off
+Question: does E460 show PAN 0010 / short addr / join state / CEN-A in class 91/92 or proprietary comm objects?
+
+=== DONE === 2026-11-09T14:05:14.069684
