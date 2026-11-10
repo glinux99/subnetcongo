@@ -132,6 +132,12 @@ class EnrollmentController extends Controller
                 courseImage: $course->thumbnail_path,
             ));
 
+            try {
+                \App\Events\EnrollmentConfirmed::dispatch($enrollment);
+            } catch (\Throwable $e) {
+                \Log::warning('Enrollment confirmed email dispatch failed: ' . $e->getMessage());
+            }
+
             return back()->with('success', 'Successfully enrolled in ' . $course->title);
         } catch (\Exception $e) {
             DB::rollBack();

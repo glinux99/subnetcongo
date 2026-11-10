@@ -14,7 +14,7 @@ const props = defineProps({
 
 const replyForm = useForm({ message: '' });
 const submitReply = () => {
-    replyForm.post(route('student.support.reply', props.ticket.id), { preserveScroll: true, onSuccess: () => replyForm.reset() });
+    replyForm.post(route('student.support.reply', props.ticket.ticket_number), { preserveScroll: true, onSuccess: () => replyForm.reset() });
 };
 const confirmAction = useConfirmAction();
 const closeTicket = () => {
@@ -22,7 +22,7 @@ const closeTicket = () => {
         header: 'Fermer le ticket',
         message: 'Fermer ce ticket ? Vous pourrez en ouvrir un nouveau si le problème revient.',
         acceptLabel: 'Fermer le ticket',
-        accept: () => router.post(route('student.support.close', props.ticket.id)),
+        accept: () => router.post(route('student.support.close', props.ticket.ticket_number)),
     });
 };
 

@@ -8,6 +8,8 @@ use App\Events\CourseCompleted;
 use App\Events\EnrollmentConfirmed;
 use App\Events\EnrollmentRejected;
 use App\Events\EnrollmentRevoked;
+use App\Events\ExamFailed;
+use App\Events\ExamPassed;
 use App\Events\LiveSessionReminder;
 use App\Events\LiveSessionStarted;
 use App\Events\PaymentFailed;
@@ -22,8 +24,10 @@ use App\Listeners\SendCourseCompletedEmail;
 use App\Listeners\SendEnrollmentConfirmationEmail;
 use App\Listeners\SendEnrollmentRejectedEmail;
 use App\Listeners\SendEnrollmentRevokedEmail;
+use App\Listeners\SendExamResultEmail;
 use App\Listeners\SendLiveSessionReminderEmail;
 use App\Listeners\SendLiveSessionStartedEmail;
+use App\Listeners\SendPasswordChangedEmail;
 use App\Listeners\SendPaymentFailedEmail;
 use App\Listeners\SendPaymentReceivedEmail;
 use App\Listeners\SendSubscriptionExpiringEmail;
@@ -95,6 +99,18 @@ class EventServiceProvider extends ServiceProvider
 
         SubscriptionExpiring::class => [
             SendSubscriptionExpiringEmail::class,
+        ],
+
+        ExamPassed::class => [
+            SendExamResultEmail::class,
+        ],
+
+        ExamFailed::class => [
+            SendExamResultEmail::class,
+        ],
+
+        \Illuminate\Auth\Events\PasswordReset::class => [
+            SendPasswordChangedEmail::class,
         ],
     ];
 

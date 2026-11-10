@@ -205,7 +205,7 @@ const submitAsk = () => {
                         </Column>
                         <Column header="Action" :exportable="false">
                             <template #body="{ data }">
-                                <Link :href="route('student.questions.show', data.id)">
+                                <Link :href="route('student.questions.show', data.uuid)">
                                     <Button label="Consulter" icon="pi pi-arrow-right" iconPos="right" size="small" class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest text-white shadow-sm" />
                                 </Link>
                             </template>

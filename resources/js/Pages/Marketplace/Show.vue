@@ -22,6 +22,7 @@ const props = defineProps({
     enrollmentStatus: String,
     isInWishlist: Boolean,
     cartCount: Number,
+    liveSession: Object,
 });
 
 const toast = useToast();
@@ -35,10 +36,10 @@ const formatPrice = (price) => {
 };
 
 const addToCart = () => {
-    router.post(route('marketplace.cart.add', props.course.id), {}, { preserveScroll: true });
+    router.post(route('marketplace.cart.add', props.course.slug), {}, { preserveScroll: true });
 };
 const toggleWishlist = () => {
-    router.post(route('marketplace.wishlist.toggle', props.course.id), {}, { preserveScroll: true });
+    router.post(route('marketplace.wishlist.toggle', props.course.slug), {}, { preserveScroll: true });
 };
 
 // ── Demande d'inscription (payant) ──────────────────────────────
@@ -52,7 +53,7 @@ const openRequest = () => {
 };
 const submitRequest = () => {
     reqSubmitting.value = true;
-    router.post(route('marketplace.request-enrollment', props.course.id), reqForm.value, {
+    router.post(route('marketplace.request-enrollment', props.course.slug), reqForm.value, {
         preserveScroll: true,
         onSuccess: (page) => {
             showRequestDialog.value = false;
@@ -65,7 +66,7 @@ const submitRequest = () => {
 };
 
 const enrollFreeNow = () => {
-    router.post(route('marketplace.enroll-free', props.course.id), {}, {
+    router.post(route('marketplace.enroll-free', props.course.slug), {}, {
         preserveScroll: true,
         onSuccess: () => toast.add({ severity: 'success', summary: 'Inscription validée', detail: 'Bienvenue dans le cours !', life: 3000 }),
     });
@@ -88,6 +89,20 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
         <Head :title="course.title" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
+
+            <div v-if="liveSession" class="max-w-[1600px] mx-auto px-4 lg:px-6 pt-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap bg-rose-50 border border-rose-200 rounded-xl p-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" :class="liveSession.status === 'Live' ? 'animate-pulse' : ''"></span>
+                        <p class="text-sm text-rose-800 font-semibold truncate">
+                            {{ liveSession.status === 'Live' ? 'Une session live est en cours pour ce cours' : 'Session live programmée : ' + liveSession.title }}
+                        </p>
+                    </div>
+                    <Link :href="liveSession.share_url || route('live-sessions.join', liveSession.uuid)">
+                        <Button :label="liveSession.status === 'Live' ? 'Rejoindre le direct' : 'Voir la session'" icon="pi pi-video" severity="danger" size="small" />
+                    </Link>
+                </div>
+            </div>
 
             <!-- HEADER GLOBAL -->
             <div class="page-header">
@@ -252,7 +267,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
             <section v-if="relatedCourses?.length" class="max-w-[1600px] mx-auto px-6 mt-8">
                 <h2 class="text-2xl font-black text-slate-800 mb-6">Cours similaires</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <Link v-for="rc in relatedCourses" :key="rc.id" :href="route('marketplace.show', rc.id)" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all group">
+                    <Link v-for="rc in relatedCourses" :key="rc.id" :href="route('marketplace.show', rc.slug)" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all group">
                         <img :src="getImageUrl(rc.thumbnail_path || rc.image)" class="h-32 w-full object-cover group-hover:scale-105 transition" />
                         <div class="p-4">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ rc.instructor?.name }}</p>

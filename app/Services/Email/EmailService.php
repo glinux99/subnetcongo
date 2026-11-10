@@ -17,16 +17,18 @@ class EmailService
     protected string $defaultFolder;
     protected bool $validateCert;
     protected bool $connected = false;
+    protected bool $readOnly = true;
+    protected ?string $currentFolder = null;
 
     public function __construct()
     {
-        $this->host = config('services.imap.host', env('IMAP_HOST', ''));
+        $this->host = (string) config('services.imap.host', env('IMAP_HOST', ''));
         $this->port = (int) config('services.imap.port', env('IMAP_PORT', 993));
-        $this->encryption = config('services.imap.encryption', env('IMAP_ENCRYPTION', 'ssl'));
-        $this->username = config('services.imap.username', env('IMAP_USERNAME', ''));
-        $this->password = config('services.imap.password', env('IMAP_PASSWORD', ''));
-        $this->defaultFolder = config('services.imap.default_folder', 'INBOX');
-        $this->validateCert = config('services.imap.validate_cert', env('IMAP_VALIDATE_CERT', true));
+        $this->encryption = (string) config('services.imap.encryption', env('IMAP_ENCRYPTION', 'ssl'));
+        $this->username = (string) config('services.imap.username', env('IMAP_USERNAME', ''));
+        $this->password = (string) config('services.imap.password', env('IMAP_PASSWORD', ''));
+        $this->defaultFolder = (string) (config('services.imap.default_folder') ?? 'INBOX');
+        $this->validateCert = (bool) config('services.imap.validate_cert', env('IMAP_VALIDATE_CERT', true));
     }
 
     public function isConfigured(): bool
@@ -43,21 +45,30 @@ class EmailService
         return "{{$this->host}:{$this->port}/imap{$secure}}{$this->defaultFolder}";
     }
 
-    public function connect(): bool
+    public function connect(?bool $readOnly = null): bool
     {
         if (!$this->isConfigured()) {
             Log::error('EmailService: IMAP not configured');
             return false;
         }
 
-        if ($this->connected && $this->connection !== null) {
+        $readOnly = $readOnly ?? ($this->connected ? $this->readOnly : true);
+
+        if ($this->connected && $this->connection !== null && $this->readOnly === $readOnly) {
             return true;
         }
 
+        if ($this->connection !== null) {
+            @imap_close($this->connection);
+            $this->connection = null;
+            $this->connected = false;
+        }
+
         $mailbox = $this->getMailboxString();
-        
-        $this->connection = @imap_open($mailbox, $this->username, $this->password, OP_READONLY, 1);
-        
+        $flags = $readOnly ? OP_READONLY : 0;
+
+        $this->connection = @imap_open($mailbox, $this->username, $this->password, $flags, 1);
+
         if ($this->connection === false) {
             $error = imap_last_error();
             Log::error('EmailService: Failed to connect', ['error' => $error, 'mailbox' => $mailbox]);
@@ -66,8 +77,41 @@ class EmailService
         }
 
         $this->connected = true;
-        Log::info('EmailService: Connected successfully');
+        $this->readOnly = $readOnly;
+        $this->currentFolder = $this->defaultFolder;
+        Log::info('EmailService: Connected successfully', ['read_only' => $readOnly]);
         return true;
+    }
+
+    /**
+     * Bascule sur un dossier IMAP (nom "short" retourné par getFolders()).
+     * À appeler après connect() avant de lire/écrire un message d'un autre dossier.
+     */
+    public function useFolder(?string $folder): void
+    {
+        if (!$this->connected || $this->connection === null || !$folder) {
+            return;
+        }
+
+        if ($this->currentFolder === $folder) {
+            return;
+        }
+
+        $mailbox = $folder === $this->defaultFolder
+            ? $this->getMailboxString()
+            : $this->getBaseMailbox() . $folder;
+
+        if (@imap_reopen($this->connection, $mailbox) !== false) {
+            $this->currentFolder = $folder;
+        }
+    }
+
+    /**
+     * Revenir explicitement au dossier par défaut (INBOX).
+     */
+    public function useDefaultFolder(): void
+    {
+        $this->useFolder($this->defaultFolder);
     }
 
     public function disconnect(): void
@@ -119,9 +163,7 @@ class EmailService
             return ['emails' => [], 'total' => 0, 'page' => $page, 'per_page' => $perPage];
         }
 
-        if ($folder !== null && $folder !== $this->defaultFolder) {
-            $this->switchFolder($folder);
-        }
+        $this->useFolder($folder ?? $this->defaultFolder);
 
         $total = imap_num_msg($this->connection);
         $totalPages = max(1, (int) ceil($total / $perPage));
@@ -147,11 +189,13 @@ class EmailService
         ];
     }
 
-    public function getEmail(int $messageNumber): ?array
+    public function getEmail(int $messageNumber, ?string $folder = null): ?array
     {
         if (!$this->connect()) {
             return null;
         }
+
+        $this->useFolder($folder);
 
         $header = imap_headerinfo($this->connection, $messageNumber);
         if ($header === false) {
@@ -471,61 +515,87 @@ class EmailService
         return $this->decodeHeader($name);
     }
 
-    public function markAsRead(int $messageNumber): bool
+    public function markAsRead(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
         return imap_setflag_full($this->connection, $messageNumber, '\\Seen');
     }
 
-    public function markAsUnread(int $messageNumber): bool
+    public function markAsUnread(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
         return imap_clearflag_full($this->connection, $messageNumber, '\\Seen');
     }
 
-    public function markAsFlagged(int $messageNumber): bool
+    public function markAsFlagged(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
         return imap_setflag_full($this->connection, $messageNumber, '\\Flagged');
     }
 
-    public function unflag(int $messageNumber): bool
+    public function unflag(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
         return imap_clearflag_full($this->connection, $messageNumber, '\\Flagged');
     }
 
-    public function moveToTrash(int $messageNumber): bool
+    public function moveToTrash(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
-        $trashFolder = $this->findTrashFolder();
+        $trashFolder = $this->findTrashFolder() ?? $this->createFolder('Corbeille');
         if ($trashFolder) {
             return imap_mail_move($this->connection, $messageNumber, $trashFolder);
         }
 
-        return imap_delete($this->connection, $messageNumber);
+        // Dernier recours : marquer comme supprimé (récupérable jusqu'à l'expunge)
+        imap_delete($this->connection, $messageNumber);
+        return true;
     }
 
-    public function permanentlyDelete(int $messageNumber): bool
+    protected function createFolder(string $path): ?string
     {
-        if (!$this->connect()) {
+        $folders = $this->getFolders();
+        foreach ($folders as $folder) {
+            if (strtolower($folder['name']) === strtolower(basename($path))
+                || str_contains(strtolower($folder['name']), strtolower(basename($path)))) {
+                return $folder['short'];
+            }
+        }
+
+        $fullPath = $this->getBaseMailbox() . $path;
+        if (@imap_createmailbox($this->connection, $fullPath)) {
+            return $path;
+        }
+
+        return null;
+    }
+
+    public function permanentlyDelete(int $messageNumber, ?string $folder = null): bool
+    {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
         imap_delete($this->connection, $messageNumber);
         return imap_expunge($this->connection);
@@ -534,22 +604,23 @@ class EmailService
     protected function findTrashFolder(): ?string
     {
         $folders = $this->getFolders();
-        
+
         foreach ($folders as $folder) {
             $name = strtolower($folder['name']);
-            if (str_contains($name, 'trash') || str_contains($name, 'corbeille') || str_contains($name, 'deleted')) {
+            if (str_contains($name, 'trash') || str_contains($name, 'corbeille') || str_contains($name, 'deleted') || str_contains($name, 'bin')) {
                 return $folder['short'];
             }
         }
 
-        return 'INBOX/Drafts';
+        return null;
     }
 
-    public function sendReply(int $messageNumber, string $replyText, ?string $cc = null): array
+    public function sendReply(int $messageNumber, string $replyText, ?string $cc = null, ?string $folder = null): array
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return ['success' => false, 'message' => 'Non connecté au serveur IMAP'];
         }
+        $this->useFolder($folder);
 
         $email = $this->getEmail($messageNumber);
         if (!$email) {
@@ -682,6 +753,7 @@ class EmailService
             return 0;
         }
 
+        $this->useDefaultFolder();
         return imap_num_recent($this->connection);
     }
 
@@ -691,6 +763,7 @@ class EmailService
             return 0;
         }
 
+        $this->useDefaultFolder();
         return imap_num_msg($this->connection);
     }
 
@@ -699,6 +772,8 @@ class EmailService
         if (!$this->connect()) {
             return ['used' => 0, 'limit' => 0, 'percent' => 0];
         }
+
+        $this->useDefaultFolder();
 
         $quota = @imap_get_quota($this->connection, 'INBOX');
         
@@ -717,30 +792,31 @@ class EmailService
         ];
     }
 
-    public function archive(int $messageNumber): bool
+    public function archive(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
-        $archiveFolder = $this->findArchiveFolder();
+        $archiveFolder = $this->findArchiveFolder() ?? $this->createFolder('Archive');
         if ($archiveFolder) {
-            return imap_mail_move($this->connection, $messageNumber, $archiveFolder);
+            return (bool) imap_mail_move($this->connection, $messageNumber, $archiveFolder);
         }
 
-        return imap_setflag_full($this->connection, $messageNumber, '\\Flagged');
+        return false;
     }
 
-    public function unarchive(int $messageNumber): bool
+    public function unarchive(int $messageNumber, ?string $folder = null): bool
     {
-        if (!$this->connect()) {
+        if (!$this->connect(false)) {
             return false;
         }
+        $this->useFolder($folder);
 
         imap_clearflag_full($this->connection, $messageNumber, '\\Flagged');
-        
-        $inbox = '{' . $this->host . ':' . $this->port . '/imap/' . ($this->encryption === 'ssl' ? 'ssl' : 'notls') . '}INBOX';
-        return imap_mail_move($this->connection, $messageNumber, 'INBOX');
+
+        return (bool) imap_mail_move($this->connection, $messageNumber, 'INBOX');
     }
 
     protected function findArchiveFolder(): ?string
@@ -814,10 +890,9 @@ class EmailService
         }
 
         $sentFolder = $this->findSentFolder();
-        
-        if ($sentFolder && $sentFolder !== $this->defaultFolder) {
-            $mailbox = $this->getBaseMailbox() . $sentFolder;
-            imap_reopen($this->connection, $mailbox);
+
+        if ($sentFolder) {
+            $this->useFolder($sentFolder);
         }
 
         $total = imap_num_msg($this->connection);
@@ -835,10 +910,7 @@ class EmailService
             $emails[] = $this->parseEmailHeader($header, $i);
         }
 
-        if ($sentFolder && $sentFolder !== $this->defaultFolder) {
-            $inbox = $this->getBaseMailbox() . $this->defaultFolder;
-            imap_reopen($this->connection, $inbox);
-        }
+        $this->useFolder(null);
 
         return [
             'emails' => $emails,
@@ -847,6 +919,27 @@ class EmailService
             'per_page' => $perPage,
             'total_pages' => $totalPages
         ];
+    }
+
+    /**
+     * Récupère un email précis du dossier "Sent" IMAP.
+     */
+    public function getSentEmail(int $messageNumber): ?array
+    {
+        if (!$this->connect()) {
+            return null;
+        }
+
+        $sentFolder = $this->findSentFolder();
+        if (!$sentFolder) {
+            return null;
+        }
+
+        $this->useFolder($sentFolder);
+
+        $this->useDefaultFolder();
+
+        return $email;
     }
 
     protected function findSentFolder(): ?string

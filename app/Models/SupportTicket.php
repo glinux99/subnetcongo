@@ -5,10 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SupportTicket extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'ticket_number';
+    }
     use HasFactory, SoftDeletes;
 
     protected $table = 'support_tickets';
@@ -46,6 +52,11 @@ class SupportTicket extends Model
         return $this->belongsTo(TicketCategory::class, 'ticket_category_id');
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(SupportMessage::class, 'support_ticket_id')->latest();
+    }
+
     public function scopeOpen($q)     { return $q->whereIn('status', ['open', 'new']); }
     public function scopeClosed($q)   { return $q->whereIn('status', ['closed', 'resolved']); }
     public function scopePending($q)  { return $q->where('status', 'pending'); }
@@ -56,8 +67,8 @@ class SupportTicket extends Model
             'open', 'new'     => 'Ouvert',
             'pending'         => 'En attente',
             'in_progress'     => 'En cours',
-            'resolved'        => 'Résolu',
-            'closed'          => 'Fermé',
+            'resolved'        => 'RÃ©solu',
+            'closed'          => 'FermÃ©',
             default           => ucfirst((string) $this->status),
         };
     }

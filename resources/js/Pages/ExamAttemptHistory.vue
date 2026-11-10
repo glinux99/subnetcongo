@@ -106,7 +106,7 @@ const viewAttempt = (attempt) => {
                         <i class="pi pi-history text-4xl block mb-3"></i>
                         <p class="text-lg font-medium">Aucune tentative pour cet examen</p>
                         <p class="text-sm mt-1">Lancez l'examen pour commencer votre première tentative.</p>
-                        <Link :href="route('exams.take', exam.id)" class="mt-6 inline-block">
+                        <Link :href="route('exams.take', exam.uuid)" class="mt-6 inline-block">
                             <Button label="Lancer l'examen" icon="pi pi-play-circle" class="!bg-blue-600 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
                         </Link>
                     </div>
@@ -157,7 +157,7 @@ const viewAttempt = (attempt) => {
 
                 <!-- Start New Attempt -->
                 <div class="mt-6 text-center">
-                    <Link v-if="exam.attempts_allowed === 0 || attempts.length < exam.attempts_allowed" :href="route('exams.take', exam.id)">
+                    <Link v-if="exam.attempts_allowed === 0 || attempts.length < exam.attempts_allowed" :href="route('exams.take', exam.uuid)">
                         <Button label="Nouvelle tentative" icon="pi pi-plus-circle" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest shadow-xl" />
                     </Link>
                     <div v-else class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-slate-600">

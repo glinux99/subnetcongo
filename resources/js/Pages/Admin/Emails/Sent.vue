@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
@@ -99,11 +101,19 @@ const deleteEmail = (id) => {
     });
 };
 
+const openEmail = (email) => {
+    if (email.imap) {
+        router.visit(route('admin.emails.sent.imap', email.message_number));
+    } else {
+        router.visit(route('admin.emails.sent.show', email.id));
+    }
+};
+
 const resendEmail = (email) => {
     router.post(route('admin.emails.send'), {
-        to: email.to.join(', '),
+        to: (email.to || []).join(', '),
         subject: email.subject,
-        body: email.body,
+        body: typeof email.body === 'string' ? email.body : '',
     }, {
         preserveScroll: true,
         onSuccess: () => applyFilters()
@@ -115,102 +125,72 @@ const resendEmail = (email) => {
     <AppLayout>
         <Head title="Emails envoyés" />
         
-        <div class="gmail-sent-container min-h-screen bg-gray-50">
-            <!-- Header -->
-            <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <Button
-                            icon="pi pi-arrow-left"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="router.visit(route('admin.emails.index'))"
-                            text
-                            rounded
-                        />
-                        <div>
-                            <h1 class="text-lg font-medium text-gray-800">Emails envoyés</h1>
-                            <p class="text-sm text-gray-500">Historique de vos envois</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
+        <div class="min-h-screen bg-slate-50 font-sans pb-20">
+            <!-- PageHeader -->
+            <PageHeader
+                title="Emails envoyés"
+                subtitle="Historique de vos envois d'emails"
+                badge="Envoyés"
+                icon="pi-send"
+                accent="blue"
+                :actions="[
+                    { label: 'Retour', icon: 'pi-arrow-left', href: route('admin.emails.index'), variant: 'secondary' },
+                    { label: 'Actualiser', icon: 'pi-refresh', onClick: applyFilters, variant: 'secondary' }
+                ]"
+            />
+
+            <div class="max-w-[1600px] mx-auto px-4 md:px-6 pt-6">
+                <!-- Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <PageKpi
+                        label="Total"
+                        :value="stats.total ?? 0"
+                        icon="pi-envelope"
+                        color="blue"
+                    />
+                    <PageKpi
+                        label="Envoyés"
+                        :value="stats.sent ?? 0"
+                        icon="pi-check-circle"
+                        color="emerald"
+                    />
+                    <PageKpi
+                        label="Échoués"
+                        :value="stats.failed ?? 0"
+                        icon="pi-times-circle"
+                        color="red"
+                    />
+                    <PageKpi
+                        label="Brouillons"
+                        :value="stats.drafts ?? 0"
+                        icon="pi-file"
+                        color="amber"
+                    />
+                </div>
+
+                <!-- Filtre -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+                    <div class="flex flex-col md:flex-row gap-3">
                         <Select
                             v-model="statusFilter"
                             :options="statusOptions"
                             optionLabel="label"
                             optionValue="value"
                             @change="applyFilters"
-                            class="w-40"
+                            class="!rounded-xl min-w-[200px] border-slate-200"
                             placeholder="Filtrer par statut"
                         />
-                        <Button
-                            icon="pi pi-refresh"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="applyFilters"
-                            :loading="isLoading"
-                            text
-                            rounded
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="max-w-6xl mx-auto p-4">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-envelope text-blue-600"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Total</p>
-                                <p class="text-xl font-bold text-gray-900">{{ stats.total ?? 0 }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-check-circle text-green-600"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Envoyés</p>
-                                <p class="text-xl font-bold text-gray-900">{{ stats.sent ?? 0 }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-times-circle text-red-600"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Échoués</p>
-                                <p class="text-xl font-bold text-gray-900">{{ stats.failed ?? 0 }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                <i class="pi pi-file text-yellow-600"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Brouillons</p>
-                                <p class="text-xl font-bold text-gray-900">{{ stats.drafts ?? 0 }}</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
                 <!-- Email list -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div v-if="emails.length" class="divide-y divide-gray-100">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div v-if="emails.length" class="divide-y divide-slate-100">
                         <div
                             v-for="email in emails"
-                            :key="email.id"
-                            class="group hover:bg-gray-50 transition-all duration-200 cursor-pointer"
-                            @click="router.visit(route('admin.emails.sent.show', email.id))"
+                            :key="email.id ?? 'imap-' + email.message_number"
+                            class="group hover:bg-slate-50 transition-all duration-200 cursor-pointer"
+                            @click="openEmail(email)"
                         >
                             <div class="flex items-center p-4 gap-4">
                                 <!-- Status icon -->
@@ -228,16 +208,16 @@ const resendEmail = (email) => {
                                 <!-- Email content -->
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center justify-between mb-1">
-                                        <p class="text-sm font-medium text-gray-900 truncate">
+                                        <p class="text-sm font-medium text-slate-900 truncate">
                                             {{ getRecipients(email.to) }}
                                         </p>
-                                        <span class="text-xs text-gray-500 shrink-0 ml-2">
+                                        <span class="text-xs text-slate-500 shrink-0 ml-2">
                                             {{ formatDate(email.sent_at || email.created_at) }}
                                         </span>
                                     </div>
                                     
                                     <div class="flex items-center gap-2">
-                                        <p class="text-sm text-gray-700 truncate font-medium">
+                                        <p class="text-sm text-slate-700 truncate font-medium">
                                             {{ email.subject || '(Sans objet)' }}
                                         </p>
                                         <span 
@@ -245,6 +225,14 @@ const resendEmail = (email) => {
                                             class="text-xs px-2 py-0.5 rounded-full font-medium"
                                         >
                                             {{ getStatusLabel(email.status) }}
+                                        </span>
+                                        <span v-if="email.sender_name || email.sender_photo" class="text-xs text-slate-400 truncate flex items-center gap-1">
+                                            ·
+                                            <img v-if="email.sender_photo" :src="email.sender_photo" :alt="email.sender_name" class="w-4 h-4 rounded-full object-cover" />
+                                            <template v-if="email.sender_name">par {{ email.sender_name }}</template>
+                                        </span>
+                                        <span v-if="email.imap" class="text-xs text-slate-400">
+                                            · IMAP
                                         </span>
                                     </div>
                                 </div>
@@ -254,15 +242,16 @@ const resendEmail = (email) => {
                                     <Button
                                         v-if="email.status === 'failed'"
                                         icon="pi pi-refresh"
-                                        class="p-1 text-gray-400 hover:text-blue-600"
+                                        class="p-1 text-slate-400 hover:text-blue-600"
                                         @click="resendEmail(email)"
                                         title="Renvoyer"
                                         text
                                         rounded
                                     />
                                     <Button
+                                        v-if="!email.imap"
                                         icon="pi pi-trash"
-                                        class="p-1 text-gray-400 hover:text-red-600"
+                                        class="p-1 text-slate-400 hover:text-red-600"
                                         @click="deleteEmail(email.id)"
                                         title="Supprimer"
                                         text
@@ -274,7 +263,7 @@ const resendEmail = (email) => {
                     </div>
 
                     <!-- Empty state -->
-                    <div v-else class="flex flex-col items-center justify-center h-64 text-gray-500">
+                    <div v-else class="flex flex-col items-center justify-center h-64 text-slate-500">
                         <i class="pi pi-send text-6xl mb-4"></i>
                         <p class="text-lg font-medium">Aucun email envoyé</p>
                         <p class="text-sm">Vos emails envoyés apparaîtront ici</p>
@@ -282,27 +271,29 @@ const resendEmail = (email) => {
                 </div>
 
                 <!-- Pagination -->
-                <div class="mt-4 flex items-center justify-between">
-                    <div class="text-sm text-gray-600">
-                        Page {{ pagination.page }} sur {{ pagination.total_pages }}
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Button
-                            icon="pi pi-chevron-left"
-                            class="p-2"
-                            :disabled="pagination.page <= 1"
-                            @click="onPage({ page: pagination.page - 2, rows: pagination.per_page })"
-                            text
-                            rounded
-                        />
-                        <Button
-                            icon="pi pi-chevron-right"
-                            class="p-2"
-                            :disabled="pagination.page >= pagination.total_pages"
-                            @click="onPage({ page: pagination.page, rows: pagination.per_page })"
-                            text
-                            rounded
-                        />
+                <div class="mt-4 bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-slate-600">
+                            Page {{ pagination.page }} sur {{ pagination.total_pages }}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <Button
+                                icon="pi pi-chevron-left"
+                                class="p-2"
+                                :disabled="pagination.page <= 1"
+                                @click="onPage({ page: pagination.page - 2, rows: pagination.per_page })"
+                                text
+                                rounded
+                            />
+                            <Button
+                                icon="pi pi-chevron-right"
+                                class="p-2"
+                                :disabled="pagination.page >= pagination.total_pages"
+                                @click="onPage({ page: pagination.page, rows: pagination.per_page })"
+                                text
+                                rounded
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

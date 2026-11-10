@@ -8,6 +8,10 @@ const layoutConfig = reactive({
     menuMode: 'static'
 });
 
+const storedActiveMenuItem = (() => {
+    try { return typeof window !== 'undefined' ? sessionStorage.getItem('snc-active-menu') : null; } catch (_) { return null; }
+})();
+
 const layoutState = reactive({
     staticMenuDesktopInactive: false,
     overlayMenuActive: false,
@@ -15,7 +19,7 @@ const layoutState = reactive({
     configSidebarVisible: false,
     staticMenuMobileActive: false,
     menuHoverActive: false,
-    activeMenuItem: null
+    activeMenuItem: storedActiveMenuItem || null
 });
 
 export function useLayout() {
@@ -32,7 +36,15 @@ export function useLayout() {
     };
 
     const setActiveMenuItem = (item) => {
-        layoutState.activeMenuItem = item.value || item;
+        const value = (item && item.value !== undefined) ? item.value : item;
+        layoutState.activeMenuItem = value;
+        try {
+            if (value) {
+                sessionStorage.setItem('snc-active-menu', value);
+            } else {
+                sessionStorage.removeItem('snc-active-menu');
+            }
+        } catch (_) { /* stockage indisponible — ignore */ }
     };
 
     const setMenuMode = (mode) => {

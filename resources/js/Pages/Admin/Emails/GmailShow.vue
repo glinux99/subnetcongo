@@ -1,17 +1,20 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import { ref, computed } from 'vue';
-
 const props = defineProps({
     email: { type: Object, default: () => ({}) },
     folders: { type: Array, default: () => [] },
     messageNumber: { type: Number, default: null },
+    folder: { type: String, default: null },
 });
+
+const folderPayload = () => props.folder ? { folder: props.folder } : {};
 
 const showReplyForm = ref(false);
 const replyText = ref('');
@@ -78,18 +81,25 @@ const getAvatarColor = (name) => {
 };
 
 const goBack = () => {
-    router.visit(route('admin.emails.index'));
+    router.visit(route('admin.emails.index', props.folder ? { folder: props.folder } : {}));
 };
 
 const markAsUnread = () => {
-    router.post(route('admin.emails.markAsUnread', props.messageNumber), {}, {
+    router.post(route('admin.emails.markAsUnread', props.messageNumber), folderPayload(), {
         preserveScroll: true,
         onSuccess: () => goBack()
     });
 };
 
 const archive = () => {
-    router.post(route('admin.emails.archive', props.messageNumber), {}, {
+    router.post(route('admin.emails.archive', props.messageNumber), folderPayload(), {
+        preserveScroll: true,
+        onSuccess: () => goBack()
+    });
+};
+
+const unarchive = () => {
+    router.post(route('admin.emails.unarchive', props.messageNumber), folderPayload(), {
         preserveScroll: true,
         onSuccess: () => goBack()
     });
@@ -101,7 +111,7 @@ const moveToTrash = () => {
         message: 'Déplacer cet email vers la corbeille ?',
         acceptLabel: 'Supprimer',
         danger: true,
-        accept: () => router.post(route('admin.emails.trash', props.messageNumber), {}, {
+        accept: () => router.post(route('admin.emails.trash', props.messageNumber), folderPayload(), {
             preserveScroll: true,
             onSuccess: () => goBack()
         })
@@ -113,7 +123,7 @@ const permanentlyDelete = () => {
         message: 'Supprimer définitivement cet email ?',
         acceptLabel: 'Supprimer définitivement',
         danger: true,
-        accept: () => router.post(route('admin.emails.permanentlyDelete', props.messageNumber), {}, {
+        accept: () => router.post(route('admin.emails.permanentlyDelete', props.messageNumber), folderPayload(), {
             preserveScroll: true,
             onSuccess: () => goBack()
         })
@@ -121,7 +131,7 @@ const permanentlyDelete = () => {
 };
 
 const forward = () => {
-    router.visit(route('admin.emails.forward', props.messageNumber));
+    router.post(route('admin.emails.forward', props.messageNumber), folderPayload());
 };
 
 const sendReply = () => {
@@ -132,6 +142,7 @@ const sendReply = () => {
         reply_message: replyText.value,
         cc: cc.value || undefined,
         bcc: bcc.value || undefined,
+        ...folderPayload(),
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -148,6 +159,18 @@ const downloadAttachment = (attachment) => {
     // Implement attachment download logic
     console.log('Downloading attachment:', attachment);
 };
+
+const isArchivedFolder = computed(() => (props.folder || '').toLowerCase().includes('archive'));
+
+const headerActions = computed(() => [
+    { label: 'Retour', icon: 'pi-arrow-left', onClick: goBack, variant: 'secondary' },
+    { label: 'Répondre', icon: 'pi-reply', onClick: () => showReplyForm.value = !showReplyForm.value, variant: 'primary' },
+    { label: 'Transférer', icon: 'pi-forward', onClick: forward, variant: 'secondary' },
+    isArchivedFolder.value
+        ? { label: 'Désarchiver', icon: 'pi-inbox', onClick: unarchive, variant: 'secondary' }
+        : { label: 'Archiver', icon: 'pi-box', onClick: archive, variant: 'secondary' },
+    { label: 'Supprimer', icon: 'pi-trash', onClick: moveToTrash, variant: 'secondary' }
+]);
 
 const getAttachmentIcon = (filename) => {
     const ext = filename.split('.').pop().toLowerCase();
@@ -174,61 +197,22 @@ const getAttachmentIcon = (filename) => {
     <AppLayout>
         <Head title="Lire l'email" />
         
-        <div class="gmail-read-container min-h-screen bg-gray-50">
-            <!-- Header -->
-            <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <Button
-                            icon="pi pi-arrow-left"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="goBack"
-                            text
-                            rounded
-                        />
-                        <h1 class="text-lg font-medium text-gray-800">{{ email.subject || '(Sans objet)' }}</h1>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Button
-                            icon="pi pi-reply"
-                            label="Répondre"
-                            class="text-blue-600 hover:bg-blue-50"
-                            @click="showReplyForm = !showReplyForm"
-                            text
-                        />
-                        <Button
-                            icon="pi pi-forward"
-                            label="Transférer"
-                            class="text-gray-600 hover:bg-gray-100"
-                            @click="forward"
-                            text
-                        />
-                        <div class="w-px h-6 bg-gray-300 mx-2"></div>
-                        <Button
-                            icon="pi pi-box"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="archive"
-                            title="Archiver"
-                            text
-                            rounded
-                        />
-                        <Button
-                            icon="pi pi-trash"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="moveToTrash"
-                            title="Supprimer"
-                            text
-                            rounded
-                        />
-                    </div>
-                </div>
-            </div>
+        <div class="min-h-screen bg-slate-50">
+            <!-- PageHeader -->
+            <PageHeader
+                :title="email.subject || '(Sans objet)'"
+                :subtitle="`De: ${getFromName(email.from)} - ${formatDate(email.date)}`"
+                badge="Email"
+                icon="pi-envelope-open"
+                accent="blue"
+                :actions="headerActions"
+            />
 
             <!-- Email content -->
             <div class="max-w-4xl mx-auto p-4">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <!-- Email header -->
-                    <div class="p-6 border-b border-gray-100">
+                    <div class="p-6 border-b border-slate-100">
                         <div class="flex items-start gap-4">
                             <div :class="['w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold', getAvatarColor(getFromName(email.from))]">
                                 {{ getInitials(getFromName(email.from)) }}
@@ -236,15 +220,15 @@ const getAttachmentIcon = (filename) => {
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-2">
                                     <div>
-                                        <p class="font-bold text-gray-900">{{ getFromName(email.from) }}</p>
-                                        <p class="text-sm text-gray-500">{{ getFromEmail(email.from) }}</p>
+                                        <p class="font-bold text-slate-900">{{ getFromName(email.from) }}</p>
+                                        <p class="text-sm text-slate-500">{{ getFromEmail(email.from) }}</p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm text-gray-500">{{ formatDate(email.date) }}</p>
-                                        <p class="text-xs text-gray-400">{{ formatSize(email.size) }}</p>
+                                        <p class="text-sm text-slate-500">{{ formatDate(email.date) }}</p>
+                                        <p class="text-xs text-slate-400">{{ formatSize(email.size) }}</p>
                                     </div>
                                 </div>
-                                <div class="text-sm text-gray-600">
+                                <div class="text-sm text-slate-600">
                                     <span class="font-medium">À :</span> {{ getToNames(email.to) }}
                                     <span v-if="email.cc && email.cc.length" class="ml-4">
                                         <span class="font-medium">Cc :</span> {{ getToNames(email.cc) }}
@@ -260,23 +244,23 @@ const getAttachmentIcon = (filename) => {
                     </div>
 
                     <!-- Attachments -->
-                    <div v-if="email.has_attachments && email.attachments" class="p-6 border-t border-gray-100">
-                        <h3 class="text-sm font-medium text-gray-700 mb-3">Pièces jointes ({{ email.attachments.length }})</h3>
+                    <div v-if="email.has_attachments && email.attachments" class="p-6 border-t border-slate-100">
+                        <h3 class="text-sm font-medium text-slate-700 mb-3">Pièces jointes ({{ email.attachments.length }})</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div
                                 v-for="(attachment, index) in email.attachments"
                                 :key="index"
-                                class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                                 @click="downloadAttachment(attachment)"
                             >
                                 <i :class="getAttachmentIcon(attachment.filename)" class="text-2xl"></i>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 truncate">{{ attachment.filename }}</p>
-                                    <p class="text-xs text-gray-500">{{ formatSize(attachment.size) }}</p>
+                                    <p class="text-sm font-medium text-slate-900 truncate">{{ attachment.filename }}</p>
+                                    <p class="text-xs text-slate-500">{{ formatSize(attachment.size) }}</p>
                                 </div>
                                 <Button
                                     icon="pi pi-download"
-                                    class="p-1 text-gray-400 hover:text-blue-600"
+                                    class="p-1 text-slate-400 hover:text-blue-600"
                                     @click.stop="downloadAttachment(attachment)"
                                     text
                                     rounded
@@ -287,17 +271,17 @@ const getAttachmentIcon = (filename) => {
                 </div>
 
                 <!-- Reply form -->
-                <div v-if="showReplyForm" class="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="p-4 border-b border-gray-100 bg-gray-50">
-                        <h3 class="font-medium text-gray-800">Répondre à {{ getFromName(email.from) }}</h3>
+                <div v-if="showReplyForm" class="mt-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50">
+                        <h3 class="font-medium text-slate-800">Répondre à {{ getFromName(email.from) }}</h3>
                     </div>
                     <div class="p-4 space-y-3">
                         <div class="flex items-center gap-2 text-sm">
-                            <span class="text-gray-600 font-medium">À :</span>
-                            <span class="text-gray-900">{{ getFromEmail(email.from) }}</span>
+                            <span class="text-slate-600 font-medium">À :</span>
+                            <span class="text-slate-900">{{ getFromEmail(email.from) }}</span>
                             <Button
                                 icon="pi pi-plus"
-                                class="p-1 text-gray-400 hover:text-gray-600"
+                                class="p-1 text-slate-400 hover:text-slate-600"
                                 @click="showCcBcc = !showCcBcc"
                                 text
                                 rounded
@@ -305,11 +289,11 @@ const getAttachmentIcon = (filename) => {
                         </div>
                         <div v-if="showCcBcc" class="space-y-2">
                             <div class="flex items-center gap-2 text-sm">
-                                <span class="text-gray-600 font-medium">Cc :</span>
+                                <span class="text-slate-600 font-medium">Cc :</span>
                                 <InputText v-model="cc" placeholder="Ajouter des destinataires en copie" class="flex-1" />
                             </div>
                             <div class="flex items-center gap-2 text-sm">
-                                <span class="text-gray-600 font-medium">Cci :</span>
+                                <span class="text-slate-600 font-medium">Cci :</span>
                                 <InputText v-model="bcc" placeholder="Ajouter des destinataires en copie cachée" class="flex-1" />
                             </div>
                         </div>
@@ -331,7 +315,7 @@ const getAttachmentIcon = (filename) => {
                                 />
                                 <Button
                                     label="Annuler"
-                                    class="text-gray-600 hover:bg-gray-100"
+                                    class="text-slate-600 hover:bg-slate-100"
                                     @click="showReplyForm = false"
                                     text
                                 />

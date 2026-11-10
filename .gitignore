@@ -17,3 +17,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Backups de déploiement (local uniquement, jamais déployés)
+/docs/backups/

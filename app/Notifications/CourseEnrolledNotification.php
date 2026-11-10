@@ -30,11 +30,12 @@ class CourseEnrolledNotification extends BaseNotification implements ShouldBroad
     {
         return [
             'title' => 'Inscription confirmée',
-            'message' => "Vous êtes maintenant inscrit au cours « {$this->courseTitle} ».",
+            'message' => "Vous êtes maintenant inscrit au cours « {$this->courseTitle} ». Commencez votre apprentissage dès maintenant !",
             'icon' => 'pi-book',
             'severity' => 'success',
             'url' => route('student.lesson-player', ['course' => $this->courseId, 'lesson' => 1]),
             'course_id' => $this->courseId,
+            'course_title' => $this->courseTitle,
         ];
     }
 

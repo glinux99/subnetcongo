@@ -68,8 +68,8 @@ const apply = () => {
 };
 
 // Gestionnaires d'actions
-const addToCart = (course) => router.post(route('marketplace.cart.add', course.id), {}, { preserveScroll: true });
-const toggleWishlist = (course) => router.post(route('marketplace.wishlist.toggle', course.id), {}, { preserveScroll: true });
+const addToCart = (course) => router.post(route('marketplace.cart.add', course.slug), {}, { preserveScroll: true });
+const toggleWishlist = (course) => router.post(route('marketplace.wishlist.toggle', course.slug), {}, { preserveScroll: true });
 
 // Gestionnaire d'affichage d'image
 const getImageUrl = (path) => {
@@ -194,7 +194,7 @@ const formatPrice = (price) => {
                                 <div v-for="course in props.courses.data" :key="course.id" class="group bg-white rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all duration-500 overflow-hidden">
                                     <!-- Image avec gestion d'erreur -->
                                     <div class="relative h-36 sm:h-48 overflow-hidden bg-slate-100">
-                                        <Link :href="route('marketplace.show', course.id)">
+                                        <Link :href="route('marketplace.show', course.slug)">
                                             <img
                                                 :src="getImageUrl(course.thumbnail_path || course.image)"
                                                 @error="handleImageError"
@@ -216,7 +216,7 @@ const formatPrice = (price) => {
                                     <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
                                         <div class="space-y-1">
                                             <p class="text-[9px] sm:text-[10px] font-black text-blue-600 uppercase tracking-widest">{{ course.category?.name || 'Technologie' }}</p>
-                                            <Link :href="route('marketplace.show', course.id)">
+                                            <Link :href="route('marketplace.show', course.slug)">
                                                 <h3 class="text-xs sm:text-sm font-black text-slate-800 leading-tight line-clamp-2 hover:text-blue-600 transition-colors tracking-tight">
                                                     {{ course.title }}
                                                 </h3>

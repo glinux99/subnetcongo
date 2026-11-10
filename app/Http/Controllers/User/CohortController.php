@@ -19,6 +19,14 @@ use Carbon\Carbon;
 
 class CohortController extends Controller
 {
+    private function resolveCohort($value)
+    {
+        return Cohort::query()
+            ->where('code', $value)
+            ->when(ctype_digit((string) $value), fn ($q) => $q->orWhere('id', (int) $value))
+            ->firstOrFail();
+    }
+
     public function __construct()
     {
         // $this->middleware('can:manage-cohorts');
@@ -220,7 +228,7 @@ class CohortController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $cohort = Cohort::findOrFail($id);
+        $cohort = $this->resolveCohort($id);
 
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
@@ -317,7 +325,7 @@ class CohortController extends Controller
 
     public function addMembers(Request $request, string $id)
     {
-        $cohort = Cohort::findOrFail($id);
+        $cohort = $this->resolveCohort($id);
         $validated = $request->validate([
             'student_ids'     => 'required|array',
             'student_ids.*'   => 'exists:users,id',
@@ -354,7 +362,7 @@ class CohortController extends Controller
 
     public function removeMember(Request $request, $cohort_id, $student_id)
     {
-        $cohort = Cohort::findOrFail($cohort_id);
+        $cohort = $this->resolveCohort($cohort_id);
         $cohort->students()->detach($student_id);
 
         // NOUVEAU : Désinscrire l'étudiant des cours de la cohorte

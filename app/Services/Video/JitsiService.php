@@ -30,4 +30,28 @@ class JitsiService
     {
         // No-op : Jitsi rooms expirent automatiquement
     }
+
+    public function isConfigured(): bool
+    {
+        return filled(config('services.jitsi.base_url'));
+    }
+
+    public function testConnection(): array
+    {
+        $base = rtrim((string) config('services.jitsi.base_url'), '/');
+
+        if (! $base) {
+            return ['success' => false, 'message' => 'URL Jitsi manquante.'];
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(10)->get($base);
+
+            return $response->successful()
+                ? ['success' => true, 'message' => 'Serveur Jitsi joignable (HTTP ' . $response->status() . ').']
+                : ['success' => false, 'message' => 'Jitsi a répondu avec le code ' . $response->status() . '.'];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => 'Serveur Jitsi injoignable : ' . $e->getMessage()];
+        }
+    }
 }

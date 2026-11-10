@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Module extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

@@ -23,12 +23,18 @@ class EnrollmentApprovedNotification extends Notification implements ShouldBroad
 
     public function toArray($notifiable): array
     {
+        $courseTitle = $this->enrollment->course?->title ?? '—';
+        
         return [
             'type' => 'enrollment_approved',
+            'title' => 'Inscription approuvée !',
+            'message' => "Votre inscription au cours « {$courseTitle} » a été approuvée. Vous pouvez commencer immédiatement.",
+            'icon' => 'pi-check-circle',
+            'severity' => 'success',
+            'url' => route('student.my-courses'),
             'enrollment_id' => $this->enrollment->id,
             'course_id' => $this->enrollment->course_id,
-            'course_title' => $this->enrollment->course?->title,
-            'message' => 'Votre inscription au cours "' . ($this->enrollment->course?->title ?? '—') . '" a été approuvée. Vous pouvez commencer immédiatement.',
+            'course_title' => $courseTitle,
         ];
     }
 

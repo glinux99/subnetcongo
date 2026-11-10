@@ -10,6 +10,11 @@ use Illuminate\Support\Str;
 
 class ExamAttempt extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
     use HasFactory;
 
     /**

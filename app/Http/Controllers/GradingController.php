@@ -79,6 +79,31 @@ class GradingController extends Controller
             $submission->save();
         });
 
+        // Email à l'étudiant quand la correction est publiée
+        if ($validated['publish']) {
+            try {
+                $submission->loadMissing(['student', 'assignment']);
+                $student = $submission->student;
+                if ($student) {
+                    $assignment = $submission->assignment;
+                    $maxPoints = $assignment?->max_points ?? 0;
+                    app(\App\Services\Email\EmailTemplateService::class)->sendTemplatedEmail(
+                        'assignment_graded',
+                        $student,
+                        [
+                            'assignment_title' => $assignment?->title ?? 'Devoir',
+                            'score'            => $submission->grade ?? 0,
+                            'max_points'       => $maxPoints,
+                            'feedback'         => $submission->feedback_text ?: 'Aucun commentaire.',
+                            'assignment_url'   => url('/student/assignments/' . ($submission->assignment_id ?? $submission->id)),
+                        ]
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Assignment graded email failed: ' . $e->getMessage());
+            }
+        }
+
         return redirect()->back()->with('success', 'Correction enregistrée avec succès.');
     }
 }

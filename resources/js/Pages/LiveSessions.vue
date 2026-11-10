@@ -39,12 +39,74 @@ const form = ref({
     instructor_id: null,
     start_at: '',
     duration: 60,
-    provider: configuredProviders[0] || 'zoom',
+    provider: configuredProviders[0] || 'livekit',
     max_participants: 100,
     is_recorded: true,
     passcode: '',
+    visibility: 'private',
+    invited_emails: '',
 });
 const submitting = ref(false);
+
+const emptyForm = () => ({
+    title: '', course_id: null, instructor_id: null, start_at: '', duration: 60,
+    provider: configuredProviders[0] || 'livekit', max_participants: 100, is_recorded: true,
+    passcode: '', visibility: 'private', invited_emails: '',
+});
+
+const showInvite = ref(false);
+const inviteTarget = ref(null);
+const inviteEmails = ref('');
+const inviteVisibility = ref('private');
+const inviteSubmitting = ref(false);
+
+const showRequests = ref(false);
+const requestsTarget = ref(null);
+
+const openInvite = (session) => {
+    inviteTarget.value = session;
+    inviteEmails.value = (session.invited_emails ?? []).join(', ');
+    inviteVisibility.value = session.is_public_session ? 'public' : 'private';
+    showInvite.value = true;
+};
+
+const submitInvite = () => {
+    inviteSubmitting.value = true;
+    router.post(route('live-sessions.invitations', inviteTarget.value.uuid), {
+        emails: inviteEmails.value,
+        visibility: inviteVisibility.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => { showInvite.value = false; inviteSubmitting.value = false; },
+        onError: () => { inviteSubmitting.value = false; },
+    });
+};
+
+const openRequests = (session) => {
+    requestsTarget.value = session;
+    showRequests.value = true;
+};
+
+const decideRequest = (session, userId, action) => {
+    router.post(route(`live-sessions.join-requests.${action}`, session.id), { user_id: userId }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            const list = (requestsTarget.value?.join_requests ?? []).map((r) =>
+                Number(r.user_id) === Number(userId) ? { ...r, status: action === 'approve' ? 'approved' : 'rejected' } : r);
+            if (requestsTarget.value) requestsTarget.value.join_requests = list;
+        },
+    });
+};
+
+const copyShareLink = async (id) => {
+    try {
+        const { data } = await window.axios.post(route('live-sessions.share-link', id));
+        await navigator.clipboard.writeText(data.url);
+        toast.add({ severity: 'success', summary: 'Lien sécurisé copié', detail: data.url, life: 3000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de générer le lien de partage.', life: 3000 });
+    }
+};
 
 const providerLabel = (p) => {
     const found = providers.find(pr => pr.value === p);
@@ -70,12 +132,19 @@ const search_ = () => {
 const submit = () => {
     submitting.value = true;
     router.post(route('live-sessions.store'), form.value, {
-        onSuccess: () => { showCreate.value = false; submitting.value = false; form.value = { title: '', course_id: null, instructor_id: null, start_at: '', duration: 60, provider: configuredProviders[0] || 'zoom', max_participants: 100, is_recorded: true, passcode: '' }; },
+        onSuccess: () => { showCreate.value = false; submitting.value = false; form.value = emptyForm(); },
         onError: () => { submitting.value = false; },
     });
 };
 
-const startSession = (id) => router.post(route('live-sessions.start', id), {}, { preserveScroll: true });
+const startSession = async (id) => {
+    try {
+        await window.axios.post(route('live-sessions.start', id));
+    } catch (e) {
+        /* la session peut déjà être en direct */
+    }
+    window.location.href = route('live-sessions.join', id);
+};
 const confirmAction = useConfirmAction();
 const cancelSession = (id) => {
     confirmAction({
@@ -256,17 +325,35 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                                 <span class="font-mono text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded">{{ data.duration ?? '—' }} min</span>
                             </template>
                         </Column>
+                        <Column header="Participants">
+                            <template #body="{ data }">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-xs font-bold text-slate-700"><i class="pi pi-users text-[10px] mr-1"></i>{{ data.attendances_count ?? 0 }} présent(s)</span>
+                                    <span class="text-[10px] text-slate-400">{{ data.invited_count ?? 0 }} invité(s)</span>
+                                    <Tag v-if="data.pending_requests" :value="data.pending_requests + ' demande(s)'" severity="warn" class="text-[9px] w-fit" />
+                                </div>
+                            </template>
+                        </Column>
                         <Column field="status" header="Statut">
                             <template #body="{ data }">
-                                <Tag :value="data.status" :severity="statusSeverity(data.status)" class="text-[10px] font-bold uppercase tracking-wider px-2" />
+                                <div class="flex flex-col gap-1">
+                                    <Tag :value="data.status" :severity="statusSeverity(data.status)" class="text-[10px] font-bold uppercase tracking-wider px-2" />
+                                    <Tag v-if="data.is_public_session" value="Publique" severity="info" class="text-[9px] w-fit" />
+                                </div>
                             </template>
                         </Column>
                         <Column header="Actions" :exportable="false" alignFrozen="right">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1 justify-end">
                                     <Button v-if="data.status === 'Scheduled'" icon="pi pi-play" rounded text severity="success" @click="startSession(data.id)" v-tooltip.top="'Démarrer la session'" />
+                                    <Link v-if="data.status !== 'Ended' && data.status !== 'Cancelled'" :href="route('live-sessions.join', data.uuid)">
+                                        <Button icon="pi pi-video" rounded text severity="danger" v-tooltip.top="'Rejoindre la salle'" />
+                                    </Link>
+                                    <Button icon="pi pi-envelope" rounded text severity="help" @click="openInvite(data)" v-tooltip.top="'Inviter / visibilité'" />
+                                    <Button v-if="data.pending_requests" icon="pi pi-user-plus" rounded text severity="warn" @click="openRequests(data)" v-tooltip.top="'Demandes d\'accès'" />
+                                    <Button icon="pi pi-link" rounded text severity="secondary" @click="copyShareLink(data.id)" v-tooltip.top="'Copier le lien de partage'" />
                                     <Button icon="pi pi-sync" rounded text severity="info" @click="syncRecordings(data.id)" v-tooltip.top="'Sync replays'" />
-                                    <Link :href="route('live-sessions.report', data.id)">
+                                    <Link :href="route('live-sessions.report', data.uuid)">
                                         <Button icon="pi pi-chart-bar" rounded text severity="secondary" v-tooltip.top="'Rapport de présence'" />
                                     </Link>
                                     <Button v-if="data.status === 'Scheduled'" icon="pi pi-times" rounded text severity="warn" @click="cancelSession(data.id)" v-tooltip.top="'Annuler'" />
@@ -345,6 +432,18 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Code d'accès (Optionnel)</label>
                     <InputText v-model="form.passcode" class="w-full !rounded-xl border-slate-300" placeholder="Laissez vide pour générer automatiquement" />
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Visibilité</label>
+                        <Select v-model="form.visibility" :options="[{ label: 'Privée (cours)', value: 'private' }, { label: 'Publique (webinaire)', value: 'public' }]"
+                                optionLabel="label" optionValue="value" class="w-full" />
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">E-mails invités (optionnel)</label>
+                        <InputText v-model="form.invited_emails" class="w-full !rounded-xl border-slate-300" placeholder="a@b.com, c@d.com" />
+                    </div>
+                </div>
             </div>
 
             <template #footer>
@@ -353,6 +452,56 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     <Button :label="submitting ? 'Création en cours...' : 'Générer la session'" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
                 </div>
             </template>
+        </Dialog>
+
+        <!-- MODAL : INVITER / VISIBILITÉ -->
+        <Dialog v-model:visible="showInvite" modal header="Inviter & visibilité" :style="{ width: '520px', maxWidth: '95vw' }" class="!rounded-2xl">
+            <div class="space-y-4 pt-2">
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Visibilité de la session</label>
+                    <Select v-model="inviteVisibility" :options="[{ label: 'Privée (cours / sur autorisation)', value: 'private' }, { label: 'Publique (webinaire)', value: 'public' }]"
+                            optionLabel="label" optionValue="value" class="w-full" />
+                    <p class="text-[11px] text-slate-500 mt-1">Une session publique apparaît sur /sessions-en-direct et peut être rejointe après connexion.</p>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">E-mails invités</label>
+                    <textarea v-model="inviteEmails" rows="4" placeholder="email1@exemple.com, email2@exemple.com"
+                              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700"></textarea>
+                    <p class="text-[11px] text-slate-500 mt-1">Les personnes dont l'e-mail est listé peuvent rejoindre sans validation.</p>
+                </div>
+            </div>
+            <template #footer>
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 w-full">
+                    <Button label="Annuler" text @click="showInvite = false" />
+                    <Button label="Enregistrer" icon="pi pi-check" :loading="inviteSubmitting" @click="submitInvite" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- MODAL : DEMANDES D'ACCÈS -->
+        <Dialog v-model:visible="showRequests" modal header="Demandes d'accès" :style="{ width: '560px', maxWidth: '95vw' }" class="!rounded-2xl">
+            <div class="pt-2">
+                <p class="text-sm text-slate-600 mb-3">{{ requestsTarget?.title }}</p>
+                <div v-if="(requestsTarget?.join_requests ?? []).length" class="space-y-2 max-h-[360px] overflow-auto">
+                    <div v-for="r in requestsTarget.join_requests" :key="r.user_id" class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl">
+                        <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 font-black text-sm flex items-center justify-center">
+                            {{ (r.name || '?').charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-bold text-slate-800 truncate">{{ r.name }}</p>
+                            <p class="text-[11px] text-slate-500 truncate">{{ r.email }}</p>
+                        </div>
+                        <Tag v-if="r.status === 'pending'" value="En attente" severity="warn" class="text-[9px]" />
+                        <Tag v-else-if="r.status === 'approved'" value="Approuvée" severity="success" class="text-[9px]" />
+                        <Tag v-else value="Refusée" severity="danger" class="text-[9px]" />
+                        <div v-if="r.status === 'pending'" class="flex gap-1">
+                            <Button icon="pi pi-check" rounded text severity="success" v-tooltip.top="'Approuver'" @click="decideRequest(requestsTarget, r.user_id, 'approve')" />
+                            <Button icon="pi pi-times" rounded text severity="danger" v-tooltip.top="'Refuser'" @click="decideRequest(requestsTarget, r.user_id, 'reject')" />
+                        </div>
+                    </div>
+                </div>
+                <p v-else class="text-sm text-slate-400 text-center py-8">Aucune demande d'accès.</p>
+            </div>
         </Dialog>
     </AppLayout>
 </template>

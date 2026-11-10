@@ -1,8 +1,7 @@
 <script setup>
 import { useLayout } from '@/sakai/layout/composables/layout';
 import { onBeforeMount, ref, watch, computed } from 'vue';
-import NavLink from "@/Components/NavLink.vue";
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
 import { useI18n } from 'vue-i18n';
 const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
@@ -103,17 +102,25 @@ const pathOnly = (url) => {
 
 const currentPath = computed(() => pathOnly(page.url));
 
-// Détecte si l'item courant (ou un de ses descendants) est la route active
+// Match exact ou préfixe (les pages détail comme /admin/emails/45 ou /courses/12/edit
+// font aussi ressortir leur entrée de menu)
+const matchesPath = (url) => {
+    const p = pathOnly(url);
+    if (!p) return false;
+    return p === currentPath.value || currentPath.value.startsWith(p + '/');
+};
+
+// Détecte si l'item courant correspond à la route active (exact ou sous-chemin)
 const isRouteActive = computed(() => {
-    if (!props.item.to) return false;
-    return pathOnly(props.item.to) === currentPath.value;
+    if (!props.item.to || props.item.items) return false;
+    return matchesPath(props.item.to);
 });
 
 // Détecte récursivement si un sous-item correspond à la route active
 const hasActiveDescendant = (item) => {
     if (!item || !item.items) return false;
     for (const child of item.items) {
-        if (child.to && pathOnly(child.to) === currentPath.value) return true;
+        if (child.to && matchesPath(child.to) && !child.items) return true;
         if (hasActiveDescendant(child)) return true;
     }
     return false;
@@ -156,16 +163,18 @@ watch(currentPath, () => {
         :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu, 'active-route': isRouteActive && !item.items, 'has-active-child': !isRouteActive && item.items && shouldBeActive }">
         <div v-if="root" class="layout-menuitem-root-text">{{ t(item.label) }}</div>
 
-        <nav-link v-if="item.to && !item.items"
-                  @click="handleLinkClick"
-                  :href="item.to" :class="[item.class, { 'active-route': isRouteActive }]"
-                  preserve-scroll>
+        <Link v-if="item.to && !item.items"
+              @click="handleLinkClick"
+              :href="item.to"
+              :aria-current="isRouteActive ? 'page' : undefined"
+              :class="[item.class, { 'active-route': isRouteActive }]"
+              preserve-scroll>
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ t(item.label) }}</span>
             <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-violet-600 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
                 {{ item.badge > 99 ? '99+' : item.badge }}
             </span>
-        </nav-link>
+        </Link>
 
         <a v-else-if="!item.to || item.items"
            :href="item.url"

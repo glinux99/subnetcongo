@@ -11,6 +11,7 @@ import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
 const { layoutConfig, layoutState, isSidebarActive, resetMenu } = useLayout();
@@ -89,6 +90,18 @@ const page = usePage();
 const filters = computed(() => page.props.filters || {});
 const dateRange = ref(null);
 const filterType = ref(filters.value.filterType || 'this_month');
+
+// --- TOAST GLOBAL SUR LES MESSAGES FLASH ---
+const toast = useToast();
+watch(() => page.props.flash, (flash) => {
+    if (!flash) return;
+    if (flash.success) {
+        toast.add({ severity: 'success', summary: 'Succès', detail: flash.success, life: 4000 });
+    }
+    if (flash.error) {
+        toast.add({ severity: 'error', summary: 'Erreur', detail: flash.error, life: 6000 });
+    }
+}, { deep: true, immediate: true });
 
 watch(dateRange, (newDates) => {
     if (newDates?.[0] && newDates?.[1]) {

@@ -12,6 +12,11 @@ use Illuminate\Support\Str;
 
 class Question extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
     use HasFactory, SoftDeletes;
 
     /**
@@ -122,13 +127,13 @@ class Question extends Model
     }
 
     /**
-     * La colonne `options` (JSON, inutilisée) masque la relation options().
-     * On force l'accès à la relation pour que $question->options retourne
+     * La colonne `options` (JSON, inutilisÃ©e) masque la relation options().
+     * On force l'accÃ¨s Ã  la relation pour que $question->options retourne
      * toujours une Collection de QuestionOption (correction des examens, etc.).
      */
     public function getOptionsAttribute($value)
     {
-        // Valeur assignée manuellement (ex: options mélangées pour un examen)
+        // Valeur assignÃ©e manuellement (ex: options mÃ©langÃ©es pour un examen)
         if ($value instanceof \Illuminate\Support\Collection) {
             return $value;
         }
@@ -288,7 +293,7 @@ class Question extends Model
     }
 
     /**
-     * Alias pour correct_answer utilisé par le frontend.
+     * Alias pour correct_answer utilisÃ© par le frontend.
      */
     public function getCorrectAttribute()
     {

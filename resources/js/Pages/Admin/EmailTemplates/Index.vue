@@ -23,6 +23,9 @@ const categories = [
     { label: 'Examens', value: 'exam' },
     { label: 'Bienvenue', value: 'welcome' },
     { label: 'Support', value: 'support' },
+    { label: 'Paiements', value: 'payment' },
+    { label: 'Sécurité', value: 'security' },
+    { label: 'Sessions live', value: 'live_session' },
     { label: 'Marketing', value: 'marketing' },
 ];
 
@@ -36,6 +39,9 @@ const getCategoryIcon = (cat) => {
         exam: '📝',
         welcome: '👋',
         support: '🎫',
+        payment: '💳',
+        security: '🔒',
+        live_session: '🎥',
         marketing: '📧',
     };
     return icons[cat] || '📧';
@@ -79,6 +85,22 @@ const getEventLabel = (event) => {
         'exam_failed': 'Examen échoué',
         'welcome': 'Bienvenue',
         'password_reset': 'Réinitialisation mot de passe',
+        'password_changed': 'Mot de passe modifié',
+        'email_verification': 'Vérification email',
+        'enrollment_request_received': 'Demande d\'inscription reçue',
+        'enrollment_request_admin': 'Alerte demande d\'inscription',
+        'enrollment_rejected': 'Inscription refusée',
+        'enrollment_revoked': 'Accès révoqué',
+        'course_completed': 'Cours terminé',
+        'assignment_graded': 'Devoir corrigé',
+        'live_session_started': 'Session live démarrée',
+        'live_session_reminder': 'Rappel session live',
+        'payment_received': 'Paiement reçu',
+        'payment_failed': 'Paiement échoué',
+        'refund_issued': 'Remboursement',
+        'subscription_expiring': 'Abonnement expire',
+        'support_ticket_created': 'Ticket support créé',
+        'contact_confirmation': 'Confirmation contact',
     };
     return labels[event] || event || 'Événement manuel';
 };
@@ -119,7 +141,7 @@ const getEventLabel = (event) => {
             </div>
 
             <div class="max-w-[1500px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
-                
+
                 <!-- Barre d'outils / Filtres (Épurée) -->
                 <div class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 p-2.5 mb-10 flex flex-col md:flex-row gap-3 items-center">
                     <div class="relative w-full flex-1">

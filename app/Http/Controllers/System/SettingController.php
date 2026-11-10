@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use DateTimeZone;
+use App\Services\Video\VideoProviderConfig;
+use App\Services\Video\ZoomService;
+use App\Services\Video\GoogleMeetService;
+use App\Services\Video\BbbService;
+use App\Services\Video\JitsiService;
+use App\Services\LiveKit\LiveKitService;
 
 class SettingController extends Controller
 {
@@ -293,6 +299,104 @@ class SettingController extends Controller
         Artisan::call('route:clear');
 
         return back()->with('success', 'Tous les caches système ont été vidés.');
+    }
+
+    public function video()
+    {
+        $values = VideoProviderConfig::all();
+
+        $secretKeys = [
+            'livekit_api_secret',
+            'zoom_client_secret',
+            'google_client_secret',
+            'google_refresh_token',
+            'bbb_secret',
+        ];
+
+        $masked = $values;
+        $hasSecret = [];
+
+        foreach ($secretKeys as $key) {
+            $hasSecret[$key] = filled($values[$key] ?? null);
+            $masked[$key] = '';
+        }
+
+        return Inertia::render('System/VideoProviders', [
+            'settings' => $masked,
+            'has_secret' => $hasSecret,
+            'configured' => [
+                'livekit' => VideoProviderConfig::isConfigured('livekit'),
+                'zoom' => VideoProviderConfig::isConfigured('zoom'),
+                'meet' => VideoProviderConfig::isConfigured('meet'),
+                'bbb' => VideoProviderConfig::isConfigured('bbb'),
+                'jitsi' => VideoProviderConfig::isConfigured('jitsi'),
+            ],
+        ]);
+    }
+
+    public function updateVideo(Request $request)
+    {
+        $data = $request->validate([
+            'default_provider' => 'nullable|in:livekit,zoom,meet,bbb,jitsi',
+            'livekit_url' => 'nullable|url|max:255',
+            'livekit_ws_url' => 'nullable|string|max:255',
+            'livekit_api_key' => 'nullable|string|max:255',
+            'livekit_api_secret' => 'nullable|string|max:255',
+            'zoom_account_id' => 'nullable|string|max:255',
+            'zoom_client_id' => 'nullable|string|max:255',
+            'zoom_client_secret' => 'nullable|string|max:255',
+            'google_client_id' => 'nullable|string|max:255',
+            'google_client_secret' => 'nullable|string|max:255',
+            'google_refresh_token' => 'nullable|string|max:1024',
+            'google_calendar_id' => 'nullable|string|max:255',
+            'bbb_base_url' => 'nullable|url|max:255',
+            'bbb_secret' => 'nullable|string|max:255',
+            'jitsi_base_url' => 'nullable|url|max:255',
+        ]);
+
+        $payload = [];
+        foreach ($data as $key => $value) {
+            if ($value === null || $value === '') {
+                continue; // On conserve les secrets déjà enregistrés.
+            }
+            $payload[$key] = is_string($value) ? trim($value) : $value;
+        }
+
+        VideoProviderConfig::save($payload);
+
+        Cache::forget('zoom_access_token');
+        Cache::forget('google_meet_access_token');
+
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'event' => 'video_providers_updated',
+            'auditable_type' => 'System',
+            'auditable_id' => 0,
+            'new_values' => json_encode(['keys' => array_keys($payload)]),
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', 'Configuration des fournisseurs de visioconférence mise à jour.');
+    }
+
+    public function testVideoProvider(string $provider)
+    {
+        $result = match ($provider) {
+            'zoom' => app(ZoomService::class)->testConnection(),
+            'meet' => app(GoogleMeetService::class)->testConnection(),
+            'bbb' => app(BbbService::class)->testConnection(),
+            'jitsi' => app(JitsiService::class)->testConnection(),
+            'livekit' => (function () {
+                $health = app(LiveKitService::class)->healthCheck();
+
+                return ($health['status'] ?? null) === 'ok'
+                    ? ['success' => true, 'message' => 'Connexion LiveKit réussie (' . count($health['rooms'] ?? []) . ' salle(s)).']
+                    : ['success' => false, 'message' => $health['message'] ?? 'LiveKit indisponible.'];
+            })(),
+            default => ['success' => false, 'message' => 'Fournisseur inconnu.'],
+        };
+
+        return response()->json($result);
     }
 
     /**

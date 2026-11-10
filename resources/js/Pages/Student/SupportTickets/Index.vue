@@ -217,7 +217,7 @@ const formatDate = (iso) => {
                                     </td>
                                     
                                     <td class="py-4 px-4 text-right whitespace-nowrap">
-                                        <Link :href="route('student.support.show', t.id)">
+                                        <Link :href="route('student.support.show', t.ticket_number)">
                                             <Button label="Ouvrir" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-blue-50 !text-blue-600 !border-none hover:!bg-blue-100 transition-colors" />
                                         </Link>
                                     </td>

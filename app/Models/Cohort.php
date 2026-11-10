@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cohort extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'code';
+    }
     use HasFactory;
 
     protected $fillable = [

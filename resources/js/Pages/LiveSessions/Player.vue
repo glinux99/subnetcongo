@@ -10,6 +10,7 @@ import VideoConference from '@/Components/LiveKit/VideoConference.vue';
 const props = defineProps({
     session: Object,
     user: Object,
+    requires_confirmation: { type: Boolean, default: false },
 });
 
 const toast = useToast();
@@ -33,7 +34,7 @@ const isMock = computed(() => !joinUrl.value && props.session?.provider !== 'liv
 
 const sendHeartbeat = async () => {
     try {
-        await window.axios?.post?.(route('live-sessions.heartbeat', props.session.id));
+        await window.axios?.post?.(route('live-sessions.heartbeat', props.session.uuid));
     } catch (e) {}
 };
 
@@ -103,7 +104,7 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
 
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
                 <div v-if="isLiveKit" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-6">
-                    <VideoConference :session="session" :user="user" />
+                    <VideoConference :session="session" :user="user" :requires-confirmation="requires_confirmation" />
                 </div>
 
                 <div v-else-if="isMock" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-6">

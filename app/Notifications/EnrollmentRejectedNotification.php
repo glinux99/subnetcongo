@@ -23,13 +23,19 @@ class EnrollmentRejectedNotification extends Notification implements ShouldBroad
 
     public function toArray($notifiable): array
     {
+        $courseTitle = $this->enrollment->course?->title ?? '—';
+        
         return [
             'type' => 'enrollment_rejected',
+            'title' => 'Inscription refusée',
+            'message' => "Votre inscription au cours « {$courseTitle} » a été refusée. Motif : {$this->reason}",
+            'icon' => 'pi-times-circle',
+            'severity' => 'danger',
+            'url' => route('student.my-enrollments'),
             'enrollment_id' => $this->enrollment->id,
             'course_id' => $this->enrollment->course_id,
-            'course_title' => $this->enrollment->course?->title,
+            'course_title' => $courseTitle,
             'reason' => $this->reason,
-            'message' => 'Votre inscription au cours "' . ($this->enrollment->course?->title ?? '—') . '" a été refusée. Motif : ' . $this->reason,
         ];
     }
 

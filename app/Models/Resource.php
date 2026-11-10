@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Storage;
 
 class Resource extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     use SoftDeletes;
 
     protected $fillable = [
@@ -39,7 +44,7 @@ class Resource extends Model
     }
 
     /**
-     * ACCESSEUR : URL complète du fichier
+     * ACCESSEUR : URL complÃ¨te du fichier
      */
     public function getFullUrlAttribute(): string
     {

@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContactMessage extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'ticket_number';
+    }
     use HasFactory;
 
     protected $fillable = [
@@ -42,8 +47,8 @@ class ContactMessage extends Model
         return match ($this->status) {
             'new'      => 'Nouveau',
             'read'     => 'Lu',
-            'replied'  => 'Répondu',
-            'archived' => 'Archivé',
+            'replied'  => 'RÃ©pondu',
+            'archived' => 'ArchivÃ©',
             'spam'     => 'Spam',
             default    => ucfirst((string) $this->status),
         };

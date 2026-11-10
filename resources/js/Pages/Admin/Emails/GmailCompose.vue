@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
@@ -61,16 +62,13 @@ const sendEmail = () => {
     
     router.post(route('admin.emails.send'), formData, {
         preserveScroll: true,
-        onSuccess: () => {
-            router.visit(route('admin.emails.index'));
-        },
         onFinish: () => isSending.value = false
     });
 };
 
 const saveDraft = () => {
     isSaving.value = true;
-    router.post(route('admin.emails.saveDraft'), {
+    router.post(route('admin.emails.draft'), {
         to: to.value,
         cc: cc.value,
         bcc: bcc.value,
@@ -98,49 +96,27 @@ const insertTemplate = (template) => {
     <AppLayout>
         <Head title="Nouveau message" />
         
-        <div class="gmail-compose-container min-h-screen bg-gray-50">
-            <!-- Header -->
-            <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <Button
-                            icon="pi pi-arrow-left"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="goBack"
-                            text
-                            rounded
-                        />
-                        <h1 class="text-lg font-medium text-gray-800">
-                            {{ forwardedEmail ? 'Transférer le message' : 'Nouveau message' }}
-                        </h1>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Button
-                            label="Brouillon"
-                            icon="pi pi-save"
-                            class="text-gray-600 hover:bg-gray-100"
-                            @click="saveDraft"
-                            :loading="isSaving"
-                            text
-                        />
-                        <Button
-                            label="Envoyer"
-                            icon="pi pi-send"
-                            class="bg-blue-600 hover:bg-blue-700 text-white"
-                            @click="sendEmail"
-                            :loading="isSending"
-                            :disabled="!canSend"
-                        />
-                    </div>
-                </div>
-            </div>
+        <div class="min-h-screen bg-slate-50">
+            <!-- PageHeader -->
+            <PageHeader
+                :title="forwardedEmail ? 'Transférer le message' : 'Nouveau message'"
+                subtitle="Composez et envoyez votre email"
+                badge="Composition"
+                icon="pi-pen-to-square"
+                accent="blue"
+                :actions="[
+                    { label: 'Retour', icon: 'pi-arrow-left', onClick: goBack, variant: 'secondary' },
+                    { label: 'Brouillon', icon: 'pi-save', onClick: saveDraft, variant: 'secondary', disabled: isSaving },
+                    { label: 'Envoyer', icon: 'pi-send', onClick: sendEmail, variant: 'primary', disabled: !canSend || isSending }
+                ]"
+            />
 
             <!-- Compose form -->
             <div class="max-w-4xl mx-auto p-4">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <!-- To field -->
-                    <div class="flex items-center border-b border-gray-100 px-4 py-3">
-                        <label class="text-sm font-medium text-gray-700 w-16">À :</label>
+                    <div class="flex items-center border-b border-slate-100 px-4 py-3">
+                        <label class="text-sm font-medium text-slate-700 w-16">À :</label>
                         <InputText
                             v-model="to"
                             placeholder="Destinataires (séparés par des virgules)"
@@ -148,7 +124,7 @@ const insertTemplate = (template) => {
                         />
                         <Button
                             icon="pi pi-plus"
-                            class="p-1 text-gray-400 hover:text-gray-600"
+                            class="p-1 text-slate-400 hover:text-slate-600"
                             @click="showCcBcc = !showCcBcc"
                             text
                             rounded
@@ -156,9 +132,9 @@ const insertTemplate = (template) => {
                     </div>
 
                     <!-- CC/BCC fields -->
-                    <div v-if="showCcBcc" class="border-b border-gray-100">
+                    <div v-if="showCcBcc" class="border-b border-slate-100">
                         <div class="flex items-center px-4 py-3">
-                            <label class="text-sm font-medium text-gray-700 w-16">Cc :</label>
+                            <label class="text-sm font-medium text-slate-700 w-16">Cc :</label>
                             <InputText
                                 v-model="cc"
                                 placeholder="Destinataires en copie"
@@ -166,7 +142,7 @@ const insertTemplate = (template) => {
                             />
                         </div>
                         <div class="flex items-center px-4 py-3">
-                            <label class="text-sm font-medium text-gray-700 w-16">Cci :</label>
+                            <label class="text-sm font-medium text-slate-700 w-16">Cci :</label>
                             <InputText
                                 v-model="bcc"
                                 placeholder="Destinataires en copie cachée"
@@ -176,8 +152,8 @@ const insertTemplate = (template) => {
                     </div>
 
                     <!-- Subject field -->
-                    <div class="flex items-center border-b border-gray-100 px-4 py-3">
-                        <label class="text-sm font-medium text-gray-700 w-16">Objet :</label>
+                    <div class="flex items-center border-b border-slate-100 px-4 py-3">
+                        <label class="text-sm font-medium text-slate-700 w-16">Objet :</label>
                         <InputText
                             v-model="subject"
                             placeholder="Objet du message"
@@ -196,18 +172,18 @@ const insertTemplate = (template) => {
                     </div>
 
                     <!-- Attachments -->
-                    <div class="border-t border-gray-100 px-4 py-3">
+                    <div class="border-t border-slate-100 px-4 py-3">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <Button
                                     icon="pi pi-paperclip"
                                     label="Joindre un fichier"
-                                    class="text-gray-600 hover:bg-gray-100"
+                                    class="text-slate-600 hover:bg-slate-100"
                                     @click="showAttachments = !showAttachments"
                                     text
                                 />
                                 <div v-if="attachments.length > 0" class="flex items-center gap-2">
-                                    <span class="text-sm text-gray-600">
+                                    <span class="text-sm text-slate-600">
                                         {{ attachments.length }} fichier(s) joint(s)
                                     </span>
                                 </div>
@@ -216,7 +192,7 @@ const insertTemplate = (template) => {
                                 <Button
                                     icon="pi pi-eraser"
                                     label="Effacer"
-                                    class="text-gray-400 hover:text-gray-600 text-sm"
+                                    class="text-slate-400 hover:text-slate-600 text-sm"
                                     @click="body = ''; to = ''; cc = ''; bcc = ''; subject = ''; attachments = []"
                                     text
                                 />
@@ -228,16 +204,16 @@ const insertTemplate = (template) => {
                             <div
                                 v-for="(file, index) in attachments"
                                 :key="index"
-                                class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
+                                class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg"
                             >
-                                <i class="pi pi-file text-gray-400"></i>
+                                <i class="pi pi-file text-slate-400"></i>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 truncate">{{ file.name }}</p>
-                                    <p class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</p>
+                                    <p class="text-sm font-medium text-slate-900 truncate">{{ file.name }}</p>
+                                    <p class="text-xs text-slate-500">{{ formatFileSize(file.size) }}</p>
                                 </div>
                                 <Button
                                     icon="pi pi-times"
-                                    class="p-1 text-gray-400 hover:text-red-600"
+                                    class="p-1 text-slate-400 hover:text-red-600"
                                     @click="removeAttachment(index)"
                                     text
                                     rounded
@@ -260,23 +236,23 @@ const insertTemplate = (template) => {
                 <div class="mt-4 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <Button
-                            icon="pi pi-send"
                             label="Envoyer"
+                            icon="pi pi-send"
                             class="bg-blue-600 hover:bg-blue-700 text-white"
                             @click="sendEmail"
                             :loading="isSending"
                             :disabled="!canSend"
                         />
                         <Button
-                            icon="pi pi-save"
                             label="Brouillon"
-                            class="text-gray-600 hover:bg-gray-100"
+                            icon="pi pi-save"
+                            class="text-slate-600 hover:bg-slate-100"
                             @click="saveDraft"
                             :loading="isSaving"
                             text
                         />
                     </div>
-                    <div class="text-sm text-gray-500">
+                    <div class="text-sm text-slate-500">
                         <span v-if="!canSend">Remplissez tous les champs pour envoyer</span>
                         <span v-else class="text-green-600">Prêt à envoyer</span>
                     </div>

@@ -52,9 +52,27 @@ class EmailTemplateController extends Controller
             'subject' => 'required|string|max:255',
             'content' => 'required|string',
             'is_active' => 'boolean',
+            'bcc_emails' => 'nullable|string|max:2000',
         ]);
 
-        $template->update($validated);
+        // Convertit la liste d'emails séparés par des virgules en tableau validé
+        $bccEmails = collect(explode(',', (string) ($validated['bcc_emails'] ?? '')))
+            ->map(fn ($e) => trim($e))
+            ->filter()
+            ->values();
+
+        foreach ($bccEmails as $email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return back()->with('error', "Adresse email BCC invalide : {$email}");
+            }
+        }
+
+        $template->update([
+            'subject' => $validated['subject'],
+            'content' => $validated['content'],
+            'is_active' => $validated['is_active'] ?? $template->is_active,
+            'bcc_emails' => $bccEmails->all(),
+        ]);
 
         return back()->with('success', 'Modèle enregistré avec succès.');
     }
@@ -97,9 +115,12 @@ class EmailTemplateController extends Controller
         $replaced = $template->replaceVariables($testData);
 
         try {
-            Mail::html($replaced['content'], function ($message) use ($validated, $replaced) {
+            Mail::html($replaced['content'], function ($message) use ($validated, $replaced, $template) {
                 $message->to($validated['email'])
                         ->subject($replaced['subject']);
+                if (!empty($template->bcc_emails)) {
+                    $message->bcc($template->bcc_emails);
+                }
             });
 
             return back()->with('success', 'Email de test envoyé à ' . $validated['email']);

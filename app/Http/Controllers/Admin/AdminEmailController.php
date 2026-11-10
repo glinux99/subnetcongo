@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\Email\EmailService;
 use App\Models\SentEmail;
+use App\Notifications\EmailSentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -75,7 +76,8 @@ class AdminEmailController extends Controller
     public function show(Request $request, int $messageNumber)
     {
        try {
-         $email = $this->emailService->getEmail($messageNumber);
+         $folder = $request->input('folder');
+         $email = $this->emailService->getEmail($messageNumber, $folder);
 
         if (!$email) {
             return Redirect::route('admin.emails.index')
@@ -83,7 +85,7 @@ class AdminEmailController extends Controller
         }
 
         if (!$email['seen']) {
-            $this->emailService->markAsRead($messageNumber);
+            $this->emailService->markAsRead($messageNumber, $folder);
             $email['seen'] = true;
         }
 
@@ -93,6 +95,7 @@ class AdminEmailController extends Controller
             'email' => $email,
             'folders' => $folders,
             'messageNumber' => $messageNumber,
+            'folder' => $folder,
         ]);
        } catch (\Throwable $th) {
         //throw
@@ -102,19 +105,30 @@ class AdminEmailController extends Controller
 
 public function reply(Request $request, int $messageNumber)
     {
-        // 1. On rend 'to' OBLIGATOIRE au lieu de nullable
         $validated = $request->validate([
-            'to' => 'required|string',
+            'to' => 'nullable|string',
             'cc' => 'nullable|string',
             'bcc' => 'nullable|string',
             'reply_message' => 'required|string|max:50000',
+            'folder' => 'nullable|string|max:255',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:25600', // 25 MB max
         ]);
 
         try {
-            // 2. Nettoyage et formatage des adresses emails
-            $to = $this->parseEmails($validated['to']);
+            // 2. Récupérer l'email original (expéditeur + sujet)
+            $folder = $validated['folder'] ?? null;
+            $originalEmail = $this->emailService->getEmail($messageNumber, $folder);
+
+            // 3. Nettoyage et formatage des adresses emails
+            //    Si aucun destinataire explicite, on répond à l'expéditeur d'origine
+            $to = $this->parseEmails($validated['to'] ?? '');
+            if (empty($to)) {
+                $originalSender = $originalEmail['from'][0]['email'] ?? null;
+                if ($originalSender) {
+                    $to = [$originalSender];
+                }
+            }
             $cc = $this->parseEmails($validated['cc'] ?? '');
             $bcc = $this->parseEmails($validated['bcc'] ?? '');
 
@@ -122,8 +136,6 @@ public function reply(Request $request, int $messageNumber)
                 return back()->with('error', 'Aucun destinataire valide trouvé.');
             }
 
-            // 3. Récupérer le sujet de l'email original
-            $originalEmail = $this->emailService->getEmail($messageNumber);
             $subject = $originalEmail['subject'] ?? 'Sans objet';
 
             // Ajouter "Re: " si ce n'est pas déjà présent dans le sujet
@@ -157,13 +169,39 @@ public function reply(Request $request, int $messageNumber)
             // (Optionnel) Si votre service a une méthode pour marquer le message comme "Répondu" sur le serveur IMAP :
             // $this->emailService->markAsAnswered($messageNumber);
 
+            // Enregistrer la réponse dans les emails envoyés
+            $sentEmail = null;
+            try {
+                $sentEmail = SentEmail::create([
+                    'user_id' => auth()->id(),
+                    'to' => $to,
+                    'cc' => !empty($cc) ? $cc : null,
+                    'bcc' => !empty($bcc) ? $bcc : null,
+                    'subject' => $subject,
+                    'body' => $validated['reply_message'],
+                    'attachments' => $request->hasFile('attachments') ? array_map(function($file) {
+                        return [
+                            'name' => $file->getClientOriginalName(),
+                            'size' => $file->getSize(),
+                            'mime' => $file->getMimeType(),
+                        ];
+                    }, $request->file('attachments')) : null,
+                    'status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Impossible d\'enregistrer la réponse envoyée', ['error' => $e->getMessage()]);
+            }
+
+            $this->notifyEmailSent(array_merge($to, $cc, $bcc), $subject, $sentEmail?->id);
+
             Log::info('Réponse envoyée avec succès', [
                 'to' => $to,
                 'messageNumber' => $messageNumber,
                 'has_attachments' => $request->hasFile('attachments')
             ]);
 
-            return Redirect::route('admin.emails.show', $messageNumber)
+            return Redirect::route('admin.emails.show', ['messageNumber' => $messageNumber, 'folder' => $folder])
                 ->with('success', 'Réponse envoyée avec succès.');
 
         } catch (\Exception $e) {
@@ -171,46 +209,45 @@ public function reply(Request $request, int $messageNumber)
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return $e->getMessage();
             return back()->with('error', 'Erreur lors de l\'envoi : ' . $e->getMessage());
         }
     }
 
-    public function markAsRead(int $messageNumber)
+    public function markAsRead(Request $request, int $messageNumber)
     {
-        $this->emailService->markAsRead($messageNumber);
+        $this->emailService->markAsRead($messageNumber, $request->input('folder'));
         return response()->json(['success' => true]);
     }
 
-    public function markAsUnread(int $messageNumber)
+    public function markAsUnread(Request $request, int $messageNumber)
     {
-        $this->emailService->markAsUnread($messageNumber);
+        $this->emailService->markAsUnread($messageNumber, $request->input('folder'));
         return response()->json(['success' => true]);
     }
 
-    public function markAsFlagged(int $messageNumber)
+    public function markAsFlagged(Request $request, int $messageNumber)
     {
-        $this->emailService->markAsFlagged($messageNumber);
+        $this->emailService->markAsFlagged($messageNumber, $request->input('folder'));
         return response()->json(['success' => true]);
     }
 
-    public function unflag(int $messageNumber)
+    public function unflag(Request $request, int $messageNumber)
     {
-        $this->emailService->unflag($messageNumber);
+        $this->emailService->unflag($messageNumber, $request->input('folder'));
         return response()->json(['success' => true]);
     }
 
-    public function moveToTrash(int $messageNumber)
+    public function moveToTrash(Request $request, int $messageNumber)
     {
-        $this->emailService->moveToTrash($messageNumber);
-        return Redirect::route('admin.emails.index')
+        $this->emailService->moveToTrash($messageNumber, $request->input('folder'));
+        return $this->redirectToFolder($request)
             ->with('success', 'Email déplacé vers la corbeille.');
     }
 
-    public function permanentlyDelete(int $messageNumber)
+    public function permanentlyDelete(Request $request, int $messageNumber)
     {
-        $this->emailService->permanentlyDelete($messageNumber);
-        return Redirect::route('admin.emails.index')
+        $this->emailService->permanentlyDelete($messageNumber, $request->input('folder'));
+        return $this->redirectToFolder($request)
             ->with('success', 'Email supprimé définitivement.');
     }
 
@@ -301,8 +338,9 @@ public function reply(Request $request, int $messageNumber)
             });
 
             // Enregistrer l'email envoyé
+            $sentEmail = null;
             try {
-                SentEmail::create([
+                $sentEmail = SentEmail::create([
                     'user_id' => auth()->id(),
                     'to' => $to,
                     'cc' => !empty($cc) ? $cc : null,
@@ -323,13 +361,15 @@ public function reply(Request $request, int $messageNumber)
                 Log::warning('Impossible d\'enregistrer l\'email envoyé', ['error' => $e->getMessage()]);
             }
 
+            $this->notifyEmailSent(array_merge($to, $cc, $bcc), $validated['subject'], $sentEmail?->id);
+
             Log::info('Email envoyé avec succès', [
                 'to' => $to,
                 'subject' => $validated['subject'],
                 'has_attachments' => $request->hasFile('attachments')
             ]);
 
-            return Redirect::route('admin.emails.index')
+            return Redirect::route('admin.emails.sent')
                 ->with('success', 'Email envoyé avec succès.');
 
         } catch (\Exception $e) {
@@ -337,6 +377,21 @@ public function reply(Request $request, int $messageNumber)
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            try {
+                SentEmail::create([
+                    'user_id' => auth()->id(),
+                    'to' => $to ?? [],
+                    'cc' => !empty($cc) ? $cc : null,
+                    'bcc' => !empty($bcc) ? $bcc : null,
+                    'subject' => $validated['subject'] ?? '',
+                    'body' => $validated['body'] ?? '',
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                ]);
+            } catch (\Exception $ex) {
+                Log::warning('Impossible d\'enregistrer l\'email échoué', ['error' => $ex->getMessage()]);
+            }
 
             return back()->with('error', 'Erreur lors de l\'envoi : ' . $e->getMessage())->withInput();
         }
@@ -382,40 +437,107 @@ public function reply(Request $request, int $messageNumber)
         $perPage = (int) $request->input('per_page', 20);
         $status = $request->input('status');
 
-        $query = SentEmail::where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc');
-
+        // Emails enregistrés dans la base (envois via la plateforme)
+        $dbQuery = SentEmail::with('user')->orderBy('sent_at', 'desc')->orderBy('created_at', 'desc');
         if ($status && $status !== 'all') {
-            $query->where('status', $status);
+            $dbQuery->where('status', $status);
         }
 
-        $emails = $query->paginate($perPage, ['*'], 'page', $page);
+        $dbEmails = $dbQuery->get()->map(fn ($e) => [
+            'id' => $e->id,
+            'imap' => false,
+            'to' => $e->to ?? [],
+            'cc' => $e->cc ?? [],
+            'bcc' => $e->bcc ?? [],
+            'subject' => $e->subject,
+            'body' => $e->body,
+            'attachments' => $e->attachments ?? [],
+            'status' => $e->status,
+            'error_message' => $e->error_message,
+            'sent_at' => $e->sent_at?->toIso8601String(),
+            'created_at' => $e->created_at->toIso8601String(),
+            'sender_name' => $e->user?->name,
+            'sender_photo' => $e->user?->profile_photo_url,
+            '_sort' => strtotime($e->sent_at ?? $e->created_at),
+        ]);
 
+        // Emails présents dans le dossier IMAP "Sent" (envoyés via webmail/autres clients)
+        $imapEmails = collect();
+        try {
+            $imapData = $this->emailService->getSentEmails(1, 100);
+            $imapEmails = collect($imapData['emails'] ?? [])->map(function ($e) {
+                $formatted = $this->formatImapSentEmail($e);
+                $formatted['body'] = null; // le corps est rechargé à l'ouverture du détail
+                return $formatted;
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Impossible de charger le dossier Sent IMAP', ['error' => $e->getMessage()]);
+        }
+
+        $all = $dbEmails->merge($imapEmails)
+            ->sortByDesc('_sort')
+            ->values();
+
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $all->forPage($page, $perPage)->values(),
+            $all->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $allDb = SentEmail::query();
         $stats = [
-            'total' => SentEmail::where('user_id', auth()->id())->count(),
-            'sent' => SentEmail::where('user_id', auth()->id())->where('status', 'sent')->count(),
-            'failed' => SentEmail::where('user_id', auth()->id())->where('status', 'failed')->count(),
-            'drafts' => SentEmail::where('user_id', auth()->id())->where('status', 'draft')->count(),
+            'total' => $all->count(),
+            'sent' => $dbEmails->where('status', 'sent')->count() + $imapEmails->count(),
+            'failed' => $allDb->where('status', 'failed')->count(),
+            'drafts' => $allDb->where('status', 'draft')->count(),
         ];
 
         return Inertia::render('Admin/Emails/Sent', [
-            'emails' => $emails->items(),
+            'emails' => $paginated->items(),
             'pagination' => [
-                'page' => $emails->currentPage(),
-                'per_page' => $emails->perPage(),
-                'total' => $emails->total(),
-                'total_pages' => $emails->lastPage(),
+                'page' => $paginated->currentPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+                'total_pages' => $paginated->lastPage(),
             ],
             'stats' => $stats,
             'filters' => $request->all(['status']),
         ]);
     }
 
+    /**
+     * Normalise un email du dossier IMAP "Sent" au format de la page Envoyés.
+     */
+    private function formatImapSentEmail(array $e): array
+    {
+        $to = array_map(fn ($a) => $a['email'] ?? '', $e['to'] ?? []);
+        $cc = array_map(fn ($a) => $a['email'] ?? '', $e['cc'] ?? []);
+
+        return [
+            'id' => null,
+            'imap' => true,
+            'message_number' => $e['message_number'],
+            'to' => array_values(array_filter($to)),
+            'cc' => array_values(array_filter($cc)),
+            'bcc' => [],
+            'subject' => $e['subject'] ?? '(sans objet)',
+            'body' => $e['html_body'] ?: nl2br(htmlspecialchars($e['text_body'] ?? $e['body'] ?? '')),
+            'attachments' => array_map(fn ($a) => ['name' => $a['filename'] ?? 'pièce jointe', 'size' => $a['size'] ?? 0], $e['attachments'] ?? []),
+            'status' => 'sent',
+            'error_message' => null,
+            'sent_at' => isset($e['udate']) && $e['udate'] ? date('c', $e['udate']) : ($e['date'] ?? null),
+            'created_at' => null,
+            'sender_name' => null,
+            'sender_photo' => null,
+            '_sort' => $e['udate'] ?? (strtotime($e['date'] ?? '') ?: 0),
+        ];
+    }
+
     public function showSentEmail(int $id)
     {
-        $email = SentEmail::where('user_id', auth()->id())
-            ->where('id', $id)
-            ->first();
+        $email = SentEmail::with('user')->find($id);
 
         if (!$email) {
             return Redirect::route('admin.emails.sent')
@@ -423,15 +545,31 @@ public function reply(Request $request, int $messageNumber)
         }
 
         return Inertia::render('Admin/Emails/SentShow', [
-            'email' => $email,
+            'email' => array_merge($email->toArray(), [
+                'imap' => false,
+                'sender_name' => $email->user?->name,
+                'sender_photo' => $email->user?->profile_photo_url,
+            ]),
+        ]);
+    }
+
+    public function showImapSentEmail(int $messageNumber)
+    {
+        $email = $this->emailService->getSentEmail($messageNumber);
+
+        if (!$email) {
+            return Redirect::route('admin.emails.sent')
+                ->with('error', 'Email envoyé introuvable dans le dossier Sent.');
+        }
+
+        return Inertia::render('Admin/Emails/SentShow', [
+            'email' => $this->formatImapSentEmail($email),
         ]);
     }
 
     public function deleteSentEmail(int $id)
     {
-        $email = SentEmail::where('user_id', auth()->id())
-            ->where('id', $id)
-            ->first();
+        $email = SentEmail::find($id);
 
         if (!$email) {
             return Redirect::route('admin.emails.sent')
@@ -444,21 +582,35 @@ public function reply(Request $request, int $messageNumber)
             ->with('success', 'Email supprimé avec succès.');
     }
 
-    public function archive(int $messageNumber)
+    public function archive(Request $request, int $messageNumber)
     {
-        $this->emailService->archive($messageNumber);
-        return Redirect::back()->with('success', 'Email archivé avec succès.');
+        if (!$this->emailService->archive($messageNumber, $request->input('folder'))) {
+            return Redirect::back()->with('error', 'Impossible d\'archiver cet email. Vérifiez la connexion IMAP et les permissions du dossier.');
+        }
+        return $this->redirectToFolder($request)->with('success', 'Email archivé avec succès.');
     }
 
-    public function unarchive(int $messageNumber)
+    public function unarchive(Request $request, int $messageNumber)
     {
-        $this->emailService->unarchive($messageNumber);
-        return Redirect::back()->with('success', 'Email désarchivé.');
+        if (!$this->emailService->unarchive($messageNumber, $request->input('folder'))) {
+            return Redirect::back()->with('error', 'Impossible de désarchiver cet email.');
+        }
+        return $this->redirectToFolder($request)->with('success', 'Email désarchivé.');
+    }
+
+    /**
+     * Redirige vers la liste des emails du dossier courant après une action.
+     */
+    private function redirectToFolder(Request $request)
+    {
+        $folder = $request->input('folder');
+        return Redirect::route('admin.emails.index', $folder ? ['folder' => $folder] : []);
     }
 
     public function forward(Request $request, int $messageNumber)
     {
-        $originalEmail = $this->emailService->getEmail($messageNumber);
+        $folder = $request->input('folder');
+        $originalEmail = $this->emailService->getEmail($messageNumber, $folder);
         
         if (!$originalEmail) {
             return Redirect::back()->with('error', 'Email original non trouvé.');
@@ -488,9 +640,10 @@ public function reply(Request $request, int $messageNumber)
         ]);
     }
 
-    public function getThread(int $messageNumber)
+    public function getThread(Request $request, int $messageNumber)
     {
-        $email = $this->emailService->getEmail($messageNumber);
+        $folder = $request->input('folder');
+        $email = $this->emailService->getEmail($messageNumber, $folder);
         
         if (!$email) {
             return Redirect::route('admin.emails.index')
@@ -507,6 +660,28 @@ public function reply(Request $request, int $messageNumber)
             'folders' => $folders,
             'messageNumber' => $messageNumber,
         ]);
+    }
+
+    /**
+     * Notifie l'expéditeur qu'un email a été envoyé (notification + broadcast).
+     */
+    private function notifyEmailSent(array $recipients, string $subject, ?int $sentEmailId = null): void
+    {
+        $recipients = array_values(array_unique(array_filter($recipients)));
+        if (empty($recipients) || !auth()->check()) {
+            return;
+        }
+
+        try {
+            auth()->user()->notify(new EmailSentNotification(
+                recipients: $recipients,
+                subject: $subject,
+                sentAt: now()->format('d/m/Y à H:i'),
+                sentEmailId: $sentEmailId,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('EmailSentNotification failed: ' . $e->getMessage());
+        }
     }
 
     /**

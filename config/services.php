@@ -33,7 +33,25 @@ return [
         'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_CLIENT_CALLBACK')
+        'redirect' => env('GOOGLE_CLIENT_CALLBACK'),
+        'refresh_token' => env('GOOGLE_REFRESH_TOKEN'),
+        'calendar_id' => env('GOOGLE_CALENDAR_ID', 'primary'),
+        'credentials_path' => env('GOOGLE_CREDENTIALS_PATH'),
+    ],
+
+    'zoom' => [
+        'account_id' => env('ZOOM_ACCOUNT_ID'),
+        'client_id' => env('ZOOM_CLIENT_ID'),
+        'client_secret' => env('ZOOM_CLIENT_SECRET'),
+    ],
+
+    'bbb' => [
+        'base_url' => env('BBB_BASE_URL'),
+        'secret' => env('BBB_SECRET'),
+    ],
+
+    'jitsi' => [
+        'base_url' => env('JITSI_BASE_URL', 'https://meet.jit.si'),
     ],
 
     'facebook' => [

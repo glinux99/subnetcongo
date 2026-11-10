@@ -15,44 +15,55 @@ class WelcomeEmail extends Mailable
 
     public $user;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(User $user)
     {
         $this->user = $user;
     }
 
     /**
-     * Get the message envelope.
+     * Détecte le rôle principal de l'utilisateur pour adapter le message.
      */
+    private function roleKey(): string
+    {
+        if ($this->user->hasRole('superadmin') || $this->user->hasRole('admin')) {
+            return 'admin';
+        }
+        if ($this->user->hasRole('instructor') || $this->user->hasRole('formateur') || $this->user->hasRole('teacher')) {
+            return 'instructor';
+        }
+        if ($this->user->hasAnyRole(['moderator', 'support-agent', 'finance-manager'])) {
+            return 'staff';
+        }
+        return 'student';
+    }
+
     public function envelope(): Envelope
     {
+        $subjects = [
+            'admin'       => 'Bienvenue dans l\'équipe SubnetCongo Academy',
+            'instructor'  => 'Bienvenue dans l\'espace instructeur SubnetCongo',
+            'staff'       => 'Bienvenue dans l\'équipe SubnetCongo Academy',
+            'student'     => 'Bienvenue sur SubnetCongo Academy, ' . $this->user->name . ' !',
+        ];
+
         return new Envelope(
-            subject: 'Bienvenue sur SubnetCongo Academy !',
+            subject: $subjects[$this->roleKey()],
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
             view: 'emails.welcome',
             with: [
-                'userName' => $this->user->name,
-                'userEmail' => $this->user->email,
+                'userName'    => $this->user->name,
+                'userEmail'   => $this->user->email,
+                'roleKey'     => $this->roleKey(),
                 'dashboardUrl' => url('/dashboard'),
             ]
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];

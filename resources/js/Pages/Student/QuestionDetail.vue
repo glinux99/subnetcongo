@@ -33,7 +33,7 @@ const removeFile = (i) => replyFiles.value.splice(i, 1);
 const sendReply = () => {
     if (!reply.value.trim()) return;
     submitting.value = true;
-    router.post(route('student.questions.reply', props.question.id), {
+    router.post(route('student.questions.reply', props.question.uuid), {
         body: reply.value,
         attachments: replyFiles.value,
     }, {
@@ -50,7 +50,7 @@ const sendReply = () => {
 };
 
 const markResolved = () => {
-    router.post(route('student.questions.resolve', props.question.id), {}, {
+    router.post(route('student.questions.resolve', props.question.uuid), {}, {
         preserveScroll: true,
         onSuccess: () => toast.add({ severity: 'success', summary: 'Question résolue', life: 2500 }),
     });

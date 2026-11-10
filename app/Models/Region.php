@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Region extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'code';
+    }
     use HasFactory;
 
     protected $fillable = [

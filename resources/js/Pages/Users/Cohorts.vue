@@ -264,11 +264,11 @@ const updateProfileCharts = (cohort) => {
 // ======================================================================================
 const openAddStudentDialog = () => {
     studentEnrollForm.reset();
-    studentEnrollForm.cohort_id = currentCohort.value.id;
+    studentEnrollForm.cohort_id = currentCohort.value.code;
     addStudentDialog.value = true;
 };
 const enrollStudents = () => {
-    studentEnrollForm.post(route('users.cohorts.members.add', currentCohort.value.id), {
+    studentEnrollForm.post(route('users.cohorts.members.add', currentCohort.value.code), {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
@@ -288,7 +288,7 @@ const studentMenuItems = computed(() => [
     { label: 'Retirer du groupe', icon: 'pi pi-trash', class: 'text-red-500', command: () => confirmRemoveStudent(selectedStudentForAction.value) }
 ]);
 const suspendStudent = (student) => {
-    router.patch(route('users.cohorts.members.suspend', { cohort: currentCohort.value.id, student: student.id }), {}, {
+    router.patch(route('users.cohorts.members.suspend', { cohort: currentCohort.value.code, student: student.id }), {}, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => toast.add({ severity: 'warn', summary: 'Suspendu', detail: 'Accès bloqué pour cet étudiant.' })
@@ -297,7 +297,7 @@ const suspendStudent = (student) => {
 const confirmRemoveStudent = (student) => {
     confirm.require({
         message: `Retirer ${student.name} de cette cohorte ?`, header: 'Retrait', icon: 'pi pi-user-minus', acceptClass: 'p-button-danger',
-        accept: () => router.delete(route('users.cohorts.members.remove', { cohort: currentCohort.value.id, student: student.id }), {
+        accept: () => router.delete(route('users.cohorts.members.remove', { cohort: currentCohort.value.code, student: student.id }), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => toast.add({ severity: 'success', summary: 'Retiré', detail: 'Étudiant retiré.' })
@@ -326,7 +326,7 @@ const executeTransfer = () => {
 // ======================================================================================
 const onDocumentUpload = (event) => {
     const file = event.files[0];
-    router.post(route('users.cohorts.documents.store', currentCohort.value.id), {
+    router.post(route('users.cohorts.documents.store', currentCohort.value.code), {
         file: file,
     }, {
         forceFormData: true,
@@ -343,7 +343,7 @@ const deleteDocument = (doc) => {
     confirm.require({
         message: `Supprimer le document "${doc.name}" ?`, header: 'Confirmation', icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
         accept: () => {
-            router.delete(route('users.cohorts.documents.destroy', { cohort: currentCohort.value.id, document: doc.id }), {
+            router.delete(route('users.cohorts.documents.destroy', { cohort: currentCohort.value.code, document: doc.id }), {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => toast.add({ severity: 'success', summary: 'Supprimé', detail: 'Document supprimé.' })
@@ -386,8 +386,8 @@ const saveLiveSession = () => {
         return;
     }
     const url = liveSessionForm.id
-        ? route('users.cohorts.live-sessions.update', { cohort: currentCohort.value.id, live_session: liveSessionForm.id })
-        : route('users.cohorts.live-sessions.store', currentCohort.value.id);
+        ? route('users.cohorts.live-sessions.update', { cohort: currentCohort.value.code, live_session: liveSessionForm.id })
+        : route('users.cohorts.live-sessions.store', currentCohort.value.code);
     liveSessionForm
         .transform((data) => ({
             ...data,
@@ -409,7 +409,7 @@ const deleteLiveSession = (session) => {
     confirm.require({
         message: `Supprimer la session "${session.title}" ?`, header: 'Confirmation', icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
         accept: () => {
-            router.delete(route('users.cohorts.live-sessions.destroy', { cohort: currentCohort.value.id, live_session: session.id }), {
+            router.delete(route('users.cohorts.live-sessions.destroy', { cohort: currentCohort.value.code, live_session: session.id }), {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => toast.add({ severity: 'success', summary: 'Supprimé', detail: 'Session live supprimée.' })
@@ -422,7 +422,7 @@ const deleteLiveSession = (session) => {
 // ======================================================================================
 const openPrereqEditor = () => prereqEditDialog.value = true;
 const savePrerequisites = () => {
-    router.put(route('users.cohorts.prerequisites.update', currentCohort.value.id), {
+    router.put(route('users.cohorts.prerequisites.update', currentCohort.value.code), {
         prerequisites: cohortPrerequisites.value
     }, {
         preserveScroll: true,

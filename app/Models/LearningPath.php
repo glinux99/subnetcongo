@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LearningPath extends Model {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     protected $fillable = [
         'uuid',
         'name',

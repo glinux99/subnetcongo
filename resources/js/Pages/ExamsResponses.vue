@@ -395,7 +395,7 @@ const handleStartClick = () => {
     // S'il n'y a pas de tentative active, on en crée une via le serveur.
     if (!props.attempt?.uuid) {
         isStarting.value = true;
-        router.post(route('attempts.start', props.exam.id), {}, {
+        router.post(route('attempts.start', props.exam.uuid), {}, {
             preserveState: false, // On recharge pour obtenir le nouvel 'attempt'
             onFinish: () => { isStarting.value = false; }
         });

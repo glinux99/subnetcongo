@@ -23,15 +23,21 @@ class NewQuestionNotification extends Notification implements ShouldBroadcast
 
     public function toArray($notifiable): array
     {
+        $askerName = $this->question->user?->name ?? 'Un apprenant';
+
         return [
             'type' => 'lesson_question',
+            'title' => 'Nouvelle question d\'un apprenant',
+            'message' => "{$askerName} a posé une nouvelle question : « {$this->question->subject} ». Une réponse est attendue.",
+            'icon' => 'pi-question-circle',
+            'severity' => 'info',
+            'url' => route('instructor.questions.index'),
             'question_id' => $this->question->id,
             'subject' => $this->question->subject,
             'course_id' => $this->question->course_id,
             'lesson_id' => $this->question->lesson_id,
             'asker_id' => $this->question->user_id,
             'priority' => $this->question->priority,
-            'message' => 'Nouvelle question d\'un apprenant : ' . $this->question->subject,
         ];
     }
 

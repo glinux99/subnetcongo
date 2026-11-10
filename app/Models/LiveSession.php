@@ -9,11 +9,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LiveSession extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
     protected $table = 'live_sessions';
 
     protected $fillable = [
         'course_id', 'instructor_id', 'cohort_id', 'created_by',
-        'title', 'slug',
+        'title',
         'start_at', 'actual_start_at', 'ended_at', 'duration',
         'provider', 'max_participants', 'is_recorded', 'passcode',
         'settings', 'metadata', 'provider_response',
@@ -92,5 +97,84 @@ class LiveSession extends Model
     public function isPast(): bool
     {
         return $this->status === self::STATUS_ENDED || $this->ended_at?->isPast();
+    }
+
+    /**
+     * La session est-elle ouverte au public (webinaire) ?
+     */
+    public function isPublicSession(): bool
+    {
+        return (($this->settings['visibility'] ?? 'private') === 'public');
+    }
+
+    /**
+     * Liste normalisÃ©e des e-mails invitÃ©s.
+     */
+    public function invitedEmails(): array
+    {
+        $emails = (array) ($this->settings['invited_emails'] ?? []);
+
+        return array_values(array_unique(array_filter(array_map(
+            fn ($e) => strtolower(trim((string) $e)),
+            $emails
+        ))));
+    }
+
+    /**
+     * Demandes d'accÃ¨s enregistrÃ©es (sans migration : stockÃ©es dans metadata).
+     */
+    public function joinRequests(): array
+    {
+        return array_values((array) ($this->metadata['join_requests'] ?? []));
+    }
+
+    public function hasApprovedAccess($userId): bool
+    {
+        foreach ($this->joinRequests() as $request) {
+            if ((int) ($request['user_id'] ?? 0) === (int) $userId && ($request['status'] ?? null) === 'approved') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function hasPendingAccess($userId): bool
+    {
+        foreach ($this->joinRequests() as $request) {
+            if ((int) ($request['user_id'] ?? 0) === (int) $userId && ($request['status'] ?? null) === 'pending') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Jeton opaque utilisÃ© dans les liens de partage (jamais l'ID en clair).
+     */
+    public function shareToken(): string
+    {
+        $settings = $this->settings ?? [];
+
+        if (empty($settings['share_token'])) {
+            $settings['share_token'] = \Illuminate\Support\Str::random(48);
+
+            // Mise Ã  jour ciblÃ©e : la liste peut porter des attributs calculÃ©s
+            // (pending_requests, share_url...) qu'il ne faut pas persister.
+            static::query()->whereKey($this->getKey())->update([
+                'settings' => json_encode($settings),
+            ]);
+
+            $this->setAttribute('settings', $settings);
+            $this->syncOriginalAttribute('settings');
+        }
+
+        return $settings['share_token'];
+    }
+
+    public function shareUrl(): string
+    {
+        return route('live-sessions.shared', $this->shareToken());
     }
 }

@@ -281,7 +281,7 @@ class PageController extends Controller
             ]);
 
             DB::commit();
-            return Redirect::route('web.pages.edit', $clone->id)->with('success', 'Page dupliquée en brouillon.');
+            return Redirect::route('web.pages.edit', $clone->slug)->with('success', 'Page dupliquée en brouillon.');
         } catch (\Exception $e) {
             DB::rollBack();
             return Redirect::back()->with('error', 'Erreur duplication : ' . $e->getMessage());

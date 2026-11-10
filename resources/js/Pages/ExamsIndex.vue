@@ -167,11 +167,11 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
 
                         <!-- ── ACTIONS ── -->
                         <div class="p-6 bg-slate-50/50 border-t border-slate-50 flex gap-3">
-                            <Link v-if="exam.active_attempt_uuid" :href="route('exams.take', exam.id)" class="flex-1">
+                            <Link v-if="exam.active_attempt_uuid" :href="route('exams.take', exam.uuid)" class="flex-1">
                                 <Button label="Reprendre" icon="pi pi-spin pi-spinner" class="w-full !bg-amber-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest" />
                             </Link>
 
-                            <Link v-else-if="exam.remaining_attempts !== 0 && !exam.is_passed" :href="route('exams.take', exam.id)" class="flex-1">
+                            <Link v-else-if="exam.remaining_attempts !== 0 && !exam.is_passed" :href="route('exams.take', exam.uuid)" class="flex-1">
                                 <Button label="Lancer l'examen" icon="pi pi-play-circle" class="w-full !bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest transition-all active:scale-95 shadow-lg shadow-red-600/20" />
                             </Link>
 
@@ -180,10 +180,10 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                                     class="w-full !bg-slate-200 !text-slate-500 !border-none !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest opacity-60" />
                             </div>
 
-                            <Link v-if="exam.results?.length" :href="route('exams.attempts', exam.id)">
+                            <Link v-if="exam.results?.length" :href="route('exams.attempts', exam.uuid)">
                                 <Button icon="pi pi-history" text class="!text-slate-400 hover:!text-blue-600" v-tooltip="'Historique des tentatives'" />
                             </Link>
-                            <Link v-if="exam.results?.length" :href="route('exams.results', exam.results[0].id)">
+                            <Link v-if="exam.results?.length" :href="route('exams.results', exam.results[0].uuid)">
                                 <Button icon="pi pi-chart-bar" text class="!text-slate-400 hover:!text-red-600" v-tooltip="'Mes performances'" />
                             </Link>
                         </div>

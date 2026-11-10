@@ -27,6 +27,8 @@ use App\Services\Video\GoogleMeetService;
 use App\Services\Video\BbbService;
 use App\Services\Video\JitsiService;
 use App\Services\LiveKit\LiveKitService;
+use App\Services\Video\VideoProviderConfig;
+use App\Notifications\LiveSessionInvitationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Redirect, Storage, Log, Cache, Notification, Http, Mail};
 use Illuminate\Support\Str;
@@ -72,7 +74,7 @@ class LiveSessionController extends Controller
     {
         // 1.1 Initialisation de la requête avec Eager Loading pour performance
         $query = LiveSession::with(['course:id,title', 'instructor:id,name,avatar'])
-            ->withCount('attendees');
+            ->withCount(['attendees', 'attendances']);
 
         // 1.2 Moteur de recherche Full-Text
         if ($request->filled('search')) {
@@ -102,6 +104,16 @@ class LiveSessionController extends Controller
         $sessions = $query->orderBy('start_at', 'desc')
             ->paginate($request->input('per_page', 15))
             ->withQueryString();
+
+        $sessions->getCollection()->transform(function ($session) {
+            $session->pending_requests = collect($session->joinRequests())->where('status', 'pending')->count();
+            $session->invited_count = count($session->invitedEmails());
+            $session->is_public_session = $session->isPublicSession();
+            $session->invited_emails = $session->invitedEmails();
+            $session->join_requests = $session->joinRequests();
+            $session->share_url = $session->shareUrl();
+            return $session;
+        });
 
         // 1.6 Agrégation des KPI pour les widgets PrimeVue
         $kpis = $this->calculateGlobalKPIs();
@@ -135,18 +147,28 @@ class LiveSessionController extends Controller
         $apiMeetingData = $this->createMeetingOnProvider($validated);
 
         $session = new LiveSession();
-        $session->fill(collect($validated)->except(['settings'])->toArray());
+        $session->fill(collect($validated)->except(['settings', 'visibility', 'invited_emails'])->toArray());
         $session->meeting_id  = $apiMeetingData['id'];
         $session->meeting_url = $apiMeetingData['join_url'];
         $session->host_url    = $apiMeetingData['start_url'] ?? null;
         $session->passcode    = $apiMeetingData['password'] ?? $validated['passcode'] ?? null;
         $session->status      = self::STATUS_SCHEDULED;
         $session->created_by  = Auth::id();
+
+        $settings = $this->normalizeSettings($request->input('settings', []));
+        $settings['visibility'] = $validated['visibility'] ?? 'private';
+        if (! empty($validated['invited_emails'])) {
+            $settings['invited_emails'] = $this->parseEmails($validated['invited_emails']);
+        }
+        $session->settings    = $settings;
         $session->metadata    = [
             'provider_response' => $apiMeetingData,
-            'settings' => $this->normalizeSettings($request->input('settings', [])),
         ];
         $session->save();
+
+        if (! empty($settings['invited_emails'])) {
+            $this->sendInvitations($session, $settings['invited_emails']);
+        }
 
         $this->scheduleNotifications($session);
         $this->audit('LIVE_SESSION_CREATED', $session);
@@ -155,7 +177,6 @@ class LiveSessionController extends Controller
         return Redirect::route('live-sessions.index')->with('success', 'Session planifiée.');
     } catch (Exception $e) {
         DB::rollBack();
-        return $e->getMessage();
         Log::error("SNC_LIVE_STORE_FAIL: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
         return back()->with('error', 'Erreur lors de la création : ' . $e->getMessage())->withInput();
     }
@@ -185,14 +206,22 @@ class LiveSessionController extends Controller
                 $apiMeetingData = $this->updateMeetingOnProvider($liveSession, $validated);
             }
 
-            $liveSession->fill(collect($validated)->except('settings')->toArray());
+            $liveSession->fill(collect($validated)->except(['settings', 'visibility', 'invited_emails'])->toArray());
             $liveSession->meeting_id  = $apiMeetingData['id'] ?? $liveSession->meeting_id;
             $liveSession->meeting_url = $apiMeetingData['join_url'] ?? $liveSession->meeting_url;
             $liveSession->host_url    = $apiMeetingData['start_url'] ?? $liveSession->host_url;
-            $liveSession->passcode    = $apiMeetingData['password'] ?? $validated['passcode'];
+            $liveSession->passcode    = $apiMeetingData['password'] ?? $validated['passcode'] ?? null;
+
+            $settings = $this->normalizeSettings($request->input('settings', []));
+            $settings['visibility'] = $validated['visibility'] ?? ($liveSession->settings['visibility'] ?? 'private');
+            if (! empty($validated['invited_emails'])) {
+                $settings['invited_emails'] = $this->parseEmails($validated['invited_emails']);
+            } elseif (isset($liveSession->settings['invited_emails'])) {
+                $settings['invited_emails'] = $liveSession->settings['invited_emails'];
+            }
+            $liveSession->settings    = $settings;
             $liveSession->metadata    = array_merge($liveSession->metadata ?? [], [
                 'provider_response' => $apiMeetingData,
-                'settings'          => $this->normalizeSettings($request->input('settings', []))
             ]);
             $liveSession->save();
 
@@ -247,35 +276,385 @@ class LiveSessionController extends Controller
     {
         $user = Auth::user();
 
-        // 3.1 Vérifier l'inscription ACTIVE au cours (et pas seulement l'existence d'une ligne)
-        $enrolled = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $liveSession->course_id)
-            ->whereIn('status', [\App\Models\Enrollment::STATUS_ACTIVE, \App\Models\Enrollment::STATUS_COMPLETED])
-            ->exists();
+        $isPrivileged = $user->id === $liveSession->instructor_id
+            || $user->hasAnyRole(['superadmin', 'admin', 'instructor', 'cohort-assistant']);
 
-        if (! $enrolled) {
-            // Message plus précis si l'utilisateur a une demande en attente
-            $pending = Enrollment::where('user_id', $user->id)
+        if (in_array($liveSession->status, [self::STATUS_CANCELLED, self::STATUS_ENDED], true)) {
+            return back()->with('error', "Cette session est terminée ou annulée.");
+        }
+
+        if (! $isPrivileged) {
+            // 3.1 Vérifier l'inscription ACTIVE au cours (et pas seulement l'existence d'une ligne)
+            $enrolled = Enrollment::where('user_id', $user->id)
                 ->where('course_id', $liveSession->course_id)
-                ->where('status', \App\Models\Enrollment::STATUS_PENDING)
+                ->whereIn('status', [\App\Models\Enrollment::STATUS_ACTIVE, \App\Models\Enrollment::STATUS_COMPLETED])
                 ->exists();
 
-            $msg = $pending
-                ? "Votre inscription au cours '{$liveSession->course->title}' est en attente de validation par l'administrateur."
-                : "Vous devez être inscrit au cours '{$liveSession->course->title}' pour rejoindre cette session.";
+            $invited = in_array(strtolower((string) $user->email), $liveSession->invitedEmails(), true);
+            $approved = $liveSession->hasApprovedAccess($user->id);
+            $isPublicSession = $liveSession->isPublicSession();
 
-            return back()->with('error', $msg);
+            if (! $enrolled && ! $invited && ! $approved && ! $isPublicSession) {
+                $liveSession->load(['course:id,title', 'instructor:id,name']);
+
+                return Inertia::render('LiveSessions/RequestAccess', [
+                    'session' => $liveSession,
+                    'requested' => $liveSession->hasPendingAccess($user->id),
+                ]);
+            }
+
+            $requiresConfirmation = ! $enrolled;
+        } else {
+            $requiresConfirmation = false;
         }
 
         // 3.2 Enregistrer la présence initiale
+        if ($liveSession->provider === self::PROVIDER_BBB && $liveSession->meeting_id) {
+            $liveSession->meeting_url = app(BbbService::class)->buildJoinUrl(
+                (string) $liveSession->meeting_id,
+                (string) $user->name,
+                $isPrivileged ? 'moderator' : 'viewer',
+                $isPrivileged
+                    ? ($liveSession->metadata['provider_response']['moderator_password'] ?? $liveSession->passcode)
+                    : $liveSession->passcode
+            );
+        }
+
         LiveAttendance::updateOrCreate(
             ['live_session_id' => $liveSession->id, 'user_id' => $user->id],
             ['joined_at' => now(), 'ip_address' => request()->ip(), 'user_agent' => request()->userAgent()]
         );
 
+        // 3.3 Le formateur (ou un admin) qui rejoint une session LiveKit la démarre implicitement
+        if ($liveSession->provider === self::PROVIDER_LIVEKIT && $isPrivileged && $liveSession->status !== self::STATUS_LIVE) {
+            app(LiveKitService::class)->createRoom($liveSession);
+            $liveSession->update([
+                'status' => self::STATUS_LIVE,
+                'actual_start_at' => $liveSession->actual_start_at ?? now(),
+            ]);
+        }
+
+        $liveSession->load(['course:id,title', 'instructor:id,name,avatar']);
+
         return Inertia::render('LiveSessions/Player', [
             'session' => $liveSession,
-            'user' => $user->only(['id', 'name', 'avatar'])
+            'user' => $user->only(['id', 'name', 'avatar', 'profile_photo']),
+            'requires_confirmation' => $requiresConfirmation ?? false,
+        ]);
+    }
+
+    /**
+     * Demande d'accès à une session privée (validée par un formateur/admin).
+     */
+    public function requestAccess(LiveSession $liveSession)
+    {
+        $user = Auth::user();
+
+        if ($liveSession->hasApprovedAccess($user->id)) {
+            return back()->with('info', 'Vous avez déjà accès à cette session.');
+        }
+
+        if ($liveSession->hasPendingAccess($user->id)) {
+            return back()->with('info', 'Votre demande est déjà en attente de validation.');
+        }
+
+        $requests = $liveSession->joinRequests();
+        $requests[] = [
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'status' => 'pending',
+            'requested_at' => now()->toIso8601String(),
+        ];
+
+        $metadata = $liveSession->metadata ?? [];
+        $metadata['join_requests'] = $requests;
+        $liveSession->metadata = $metadata;
+        $liveSession->save();
+
+        $instructor = User::find($liveSession->instructor_id);
+        if ($instructor) {
+            $instructor->notify(new \App\Notifications\BaseAppNotification(
+                'Nouvelle demande d\'accès',
+                $user->name . ' demande à rejoindre la session « ' . $liveSession->title . ' ».',
+                'pi-user-plus',
+                'warn',
+                route('live-sessions.index')
+            ));
+        }
+
+        return back()->with('success', "Demande envoyée. Un formateur ou un administrateur doit l'approuver.");
+    }
+
+    /**
+     * Approbation d'une demande d'accès.
+     */
+    public function approveAccess(Request $request, LiveSession $liveSession)
+    {
+        $this->authorizeSessionManager($liveSession);
+
+        $userId = (int) $request->input('user_id');
+        $this->updateAccessStatus($liveSession, $userId, 'approved');
+
+        $user = User::find($userId);
+        if ($user) {
+            $this->sendInvitations($liveSession, [$user->email]);
+        }
+
+        return back()->with('success', 'Accès approuvé : la personne peut rejoindre la session.');
+    }
+
+    /**
+     * Refus d'une demande d'accès.
+     */
+    public function rejectAccess(Request $request, LiveSession $liveSession)
+    {
+        $this->authorizeSessionManager($liveSession);
+
+        $userId = (int) $request->input('user_id');
+        $this->updateAccessStatus($liveSession, $userId, 'rejected');
+
+        return back()->with('success', "Demande d'accès refusée.");
+    }
+
+    private function updateAccessStatus(LiveSession $session, int $userId, string $status): void
+    {
+        $requests = $session->joinRequests();
+
+        foreach ($requests as &$item) {
+            if ((int) ($item['user_id'] ?? 0) === $userId) {
+                $item['status'] = $status;
+                $item['decided_at'] = now()->toIso8601String();
+                $item['decided_by'] = Auth::id();
+            }
+        }
+        unset($item);
+
+        $metadata = $session->metadata ?? [];
+        $metadata['join_requests'] = $requests;
+        $session->metadata = $metadata;
+        $session->save();
+    }
+
+    /**
+     * Ajout d'e-mails invités et réglage public/privé.
+     */
+    public function invite(Request $request, LiveSession $liveSession)
+    {
+        $this->authorizeSessionManager($liveSession);
+
+        $data = $request->validate([
+            'emails' => 'required|string',
+            'visibility' => 'nullable|in:public,private',
+        ]);
+
+        $emails = $this->parseEmails($data['emails']);
+        $alreadyInvited = $liveSession->invitedEmails();
+        $newEmails = array_values(array_diff($emails, $alreadyInvited));
+
+        $settings = $liveSession->settings ?? [];
+        $settings['invited_emails'] = array_values(array_unique(array_merge(
+            (array) ($settings['invited_emails'] ?? []),
+            $emails
+        )));
+
+        if (! empty($data['visibility'])) {
+            $settings['visibility'] = $data['visibility'];
+        }
+
+        $liveSession->settings = $settings;
+        $liveSession->save();
+
+        $sent = $this->sendInvitations($liveSession, $newEmails);
+
+        return back()->with('success', sprintf(
+            '%d e-mail(s) enregistré(s), %d invitation(s) envoyée(s).',
+            count($emails),
+            $sent
+        ));
+
+    }
+
+    /**
+     * Envoie l'invitation (e-mail + notification interne) aux adresses indiquées.
+     * Les adresses sans compte reçoivent uniquement l'e-mail.
+     */
+    private function sendInvitations(LiveSession $session, array $emails): int
+    {
+        if (empty($emails)) {
+            return 0;
+        }
+
+        $session->loadMissing(['course:id,title', 'instructor:id,name']);
+
+        $joinUrl = $session->shareUrl();
+        $startAtLabel = $session->start_at
+            ? $session->start_at->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm')
+            : 'une date à confirmer';
+
+        $sent = 0;
+
+        foreach ($emails as $email) {
+            try {
+                $notification = new LiveSessionInvitationNotification(
+                    (string) $session->title,
+                    $session->course?->title,
+                    $session->instructor?->name ?? 'Un formateur',
+                    $startAtLabel,
+                    $joinUrl,
+                    (int) $session->id,
+                );
+
+                $user = User::where('email', $email)->first();
+
+                if ($user) {
+                    $user->notify($notification);
+                } else {
+                    Notification::route('mail', $email)->notify($notification);
+                }
+
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::warning('SNC_LIVE_INVITE_FAIL', ['email' => $email, 'error' => $e->getMessage()]);
+            }
+        }
+
+        return $sent;
+    }
+
+    /**
+     * Retourne le lien de partage opaque (jeton) d'une session.
+     */
+    public function shareLink(LiveSession $liveSession)
+    {
+        $this->authorizeSessionManager($liveSession);
+
+        return response()->json([
+            'url' => $liveSession->shareUrl(),
+            'token' => $liveSession->shareToken(),
+        ]);
+    }
+
+    /**
+     * Point d'entrée des liens partagés : /l/{token}.
+     * Aucun identifiant de session n'apparaît dans l'URL.
+     */
+    public function sharedJoin(string $token)
+    {
+        $session = LiveSession::where('settings->share_token', $token)->first();
+
+        abort_if(! $session, 404);
+
+        if (! Auth::check()) {
+            return redirect()->guest(route('login'));
+        }
+
+        if (in_array($session->status, [self::STATUS_ENDED, self::STATUS_CANCELLED], true)) {
+            return redirect()->route('live-sessions.mine')
+                ->with('error', 'Cette session est terminée ou annulée.');
+        }
+
+        return redirect()->route('live-sessions.join', $session);
+    }
+
+    /**
+     * Confirmation des informations à la fin d'une session (participants externes).
+     */
+    public function confirmInfo(Request $request, LiveSession $liveSession)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+
+        $attendance = LiveAttendance::where('live_session_id', $liveSession->id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if ($attendance) {
+            $metadata = $attendance->metadata ?? [];
+            $metadata['confirmed_identity'] = $data;
+            $metadata['confirmed_at'] = now()->toIso8601String();
+            $attendance->metadata = $metadata;
+            $attendance->save();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Liste publique des sessions ouvertes (webinaires), accessible sans connexion.
+     */
+    public function publicIndex()
+    {
+        $sessions = LiveSession::with(['course:id,title,slug', 'instructor:id,name'])
+            ->whereIn('status', [self::STATUS_SCHEDULED, self::STATUS_LIVE])
+            ->where('start_at', '>=', now()->subHours(2))
+            ->where('settings->visibility', 'public')
+            ->orderByRaw("FIELD(status, 'Live', 'Scheduled')")
+            ->orderBy('start_at')
+            ->get();
+
+        $sessions->each(function ($session) { $session->share_url = $session->shareUrl(); });
+
+        return Inertia::render('LiveSessions/PublicIndex', [
+            'sessions' => $sessions,
+        ]);
+    }
+
+    private function authorizeSessionManager(LiveSession $session): void
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            abort(403);
+        }
+
+        if ((int) $user->id === (int) $session->instructor_id) {
+            return;
+        }
+
+        if ($user->hasAnyRole(['superadmin', 'admin', 'instructor', 'cohort-assistant'])) {
+            return;
+        }
+
+        abort(403);
+    }
+
+    /**
+     * Espace apprenant : liste des sessions live de ses cours (en direct et à venir).
+     */
+    public function studentIndex()
+    {
+        $user = Auth::user();
+
+        $isPrivileged = $user->hasAnyRole(['superadmin', 'admin', 'instructor', 'cohort-assistant']);
+
+        $courseIds = Enrollment::where('user_id', $user->id)
+            ->whereIn('status', [\App\Models\Enrollment::STATUS_ACTIVE, \App\Models\Enrollment::STATUS_COMPLETED])
+            ->pluck('course_id');
+
+        $query = LiveSession::with(['course:id,title', 'instructor:id,name,avatar'])
+            ->whereIn('status', [self::STATUS_SCHEDULED, self::STATUS_LIVE])
+            ->where('start_at', '>=', now()->subHours(6));
+
+        if (! $isPrivileged) {
+            $query->where(function ($q) use ($user, $courseIds) {
+                $q->whereIn('course_id', $courseIds)
+                    ->orWhere('instructor_id', $user->id);
+            });
+        }
+
+        $sessions = $query
+            ->orderByRaw("FIELD(status, 'Live', 'Scheduled')")
+            ->orderBy('start_at')
+            ->get();
+
+        $sessions->each(function ($session) { $session->share_url = $session->shareUrl(); });
+
+        return Inertia::render('LiveSessions/StudentIndex', [
+            'sessions' => $sessions,
+            'courses' => Course::whereIn('id', $courseIds)->select('id', 'title')->get(),
         ]);
     }
 
@@ -306,7 +685,14 @@ class LiveSessionController extends Controller
      */
     public function report(LiveSession $liveSession)
     {
-        $liveSession->load(['course', 'instructor', 'attendees.user']);
+        $liveSession->load(['course', 'instructor']);
+
+        $attendances = LiveAttendance::with('user')
+            ->where('live_session_id', $liveSession->id)
+            ->orderBy('joined_at')
+            ->get();
+
+        $liveSession->setRelation('attendees', $attendances);
 
         // 4.1 Calcul du taux d'engagement par tranche de 15 min
         $engagementData = $this->calculateEngagementChart($liveSession);
@@ -314,8 +700,8 @@ class LiveSessionController extends Controller
         // 4.2 Statistiques de présence
         $stats = [
             'total_registered' => Enrollment::where('course_id', $liveSession->course_id)->count(),
-            'actual_attendees' => $liveSession->attendees()->count(),
-            'average_time' => $liveSession->attendees()->avg('seconds_spent') ?? 0,
+            'actual_attendees' => $attendances->count(),
+            'average_time' => (int) round($attendances->avg('seconds_spent') ?? 0),
             'peak_participants' => $this->getPeakParticipants($liveSession->id)
         ];
 
@@ -368,10 +754,9 @@ class LiveSessionController extends Controller
     {
         return $request->validate([
             'title'             => 'required|string|max:255',
-            'slug'              => 'nullable|string|max:255',
             'course_id'         => 'required|exists:courses,id',
             'instructor_id'     => 'required|exists:users,id',
-            'start_at'          => 'required|date|after:now',
+            'start_at'          => 'required|date',
             'duration'          => 'required|integer|min:15|max:480',
             'provider'          => [
                 'required',
@@ -382,6 +767,8 @@ class LiveSessionController extends Controller
             'passcode'          => 'nullable|string|max:20',
             'settings'          => 'nullable|array',
             'settings.*'        => 'string', // Les valeurs arrivent sous forme de string "1"/"0"
+            'visibility'        => 'nullable|in:public,private',
+            'invited_emails'    => 'nullable|string',
         ]);
     }
 
@@ -398,6 +785,19 @@ class LiveSessionController extends Controller
     }
 
     /**
+     * Transforme une liste d'e-mails séparés par des virgules/espaces en tableau valide.
+     */
+    private function parseEmails(string $raw): array
+    {
+        return collect(preg_split('/[\s,;]+/', $raw))
+            ->map(fn ($e) => strtolower(trim((string) $e)))
+            ->filter(fn ($e) => filter_var($e, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Orchestrateur d'API multi-fournisseur.
      */
     private function createMeetingOnProvider(array $data): array
@@ -407,8 +807,13 @@ class LiveSessionController extends Controller
             self::PROVIDER_BBB   => app(BbbService::class)->createMeeting($data),
             self::PROVIDER_MEET  => app(GoogleMeetService::class)->createMeeting($data),
             self::PROVIDER_JITSI => app(JitsiService::class)->createMeeting($data),
-            self::PROVIDER_LIVEKIT => app(LiveKitService::class)->createRoomForData($data),
-            default => throw new Exception("Fournisseur non supporté : {$data['provider']}"),
+            // LiveKit : la room est créée automatiquement au premier join.
+            self::PROVIDER_LIVEKIT => [
+                'id' => null,
+                'join_url' => app(LiveKitService::class)->getWsUrl(),
+                'start_url' => app(LiveKitService::class)->getWsUrl(),
+            ],
+            default => throw new Exception("Fournisseur non support� : {$data['provider']}"),
         };
     }
 
@@ -573,29 +978,7 @@ class LiveSessionController extends Controller
 
     private function getConfiguredProviders(): array
     {
-        $configured = [];
-
-        if (config('services.zoom.account_id') && config('services.zoom.client_id') && config('services.zoom.client_secret')) {
-            $configured[] = 'zoom';
-        }
-
-        if (config('services.google.credentials_path') && file_exists(config('services.google.credentials_path'))) {
-            $configured[] = 'meet';
-        }
-
-        if (config('services.bbb.base_url') && config('services.bbb.secret')) {
-            $configured[] = 'bbb';
-        }
-
-        if (config('services.jitsi.base_url')) {
-            $configured[] = 'jitsi';
-        }
-
-        if (config('services.livekit.api_key') && config('services.livekit.api_secret') && config('services.livekit.url')) {
-            $configured[] = 'livekit';
-        }
-
-        return $configured;
+        return \App\Services\Video\VideoProviderConfig::configuredProviders();
     }
 
     private function formatBytes($bytes, $precision = 2): string
@@ -702,11 +1085,11 @@ class LiveSessionController extends Controller
             return response()->json([
                 'token' => $token,
                 'room' => app(LiveKitService::class)->getRoomName($liveSession),
-                'ws_url' => config('services.livekit.ws_url', 'ws://localhost:7880'),
+                'ws_url' => app(LiveKitService::class)->getWsUrl(),
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'avatar' => $user->avatar ?? null,
+                    'avatar' => $user->avatar ?? $user->profile_photo ?? null,
                 ],
                 'is_instructor' => $isInstructor,
             ]);
@@ -809,9 +1192,139 @@ class LiveSessionController extends Controller
             'message' => $request->input('message'),
         ]);
 
-        broadcast(new \App\Events\LiveSessionChatMessageSent($chatMessage));
+        try {
+            broadcast(new \App\Events\LiveSessionChatMessageSent($chatMessage));
+        } catch (\Throwable $e) {
+            Log::warning('SNC_LIVE_CHAT_BROADCAST_FAIL: ' . $e->getMessage());
+        }
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'id' => $chatMessage->id]);
+    }
+
+    /**
+     * Historique du chat (texte + fichiers) de la session.
+     */
+    public function chatMessages(LiveSession $liveSession)
+    {
+        if (! $this->canAccessSession($liveSession, Auth::user())) {
+            return response()->json(['error' => 'Accès refusé.'], 403);
+        }
+
+        $messages = \App\Models\LiveSessionChatMessage::where('live_session_id', $liveSession->id)
+            ->orderBy('created_at')
+            ->limit(200)
+            ->get()
+            ->map(function ($m) {
+                $file = null;
+                $decoded = json_decode((string) $m->message, true);
+                if (is_array($decoded) && ($decoded['type'] ?? null) === 'file') {
+                    $file = $decoded;
+                }
+
+                return [
+                    'id' => $m->id,
+                    'sender' => $m->user_name,
+                    'message' => $file ? null : $m->message,
+                    'file' => $file,
+                    'timestamp' => optional($m->created_at)->format('H:i'),
+                ];
+            });
+
+        return response()->json(['messages' => $messages]);
+    }
+
+    /**
+     * Partage d'un document dans la session (stockage local privé).
+     */
+    public function uploadDocument(Request $request, LiveSession $liveSession)
+    {
+        if (! $this->canAccessSession($liveSession, Auth::user())) {
+            return response()->json(['error' => 'Accès refusé.'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|max:10240|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,csv,zip,png,jpg,jpeg,webp,gif,mp4',
+        ]);
+
+        $file = $request->file('file');
+        $stored = $file->store('live-documents/' . $liveSession->id, 'local');
+
+        if (! $stored) {
+            return response()->json(['error' => 'Enregistrement du fichier impossible.'], 500);
+        }
+
+        $payload = [
+            'type' => 'file',
+            'path' => $stored,
+            'name' => $file->getClientOriginalName(),
+            'mime' => $file->getClientMimeType(),
+            'size' => $file->getSize(),
+            'url' => route('live-sessions.documents.download', [$liveSession->id, basename($stored)]),
+        ];
+
+        $chatMessage = \App\Models\LiveSessionChatMessage::create([
+            'live_session_id' => $liveSession->id,
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name,
+            'message' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
+
+        try {
+            broadcast(new \App\Events\LiveSessionChatMessageSent($chatMessage));
+        } catch (\Throwable $e) {
+            Log::warning('SNC_LIVE_DOC_BROADCAST_FAIL: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'file' => $payload,
+            'id' => $chatMessage->id,
+        ]);
+    }
+
+    /**
+     * Téléchargement sécurisé d'un document partagé.
+     */
+    public function downloadDocument(LiveSession $liveSession, string $filename)
+    {
+        if (! $this->canAccessSession($liveSession, Auth::user())) {
+            abort(403);
+        }
+
+        if ($filename !== basename($filename) || str_contains($filename, '..')) {
+            abort(404);
+        }
+
+        $path = 'live-documents/' . $liveSession->id . '/' . $filename;
+
+        if (! \Illuminate\Support\Facades\Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->download($path);
+    }
+
+    /**
+     * Vérifie qu'un utilisateur peut accéder au contenu de la session.
+     */
+    private function canAccessSession(LiveSession $session, $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if ((int) $user->id === (int) $session->instructor_id) {
+            return true;
+        }
+
+        if ($user->hasAnyRole(['superadmin', 'admin', 'instructor', 'cohort-assistant'])) {
+            return true;
+        }
+
+        return Enrollment::where('user_id', $user->id)
+            ->where('course_id', $session->course_id)
+            ->whereIn('status', [\App\Models\Enrollment::STATUS_ACTIVE, \App\Models\Enrollment::STATUS_COMPLETED])
+            ->exists();
     }
 
     public function livekitHealth()

@@ -16,6 +16,7 @@ const form = useForm({
     subject: props.template.subject,
     content: props.template.content,
     is_active: props.template.is_active,
+    bcc_emails: (props.template.bcc_emails || []).join(', '),
 });
 
 const testEmail = ref('');
@@ -121,6 +122,24 @@ const copyVariable = (variable) => {
                                             </p>
                                         </div>
                                         <InputSwitch v-model="form.is_active" class="scale-110" />
+                                    </div>
+
+                                    <!-- Copies BCC -->
+                                    <div>
+                                        <label class="block text-sm font-black text-slate-700 mb-2">Copies cachées (BCC)</label>
+                                        <div class="relative">
+                                            <i class="pi pi-eye-slash absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                            <InputText
+                                                v-model="form.bcc_emails"
+                                                class="!rounded-xl w-full !pl-11 !py-3 !text-slate-800 !border-slate-200 focus:!border-blue-500 font-mono"
+                                                placeholder="email1@exemple.com, email2@exemple.com"
+                                            />
+                                        </div>
+                                        <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                                            <i class="pi pi-info-circle"></i>
+                                            Adresses séparées par des virgules. Chaque envoi de ce modèle leur sera copié en BCC (invisible pour le destinataire). Laissez vide pour ne faire aucune copie.
+                                        </p>
+                                        <p v-if="form.errors.bcc_emails" class="text-red-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.bcc_emails }}</p>
                                     </div>
 
                                     <!-- Subject -->

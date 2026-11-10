@@ -244,7 +244,7 @@ class BlogController extends Controller
             'auditable_id' => $clone->id,
         ]);
 
-        return Redirect::route('web.blog.edit', $clone->id)->with('success', 'Article dupliqué en brouillon.');
+        return Redirect::route('web.blog.edit', $clone->slug)->with('success', 'Article dupliqué en brouillon.');
     }
 
     /**

@@ -350,7 +350,7 @@ class WebSettingController extends Controller
         ]);
 
         try {
-            \App\Models\ContactMessage::create([
+            $contactMessage = \App\Models\ContactMessage::create([
                 'ticket_number' => 'MSG-' . strtoupper(uniqid()),
                 'name'          => $validated['name'],
                 'email'         => $validated['email'],
@@ -362,6 +362,19 @@ class WebSettingController extends Controller
                 'user_agent'    => substr((string) $request->userAgent(), 0, 500),
                 'source'        => 'web_contact_form',
             ]);
+
+            // Email de confirmation automatique au visiteur
+            app(\App\Services\Email\EmailTemplateService::class)->sendTemplatedEmailTo(
+                'contact_confirmation',
+                $validated['email'],
+                $validated['name'],
+                [
+                    'visitor_name'  => $validated['name'],
+                    'visitor_email' => $validated['email'],
+                    'subject'       => $validated['subject'],
+                    'ticket_number' => $contactMessage->ticket_number,
+                ]
+            );
         } catch (\Throwable $e) {
             \Log::warning('Contact form submit failed', ['err' => $e->getMessage()]);
         }

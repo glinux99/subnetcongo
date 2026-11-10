@@ -112,4 +112,23 @@ class ZoomService
         $response = Http::withToken($token)->get("{$this->base}/meetings/{$meetingId}/recordings");
         return $response->json('recording_files') ?? [];
     }
+
+    public function isConfigured(): bool
+    {
+        return filled(config('services.zoom.account_id'))
+            && filled(config('services.zoom.client_id'))
+            && filled(config('services.zoom.client_secret'));
+    }
+
+    public function testConnection(): array
+    {
+        try {
+            Cache::forget('zoom_access_token');
+            $this->getAccessToken();
+
+            return ['success' => true, 'message' => 'Connexion Zoom réussie.'];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
 }

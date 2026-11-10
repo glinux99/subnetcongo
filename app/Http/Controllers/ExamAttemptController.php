@@ -129,7 +129,7 @@ public function index()
             ->first();
 
         if ($existingAttempt) {
-            return redirect()->route('exams.take', $exam->id)->with('info', 'Vous avez déjà une tentative en cours.');
+            return redirect()->route('exams.take', $exam->uuid)->with('info', 'Vous avez déjà une tentative en cours.');
         }
         if (!$exam->userHasAttemptsRemaining($user)) {
             return redirect()->route('exams.learner.index')->with('error', 'Vous avez atteint la limite de tentatives pour cet examen.');
@@ -148,7 +148,7 @@ public function index()
             'proctoring_data' => [],
         ]);
 
-        return redirect()->route('exams.take', $exam->id);
+        return redirect()->route('exams.take', $exam->uuid);
     }
 
     /**
@@ -359,7 +359,17 @@ public function index()
                 'graded_by' => $hasManualGrading ? null : 1, // ID de l'utilisateur "Système" pour l'auto-correction
             ]);
 
-            return redirect()->route('exams.results', $result->id);
+            // 3. Envoyer l'email de résultat (uniquement si correction automatique complète)
+            if (!$hasManualGrading) {
+                try {
+                    $eventClass = $isPassed ? \App\Events\ExamPassed::class : \App\Events\ExamFailed::class;
+                    $eventClass::dispatch($result, $attempt);
+                } catch (\Throwable $e) {
+                    \Log::warning('Exam result email dispatch failed: ' . $e->getMessage());
+                }
+            }
+
+            return redirect()->route('exams.results', $result->uuid);
         });
     }
 

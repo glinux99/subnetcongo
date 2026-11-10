@@ -292,7 +292,7 @@ const submitAskQuestion = () => {
 };
 
 const downloadCertificate = (cert) => {
-    const url = cert?.download_url ?? (cert?.id ? route('certificates.download', cert.id) : null);
+    const url = cert?.download_url ?? (cert?.id ? route('certificates.download', cert.uuid) : null);
     if (!url) {
         toast.add({ severity: 'warn', summary: 'Certificat indisponible', life: 2500 });
         return;
@@ -304,15 +304,15 @@ const downloadCertificate = (cert) => {
 const startExam = (exam) => {
     if (!exam?.id) return;
     if (exam?.attempt_uuid) {
-        router.visit(route('exams.take', exam.id));
+        router.visit(route('exams.take', exam.uuid));
     } else {
-        router.post(route('attempts.start', exam.id));
+        router.post(route('attempts.start', exam.uuid));
     }
 };
 
 const resumeExam = (exam) => {
     if (!exam?.id) return;
-    router.visit(route('exams.take', exam.id));
+    router.visit(route('exams.take', exam.uuid));
 };
 
 onMounted(() => {

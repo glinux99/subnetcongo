@@ -132,7 +132,7 @@ class StudentController extends Controller
                     'issued_at' => $cert->issued_at?->format('d/m/Y'),
                     'certificate_code' => $cert->certificate_code,
                     'verification_hash' => $cert->verification_hash,
-                    'download_url' => route('certificates.download', $cert->id),
+                    'download_url' => route('certificates.download', $cert->uuid),
                     'verify_url' => route('certificates.verify.public', $cert->verification_hash),
                 ];
             })->values();
@@ -312,7 +312,7 @@ class StudentController extends Controller
                 'type' => $r->file_type ?? $r->mime_type,
                 'size' => (int) $r->size,
                 'mime_type' => $r->mime_type,
-                'download_url' => route('student.resources.download', $r->id),
+                'download_url' => route('student.resources.download', $r->slug ?? $r->id),
                 'full_url' => $r->full_url,
             ])->values();
 

@@ -10,6 +10,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Exception;
 
+/**
+ * Client LiveKit (Cloud ou self-hosted).
+ *
+ * - generateToken() : token participant avec grants vidéo conformes LiveKit v2
+ * - createRoom()/deleteRoom()/listParticipants() : API Twirp /twirp/livekit.RoomService/*
+ *
+ * Note : LiveKit crée automatiquement une room lorsqu'un premier participant
+ * se connecte. createRoom() est donc optionnel et tolérant aux rooms existantes.
+ */
 class LiveKitService
 {
     protected string $apiKey;
@@ -19,133 +28,159 @@ class LiveKitService
 
     public function __construct()
     {
-        $this->apiKey = config('services.livekit.api_key', '');
-        $this->apiSecret = config('services.livekit.api_secret', '');
-        $this->url = rtrim(config('services.livekit.url', 'http://localhost:7880'), '/');
-        $this->wsUrl = rtrim(config('services.livekit.ws_url', 'ws://localhost:7880'), '/');
+        $this->apiKey = (string) config('services.livekit.api_key', '');
+        $this->apiSecret = (string) config('services.livekit.api_secret', '');
+        $this->url = rtrim((string) config('services.livekit.url', 'http://localhost:7880'), '/');
+        $this->wsUrl = rtrim((string) config('services.livekit.ws_url', 'ws://localhost:7880'), '/');
+
+        // LiveKit Cloud expose l'API HTTP sur https:// et le websocket sur wss://
+        // sans suffixe de port. On normalise les anciennes configurations (:7880).
+        if (str_contains($this->url, '.livekit.cloud') && str_ends_with($this->url, ':7880')) {
+            $this->url = preg_replace('/:7880$/', '', $this->url);
+        }
+        if (str_contains($this->wsUrl, '.livekit.cloud') && str_ends_with($this->wsUrl, ':7880')) {
+            $this->wsUrl = preg_replace('/:7880$/', '', $this->wsUrl);
+        }
+    }
+
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
+
+    public function getWsUrl(): string
+    {
+        return $this->wsUrl;
     }
 
     public function isConfigured(): bool
     {
-        return !empty($this->apiKey) && !empty($this->apiSecret) && !empty($this->url);
+        return $this->apiKey !== '' && $this->apiSecret !== '' && $this->url !== '';
     }
 
     public function healthCheck(): array
     {
-        if (!$this->isConfigured()) {
+        if (! $this->isConfigured()) {
             return ['status' => 'error', 'message' => 'LiveKit non configuré'];
         }
 
         try {
-            $response = Http::timeout(3)->get($this->url);
+            $response = Http::timeout(5)
+                ->withHeaders(['Authorization' => 'Bearer ' . $this->generateAdminToken()])
+                ->post($this->url . '/twirp/livekit.RoomService/ListRooms', new \stdClass());
+
             if ($response->successful()) {
-                return ['status' => 'ok', 'url' => $this->url];
+                return ['status' => 'ok', 'url' => $this->url, 'rooms' => $response->json('rooms', [])];
             }
-            return ['status' => 'error', 'message' => 'HTTP ' . $response->status()];
+
+            return ['status' => 'error', 'message' => 'HTTP ' . $response->status() . ' ' . $response->body()];
         } catch (\Exception $e) {
-            $msg = $e->getMessage();
-            if (str_contains($msg, 'Empty reply from server')) {
-                return ['status' => 'error', 'message' => 'Serveur injoignable (vide). Vérifiez docker run -p 7880:7880 -p 7881:7881/udp livekit/livekit-server --dev'];
-            }
-            if (str_contains($msg, 'Connection refused')) {
-                return ['status' => 'error', 'message' => 'Connexion refusée sur ' . $this->url];
-            }
-            if (str_contains($msg, 'timed out') || str_contains($msg, 'Operation timed out')) {
-                return ['status' => 'error', 'message' => 'Timeout. Le serveur LiveKit ne répond pas.'];
-            }
-            return ['status' => 'error', 'message' => $msg];
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
+    /**
+     * Token d'accès d'un participant (instructeur ou apprenant).
+     */
     public function generateToken(LiveSession $session, User $user, bool $isInstructor = false): string
     {
-        if (!$this->isConfigured()) {
-            throw new \RuntimeException('LiveKit n\'est pas configuré. Vérifiez LIVEKIT_API_KEY, LIVEKIT_API_SECRET et LIVEKIT_URL dans .env.');
+        if (! $this->isConfigured()) {
+            throw new \RuntimeException("LiveKit n'est pas configuré. Vérifiez LIVEKIT_API_KEY, LIVEKIT_API_SECRET et LIVEKIT_URL dans .env.");
         }
 
         $roomName = $this->getRoomName($session);
         $now = time();
-        $exp = $now + ($session->duration ?? 120) * 60 + 3600;
+        $exp = $now + max(60, (int) ($session->duration ?? 120)) * 60 + 3600;
+
+        $video = [
+            'roomJoin' => true,
+            'room' => $roomName,
+            'canPublish' => true,
+            'canSubscribe' => true,
+            'canPublishData' => true,
+            'hidden' => false,
+        ];
+
+        if ($isInstructor) {
+            $video['roomAdmin'] = true;
+            $video['roomCreate'] = true;
+        }
 
         $payload = [
             'iss' => $this->apiKey,
             'sub' => (string) $user->id,
-            'name' => $user->name,
-            'video' => true,
-            'audio' => true,
-            'room' => $roomName,
-            'room_admin' => $isInstructor,
+            'name' => (string) $user->name,
+            'video' => $video,
+            'metadata' => json_encode([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'role' => $isInstructor ? 'instructor' : 'student',
+            ]),
             'iat' => $now,
-            'exp' => $exp,
             'nbf' => $now,
-            'jti' => Str::random(32),
+            'exp' => $exp,
+            'jti' => Str::random(16),
         ];
 
         return JWT::encode($payload, $this->apiSecret, 'HS256');
     }
 
+    /**
+     * Crée la room (idempotent : retourne la room existante si déjà présente).
+     */
     public function createRoom(LiveSession $session): array
     {
-        if (!$this->isConfigured()) {
-            throw new \RuntimeException('LiveKit n\'est pas configuré. Impossible de créer une room.');
+        if (! $this->isConfigured()) {
+            throw new \RuntimeException("LiveKit n'est pas configuré. Impossible de créer une room.");
         }
 
         $roomName = $this->getRoomName($session);
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->generateAdminToken(),
-                'Content-Type' => 'application/json',
-            ])->post($this->url . '/room', [
-                'name' => $roomName,
-                'empty_timeout' => 300,
-                'max_participants' => $session->max_participants ?? 100,
-                'metadata' => json_encode([
-                    'session_id' => $session->id,
-                    'course_id' => $session->course_id,
-                    'title' => $session->title,
-                    'provider' => 'livekit',
-                ]),
-            ]);
+            $response = Http::timeout(10)
+                ->withHeaders(['Authorization' => 'Bearer ' . $this->generateAdminToken()])
+                ->post($this->url . '/twirp/livekit.RoomService/CreateRoom', [
+                    'name' => $roomName,
+                    'emptyTimeout' => 300,
+                    'maxParticipants' => (int) ($session->max_participants ?? 100),
+                    'metadata' => json_encode([
+                        'session_id' => $session->id,
+                        'course_id' => $session->course_id,
+                        'title' => $session->title,
+                        'provider' => 'livekit',
+                    ]),
+                ]);
 
-            if ($response->failed()) {
-                $body = $response->body();
-                if (empty($body) || $response->getStatusCode() === 0) {
-                    throw new \RuntimeException('Serveur LiveKit inaccessible. Vérifiez que le serveur est démarré sur ' . $this->url . ' (docker run -p 7880:7880 -p 7881:7881/udp livekit/livekit-server --dev)');
-                }
-                throw new Exception('Création de room LiveKit échouée : ' . $body);
+            if ($response->failed() && $response->status() !== 409) {
+                Log::warning('LiveKit createRoom failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
             }
-
-            $json = $response->json();
-            return [
-                'id' => $roomName,
-                'join_url' => $this->wsUrl . '?access_token=' . $this->generateToken($session, $session->instructor, true),
-                'start_url' => $this->url . '/room/' . $roomName,
-            ];
         } catch (\Exception $e) {
-            $msg = $e->getMessage();
-            if (str_contains($msg, 'Empty reply from server') || 
-                str_contains($msg, 'Couldn\'t connect to server') || 
-                str_contains($msg, 'Connection was aborted') ||
-                str_contains($msg, 'Recv failure')) {
-                throw new \RuntimeException('Serveur LiveKit inaccessible. Vérifiez : 1) Le serveur est démarré (docker run -p 7880:7880 -p 7881:7881/udp livekit/livekit-server --dev) 2) LIVEKIT_URL=' . $this->url . ' dans .env 3) Pas de firewall bloquant le port 7880');
-            }
-            throw $e;
+            // La room sera créée automatiquement au premier join : non bloquant.
+            Log::warning('LiveKit createRoom exception', ['error' => $e->getMessage()]);
         }
+
+        return [
+            'id' => $roomName,
+            'join_url' => $this->wsUrl,
+            'start_url' => $this->wsUrl,
+        ];
     }
 
     public function deleteRoom(LiveSession $session): void
     {
-        if (!$this->isConfigured()) {
-            throw new \RuntimeException('LiveKit n\'est pas configuré.');
+        if (! $this->isConfigured()) {
+            return;
         }
 
-        $roomName = $this->getRoomName($session);
-
         try {
-            Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->generateAdminToken(),
-            ])->delete($this->url . '/room/' . urlencode($roomName));
+            Http::timeout(10)
+                ->withHeaders(['Authorization' => 'Bearer ' . $this->generateAdminToken()])
+                ->post($this->url . '/twirp/livekit.RoomService/DeleteRoom', [
+                    'room' => $this->getRoomName($session),
+                ]);
         } catch (\Exception $e) {
             Log::warning('LiveKit deleteRoom failed', ['error' => $e->getMessage()]);
         }
@@ -153,34 +188,13 @@ class LiveKitService
 
     public function updateRoom(LiveSession $session, array $data = []): array
     {
-        if (!$this->isConfigured()) {
-            throw new \RuntimeException('LiveKit n\'est pas configuré.');
-        }
-
-        $roomName = $this->getRoomName($session);
-
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->generateAdminToken(),
-                'Content-Type' => 'application/json',
-            ])->patch($this->url . '/room/' . urlencode($roomName), $data);
-
-            if ($response->failed()) {
-                throw new Exception('Mise à jour room LiveKit échouée.');
-            }
-
-            return $response->json();
-        } catch (\Exception $e) {
-            if (str_contains($e->getMessage(), 'Empty reply from server') || str_contains($e->getMessage(), 'Couldn\'t connect to server')) {
-                throw new \RuntimeException('Serveur LiveKit inaccessible. Démarrez-le avec : docker run -p 7880:7880 -p 7881:7881/udp livekit/livekit-server --dev');
-            }
-            throw $e;
-        }
+        // Les rooms LiveKit n'ont pas besoin d'être mises à jour pour le MVP.
+        return ['id' => $this->getRoomName($session), 'join_url' => $this->wsUrl, 'start_url' => $this->wsUrl];
     }
 
     public function createRoomForData(array $data): array
     {
-        $session = new \App\Models\LiveSession();
+        $session = new LiveSession();
         $session->fill($data);
         $session->provider = 'livekit';
 
@@ -189,46 +203,59 @@ class LiveKitService
 
     public function listParticipants(LiveSession $session): array
     {
-        if (!$this->isConfigured()) {
-            throw new \RuntimeException('LiveKit n\'est pas configuré.');
-        }
-
-        $roomName = $this->getRoomName($session);
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->generateAdminToken(),
-        ])->get($this->url . '/room/' . urlencode($roomName) . '/participants');
-
-        if ($response->failed()) {
+        if (! $this->isConfigured()) {
             return [];
         }
 
-        return $response->json('participants', []);
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['Authorization' => 'Bearer ' . $this->generateAdminToken()])
+                ->post($this->url . '/twirp/livekit.RoomService/ListParticipants', [
+                    'room' => $this->getRoomName($session),
+                ]);
+
+            if ($response->failed()) {
+                return [];
+            }
+
+            return $response->json('participants', []);
+        } catch (\Exception $e) {
+            Log::warning('LiveKit listParticipants failed', ['error' => $e->getMessage()]);
+            return [];
+        }
     }
 
     public function getRoomName(LiveSession $session): string
     {
-        return 'subnetcongo-' . $session->id . '-' . ($session->slug ?: Str::slug($session->title));
+        $slug = Str::slug((string) $session->title);
+        $slug = $slug !== '' ? $slug : 'session';
+
+        return 'subnetcongo-' . $session->id . '-' . substr($slug, 0, 40);
     }
 
+    /**
+     * Token « serveur » pour appeler l'API RoomService.
+     */
     protected function generateAdminToken(): string
     {
-        if (!$this->isConfigured()) {
-            throw new \RuntimeException('LiveKit n\'est pas configuré.');
+        if (! $this->isConfigured()) {
+            throw new \RuntimeException("LiveKit n'est pas configuré.");
         }
 
         $now = time();
         $payload = [
             'iss' => $this->apiKey,
-            'sub' => '',
-            'name' => 'SubnetCongo Admin',
-            'video' => true,
-            'audio' => true,
-            'room_admin' => true,
+            'sub' => $this->apiKey,
+            'name' => 'SubnetCongo Server',
+            'video' => [
+                'roomList' => true,
+                'roomCreate' => true,
+                'roomAdmin' => true,
+            ],
             'iat' => $now,
-            'exp' => $now + 3600,
             'nbf' => $now,
-            'jti' => Str::random(32),
+            'exp' => $now + 3600,
+            'jti' => Str::random(16),
         ];
 
         return JWT::encode($payload, $this->apiSecret, 'HS256');

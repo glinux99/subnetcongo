@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LiveSessionChatMessage extends Model
 {
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'live_session_id',
         'user_id',

@@ -135,6 +135,19 @@ class MarketplaceController extends Controller
             'inWishlist' => $inWishlist,
             'related' => $related,
             'cartCount' => $this->getCartCount($request),
+            'liveSession' => (function () use ($course) {
+                $session = \App\Models\LiveSession::where('course_id', $course->id)
+                    ->whereIn('status', ['Live', 'Scheduled'])
+                    ->orderByRaw("FIELD(status, 'Live', 'Scheduled')")
+                    ->orderBy('start_at')
+                    ->first(['id', 'title', 'status', 'start_at', 'duration']);
+
+                if ($session) {
+                    $session->share_url = $session->shareUrl();
+                }
+
+                return $session;
+            })(),
         ]);
         } catch (\Throwable $th) {
             //throw $th;
@@ -261,7 +274,8 @@ class MarketplaceController extends Controller
             if ($price > 0) { $skipped++; continue; } // pas gratuit -> on ignore
             if ($user->isEnrolledIn($course) || $user->hasPendingEnrollment($course)) { $skipped++; continue; }
 
-            DB::transaction(function () use ($user, $course) {
+            $enrollment = null;
+            DB::transaction(function () use ($user, $course, &$enrollment) {
                 $enrollment = $user->enrollIn($course, [], Enrollment::STATUS_ACTIVE);
                 \App\Models\UserProgress::firstOrCreate(
                     ['user_id' => $user->id, 'course_id' => $course->id, 'enrollment_id' => $enrollment->id],
@@ -274,6 +288,9 @@ class MarketplaceController extends Controller
                     courseId: $course->id,
                     courseImage: $course->thumbnail_path,
                 ));
+                if ($enrollment) {
+                    \App\Events\EnrollmentConfirmed::dispatch($enrollment);
+                }
             } catch (\Throwable $e) {
                 // notification best-effort
             }
@@ -333,7 +350,8 @@ class MarketplaceController extends Controller
             return back()->with('error', 'Une demande d\'inscription est déjà en attente pour ce cours.');
         }
 
-        DB::transaction(function () use ($user, $course) {
+        $enrollment = null;
+        DB::transaction(function () use ($user, $course, &$enrollment) {
             $enrollment = $user->enrollIn($course, [], Enrollment::STATUS_ACTIVE);
             // Initialise la progression à 0
             \App\Models\UserProgress::firstOrCreate(
@@ -355,6 +373,9 @@ class MarketplaceController extends Controller
                 courseId: $course->id,
                 courseImage: $course->thumbnail_path,
             ));
+            if ($enrollment) {
+                \App\Events\EnrollmentConfirmed::dispatch($enrollment);
+            }
         } catch (\Throwable $e) {
             \Log::warning('Notify enroll free failed: ' . $e->getMessage());
         }
@@ -402,6 +423,8 @@ class MarketplaceController extends Controller
         } catch (\Throwable $e) {
             \Log::warning('Notify admin enrollment request failed: ' . $e->getMessage());
         }
+
+        $this->sendEnrollmentRequestEmails($user, $course, $data);
 
         $methodLabel = strtoupper(str_replace('_', ' ', $data['payment_method']));
         $txSuffix = $data['transaction_id'] ?? null ? " (ID transaction : {$data['transaction_id']})" : '';
@@ -566,6 +589,19 @@ class MarketplaceController extends Controller
                 }
             } catch (\Throwable $e) {
                 \Log::warning('Notify admin (requestEnrollmentCart) failed: ' . $e->getMessage());
+            }
+
+            // Emails transactionnels (un par cours)
+            foreach ($requestedEnrollments as $idx => $enrollment) {
+                $course = $requestedCourses[$idx] ?? $enrollment->course;
+                if ($course) {
+                    $this->sendEnrollmentRequestEmails($user, $course, [
+                        'payment_method' => 'manual_validation',
+                        'note' => $data['note'] ?? null,
+                        'phone_number' => $data['phone_number'] ?? null,
+                        'transaction_id' => null,
+                    ]);
+                }
             }
         }
 
@@ -789,7 +825,9 @@ class MarketplaceController extends Controller
      */
     private function fulfillOrder(Order $order): void
     {
-        DB::transaction(function () use ($order) {
+        $confirmedEnrollments = [];
+
+        DB::transaction(function () use ($order, &$confirmedEnrollments) {
             foreach ($order->items()->with('course')->get() as $item) {
                 if (! $item->course) continue;
 
@@ -817,11 +855,67 @@ class MarketplaceController extends Controller
                     courseId: $item->course_id,
                     courseImage: $item->course->thumbnail_path,
                 ));
+
+                $confirmedEnrollments[] = $enrollment;
             }
 
             // Vider le panier
             CartItem::where('user_id', $order->user_id)->delete();
         });
+
+        // Emails transactionnels hors transaction (évite les envois en cas de rollback)
+        try {
+            \App\Events\PaymentReceived::dispatch($order);
+            foreach ($confirmedEnrollments as $enrollment) {
+                \App\Events\EnrollmentConfirmed::dispatch($enrollment);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Post-payment emails failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Envoie les emails transactionnels d'une demande d'inscription :
+     * confirmation à l'étudiant + alerte détaillée aux administrateurs.
+     */
+    private function sendEnrollmentRequestEmails(\App\Models\User $user, \App\Models\Course $course, array $data): void
+    {
+        try {
+            $emailService = app(\App\Services\Email\EmailTemplateService::class);
+            $methodLabels = [
+                'orange_money' => 'Orange Money', 'mpesa' => 'M-Pesa', 'airtel_money' => 'Airtel Money',
+                'stripe' => 'Carte bancaire (Stripe)', 'paypal' => 'PayPal',
+                'on_site' => 'Paiement sur place', 'manual' => 'Validation manuelle',
+                'manual_validation' => 'Sans paiement en ligne (validation manuelle)',
+            ];
+            $paymentLabel = $methodLabels[$data['payment_method'] ?? ''] ?? ($data['payment_method'] ?? 'Non spécifiée');
+
+            // Les adresses BCC sont configurées sur le template 'enrollment_request_received'
+            // (page admin → Modèles d'emails → modifier le modèle).
+            $emailService->sendTemplatedEmail('enrollment_request_received', $user, [
+                'course_name' => $course->title,
+                'course_url' => route('marketplace.show', $course->slug ?? $course->id),
+                'payment_method' => $paymentLabel,
+                'request_date' => now()->format('d/m/Y'),
+            ]);
+
+            $admins = \App\Models\User::role(['admin', 'superadmin', 'finance-manager'])->get();
+            foreach ($admins as $admin) {
+                $emailService->sendTemplatedEmail('enrollment_request_admin', $admin, [
+                    'admin_name' => $admin->name,
+                    'student_name' => $user->name,
+                    'student_email' => $user->email,
+                    'course_name' => $course->title,
+                    'payment_method' => $paymentLabel,
+                    'phone_number' => $data['phone_number'] ?? 'Non fourni',
+                    'transaction_id' => $data['transaction_id'] ?? 'N/A',
+                    'note' => $data['note'] ?? 'Aucune note',
+                    'admin_url' => route('admin.enrollments.index'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Enrollment request emails failed: ' . $e->getMessage());
+        }
     }
 
     private function markOrderPaid(Order $order): void

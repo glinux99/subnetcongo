@@ -71,7 +71,7 @@ class SupportTicketController extends Controller
 
         $user = $request->user();
         $ticket = $user->tickets()->create([
-            'ticket_number'     => 'TKT-' . strtoupper(uniqid()),
+            'ticket_number'     => 'tkt-' . uniqid(),
             'subject'           => $data['subject'],
             'message'           => $data['message'],
             'description'       => $data['description'] ?? $data['message'],
@@ -80,28 +80,37 @@ class SupportTicketController extends Controller
             'ticket_category_id'=> $data['category_id'] ?? null,
         ]);
 
-        return Redirect::route('student.support.show', $ticket->id)
+        return Redirect::route('student.support.show', $ticket->ticket_number)
             ->with('success', 'Ticket créé. Notre équipe vous répondra sous 24h.');
     }
 
-    public function show(Request $request, string $id)
+    private function resolveTicket($user, string $value): SupportTicket
     {
-        $ticket = $request->user()->tickets()
-            ->with(['category:id,name,color', 'assignedAgent:id,name,avatar'])
-            ->findOrFail($id);
+        $ticket = $user->tickets()->where('ticket_number', $value)->first();
+        if (! $ticket && ctype_digit($value)) {
+            $ticket = $user->tickets()->where('id', (int) $value)->first();
+        }
+        abort_if(! $ticket, 404);
+        return $ticket;
+    }
+
+    public function show(Request $request, string $ticket_number)
+    {
+        $ticket = $this->resolveTicket($request->user(), $ticket_number);
+        $ticket->load(['category:id,name,color', 'assignedAgent:id,name,avatar']);
 
         return Inertia::render('Student/SupportTickets/Show', [
             'ticket' => $ticket,
         ]);
     }
 
-    public function reply(Request $request, string $id)
+    public function reply(Request $request, string $ticket_number)
     {
         $data = $request->validate([
             'message' => 'required|string|max:5000',
         ]);
 
-        $ticket = $request->user()->tickets()->findOrFail($id);
+        $ticket = $this->resolveTicket($request->user(), $ticket_number);
         $ticket->update([
             'message' => $ticket->message . "\n\n--- Réponse " . $request->user()->name . " (" . now()->toDateTimeString() . ") ---\n" . $data['message'],
             'status'  => 'pending', // repassé en attente tant qu'un agent ne répond pas
@@ -110,9 +119,9 @@ class SupportTicketController extends Controller
         return back()->with('success', 'Réponse envoyée. Votre ticket est repassé en attente.');
     }
 
-    public function close(Request $request, string $id)
+    public function close(Request $request, string $ticket_number)
     {
-        $ticket = $request->user()->tickets()->findOrFail($id);
+        $ticket = $this->resolveTicket($request->user(), $ticket_number);
         $ticket->update(['status' => 'closed']);
         return back()->with('success', 'Ticket fermé. Merci de votre retour.');
     }

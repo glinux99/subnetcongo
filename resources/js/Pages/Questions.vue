@@ -180,7 +180,7 @@ const editQuestion = async (data) => {
     // Chargement de l'audit trail réel depuis le serveur
     auditEvents.value = [];
     try {
-        const response = await axios.get(route('squestions.audit', qData.id));
+        const response = await axios.get(route('squestions.audit', qData.uuid));
         auditEvents.value = response.data;
     } catch (e) {
         console.error("Audit load failed", e);
@@ -201,7 +201,7 @@ const editQuestion = async (data) => {
 const saveQuestion = () => {
     isSaving.value = true;
     const isUpdate = !!form.id;
-    const url = isUpdate ? route('squestions.update', form.id) : route('squestions.store');
+    const url = isUpdate ? route('squestions.update', form.uuid) : route('squestions.store');
 
     form.transform((data) => ({
         ...data,

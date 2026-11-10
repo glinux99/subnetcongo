@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     use HasFactory, SoftDeletes;
 
     public const STATUS_DRAFT = 'draft';
@@ -69,7 +74,7 @@ class Course extends Model
 
     /**
      * FIX: Correction de l'Accessor pour le thumbnail
-     * La méthode doit correspondre au nom de la colonne en camelCase
+     * La mÃ©thode doit correspondre au nom de la colonne en camelCase
      */
     protected function thumbnailPath(): Attribute
     {
@@ -83,12 +88,12 @@ class Course extends Model
     }
 
     /**
-     * RELATION CORRIGÉE : Payments
+     * RELATION CORRIGÃ‰E : Payments
      * Indispensable pour DashboardController::getCohortsData
      */
     public function payments(): HasMany
     {
-        // On suppose que vous avez un modèle Payment lié au Course
+        // On suppose que vous avez un modÃ¨le Payment liÃ© au Course
         return $this->hasMany(Payment::class);
     }
 
@@ -112,7 +117,7 @@ class Course extends Model
         return $this->hasMany(Module::class)->orderBy('order');
     }
 
-    // Alias pour la compatibilité
+    // Alias pour la compatibilitÃ©
     public function sections(): HasMany
     {
         return $this->modules();
@@ -147,15 +152,15 @@ class Course extends Model
         return $this->hasMany(OrderItem::class);
     }
 /**
- * Récupère toutes les ressources (fichiers joints) associées à ce cours.
- * Relation Polymorphique : 1 Cours possède plusieurs Ressources.
+ * RÃ©cupÃ¨re toutes les ressources (fichiers joints) associÃ©es Ã  ce cours.
+ * Relation Polymorphique : 1 Cours possÃ¨de plusieurs Ressources.
  * 
  * @return \Illuminate\Database\Eloquent\Relations\MorphMany
  */
 public function resources(): \Illuminate\Database\Eloquent\Relations\MorphMany
 {
     return $this->morphMany(\App\Models\Resource::class, 'resourceable')
-                ->orderBy('sort_order') // Tri par ordre défini dans l'éditeur
+                ->orderBy('sort_order') // Tri par ordre dÃ©fini dans l'Ã©diteur
                 ->orderBy('created_at', 'desc');
 }
     // --- SCOPES ---
@@ -165,7 +170,7 @@ public function resources(): \Illuminate\Database\Eloquent\Relations\MorphMany
     public function scopeFree($query) { return $query->where('price', 0); }
     public function scopePaid($query) { return $query->where('price', '>', 0); }
 
-    // --- ATTRIBUTS CALCULÉS (APPENDS) ---
+    // --- ATTRIBUTS CALCULÃ‰S (APPENDS) ---
 
     public function getEffectivePriceAttribute(): float
     {
@@ -174,12 +179,12 @@ public function resources(): \Illuminate\Database\Eloquent\Relations\MorphMany
 
     public function getAverageRatingAttribute(): float
     {
-        // On évite de crasher si la table reviews n'existe pas ou est vide
+        // On Ã©vite de crasher si la table reviews n'existe pas ou est vide
         return method_exists($this, 'reviews') ? ($this->reviews()->where('is_approved', true)->avg('rating') ?? 0) : 0;
     }
 
     /**
-     * Accessor pour la vidéo de preview
+     * Accessor pour la vidÃ©o de preview
      */
     protected function previewVideoUrl(): Attribute
     {
@@ -193,7 +198,7 @@ public function resources(): \Illuminate\Database\Eloquent\Relations\MorphMany
     }
 
     /**
-     * Accessor pour l'image (compatibilité avec le frontend qui utilise 'image')
+     * Accessor pour l'image (compatibilitÃ© avec le frontend qui utilise 'image')
      */
     protected function image(): Attribute
     {

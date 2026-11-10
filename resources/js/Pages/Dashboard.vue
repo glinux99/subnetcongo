@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
             <!-- Header avec PageHeader -->
             <PageHeader
                 :title="props.meta?.greeting || 'Tableau de bord'"
-                subtitle="Vue d'ensemble de la plateforme SUBNETCONGO"
+                :subtitle="props.meta?.message || 'Vue d\'ensemble de la plateforme SUBNETCONGO'"
                 icon="pi-chart-bar"
                 badge="Admin"
                 accent="blue"

@@ -26,11 +26,13 @@ class CertificateIssuedNotification extends BaseNotification implements ShouldBr
     {
         return [
             'title' => 'Certificat délivré !',
-            'message' => "Félicitations ! Vous avez obtenu le certificat « {$this->courseTitle} » avec un score de {$this->score}%.",
+            'message' => "Félicitations ! Vous avez obtenu le certificat « {$this->courseTitle} » avec un score de {$this->score}%. Félicitations pour cette réussite !",
             'icon' => 'pi-verified',
             'severity' => 'success',
             'url' => route('student.certificates'),
             'certificate_id' => $this->certificateId,
+            'course_title' => $this->courseTitle,
+            'score' => $this->score,
         ];
     }
 

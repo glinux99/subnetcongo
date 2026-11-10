@@ -9,7 +9,20 @@ use Illuminate\Support\Facades\Log;
 
 class EmailTemplateService
 {
-    public function sendTemplatedEmail(string $templateKey, User $user, array $additionalData = []): bool
+    public function sendTemplatedEmail(string $templateKey, User $user, array $additionalData = [], array $bcc = []): bool
+    {
+        return $this->sendTemplatedEmailTo($templateKey, $user->email, $user->name, array_merge([
+            'student_name' => $user->name,
+            'student_email' => $user->email,
+        ], $additionalData), $bcc);
+    }
+
+    /**
+     * Envoie un email templated à un destinataire quelconque (utilisateur ou non).
+     *
+     * @param array<int,string> $bcc Adresses en copie cachée
+     */
+    public function sendTemplatedEmailTo(string $templateKey, string $email, string $name = '', array $data = [], array $bcc = []): bool
     {
         $template = EmailTemplate::where('key', $templateKey)->where('is_active', true)->first();
 
@@ -18,30 +31,38 @@ class EmailTemplateService
             return false;
         }
 
+        // Fusionne les BCC configurés sur le template avec ceux passés explicitement
+        $bcc = array_values(array_unique(array_merge(
+            $template->bcc_emails ?? [],
+            $bcc
+        )));
+
         $data = array_merge([
-            'student_name' => $user->name,
-            'student_email' => $user->email,
-        ], $additionalData);
+            'student_name' => $name,
+            'student_email' => $email,
+        ], $data);
 
         $replaced = $template->replaceVariables($data);
 
         try {
-            Mail::html($replaced['content'], function ($message) use ($user, $replaced, $template) {
-                $message->to($user->email, $user->name)
+            Mail::html($replaced['content'], function ($message) use ($email, $name, $replaced, $bcc) {
+                $message->to($email, $name ?: null)
                         ->subject($replaced['subject']);
+                if (!empty($bcc)) {
+                    $message->bcc($bcc);
+                }
             });
 
             Log::info("EmailTemplateService: Email sent successfully", [
                 'template' => $templateKey,
-                'user' => $user->id,
-                'email' => $user->email,
+                'email' => $email,
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error("EmailTemplateService: Failed to send email", [
                 'template' => $templateKey,
-                'user' => $user->id,
+                'email' => $email,
                 'error' => $e->getMessage(),
             ]);
 

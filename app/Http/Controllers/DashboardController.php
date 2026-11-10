@@ -38,6 +38,7 @@ use App\Models\Lesson;
 use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Schema;
 use App\Models\UserProgress;
 use App\Models\Resource;
 use Illuminate\Http\Request;
@@ -177,7 +178,7 @@ class DashboardController extends Controller
                 'score' => (float) $cert->score,
                 'issued_at' => $cert->issued_at?->format('d/m/Y'),
                 'certificate_code' => $cert->certificate_code,
-                'download_url' => route('certificates.download', $cert->id),
+                'download_url' => route('certificates.download', $cert->uuid),
             ])
             ->values();
 
@@ -229,7 +230,10 @@ class DashboardController extends Controller
         // ── Ressources (supports + vidéos) pour chaque cours inscrit ──
         $courseResources = $this->getCourseResourcesFor($enrolledCourseIds);
 
-       return Inertia::render('DashboardS', [
+       // Message d'accueil personnalisé puisé dans la base de connaissances
+        $greetingData = app(\App\Services\GreetingService::class)->pick($user);
+
+        return Inertia::render('DashboardS', [
     'auth' => [
         'user' => [
             'id' => $user->id,
@@ -242,10 +246,12 @@ class DashboardController extends Controller
         ],
     ],
     'meta' => [
-        'greeting' => 'Bonjour',
-        'message' => $myCourses->count() > 0
-            ? 'Continuez vos efforts, vous progressez bien !'
-            : 'Bienvenue ! Trouvez votre premier cours pour commencer.',
+        'greeting' => $greetingData['greeting'],
+        'message' => $myCourses->count() > 0 && !empty($greetingData['message'])
+            ? $greetingData['message']
+            : ($myCourses->count() > 0
+                ? 'Continuez vos efforts, vous progressez bien !'
+                : 'Bienvenue ! Trouvez votre premier cours pour commencer.'),
     ],
     'stats' => [
         'xp' => $xp,
@@ -295,7 +301,7 @@ class DashboardController extends Controller
                 'type' => $m->file_type,
                 'size' => (int) $m->size,
                 'mime_type' => $m->mime_type,
-                'download_url' => route('student.resources.download', $m->id),
+                'download_url' => route('student.resources.download', $m->slug ?? $m->id),
             ];
         }
 
@@ -462,7 +468,7 @@ class DashboardController extends Controller
         $this->logActivity('ADMIN_DASHBOARD_VIEW', 'Consultation des rapports de direction');
 
         return Inertia::render('Dashboard', [
-            'meta' => $this->resolveSystemMeta(),
+            'meta' => $this->resolveSystemMeta($request->user()),
             'availableFilters' => $this->fetchAvailableFilters(),
             'kpis' => $this->calculateExecutiveKPIs($filters),
             'chartData' => $this->compileAdvancedChartData($filters),
@@ -594,6 +600,10 @@ class DashboardController extends Controller
     {
         $totalStart = User::students()->where('created_at', '<', now()->subDays(30))->count();
         if ($totalStart === 0) {
+            return 0.0;
+        }
+
+        if (! Schema::hasColumn('users', 'last_login_at')) {
             return 0.0;
         }
 
@@ -942,9 +952,9 @@ class DashboardController extends Controller
         ];
     }
 
-    private function resolveSystemMeta(): array
+    private function resolveSystemMeta(?User $user = null): array
     {
-        return [
+        $meta = [
             'app_name' => 'SubnetCongo Enterprise LMS',
             'version' => '13.6.0-Gold',
             'environment' => app()->environment(),
@@ -952,6 +962,14 @@ class DashboardController extends Controller
             'server_time' => now()->toDateTimeString(),
             'greeting' => $this->getGreeting(),
         ];
+
+        if ($user) {
+            $picked = app(\App\Services\GreetingService::class)->pick($user);
+            $meta['greeting'] = $picked['greeting'];
+            $meta['message'] = $picked['message'];
+        }
+
+        return $meta;
     }
 
     private function getGreeting(): string

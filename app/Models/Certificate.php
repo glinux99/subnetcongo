@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Certificate extends Model {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
     protected $fillable = [
         'uuid',
         'user_id',

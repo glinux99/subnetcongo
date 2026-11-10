@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { router, Head } from '@inertiajs/vue3';
+import axios from 'axios';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
@@ -15,6 +16,7 @@ const props = defineProps({
 const toast = useToast();
 const filter = ref('all');
 const isMarkingAll = ref(false);
+const unreadLocal = ref(props.unreadCount);
 
 // Filtre calculé sécurisé
 const filtered = computed(() => {
@@ -46,38 +48,35 @@ const getIconStyles = (severity) => {
     return styles[severity] || styles.info;
 };
 
-// Actions (Utilisation de Inertia Router pour éviter les rechargements manuels et gérer le CSRF)
-const markAsRead = (n) => {
+// Actions via axios (les endpoints notifications renvoient du JSON, pas des réponses Inertia)
+const markAsRead = async (n) => {
     if (!n.read_at) {
-        router.post(route('notifications.read', n.id), {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                if (n.url) router.visit(n.url);
-            }
-        });
-    } else if (n.url) {
-        router.visit(n.url);
+        try {
+            await axios.post(route('notifications.read', n.id));
+            n.read_at = new Date().toISOString();
+            unreadLocal.value = Math.max(0, unreadLocal.value - 1);
+        } catch (e) {}
     }
+    if (n.url) router.visit(n.url);
 };
 
-const markAll = () => {
+const markAll = async () => {
     isMarkingAll.value = true;
-    router.post(route('notifications.read-all'), {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Fait', detail: 'Toutes les notifications sont lues.', life: 3000 });
-        },
-        onFinish: () => { isMarkingAll.value = false; }
-    });
+    try {
+        await axios.post(route('notifications.read-all'));
+        props.notifications?.data?.forEach(n => n.read_at = n.read_at || new Date().toISOString());
+        unreadLocal.value = 0;
+        toast.add({ severity: 'success', summary: 'Fait', detail: 'Toutes les notifications sont lues.', life: 3000 });
+    } catch (e) {}
+    isMarkingAll.value = false;
 };
 
-const remove = (id) => {
-    router.delete(route('notifications.destroy', id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.add({ severity: 'info', summary: 'Supprimée', detail: 'Notification effacée.', life: 2000 });
-        }
-    });
+const remove = async (id) => {
+    try {
+        await axios.delete(route('notifications.destroy', id));
+        toast.add({ severity: 'info', summary: 'Supprimée', detail: 'Notification effacée.', life: 2000 });
+        router.reload({ only: ['notifications', 'unreadCount'] });
+    } catch (e) {}
 };
 </script>
 
@@ -101,14 +100,14 @@ const remove = (id) => {
                         <div>
                             <div class="flex items-center gap-3 mb-1.5 flex-wrap">
                                 <h1 class="text-3xl font-black text-white tracking-tight">Notifications</h1>
-                                <Tag v-if="unreadCount > 0" :value="`${unreadCount} non lues`" class="!bg-red-500/20 !text-red-400 !border !border-red-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <Tag v-if="unreadLocal > 0" :value="`${unreadLocal} non lues`" class="!bg-red-500/20 !text-red-400 !border !border-red-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                             </div>
                             <p class="text-slate-400 font-medium text-sm">Restez informé de l'activité de votre compte.</p>
                         </div>
                     </div>
 
                     <Button
-                        v-if="unreadCount > 0"
+                        v-if="unreadLocal > 0"
                         label="Tout marquer comme lu"
                         icon="pi pi-check-circle"
                         :loading="isMarkingAll"

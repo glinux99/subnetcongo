@@ -13,12 +13,14 @@ class EmailTemplate extends Model
         'content',
         'variables',
         'is_active',
+        'bcc_emails',
         'trigger_event',
         'category',
     ];
 
     protected $casts = [
         'variables' => 'array',
+        'bcc_emails' => 'array',
         'is_active' => 'boolean',
     ];
 
@@ -29,6 +31,9 @@ class EmailTemplate extends Model
     public const CATEGORY_WELCOME = 'welcome';
     public const CATEGORY_SUPPORT = 'support';
     public const CATEGORY_MARKETING = 'marketing';
+    public const CATEGORY_PAYMENT = 'payment';
+    public const CATEGORY_SECURITY = 'security';
+    public const CATEGORY_LIVE_SESSION = 'live_session';
 
     public const EVENT_CERTIFICATE_GENERATED = 'certificate_generated';
     public const EVENT_ENROLLMENT_CONFIRMED = 'enrollment_confirmed';
@@ -38,291 +43,327 @@ class EmailTemplate extends Model
     public const EVENT_WELCOME = 'welcome';
     public const EVENT_PASSWORD_RESET = 'password_reset';
 
+    /**
+     * Gabarit HTML professionnel commun à tous les emails transactionnels.
+     * Charte SubnetCongo Academy : bleu institutionnel #003399, accent rouge #EE1C25.
+     */
+    protected static function wrapTemplate(string $innerHtml): string
+    {
+        return '
+<div style="margin:0;padding:0;background-color:#f1f5f9;">
+  <div style="max-width:620px;margin:0 auto;padding:24px 12px;">
+
+    <!-- En-tête -->
+    <div style="background:linear-gradient(135deg,#003399 0%,#0a4fd6 100%);border-radius:14px 14px 0 0;padding:26px 30px;text-align:center;">
+      <div style="display:inline-block;background:#EE1C25;color:#ffffff;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:10px;">SubnetCongo Academy</div>
+      <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;">Formation &amp; Certification</h1>
+    </div>
+
+    <!-- Corps -->
+    <div style="background:#ffffff;padding:34px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#334155;">
+      ' . $innerHtml . '
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#0f172a;border-radius:0 0 14px 14px;padding:22px 30px;text-align:center;">
+      <p style="margin:0 0 6px;color:#94a3b8;font-size:12px;font-family:Arial,Helvetica,sans-serif;">
+        SubnetCongo Academy — Plateforme e-learning
+      </p>
+      <p style="margin:0;color:#64748b;font-size:11px;font-family:Arial,Helvetica,sans-serif;">
+        Cet email a été envoyé automatiquement, merci de ne pas y répondre directement.
+        Pour toute question : <a href="mailto:academy@subnetcongo.net" style="color:#60a5fa;text-decoration:none;">academy@subnetcongo.net</a>
+      </p>
+    </div>
+
+  </div>
+</div>';
+    }
+
+    /**
+     * Bouton d'appel à l'action réutilisable.
+     */
+    protected static function cta(string $url, string $label): string
+    {
+        return '
+<div style="text-align:center;margin:28px 0 8px;">
+  <a href="' . e($url) . '" style="display:inline-block;background:#003399;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 32px;border-radius:10px;letter-spacing:0.3px;">
+    ' . e($label) . ' →
+  </a>
+</div>';
+    }
+
     public static function getDefaultTemplates(): array
     {
+        $t = function (string $key, string $name, string $category, string $trigger, string $subject, string $body, array $variables, array $bcc = []): array {
+            return [
+                'key' => $key,
+                'name' => $name,
+                'category' => $category,
+                'trigger_event' => $trigger,
+                'subject' => $subject,
+                'content' => self::wrapTemplate($body),
+                'variables' => $variables,
+                'is_active' => true,
+                'bcc_emails' => $bcc,
+            ];
+        };
+
         return [
-            [
-                'key' => 'certificate_generated',
-                'name' => 'Certificat généré',
-                'category' => self::CATEGORY_CERTIFICATE,
-                'trigger_event' => self::EVENT_CERTIFICATE_GENERATED,
-                'subject' => 'Votre certificat - {{course_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Felicitations ! Vous avez complete avec succes <strong>{{course_name}}</strong>.</p>
-
-<p>Votre certificat est disponible en telechargement. Vous pouvez y acceder via votre espace apprenant ou directement via le lien ci-dessous.</p>
-
-<p><a href="{{certificate_url}}">Telecharger mon certificat</a></p>
-
-<p>Ce certificat est valable indefiniment et peut etre verifie avec le code unique : <strong>{{certificate_code}}</strong>.</p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'certificate_url', 'certificate_code', 'completion_date'],
-                'is_active' => true,
-            ],
-            [
-                'key' => 'enrollment_confirmed',
-                'name' => 'Inscription confirmée',
-                'category' => self::CATEGORY_ENROLLMENT,
-                'trigger_event' => self::EVENT_ENROLLMENT_CONFIRMED,
-                'subject' => 'Inscription confirmee - {{course_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Votre inscription au cours <strong>{{course_name}}</strong> a ete confirmee !</p>
-
-<p>Vous pouvez des maintenant acceder a :</p>
-<ul>
-<li>Tous les modules du cours</li>
-<li>Contenus video et ressources</li>
-<li>Quiz et examens</li>
-<li>Forums de discussion</li>
-</ul>
-
-<p><a href="{{course_url}}">Acceder au cours</a></p>
-
-<p>Bonne formation !<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'course_url', 'enrollment_date', 'expiry_date'],
-                'is_active' => true,
-            ],
-            [
-                'key' => 'course_added',
-                'name' => 'Nouveau cours ajouté',
-                'category' => self::CATEGORY_COURSE,
-                'trigger_event' => self::EVENT_COURSE_ADDED,
-                'subject' => 'Nouveau cours ajoute a votre cursus - {{course_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Un nouveau cours vient d\'etre ajoute a votre programme de formation :</p>
-
-<p><strong>{{course_name}}</strong></p>
-
-<p>{{course_description}}</p>
-
-<p><a href="{{course_url}}">Decouvrir ce cours</a></p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'course_description', 'course_url', 'added_date'],
-                'is_active' => true,
-            ],
-            [
-                'key' => 'exam_passed',
-                'name' => 'Examen réussi',
-                'category' => self::CATEGORY_EXAM,
-                'trigger_event' => self::EVENT_EXAM_PASSED,
-                'subject' => 'Examen reussi - {{exam_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Felicitations ! Vous avez reussi l\'examen <strong>{{exam_name}}</strong>.</p>
-
-<p>Votre score : <strong>{{score}}%</strong> (score minimum requis : {{passing_score}}%)</p>
-
-<p>{{if_certificate}}</p>
-
-<p>Continuez votre progression !<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'exam_name', 'score', 'passing_score', 'certificate_url', 'if_certificate'],
-                'is_active' => true,
-            ],
-            [
-                'key' => 'welcome',
-                'name' => 'Email de bienvenue',
-                'category' => self::CATEGORY_WELCOME,
-                'trigger_event' => self::EVENT_WELCOME,
-                'subject' => 'Bienvenue sur SubnetCongo Academy !',
-                'content' => '<p>Bienvenue {{student_name}},</p>
-
-<p>Nous sommes ravis de vous accueillir sur SubnetCongo Academy, votre plateforme de formation professionnelle.</p>
-
-<p>Pour bien demarrer :</p>
-<ol>
-<li>Completez votre profil</li>
-<li>Explorez nos formations disponibles</li>
-<li>Inscrivez-vous a votre premier cours</li>
+            // ─────────────────────────── BIENVENUE & COMPTE ───────────────────────────
+            $t('welcome', 'Email de bienvenue', self::CATEGORY_WELCOME, self::EVENT_WELCOME,
+                'Bienvenue sur SubnetCongo Academy, {{student_name}} !',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous sommes ravis de vous accueillir sur <strong>SubnetCongo Academy</strong>, votre plateforme de formation professionnelle aux compétences certifiantes.</p>
+<p>Pour bien démarrer votre parcours :</p>
+<ol style="padding-left:20px;">
+  <li>Complétez votre profil dans votre espace apprenant.</li>
+  <li>Explorez notre catalogue de formations.</li>
+  <li>Inscrivez-vous à votre premier cours et progressez à votre rythme.</li>
 </ol>
+<p>Notre équipe pédagogique reste à votre disposition pour toute question.</p>' .
+                self::cta('{{dashboard_url}}', 'Accéder à mon espace'),
+                ['student_name', 'student_email', 'dashboard_url', 'welcome_date']),
 
-<p><a href="{{dashboard_url}}">Acceder a mon espace</a></p>
+            $t('password_reset', 'Réinitialisation du mot de passe', self::CATEGORY_SECURITY, self::EVENT_PASSWORD_RESET,
+                'Réinitialisation de votre mot de passe — SubnetCongo Academy',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous avons reçu une demande de réinitialisation du mot de passe de votre compte SubnetCongo Academy.</p>
+<p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien est valable pendant une durée limitée.</p>
+<p style="color:#b45309;font-size:13px;">Si vous n\'êtes pas à l\'origine de cette demande, ignorez simplement cet email : votre mot de passe actuel reste inchangé.</p>' .
+                self::cta('{{reset_url}}', 'Réinitialiser mon mot de passe'),
+                ['student_name', 'student_email', 'reset_url', 'expiry_minutes']),
 
-<p>Notre equipe est a votre disposition pour toute question.</p>
+            $t('password_changed', 'Mot de passe modifié', self::CATEGORY_SECURITY, 'password_changed',
+                'Votre mot de passe a été modifié — SubnetCongo Academy',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Le mot de passe de votre compte SubnetCongo Academy (<strong>{{student_email}}</strong>) vient d\'être modifié le <strong>{{changed_at}}</strong>.</p>
+<p>Si vous êtes à l\'origine de cette modification, aucune action n\'est requise.</p>
+<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:6px;margin:16px 0;">
+  <strong style="color:#991b1b;">Si vous n\'avez pas fait cette modification</strong>, contactez immédiatement notre support à <a href="mailto:academy@subnetcongo.net" style="color:#991b1b;">academy@subnetcongo.net</a>.
+</div>',
+                ['student_name', 'student_email', 'changed_at']),
 
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'dashboard_url', 'welcome_date'],
-                'is_active' => true,
-            ],
-            [
-                'key' => 'support_ticket_created',
-                'name' => 'Ticket de support cree',
-                'category' => self::CATEGORY_SUPPORT,
-                'trigger_event' => 'support_ticket_created',
-                'subject' => 'Ticket de support #{{ticket_id}} cree',
-                'content' => '<p>Bonjour {{student_name}},</p>
+            $t('email_verification', 'Vérification de votre adresse email', self::CATEGORY_SECURITY, 'email_verification',
+                'Confirmez votre adresse email — SubnetCongo Academy',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Merci de votre inscription. Pour activer pleinement votre compte et accéder à toutes les fonctionnalités, veuillez confirmer votre adresse email.</p>' .
+                self::cta('{{verification_url}}', 'Vérifier mon adresse'),
+                ['student_name', 'student_email', 'verification_url']),
 
-<p>Votre demande de support a été créée avec succès.</p>
+            // ─────────────────────────── INSCRIPTIONS ───────────────────────────
+            $t('enrollment_request_received', 'Demande d\'inscription reçue', self::CATEGORY_ENROLLMENT, 'enrollment_request_received',
+                'Demande d\'inscription reçue — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous avons bien reçu votre demande d\'inscription au cours <strong>{{course_name}}</strong>.</p>
+<div style="background:#eff6ff;border-left:4px solid #003399;padding:12px 16px;border-radius:6px;margin:16px 0;">
+  <p style="margin:0;font-size:14px;"><strong>Statut :</strong> En attente de validation</p>
+  <p style="margin:4px 0 0;font-size:13px;color:#475569;">Notre équipe vérifie votre paiement{{payment_method}} et validera votre accès sous 24 à 48h. Vous recevrez un email dès que votre inscription sera confirmée.</p>
+</div>',
+                ['student_name', 'student_email', 'course_name', 'course_url', 'payment_method', 'request_date'],
+                ['genesiskikimba@gmail.com', 'Joackimmuholu@gmail.com']
+            ),
 
-<p><strong>Sujet :</strong> {{ticket_subject}}</p>
-<p><strong>Numéro :</strong> #{{ticket_id}}</p>
-<p><strong>Statut :</strong> Ouvert</p>
+            $t('enrollment_request_admin', 'Nouvelle demande d\'inscription', self::CATEGORY_ENROLLMENT, 'enrollment_request_admin',
+                'Nouvelle demande d\'inscription — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{admin_name}}</strong>,</p>
+<p>Une nouvelle demande d\'inscription attend votre validation.</p>
+<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+  <tr><td style="padding:8px 0;color:#64748b;width:130px;">Apprenant</td><td style="padding:8px 0;"><strong>{{student_name}}</strong> ({{student_email}})</td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Cours</td><td style="padding:8px 0;"><strong>{{course_name}}</strong></td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Méthode de paiement</td><td style="padding:8px 0;">{{payment_method}}</td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Téléphone</td><td style="padding:8px 0;">{{phone_number}}</td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">ID transaction</td><td style="padding:8px 0;">{{transaction_id}}</td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Note</td><td style="padding:8px 0;">{{note}}</td></tr>
+</table>' .
+                self::cta('{{admin_url}}', 'Traiter la demande'),
+                ['admin_name', 'student_name', 'student_email', 'course_name', 'payment_method', 'phone_number', 'transaction_id', 'note', 'admin_url']),
 
-<p>Notre équipe vous répondra dans les plus brefs délais.</p>
+            $t('enrollment_confirmed', 'Inscription confirmée', self::CATEGORY_ENROLLMENT, self::EVENT_ENROLLMENT_CONFIRMED,
+                'Inscription confirmée — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Excellente nouvelle : votre inscription au cours <strong>{{course_name}}</strong> est confirmée !</p>
+<p>Vous pouvez dès maintenant accéder à :</p>
+<ul style="padding-left:20px;">
+  <li>Tous les modules et contenus du cours (vidéos, documents, ressources)</li>
+  <li>Les quiz et examens de validation</li>
+  <li>Les forums de discussion avec les instructeurs</li>
+</ul>' .
+                self::cta('{{course_url}}', 'Accéder au cours'),
+                ['student_name', 'student_email', 'course_name', 'course_url', 'enrollment_date', 'expiry_date']),
 
-<p><a href="{{ticket_url}}">Suivre mon ticket</a></p>
+            $t('enrollment_rejected', 'Inscription refusée', self::CATEGORY_ENROLLMENT, 'enrollment_rejected',
+                'Inscription non retenue — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous regrettons de vous informer que votre demande d\'inscription au cours <strong>{{course_name}}</strong> n\'a pas pu être acceptée.</p>
+<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:6px;margin:16px 0;">
+  <p style="margin:0;font-size:14px;"><strong>Motif :</strong> {{reason}}</p>
+</div>
+<p>N\'hésitez pas à nous contacter si vous pensez qu\'il s\'agit d\'une erreur ou si vous souhaitez plus d\'informations.</p>',
+                ['student_name', 'student_email', 'course_name', 'course_url', 'reason', 'rejection_date']),
 
-<p>Cordialement,<br>Support SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'ticket_id', 'ticket_subject', 'ticket_url', 'created_at'],
-                'is_active' => true,
-            ],
+            $t('enrollment_revoked', 'Accès révoqué', self::CATEGORY_ENROLLMENT, 'enrollment_revoked',
+                'Accès à un cours révoqué — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous vous informons que votre accès au cours <strong>{{course_name}}</strong> a été révoqué.</p>
+<div style="background:#fffbeb;border-left:4px solid #d97706;padding:12px 16px;border-radius:6px;margin:16px 0;">
+  <p style="margin:0;font-size:14px;"><strong>Motif :</strong> {{revocation_reason}}</p>
+</div>
+<p>Si vous pensez qu\'il s\'agit d\'une erreur, contactez notre équipe à <a href="mailto:academy@subnetcongo.net" style="color:#003399;">academy@subnetcongo.net</a>.</p>',
+                ['student_name', 'student_email', 'course_name', 'course_url', 'revocation_reason', 'revocation_date']),
 
-            // STANDBY TEMPLATES (inactive by default)
-            [
-                'key' => 'enrollment_rejected',
-                'name' => 'Inscription refusée',
-                'category' => self::CATEGORY_ENROLLMENT,
-                'trigger_event' => 'enrollment_rejected',
-                'subject' => 'Inscription refusee - {{course_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
+            $t('subscription_expiring', 'Abonnement bientôt expiré', self::CATEGORY_ENROLLMENT, 'subscription_expiring',
+                'Votre accès expire dans {{days_remaining}} jour(s) — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Votre accès au cours <strong>{{course_name}}</strong> expire le <strong>{{expiry_date}}</strong>.</p>
+<p>Il vous reste <strong>{{days_remaining}} jour(s)</strong> pour terminer votre formation.</p>
+<p>Ne manquez pas cette opportunité de valider vos compétences avant l\'expiration de votre accès.</p>' .
+                self::cta('{{renew_url}}', 'Renouveler mon accès'),
+                ['student_name', 'student_email', 'course_name', 'course_url', 'days_remaining', 'expiry_date', 'renew_url']),
 
-<p>Nous regrettons de vous informer que votre inscription au cours <strong>{{course_name}}</strong> n\'a pas pu etre acceptee.</p>
+            // ─────────────────────────── COURS & FORMATION ───────────────────────────
+            $t('course_added', 'Nouveau cours dans votre cursus', self::CATEGORY_COURSE, self::EVENT_COURSE_ADDED,
+                'Nouveau cours ajouté — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Un nouveau cours vient d\'être ajouté à votre programme de formation :</p>
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin:16px 0;">
+  <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:#0f172a;">{{course_name}}</p>
+  <p style="margin:0;color:#475569;font-size:14px;">{{course_description}}</p>
+</div>' .
+                self::cta('{{course_url}}', 'Découvrir ce cours'),
+                ['student_name', 'student_email', 'course_name', 'course_description', 'course_url', 'added_date']),
 
-<p><strong>Raison :</strong> {{reason}}</p>
+            $t('course_completed', 'Cours terminé avec succès', self::CATEGORY_COURSE, 'course_completed',
+                'Félicitations, vous avez terminé {{course_name}} !',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Félicitations ! Vous avez terminé le cours <strong>{{course_name}}</strong> à <strong>{{progress}}%</strong> de progression.</p>
+<p>Si un examen final est disponible, c\'est le moment idéal pour le passer et obtenir votre certificat.</p>' .
+                self::cta('{{course_url}}', 'Continuer mon parcours'),
+                ['student_name', 'student_email', 'course_name', 'course_url', 'completion_date', 'progress']),
 
-<p>N\'hesitez pas a nous contacter pour plus d\'informations.</p>
+            $t('assignment_graded', 'Devoir corrigé et noté', self::CATEGORY_COURSE, 'assignment_graded',
+                'Votre devoir a été corrigé — {{assignment_title}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Votre devoir <strong>{{assignment_title}}</strong> a été corrigé par votre instructeur.</p>
+<div style="background:#eff6ff;border-left:4px solid #003399;padding:12px 16px;border-radius:6px;margin:16px 0;">
+  <p style="margin:0;font-size:14px;"><strong>Note obtenue :</strong> {{score}} / {{max_points}}</p>
+  <p style="margin:4px 0 0;font-size:13px;color:#475569;"><strong>Feedback :</strong> {{feedback}}</p>
+</div>' .
+                self::cta('{{assignment_url}}', 'Voir ma correction'),
+                ['student_name', 'student_email', 'assignment_title', 'score', 'max_points', 'feedback', 'assignment_url']),
 
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'course_url', 'reason', 'rejection_date'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'enrollment_revoked',
-                'name' => 'Accès révoqué',
-                'category' => self::CATEGORY_ENROLLMENT,
-                'trigger_event' => 'enrollment_revoked',
-                'subject' => 'Acces revoque - {{course_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
+            // ─────────────────────────── EXAMENS & CERTIFICATS ───────────────────────────
+            $t('exam_passed', 'Examen réussi', self::CATEGORY_EXAM, self::EVENT_EXAM_PASSED,
+                'Examen réussi — {{exam_name}} ({{score}}%)',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Félicitations ! Vous avez réussi l\'examen <strong>{{exam_name}}</strong>.</p>
+<div style="background:#ecfdf5;border-left:4px solid #059669;padding:12px 16px;border-radius:6px;margin:16px 0;text-align:center;">
+  <p style="margin:0;font-size:26px;font-weight:800;color:#047857;">{{score}}%</p>
+  <p style="margin:0;font-size:12px;color:#059669;">Score minimum requis : {{passing_score}}%</p>
+</div>
+<p>{{if_certificate}}</p>' .
+                self::cta('{{exam_url}}', 'Voir mon résultat'),
+                ['student_name', 'student_email', 'exam_name', 'score', 'passing_score', 'certificate_url', 'if_certificate', 'exam_url']),
 
-<p>Nous vous informons que votre acces au cours <strong>{{course_name}}</strong> a ete revoque temporairement.</p>
+            $t('exam_failed', 'Résultat d\'examen', self::CATEGORY_EXAM, self::EVENT_EXAM_FAILED,
+                'Résultat de l\'examen {{exam_name}} — {{score}}%',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Vous avez passé l\'examen <strong>{{exam_name}}</strong>. Voici votre résultat :</p>
+<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:6px;margin:16px 0;text-align:center;">
+  <p style="margin:0;font-size:26px;font-weight:800;color:#b91c1c;">{{score}}%</p>
+  <p style="margin:0;font-size:12px;color:#dc2626;">Score requis pour réussir : {{passing_score}}%</p>
+</div>
+<p>Pas d\'inquiétude : révisez les modules concernés et vous pourrez repasser l\'examen. Chaque tentative vous fait progresser.</p>' .
+                self::cta('{{exam_url}}', 'Réviser et repasser'),
+                ['student_name', 'student_email', 'exam_name', 'score', 'passing_score', 'exam_url', 'attempt_number']),
 
-<p><strong>Raison :</strong> {{revocation_reason}}</p>
+            $t('certificate_generated', 'Certificat délivré', self::CATEGORY_CERTIFICATE, self::EVENT_CERTIFICATE_GENERATED,
+                'Votre certificat SubnetCongo — {{course_name}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Félicitations ! Vous avez complété avec succès la formation <strong>{{course_name}}</strong> et votre certificat a été généré le <strong>{{completion_date}}</strong>.</p>
+<div style="background:#f8fafc;border:1px dashed #003399;border-radius:10px;padding:18px 20px;margin:16px 0;text-align:center;">
+  <p style="margin:0 0 4px;font-size:12px;color:#64748b;letter-spacing:1px;text-transform:uppercase;">Code de vérification</p>
+  <p style="margin:0;font-size:20px;font-weight:800;color:#003399;letter-spacing:2px;">{{certificate_code}}</p>
+</div>
+<p>Ce certificat est vérifiable en ligne et atteste de vos compétences acquises.</p>' .
+                self::cta('{{certificate_url}}', 'Télécharger mon certificat'),
+                ['student_name', 'student_email', 'course_name', 'certificate_url', 'certificate_code', 'completion_date']),
 
-<p>Pour plus d\'informations, contactez notre equipe.</p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'course_url', 'revocation_reason', 'revocation_date'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'course_completed',
-                'name' => 'Cours terminé',
-                'category' => self::CATEGORY_COURSE,
-                'trigger_event' => 'course_completed',
-                'subject' => 'Cours termine avec succes - {{course_name}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Felicitations ! Vous avez termine le cours <strong>{{course_name}}</strong>.</p>
-
-<p>Votre progression : {{progress}}%</p>
-
-<p>Vous pouvez des maintenant passer votre examen final si disponible.</p>
-
-<p><a href="{{course_url}}">Continuer</a></p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'course_url', 'completion_date', 'progress'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'live_session_started',
-                'name' => 'Session live démarrée',
-                'category' => 'live_session',
-                'trigger_event' => 'live_session_started',
-                'subject' => 'Session live en cours - {{session_title}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
+            // ─────────────────────────── SESSIONS LIVE ───────────────────────────
+            $t('live_session_started', 'Session live en cours', self::CATEGORY_LIVE_SESSION, 'live_session_started',
+                'Session live en cours — {{session_title}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
 <p>La session live <strong>{{session_title}}</strong> du cours {{course_name}} vient de commencer !</p>
+<p><strong>Heure :</strong> {{start_time}} — <strong>Durée :</strong> {{duration}} min</p>
+<p>Rejoignez la salle maintenant pour ne rien manquer.</p>' .
+                self::cta('{{session_url}}', 'Rejoindre la session'),
+                ['student_name', 'student_email', 'session_title', 'course_name', 'session_url', 'start_time', 'duration']),
 
-<p><strong>Heure :</strong> {{start_time}}</p>
-<p><strong>Durée :</strong> {{duration}} minutes</p>
+            $t('live_session_reminder', 'Rappel de session live', self::CATEGORY_LIVE_SESSION, 'live_session_reminder',
+                'Rappel : session live dans {{minutes_until}} min — {{session_title}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Rappel amical : la session live <strong>{{session_title}}</strong> commence dans <strong>{{minutes_until}} minutes</strong>.</p>
+<p><strong>Heure :</strong> {{start_time}} — <strong>Cours :</strong> {{course_name}}</p>' .
+                self::cta('{{session_url}}', 'Rejoindre la session'),
+                ['student_name', 'student_email', 'session_title', 'course_name', 'session_url', 'start_time', 'minutes_until']),
 
-<p><a href="{{session_url}}">Rejoindre la session</a></p>
+            // ─────────────────────────── PAIEMENTS ───────────────────────────
+            $t('payment_received', 'Paiement confirmé', self::CATEGORY_PAYMENT, 'payment_received',
+                'Paiement confirmé — Commande #{{order_number}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous avons bien reçu votre paiement. Merci pour votre confiance.</p>
+<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+  <tr><td style="padding:8px 0;color:#64748b;width:130px;">Commande</td><td style="padding:8px 0;"><strong>#{{order_number}}</strong></td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Montant</td><td style="padding:8px 0;"><strong>{{amount}} {{currency}}</strong></td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Date</td><td style="padding:8px 0;">{{payment_date}}</td></tr>
+</table>
+<p>Vous recevrez prochainement la confirmation de votre inscription au(x) cours concerné(s).</p>' .
+                self::cta('{{order_url}}', 'Voir ma commande'),
+                ['student_name', 'student_email', 'order_number', 'amount', 'currency', 'order_url', 'payment_date']),
 
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'session_title', 'course_name', 'session_url', 'start_time', 'duration'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'live_session_reminder',
-                'name' => 'Rappel session live',
-                'category' => 'live_session',
-                'trigger_event' => 'live_session_reminder',
-                'subject' => 'Rappel : Session live dans {{minutes_until}} min - {{session_title}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
+            $t('payment_failed', 'Paiement échoué', self::CATEGORY_PAYMENT, 'payment_failed',
+                'Échec du paiement — Commande #{{order_number}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Nous regrettons de vous informer que votre paiement pour la commande <strong>#{{order_number}}</strong> n\'a pas abouti.</p>
+<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 16px;border-radius:6px;margin:16px 0;">
+  <p style="margin:0;font-size:14px;"><strong>Montant :</strong> {{amount}} {{currency}} — <strong>Raison :</strong> {{failure_reason}}</p>
+</div>
+<p>Aucun montant n\'a été débité. Vous pouvez réessayer le paiement en toute sécurité.</p>' .
+                self::cta('{{retry_url}}', 'Réessayer le paiement'),
+                ['student_name', 'student_email', 'order_number', 'amount', 'currency', 'failure_reason', 'retry_url', 'payment_date']),
 
-<p>Rappel : La session live <strong>{{session_title}}</strong> commence dans {{minutes_until}} minutes.</p>
+            $t('refund_issued', 'Remboursement effectué', self::CATEGORY_PAYMENT, 'refund_issued',
+                'Remboursement effectué — Commande #{{order_number}}',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Votre demande de remboursement pour la commande <strong>#{{order_number}}</strong> a été traitée.</p>
+<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+  <tr><td style="padding:8px 0;color:#64748b;width:130px;">Montant remboursé</td><td style="padding:8px 0;"><strong>{{amount}} {{currency}}</strong></td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Date</td><td style="padding:8px 0;">{{refund_date}}</td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Motif</td><td style="padding:8px 0;">{{refund_reason}}</td></tr>
+</table>
+<p>Le remboursement peut prendre quelques jours ouvrés pour apparaître sur votre relevé selon votre banque.</p>' .
+                self::cta('{{order_url}}', 'Voir ma commande'),
+                ['student_name', 'student_email', 'order_number', 'amount', 'currency', 'refund_date', 'refund_reason', 'order_url']),
 
-<p><strong>Heure :</strong> {{start_time}}</p>
-<p><strong> Cours :</strong> {{course_name}}</p>
+            // ─────────────────────────── SUPPORT & CONTACT ───────────────────────────
+            $t('support_ticket_created', 'Ticket de support créé', self::CATEGORY_SUPPORT, 'support_ticket_created',
+                'Votre demande de support #{{ticket_id}} a été créée',
+                '<p style="margin-top:0;">Bonjour <strong>{{student_name}}</strong>,</p>
+<p>Votre demande de support a été créée avec succès. Notre équipe vous répondra dans les plus brefs délais.</p>
+<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+  <tr><td style="padding:8px 0;color:#64748b;width:130px;">Sujet</td><td style="padding:8px 0;"><strong>{{ticket_subject}}</strong></td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Numéro</td><td style="padding:8px 0;">#{{ticket_id}}</td></tr>
+  <tr><td style="padding:8px 0;color:#64748b;">Statut</td><td style="padding:8px 0;">Ouvert</td></tr>
+</table>' .
+                self::cta('{{ticket_url}}', 'Suivre mon ticket'),
+                ['student_name', 'student_email', 'ticket_id', 'ticket_subject', 'ticket_url', 'created_at']),
 
-<p><a href="{{session_url}}">Rejoindre la session</a></p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'session_title', 'course_name', 'session_url', 'start_time', 'minutes_until'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'payment_received',
-                'name' => 'Paiement reçu',
-                'category' => 'payment',
-                'trigger_event' => 'payment_received',
-                'subject' => 'Paiement confirme - Commande #{{order_number}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Nous avons bien recu votre paiement.</p>
-
-<p><strong>Commande :</strong> #{{order_number}}</p>
-<p><strong>Montant :</strong> {{amount}} {{currency}}</p>
-<p><strong>Date :</strong> {{payment_date}}</p>
-
-<p><a href="{{order_url}}">Voir ma commande</a></p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'order_number', 'amount', 'currency', 'order_url', 'payment_date'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'payment_failed',
-                'name' => 'Paiement échoué',
-                'category' => 'payment',
-                'trigger_event' => 'payment_failed',
-                'subject' => 'Paiement echoue - Commande #{{order_number}}',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Nous regrettons de vous informer que votre paiement pour la commande #{{order_number}} a echoue.</p>
-
-<p><strong>Montant :</strong> {{amount}} {{currency}}</p>
-<p><strong>Raison :</strong> {{failure_reason}}</p>
-
-<p><a href="{{retry_url}}">Reessayer le paiement</a></p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'order_number', 'amount', 'currency', 'failure_reason', 'retry_url', 'payment_date'],
-                'is_active' => false,
-            ],
-            [
-                'key' => 'subscription_expiring',
-                'name' => 'Abonnement expiré bientôt',
-                'category' => self::CATEGORY_ENROLLMENT,
-                'trigger_event' => 'subscription_expiring',
-                'subject' => 'Votre acces expire dans {{days_remaining}} jours',
-                'content' => '<p>Bonjour {{student_name}},</p>
-
-<p>Votre acces au cours <strong>{{course_name}}</strong> expire le {{expiry_date}}.</p>
-
-<p>Il vous reste <strong>{{days_remaining}} jours</strong> pour completer votre formation.</p>
-
-<p><a href="{{renew_url}}">Renouveler mon acces</a></p>
-
-<p>Cordialement,<br>L\'equipe SubnetCongo Academy</p>',
-                'variables' => ['student_name', 'student_email', 'course_name', 'course_url', 'days_remaining', 'expiry_date', 'renew_url'],
-                'is_active' => false,
-            ],
+            $t('contact_confirmation', 'Message de contact reçu', self::CATEGORY_SUPPORT, 'contact_confirmation',
+                'Nous avons bien reçu votre message — SubnetCongo Academy',
+                '<p style="margin-top:0;">Bonjour <strong>{{visitor_name}}</strong>,</p>
+<p>Merci de nous avoir contactés. Votre message concernant <strong>« {{subject}} »</strong> a bien été enregistré.</p>
+<p>Notre équipe vous répondra sous <strong>48 heures ouvrées</strong> à l\'adresse <strong>{{visitor_email}}</strong>.</p>
+<p style="font-size:13px;color:#64748b;">Référence de votre demande : <strong>{{ticket_number}}</strong></p>',
+                ['visitor_name', 'visitor_email', 'subject', 'ticket_number']),
         ];
     }
 
@@ -334,13 +375,13 @@ class EmailTemplate extends Model
         foreach ($this->variables as $var) {
             $placeholder = '{{' . $var . '}}';
             $value = $data[$var] ?? '';
-            
+
             if (is_bool($value)) {
                 $value = $value ? 'Oui' : 'Non';
             }
-            
-            $subject = str_replace($placeholder, $value, $subject);
-            $content = str_replace($placeholder, $value, $content);
+
+            $subject = str_replace($placeholder, (string) $value, $subject);
+            $content = str_replace($placeholder, e((string) $value), $content);
         }
 
         return [
@@ -352,8 +393,15 @@ class EmailTemplate extends Model
     public static function seedDefaults()
     {
         $defaults = self::getDefaultTemplates();
-        
+
         foreach ($defaults as $template) {
+            $existing = self::where('key', $template['key'])->first();
+
+            if ($existing) {
+                // Ne pas écraser la configuration BCC personnalisée par l'admin
+                unset($template['bcc_emails']);
+            }
+
             self::updateOrCreate(
                 ['key' => $template['key']],
                 $template

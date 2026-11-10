@@ -329,7 +329,7 @@ const savePath = (action = 'save') => {
         order: index + 1
     }));
 
-    const url = pathForm.id ? route('learning-paths.update', pathForm.id) : route('learning-paths.store');
+    const url = pathForm.id ? route('learning-paths.update', pathForm.slug) : route('learning-paths.store');
 
     pathForm.transform((data) => {
         const transformed = { ...data, _method: pathForm.id ? 'PUT' : 'POST' };
@@ -363,7 +363,7 @@ const confirmArchive = (pathData) => {
         acceptLabel: 'Oui, Archiver',
         rejectLabel: 'Annuler',
         accept: () => {
-            router.patch(route('learning-paths.archive', pathData.id), {}, {
+            router.patch(route('learning-paths.archive', pathData.slug), {}, {
                 preserveScroll: true,
                 onSuccess: () => toast.add({ severity: 'warn', summary: 'Archivé', detail: 'Le parcours a été retiré du catalogue actif.', life: 3000 })
             });
@@ -562,7 +562,7 @@ const saveCohortChanges = () => {
         return;
     }
 
-    cohortForm.post(route('learning-paths.sync-cohort', selectedPath.value.id), {
+    cohortForm.post(route('learning-paths.sync-cohort', selectedPath.value.slug), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({ severity: 'success', summary: 'Cohorte Synchronisée', detail: 'Les accès des étudiants ont été mis à jour avec succès.', life: 4000 });

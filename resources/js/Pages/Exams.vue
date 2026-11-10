@@ -299,7 +299,7 @@ const saveExam = (status = 'Active') => {
 
     // Détermination de la méthode HTTP et de la route
     const isUpdate = !!examForm.id;
-    const url = isUpdate ? route('exams.update', examForm.id) : route('exams.store');
+    const url = isUpdate ? route('exams.update', examForm.uuid) : route('exams.store');
 
     // Nettoyage avant envoi pour éviter des données lourdes/inutiles
     examForm.transform((data) => {

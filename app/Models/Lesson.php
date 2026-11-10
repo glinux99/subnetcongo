@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Lesson extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     use HasFactory, SoftDeletes;
 
     public const TYPE_VIDEO = 'video';

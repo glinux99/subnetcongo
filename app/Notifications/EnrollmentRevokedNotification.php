@@ -23,13 +23,19 @@ class EnrollmentRevokedNotification extends Notification implements ShouldBroadc
 
     public function toArray($notifiable): array
     {
+        $courseTitle = $this->enrollment->course?->title ?? '—';
+        
         return [
             'type' => 'enrollment_revoked',
+            'title' => 'Accès révoqué',
+            'message' => "Votre accès au cours « {$courseTitle} » a été révoqué. Motif : {$this->reason}",
+            'icon' => 'pi-ban',
+            'severity' => 'warn',
+            'url' => route('student.my-enrollments'),
             'enrollment_id' => $this->enrollment->id,
             'course_id' => $this->enrollment->course_id,
-            'course_title' => $this->enrollment->course?->title,
+            'course_title' => $courseTitle,
             'reason' => $this->reason,
-            'message' => 'Votre accès au cours "' . ($this->enrollment->course?->title ?? '—') . '" a été révoqué. Motif : ' . $this->reason,
         ];
     }
 

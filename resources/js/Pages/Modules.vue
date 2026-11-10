@@ -272,7 +272,7 @@ const saveModule = () => {
         return;
     }
 
-    const url = moduleForm.id ? route('modules.update', moduleForm.id) : route('modules.store', moduleForm.course_id);
+    const url = moduleForm.id ? route('modules.update', moduleForm.slug) : route('modules.store', moduleForm.course_id);
 
     moduleForm.transform((data) => {
         const transformed = { ...data, _method: moduleForm.id ? 'PUT' : 'POST' };
@@ -295,7 +295,7 @@ const confirmDeleteModule = (module) => {
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => {
-            router.delete(route('curriculum.modules.destroy', module.id), {
+            router.delete(route('curriculum.modules.destroy', module.slug), {
                 preserveScroll: true,
                 onSuccess: () => toast.add({ severity: 'info', summary: 'Supprimé', detail: 'Module et leçons purgés.', life: 3000 })
             });
@@ -389,7 +389,7 @@ const saveLesson = () => {
         return;
     }
 
-    const url = lessonForm.id ? route('lessons.update', lessonForm.id) : route('lessons.store', lessonForm.module_id);
+    const url = lessonForm.id ? route('lessons.update', lessonForm.slug) : route('lessons.store', lessonForm.module_id);
 
     lessonForm.transform((data) => {
         return { ...data, _method: lessonForm.id ? 'PUT' : 'POST' };
@@ -409,7 +409,7 @@ const confirmDeleteLesson = (lesson) => {
         icon: 'pi pi-trash',
         acceptClass: 'p-button-danger',
         accept: () => {
-            router.delete(route('curriculum.lessons.destroy', lesson.id), { preserveScroll: true });
+            router.delete(route('curriculum.lessons.destroy', lesson.slug), { preserveScroll: true });
         }
     });
 };

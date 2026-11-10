@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamResult extends Model
 {
+    /** Route URL sans ID (lien partageable) */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
     use HasFactory;
 
     /**

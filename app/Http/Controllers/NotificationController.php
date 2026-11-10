@@ -38,10 +38,27 @@ class NotificationController extends Controller
     {
         $payload = is_string($n->data) ? json_decode($n->data, true) : (array) $n->data;
         $payload = is_array($payload) ? $payload : [];
+
+        // Titres de secours par type pour les notifications héritées sans titre explicite
+        $type = class_basename((string) $n->type);
+        $fallbackTitles = [
+            'CourseEnrolledNotification'        => 'Inscription à un cours',
+            'EnrollmentApprovedNotification'    => 'Inscription approuvée',
+            'EnrollmentRejectedNotification'    => 'Inscription refusée',
+            'EnrollmentRevokedNotification'     => 'Accès révoqué',
+            'CertificateIssuedNotification'     => 'Certificat délivré',
+            'NewEnrollmentRequestNotification'  => 'Demande d\'inscription à traiter',
+            'NewQuestionNotification'           => 'Nouvelle question',
+            'QuestionAnsweredNotification'      => 'Réponse à votre question',
+            'EmailSentNotification'             => 'Email envoyé',
+            'ExamReminderNotification'          => 'Examen à venir',
+            'LiveSessionStartingNotification'   => 'Session live à venir',
+        ];
+
         return [
             'id'         => $n->id,
             'type'       => $n->type,
-            'title'      => $payload['title']      ?? $payload['subject'] ?? 'Notification',
+            'title'      => $payload['title']      ?? $payload['subject'] ?? ($fallbackTitles[$type] ?? 'Notification'),
             'message'    => $payload['message']    ?? $payload['body'] ?? '',
             'icon'       => $payload['icon']       ?? 'pi-bell',
             'severity'   => $payload['severity']   ?? 'info',
@@ -63,18 +80,7 @@ class NotificationController extends Controller
             ->latest('created_at')
             ->limit(10)
             ->get()
-            ->map(fn ($n) => [
-                'id' => $n->id,
-                'type' => $n->type,
-                'title' => $n->title,
-                'message' => $n->message,
-                'icon' => $n->icon,
-                'severity' => $n->severity,
-                'url' => $n->url,
-                'read_at' => $n->read_at?->toIso8601String(),
-                'created_at' => $n->created_at->toIso8601String(),
-                'time_ago' => $n->created_at->diffForHumans(),
-            ]);
+            ->map(fn ($n) => $this->flatten($n));
 
         return response()->json([
             'notifications' => $notifications,

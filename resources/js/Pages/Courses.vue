@@ -416,7 +416,7 @@ const saveCourse = (action = 'save') => {
     if (action === 'publish') courseForm.status = 'published';
     if (action === 'draft') courseForm.status = 'draft';
 
-    const url = courseForm.id ? route('courses.update', courseForm.id) : route('courses.store');
+    const url = courseForm.id ? route('courses.update', courseForm.slug) : route('courses.store');
 
     courseForm.transform((data) => {
         const transformed = { ...data, _method: courseForm.id ? 'PUT' : 'POST' };
@@ -512,7 +512,7 @@ const cloneCourse = (course) => {
         acceptLabel: 'Oui, cloner',
         rejectLabel: 'Annuler',
         accept: () => {
-            router.post(route('courses.duplicate', course.id), {}, {
+            router.post(route('courses.duplicate', course.slug), {}, {
                 preserveScroll: true,
                 onSuccess: () => toast.add({ severity: 'success', summary: 'Clonage réussi', detail: 'Le cours a été dupliqué.', life: 3000 }),
                 onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Le clonage a échoué.', life: 3000 })
@@ -547,7 +547,7 @@ const confirmPurge = (course) => {
         acceptLabel: 'Oui, supprimer définitivement',
         rejectLabel: 'Annuler',
         accept: () => {
-            router.delete(route('courses.purge', course.id), {
+            router.delete(route('courses.purge', course.slug), {
                 preserveScroll: true,
                 onError: (errors) => {
                     const errorMessage = Object.values(errors).flat().join(' ') || 'Une erreur est survenue.';

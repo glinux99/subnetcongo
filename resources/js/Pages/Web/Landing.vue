@@ -456,7 +456,7 @@ const schemaOrgData = computed(() => {
                 <div class="transition-opacity duration-300 w-full" :class="{'opacity-0 scale-95': isAnimatingCourses, 'opacity-100 scale-100': !isAnimatingCourses}">
                     <div v-if="filteredCourses.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 lg:gap-8 w-full">
 
-                        <Link v-for="(course, idx) in filteredCourses" :key="course.id" :href="route('marketplace.show', course.id)"
+                        <Link v-for="(course, idx) in filteredCourses" :key="course.id" :href="route('marketplace.show', course.slug)"
                             class="group flex flex-col bg-white rounded-[1.25rem] overflow-hidden shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-2xl border border-slate-100 transition-all duration-300 h-full w-full"
                         >
                             <!-- Header Image -->

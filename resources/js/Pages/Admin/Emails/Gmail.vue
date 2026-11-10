@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -125,9 +127,18 @@ const getFolderIcon = (name) => {
     return 'pi pi-folder';
 };
 
+const showUrl = (messageNumber) => {
+    const url = route('admin.emails.show', messageNumber);
+    return currentFolder.value && currentFolder.value !== 'INBOX'
+        ? url + '?folder=' + encodeURIComponent(currentFolder.value)
+        : url;
+};
+
+const folderPayload = () => currentFolder.value ? { folder: currentFolder.value } : {};
+
 // Email actions
 const markAsRead = (messageNumber) => {
-    router.post(route('admin.emails.markAsRead', messageNumber), {}, {
+    router.post(route('admin.emails.markAsRead', messageNumber), folderPayload(), {
         preserveScroll: true,
         onSuccess: () => {
             const email = props.emails.find(e => e.message_number === messageNumber);
@@ -137,7 +148,7 @@ const markAsRead = (messageNumber) => {
 };
 
 const markAsUnread = (messageNumber) => {
-    router.post(route('admin.emails.markAsUnread', messageNumber), {}, {
+    router.post(route('admin.emails.markAsUnread', messageNumber), folderPayload(), {
         preserveScroll: true,
         onSuccess: () => {
             const email = props.emails.find(e => e.message_number === messageNumber);
@@ -152,12 +163,12 @@ const moveToTrash = (messageNumber) => {
         message: 'Déplacer cet email vers la corbeille ?',
         acceptLabel: 'Mettre à la corbeille',
         danger: true,
-        accept: () => router.post(route('admin.emails.trash', messageNumber), {}, { preserveScroll: true }),
+        accept: () => router.post(route('admin.emails.trash', messageNumber), folderPayload(), { preserveScroll: true }),
     });
 };
 
 const archive = (messageNumber) => {
-    router.post(route('admin.emails.archive', messageNumber), {}, {
+    router.post(route('admin.emails.archive', messageNumber), folderPayload(), {
         preserveScroll: true,
         onSuccess: () => {
             applyFilters();
@@ -225,296 +236,288 @@ const folderStats = computed(() => {
     });
     return stats;
 });
+
+// Le dossier "Sent" IMAP est déjà couvert par la page dédiée "Envoyés"
+const isSentFolder = (folder) => /(sent|envoy)/i.test(folder.name || '');
+const visibleFolders = computed(() => props.folders.filter(f => !isSentFolder(f)));
 </script>
 
 <template>
     <AppLayout>
         <Head title="Boîte email" />
         
-        <div class="gmail-container min-h-screen bg-gray-50 font-sans">
+        <div class="min-h-screen bg-slate-50 font-sans pb-20">
             
-            <!-- Header Gmail-like -->
-            <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
-                <div class="flex items-center justify-between max-w-full">
-                    <!-- Logo et titre -->
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                            <i class="pi pi-envelope text-white text-xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold text-gray-800">Gmail</h1>
-                            <p class="text-xs text-gray-500">{{ account }}</p>
-                        </div>
-                    </div>
+            <!-- PageHeader comme les autres pages -->
+            <PageHeader
+                title="Boîte Email"
+                subtitle="Gérez vos correspondances IMAP directement depuis la plateforme"
+                badge="Connecté"
+                icon="pi-envelope"
+                accent="blue"
+                :actions="[
+                    { label: 'Nouveau message', icon: 'pi-pen-to-square', href: route('admin.emails.compose'), variant: 'primary' },
+                    { label: 'Actualiser', icon: 'pi-refresh', onClick: applyFilters, variant: 'secondary' }
+                ]"
+            />
 
-                    <!-- Barre de recherche -->
-                    <div class="flex-1 max-w-2xl mx-8">
-                        <div class="relative">
-                            <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            <InputText
-                                v-model="search"
-                                @keyup.enter="applyFilters"
-                                placeholder="Rechercher dans la boîte mail"
-                                class="w-full pl-10 pr-4 py-2 rounded-full border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                            />
-                            <Button
-                                icon="pi pi-times"
-                                class="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                                @click="search = ''; applyFilters()"
-                                v-if="search"
-                                text
-                                rounded
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-2">
-                        <Button
-                            icon="pi pi-refresh"
-                            class="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                            @click="applyFilters"
-                            :loading="isLoading"
-                            text
-                            rounded
-                        />
-                        <Button
-                            icon="pi pi-pen-to-square"
-                            label="Nouveau message"
-                            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2"
-                            @click="router.visit(route('admin.emails.compose'))"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex h-[calc(100vh-80px)]">
-                <!-- Sidebar Gmail-style -->
-                <div class="w-64 bg-white border-r border-gray-200 flex flex-col">
-                    <!-- Compose button -->
-                    <div class="p-4">
-                        <Button
-                            icon="pi pi-pen-to-square"
-                            label="Nouveau message"
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-3 font-medium"
-                            @click="router.visit(route('admin.emails.compose'))"
-                        />
-                    </div>
-
-                    <!-- Navigation -->
-                    <nav class="flex-1 px-2 space-y-1">
-                        <button
-                            v-for="folder in folders"
-                            :key="folder.path"
-                            @click="currentFolder = folder.short; applyFilters()"
-                            class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 font-medium"
-                            :class="isFolderActive(folder) 
-                                ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' 
-                                : 'text-gray-700 hover:bg-gray-100'"
-                        >
-                            <div class="flex items-center gap-3">
-                                <i :class="getFolderIcon(folder.name)" class="text-lg"></i>
-                                <span class="truncate">{{ folder.name }}</span>
-                            </div>
-                            <span 
-                                v-if="getUnreadCount(folder) > 0"
-                                class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full"
-                            >
-                                {{ getUnreadCount(folder) }}
-                            </span>
-                        </button>
-                    </nav>
-
-                    <!-- Stats -->
-                    <div class="p-4 border-t border-gray-200">
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Total</span>
-                                <span class="font-medium">{{ stats.total ?? 0 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Non lus</span>
-                                <span class="font-medium text-red-600">{{ stats.unread ?? 0 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Quota</span>
-                                <span class="font-medium">{{ stats.quota?.percent ?? 0 }}%</span>
-                            </div>
-                        </div>
+            <div class="max-w-[1600px] mx-auto px-4 md:px-6 pt-6">
+                
+                <!-- Message d'erreur -->
+                <div v-if="error" class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 shadow-sm flex items-center gap-3 text-red-700">
+                    <i class="pi pi-exclamation-triangle text-2xl"></i>
+                    <div>
+                        <p class="font-bold text-sm">Erreur de connexion IMAP</p>
+                        <p class="text-xs text-red-600">{{ error }}</p>
                     </div>
                 </div>
 
-                <!-- Main content area -->
-                <div class="flex-1 flex flex-col overflow-hidden">
-                    <!-- Toolbar -->
-                    <div class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <Checkbox
-                                v-model="selectAll"
-                                @change="toggleSelectAll"
-                                :binary="true"
-                            />
-                            <div class="flex items-center gap-1" v-if="selectedEmails.length > 0">
-                                <Button
-                                    icon="pi pi-check"
-                                    class="p-1 text-gray-600 hover:bg-gray-100 rounded"
-                                    @click="bulkAction('read')"
-                                    title="Marquer comme lu"
-                                    text
-                                    rounded
-                                />
-                                <Button
-                                    icon="pi pi-envelope"
-                                    class="p-1 text-gray-600 hover:bg-gray-100 rounded"
-                                    @click="bulkAction('unread')"
-                                    title="Marquer comme non lu"
-                                    text
-                                    rounded
-                                />
-                                <Button
-                                    icon="pi pi-box"
-                                    class="p-1 text-gray-600 hover:bg-gray-100 rounded"
-                                    @click="bulkAction('archive')"
-                                    title="Archiver"
-                                    text
-                                    rounded
-                                />
-                                <Button
-                                    icon="pi pi-trash"
-                                    class="p-1 text-gray-600 hover:bg-gray-100 rounded hover:text-red-600"
-                                    @click="bulkAction('trash')"
-                                    title="Supprimer"
-                                    text
-                                    rounded
-                                />
+                <div v-else class="flex flex-col lg:flex-row gap-6 items-start">
+                    
+                    <!-- Sidebar -->
+                    <div class="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-6">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            
+                            <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+                                <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                    <i class="pi pi-folder"></i> Navigation
+                                </h3>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm text-gray-500">
-                                {{ emails.length }} email(s)
-                            </span>
+
+                            <div class="p-3 space-y-1">
+                                <button
+                                    v-for="folder in visibleFolders"
+                                    :key="folder.path"
+                                    @click="currentFolder = folder.short; applyFilters()"
+                                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 font-bold"
+                                    :class="isFolderActive(folder) 
+                                        ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' 
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <i :class="getFolderIcon(folder.name)" class="text-lg"></i>
+                                        <span class="truncate">{{ folder.name }}</span>
+                                    </div>
+                                    <span 
+                                        v-if="getUnreadCount(folder) > 0"
+                                        class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full"
+                                    >
+                                        {{ getUnreadCount(folder) }}
+                                    </span>
+                                </button>
+
+                                <!-- Emails envoyés -->
+                                <div class="border-t border-slate-200 mt-4 pt-4">
+                                    <button
+                                        @click="router.visit(route('admin.emails.sent'))"
+                                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <i class="pi pi-send text-lg"></i>
+                                            <span class="truncate">Envoyés</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Email list -->
-                    <div class="flex-1 overflow-y-auto">
-                        <div v-if="emails.length" class="divide-y divide-gray-100">
-                            <div
-                                v-for="email in emails"
-                                :key="email.message_number"
-                                class="group hover:bg-gray-50 transition-all duration-200 cursor-pointer"
-                                :class="{
-                                    'bg-blue-50/30': !email.seen,
-                                    'bg-gray-50': selectedEmails.includes(email.message_number)
-                                }"
-                                @click="router.visit(route('admin.emails.show', email.message_number))"
-                            >
-                                <div class="flex items-center p-4 gap-3">
-                                    <!-- Checkbox -->
-                                    <div class="flex items-center" @click.stop>
-                                        <Checkbox
-                                            :modelValue="selectedEmails.includes(email.message_number)"
-                                            @change="toggleSelect(email.message_number)"
-                                            :binary="true"
-                                        />
-                                    </div>
+                    <!-- Contenu principal -->
+                    <div class="flex-1 min-w-0 w-full flex flex-col gap-6">
+                        
+                        <!-- Barre de recherche -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <div class="flex-1 relative">
+                                    <i class="pi pi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <InputText
+                                        v-model="search"
+                                        @keyup.enter="applyFilters"
+                                        placeholder="Rechercher un expéditeur, un sujet..."
+                                        class="!rounded-xl w-full !pl-10 border-slate-200"
+                                    />
+                                </div>
+                                <Select
+                                    v-model="currentFolder"
+                                    :options="visibleFolders"
+                                    optionLabel="name"
+                                    optionValue="short"
+                                    @change="applyFilters"
+                                    class="!rounded-xl min-w-[200px] border-slate-200 lg:hidden"
+                                />
+                                <Button label="Rechercher" icon="pi pi-search" @click="applyFilters" class="!rounded-xl !bg-slate-800 !border-slate-800 hover:!bg-slate-900 font-bold" />
+                            </div>
+                        </div>
 
-                                    <!-- Avatar -->
-                                    <div class="relative shrink-0">
-                                        <div :class="['w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold', getAvatarColor(getFromName(email.from))]">
-                                            {{ getInitials(getFromName(email.from)) }}
-                                        </div>
-                                        <span v-if="!email.seen" class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border-2 border-white rounded-full"></span>
-                                    </div>
-
-                                    <!-- Email content -->
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <div class="flex items-center gap-2">
-                                                <p class="truncate text-sm" :class="!email.seen ? 'font-bold text-gray-900' : 'font-medium text-gray-700'">
-                                                    {{ getFromName(email.from) }}
-                                                </p>
-                                                <span v-if="email.flagged" class="text-yellow-500">
-                                                    <i class="pi pi-star-fill text-xs"></i>
-                                                </span>
-                                            </div>
-                                            <span class="text-xs text-gray-500 shrink-0 ml-2">
-                                                {{ formatDate(email.date) }}
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="flex items-center gap-2">
-                                            <p class="text-sm truncate" :class="!email.seen ? 'text-gray-800 font-medium' : 'text-gray-600'">
-                                                {{ email.subject || '(Sans objet)' }}
-                                            </p>
-                                            <span v-if="email.has_attachments" class="text-gray-400 text-xs">
-                                                <i class="pi pi-paperclip"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Quick actions -->
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+                        <!-- Liste des emails -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <!-- Toolbar -->
+                            <div class="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <Checkbox
+                                        v-model="selectAll"
+                                        @change="toggleSelectAll"
+                                        :binary="true"
+                                    />
+                                    <div class="flex items-center gap-1" v-if="selectedEmails.length > 0">
                                         <Button
-                                            icon="pi pi-reply"
-                                            class="p-1 text-gray-400 hover:text-blue-600"
-                                            @click="router.visit(route('admin.emails.reply', email.message_number))"
-                                            title="Répondre"
+                                            icon="pi pi-check"
+                                            class="p-1 text-slate-600 hover:bg-slate-100 rounded"
+                                            @click="bulkAction('read')"
+                                            title="Marquer comme lu"
+                                            text
+                                            rounded
+                                        />
+                                        <Button
+                                            icon="pi pi-envelope"
+                                            class="p-1 text-slate-600 hover:bg-slate-100 rounded"
+                                            @click="bulkAction('unread')"
+                                            title="Marquer comme non lu"
                                             text
                                             rounded
                                         />
                                         <Button
                                             icon="pi pi-box"
-                                            class="p-1 text-gray-400 hover:text-green-600"
-                                            @click="archive(email.message_number)"
+                                            class="p-1 text-slate-600 hover:bg-slate-100 rounded"
+                                            @click="bulkAction('archive')"
                                             title="Archiver"
                                             text
                                             rounded
                                         />
                                         <Button
                                             icon="pi pi-trash"
-                                            class="p-1 text-gray-400 hover:text-red-600"
-                                            @click="moveToTrash(email.message_number)"
+                                            class="p-1 text-slate-600 hover:bg-slate-100 rounded hover:text-red-600"
+                                            @click="bulkAction('trash')"
                                             title="Supprimer"
                                             text
                                             rounded
                                         />
                                     </div>
                                 </div>
+                                <div class="text-sm text-slate-500">
+                                    {{ emails.length }} email(s)
+                                </div>
+                            </div>
+
+                            <!-- Email list -->
+                            <div v-if="emails.length" class="divide-y divide-slate-100">
+                                <div
+                                    v-for="email in emails"
+                                    :key="email.message_number"
+                                    class="group hover:bg-slate-50 transition-all duration-200 cursor-pointer"
+                                    :class="{
+                                        'bg-blue-50/30': !email.seen,
+                                        'bg-slate-50': selectedEmails.includes(email.message_number)
+                                    }"
+                                    @click="router.visit(showUrl(email.message_number))"
+                                >
+                                    <div class="flex items-center p-4 gap-3">
+                                        <!-- Checkbox -->
+                                        <div class="flex items-center" @click.stop>
+                                            <Checkbox
+                                                :modelValue="selectedEmails.includes(email.message_number)"
+                                                @change="toggleSelect(email.message_number)"
+                                                :binary="true"
+                                            />
+                                        </div>
+
+                                        <!-- Avatar -->
+                                        <div class="relative shrink-0">
+                                            <div :class="['w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold', getAvatarColor(getFromName(email.from))]">
+                                                {{ getInitials(getFromName(email.from)) }}
+                                            </div>
+                                            <span v-if="!email.seen" class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border-2 border-white rounded-full"></span>
+                                        </div>
+
+                                        <!-- Email content -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="truncate text-sm" :class="!email.seen ? 'font-bold text-slate-900' : 'font-medium text-slate-700'">
+                                                        {{ getFromName(email.from) }}
+                                                    </p>
+                                                    <span v-if="email.flagged" class="text-yellow-500">
+                                                        <i class="pi pi-star-fill text-xs"></i>
+                                                    </span>
+                                                </div>
+                                                <span class="text-xs text-slate-500 shrink-0 ml-2">
+                                                    {{ formatDate(email.date) }}
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="flex items-center gap-2">
+                                                <p class="text-sm truncate" :class="!email.seen ? 'text-slate-800 font-medium' : 'text-slate-600'">
+                                                    {{ email.subject || '(Sans objet)' }}
+                                                </p>
+                                                <span v-if="email.has_attachments" class="text-slate-400 text-xs">
+                                                    <i class="pi pi-paperclip"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick actions -->
+                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+                                            <Button
+                                                icon="pi pi-reply"
+                                                class="p-1 text-slate-400 hover:text-blue-600"
+                                                @click="router.visit(route('admin.emails.reply', email.message_number))"
+                                                title="Répondre"
+                                                text
+                                                rounded
+                                            />
+                                            <Button
+                                                icon="pi pi-box"
+                                                class="p-1 text-slate-400 hover:text-green-600"
+                                                @click="archive(email.message_number)"
+                                                title="Archiver"
+                                                text
+                                                rounded
+                                            />
+                                            <Button
+                                                icon="pi pi-trash"
+                                                class="p-1 text-slate-400 hover:text-red-600"
+                                                @click="moveToTrash(email.message_number)"
+                                                title="Supprimer"
+                                                text
+                                                rounded
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Empty state -->
+                            <div v-else class="flex flex-col items-center justify-center h-64 text-slate-500">
+                                <i class="pi pi-inbox text-6xl mb-4"></i>
+                                <p class="text-lg font-medium">Aucun email</p>
+                                <p class="text-sm">Votre boîte de réception est vide</p>
                             </div>
                         </div>
 
-                        <!-- Empty state -->
-                        <div v-else class="flex flex-col items-center justify-center h-64 text-gray-500">
-                            <i class="pi pi-inbox text-6xl mb-4"></i>
-                            <p class="text-lg font-medium">Aucun email</p>
-                            <p class="text-sm">Votre boîte de réception est vide</p>
-                        </div>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div class="bg-white border-t border-gray-200 px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-gray-600">
-                                Page {{ pagination.page }} sur {{ pagination.total_pages }}
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <Button
-                                    icon="pi pi-chevron-left"
-                                    class="p-2"
-                                    :disabled="pagination.page <= 1"
-                                    @click="onPage({ page: pagination.page - 2, rows: pagination.per_page })"
-                                    text
-                                    rounded
-                                />
-                                <Button
-                                    icon="pi pi-chevron-right"
-                                    class="p-2"
-                                    :disabled="pagination.page >= pagination.total_pages"
-                                    @click="onPage({ page: pagination.page, rows: pagination.per_page })"
-                                    text
-                                    rounded
-                                />
+                        <!-- Pagination -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-slate-600">
+                                    Page {{ pagination.page }} sur {{ pagination.total_pages }}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <Button
+                                        icon="pi pi-chevron-left"
+                                        class="p-2"
+                                        :disabled="pagination.page <= 1"
+                                        @click="onPage({ page: pagination.page - 2, rows: pagination.per_page })"
+                                        text
+                                        rounded
+                                    />
+                                    <Button
+                                        icon="pi pi-chevron-right"
+                                        class="p-2"
+                                        :disabled="pagination.page >= pagination.total_pages"
+                                        @click="onPage({ page: pagination.page, rows: pagination.per_page })"
+                                        text
+                                        rounded
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

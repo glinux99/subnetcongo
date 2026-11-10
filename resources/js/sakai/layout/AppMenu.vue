@@ -44,7 +44,7 @@ const model = computed(() => {
                     { label: 'Mes formations', icon: 'pi pi-fw pi-list', to: r('student.my-courses') },
                     { label: 'Mes inscriptions', icon: 'pi pi-fw pi-id-card', to: r('student.my-enrollments'), badge: badges.value.enrollments_pending },
                     // { label: 'Bibliothèque médias', icon: 'pi pi-fw pi-video', to: r('media-library.index') },
-                    { label: 'Classes virtuelles', icon: 'pi pi-fw pi-desktop', to: r('live-sessions.index') },
+                    { label: 'Classes virtuelles', icon: 'pi pi-fw pi-desktop', to: r('live-sessions.mine') },
                     { label: 'Marketplace', icon: 'pi pi-fw pi-shopping-bag', to: r('marketplace.index') },
                     { label: 'Mon panier', icon: 'pi pi-fw pi-shopping-cart', to: r('marketplace.cart'), badge: badges.value.cart },
                 ]
@@ -102,7 +102,6 @@ const model = computed(() => {
                     items: [
                         { label: 'Quiz & Tests', icon: 'pi pi-fw pi-pencil', to: r('exams.index') },
                         { label: 'Banque de Questions', icon: 'pi pi-fw pi-database', to: r('squestions.index') },
-                        { label: 'Corrections', icon: 'pi pi-fw pi-user-edit', to: r('sgradings.edit') },
                         { label: 'Certificats', icon: 'pi pi-fw pi-verified', to: r('certificates.index'), badge: badges.value.certificates },
                     ]
                 },
@@ -179,6 +178,7 @@ const model = computed(() => {
                     ]
                 },
                 { label: 'Paramètres Généraux', icon: 'pi pi-fw pi-sliders-h', to: r('system.settings') },
+                { label: 'Visioconférence', icon: 'pi pi-fw pi-video', to: r('system.settings.video') },
                 { label: 'Passerelles de Paiement', icon: 'pi pi-fw pi-dollar', to: r('system.payments') },
                 { label: 'Traductions (i18n)', icon: 'pi pi-fw pi-globe', to: r('system.languages.index') },
                 { label: 'Maintenance Serveur', icon: 'pi pi-fw pi-server', to: r('system.server') },

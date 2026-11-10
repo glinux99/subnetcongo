@@ -62,6 +62,10 @@ Route::get('/mentions-legales', [WebSettingController::class, 'mentionsLegales']
 Route::get('/confidentialite', [WebSettingController::class, 'confidentialite'])->name('confidentialite');
 Route::post('/contact', [WebSettingController::class, 'store'])->name('contact.store');
 
+// Sessions en direct publiques (webinaires) — accessible sans connexion
+Route::get('/sessions-en-direct', [LiveSessionController::class, 'publicIndex'])->name('live-sessions.public');
+Route::get('/l/{token}', [LiveSessionController::class, 'sharedJoin'])->name('live-sessions.shared');
+
 // Route::get('/dashboard', function () {
 //     return Inertia::render('Dashboard', [
 //         'users'         => (int) User::count(),
@@ -102,6 +106,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/sales-reports', [SalesReportController::class, 'index'])->name('sales.reports');
+
+    // ===== SESSIONS LIVE (accessibles aux apprenants inscrits) =====
+    Route::get('mes-lives', [LiveSessionController::class, 'studentIndex'])->name('live-sessions.mine');
+    Route::get('live-sessions/{live_session}/join', [LiveSessionController::class, 'join'])->name('live-sessions.join');
+    Route::get('live-sessions/{live_session}/livekit-token', [LiveSessionController::class, 'livekitToken'])->name('live-sessions.livekit-token');
+    Route::post('live-sessions/{live_session}/heartbeat', [LiveSessionController::class, 'heartbeat'])->name('live-sessions.heartbeat');
+    Route::post('live-sessions/{live_session}/chat/send', [LiveSessionController::class, 'sendChat'])->name('live-sessions.chat.send');
+    Route::get('live-sessions/{live_session}/chat/messages', [LiveSessionController::class, 'chatMessages'])->name('live-sessions.chat.messages');
+    Route::post('live-sessions/{live_session}/documents', [LiveSessionController::class, 'uploadDocument'])->name('live-sessions.documents.upload');
+    Route::get('live-sessions/{live_session}/documents/{filename}', [LiveSessionController::class, 'downloadDocument'])->name('live-sessions.documents.download');
+    Route::post('live-sessions/{live_session}/request-access', [LiveSessionController::class, 'requestAccess'])->name('live-sessions.request-access');
+    Route::post('live-sessions/{live_session}/confirm-info', [LiveSessionController::class, 'confirmInfo'])->name('live-sessions.confirm-info');
 
     // ===== ADMIN ENROLLMENTS (Demandes d'inscription, révocations) =====
     Route::prefix('admin/enrollments')->name('admin.enrollments.')->middleware(['has_role:superadmin,admin,finance-manager'])->group(function () {
@@ -168,14 +184,14 @@ Route::middleware(['auth'])->group(function () {
 
         // Live sessions
         Route::post('live-sessions/{live_session}/sync-recordings', [LiveSessionController::class, 'syncRecordings'])->name('live-sessions.sync-recordings');
+        Route::post('live-sessions/{live_session}/invitations', [LiveSessionController::class, 'invite'])->name('live-sessions.invitations');
+        Route::post('live-sessions/{live_session}/share-link', [LiveSessionController::class, 'shareLink'])->name('live-sessions.share-link');
+        Route::post('live-sessions/{live_session}/join-requests/approve', [LiveSessionController::class, 'approveAccess'])->name('live-sessions.join-requests.approve');
+        Route::post('live-sessions/{live_session}/join-requests/reject', [LiveSessionController::class, 'rejectAccess'])->name('live-sessions.join-requests.reject');
         Route::post('live-sessions/{live_session}/start', [LiveSessionController::class, 'start'])->name('live-sessions.start');
-        Route::post('live-sessions/{live_session}/heartbeat', [LiveSessionController::class, 'heartbeat'])->name('live-sessions.heartbeat');
         Route::post('live-sessions/{live_session}/end', [LiveSessionController::class, 'endSession'])->name('live-sessions.end');
         Route::post('live-sessions/{live_session}/cancel', [LiveSessionController::class, 'cancel'])->name('live-sessions.cancel');
         Route::get('live-sessions/{live_session}/report', [LiveSessionController::class, 'report'])->name('live-sessions.report');
-        Route::get('live-sessions/{live_session}/join', [LiveSessionController::class, 'join'])->name('live-sessions.join');
-        Route::post('live-sessions/{live_session}/chat/send', [LiveSessionController::class, 'sendChat'])->name('live-sessions.chat.send');
-        Route::get('live-sessions/{live_session}/livekit-token', [LiveSessionController::class, 'livekitToken'])->name('live-sessions.livekit-token');
         Route::get('live-sessions/{live_session}/livekit-participants', [LiveSessionController::class, 'livekitParticipants'])->name('live-sessions.livekit-participants');
         Route::post('live-sessions/{live_session}/livekit-start', [LiveSessionController::class, 'livekitStart'])->name('live-sessions.livekit-start');
         Route::post('live-sessions/{live_session}/livekit-end', [LiveSessionController::class, 'livekitEnd'])->name('live-sessions.livekit-end');
@@ -278,13 +294,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/enrollments/{enrollment}/cancel', [App\Http\Controllers\Student\StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
 
         // Support / Tickets
-        Route::prefix('support')->name('support.')->group(function () {
+            Route::prefix('support')->name('support.')->group(function () {
             Route::get('/',                [App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('index');
             Route::get('/create',          [App\Http\Controllers\Student\SupportTicketController::class, 'create'])->name('create');
             Route::post('/',               [App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('store');
-            Route::get('/{id}',            [App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('show');
-            Route::post('/{id}/reply',     [App\Http\Controllers\Student\SupportTicketController::class, 'reply'])->name('reply');
-            Route::post('/{id}/close',     [App\Http\Controllers\Student\SupportTicketController::class, 'close'])->name('close');
+            Route::get('/{ticket_number}', [App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('show')->where('ticket_number', '[A-Za-z0-9-]+');
+            Route::post('/{ticket_number}/reply', [App\Http\Controllers\Student\SupportTicketController::class, 'reply'])->name('reply')->where('ticket_number', '[A-Za-z0-9-]+');
+            Route::post('/{ticket_number}/close', [App\Http\Controllers\Student\SupportTicketController::class, 'close'])->name('close')->where('ticket_number', '[A-Za-z0-9-]+');
         });
     });
     // 4. Communauté & Étudiants
@@ -329,7 +345,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forums/threads/{id}/resolve', [App\Http\Controllers\Social\ForumController::class, 'resolveThread'])->name('forums.threads.resolve');
         Route::post('forums/groups', [App\Http\Controllers\Social\ForumController::class, 'storeGroup'])->name('forums.groups.store');
         Route::post('forums/threads/{id}/upvote', [App\Http\Controllers\Social\ForumController::class, 'upvoteThread'])->name('forums.threads.upvote');
-        Route::resource('support', App\Http\Controllers\Social\SupportTicketController::class);
+        // Liens historiques numériques -> redirection 301 vers le ticket_number
+        Route::get('support/{legacy}', function ($legacy) {
+            $ticket = \App\Models\SupportTicket::where('ticket_number', $legacy)->first();
+            abort_if(! $ticket, 404);
+            return response()->redirectToRoute('social.support.show', $ticket->ticket_number, 301);
+        })->whereNumber('legacy');
+        Route::resource('support', App\Http\Controllers\Social\SupportTicketController::class)->scoped(['support' => 'ticket_number']);
+        Route::post('support/{support:ticket_number}/reply',        [App\Http\Controllers\Social\SupportTicketController::class, 'reply'])->name('support.reply');
+        Route::post('support/{support:ticket_number}/assign',       [App\Http\Controllers\Social\SupportTicketController::class, 'assign'])->name('support.assign');
+        Route::post('support/{support:ticket_number}/change-status',[App\Http\Controllers\Social\SupportTicketController::class, 'changeStatus'])->name('support.change-status');
+        Route::post('support/bulk-destroy',           [App\Http\Controllers\Social\SupportTicketController::class, 'bulkDestroy'])->name('support.bulk-destroy');
+        Route::get('support-export',                  [App\Http\Controllers\Social\SupportTicketController::class, 'export'])->name('support.export');
     });
 
     // 5. Marketing & Ventes
@@ -392,6 +419,9 @@ Route::prefix('curriculum')->group(function () {
         Route::delete('logs/{log}', [App\Http\Controllers\System\AuditLogController::class, 'destroy'])->name('logs.destroy');
         Route::delete('logs/clear', [App\Http\Controllers\System\AuditLogController::class, 'clear'])->name('logs.clear');
         Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('settings');
+        Route::get('settings/video', [App\Http\Controllers\System\SettingController::class, 'video'])->name('settings.video');
+        Route::post('settings/video', [App\Http\Controllers\System\SettingController::class, 'updateVideo'])->name('settings.video.update');
+        Route::post('settings/video/test/{provider}', [App\Http\Controllers\System\SettingController::class, 'testVideoProvider'])->name('settings.video.test');
         Route::post('settings/mail/test', [App\Http\Controllers\System\SettingController::class, 'testEmail'])->name('settings.mail.test');
         Route::get('payments', [App\Http\Controllers\System\PaymentGatewayController::class, 'index'])->name('payments');
         Route::get('payments/{gateway}/export', [App\Http\Controllers\System\PaymentGatewayController::class, 'exportTransactions'])->name('payments.export');
@@ -417,22 +447,26 @@ Route::prefix('curriculum')->group(function () {
         Route::get('/compose',                 [App\Http\Controllers\Admin\AdminEmailController::class, 'compose'])->name('compose');
         Route::post('/send',                   [App\Http\Controllers\Admin\AdminEmailController::class, 'send'])->name('send');
         Route::post('/draft',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'saveDraft'])->name('draft');
-        Route::get('/{messageNumber}',          [App\Http\Controllers\Admin\AdminEmailController::class, 'show'])->name('show');
-        Route::get('/{messageNumber}/thread',   [App\Http\Controllers\Admin\AdminEmailController::class, 'getThread'])->name('thread');
-        Route::post('/{messageNumber}/reply',   [App\Http\Controllers\Admin\AdminEmailController::class, 'reply'])->name('reply');
-        Route::post('/{messageNumber}/forward',  [App\Http\Controllers\Admin\AdminEmailController::class, 'forward'])->name('forward');
-        Route::post('/{messageNumber}/read',    [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsRead'])->name('markAsRead');
-        Route::post('/{messageNumber}/unread',  [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsUnread'])->name('markAsUnread');
-        Route::post('/{messageNumber}/flag',    [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsFlagged'])->name('flag');
-        Route::post('/{messageNumber}/unflag',  [App\Http\Controllers\Admin\AdminEmailController::class, 'unflag'])->name('unflag');
-        Route::post('/{messageNumber}/archive', [App\Http\Controllers\Admin\AdminEmailController::class, 'archive'])->name('archive');
-        Route::post('/{messageNumber}/unarchive', [App\Http\Controllers\Admin\AdminEmailController::class, 'unarchive'])->name('unarchive');
-        Route::post('/{messageNumber}/trash',   [App\Http\Controllers\Admin\AdminEmailController::class, 'moveToTrash'])->name('trash');
-        Route::post('/{messageNumber}/permanentlyDelete', [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->name('permanentlyDelete');
-        Route::delete('/{messageNumber}',       [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->name('destroy');
+        Route::get('/{messageNumber}',          [App\Http\Controllers\Admin\AdminEmailController::class, 'show'])->whereNumber('messageNumber')->name('show');
+        Route::get('/{messageNumber}/thread',   [App\Http\Controllers\Admin\AdminEmailController::class, 'getThread'])->whereNumber('messageNumber')->name('thread');
+        Route::post('/{messageNumber}/reply',   [App\Http\Controllers\Admin\AdminEmailController::class, 'reply'])->whereNumber('messageNumber')->name('reply');
+        Route::post('/{messageNumber}/forward',  [App\Http\Controllers\Admin\AdminEmailController::class, 'forward'])->whereNumber('messageNumber')->name('forward');
+        Route::post('/{messageNumber}/read',    [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsRead'])->whereNumber('messageNumber')->name('markAsRead');
+        Route::post('/{messageNumber}/unread',  [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsUnread'])->whereNumber('messageNumber')->name('markAsUnread');
+        Route::post('/{messageNumber}/flag',    [App\Http\Controllers\Admin\AdminEmailController::class, 'markAsFlagged'])->whereNumber('messageNumber')->name('flag');
+        Route::post('/{messageNumber}/unflag',  [App\Http\Controllers\Admin\AdminEmailController::class, 'unflag'])->whereNumber('messageNumber')->name('unflag');
+        Route::post('/{messageNumber}/archive', [App\Http\Controllers\Admin\AdminEmailController::class, 'archive'])->whereNumber('messageNumber')->name('archive');
+        Route::post('/{messageNumber}/unarchive', [App\Http\Controllers\Admin\AdminEmailController::class, 'unarchive'])->whereNumber('messageNumber')->name('unarchive');
+        Route::post('/{messageNumber}/trash',   [App\Http\Controllers\Admin\AdminEmailController::class, 'moveToTrash'])->whereNumber('messageNumber')->name('trash');
+        Route::post('/{messageNumber}/permanentlyDelete', [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->whereNumber('messageNumber')->name('permanentlyDelete');
+        Route::delete('/{messageNumber}',       [App\Http\Controllers\Admin\AdminEmailController::class, 'permanentlyDelete'])->whereNumber('messageNumber')->name('destroy');
         Route::get('/folders',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'getFolders'])->name('folders');
         Route::post('/search',                  [App\Http\Controllers\Admin\AdminEmailController::class, 'search'])->name('search');
         Route::get('/test',                     [App\Http\Controllers\Admin\AdminEmailController::class, 'testConnection'])->name('test');
+        Route::get('/sent',                     [App\Http\Controllers\Admin\AdminEmailController::class, 'sentEmails'])->name('sent');
+        Route::get('/sent/imap/{messageNumber}', [App\Http\Controllers\Admin\AdminEmailController::class, 'showImapSentEmail'])->whereNumber('messageNumber')->name('sent.imap');
+        Route::get('/sent/{id}',                [App\Http\Controllers\Admin\AdminEmailController::class, 'showSentEmail'])->whereNumber('id')->name('sent.show');
+        Route::delete('/sent/{id}',             [App\Http\Controllers\Admin\AdminEmailController::class, 'deleteSentEmail'])->name('sent.delete');
     });
 
     // Admin : Modèles d'emails (templates pour certificates, inscriptions, etc.)

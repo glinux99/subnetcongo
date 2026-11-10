@@ -254,7 +254,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
                 <div class="transition-all duration-300" :class="{'opacity-0 scale-[0.98]': isFiltering, 'opacity-100 scale-100': !isFiltering}">
                 <div v-if="courses.data?.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    <Link v-for="(course, idx) in courses.data" :key="course.id" :href="route('marketplace.show', course.id)"
+                    <Link v-for="(course, idx) in courses.data" :key="course.id" :href="route('marketplace.show', course.slug)"
                         class="reveal-on-scroll group flex flex-col bg-white rounded-[1.25rem] overflow-hidden shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-2xl border border-slate-100 transition-all duration-300 h-full w-full"
                         :style="{ transitionDelay: (idx % 6) * 60 + 'ms' }"
                     >
