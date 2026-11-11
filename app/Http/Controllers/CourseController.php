@@ -777,6 +777,7 @@ class CourseController extends Controller
     {
         AuditLog::create([
             'user_id'     => Auth::id(),
+            'event'       => $event,
             'event_name'  => $event,
             'description' => $desc,
             'ip_address'  => request()->ip(),

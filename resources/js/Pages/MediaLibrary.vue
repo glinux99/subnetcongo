@@ -20,7 +20,6 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 
 // --- COMPOSANTS PRIMEVUE ---
-import Breadcrumb from 'primevue/breadcrumb';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import ProgressBar from 'primevue/progressbar';
@@ -109,16 +108,6 @@ const metadataForm = useForm({
 
 const folderForm = useForm({
     name: ''
-});
-
-// --- BREADCRUMBS ---
-const home = { icon: 'pi pi-home', to: '/' };
-const breadcrumbItems = computed(() => {
-    const items = [{ label: 'Bibliothèque Média' }];
-    if (serverFilters.folder !== '/') {
-        items.push({ label: serverFilters.folder, class: 'font-bold text-blue-600' });
-    }
-    return items;
 });
 
 // --- MÉTHODES DE NAVIGATION & ACTIONS ---
@@ -236,7 +225,6 @@ const getFileIcon = (type) => {
             <!-- --- HEADER SECTION --- -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="space-y-2">
-                    <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-6">
                         <div class="bg-blue-600 p-5 rounded-[1.2rem] shadow-2xl shadow-blue-100 rotate-2 hover:rotate-0 transition-all duration-500">
                             <i class="pi pi-cloud text-white text-3xl"></i>

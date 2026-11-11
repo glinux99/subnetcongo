@@ -7,6 +7,7 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
@@ -126,30 +127,20 @@ const getProviderStyle = (provider) => {
     <AppLayout>
         <Head title="Passerelles de Paiement - SubNetCongo" />
 
-        <div class="bg-slate-50/50 min-h-screen pb-20">
+        <div class="page-bg min-h-screen font-sans">
 
-            <!-- --- STICKY HEADER --- -->
-            <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-slate-900 rounded-xl shadow-inner flex items-center justify-center">
-                        <i class="pi pi-credit-card text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Services Financiers</h1>
-                            <Badge value="Paiements" severity="contrast" class="!text-[10px] !px-2 uppercase tracking-wider" />
-                        </div>
-                        <p class="text-sm text-slate-500 font-medium mt-0.5">Configuration des passerelles et flux transactionnels.</p>
-                    </div>
-                </div>
-                
-                <div class="flex gap-3">
-                    <Button label="Rafraîchir" icon="pi pi-refresh" class="p-button-text p-button-secondary font-bold" @click="fetchGateways" :loading="loading" />
-                    <Button label="Nouvelle Passerelle" icon="pi pi-plus" class="bg-slate-900 hover:bg-slate-800 text-white border-none font-bold shadow-md !rounded-xl" />
-                </div>
-            </header>
+            <PageHeader
+                title="Passerelles de paiement"
+                subtitle="Configuration des passerelles et suivi des flux transactionnels"
+                icon="pi-credit-card"
+                accent="emerald"
+                badge="Système"
+                :actions="[
+                    { label: 'Rafraîchir', icon: 'pi-refresh', variant: 'secondary', onClick: fetchGateways },
+                ]"
+            />
 
-            <div class="max-w-screen-2xl mx-auto px-6">
+            <div class="page-container page-section">
                 <!-- --- KPI SECTION (Style Stripe) --- -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">

@@ -44,7 +44,6 @@ import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Editor from 'primevue/editor';
-import Breadcrumb from 'primevue/breadcrumb';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import ProgressBar from 'primevue/progressbar';
@@ -527,14 +526,6 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || 'Co
     <!-- ============================================================================== -->
     <div class="flex flex-col gap-2 mb-12">
         
-        <!-- Breadcrumb -->
-        <div class="flex items-center text-sm px-1 mb-2">
-            <Breadcrumb 
-                :model="[{ label: 'Cours', icon: 'pi pi-book' }, { label: 'Curriculum (Modules & Leçons)' }]" 
-                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-            />
-        </div>
-
         <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
         <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
             

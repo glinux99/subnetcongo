@@ -457,9 +457,9 @@ const intervalOptions = [
                                     </template>
                                 </Column>
 
-                                <Column header="Actions" alignFrozen="right" frozen style="min-width: 9rem">
+                                <Column header="Actions" alignFrozen="right" frozen style="min-width: 10rem">
                                     <template #body="{ data }">
-                                        <div class="flex items-center gap-1">
+                                        <div class="flex items-center gap-1 whitespace-nowrap">
                                             <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="`Voir la fiche de ${data.user?.name ?? 'l’abonné'}`" title="Voir le détail" @click="openDetail(data)" />
                                             <Button v-if="data.status === 'active'" icon="pi pi-ban" text rounded severity="danger" aria-label="Résilier l’abonnement" title="Résilier" @click="askCancel(data)" />
                                             <Button v-if="data.status === 'canceled'" icon="pi pi-refresh" text rounded severity="success" aria-label="Réactiver l’abonnement" title="Réactiver" @click="askResume(data)" />
@@ -503,9 +503,9 @@ const intervalOptions = [
                                 <InputSwitch v-model="data.is_active" :aria-label="`${data.is_active ? 'Désactiver' : 'Activer'} le plan ${data.name}`" @change="togglePlanActive(data)" />
                             </template>
                         </Column>
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 7rem">
+                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 8rem">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-1">
+                                <div class="flex items-center gap-1 whitespace-nowrap">
                                     <Button icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Modifier le plan ${data.name}`" title="Modifier" @click="openEditPlan(data)" />
                                     <Button icon="pi pi-trash" text rounded severity="danger" :aria-label="`Supprimer le plan ${data.name}`" title="Supprimer" @click="askDeletePlan(data)" />
                                 </div>
@@ -626,7 +626,7 @@ const intervalOptions = [
             >
                 <div v-if="detailSub" class="flex flex-col gap-5">
                     <SncSection icon="pi-user" title="Abonné" icon-class="from-blue-500 to-indigo-600">
-                        <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                        <div class="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200/70 rounded-xl">
                             <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-black shrink-0" aria-hidden="true">
                                 {{ initials(detailSub.user?.name) }}
                             </div>

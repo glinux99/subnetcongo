@@ -7,7 +7,6 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Paginator from 'primevue/paginator';
-import Breadcrumb from 'primevue/breadcrumb';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -146,13 +145,6 @@ const moveToTrash = (messageNumber) => {
             
             <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
                 
-                <!-- Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'Administration', icon: 'pi pi-cog' }, { label: 'Boîte Email' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <!-- 1. BANNIÈRE SOMBRE -->
                 <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">

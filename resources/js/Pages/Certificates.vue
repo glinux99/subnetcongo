@@ -32,7 +32,6 @@ import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
 import ConfirmDialog from 'primevue/confirmdialog';
-import Breadcrumb from 'primevue/breadcrumb';
 import Chart from 'primevue/chart';
 import Message from 'primevue/message';
 import IconField from 'primevue/iconfield';
@@ -565,13 +564,6 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
             <div class="flex flex-col mb-12 px-4 md:px-6 pt-4">
             
-            <!-- Breadcrumb -->
-            <div class="flex items-center text-sm px-1 mb-2">
-                <Breadcrumb 
-                    :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Trust Center & Diplômes' }]" 
-                    class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                />
-            </div>
 
             <!-- 1. BANNIÈRE SOMBRE -->
             <!-- Padding bottom (pb-24) large pour laisser la place aux cartes de remonter -->

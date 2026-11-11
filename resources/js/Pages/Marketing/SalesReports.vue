@@ -13,6 +13,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
@@ -344,10 +346,10 @@ onMounted(() => {
                                     <Tag :value="sales.length + ' Entrées'" severity="info" class="px-3" />
                                 </div>
                                 <div class="flex gap-3 w-full md:w-auto">
-                                    <span class="p-input-icon-left flex-1 md:w-80">
-                                        <i class="pi pi-search" />
-                                        <InputText v-model="filters['global'].value" placeholder="Recherche transaction..." class="w-full rounded-2xl border-slate-200" />
-                                    </span>
+                                    <IconField iconPosition="left" class="flex-1 md:w-80">
+                                        <InputIcon class="pi pi-search text-slate-400" />
+                                        <InputText v-model="filters['global'].value" placeholder="Recherche transaction..." class="w-full" />
+                                    </IconField>
                                     <Button icon="pi pi-filter" class="p-button-outlined p-button-secondary rounded-2xl border-2" v-tooltip="'Filtres avancés'" />
                                 </div>
                             </div>

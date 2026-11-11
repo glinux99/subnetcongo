@@ -13,7 +13,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
@@ -399,10 +400,10 @@ const kpis = computed(() => [
                     <Card class="border-none shadow-sm rounded-xl">
                         <template #content>
                             <div class="flex flex-col md:flex-row gap-3 items-center">
-                                <span class="p-input-icon-left flex-1 w-full">
-                                    <i class="pi pi-search" />
-                                    <InputText v-model="filterState.search" placeholder="Rechercher par sujet, n° ticket, nom ou email..." class="w-full !rounded-xl !pl-10" />
-                                </span>
+                                <IconField iconPosition="left" class="flex-1 w-full">
+                                    <InputIcon class="pi pi-search text-slate-400" />
+                                    <InputText v-model="filterState.search" placeholder="Rechercher par sujet, n° ticket, nom ou email..." class="w-full" />
+                                </IconField>
                                 <Select v-model="filterState.status" :options="statuses" optionLabel="label" optionValue="value" placeholder="Statut" class="w-full md:w-44" showClear />
                                 <Select v-model="filterState.priority" :options="priorities" optionLabel="label" optionValue="value" placeholder="Priorité" class="w-full md:w-40" showClear />
                                 <Select v-model="filterState.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" placeholder="Catégorie" class="w-full md:w-52" showClear />

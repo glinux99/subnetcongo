@@ -4,8 +4,9 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import Select from 'primevue/select';
-import Breadcrumb from 'primevue/breadcrumb';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -55,13 +56,6 @@ const formatDate = (iso) => {
             
             <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
                 
-                <!-- Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'Espace Étudiant', icon: 'pi pi-home' }, { label: 'Support & Assistance' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <!-- 1. BANNIÈRE SOMBRE -->
                 <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
@@ -158,10 +152,10 @@ const formatDate = (iso) => {
                     
                     <!-- Zone des filtres -->
                     <div class="flex flex-wrap items-center gap-3 mb-6">
-                        <span class="p-input-icon-left flex-1 min-w-[250px]">
-                            <i class="pi pi-search text-slate-400"></i>
-                            <InputText v-model="search" @keyup.enter="apply" placeholder="Rechercher (sujet, n° ticket...)" class="w-full !rounded-xl border-slate-200" />
-                        </span>
+                        <IconField iconPosition="left" class="flex-1 min-w-[250px]">
+                            <InputIcon class="pi pi-search text-slate-400" />
+                            <InputText v-model="search" @keyup.enter="apply" placeholder="Rechercher (sujet, n° ticket...)" class="w-full" />
+                        </IconField>
                         
                         <Select v-model="status" :options="[
                             { label:'Tous statuts', value:'' },

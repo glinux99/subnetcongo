@@ -16,6 +16,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import InputNumber from 'primevue/inputnumber';
 import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
@@ -263,16 +265,16 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
 
             <PageCard>
                 <!-- Barre de filtres -->
-                <div class="flex flex-col lg:flex-row lg:items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-                    <span class="p-input-icon-left flex-1 min-w-[220px]">
-                        <i class="pi pi-search text-slate-400" aria-hidden="true"></i>
+                <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <IconField iconPosition="left" class="w-full md:flex-1 md:min-w-[220px]">
+                        <InputIcon class="pi pi-search text-slate-400" aria-hidden="true" />
                         <InputText
                             v-model="serverFilters.search"
                             placeholder="Rechercher un code ou une description…"
-                            class="w-full"
+                            class="w-full h-11"
                             aria-label="Rechercher un coupon"
                         />
-                    </span>
+                    </IconField>
 
                     <SelectButton
                         v-model="serverFilters.status"
@@ -280,6 +282,8 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         optionLabel="label"
                         optionValue="value"
                         aria-label="Filtrer par statut"
+                        class="shrink-0 overflow-x-auto"
+                        :pt="{ pcButton: { root: { class: 'h-11' } } }"
                     />
 
                     <Select
@@ -288,7 +292,8 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         optionLabel="label"
                         optionValue="value"
                         placeholder="Tous les types"
-                        class="min-w-[180px]"
+                        class="w-full md:w-44 h-11 shrink-0"
+                        inputClass="!flex !items-center"
                         showClear
                         aria-label="Filtrer par type"
                     />
@@ -298,6 +303,7 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         icon="pi pi-refresh"
                         severity="secondary"
                         outlined
+                        class="h-11 w-full md:w-auto shrink-0"
                         @click="resetFilters"
                     />
                 </div>
@@ -404,9 +410,9 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" frozen style="min-width: 9rem">
+                    <Column header="Actions" alignFrozen="right" frozen style="min-width: 10rem">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-1">
+                            <div class="flex items-center gap-1 whitespace-nowrap">
                                 <Button icon="pi pi-pencil" text rounded severity="secondary" aria-label="Éditer" v-tooltip.top="'Éditer'" @click="openEdit(data)" />
                                 <Button icon="pi pi-copy" text rounded severity="secondary" aria-label="Dupliquer" v-tooltip.top="'Dupliquer'" @click="duplicateCoupon(data)" />
                                 <Button icon="pi pi-trash" text rounded severity="danger" aria-label="Supprimer" v-tooltip.top="'Supprimer'" @click="confirmDelete(data)" />

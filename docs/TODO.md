@@ -20,7 +20,20 @@
 7. **Déploiement build = miroir sur les DEUX dossiers** : `web/build/` ET `web/elearning/public/build/` (laisser vérifier : md5sum identical après extract).
 8. En cas de doute sur une action serveur non-liée au déploiement : demander à l'utilisateur AVANT d'agir.
 
-Dernière mise à jour : **11 novembre 2026, 06h33** (prod réparée : 9 assets manquants restaurés dans web/build ET web/elearning/public/build — AppLayout-BlsAJJFs.css, auto-CpL4W96M.js, purify.es*, html2canvas*, primeicons eot/svg/ttf/woff/woff2 — ; manifest check 0 missing ; site 200 partout ; SSH stable ; backup 20261111-063241-fix-9-missing).
+Dernière mise à jour : **11 novembre 2026** (session UI : sidebar rouge #E1251B unifiée, topbar sans texte doublon, fil d'Ariane dupliqué supprimé sur 19 pages, champs PrimeVue stylés via design tokens formField du preset app.js — build OK. Règle absolue inchangée : local uniquement.)
+
+### UI admin (11/11/2026, session opencode)
+- **Sidebar active = rouge de marque #E1251B partout** : unification des 3 sources qui se battaient (violet codé en dur `AppMenuItem.vue`/`AppMenu.vue` + bleu `--primary-color` dans `_menu.scss`). Constant après F5. Badges sidebar passés en rouge.
+- **Topbar** : texte « SubNetCongo e-Learning » (doublon du logo) supprimé, logo seul.
+- **Fils d'Ariane dupliqués supprimés** sur 19 pages (Modules, Courses, Exams, Certificates, Grading, LearningPaths, LiveSessions, Questions, Analytics, MediaLibrary, ContactMessages/Index, Emails/Index, Student SupportTickets/Index, Users/Cohorts+Instructors+Students, Web/Seo+Theme+Widgets) + imports/variables orphelines nettoyés. Le fil du layout Sakai (`AppBreadcrumb`) est la source unique.
+- **Champs PrimeVue stylés via design tokens** : preset `definePreset(Aura)` dans `app.js` étendu (`semantic.formField` : radius 0.65rem, padding 0.65/0.9rem ; `colorScheme.light/dark.formField` : bordures, focus, invalide, placeholder). S'applique app-wide (InputText, Textarea, Select, DatePicker, InputNumber, Password…) y compris dialogs et site public. `app.css` allégé : seules la typo 0.9rem et l'éditeur riche restent en CSS.
+- Build Vite OK, pages `/modules` et `/` vérifiées 200 en local.
+
+### Langues & Médiathèque réelles (11/11/2026, session opencode)
+- **`/system/languages` refaite à 100 % réel** (plus aucune donnée bidon) : `System\LanguageController` réécrit — langues depuis la table `languages` (auto-sync des fichiers `resources/js/locales/*.json`), complétion réelle = nb de clés traduites vs référence fr.json (fr 1762, en 1880, de 323, sw 1635, ln 1682 clés). Endpoints ajoutés : toggle, set-default, keys (pagination+recherche serveur), updateKey (écrit le JSON), import/export JSON. Vue refaite : KPI réels, DataTable (badge Défaut, switch visible, export, suppression), éditeur de clés avec colonne FR référence + clés manquantes en rouge, dialogue ajout langue (crée le JSON vide) et import. ⚠️ Les édits JSON nécessitent `npm run build` pour le front (indiqué dans l'UI).
+- **`/web/assets` refaite = vraie médiathèque disques** : `Web\AssetController@index` scanne les disques **media** (public/media, 93 fichiers) et **public** (storage/app/public, 27 fichiers) — 119 fichiers, 19,2 Mo. Filtres serveur (recherche, disque, type image/vidéo/audio/document/archive), pagination 24, KPI réels par disque, grille avec aperçu images + lien « Ouvrir ». Layout Sakai (admin) au lieu du layout public.
+- **Pattern `p-input-icon-left` cassé en PrimeVue v4 corrigé partout** : LiveSessions, Marketing/SalesReports, Student/SupportTickets/Index (+ Support.vue et ContactMessages/Index avant) → `IconField`+`InputIcon`.
+- Vérifié en CLI : props Inertia réelles pour keys() et AssetController@index (pagination, recherche, URLs `http://127.0.0.1:8000/media/...`). Build OK.
 
 ---
 

@@ -421,9 +421,9 @@ const kpis = computed(() => [
                             <span class="text-sm text-slate-500">{{ formatDate(data.created_at) }}</span>
                         </template>
                     </Column>
-                    <Column header="Actions" style="width: 15rem">
+                    <Column header="Actions" style="width: 11.5rem">
                         <template #body="{ data }">
-                            <div class="flex gap-1">
+                            <div class="flex items-center gap-1 whitespace-nowrap">
                                 <Button icon="pi pi-eye" text rounded severity="secondary" v-tooltip.top="'Voir'" aria-label="Voir la campagne" @click="viewCampaign(data)" />
                                 <Button icon="pi pi-copy" text rounded severity="secondary" v-tooltip.top="'Dupliquer'" aria-label="Dupliquer la campagne" @click="duplicateCampaign(data)" />
                                 <Button icon="pi pi-send" text rounded severity="info" v-tooltip.top="'Envoyer un test'" aria-label="Envoyer un email de test" @click="openTest(data)" />
@@ -559,19 +559,19 @@ const kpis = computed(() => [
             <div v-if="campaign" class="flex flex-col gap-5">
                 <SncSection icon="pi-chart-bar" title="Statistiques d'envoi" icon-class="from-blue-500 to-indigo-600">
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3">
                             <p class="text-[10px] font-black text-slate-400 uppercase">Statut</p>
                             <Tag :value="statusLabel(campaign.status)" :severity="statusSeverity(campaign.status)" class="mt-1" />
                         </div>
-                        <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3">
                             <p class="text-[10px] font-black text-slate-400 uppercase">Audience</p>
                             <p class="font-bold text-slate-800 mt-1">{{ audienceLabel(campaign.target_audience, campaign) }}</p>
                         </div>
-                        <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3">
                             <p class="text-[10px] font-black text-slate-400 uppercase">Envoyés</p>
                             <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.sent_count ?? 0 }} / {{ campaign.total_recipients ?? 0 }}</p>
                         </div>
-                        <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3">
                             <p class="text-[10px] font-black text-slate-400 uppercase">Échecs</p>
                             <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.bounces_count ?? 0 }}</p>
                         </div>

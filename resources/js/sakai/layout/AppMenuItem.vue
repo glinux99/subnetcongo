@@ -171,7 +171,7 @@ watch(currentPath, () => {
               preserve-scroll>
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ t(item.label) }}</span>
-            <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-violet-600 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
+            <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-[#E1251B] text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
                 {{ item.badge > 99 ? '99+' : item.badge }}
             </span>
         </Link>
@@ -184,7 +184,7 @@ watch(currentPath, () => {
            tabindex="0">
             <i :class="item.icon" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ t(item.label) }}</span>
-            <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-violet-600 text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
+            <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-[#E1251B] text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
                 {{ item.badge > 99 ? '99+' : item.badge }}
             </span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items" :class="{ 'rotate-180': isActiveMenu }"></i>
@@ -205,13 +205,13 @@ watch(currentPath, () => {
 </template>
 
 <style lang="scss" scoped>
-/* Item parent qui contient la page active */
+/* Item parent qui contient la page active — rouge de marque SubNetCongo */
 .active-route {
-    color: #8B5CF6 !important;
+    color: #E1251B !important;
     font-weight: 700;
 }
 .has-active-child > a {
-    color: #8B5CF6 !important;
+    color: #E1251B !important;
     font-weight: 700;
 }
 .layout-submenu-toggler {

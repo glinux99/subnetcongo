@@ -40,7 +40,6 @@ import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from 'primevue/confirmdialog';
 import SelectButton from 'primevue/selectbutton';
 import Editor from 'primevue/editor';
-import Breadcrumb from 'primevue/breadcrumb';
 import RadioButton from 'primevue/radiobutton';
 import Checkbox from 'primevue/checkbox';
 import Chart from 'primevue/chart';
@@ -319,13 +318,6 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
     <!-- ============================================================================== -->
     <div class="flex flex-col gap-2 mb-12">
         
-        <!-- Breadcrumb -->
-        <div class="flex items-center text-sm px-1 mb-2">
-            <Breadcrumb 
-                :model="[{ label: 'Ingénierie Pédagogique', icon: 'pi pi-home' }, { label: 'Banque d\'Items' }]" 
-                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-            />
-        </div>
 
         <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
         <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">

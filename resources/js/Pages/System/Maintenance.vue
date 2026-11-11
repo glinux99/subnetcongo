@@ -1,6 +1,7 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Tag from 'primevue/tag';
@@ -39,35 +40,20 @@ const severityMap = {
 <template>
     <AppLayout>
         <Head title="Maintenance Serveur" />
-        <div class="py-8 px-4 sm:px-8 bg-slate-50 min-h-screen">
-            <div class="max-w-[1600px] mx-auto space-y-8">
-
-                <!-- En-tête -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Maintenance Serveur</h1>
-                            <Tag :value="is_maintenance_mode ? 'Maintenance Active' : 'Système En Ligne'" 
-                                 :severity="is_maintenance_mode ? 'danger' : 'success'" 
-                                 class="font-bold uppercase tracking-wider text-[10px]" />
-                        </div>
-                        <div class="flex items-center gap-4 text-sm text-slate-500 font-medium">
-                            <span class="flex items-center gap-1.5">
-                                <i class="pi pi-code text-red-500"></i> Laravel {{ laravel_version }}
-                            </span>
-                            <span class="text-slate-300">|</span>
-                            <span class="flex items-center gap-1.5">
-                                <i class="pi pi-server text-blue-500"></i> PHP {{ php_version }}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-3">
-                        <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-bold text-sm transition-colors shadow-sm flex items-center gap-2">
-                            <i class="pi pi-refresh"></i> Rafraîchir
-                        </button>
-                    </div>
-                </div>
+        <div class="page-bg min-h-screen font-sans">
+            <PageHeader
+                title="Maintenance serveur"
+                :subtitle="is_maintenance_mode
+                    ? 'Mode maintenance ACTIF — le site est actuellement indisponible aux visiteurs'
+                    : 'Surveillance serveur, santé système et outils de maintenance'"
+                icon="pi-server"
+                :accent="is_maintenance_mode ? 'red' : 'slate'"
+                badge="Système"
+                :actions="[
+                    { label: 'Rafraîchir', icon: 'pi-refresh', variant: 'secondary', onClick: () => router.reload() },
+                ]"
+            />
+            <div class="page-container page-section space-y-8">
 
                 <!-- Contenu Principal -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-2">

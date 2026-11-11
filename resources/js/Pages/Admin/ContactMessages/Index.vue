@@ -4,8 +4,9 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import Select from 'primevue/select';
-import Breadcrumb from 'primevue/breadcrumb';
 import { ref } from 'vue';
 
 const props = defineProps({
@@ -49,13 +50,6 @@ const formatDate = (iso) => {
             
             <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
                 
-                <!-- Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'Administration', icon: 'pi pi-home' }, { label: 'Messages du site' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <!-- 1. BANNIÈRE SOMBRE -->
                 <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
@@ -145,21 +139,18 @@ const formatDate = (iso) => {
                     
                     <!-- Zone des filtres -->
                     <div class="flex flex-wrap items-center gap-3 mb-6">
-                        <span class="p-input-icon-left flex-1 min-w-[250px]">
-                            <i class="pi pi-search text-slate-400"></i>
-                            <InputText v-model="search" @keyup.enter="apply" placeholder="Rechercher (nom, email, sujet...)" class="w-full !rounded-xl border-slate-200" />
-                        </span>
+                        <IconField iconPosition="left" class="flex-1 min-w-[250px]">
+                            <InputIcon class="pi pi-search text-slate-400" />
+                            <InputText v-model="search" @keyup.enter="apply" placeholder="Rechercher (nom, email, sujet...)" class="w-full" />
+                        </IconField>
                         
                         <Select v-model="status" :options="[
-                            { label:'Tous statuts', value:'' },
                             { label:'Nouveaux', value:'new' },
                             { label:'Lus', value:'read' },
                             { label:'Répondus', value:'replied' },
                             { label:'Archivés', value:'archived' },
                             { label:'Spam', value:'spam' },
-                        ]" optionLabel="label" optionValue="value" @change="apply" class="!rounded-xl border-slate-200 min-w-[180px]" />
-                        
-                        <Button label="Filtrer" icon="pi pi-filter" @click="apply" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
+                        ]" optionLabel="label" optionValue="value" placeholder="Tous les statuts" showClear @change="apply" class="min-w-[180px]" />
                     </div>
 
                     <!-- Tableau natif re-stylisé façon SaaS -->

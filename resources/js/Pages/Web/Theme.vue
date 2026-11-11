@@ -8,7 +8,6 @@ import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
-import Breadcrumb from 'primevue/breadcrumb';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 
@@ -81,13 +80,6 @@ const submit = () => {
             <!-- ============================================================================== -->
             <div class="flex flex-col gap-2 mb-12 px-4 md:px-6 pt-4">
                 
-                <!-- Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'Administration', icon: 'pi pi-cog' }, { label: 'Identité & Thème' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
                 <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">

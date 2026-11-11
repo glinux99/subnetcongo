@@ -5,12 +5,13 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
-import Breadcrumb from 'primevue/breadcrumb';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -176,13 +177,6 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
             
             <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
                 
-                <!-- Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Sessions en direct' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <!-- 1. BANNIÈRE SOMBRE -->
                 <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
@@ -278,10 +272,10 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     
                     <!-- Zone des filtres -->
                     <div class="flex flex-wrap items-center gap-3 mb-6">
-                        <span class="p-input-icon-left flex-1 min-w-[200px]">
-                            <i class="pi pi-search text-slate-400"></i>
-                            <InputText v-model="search" placeholder="Rechercher une session..." class="w-full !rounded-xl border-slate-200" @keyup.enter="search_" />
-                        </span>
+                        <IconField iconPosition="left" class="flex-1 min-w-[200px]">
+                            <InputIcon class="pi pi-search text-slate-400" />
+                            <InputText v-model="search" placeholder="Rechercher une session..." class="w-full" @keyup.enter="search_" />
+                        </IconField>
                         <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" placeholder="Fournisseur" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
                         <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" placeholder="Statut" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
                         <Button label="Filtrer" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />

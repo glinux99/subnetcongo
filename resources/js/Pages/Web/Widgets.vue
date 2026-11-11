@@ -5,7 +5,6 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 
 // Composants PrimeVue
 import Button from 'primevue/button';
-import Breadcrumb from 'primevue/breadcrumb';
 import Tag from 'primevue/tag';
 import InputSwitch from 'primevue/inputswitch';
 import Dialog from 'primevue/dialog';
@@ -87,12 +86,6 @@ const removeWidget = (index) => {
             <!-- ============================================================================== -->
             <div class="flex flex-col gap-2 mb-12 px-4 md:px-6 pt-4">
                 
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'Administration', icon: 'pi pi-cog' }, { label: 'Composants & Widgets' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
                     <i class="pi pi-objects-column absolute -right-10 -top-10 text-[15rem] text-white/5 rotate-12 pointer-events-none"></i>

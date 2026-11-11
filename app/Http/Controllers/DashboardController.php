@@ -1052,6 +1052,7 @@ class DashboardController extends Controller
     {
         AuditLog::create([
             'user_id' => Auth::id(),
+            'event' => $event,
             'event_name' => $event,
             'description' => $description,
             'level' => 'info',

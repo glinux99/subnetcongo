@@ -7,6 +7,8 @@
  */
 
 import AppLayout from "@/sakai/layout/AppLayout.vue";
+import PageHeader from '@/Components/PageHeader.vue';
+import SncDialog from '@/Components/SncDialog.vue';
 import { useForm, Head, router, usePage } from '@inertiajs/vue3';
 import { ref, watch, computed, reactive } from "vue";
 import pkg from "lodash";
@@ -16,7 +18,6 @@ const { debounce, pickBy, cloneDeep } = pkg;
 // PRIMEVUE COMPONENTS
 // ======================================================================================
 import Button from 'primevue/button';
-import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
@@ -200,28 +201,18 @@ watch(() => cloneDeep(data.params), debounce(() => {
     <AppLayout>
         <Head :title="props.title" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+        <div class="page-bg min-h-screen font-sans">
 
-            <!-- ============================================================================== -->
-            <!-- HEADER -->
-            <!-- ============================================================================== -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div class="flex items-center gap-5">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 shadow-xl shadow-blue-200">
-                        <i class="pi pi-shield text-2xl text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black tracking-tight text-slate-900">
-                            {{ props.title }}
-                        </h1>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Gouvernance & Privilèges (RBAC)</p>
-                    </div>
-                </div>
-                <div class="flex gap-3 w-full md:w-auto">
-                    <Button v-show="can(['create role'])" label="Créer un Rôle" icon="pi pi-plus"
-                            class="p-button-primary shadow-lg shadow-blue-500/30 font-black rounded-xl px-6 w-full md:w-auto" @click="openCreate" />
-                </div>
-            </div>
+            <PageHeader
+                title="Gestion des rôles"
+                subtitle="Gouvernance & privilèges (RBAC) — définissez les rôles et leurs permissions"
+                icon="pi-shield"
+                accent="indigo"
+                badge="Système"
+                :actions="[{ label: 'Créer un rôle', icon: 'pi-plus', variant: 'primary', onClick: openCreate }]"
+            />
+
+            <div class="page-container page-section">
 
             <!-- ============================================================================== -->
             <!-- STATS CARDS -->
@@ -310,7 +301,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
                     <Column header="Actions" alignFrozen="right" frozen style="width: 8rem" align="center">
                         <template #body="slotProps">
-                            <div class="flex justify-center gap-2">
+                            <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                                 <Button v-show="can(['update role'])" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-blue-50 hover:text-blue-600" @click="openEdit(slotProps.data)" v-tooltip.top="'Modifier'" />
                                 <Button v-show="can(['delete role'])" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger bg-red-50 hover:bg-red-100" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Supprimer'" />
                             </div>
@@ -318,26 +309,21 @@ watch(() => cloneDeep(data.params), debounce(() => {
                     </Column>
                 </DataTable>
             </div>
+            </div>
         </div>
 
         <!-- ============================================================================== -->
         <!-- DIALOG : CREATE / UPDATE ROLE (Unified Form) -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="roleModalOpen" modal :style="{ width: '800px' }" class="p-fluid rounded-xl custom-dialog bg-slate-50">
-            <!-- Header personnalisé -->
-            <template #header>
-                <div class="flex items-center gap-4 w-full pr-4">
-                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
-                        <i :class="isEditing ? 'pi pi-pencil' : 'pi pi-plus'" class="text-xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h2 class="text-xl font-black text-slate-800">{{ isEditing ? 'Modifier le Rôle' : 'Créer un Nouveau Rôle' }}</h2>
-                        <p class="text-xs text-slate-500 font-medium">Définissez l'identité du rôle et attribuez ses privilèges de sécurité.</p>
-                    </div>
-                </div>
-            </template>
-
-            <div class="p-2 space-y-6 pt-4">
+        <SncDialog
+            v-model:visible="roleModalOpen"
+            :title="isEditing ? 'Modifier le rôle' : 'Créer un nouveau rôle'"
+            subtitle="Définissez l'identité du rôle et attribuez ses privilèges de sécurité."
+            :icon="isEditing ? 'pi-pencil' : 'pi-plus'"
+            icon-class="from-blue-500 to-indigo-600"
+            width="800px"
+        >
+            <div class="space-y-6">
                 <!-- Infos basiques -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
                     <div class="space-y-2">
@@ -394,29 +380,24 @@ watch(() => cloneDeep(data.params), debounce(() => {
             </div>
 
             <template #footer>
-                <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="roleModalOpen = false" />
-                    <Button :label="isEditing ? 'Mettre à jour le rôle' : 'Créer le rôle'" :icon="isEditing ? 'pi pi-save' : 'pi pi-check'"
-                            class="p-button-primary px-8 font-black shadow-lg rounded-xl" @click="submitRole" :loading="roleForm.processing" :disabled="!roleForm.name.trim()" />
-                </div>
+                <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="roleModalOpen = false" />
+                <Button :label="isEditing ? 'Mettre à jour le rôle' : 'Créer le rôle'" :icon="isEditing ? 'pi pi-save' : 'pi pi-check'"
+                        severity="primary" class="px-8 font-black" @click="submitRole" :loading="roleForm.processing" :disabled="!roleForm.name.trim()" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- ============================================================================== -->
         <!-- DIALOG : VIEW PERMISSIONS (Read-Only) -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="permissionDialog" modal :style="{ width: '600px' }" class="p-fluid rounded-xl custom-dialog">
-            <template #header>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center"><i class="pi pi-lock-open text-lg"></i></div>
-                    <div>
-                        <h2 class="text-lg font-black text-slate-800">{{ selectedRole?.name }}</h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Aperçu des privilèges</p>
-                    </div>
-                </div>
-            </template>
-
-            <div class="p-4 bg-slate-50 min-h-[300px]">
+        <SncDialog
+            v-model:visible="permissionDialog"
+            :title="selectedRole?.name ?? 'Permissions'"
+            subtitle="Aperçu des privilèges de ce rôle"
+            icon="pi-lock-open"
+            icon-class="from-slate-500 to-slate-600"
+            width="600px"
+        >
+            <div class="min-h-[300px]">
                 <div v-if="selectedRole?.permissions.length === props.permissions.length" class="bg-emerald-50 border border-emerald-200 p-6 rounded-2xl text-center mb-4 flex flex-col items-center justify-center h-full">
                     <i class="pi pi-verified text-5xl text-emerald-500 mb-3"></i>
                     <h3 class="text-lg font-black text-emerald-800">Accès Administrateur Total</h3>
@@ -437,31 +418,36 @@ watch(() => cloneDeep(data.params), debounce(() => {
             </div>
 
             <template #footer>
-                <div class="border-t border-slate-100 pt-4 flex justify-end">
-                    <Button label="Fermer l'aperçu" class="p-button-secondary font-bold rounded-xl" @click="permissionDialog = false" />
-                </div>
+                <Button label="Fermer l'aperçu" icon="pi pi-times" text severity="secondary" @click="permissionDialog = false" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- ============================================================================== -->
         <!-- DIALOG : CONFIRM DELETE -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="deleteDialog" modal :style="{ width: '450px' }" class="p-fluid rounded-xl custom-dialog" :closable="false">
-            <div class="p-6 flex flex-col items-center text-center pt-8">
-                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-red-100">
-                    <i class="pi pi-exclamation-triangle text-4xl text-red-500"></i>
+        <SncDialog
+            v-model:visible="deleteDialog"
+            title="Suppression définitive"
+            subtitle="Cette action est irréversible"
+            icon="pi-exclamation-triangle"
+            icon-class="from-rose-500 to-red-600"
+            width="450px"
+            :closable="false"
+        >
+            <div class="flex flex-col items-center text-center py-4">
+                <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-4 border border-rose-100">
+                    <i class="pi pi-exclamation-triangle text-3xl text-rose-500"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 mb-2">Suppression définitive</h2>
-                <p class="text-sm text-slate-500 leading-relaxed mb-8">
-                    Êtes-vous sûr de vouloir supprimer le rôle <span class="font-black text-red-600">"{{ selectedRole?.name }}"</span> ? Les utilisateurs associés perdront ces privilèges immédiatement.
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    Êtes-vous sûr de vouloir supprimer le rôle <span class="font-black text-rose-600">"{{ selectedRole?.name }}"</span> ? Les utilisateurs associés perdront ces privilèges immédiatement.
                 </p>
-
-                <div class="flex gap-3 w-full">
-                    <Button label="Annuler" class="p-button-outlined p-button-secondary font-bold flex-1 rounded-xl py-3" @click="deleteDialog = false" />
-                    <Button label="Oui, Supprimer" class="p-button-danger font-black flex-1 rounded-xl py-3 shadow-lg shadow-red-500/30" @click="executeDelete" />
-                </div>
             </div>
-        </Dialog>
+
+            <template #footer>
+                <Button label="Annuler" icon="pi pi-times" outlined severity="secondary" class="flex-1" @click="deleteDialog = false" />
+                <Button label="Oui, supprimer" icon="pi pi-trash" severity="danger" class="flex-1" @click="executeDelete" />
+            </template>
+        </SncDialog>
 
         <!-- OverlayPanel pour le choix des colonnes -->
         <OverlayPanel ref="op" class="p-4 rounded-2xl shadow-xl border border-slate-100">

@@ -40,28 +40,30 @@ const story = computed(() =>
     "SubnetCongo est un centre d'excellence numérique dédié à la formation et au déploiement d'infrastructures en République Démocratique du Congo."
 );
 
-const mission = computed(() => props.about?.mission || 'Démocratiser l\'accès aux compétences technologiques de pointe pour les professionnels et les entreprises congolaises.');
-const vision = computed(() => props.about?.vision || 'Devenir la référence régionale en formation IT certifiante et en ingénierie de réseaux.');
+const mission = computed(() => props.about?.mission || 'Informer, Former et Responsabiliser — l’apprentissage comme levier de développement.');
+const vision = computed(() => props.about?.vision || 'L’AVENIR C’EST NOUS. SubNet Congo accompagne entreprises, ONG et particuliers à devenir agiles, compétents et autonomes.');
 
 const values = computed(() => parseJson(props.about?.values, [
-    { title: 'Excellence', desc: 'Des programmes alignés sur les standards internationaux et animés par des experts certifiés.', icon: 'pi-verified' },
-    { title: 'Accessibilité', desc: 'Des formats flexibles, en ligne et en présentiel, pensés pour les contraintes du terrain.', icon: 'pi-users' },
-    { title: 'Pratique', desc: 'Des laboratoires virtuels et des projets réels pour transformer le savoir en compétence.', icon: 'pi-desktop' },
-    { title: 'Impact', desc: 'Un ancrage fort en RDC : former les talents qui font avancer les infrastructures locales.', icon: 'pi-globe' },
+    { title: 'Satisfaction client', desc: 'Au centre de toutes nos décisions — de la formation à la maintenance après-vente.', icon: 'pi-verified' },
+    { title: 'Agilité', desc: 'Des solutions créatives, déployées rapidement, avec une équipe dédiée à chaque client.', icon: 'pi-bolt' },
+    { title: 'Collaboration', desc: 'Fournisseurs, sous-traitants et clients sont des partenaires avec nous.', icon: 'pi-users' },
+    { title: 'Sécurité au travail', desc: 'Objectif « zéro incident » sur tous nos chantiers.', icon: 'pi-shield' },
+    { title: 'Innovation', desc: 'Amélioration et création continue dans nos formations et nos réalisations.', icon: 'pi-sparkles' },
 ]));
 
 const services = computed(() => parseJson(props.about?.services, [
-    { title: 'Infrastructures Réseaux', desc: 'Architecture, déploiement et maintenance de réseaux LAN/WAN (Cisco, MikroTik).', icon: 'pi-sitemap' },
-    { title: 'Cybersécurité & Audit', desc: 'Tests d\'intrusion, sécurisation des endpoints et protection périmétrique.', icon: 'pi-shield' },
-    { title: 'Solutions Cloud & Data', desc: 'Migration, virtualisation (VMware, Hyper-V) et services AWS/Azure.', icon: 'pi-server' },
-    { title: 'Infogérance (NOC/SOC)', desc: 'Surveillance 24/7 de vos infrastructures et réponse aux incidents.', icon: 'pi-desktop' },
+    { title: 'NTIC — Informatique de gestion', desc: 'Word, Excel, PowerPoint, Publisher, Outlook, développement de logiciels sur mesure.', icon: 'pi-desktop' },
+    { title: 'NTIC — Télécommunications & Réseaux', desc: 'VSAT, Starlink, fibre optique, réseau LAN/WAN, caméras de surveillance, interphonie IP.', icon: 'pi-sitemap' },
+    { title: 'Techniques Appliquées — Électricité & Énergie', desc: 'Installations électriques, parc solaire photovoltaïque, éolienne, hydroélectrique.', icon: 'pi-bolt' },
+    { title: 'Électronique & Robotique', desc: 'Systèmes embarqués, IA, systèmes robotiques et circuits imprimés.', icon: 'pi-cog' },
+    { title: 'R&D — Recherche & Formation', desc: 'Douze formations certifiées, mentors experts, supports produits internes, 6 critères qualité.', icon: 'pi-book' },
 ]));
 
 const processSteps = [
-    { icon: 'pi-search', title: 'Audit & diagnostic', desc: 'Nous analysons votre infrastructure, vos besoins et vos objectifs pour concevoir la bonne approche.' },
-    { icon: 'pi-pencil', title: 'Conception du programme', desc: 'Un parcours sur mesure est construit : cours, labs, certification et calendrier adapté à vos équipes.' },
-    { icon: 'pi-play', title: 'Formation & accompagnement', desc: 'Sessions en ligne ou sur site, suivi de progression et support continu tout au long du parcours.' },
-    { icon: 'pi-chart-line', title: 'Évaluation & certification', desc: 'Quiz, projets réels et examens finaux. Vos équipes repartent avec des compétences mesurables.' },
+    { icon: 'pi-search', title: 'Étude & devis sur mesure', desc: 'Visite de site, analyse des besoins (m3, m2, pièces, UTJ), proposition détaillée.' },
+    { icon: 'pi-sitemap', title: 'Implémentation terrain', desc: "Équipe dédiée : ingénieurs réalisateurs, formateurs et techniciens sur site, partout en RDC." },
+    { icon: 'pi-play', title: 'Formation & suivi', desc: 'Formations internes certifiantes, suivi post-projet et hotlines dédiées.' },
+    { icon: 'pi-shield', title: 'Garantie & support', desc: 'Maintenance et garantie pièces/équipements conformes au contrat de service.' },
 ];
 
 // ============================================================================
@@ -73,9 +75,9 @@ const displayStats = ref([]);
 
 const buildStats = () => [
     { current: 0, target: parseInt(props.stats?.students ?? 0, 10) || 3500, label: 'Apprenants formés', icon: 'pi-users', color: '#003399' },
-    { current: 0, target: parseInt(props.stats?.courses ?? 0, 10) || 120, label: 'Cours & Modules', icon: 'pi-book', color: '#2563EB' },
-    { current: 0, target: parseInt(props.stats?.instructors ?? 0, 10) || 25, label: 'Experts Certifiés', icon: 'pi-verified', color: '#10B981' },
-    { current: 0, target: parseInt(props.stats?.countries ?? 0, 10) || 1, label: 'Pays desservis', icon: 'pi-globe', color: '#E1251B' },
+    { current: 0, target: parseInt(props.stats?.courses ?? 0, 10) || 32, label: 'Cours & Modules', icon: 'pi-book', color: '#2563EB' },
+    { current: 0, target: parseInt(props.stats?.instructors ?? 0, 10) || 7, label: 'Experts SubNet', icon: 'pi-verified', color: '#10B981' },
+    { current: 0, target: parseInt(props.stats?.countries ?? 0, 10) || 1, label: 'Pays (RDC)', icon: 'pi-globe', color: '#E1251B' },
 ];
 
 displayStats.value = buildStats();
@@ -131,10 +133,13 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         <!-- ================================================================== -->
         <header class="relative min-h-[75vh] flex items-center pt-20 overflow-hidden bg-[#020617]">
             <div class="absolute inset-0 z-0 bg-[#020617]">
+                <img src="/media/realizations/real-p23-1.jpg" alt="" aria-hidden="true" class="w-full h-full object-cover opacity-30" loading="eager" decoding="async" />
                 <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50"></div>
                 <div class="absolute -top-[30%] -left-[10%] w-[50%] h-[80%] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none"></div>
                 <div class="absolute -bottom-[20%] -right-[10%] w-[40%] h-[60%] bg-red-600/10 blur-[150px] rounded-full pointer-events-none"></div>
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#F4F6F9]"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/85 to-[#020617]/20"></div>
+
+            <div class="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#E1251B] via-[#F59E0B] to-transparent z-10"></div>
             </div>
 
             <div class="relative z-20 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-12">

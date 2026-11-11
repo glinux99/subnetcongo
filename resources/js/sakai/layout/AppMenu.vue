@@ -121,6 +121,8 @@ const model = computed(() => {
                         { label: 'Menus & Navigation', icon: 'pi pi-fw pi-bars', to: r('web.menus.index') },
                         { label: 'Témoignages', icon: 'pi pi-fw pi-star', to: r('web.testimonials.index') },
                         { label: 'Réalisations', icon: 'pi pi-fw pi-trophy', to: r('realizations') },
+                        { label: 'Nos réalisations', icon: 'pi pi-fw pi-briefcase', to: r('admin.realizations.index') },
+                        { label: 'Blog', icon: 'pi pi-fw pi-book', to: r('admin.blog.index') },
                     ]
                 },
                 {
@@ -280,10 +282,11 @@ const model = computed(() => {
     margin-top: auto;
 }
 
-/* Active route visual cue */
+/* Active route visual cue — rouge de marque, constant après F5 comme après navigation */
 :deep(.active-route) {
-    background: linear-gradient(90deg, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0.04) 100%);
-    border-left: 3px solid #8B5CF6;
+    background: linear-gradient(90deg, rgba(225, 37, 27, 0.10) 0%, rgba(225, 37, 27, 0.03) 100%);
+    border-left: 3px solid #E1251B;
+    color: #E1251B !important;
 }
 
 :deep(.layout-menuitem-root-text) {

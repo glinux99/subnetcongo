@@ -39,6 +39,37 @@ const MyCustomPreset = definePreset (Aura, {
             800: '#1e40af',
             900: '#1e3a8a',
             950: '#172554'
+        },
+        // Champs de formulaire (InputText, Textarea, Select, DatePicker, InputNumber…)
+        // partagent ces tokens : une seule source de vérité pour toute l'app.
+        formField: {
+            paddingX: '0.9rem',
+            paddingY: '0.65rem',
+            borderRadius: '0.65rem'
+        }
+    },
+    colorScheme: {
+        light: {
+            formField: {
+                borderColor: '#E2E8F0',
+                hoverBorderColor: '#CBD5E1',
+                focusBorderColor: '#3B82F6',
+                invalidBorderColor: '#F43F5E',
+                placeholderColor: '#94A3B8'
+            }
+        },
+        dark: {
+            formField: {
+                background: '#0F172A',
+                filledBackground: '#0F172A',
+                filledFocusBackground: '#1E293B',
+                borderColor: 'rgba(51, 65, 85, 0.8)',
+                hoverBorderColor: '#475569',
+                focusBorderColor: '#60A5FA',
+                invalidBorderColor: '#FB7185',
+                color: '#F1F5F9',
+                placeholderColor: '#64748B'
+            }
         }
     }
 });

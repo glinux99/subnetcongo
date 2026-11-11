@@ -8,6 +8,7 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { ref, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
@@ -172,35 +173,22 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
             </template>
         </Dialog>
 
-        <div class="min-h-screen bg-slate-50/50 pb-20">
+        <div class="page-bg min-h-screen font-sans">
 
-            <!-- --- STICKY HEADER (Le cœur de la nouvelle UX) --- -->
-            <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-xl shadow-inner flex items-center justify-center">
-                        <i class="pi pi-cog text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Paramètres Globaux</h1>
-                            <Badge value="v40.0" severity="info" class="!text-xs !px-2" />
-                        </div>
-                        <p class="text-sm text-slate-500 font-medium mt-0.5">Configuration du moteur ERP & LMS</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <Button label="Annuler" icon="pi pi-refresh" class="p-button-text p-button-secondary font-bold" @click="resetToDefaults" :disabled="isSubmitting" />
-                    <Button :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
-                            :icon="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-                            class="p-button-primary !px-6 !py-2.5 !rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
-                            @click="submitSettings"
-                            :disabled="isSubmitting" />
-                </div>
-            </header>
+            <PageHeader
+                title="Paramètres globaux"
+                subtitle="Configuration du moteur LMS — identité, emails, réseau et maintenance"
+                icon="pi-cog"
+                accent="blue"
+                badge="Système"
+                :actions="[
+                    { label: 'Réinitialiser', icon: 'pi-refresh', variant: 'secondary', onClick: resetToDefaults },
+                    { label: 'Enregistrer', icon: 'pi-check', variant: 'primary', onClick: submitSettings },
+                ]"
+            />
 
             <!-- --- SECTION PRINCIPALE --- -->
-            <div class="max-w-7xl mx-auto px-6 mt-8">
+            <div class="page-container page-section">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <TabView v-model:activeIndex="activeTab" class="ultimate-tabs">
 

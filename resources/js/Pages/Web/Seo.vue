@@ -5,7 +5,6 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 
 // Composants PrimeVue
 import Button from 'primevue/button';
-import Breadcrumb from 'primevue/breadcrumb';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import InputSwitch from 'primevue/inputswitch';
@@ -51,13 +50,6 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
             <!-- ============================================================================== -->
             <div class="flex flex-col gap-2 mb-12 px-4 md:px-6 pt-4">
                 
-                <!-- Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-2">
-                    <Breadcrumb 
-                        :model="[{ label: 'Administration', icon: 'pi pi-cog' }, { label: 'Référencement SEO' }]" 
-                        class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-                    />
-                </div>
 
                 <!-- Bannière Sombre -->
                 <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">

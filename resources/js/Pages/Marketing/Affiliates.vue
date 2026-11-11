@@ -13,6 +13,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
@@ -374,18 +376,18 @@ const submitNewAffiliate = () => {
                         class="p-datatable-lg"
                     >
                         <template #header>
-                            <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 px-2 py-2">
-                                <div class="flex items-center gap-3">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-2 py-2">
+                                <div class="flex items-center gap-3 shrink-0">
                                     <h2 class="text-xl font-black text-slate-800">Annuaire des partenaires</h2>
                                     <Badge :value="affiliates?.total ?? 0" severity="warning" />
                                 </div>
-                                <div class="flex flex-col md:flex-row gap-2">
-                                    <span class="p-input-icon-left w-full md:w-64">
-                                        <i class="pi pi-search" />
-                                        <InputText v-model="search" placeholder="Nom, email ou code..." class="w-full" />
-                                    </span>
-                                    <Select v-model="statusFilter" :options="statuses" :optionLabel="(s) => STATUS_LABELS[s] ?? s" placeholder="Tous les statuts" showClear class="w-full md:w-44" />
-                                    <Select v-model="tierFilter" :options="tiers" optionLabel="label" optionValue="value" placeholder="Tous les tiers" showClear class="w-full md:w-44" />
+                                <div class="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                                    <IconField iconPosition="left" class="w-full sm:w-64 shrink-0">
+                                        <InputIcon class="pi pi-search text-slate-400" />
+                                        <InputText v-model="search" placeholder="Nom, email ou code..." class="w-full h-11" aria-label="Rechercher un partenaire" />
+                                    </IconField>
+                                    <Select v-model="statusFilter" :options="statuses" :optionLabel="(s) => STATUS_LABELS[s] ?? s" placeholder="Tous les statuts" showClear class="w-full sm:w-44 h-11 shrink-0" inputClass="!flex !items-center" aria-label="Filtrer par statut" />
+                                    <Select v-model="tierFilter" :options="tiers" optionLabel="label" optionValue="value" placeholder="Tous les tiers" showClear class="w-full sm:w-44 h-11 shrink-0" inputClass="!flex !items-center" aria-label="Filtrer par tier" />
                                 </div>
                             </div>
                         </template>
@@ -456,14 +458,14 @@ const submitNewAffiliate = () => {
                             </template>
                         </Column>
 
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 11rem">
+                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 12rem">
                             <template #body="{ data }">
-                                <div class="flex gap-1">
-                                    <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-secondary" v-tooltip.top="'Voir le détail'" @click="showDetail(data)" aria-label="Voir le détail" />
-                                    <Button v-if="data.status === 'pending'" icon="pi pi-check" class="p-button-rounded p-button-text p-button-success" v-tooltip.top="'Approuver'" @click="approveAffiliate(data)" aria-label="Approuver" />
-                                    <Button v-if="Number(data.unpaid_earnings) > 0" icon="pi pi-wallet" class="p-button-rounded p-button-text p-button-warning" v-tooltip.top="'Générer le paiement'" @click="generatePayout(data)" aria-label="Générer un paiement" />
-                                    <Button v-else icon="pi pi-wallet" class="p-button-rounded p-button-text p-button-warning" disabled v-tooltip.top="'Rien à payer'" aria-label="Rien à payer" />
-                                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" v-tooltip.top="'Supprimer'" @click="destroyAffiliate(data)" aria-label="Supprimer" />
+                                <div class="flex items-center gap-1 whitespace-nowrap">
+                                    <Button icon="pi pi-eye" text rounded severity="secondary" v-tooltip.top="'Voir le détail'" @click="showDetail(data)" aria-label="Voir le détail" />
+                                    <Button v-if="data.status === 'pending'" icon="pi pi-check" text rounded severity="success" v-tooltip.top="'Approuver'" @click="approveAffiliate(data)" aria-label="Approuver" />
+                                    <Button v-if="Number(data.unpaid_earnings) > 0" icon="pi pi-wallet" text rounded severity="warning" v-tooltip.top="'Générer le paiement'" @click="generatePayout(data)" aria-label="Générer un paiement" />
+                                    <Button v-else icon="pi pi-wallet" text rounded severity="warning" disabled v-tooltip.top="'Rien à payer'" aria-label="Rien à payer" />
+                                    <Button icon="pi pi-trash" text rounded severity="danger" v-tooltip.top="'Supprimer'" @click="destroyAffiliate(data)" aria-label="Supprimer" />
                                 </div>
                             </template>
                         </Column>

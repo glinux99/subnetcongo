@@ -4,210 +4,111 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Asset; // Modèle supposé pour la médiathèque
-use App\Models\AuditLog;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Response;
 use Inertia\Inertia;
-use Illuminate\Support\Str;
 
 class AssetController extends Controller
 {
     /**
-     * Affiche la médiathèque avec filtrage et recherche.
-     *
-     * @param Request $request
-     * @return \Inertia\Response
+     * Disques parcourus : « media » (public/media) et « public » (storage/app/public).
+     */
+    private const DISKS = ['media', 'public'];
+
+    /**
+     * Médiathèque : liste les fichiers réellement présents sur les disques
+     * media et public, avec recherche, filtre par type et pagination.
      */
     public function index(Request $request)
     {
-        $query = Asset::query()
-            ->when($request->input('search'), function ($q, $search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('original_name', 'like', "%{$search}%");
-            })
-            ->when($request->input('type'), function ($q, $type) {
-                // Ex: image, document, video
-                $q->where('mime_type', 'like', "{$type}%");
-            })
-            ->when($request->input('date'), function ($q, $date) {
-                $q->whereDate('created_at', $date);
-            });
+        $disk   = in_array($request->input('disk'), self::DISKS) ? $request->input('disk') : 'all';
+        $search = mb_strtolower(trim($request->input('search', '')));
+        $type   = $request->input('type', 'all'); // image|video|audio|document|other
+        $page   = max(1, (int) $request->input('page', 1));
+        $perPage = 24;
 
-        $sortField = $request->input('sort_field', 'created_at');
-        $sortDirection = $request->input('sort_direction', 'desc');
+        $all = [];
+        $stats = ['total_size' => 0, 'count' => 0, 'by_disk' => []];
 
-        $assets = $query->orderBy($sortField, $sortDirection)
-            ->paginate($request->input('per_page', 20))
-            ->withQueryString();
+        foreach (self::DISKS as $diskName) {
+            if ($disk !== 'all' && $disk !== $diskName) {
+                continue;
+            }
+
+            $files = collect(Storage::disk($diskName)->allFiles())
+                ->reject(fn ($path) => str_starts_with($path, '.'))
+                ->map(function ($path) use ($diskName) {
+                    $full = Storage::disk($diskName)->path($path);
+                    $mime = mime_content_type($full) ?: 'application/octet-stream';
+                    $size = filesize($full);
+
+                    return [
+                        'disk'       => $diskName,
+                        'path'       => $path,
+                        'name'       => basename($path),
+                        'folder'     => dirname($path) === '.' ? '' : dirname($path),
+                        'extension'  => strtolower(pathinfo($path, PATHINFO_EXTENSION)),
+                        'mime_type'  => $mime,
+                        'size'       => $size,
+                        'human_size' => $this->formatBytes($size),
+                        'modified'   => date('d/m/Y H:i', filemtime($full)),
+                        'is_image'   => str_starts_with($mime, 'image/'),
+                        'is_video'   => str_starts_with($mime, 'video/'),
+                        'is_audio'   => str_starts_with($mime, 'audio/'),
+                        'url'        => Storage::disk($diskName)->url($path),
+                    ];
+                });
+
+            $stats['by_disk'][$diskName] = [
+                'count' => $files->count(),
+                'size'  => $this->formatBytes($files->sum('size')),
+            ];
+            $stats['total_size'] += $files->sum('size');
+            $stats['count'] += $files->count();
+
+            $all = array_merge($all, $files->all());
+        }
+
+        $all = collect($all)
+            ->when($search !== '', fn ($c) => $c->filter(fn ($f) =>
+                str_contains(mb_strtolower($f['name']), $search)
+                || str_contains(mb_strtolower($f['folder']), $search)))
+            ->when($type !== 'all', fn ($c) => $c->filter(function ($f) use ($type) {
+                return match ($type) {
+                    'image'    => $f['is_image'],
+                    'video'    => $f['is_video'],
+                    'audio'    => $f['is_audio'],
+                    'document' => in_array($f['extension'], ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv']),
+                    'archive'  => in_array($f['extension'], ['zip', 'rar', '7z', 'tar', 'gz']),
+                    default    => true,
+                };
+            }))
+            ->sortByDesc('modified')
+            ->values();
+
+        $total = $all->count();
+        $stats['total_size'] = $this->formatBytes($stats['total_size']);
 
         return Inertia::render('Web/Assets', [
-            'assets' => $assets,
-            'filters' => $request->all(['search', 'type', 'date', 'sort_field', 'sort_direction']),
-            'stats' => [
-                'total_size' => $this->formatBytes(Asset::sum('size')),
-                'count' => Asset::count(),
-                'images_count' => Asset::where('mime_type', 'like', 'image%')->count(),
-            ]
+            'assets' => [
+                'data'      => $all->slice(($page - 1) * $perPage, $perPage)->values(),
+                'total'     => $total,
+                'page'      => $page,
+                'per_page'  => $perPage,
+                'last_page' => (int) max(1, ceil($total / $perPage)),
+            ],
+            'filters' => $request->all(['disk', 'search', 'type']),
+            'stats'   => $stats,
         ]);
     }
 
-    /**
-     * Formulaire d'upload (souvent une modale ou zone dropzone).
-     *
-     * @return \Inertia\Response
-     */
-    public function create()
+    private function formatBytes($bytes, $precision = 1)
     {
-        return Inertia::render('Web/Assets');
-    }
-
-    /**
-     * Upload d'un ou plusieurs fichiers.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|file|max:10240', // 10MB max par fichier
-        ]);
-
-        try {
-            $file = $request->file('file');
-            $originalName = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
-            $mimeType = $file->getMimeType();
-            $size = $file->getSize();
-
-            // Stockage
-            $path = $file->store('uploads/' . date('Y/m'), 'public');
-
-            $asset = Asset::create([
-                'user_id' => Auth::id(),
-                'name' => pathinfo($originalName, PATHINFO_FILENAME),
-                'original_name' => $originalName,
-                'path' => $path,
-                'url' => Storage::url($path),
-                'mime_type' => $mimeType,
-                'extension' => $extension,
-                'size' => $size,
-                'alt_text' => '',
-            ]);
-
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'event' => 'asset_uploaded',
-                'auditable_type' => Asset::class,
-                'auditable_id' => $asset->id,
-            ]);
-
-            if ($request->wantsJson()) {
-                return response()->json($asset);
-            }
-
-            return Redirect::route('web.assets.index')->with('success', 'Fichier téléchargé avec succès.');
-        } catch (\Exception $e) {
-            if ($request->wantsJson()) {
-                return response()->json(['error' => $e->getMessage()], 500);
-            }
-            return Redirect::back()->with('error', 'Erreur upload : ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Met à jour les métadonnées d'un fichier.
-     *
-     * @param Request $request
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, string $id)
-    {
-        $asset = Asset::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'alt_text' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        $asset->update($validated);
-
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'event' => 'asset_updated',
-            'auditable_type' => Asset::class,
-            'auditable_id' => $asset->id,
-            'new_values' => json_encode($validated),
-        ]);
-
-        return Redirect::back()->with('success', 'Détails du fichier mis à jour.');
-    }
-
-    /**
-     * Supprime un fichier.
-     *
-     * @param string $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(string $id)
-    {
-        $asset = Asset::findOrFail($id);
-
-        // Suppression physique
-        if (Storage::disk('public')->exists($asset->path)) {
-            Storage::disk('public')->delete($asset->path);
-        }
-
-        $asset->delete();
-
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'event' => 'asset_deleted',
-            'auditable_type' => Asset::class,
-            'auditable_id' => $id,
-        ]);
-
-        return Redirect::back()->with('success', 'Fichier supprimé définitivement.');
-    }
-
-    /**
-     * Suppression de masse.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate(['ids' => 'required|array']);
-        $assets = Asset::whereIn('id', $request->ids)->get();
-        $count = 0;
-
-        foreach ($assets as $asset) {
-            if (Storage::disk('public')->exists($asset->path)) {
-                Storage::disk('public')->delete($asset->path);
-            }
-            $asset->delete();
-            $count++;
-        }
-
-        return Redirect::back()->with('success', "$count fichiers supprimés.");
-    }
-
-    /**
-     * Helper pour formater la taille des fichiers.
-     */
-    private function formatBytes($bytes, $precision = 2)
-    {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $units = ['o', 'Ko', 'Mo', 'Go', 'To'];
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
         $bytes /= pow(1024, $pow);
+
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }

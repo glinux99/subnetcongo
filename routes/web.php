@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\Admin\RealizationController as AdminRealizationController;
+use App\Http\Controllers\Admin\BlogPostController as AdminBlogPostController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\WebSettingController;
@@ -214,6 +216,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('widgets',[App\Http\Controllers\Web\WidgetController::class, 'index'])->name('widgets');
         Route::get('seo',[App\Http\Controllers\Web\SeoController::class, 'index'])->name('seo');
         Route::get('assets',[App\Http\Controllers\Web\AssetController::class, 'index'])->name('assets');
+    });
+
+    // Réalisations & Blog (gestion admin)
+    Route::prefix('admin')->name('admin.')->middleware(['has_role:superadmin,admin,editor'])->group(function () {
+        Route::post('uploads/image', [App\Http\Controllers\Admin\UploadController::class, 'image'])->name('uploads.image');
+        Route::get('realizations', [AdminRealizationController::class, 'index'])->name('realizations.index');
+        Route::post('realizations', [AdminRealizationController::class, 'store'])->name('realizations.store');
+        Route::put('realizations/{realization}', [AdminRealizationController::class, 'update'])->name('realizations.update');
+        Route::delete('realizations/{realization}', [AdminRealizationController::class, 'destroy'])->name('realizations.destroy');
+        Route::post('realizations/{realization}/toggle', [AdminRealizationController::class, 'toggle'])->name('realizations.toggle');
+
+        Route::get('blog', [AdminBlogPostController::class, 'index'])->name('blog.index');
+        Route::post('blog', [AdminBlogPostController::class, 'store'])->name('blog.store');
+        Route::put('blog/{post}', [AdminBlogPostController::class, 'update'])->name('blog.update');
+        Route::delete('blog/{post}', [AdminBlogPostController::class, 'destroy'])->name('blog.destroy');
+        Route::post('blog/{post}/toggle', [AdminBlogPostController::class, 'toggle'])->name('blog.toggle');
     });
      Route::get('/exams/{exam}/take', [ExamAttemptController::class, 'show'])->name('exams.take');
     Route::post('/exams/{exam}/start', [ExamAttemptController::class, 'start'])->name('attempts.start');
@@ -444,6 +462,12 @@ Route::prefix('curriculum')->group(function () {
         Route::delete('payments/{gateway}', [App\Http\Controllers\System\PaymentGatewayController::class, 'destroy'])->name('payments.destroy');
         Route::post('payments/{gateway}/test', [App\Http\Controllers\System\PaymentGatewayController::class, 'testConnection'])->name('payments.test');
         Route::resource('languages', App\Http\Controllers\System\LanguageController::class);
+        Route::post('languages/import', [App\Http\Controllers\System\LanguageController::class, 'import'])->name('languages.import');
+        Route::post('languages/toggle', [App\Http\Controllers\System\LanguageController::class, 'toggle'])->name('languages.toggle');
+        Route::post('languages/set-default', [App\Http\Controllers\System\LanguageController::class, 'setDefault'])->name('languages.set-default');
+        Route::get('languages/{id}/keys', [App\Http\Controllers\System\LanguageController::class, 'keys'])->name('languages.keys');
+        Route::put('languages/{id}/keys', [App\Http\Controllers\System\LanguageController::class, 'updateKey'])->name('languages.keys.update');
+        Route::get('languages/{id}/export', [App\Http\Controllers\System\LanguageController::class, 'export'])->name('languages.export');
         Route::get('server',[App\Http\Controllers\System\ServerMaintenanceController::class, 'index'])->name('server');
     });
 

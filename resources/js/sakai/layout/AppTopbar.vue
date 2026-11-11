@@ -112,10 +112,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeyDown));
 
             <nav-link href="/dashboard" class="flex items-center gap-2.5">
                 <img src="/assets/media/logos/logo.png" alt="SubNetCongo" class="h-7 sm:h-9 w-auto hover:opacity-80 transition-opacity" />
-                <span class="hidden md:flex flex-col leading-tight select-none">
-                    <span class="text-[15px] font-black tracking-tight text-slate-900">SubNet<span class="text-blue-600">Congo</span></span>
-                    <span class="text-[8px] font-bold uppercase tracking-[0.18em] text-slate-400">e-Learning</span>
-                </span>
             </nav-link>
         </div>
 

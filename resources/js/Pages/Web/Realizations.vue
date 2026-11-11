@@ -103,21 +103,23 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
     <AppLayout>
         <!-- ================================================================== -->
-        <!-- HERO : signature sombre Landing -->
+        <!-- HERO — Landing signature, bg image léger + raccord navy + ligne rouge -->
         <!-- ================================================================== -->
-        <header class="relative min-h-[55vh] flex items-end pt-20 overflow-hidden bg-[#020617]">
+        <header class="relative min-h-[60vh] flex items-end pt-20 overflow-hidden bg-[#020617] border-b-4 border-[#E1251B]">
             <div class="absolute inset-0 z-0 bg-[#020617]">
+                <img src="/media/realizations/real-p27-1.jpg" alt="" aria-hidden="true" class="w-full h-full object-cover opacity-30" loading="eager" decoding="async" />
                 <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50"></div>
                 <div class="absolute -top-[30%] -left-[10%] w-[50%] h-[80%] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none"></div>
                 <div class="absolute -bottom-[20%] -right-[10%] w-[40%] h-[60%] bg-red-600/10 blur-[150px] rounded-full pointer-events-none"></div>
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#F4F6F9]"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/85 to-[#020617]/20"></div>
+                <div class="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#E1251B] via-[#F59E0B] to-transparent z-10"></div>
             </div>
 
             <div class="relative z-20 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-12 pb-16">
-                <div class="max-w-3xl space-y-6">
+                <div class="max-w-3xl space-y-5 sm:space-y-6">
                     <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white reveal-on-scroll">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Portfolio & Projets terrain</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Nos réalisations</span>
                     </div>
 
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight reveal-on-scroll delay-100">
@@ -125,11 +127,21 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     </h1>
 
                     <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5 reveal-on-scroll delay-200">
-                        Déploiements réseaux, infrastructures critiques et programmes de formation menés avec succès en République Démocratique du Congo.
+                        Électricité, sécurité, réseaux et formation — chantiers livrés en République Démocratique du Congo, Goma et Provinces.
                     </p>
+
+                    <div class="flex flex-wrap gap-4 pt-2 reveal-on-scroll delay-300">
+                        <a href="#realisations" class="bg-white hover:bg-slate-100 text-[#0B1221] px-8 py-4 rounded-xl font-bold text-base shadow-lg transition-all flex items-center gap-2">
+                            Voir nos chantiers <i class="pi pi-arrow-down" aria-hidden="true"></i>
+                        </a>
+                        <Link :href="route('contact')" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-base transition-all flex items-center gap-2">
+                            Parler à un ingénieur <i class="pi pi-briefcase" aria-hidden="true"></i>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </header>
+
 
         <!-- ================================================================== -->
         <!-- SECTION : STATS RAPIDES -->
@@ -197,7 +209,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         <!-- ================================================================== -->
         <!-- SECTION : GRILLE DES PROJETS -->
         <!-- ================================================================== -->
-        <section class="py-20 bg-[#F4F6F9] min-h-[60vh]">
+        <section id="realisations" class="py-20 bg-[#F4F6F9] min-h-[60vh] scroll-mt-24">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
 
                 <div v-if="realizations.data?.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">

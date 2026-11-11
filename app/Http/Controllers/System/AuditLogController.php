@@ -32,7 +32,20 @@ class AuditLogController extends Controller
         }
 
         if ($request->filled('event')) {
-            $query->where('event', $request->input('event'));
+            $event = $request->input('event');
+            if ($event === 'system_activity') {
+                // Logs sans code d'événement (valeur par défaut « new event »)
+                $query->where(function ($q) {
+                    $q->where('event', 'new event')
+                      ->orWhereNull('event')
+                      ->orWhere('event_name', 'new event')
+                      ->orWhereNull('event_name');
+                });
+            } else {
+                $query->where(function ($q) use ($event) {
+                    $q->where('event', $event)->orWhere('event_name', $event);
+                });
+            }
         }
 
         if ($request->filled('auditable_type')) {
@@ -64,10 +77,30 @@ class AuditLogController extends Controller
         $logs = $query->paginate($request->input('per_page', 15))
             ->withQueryString();
 
+        // Titre lisible + type complet pour chaque événement
+        $logs->getCollection()->transform(function (AuditLog $log) {
+            $array = $log->toArray();
+            $array['event_title'] = $log->eventTitle();
+            $array['event_type'] = $log->eventType();
+            $array['event_display'] = $log->resolvedEventCode();
+
+            return $array;
+        });
+
+        // Liste des types d'événements pour le filtre (code + titre lisible)
+        $events = AuditLog::query()
+            ->select('event', 'event_name')
+            ->get()
+            ->map(fn (AuditLog $l) => $l->resolvedEventCode())
+            ->unique()
+            ->sort()
+            ->map(fn ($code) => ['value' => $code, 'label' => AuditLog::titleForCode($code)])
+            ->values();
+
         return Inertia::render('System/Logs', [
             'logs' => $logs,
             'filters' => $request->all(),
-            'events' => AuditLog::select('event')->distinct()->pluck('event'),
+            'events' => $events,
         ]);
     }
 

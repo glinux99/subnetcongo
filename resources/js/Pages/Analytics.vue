@@ -37,7 +37,6 @@ import OverlayPanel from 'primevue/overlaypanel';
 import Skeleton from 'primevue/skeleton';
 import Knob from 'primevue/knob';
 import ScrollPanel from 'primevue/scrollpanel';
-import Breadcrumb from 'primevue/breadcrumb';
 import InputSwitch from 'primevue/inputswitch';
 import Slider from 'primevue/slider';
 
@@ -45,10 +44,6 @@ const toast = useToast();
 const loading = ref(true);
 const exportMenu = ref();
 const dateRange = ref([new Date(new Date().setDate(new Date().getDate() - 30)), new Date()]);
-
-// --- BREADCRUMBS ---
-const home = { icon: 'pi pi-home', to: '/' };
-const breadcrumbItems = ref([{ label: 'Reporting' }, { label: 'Analytique Avancée', class: 'font-bold text-blue-600' }]);
 
 // --- OPTIONS DE FILTRES ---
 const categories = ref([
@@ -204,7 +199,6 @@ onMounted(() => {
             <!-- --- HEADER: COMMAND CENTER --- -->
             <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                 <div class="space-y-2">
-                    <Breadcrumb :home="home" :model="breadcrumbItems" class="bg-transparent p-0 border-none text-xs" />
                     <div class="flex items-center gap-4">
                         <div class="bg-blue-600 p-5 rounded-[1rem] shadow-2xl shadow-blue-100 relative group">
                             <i class="pi pi-chart-bar text-white text-3xl"></i>

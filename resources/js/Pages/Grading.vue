@@ -37,7 +37,6 @@ import InputSwitch from 'primevue/inputswitch';
 import Divider from 'primevue/divider';
 import Knob from 'primevue/knob';
 import ScrollPanel from 'primevue/scrollpanel';
-import Breadcrumb from 'primevue/breadcrumb';
 import Editor from 'primevue/editor';
 import Slider from 'primevue/slider';
 import Chart from 'primevue/chart';
@@ -500,7 +499,6 @@ onMounted(() => {
             <!-- ============================================================================== -->
             <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
                 <div class="space-y-3 w-full xl:w-auto">
-                    <Breadcrumb :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Évaluation & Suivi', class: 'font-semibold text-blue-600' }]" class="bg-transparent p-0 m-0 border-none text-xs text-slate-500" />
                     <div>
                         <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                             Console de Correction

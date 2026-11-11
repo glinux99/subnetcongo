@@ -43,7 +43,6 @@ import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Editor from 'primevue/editor';
-import Breadcrumb from 'primevue/breadcrumb';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Chart from 'primevue/chart';
@@ -986,13 +985,6 @@ onBeforeUnmount(() => {
 <!-- ============================================================================== -->
 <div class="flex flex-col gap-3 mb-10">
     
-    <!-- Breadcrumb au-dessus de la bannière (comme sur la maquette) -->
-    <div class="flex items-center text-sm px-1">
-        <Breadcrumb 
-            :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Patrimoine Pédagogique' }]" 
-            class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-        />
-    </div>
 
     <!-- Bannière sombre (Dark Banner) -->
     <!-- NB: Si vous voulez faire chevaucher des cartes KPI en dessous plus tard, changez 'py-8' par 'pt-10 pb-28' -->

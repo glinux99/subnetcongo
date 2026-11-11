@@ -61,7 +61,6 @@ import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import InputSwitch from 'primevue/inputswitch';
 import SelectButton from 'primevue/selectbutton';
-import Breadcrumb from 'primevue/breadcrumb';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Paginator from 'primevue/paginator';
@@ -698,13 +697,6 @@ onMounted(() => {
     <!-- ============================================================================== -->
     <div class="flex flex-col gap-2 mb-12">
         
-        <!-- Breadcrumb -->
-        <div class="flex items-center text-sm px-1 mb-2">
-            <Breadcrumb 
-                :model="[{ label: 'LMS Center', icon: 'pi pi-home' }, { label: 'Career Paths & Cohorts' }]" 
-                class="bg-transparent p-0 m-0 border-none text-xs text-slate-500 font-medium" 
-            />
-        </div>
 
         <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
         <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
