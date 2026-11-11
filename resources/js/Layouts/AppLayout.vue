@@ -106,30 +106,30 @@
     <!-- Accent line top -->
     <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#E11D48] to-transparent"></div>
     <!-- Soft halo -->
-    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[420px] h-[220px] rounded-full bg-blue-600/[0.05] blur-3xl pointer-events-none"></div>
+    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[300px] sm:w-[420px] h-[160px] sm:h-[220px] rounded-full bg-blue-600/[0.05] blur-3xl pointer-events-none"></div>
 
     <div class="max-w-[1400px] mx-auto relative">
 
         <!-- SECTION 1: Newsletter Banner (compact on mobile) -->
         <div class="mb-6 sm:mb-16 p-4 sm:p-8 lg:p-12 rounded-xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
             <div class="max-w-2xl text-center sm:text-left">
-                <h2 class="text-lg sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-4 leading-tight">
+                <h2 class="text-base sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-4 leading-tight tracking-tight whitespace-nowrap sm:whitespace-normal">
                     Restez à la pointe de la <span class="text-[#E11D48] italic">Tech en RDC.</span>
                 </h2>
-                <p class="text-slate-400 text-[11px] sm:text-lg leading-snug">
-                    Rejoignez-nous pour recevoir les alertes Starlink et nos bourses d'études.
+                <p class="text-slate-400 text-[10px] sm:text-lg leading-snug whitespace-nowrap sm:whitespace-normal">
+                    Rejoignez-nous : alertes Starlink &amp; bourses d'études.
                 </p>
             </div>
             <form @submit.prevent="() => {}" class="w-full sm:w-auto flex items-center bg-[#0A0F1C] border border-white/10 rounded-xl p-1 focus-within:border-red-500/50 transition-all">
-                <input type="email" placeholder="votre@email.com" required class="bg-transparent border-none outline-none px-3 py-2 sm:py-3 text-white w-full sm:w-64 placeholder:text-slate-600 text-[11px] sm:text-sm focus:sm:w-72 transition-all duration-300" />
-                <button type="submit" class="bg-[#E11D48] hover:bg-[#BE123C] text-white font-bold px-3 sm:px-8 py-2 sm:py-3 rounded-lg transition-all active:scale-95 whitespace-nowrap text-[11px] sm:text-sm">
+                <input type="email" placeholder="votre@email.com" required class="bg-transparent border-none outline-none px-3 py-2 text-white w-3/4 sm:w-64 placeholder:text-slate-400 text-[11px] sm:text-sm focus:sm:w-72 transition-all duration-300" />
+                <button type="submit" class="bg-[#E11D48] hover:bg-[#BE123C] text-white font-bold px-2 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all active:scale-95 whitespace-nowrap text-[11px] sm:text-sm w-1/4 sm:w-auto text-center min-h-[40px] flex items-center justify-center">
                     S'abonner
                 </button>
             </form>
         </div>
 
         <!-- SECTION 2: Grid Content (compact on mobile) -->
-        <div class="grid grid-cols-2 gap-4 sm:gap-8 lg:gap-12 mb-6 sm:mb-20 lg:grid-cols-12">
+        <div class="grid grid-cols-2 gap-4 gap-y-6 sm:gap-8 lg:gap-10 mb-6 sm:mb-20 lg:grid-cols-12">
 
             <!-- Branding -->
             <div class="col-span-2 lg:col-span-3 space-y-3 sm:space-y-8">
@@ -137,7 +137,7 @@
                     <h1 class="text-lg sm:text-xl font-black text-white italic tracking-tighter">
                         SubNet<span class="text-[#E11D48]">Congo</span>
                     </h1>
-                    <span class="text-[8px] sm:text-[10px] text-slate-500 uppercase tracking-[0.3em]">Technologie du futur</span>
+                    <span class="text-[8px] sm:text-[10px] text-slate-400 uppercase tracking-[0.3em]">Technologie du futur</span>
                 </div>
                 <p class="text-xs sm:text-sm leading-relaxed max-w-xs italic font-medium hidden sm:block">
                     {{ identity.site_tagline || "Propulser l'excellence numérique au cœur de la RDC." }}
@@ -149,7 +149,7 @@
                         { icon: 'linkedin', link: identity.social_linkedin, color: 'hover:bg-blue-700' },
                         { icon: 'youtube', link: identity.social_youtube, color: 'hover:bg-red-600' }
                     ]" :key="soc.icon" :href="soc.link"
-                       class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)]"
+                       class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)]"
                        :class="soc.color">
                         <i :class="`pi pi-${soc.icon} text-[10px] sm:text-sm text-white`"></i>
                     </a>
@@ -158,42 +158,42 @@
 
             <!-- Col 2: Solutions -->
             <div class="col-span-1 lg:col-span-2">
-                <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white mb-3 sm:mb-8 relative inline-block">
+                <h4 class="text-xs sm:text-xs font-bold uppercase tracking-[0.2em] text-white mb-2 sm:mb-8 relative inline-block">
                     Solutions
                     <span class="absolute -bottom-1 sm:-bottom-2 left-0 w-5 sm:w-6 h-[2px] bg-[#E11D48]"></span>
                 </h4>
-                <ul class="space-y-2 sm:space-y-4 text-[11px] sm:text-sm font-medium">
+                <ul class="space-y-2.5 sm:space-y-4 text-xs sm:text-sm font-medium text-slate-300">
                     <li v-for="item in ['Internet Satellite','Starlink Business','Fibre Optique','Audit Réseau']" :key="item" class="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:text-white transition-all duration-200 hover:translate-x-1">{{ item }}</li>
                 </ul>
             </div>
 
             <!-- Col 3: Académie -->
             <div class="col-span-1 lg:col-span-2">
-                <h4 class="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-white mb-3 sm:mb-8 relative inline-block">
+                <h4 class="text-xs sm:text-xs font-bold uppercase tracking-[0.2em] text-white mb-2 sm:mb-8 relative inline-block">
                     Académie
                     <span class="absolute -bottom-1 sm:-bottom-2 left-0 w-5 sm:w-6 h-[2px] bg-[#E11D48]"></span>
                 </h4>
-                <ul class="space-y-2 sm:space-y-4 text-[11px] sm:text-sm font-medium">
+                <ul class="space-y-2.5 sm:space-y-4 text-xs sm:text-sm font-medium text-slate-300">
                     <li v-for="item in ['Catalogue Cours','Espace Étudiant','Certifications','Recrutement']" :key="item" class="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:text-white transition-all duration-200 hover:translate-x-1">{{ item }}</li>
                 </ul>
             </div>
 
             <!-- Col 4: Starlink Authorized Card -->
             <div class="col-span-2 lg:col-span-5 lg:flex lg:justify-end">
-                <div class="w-full max-w-sm p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0A0F1C] to-[#070A14] border border-red-900/20 shadow-[0_0_50px_rgba(225,29,72,0.06)] space-y-3 sm:space-y-6">
+                <div class="w-full max-w-none sm:max-w-sm lg:max-w-md p-4 sm:p-6 lg:p-8 rounded-2xl bg-gradient-to-br from-[#0A0F1C] to-[#070A14] border border-red-900/20 shadow-[0_0_50px_rgba(225,29,72,0.06)] space-y-3 sm:space-y-6">
                     <div class="flex items-center gap-3 sm:gap-4 border-b border-white/5 pb-3 sm:pb-6">
                         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-red-500/50 flex items-center justify-center text-[#E11D48] shrink-0">
                             <i class="pi pi-verified sm:text-lg text-sm"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-500">STARLINK</p>
+                            <p class="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">STARLINK</p>
                             <p class="text-[11px] sm:text-sm font-bold text-white">Authorized Reseller</p>
                         </div>
                     </div>
 
                     <div class="space-y-2 sm:space-y-4">
-                        <h5 class="text-[10px] sm:text-xs font-black uppercase italic tracking-widest text-white">Nord-Kivu / Goma</h5>
-                        <p class="text-[10px] sm:text-xs leading-relaxed text-slate-500 font-medium">
+                        <h5 class="text-[10px] sm:text-xs font-black uppercase italic tracking-widest text-white whitespace-nowrap">Nord-Kivu / Goma</h5>
+                        <p class="text-[10px] sm:text-xs leading-relaxed text-slate-400 font-medium">
                            {{ legal?.address_line || identity.contact_address }}
                         </p>
                     </div>
@@ -202,9 +202,9 @@
         </div>
 
         <!-- SECTION 3: Bottom Bar (stack on mobile) -->
-        <div class="pt-4 sm:pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 px-1 text-center sm:text-left">
-            <p class="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600 flex items-center gap-2"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {{ identity.footer_text || `© ${year} ${identity.site_name}. ALL SYSTEMS OPERATIONAL.` }} DESIGN BY LINUX99</p>
-            <div class="flex gap-4 sm:gap-8 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
+        <div class="pt-4 sm:pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 px-1 text-center sm:text-left">
+            <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-slate-400 flex items-center gap-2"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {{ identity.footer_text || `© ${year} ${identity.site_name}. ALL SYSTEMS OPERATIONAL.` }} DESIGN BY LINUX99</p>
+            <div class="flex gap-4 sm:gap-8 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-slate-400">
                 <Link :href="route('confidentialite')" class="hover:text-white transition-colors">Confidentialité</Link>
                 <Link :href="route('mentions-legales')" class="hover:text-white transition-colors">Mentions Légales</Link>
             </div>

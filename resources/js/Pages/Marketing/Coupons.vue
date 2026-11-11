@@ -9,6 +9,8 @@ import debounce from 'lodash/debounce';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
 import PageCard from '@/Components/PageCard.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import SncSection from '@/Components/SncSection.vue';
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -19,7 +21,6 @@ import Select from 'primevue/select';
 import SelectButton from 'primevue/selectbutton';
 import DatePicker from 'primevue/datepicker';
 import ToggleSwitch from 'primevue/toggleswitch';
-import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import ProgressBar from 'primevue/progressbar';
@@ -426,18 +427,17 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
         </div>
 
         <!-- Dialogue création / édition -->
-        <Dialog
+        <SncDialog
             v-model:visible="couponDialog"
-            modal
-            class="snc-dialog p-fluid"
-            :style="{ width: '640px', maxWidth: '95vw' }"
+            :title="dialogTitle"
+            subtitle="Configurez la remise, ses limites et sa période de validité"
+            :icon="mode === 'edit' ? 'pi-pencil' : 'pi-ticket'"
+            width="720px"
+            @hide="closeDialog"
         >
-            <template #header>
-                <span class="p-dialog-title flex items-center gap-2">
-                    <i :class="['pi', mode === 'edit' ? 'pi-pencil' : 'pi-ticket']"></i>
-                    {{ dialogTitle }}
-                </span>
-            </template>
+            <div class="space-y-5">
+            <!-- Section : informations -->
+            <SncSection icon="pi-id-card" title="Informations" subtitle="Identité et libellé du coupon" icon-class="from-slate-600 to-slate-700">
             <div class="grid grid-cols-12 gap-4">
                 <!-- Code -->
                 <div class="col-span-12">
@@ -476,7 +476,12 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                     />
                     <small v-if="couponForm.errors.description" class="p-error" role="alert">{{ couponForm.errors.description }}</small>
                 </div>
+            </div>
+            </SncSection>
 
+            <!-- Section : remise & limites -->
+            <SncSection icon="pi-percentage" title="Remise & limites" subtitle="Valeur de la réduction et règles d'utilisation" icon-class="from-emerald-500 to-teal-600">
+            <div class="grid grid-cols-12 gap-4">
                 <!-- Type -->
                 <div class="col-span-12 md:col-span-6">
                     <label for="coupon-type" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Type de remise</label>
@@ -529,7 +534,12 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                     <InputNumber id="coupon-min" v-model="couponForm.min_amount" :min="0" allowEmpty :maxFractionDigits="2" placeholder="Aucun" suffix=" USD" class="w-full" :class="{ 'p-invalid': couponForm.errors.min_amount }" />
                     <small v-if="couponForm.errors.min_amount" class="p-error" role="alert">{{ couponForm.errors.min_amount }}</small>
                 </div>
+            </div>
+            </SncSection>
 
+            <!-- Section : validité -->
+            <SncSection icon="pi-calendar" title="Validité & statut" subtitle="Période d'utilisation et activation" icon-class="from-amber-500 to-orange-500">
+            <div class="grid grid-cols-12 gap-4">
                 <!-- Dates -->
                 <div class="col-span-6">
                     <label for="coupon-start" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Date de début</label>
@@ -552,18 +562,18 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                     <ToggleSwitch id="coupon-active" v-model="couponForm.is_active" />
                 </div>
             </div>
+            </SncSection>
+            </div>
 
             <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="closeDialog" />
-                    <Button
-                        :label="mode === 'edit' ? 'Enregistrer' : 'Créer le coupon'"
-                        icon="pi pi-check"
-                        :loading="couponForm.processing"
-                        @click="submitForm"
-                    />
-                </div>
+                <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="closeDialog" />
+                <Button
+                    :label="mode === 'edit' ? 'Enregistrer' : 'Créer le coupon'"
+                    icon="pi pi-check"
+                    :loading="couponForm.processing"
+                    @click="submitForm"
+                />
             </template>
-        </Dialog>
+        </SncDialog>
     </AppLayout>
 </template>

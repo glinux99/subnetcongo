@@ -465,18 +465,18 @@
 .app-dark .layout-main thead.bg-slate-50 th { color: var(--snc-text-muted); }
 
 /* ---------- Dialogues premium (PrimeVue) ---------- */
-.snc-dialog .p-dialog {
+.p-dialog.snc-dialog {
     border-radius: 1.25rem;
     box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 8px 24px -8px rgba(15, 23, 42, 0.2);
     border: 1px solid rgba(226, 232, 240, 0.8);
     overflow: hidden;
 }
-.snc-dialog .p-dialog-header {
+.p-dialog.snc-dialog .p-dialog-header {
     padding: 1.25rem 1.5rem 1rem;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border-bottom: 1px solid #e2e8f0;
 }
-.snc-dialog .p-dialog-header .p-dialog-title {
+.p-dialog.snc-dialog .p-dialog-header .p-dialog-title {
     font-size: 1.05rem;
     font-weight: 800;
     color: #0f172a;
@@ -485,7 +485,7 @@
     align-items: center;
     gap: 0.6rem;
 }
-.snc-dialog .p-dialog-header .p-dialog-header-icon {
+.p-dialog.snc-dialog .p-dialog-header .p-dialog-header-icon {
     width: 2rem;
     height: 2rem;
     border-radius: 0.6rem;
@@ -495,31 +495,31 @@
     align-items: center;
     justify-content: center;
 }
-.snc-dialog .p-dialog-header .p-dialog-header-icon:hover {
+.p-dialog.snc-dialog .p-dialog-header .p-dialog-header-icon:hover {
     background: #dbeafe;
     color: #1d4ed8;
 }
-.snc-dialog .p-dialog-content {
+.p-dialog.snc-dialog .p-dialog-content {
     padding: 1.5rem;
     color: #334155;
 }
-.snc-dialog .p-dialog-footer {
+.p-dialog.snc-dialog .p-dialog-footer {
     padding: 1rem 1.5rem;
     background: #f8fafc;
     border-top: 1px solid #e2e8f0;
     gap: 0.5rem;
 }
-.app-dark .snc-dialog .p-dialog {
+.app-dark .p-dialog.snc-dialog {
     background: var(--snc-surface, #1e293b);
     border-color: rgba(51, 65, 85, 0.6);
 }
-.app-dark .snc-dialog .p-dialog-header {
+.app-dark .p-dialog.snc-dialog .p-dialog-header {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     border-bottom-color: rgba(51, 65, 85, 0.6);
 }
-.app-dark .snc-dialog .p-dialog-header .p-dialog-title { color: #f1f5f9; }
-.app-dark .snc-dialog .p-dialog-content { color: #cbd5e1; }
-.app-dark .snc-dialog .p-dialog-footer {
+.app-dark .p-dialog.snc-dialog .p-dialog-header .p-dialog-title { color: #f1f5f9; }
+.app-dark .p-dialog.snc-dialog .p-dialog-content { color: #cbd5e1; }
+.app-dark .p-dialog.snc-dialog .p-dialog-footer {
     background: #0f172a;
     border-top-color: rgba(51, 65, 85, 0.6);
 }
