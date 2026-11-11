@@ -1,10 +1,15 @@
 <script setup>
+import { computed, ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import Button from 'primevue/button';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageCard from '@/Components/PageCard.vue';
+import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
-import { useToast } from "primevue/usetoast";
-import Message from 'primevue/message';
+import Select from 'primevue/select';
+import InputNumber from 'primevue/inputnumber';
+import FileUpload from 'primevue/fileupload';
+import Button from 'primevue/button';
 
 const props = defineProps({
     legal: { type: Object, default: () => ({}) },
@@ -12,199 +17,260 @@ const props = defineProps({
 
 const toast = useToast();
 
+const lastSavedAt = computed(() => props.legal?.updated_at || null);
+const isSaved = computed(() => !!lastSavedAt.value);
+
+const formatDate = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return new Intl.DateTimeFormat('fr-FR', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    }).format(d);
+};
+
+const statusLabel = computed(() =>
+    isSaved.value ? `Enregistré le ${formatDate(lastSavedAt.value)}` : 'Brouillon — non enregistré'
+);
+
 const form = useForm({
-    company_name:   props.legal.company_name   || 'SubnetCongo',
-    legal_form:     props.legal.legal_form     || 'SARL',
+    company_name:   props.legal.company_name   || '',
+    legal_form:     props.legal.legal_form     || '',
     rccm:           props.legal.rccm           || '',
     ifu:            props.legal.ifu            || '',
     tax_id:         props.legal.tax_id         || '',
     nif:            props.legal.nif            || '',
     ai:             props.legal.ai             || '',
+    vat_number:     props.legal.vat_number     || '',
+    tva_rate:       props.legal.tva_rate !== null && props.legal.tva_rate !== undefined ? Number(props.legal.tva_rate) : 16,
+    currency:       props.legal.currency       || 'CDF',
     country:        props.legal.country        || 'République Démocratique du Congo',
     province:       props.legal.province       || '',
-    city:           props.legal.city           || 'Kinshasa',
+    city:           props.legal.city           || '',
     address_line:   props.legal.address_line   || '',
     po_box:         props.legal.po_box         || '',
-    website:        props.legal.website        || 'https://subnetcongo.cd',
+    website:        props.legal.website        || '',
     capital_social: props.legal.capital_social || '',
     logo_url:       props.legal.logo_url       || '',
+    logo:           null,
 });
 
+const logoPreview = ref(props.legal.logo_url || null);
+
+const onLogoSelect = (event) => {
+    const file = event.files?.[0];
+    if (!file) return;
+    form.logo = file;
+    logoPreview.value = URL.createObjectURL(file);
+};
+
+const clearLogo = () => {
+    form.logo = null;
+    form.logo_url = '';
+    logoPreview.value = null;
+};
+
 const submit = () => {
-    form.post(route('admin.legal.save'), {
+    form.transform((data) => {
+        const payload = { ...data };
+        if (!payload.logo) delete payload.logo;
+        payload.tva_rate = payload.tva_rate === '' || payload.tva_rate === null || payload.tva_rate === undefined
+            ? null
+            : Number(payload.tva_rate);
+        return payload;
+    }).post(route('admin.legal.save'), {
         preserveScroll: true,
-        onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Mise à jour réussie', detail: 'Les informations légales ont été enregistrées.', life: 3000 });
-        },
+        forceFormData: true,
         onError: () => {
             toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez vérifier les champs du formulaire.', life: 4000 });
-        }
+        },
     });
 };
+
+const resetForm = () => {
+    form.reset();
+    logoPreview.value = props.legal.logo_url || null;
+};
+
+const currencies = [
+    { value: 'CDF' },
+    { value: 'USD' },
+    { value: 'EUR' },
+];
+
+const labelClass = 'block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5';
+const hintClass = 'text-xs text-slate-400 mt-1';
+const errorClass = 'text-xs text-rose-600 dark:text-rose-400 mt-1';
+const inputClass = 'w-full !rounded-xl';
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Identité Légale | Dashboard Admin" />
-        <div class="page-bg min-h-screen font-sans pb-20">
+        <Head title="Identité légale | SubnetCongo" />
 
-            <!-- HEADER ULTIMATE V30 -->
-            <div class="bg-[#0F172A] relative overflow-hidden">
-                <!-- Mesh Gradient Background -->
-                <div class="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-                    <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-red-600 rounded-full blur-[120px]"></div>
-                    <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-blue-600 rounded-full blur-[100px]"></div>
-                </div>
+        <div class="page-bg min-h-screen font-sans">
+            <PageHeader
+                title="Identité légale"
+                subtitle="Gérez les informations officielles de votre société. Ces données sont utilisées sur les factures, contrats, certificats et pages publiques (mentions légales, contact)."
+                icon="pi-id-card"
+                :accent="isSaved ? 'emerald' : 'amber'"
+                :badge="statusLabel"
+                :actions="[{ label: 'Enregistrer', icon: 'pi-check', variant: 'primary', onClick: submit, disabled: form.processing }]"
+            />
 
-                <div class="max-w-6xl mx-auto px-6 py-16 relative z-10">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div>
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-red-500/20">System Config</span>
-                            </div>
-                            <h1 class="text-4xl font-black text-white tracking-tighter italic uppercase">
-                                Identité <span class="text-red-500">Légale</span>
-                            </h1>
-                            <p class="text-slate-400 text-sm mt-3 max-w-xl leading-relaxed">
-                                Gérez les paramètres institutionnels de SubnetCongo. Ces données sont utilisées pour la génération automatique de vos factures, contrats et documents officiels.
-                            </p>
-                        </div>
-                        <div class="hidden lg:block">
-                            <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-xl">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20">
-                                        <i class="pi pi-shield text-white text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-slate-500 uppercase font-bold tracking-widest">Statut Compliance</p>
-                                        <p class="text-white font-bold tracking-tight">Vérifié & Opérationnel</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="page-container">
+                <form @submit.prevent="submit" class="space-y-6">
 
-            <!-- FORM SECTIONS -->
-            <div class="max-w-6xl mx-auto px-6 -mt-10 relative z-20">
-                <form @submit.prevent="submit" class="space-y-8">
-
-                    <!-- SECTION 1 : SOCIETE -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-                        <div class="grid grid-cols-1 lg:grid-cols-12">
-                            <div class="lg:col-span-4 bg-slate-50/50 p-8 border-r border-slate-100">
-                                <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                                    <i class="pi pi-building text-red-500"></i> Structure
-                                </h3>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">Informations générales sur l'entité juridique et sa forme sociale.</p>
+                    <!-- SECTION : Structure de la société -->
+                    <PageCard title="Structure de la société" subtitle="Dénomination, forme sociale et capital.">
+                        <template #header>
+                            <i class="pi pi-building text-slate-400" aria-hidden="true"></i>
+                        </template>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label for="company_name" :class="labelClass">Raison sociale <span class="text-rose-600" aria-hidden="true">*</span></label>
+                                <InputText id="company_name" v-model="form.company_name" required maxlength="255"
+                                       class="w-full" :invalid="!!form.errors.company_name" placeholder="Ex. SUBNETCONGO SARL" />
+                                <p v-if="form.errors.company_name" :class="errorClass" role="alert">{{ form.errors.company_name }}</p>
                             </div>
-                            <div class="lg:col-span-8 p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="col-span-full md:col-span-1">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Raison sociale <span class="text-red-500">*</span></label>
-                                    <InputText v-model="form.company_name" :class="{'p-invalid': form.errors.company_name}" class="w-full !rounded-xl !p-3 !bg-slate-50 focus:!bg-white transition-all" />
-                                    <small class="text-red-500" v-if="form.errors.company_name">{{ form.errors.company_name }}</small>
-                                </div>
-                                <div class="col-span-full md:col-span-1">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Forme juridique</label>
-                                    <InputText v-model="form.legal_form" class="w-full !rounded-xl !p-3 !bg-slate-50 focus:!bg-white" placeholder="SARL, SA, SAS..." />
-                                </div>
-                                <div class="col-span-full">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Capital social</label>
-                                    <InputText v-model="form.capital_social" class="w-full !rounded-xl !p-3 !bg-slate-50" />
-                                </div>
+                            <div>
+                                <label for="legal_form" :class="labelClass">Forme juridique</label>
+                                <InputText id="legal_form" v-model="form.legal_form" maxlength="100" class="w-full" placeholder="SARL, SA, SAS…" />
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 2 : FISCALITE -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-                        <div class="grid grid-cols-1 lg:grid-cols-12">
-                            <div class="lg:col-span-4 bg-slate-50/50 p-8 border-r border-slate-100">
-                                <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                                    <i class="pi pi-percentage text-red-500"></i> Fiscalité & IDs
-                                </h3>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">Identifiants uniques d'enregistrement auprès des autorités congolaises.</p>
-                            </div>
-                            <div class="lg:col-span-8 p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div v-for="(label, field) in {rccm: 'RCCM', ifu: 'IFU', tax_id: 'Numéro Contribuable', nif: 'NIF', ai: 'Article d’Imposition (AI)'}" :key="field">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">{{ label }}</label>
-                                    <InputText v-model="form[field]" class="w-full !rounded-xl !p-3 font-mono text-sm !bg-slate-50" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 3 : LOCALISATION -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-                        <div class="grid grid-cols-1 lg:grid-cols-12">
-                            <div class="lg:col-span-4 bg-slate-50/50 p-8 border-r border-slate-100">
-                                <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                                    <i class="pi pi-map-marker text-red-500"></i> Siège Social
-                                </h3>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">Coordonnées physiques et numériques de l'établissement principal.</p>
-                            </div>
-                            <div class="lg:col-span-8 p-8 space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Pays</label>
-                                        <InputText v-model="form.country" class="w-full !rounded-xl !p-3 !bg-slate-50" />
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Province</label>
-                                        <InputText v-model="form.province" class="w-full !rounded-xl !p-3 !bg-slate-50" />
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Ville</label>
-                                        <InputText v-model="form.city" class="w-full !rounded-xl !p-3 !bg-slate-50" />
-                                    </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label for="capital_social" :class="labelClass">Capital social</label>
+                                    <InputText id="capital_social" v-model="form.capital_social" maxlength="100" class="w-full" placeholder="Ex. 10 000 000" />
                                 </div>
                                 <div>
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Adresse précise</label>
-                                    <InputText v-model="form.address_line" class="w-full !rounded-xl !p-3 !bg-slate-50" placeholder="Avenue, N°, Commune..." />
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">URL Site Web</label>
-                                        <InputText v-model="form.website" class="w-full !rounded-xl !p-3 !bg-slate-50" />
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Logo Institutionnel (URL)</label>
-                                        <InputText v-model="form.logo_url" class="w-full !rounded-xl !p-3 !bg-slate-50" />
-                                    </div>
+                                    <label for="currency" :class="labelClass">Devise par défaut</label>
+                                    <Select id="currency" v-model="form.currency" :options="currencies"
+                                            optionLabel="value" optionValue="value" class="w-full" />
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </PageCard>
 
-                    <!-- STICKY ACTION BAR -->
-                    <div class="sticky bottom-6 bg-[#0F172A]/90 backdrop-blur-xl p-4 rounded-xl border border-white/10 shadow-2xl flex items-center justify-between">
-                        <p class="text-xs text-slate-400 px-4 hidden md:block">
-                            <i class="pi pi-info-circle text-red-500 mr-2"></i> Les modifications sont définitives après enregistrement.
+                    <!-- SECTION : Fiscalité & identifiants -->
+                    <PageCard title="Fiscalité & identifiants" subtitle="Numéros d'enregistrement auprès des autorités (RCCM, IFU, NIF, TVA…).">
+                        <template #header>
+                            <i class="pi pi-percentage text-slate-400" aria-hidden="true"></i>
+                        </template>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label for="rccm" :class="labelClass">RCCM</label>
+                                <InputText id="rccm" v-model="form.rccm" maxlength="100" class="w-full font-mono" placeholder="CD/KIN/RCCM/25-B-…" />
+                            </div>
+                            <div>
+                                <label for="ifu" :class="labelClass">IFU (Identifiant fiscal unique)</label>
+                                <InputText id="ifu" v-model="form.ifu" maxlength="50" class="w-full font-mono" placeholder="A00000000X" />
+                            </div>
+                            <div>
+                                <label for="tax_id" :class="labelClass">N° impôt (tax ID)</label>
+                                <InputText id="tax_id" v-model="form.tax_id" maxlength="100" class="w-full font-mono" placeholder="Ex. A123456789B" />
+                            </div>
+                            <div>
+                                <label for="nif" :class="labelClass">NIF</label>
+                                <InputText id="nif" v-model="form.nif" maxlength="50" class="w-full font-mono" placeholder="Ex. 01-9-N00000A" />
+                            </div>
+                            <div>
+                                <label for="ai" :class="labelClass">Article d’imposition (AI)</label>
+                                <InputText id="ai" v-model="form.ai" maxlength="50" class="w-full font-mono" />
+                            </div>
+                            <div>
+                                <label for="vat_number" :class="labelClass">N° TVA</label>
+                                <InputText id="vat_number" v-model="form.vat_number" maxlength="50" class="w-full font-mono" placeholder="Ex. 0000000/A" />
+                                <p :class="hintClass">Numéro d'identification à la TVA, si attribué.</p>
+                            </div>
+                            <div>
+                                <label for="tva_rate" :class="labelClass">Taux TVA (%)</label>
+                                <InputNumber id="tva_rate" v-model="form.tva_rate" :min="0" :max="100" :step="0.01"
+                                             :useGrouping="false" class="w-full" :invalid="!!form.errors.tva_rate" />
+                                <p v-if="form.errors.tva_rate" :class="errorClass" role="alert">{{ form.errors.tva_rate }}</p>
+                                <p v-else :class="hintClass">16 % par défaut en RDC.</p>
+                            </div>
+                        </div>
+                    </PageCard>
+
+                    <!-- SECTION : Siège social & coordonnées -->
+                    <PageCard title="Siège social & coordonnées" subtitle="Adresse physique, boîte postale et présence en ligne.">
+                        <template #header>
+                            <i class="pi pi-map-marker text-slate-400" aria-hidden="true"></i>
+                        </template>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label for="country" :class="labelClass">Pays</label>
+                                <InputText id="country" v-model="form.country" maxlength="100" class="w-full" />
+                            </div>
+                            <div>
+                                <label for="province" :class="labelClass">Province</label>
+                                <InputText id="province" v-model="form.province" maxlength="100" class="w-full" placeholder="Ex. Kinshasa" />
+                            </div>
+                            <div>
+                                <label for="city" :class="labelClass">Ville</label>
+                                <InputText id="city" v-model="form.city" maxlength="100" class="w-full" placeholder="Ex. Kinshasa, Goma…" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="address_line" :class="labelClass">Adresse (avenue, quartier, commune)</label>
+                                <InputText id="address_line" v-model="form.address_line" maxlength="500" class="w-full" placeholder="Ex. Av. de l'OUA, n° 15, Quartier …, Commune …" />
+                            </div>
+                            <div>
+                                <label for="po_box" :class="labelClass">Boîte postale</label>
+                                <InputText id="po_box" v-model="form.po_box" maxlength="50" class="w-full" placeholder="Ex. BP 1234 Kinshasa" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <label for="website" :class="labelClass">Site web</label>
+                                <InputText id="website" v-model="form.website" maxlength="255" class="w-full" placeholder="https://…" />
+                            </div>
+                        </div>
+                    </PageCard>
+
+                    <!-- SECTION : Identité visuelle -->
+                    <PageCard title="Identité visuelle" subtitle="Logo utilisé sur les documents officiels et la plateforme.">
+                        <template #header>
+                            <i class="pi pi-image text-slate-400" aria-hidden="true"></i>
+                        </template>
+                        <div class="flex flex-col md:flex-row md:items-start gap-6">
+                            <div class="flex flex-col items-center gap-3 flex-shrink-0">
+                                <div class="w-36 h-36 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center overflow-hidden">
+                                    <img v-if="logoPreview" :src="logoPreview" alt="Aperçu du logo" class="max-w-full max-h-full object-contain" />
+                                    <i v-else class="pi pi-building text-4xl text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <FileUpload mode="basic" :auto="false" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                                chooseLabel="Changer" chooseIcon="pi pi-upload" @select="onLogoSelect"
+                                                :invalid="!!form.errors.logo" class="!w-auto" />
+                                    <Button v-if="logoPreview" icon="pi pi-trash" label="Retirer" severity="secondary"
+                                            outlined size="small" @click="clearLogo" />
+                                </div>
+                                <p v-if="form.errors.logo" :class="errorClass" role="alert">{{ form.errors.logo }}</p>
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <label for="logo_url" :class="labelClass">URL du logo</label>
+                                <InputText id="logo_url" v-model="form.logo_url" maxlength="500" class="w-full" placeholder="https://…/logo.png" />
+                                <p :class="hintClass">Ou collez une URL directe. Le fichier uploadé ci-contre est prioritaire et remplacera cette URL à l'enregistrement. PNG, JPG, WebP ou SVG — 2 Mo maximum.</p>
+                            </div>
+                        </div>
+                    </PageCard>
+
+                    <!-- Actions -->
+                    <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+                        <p class="text-xs text-slate-400 flex items-center gap-2">
+                            <i class="pi pi-info-circle" aria-hidden="true"></i>
+                            <span v-if="isSaved">Dernière sauvegarde : {{ formatDate(lastSavedAt) }}.</span>
+                            <span v-else>Brouillon local — rien n'est enregistré tant que vous ne cliquez pas sur « Enregistrer ».</span>
                         </p>
-                        <div class="flex gap-4 w-full md:w-auto">
-                            <Button @click="form.reset()" type="button" label="Réinitialiser" class="p-button-text !text-white !text-xs !font-bold flex-1 md:flex-none" />
-                            <Button type="submit"
-                                    label="Enregistrer les modifications"
-                                    icon="pi pi-check-circle"
-                                    :loading="form.processing"
-                                    class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest flex-1 md:flex-none transition-all active:scale-95" />
+                        <div class="flex items-center gap-3">
+                            <Button type="button" label="Réinitialiser" icon="pi pi-refresh" severity="secondary"
+                                    outlined @click="resetForm" />
+                            <Button type="submit" label="Enregistrer les modifications" icon="pi pi-check"
+                                    :loading="form.processing" />
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-/* Focus States Focus Pro Max */
-:deep(.p-inputtext:focus) {
-    border-color: #EF4444 !important;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
-}
-
-:deep(.p-inputtext) {
-    border: 1px solid #E2E8F0;
-}
-</style>

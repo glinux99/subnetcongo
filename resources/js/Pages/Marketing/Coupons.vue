@@ -1,504 +1,569 @@
 <script setup>
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, computed, onMounted } from 'vue';
-import { Head } from '@inertiajs/vue3';
-import { useI18n } from 'vue-i18n';
+import { ref, reactive, computed, watch } from 'vue';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
-import { FilterMatchMode } from '@primevue/core/api';
+import { useConfirmAction } from '@/composables/useConfirmAction';
+import debounce from 'lodash/debounce';
 
-// --- PRIME VUE IMPORTS ---
-import Card from 'primevue/card';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
+import PageCard from '@/Components/PageCard.vue';
+
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import InputNumber from 'primevue/inputnumber';
+import Select from 'primevue/select';
+import SelectButton from 'primevue/selectbutton';
+import DatePicker from 'primevue/datepicker';
+import ToggleSwitch from 'primevue/toggleswitch';
+import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
-import InputNumber from 'primevue/inputnumber';
-import Calendar from 'primevue/calendar';
-import SelectButton from 'primevue/selectbutton';
-import MultiSelect from 'primevue/multiselect';
 import ProgressBar from 'primevue/progressbar';
-import InputSwitch from 'primevue/inputswitch';
-import Slider from 'primevue/slider';
-import InlineMessage from 'primevue/inlinemessage';
-import Divider from 'primevue/divider';
-import Tooltip from 'primevue/tooltip';
+import Textarea from 'primevue/textarea';
 
-const { t } = useI18n();
 const toast = useToast();
+const confirmAction = useConfirmAction();
 
-// --- STATE MANAGEMENT ---
-const loading = ref(true);
-const coupons = ref([]);
-const displayCouponDialog = ref(false);
-const displayStatsDialog = ref(false);
-const submitted = ref(false);
-const couponType = ref('percentage');
-
-// Form Object
-const coupon = ref({
-    id: null,
-    code: '',
-    description: '',
-    type: 'percentage',
-    value: 10,
-    min_purchase: 0,
-    max_usage: 100,
-    current_usage: 0,
-    start_date: null,
-    end_date: null,
-    status: 'active',
-    applied_to: [], // IDs des cours
-    is_public: true
+const props = defineProps({
+    coupons: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10, last_page: 1 }) },
+    filters: { type: Object, default: () => ({}) },
+    stats: { type: Object, default: () => ({ total: 0, active: 0, total_usage: 0, expiring_soon: 0 }) },
 });
 
-const couponTypes = ref([
-    { label: 'Pourcentage (%)', value: 'percentage', icon: 'pi pi-percentage' },
-    { label: 'Montant Fixe ($)', value: 'fixed', icon: 'pi pi-dollar' }
-]);
-
-const courseOptions = ref([
-    { name: 'Mastering Vue 3', id: 1 },
-    { name: 'Laravel Advanced Patterns', id: 2 },
-    { name: 'UI/UX Design Fondamentaux', id: 3 },
-    { name: 'Node.js Microservices', id: 4 },
-    { name: 'Sécurité Web Congolaise', id: 5 }
-]);
-
-// --- FILTERS ---
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+// ============================================================
+// FILTRES SERVEUR
+// ============================================================
+const serverFilters = reactive({
+    search: props.filters?.search || '',
+    status: props.filters?.status || null,
+    type: props.filters?.type || null,
 });
 
-// --- MOCK DATA ---
-const loadCoupons = () => {
-    loading.value = true;
-    setTimeout(() => {
-        coupons.value = [
-            { 
-                id: 1, code: 'WELCOME2026', description: 'Offre de bienvenue pour nouveaux inscrits', 
-                type: 'percentage', value: 25, current_usage: 45, max_usage: 200, 
-                start_date: '2025-01-01', end_date: '2026-12-31', status: 'active', revenue: 1250 
-            },
-            { 
-                id: 2, code: 'BLACKFRIDAY', description: 'Vente flash novembre', 
-                type: 'percentage', value: 50, current_usage: 150, max_usage: 150, 
-                start_date: '2025-11-20', end_date: '2025-11-30', status: 'expired', revenue: 4500 
-            },
-            { 
-                id: 3, code: 'SUBNET10', description: 'Réduction partenaire SubNet', 
-                type: 'fixed', value: 10, current_usage: 12, max_usage: 500, 
-                start_date: '2025-02-01', end_date: '2026-02-01', status: 'active', revenue: 120 
-            },
-            { 
-                id: 4, code: 'TECHCONGO', description: 'Campagne influenceur Tech', 
-                type: 'percentage', value: 15, current_usage: 89, max_usage: 300, 
-                start_date: '2025-01-15', end_date: '2025-06-15', status: 'active', revenue: 2100 
-            }
-        ];
-        loading.value = false;
-    }, 1000);
+const searchLoading = ref(false);
+
+const reload = debounce(() => {
+    searchLoading.value = true;
+    router.get(route('marketing.coupons.index'), { ...serverFilters, page: 1 }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        onFinish: () => (searchLoading.value = false),
+    });
+}, 350);
+
+watch(serverFilters, reload);
+
+const resetFilters = () => {
+    serverFilters.search = '';
+    serverFilters.status = null;
+    serverFilters.type = null;
 };
 
-// --- LOGIQUE METIER ---
+const onPage = (event) => {
+    router.get(route('marketing.coupons.index'), {
+        ...serverFilters,
+        page: event.page + 1,
+        per_page: event.rows,
+    }, { preserveState: true, preserveScroll: true });
+};
+
+const statusOptions = [
+    { label: 'Tous', value: null },
+    { label: 'Actifs', value: 'active' },
+    { label: 'Inactifs', value: 'inactive' },
+    { label: 'Expirant', value: 'expiring' },
+];
+
+const typeOptions = [
+    { label: 'Pourcentage (%)', value: 'percent', icon: 'pi pi-percentage' },
+    { label: 'Montant fixe (USD)', value: 'fixed', icon: 'pi pi-dollar' },
+];
+
+const typeFilterOptions = [
+    { label: 'Tous les types', value: null },
+    ...typeOptions,
+];
+
+// ============================================================
+// FORMULAIRE (création / édition / duplication)
+// ============================================================
+const couponDialog = ref(false);
+const mode = ref('create'); // 'create' | 'edit'
+const editingCode = ref(null);
+
+const couponForm = useForm({
+    code: '',
+    description: '',
+    discount_type: 'percent',
+    discount_value: 10,
+    usage_limit: null,
+    max_uses_per_user: 1,
+    min_amount: null,
+    starts_at: null,
+    expires_at: null,
+    is_active: true,
+});
+
 const generateCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = 'SERPENT-';
+    for (let i = 0; i < 6; i++) {
+        result += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
     }
-    coupon.value.code = result;
+    couponForm.code = result;
 };
 
 const openNew = () => {
-    coupon.value = { 
-        id: null, code: '', description: '', type: 'percentage', value: 10, 
-        min_purchase: 0, max_usage: 100, current_usage: 0, status: 'active', applied_to: [] 
-    };
-    submitted.value = false;
-    displayCouponDialog.value = true;
+    couponForm.reset();
+    couponForm.clearErrors();
+    mode.value = 'create';
+    editingCode.value = null;
+    couponDialog.value = true;
 };
 
-const hideDialog = () => {
-    displayCouponDialog.value = false;
-    submitted.value = false;
+const fillForm = (coupon) => {
+    couponForm.code = coupon.code;
+    couponForm.description = coupon.description || '';
+    couponForm.discount_type = coupon.discount_type;
+    couponForm.discount_value = Number(coupon.discount_value);
+    couponForm.usage_limit = coupon.usage_limit ? Number(coupon.usage_limit) : null;
+    couponForm.max_uses_per_user = coupon.max_uses_per_user ? Number(coupon.max_uses_per_user) : 1;
+    couponForm.min_amount = coupon.min_amount !== null && coupon.min_amount !== undefined ? Number(coupon.min_amount) : null;
+    couponForm.starts_at = coupon.starts_at ? new Date(coupon.starts_at) : null;
+    couponForm.expires_at = coupon.expires_at ? new Date(coupon.expires_at) : null;
+    couponForm.is_active = !!coupon.is_active;
 };
 
-const saveCoupon = () => {
-    submitted.value = true;
-    if (coupon.value.code.trim()) {
-        toast.add({ severity: 'success', summary: 'Succès', detail: 'Coupon enregistré avec succès', life: 3000 });
-        displayCouponDialog.value = false;
-    }
+const openEdit = (coupon) => {
+    couponForm.clearErrors();
+    fillForm(coupon);
+    mode.value = 'edit';
+    editingCode.value = coupon.code;
+    couponDialog.value = true;
 };
 
-const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.add({ severity: 'info', summary: 'Copié', detail: 'Code coupon copié dans le presse-papier', life: 2000 });
+const duplicateCoupon = (coupon) => {
+    couponForm.clearErrors();
+    fillForm(coupon);
+    couponForm.code = '';
+    generateCode();
+    mode.value = 'create';
+    editingCode.value = null;
+    couponDialog.value = true;
 };
 
-const getStatusSeverity = (status) => {
-    switch (status) {
-        case 'active': return 'success';
-        case 'expired': return 'danger';
-        case 'scheduled': return 'info';
-        default: return 'warning';
-    }
+const closeDialog = () => {
+    couponDialog.value = false;
+    couponForm.reset();
+    couponForm.clearErrors();
 };
 
-// --- CALCULS KPI ---
-const activeCouponsCount = computed(() => coupons.value.filter(c => c.status === 'active').length);
-const totalSavedByUsers = computed(() => coupons.value.reduce((acc, curr) => acc + curr.revenue, 0).toLocaleString());
-
-onMounted(() => {
-    loadCoupons();
+const dialogTitle = computed(() => {
+    if (mode.value === 'edit') return 'Modifier le coupon';
+    return couponForm.code ? 'Créer un coupon' : 'Nouveau coupon';
 });
+
+const submitForm = () => {
+    if (mode.value === 'edit' && editingCode.value) {
+        couponForm.put(route('marketing.coupons.update', editingCode.value), {
+            preserveScroll: true,
+            onSuccess: closeDialog,
+        });
+    } else {
+        couponForm.post(route('marketing.coupons.store'), {
+            preserveScroll: true,
+            onSuccess: closeDialog,
+        });
+    }
+};
+
+const confirmDelete = (coupon) => {
+    const used = Number(coupon.used_count || 0);
+    const alreadyUsed = used > 0;
+
+    confirmAction({
+        header: alreadyUsed ? 'Archiver le coupon' : 'Supprimer le coupon',
+        message: alreadyUsed
+            ? `Le coupon ${coupon.code} a déjà été utilisé ${used} fois. Il sera archivé (désactivé) plutôt que supprimé. Continuer ?`
+            : `Supprimer définitivement le coupon ${coupon.code} ? Cette action est irréversible.`,
+        acceptLabel: alreadyUsed ? 'Archiver' : 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('marketing.coupons.destroy', coupon.code), {
+            preserveScroll: true,
+        }),
+    });
+};
+
+const copyCode = (code) => {
+    navigator.clipboard?.writeText(code).then(() => {
+        toast.add({ severity: 'info', summary: 'Copié', detail: `Code ${code} copié dans le presse-papier`, life: 2500 });
+    }).catch(() => {
+        toast.add({ severity: 'warn', summary: 'Copie impossible', detail: 'Le navigateur a bloqué l’accès au presse-papier.', life: 3000 });
+    });
+};
+
+// ============================================================
+// AFFICHAGE
+// ============================================================
+const formatMoney = (value) => {
+    if (value === null || value === undefined) return '—';
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(Number(value));
+};
+
+const formatDate = (value) => {
+    if (!value) return 'Sans limite';
+    return new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const effectiveStatus = (coupon) => {
+    if (!coupon.is_active) return { label: 'Inactif', severity: 'secondary' };
+    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) return { label: 'Expiré', severity: 'danger' };
+    if (coupon.expires_at && (new Date(coupon.expires_at) - new Date()) < 7 * 24 * 3600 * 1000) {
+        return { label: 'Expirant', severity: 'warning' };
+    }
+    return { label: 'Actif', severity: 'success' };
+};
+
+const usagePercent = (coupon) => {
+    if (!coupon.usage_limit) return 0;
+    return Math.min(100, Math.round((Number(coupon.used_count || 0) / Number(coupon.usage_limit)) * 100));
+};
+
+const couponList = computed(() => props.coupons?.data ?? []);
+const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (props.coupons?.per_page || 10));
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Gestion des Coupons - SubNetCongo" />
+        <Head title="Coupons marketing — SubNetCongo" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+        <div class="page-bg min-h-screen font-sans">
+            <PageHeader
+                title="Codes promo"
+                subtitle="Créez et pilotez les réductions appliquées à la marketplace"
+                icon="pi-ticket"
+                accent="blue"
+                badge="Marketing"
+                :actions="[{ label: 'Nouveau coupon', icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
+            />
 
-            <!-- HEADER AVEC TAILWIND -->
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="bg-blue-600 p-4 rounded-2xl shadow-xl shadow-blue-100 rotate-3 hover:rotate-0 transition-transform cursor-pointer">
-                        <i class="pi pi-ticket text-white text-3xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Codes Coupons</h1>
-                        <p class="text-slate-500 font-medium">Boostez vos ventes avec des campagnes promotionnelles</p>
-                    </div>
-                </div>
-                <div class="flex gap-3 w-full md:w-auto">
-                    <Button label="Nouvelle Promotion" icon="pi pi-plus" class="p-button-primary shadow-lg px-6 flex-1 md:flex-none" @click="openNew" />
-                </div>
-            </header>
-
-            <!-- KPI SECTION -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <Card v-for="kpi in [
-                    { label: 'Coupons Actifs', val: activeCouponsCount, icon: 'pi-check-circle', color: 'indigo' },
-                    { label: 'Économies Clients', val: totalSavedByUsers + ' $', icon: 'pi-wallet', color: 'emerald' },
-                    { label: 'Taux d\'Utilisation', val: '64%', icon: 'pi-percentage', color: 'amber' },
-                    { label: 'Coupons Expirés', val: '12', icon: 'pi-clock', color: 'rose' }
-                ]" :key="kpi.label" class="border-none shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-                    <template #content>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">{{ kpi.label }}</span>
-                                <div class="text-3xl font-black text-slate-800">{{ kpi.val }}</div>
-                            </div>
-                            <div :class="`p-3 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-500` ">
-                                <i :class="`pi ${kpi.icon} text-xl` "></i>
-                            </div>
-                        </div>
-                    </template>
-                </Card>
+            <div class="page-container page-section">
+            <!-- KPI réels -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 my-6">
+                <PageKpi label="Coupons au total" :value="stats.total" icon="pi-ticket" color="blue" />
+                <PageKpi label="Coupons actifs" :value="stats.active" icon="pi-check-circle" color="emerald" />
+                <PageKpi label="Utilisations cumulées" :value="stats.total_usage" icon="pi-chart-line" color="violet" />
+                <PageKpi label="Expirant sous 7 jours" :value="stats.expiring_soon" icon="pi-clock" color="amber" />
             </div>
 
-            <!-- MAIN DATA TABLE -->
-            <Card class="border-none shadow-sm rounded-xl overflow-hidden">
-                <template #content>
-                    <DataTable 
-                        v-model:filters="filters"
-                        :value="coupons" 
-                        :paginator="true" 
-                        :rows="10" 
-                        :loading="loading"
-                        stripedRows
-                        responsiveLayout="scroll"
-                        class="p-datatable-sm custom-coupon-table"
-                    >
-                        <template #header>
-                            <div class="flex flex-col md:flex-row justify-between items-center gap-4 py-2">
-                                <div class="flex items-center gap-2">
-                                    <h2 class="text-xl font-bold text-slate-800">Catalogue de Remises</h2>
-                                    <Badge :value="coupons.length" severity="info" />
-                                </div>
-                                <span class="p-input-icon-left w-full md:w-72">
-                                    <i class="pi pi-search" />
-                                    <InputText v-model="filters['global'].value" placeholder="Rechercher un coupon..." class="w-full rounded-xl border-slate-200" />
+            <PageCard>
+                <!-- Barre de filtres -->
+                <div class="flex flex-col lg:flex-row lg:items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <span class="p-input-icon-left flex-1 min-w-[220px]">
+                        <i class="pi pi-search text-slate-400" aria-hidden="true"></i>
+                        <InputText
+                            v-model="serverFilters.search"
+                            placeholder="Rechercher un code ou une description…"
+                            class="w-full"
+                            aria-label="Rechercher un coupon"
+                        />
+                    </span>
+
+                    <SelectButton
+                        v-model="serverFilters.status"
+                        :options="statusOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        aria-label="Filtrer par statut"
+                    />
+
+                    <Select
+                        v-model="serverFilters.type"
+                        :options="typeFilterOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Tous les types"
+                        class="min-w-[180px]"
+                        showClear
+                        aria-label="Filtrer par type"
+                    />
+
+                    <Button
+                        label="Réinitialiser"
+                        icon="pi pi-refresh"
+                        severity="secondary"
+                        outlined
+                        @click="resetFilters"
+                    />
+                </div>
+
+                <div class="flex items-center justify-between gap-3 pt-4 pb-2">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Catalogue des coupons</h2>
+                        <Badge :value="coupons.total ?? 0" severity="info" />
+                    </div>
+                    <i v-if="searchLoading" class="pi pi-spin pi-spinner text-slate-400" aria-hidden="true"></i>
+                </div>
+
+                <DataTable
+                    :value="couponList"
+                    :lazy="true"
+                    :paginator="true"
+                    :rows="coupons.per_page || 10"
+                    :first="firstRow"
+                    :totalRecords="coupons.total ?? 0"
+                    @page="onPage"
+                    :loading="searchLoading"
+                    stripedRows
+                    responsiveLayout="scroll"
+                    class="text-sm"
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                >
+                    <Column field="code" header="Code" style="min-width: 11rem">
+                        <template #body="{ data }">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 border border-dashed border-blue-200 dark:border-blue-500/30 rounded-md tracking-wider">
+                                    {{ data.code }}
                                 </span>
+                                <Button
+                                    icon="pi pi-copy"
+                                    text
+                                    rounded
+                                    severity="secondary"
+                                    aria-label="Copier le code"
+                                    v-tooltip.top="'Copier'"
+                                    @click="copyCode(data.code)"
+                                />
+                            </div>
+                            <p v-if="data.description" class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{{ data.description }}</p>
+                        </template>
+                    </Column>
+
+                    <Column field="discount_type" header="Type" style="min-width: 9rem">
+                        <template #body="{ data }">
+                            <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200 font-medium">
+                                <i :class="['pi', data.discount_type === 'percent' ? 'pi-percentage' : 'pi-dollar', 'text-slate-400']" aria-hidden="true"></i>
+                                {{ data.discount_type === 'percent' ? 'Pourcentage' : 'Montant fixe' }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column field="discount_value" header="Valeur" style="min-width: 7rem">
+                        <template #body="{ data }">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">
+                                {{ data.discount_type === 'percent' ? `${Number(data.discount_value)} %` : formatMoney(data.discount_value) }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column field="used_count" header="Utilisations" style="min-width: 12rem">
+                        <template #body="{ data }">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center justify-between text-xs font-semibold">
+                                    <span class="text-slate-600 dark:text-slate-300">{{ data.used_count }} utilisés</span>
+                                    <span class="text-slate-400">{{ data.usage_limit ? `sur ${data.usage_limit}` : 'illimité' }}</span>
+                                </div>
+                                <ProgressBar
+                                    v-if="data.usage_limit"
+                                    :value="usagePercent(data)"
+                                    :showValue="false"
+                                    style="height: 6px"
+                                    class="rounded-full"
+                                    :aria-label="`${usagePercent(data)} % de la limite atteinte`"
+                                />
                             </div>
                         </template>
+                    </Column>
 
-                        <Column field="code" header="CODE" style="min-width: 12rem">
-                            <template #body="{ data }">
-                                <div class="flex items-center gap-3">
-                                    <div class="px-3 py-1.5 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg font-mono font-black text-blue-600 tracking-wider text-sm">
-                                        {{ data.code }}
-                                    </div>
-                                    <Button icon="pi pi-copy" class="p-button-rounded p-button-text p-button-secondary p-button-sm" v-tooltip.top="'Copier'" @click="copyToClipboard(data.code)" />
-                                </div>
-                            </template>
-                        </Column>
+                    <Column field="min_amount" header="Min. achat" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            <span class="text-slate-600 dark:text-slate-300">{{ data.min_amount ? formatMoney(data.min_amount) : 'Aucun' }}</span>
+                        </template>
+                    </Column>
 
-                        <Column field="type" header="TYPE / VALEUR" style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <div class="flex flex-col">
-                                    <span class="font-black text-slate-800 text-lg">
-                                        {{ data.value }}{{ data.type === 'percentage' ? '%' : ' $' }}
-                                    </span>
-                                    <span class="text-[10px] text-slate-400 uppercase font-bold">{{ data.type === 'percentage' ? 'De réduction' : 'Remise fixe' }}</span>
-                                </div>
-                            </template>
-                        </Column>
+                    <Column field="starts_at" header="Début" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.starts_at) }}</span>
+                        </template>
+                    </Column>
 
-                        <Column field="usage" header="USAGE (LIMITES)" style="min-width: 14rem">
-                            <template #body="{ data }">
-                                <div class="flex flex-col gap-2">
-                                    <div class="flex justify-between text-xs font-bold">
-                                        <span class="text-slate-600">{{ data.current_usage }} utilisés</span>
-                                        <span class="text-slate-400">sur {{ data.max_usage }}</span>
-                                    </div>
-                                    <ProgressBar :value="(data.current_usage / data.max_usage) * 100" :showValue="false" style="height: 6px" class="rounded-full"
-                                        :color="data.current_usage >= data.max_usage ? '#EF4444' : '#6366F1'" />
-                                </div>
-                            </template>
-                        </Column>
+                    <Column field="expires_at" header="Fin" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.expires_at) }}</span>
+                        </template>
+                    </Column>
 
-                        <Column field="end_date" header="EXPIRATION" style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <div class="flex flex-col">
-                                    <span class="font-bold text-slate-700 text-sm">{{ new Date(data.end_date).toLocaleDateString() }}</span>
-                                    <span class="text-[10px] text-red-400 font-bold uppercase" v-if="data.status === 'expired'">Expiré</span>
-                                    <span class="text-[10px] text-emerald-400 font-bold uppercase" v-else>Valide</span>
-                                </div>
-                            </template>
-                        </Column>
+                    <Column field="status" header="Statut" style="min-width: 7rem">
+                        <template #body="{ data }">
+                            <Tag :value="effectiveStatus(data).label" :severity="effectiveStatus(data).severity" />
+                        </template>
+                    </Column>
 
-                        <Column field="revenue" header="REVENU RÉDUIT" style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <span class="font-black text-emerald-600">{{ data.revenue }} $</span>
-                            </template>
-                        </Column>
-
-                        <Column field="status" header="STATUT" style="min-width: 8rem">
-                            <template #body="{ data }">
-                                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" class="uppercase px-4 py-1 text-[10px]" />
-                            </template>
-                        </Column>
-
-                        <Column header="ACTIONS" alignFrozen="right" frozen style="min-width: 8rem">
-                            <template #body="{ data }">
-                                <div class="flex gap-2">
-                                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary" />
-                                    <Button icon="pi pi-chart-bar" class="p-button-rounded p-button-text p-button-secondary" @click="displayStatsDialog = true" />
-                                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" />
-                                </div>
-                            </template>
-                        </Column>
-                    </DataTable>
-                </template>
-            </Card>
-
-            <!-- DIALOG: CREATE/EDIT COUPON -->
-            <Dialog v-model:visible="displayCouponDialog" :modal="true" :style="{width: '650px'}" header="Configuration de la Promotion" class="p-fluid coupon-modal">
-                <div class="grid grid-cols-12 gap-6 pt-4">
-                    
-                    <!-- Colonne Gauche -->
-                    <div class="col-span-12 md:col-span-7 space-y-6">
-                        <div class="field">
-                            <label for="code" class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Code Coupon</label>
-                            <div class="flex gap-2">
-                                <InputText id="code" v-model="coupon.code" placeholder="ex: SUMMER25" class="font-mono font-bold border-2" :class="{'p-invalid': submitted && !coupon.code}" />
-                                <Button icon="pi pi-refresh" @click="generateCode" class="p-button-outlined" v-tooltip="'Générer aléatoirement'" />
+                    <Column header="Actions" alignFrozen="right" frozen style="min-width: 9rem">
+                        <template #body="{ data }">
+                            <div class="flex items-center gap-1">
+                                <Button icon="pi pi-pencil" text rounded severity="secondary" aria-label="Éditer" v-tooltip.top="'Éditer'" @click="openEdit(data)" />
+                                <Button icon="pi pi-copy" text rounded severity="secondary" aria-label="Dupliquer" v-tooltip.top="'Dupliquer'" @click="duplicateCoupon(data)" />
+                                <Button icon="pi pi-trash" text rounded severity="danger" aria-label="Supprimer" v-tooltip.top="'Supprimer'" @click="confirmDelete(data)" />
                             </div>
-                            <small class="p-error" v-if="submitted && !coupon.code">Le code est obligatoire.</small>
-                        </div>
+                        </template>
+                    </Column>
 
-                        <div class="field">
-                            <label class="font-black text-slate-700 text-sm mb-2 block uppercase">Type de Remise</label>
-                            <SelectButton v-model="coupon.type" :options="couponTypes" optionLabel="label" optionValue="value" class="custom-select-button" />
+                    <template #empty>
+                        <div class="text-center py-10 text-slate-500 dark:text-slate-400">
+                            <i class="pi pi-ticket text-3xl mb-3 text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
+                            <p class="font-semibold">Aucun coupon trouvé</p>
+                            <p class="text-sm mt-1">Modifiez vos filtres ou créez un nouveau coupon.</p>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="field">
-                                <label class="font-black text-slate-700 text-sm mb-2 block uppercase">Valeur</label>
-                                <InputNumber v-model="coupon.value" :suffix="coupon.type === 'percentage' ? '%' : ' $'" :min="0" :max="coupon.type === 'percentage' ? 100 : 1000" />
-                            </div>
-                            <div class="field">
-                                <label class="font-black text-slate-700 text-sm mb-2 block uppercase">Limite d'usage</label>
-                                <InputNumber v-model="coupon.max_usage" showButtons :min="1" />
-                            </div>
-                        </div>
-
-                        <div class="field">
-                            <label class="font-black text-slate-700 text-sm mb-2 block uppercase">Appliquer à certains cours</label>
-                            <MultiSelect v-model="coupon.applied_to" :options="courseOptions" optionLabel="name" placeholder="Tous les cours par défaut" display="chip" class="rounded-xl" />
-                        </div>
-                    </div>
-
-                    <!-- Colonne Droite (Config Dates et Options) -->
-                    <div class="col-span-12 md:col-span-5 bg-slate-50 p-6 rounded-xl border border-slate-100 flex flex-col gap-6">
-                        <div class="field">
-                            <label class="font-black text-slate-400 text-[10px] mb-2 block uppercase">Date de début</label>
-                            <Calendar v-model="coupon.start_date" showIcon class="w-full" />
-                        </div>
-                        <div class="field">
-                            <label class="font-black text-slate-400 text-[10px] mb-2 block uppercase">Date d'expiration</label>
-                            <Calendar v-model="coupon.end_date" showIcon class="w-full" />
-                        </div>
-                        
-                        <Divider />
-
-                        <div class="flex items-center justify-between p-3 bg-white rounded-2xl shadow-sm">
-                            <div class="flex flex-col">
-                                <span class="font-bold text-slate-800 text-sm">Coupon Public</span>
-                                <span class="text-[10px] text-slate-400">Visible sur le checkout</span>
-                            </div>
-                            <InputSwitch v-model="coupon.is_public" />
-                        </div>
-
-                        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100 mt-auto">
-                            <div class="flex gap-3 text-amber-600">
-                                <i class="pi pi-info-circle text-xl"></i>
-                                <p class="text-xs font-medium leading-relaxed">Les coupons expirés sont automatiquement désactivés à minuit de la date choisie.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <template #footer>
-                    <div class="flex justify-between items-center w-full border-t border-slate-100 pt-6">
-                        <Button label="Annuler" icon="pi pi-times" class="p-button-text p-button-secondary font-bold" @click="hideDialog" />
-                        <Button label="Créer le Coupon" icon="pi pi-check" class="p-button-primary px-10 shadow-lg shadow-blue-100" @click="saveCoupon" />
-                    </div>
-                </template>
-            </Dialog>
-
-            <!-- DIALOG: RAPPORT RAPIDE -->
-            <Dialog v-model:visible="displayStatsDialog" :modal="true" :style="{width: '450px'}" header="Performance du Coupon" class="p-fluid">
-                <div class="pt-4 space-y-8">
-                    <div class="text-center">
-                        <div class="inline-block px-4 py-2 bg-blue-50 rounded-full text-blue-600 font-black tracking-widest text-lg border-2 border-blue-100 mb-2">
-                            WELCOME2026
-                        </div>
-                        <p class="text-slate-400 text-sm">Géré depuis 14 mois</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                            <span class="text-[10px] font-black text-slate-400 uppercase block mb-1">Inscriptions</span>
-                            <span class="text-2xl font-black text-slate-800">145</span>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                            <span class="text-[10px] font-black text-slate-400 uppercase block mb-1">Conversion</span>
-                            <span class="text-2xl font-black text-emerald-500">12.4%</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="font-black text-slate-800 text-sm mb-4 flex items-center gap-2">
-                            <i class="pi pi-chart-line text-blue-500"></i> Économie cumulée par les élèves
-                        </h4>
-                        <div class="flex items-end gap-1 mb-2">
-                            <span class="text-4xl font-black text-blue-600">2,840.00</span>
-                            <span class="text-xl font-bold text-blue-400 pb-1">$</span>
-                        </div>
-                        <ProgressBar :value="75" :showValue="false" style="height: 10px" class="rounded-full" />
-                    </div>
-
-                    <div class="bg-slate-900 p-6 rounded-xl text-white">
-                        <h5 class="font-bold text-slate-400 text-xs uppercase mb-4 tracking-tighter">Profil type utilisateur</h5>
-                        <div class="flex items-center gap-4">
-                            <div class="flex -space-x-3">
-                                <img src="https://i.pravatar.cc/150?u=1" class="w-8 h-8 rounded-full border-2 border-slate-900" />
-                                <img src="https://i.pravatar.cc/150?u=2" class="w-8 h-8 rounded-full border-2 border-slate-900" />
-                                <img src="https://i.pravatar.cc/150?u=3" class="w-8 h-8 rounded-full border-2 border-slate-900" />
-                            </div>
-                            <span class="text-xs font-medium text-slate-300">Étudiants de 1ère année (Bac+1)</span>
-                        </div>
-                    </div>
-                </div>
-                <template #footer>
-                    <Button label="Exporter Rapport PDF" icon="pi pi-file-pdf" class="p-button-outlined p-button-secondary w-full border-2" />
-                </template>
-            </Dialog>
-
-            <footer class="mt-12 text-center text-slate-400 text-sm pb-8 font-medium">
-                © 2026 SubNetCongo LMS - Marketing & Loyalty Modules.
-            </footer>
-
+                    </template>
+                </DataTable>
+            </PageCard>
+            </div>
         </div>
+
+        <!-- Dialogue création / édition -->
+        <Dialog
+            v-model:visible="couponDialog"
+            modal
+            class="snc-dialog p-fluid"
+            :style="{ width: '640px', maxWidth: '95vw' }"
+        >
+            <template #header>
+                <span class="p-dialog-title flex items-center gap-2">
+                    <i :class="['pi', mode === 'edit' ? 'pi-pencil' : 'pi-ticket']"></i>
+                    {{ dialogTitle }}
+                </span>
+            </template>
+            <div class="grid grid-cols-12 gap-4">
+                <!-- Code -->
+                <div class="col-span-12">
+                    <label for="coupon-code" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Code</label>
+                    <div class="flex gap-2">
+                        <InputText
+                            id="coupon-code"
+                            v-model="couponForm.code"
+                            placeholder="Laissez vide pour générer automatiquement (SERPENT-XXXXXX)"
+                            class="font-mono"
+                            :class="{ 'p-invalid': couponForm.errors.code }"
+                            @blur="couponForm.code = (couponForm.code || '').toUpperCase()"
+                        />
+                        <Button
+                            icon="pi pi-sparkles"
+                            outlined
+                            severity="secondary"
+                            v-tooltip.top="'Générer un code aléatoire'"
+                            aria-label="Générer un code aléatoire"
+                            @click="generateCode"
+                        />
+                    </div>
+                    <small v-if="couponForm.errors.code" class="p-error" role="alert">{{ couponForm.errors.code }}</small>
+                </div>
+
+                <!-- Description -->
+                <div class="col-span-12">
+                    <label for="coupon-desc" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Description</label>
+                    <Textarea
+                        id="coupon-desc"
+                        v-model="couponForm.description"
+                        rows="2"
+                        autoResize
+                        placeholder="Usage interne, ex. : campagne rentrée 2026"
+                        :class="{ 'p-invalid': couponForm.errors.description }"
+                    />
+                    <small v-if="couponForm.errors.description" class="p-error" role="alert">{{ couponForm.errors.description }}</small>
+                </div>
+
+                <!-- Type -->
+                <div class="col-span-12 md:col-span-6">
+                    <label for="coupon-type" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Type de remise</label>
+                    <Select
+                        id="coupon-type"
+                        v-model="couponForm.discount_type"
+                        :options="typeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-full"
+                    />
+                    <small v-if="couponForm.errors.discount_type" class="p-error" role="alert">{{ couponForm.errors.discount_type }}</small>
+                </div>
+
+                <!-- Valeur -->
+                <div class="col-span-12 md:col-span-6">
+                    <label for="coupon-value" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Valeur</label>
+                    <InputNumber
+                        id="coupon-value"
+                        v-model="couponForm.discount_value"
+                        :min="0"
+                        :max="couponForm.discount_type === 'percent' ? 100 : undefined"
+                        :suffix="couponForm.discount_type === 'percent' ? ' %' : ' USD'"
+                        :minFractionDigits="0"
+                        :maxFractionDigits="2"
+                        class="w-full"
+                        :class="{ 'p-invalid': couponForm.errors.discount_value }"
+                    />
+                    <small v-if="couponForm.errors.discount_value" class="p-error" role="alert">{{ couponForm.errors.discount_value }}</small>
+                </div>
+
+                <!-- Limite globale -->
+                <div class="col-span-6 md:col-span-4">
+                    <label for="coupon-limit" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Limite globale</label>
+                    <InputNumber id="coupon-limit" v-model="couponForm.usage_limit" :min="1" allowEmpty placeholder="Illimitée" class="w-full" :class="{ 'p-invalid': couponForm.errors.usage_limit }" />
+                    <small v-if="couponForm.errors.usage_limit" class="p-error" role="alert">{{ couponForm.errors.usage_limit }}</small>
+                    <small v-else class="text-slate-400">Vide = illimitée</small>
+                </div>
+
+                <!-- Limite par utilisateur -->
+                <div class="col-span-6 md:col-span-4">
+                    <label for="coupon-per-user" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Limite / utilisateur</label>
+                    <InputNumber id="coupon-per-user" v-model="couponForm.max_uses_per_user" :min="1" class="w-full" :class="{ 'p-invalid': couponForm.errors.max_uses_per_user }" />
+                    <small v-if="couponForm.errors.max_uses_per_user" class="p-error" role="alert">{{ couponForm.errors.max_uses_per_user }}</small>
+                </div>
+
+                <!-- Min. achat -->
+                <div class="col-span-12 md:col-span-4">
+                    <label for="coupon-min" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Min. achat</label>
+                    <InputNumber id="coupon-min" v-model="couponForm.min_amount" :min="0" allowEmpty :maxFractionDigits="2" placeholder="Aucun" suffix=" USD" class="w-full" :class="{ 'p-invalid': couponForm.errors.min_amount }" />
+                    <small v-if="couponForm.errors.min_amount" class="p-error" role="alert">{{ couponForm.errors.min_amount }}</small>
+                </div>
+
+                <!-- Dates -->
+                <div class="col-span-6">
+                    <label for="coupon-start" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Date de début</label>
+                    <DatePicker id="coupon-start" v-model="couponForm.starts_at" showIcon dateFormat="dd/mm/yy" :manualInput="false" class="w-full" :class="{ 'p-invalid': couponForm.errors.starts_at }" />
+                    <small v-if="couponForm.errors.starts_at" class="p-error" role="alert">{{ couponForm.errors.starts_at }}</small>
+                </div>
+
+                <div class="col-span-6">
+                    <label for="coupon-end" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Date de fin</label>
+                    <DatePicker id="coupon-end" v-model="couponForm.expires_at" showIcon dateFormat="dd/mm/yy" :manualInput="false" :minDate="couponForm.starts_at || undefined" class="w-full" :class="{ 'p-invalid': couponForm.errors.expires_at }" />
+                    <small v-if="couponForm.errors.expires_at" class="p-error" role="alert">{{ couponForm.errors.expires_at }}</small>
+                </div>
+
+                <!-- Actif -->
+                <div class="col-span-12 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
+                    <div>
+                        <label for="coupon-active" class="font-semibold text-slate-800 dark:text-slate-100">Coupon actif</label>
+                        <p class="text-xs text-slate-500">Un coupon inactif est refusé au paiement.</p>
+                    </div>
+                    <ToggleSwitch id="coupon-active" v-model="couponForm.is_active" />
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="closeDialog" />
+                    <Button
+                        :label="mode === 'edit' ? 'Enregistrer' : 'Créer le coupon'"
+                        icon="pi pi-check"
+                        :loading="couponForm.processing"
+                        @click="submitForm"
+                    />
+                </div>
+            </template>
+        </Dialog>
     </AppLayout>
 </template>
-
-<style scoped>
-/* Custom PrimeVue Table Styling */
-:deep(.p-datatable.custom-coupon-table) {
-    border: none;
-}
-
-:deep(.p-datatable-header) {
-    background: transparent;
-    border-bottom: 1px solid #F1F5F9;
-    padding: 2rem 1rem;
-}
-
-:deep(.p-datatable-thead > tr > th) {
-    background: #F8FAFC;
-    color: #94A3B8;
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    padding: 1.5rem 1rem;
-    text-transform: uppercase;
-    border-bottom: 1px solid #F1F5F9;
-}
-
-:deep(.p-datatable-tbody > tr) {
-    background: white;
-    transition: background 0.2s;
-}
-
-:deep(.p-datatable-tbody > tr:hover) {
-    background: #F8FAFC !important;
-}
-
-:deep(.p-progressbar .p-progressbar-value) {
-    background: #6366F1;
-    border-radius: 10px;
-}
-
-/* Custom SelectButton Styling */
-:deep(.custom-select-button .p-button) {
-    border: 2px solid #F1F5F9;
-    background: white;
-    color: #64748B;
-    font-weight: 700;
-    font-size: 0.8rem;
-}
-
-:deep(.custom-select-button .p-button.p-highlight) {
-    border-color: #6366F1;
-    background: #F5F3FF;
-    color: #6366F1;
-}
-
-/* Modal styling */
-:deep(.p-dialog-header) {
-    padding: 1.5rem;
-    border-bottom: 1px solid #F1F5F9;
-}
-
-:deep(.p-dialog-content) {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-.field label {
-    font-size: 0.75rem;
-    color: #64748B;
-}
-
-/* Transitions */
-.p-button {
-    transition: all 0.3s ease;
-}
-</style>

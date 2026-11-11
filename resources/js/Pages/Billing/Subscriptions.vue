@@ -1,662 +1,687 @@
 <script setup>
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, computed, onMounted, watch } from 'vue';
-import { Head } from '@inertiajs/vue3';
-import { useI18n } from 'vue-i18n';
-import { useToast } from 'primevue/usetoast';
-import { FilterMatchMode, FilterOperator } from  '@primevue/core/api';
+import PageHeader from '@/Components/PageHeader.vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import debounce from 'lodash/debounce';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 
-// --- PRIME VUE IMPORTS ---
 import Card from 'primevue/card';
-import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Dialog from 'primevue/dialog';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
-import SelectButton from 'primevue/selectbutton';
-import ProgressBar from 'primevue/progressbar';
-import MultiSelect from 'primevue/multiselect';
-import Calendar from 'primevue/calendar';
-import Avatar from 'primevue/avatar';
 import Divider from 'primevue/divider';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
-import Menu from 'primevue/menu';
-import InlineMessage from 'primevue/inlinemessage';
+import InputSwitch from 'primevue/inputswitch';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
-const { t } = useI18n();
-const toast = useToast();
+const props = defineProps({
+    subscriptions: { type: Object, required: true },
+    stats: { type: Object, default: () => ({}) },
+    plans: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
+    users: { type: Array, default: () => [] },
+    selectedSubscription: { type: Object, default: null },
+});
 
-// --- STATE MANAGEMENT ---
-const loading = ref(true);
-const subscriptions = ref([]);
-const selectedSubscriptions = ref(null);
-const globalFilterValue = ref('');
-const displayPlanDialog = ref(false);
-const displaySubDialog = ref(false);
-const submitted = ref(false);
+const confirmAction = useConfirmAction();
+const page = usePage();
 
-// Form States
-const plan = ref({
+const activeTabIndex = ref(new URLSearchParams((page.url.split('?')[1] ?? '')).get('tab') === 'plans' ? 1 : 0);
+
+const statusOptions = [
+    { label: 'Tous les statuts', value: '' },
+    { label: 'Actif', value: 'active' },
+    { label: 'Résilié', value: 'canceled' },
+    { label: 'Expiré', value: 'expired' },
+    { label: 'Essai', value: 'trialing' },
+    { label: 'Impayé', value: 'past_due' },
+];
+
+const planOptions = computed(() => [
+    { label: 'Tous les plans', value: '' },
+    ...props.plans.map((p) => ({ label: p.name, value: p.code })),
+]);
+
+const activePlanOptions = computed(() =>
+    props.plans.filter((p) => p.is_active).map((p) => ({
+        label: `${p.name} — ${formatCents(p.price)}/${p.interval === 'year' ? 'an' : 'mois'}`,
+        value: p.code,
+    }))
+);
+
+const userOptions = computed(() =>
+    props.users.map((u) => ({ label: `${u.name} — ${u.email}`, value: u.id }))
+);
+
+const filterForm = useForm({
+    search: props.filters?.search ?? '',
+    status: props.filters?.status ?? '',
+    plan: props.filters?.plan ?? '',
+});
+
+const buildParams = (pageNumber = 1, perPage = null) => {
+    const params = { page: pageNumber };
+    if (filterForm.search) params.search = filterForm.search;
+    if (filterForm.status) params.status = filterForm.status;
+    if (filterForm.plan) params.plan = filterForm.plan;
+    if (perPage) params.per_page = perPage;
+    else if (props.filters?.per_page) params.per_page = props.filters.per_page;
+    return params;
+};
+
+const applyFilters = (pageNumber = 1, perPage = null) => {
+    router.get(route('billing.subscriptions.index'), buildParams(pageNumber, perPage), {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+};
+
+watch(() => filterForm.search, debounce(() => applyFilters(1), 350));
+watch(() => filterForm.status, () => applyFilters(1));
+watch(() => filterForm.plan, () => applyFilters(1));
+
+const hasActiveFilters = computed(() => !!(filterForm.search || filterForm.status || filterForm.plan));
+
+const resetFilters = () => {
+    filterForm.search = '';
+    filterForm.status = '';
+    filterForm.plan = '';
+};
+
+const onPage = (event) => {
+    applyFilters(event.page + 1, event.rows);
+};
+
+const exportUrl = computed(() => {
+    const params = buildParams(1);
+    delete params.page;
+    params.export = 'csv';
+    return route('billing.subscriptions.index', params);
+});
+
+const downloadExport = () => {
+    window.location.href = exportUrl.value;
+};
+
+const formatCents = (cents) =>
+    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: props.stats?.currency ?? 'USD' })
+        .format(((Number(cents) || 0) / 100));
+
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
+
+const intervalLabel = (interval) => (interval === 'year' ? 'Annuel' : interval === 'month' ? 'Mensuel' : (interval || '—'));
+
+const STATUS = {
+    active: { label: 'Actif', severity: 'success' },
+    canceled: { label: 'Résilié', severity: 'danger' },
+    expired: { label: 'Expiré', severity: 'warning' },
+    trialing: { label: 'Essai', severity: 'info' },
+    past_due: { label: 'Impayé', severity: 'warning' },
+};
+const statusTag = (status) => STATUS[status] ?? { label: status ?? '—', severity: 'info' };
+
+const initials = (name) =>
+    (name || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('') || '?';
+
+const detailRow = ref(null);
+const detailOpen = ref(false);
+const detailId = ref(null);
+
+const openDetail = (sub) => {
+    detailRow.value = sub;
+    detailId.value = sub.id;
+    detailOpen.value = true;
+};
+
+const detailSub = computed(() => {
+    if (detailId.value === null) return null;
+    const fresh = props.subscriptions.data.find((s) => s.id === detailId.value);
+    return fresh ?? detailRow.value;
+});
+
+onMounted(() => {
+    if (props.selectedSubscription) openDetail(props.selectedSubscription);
+});
+
+const askCancel = (sub) => {
+    confirmAction({
+        header: 'Résilier l’abonnement',
+        message: `Résilier l’abonnement de ${sub.user?.name ?? 'cet utilisateur'} ? La résiliation prend effet immédiatement.`,
+        acceptLabel: 'Résilier',
+        rejectLabel: 'Conserver',
+        danger: true,
+        accept: () => router.post(route('billing.subscriptions.cancel', sub.id), {}, { preserveScroll: true, preserveState: true }),
+    });
+};
+
+const askResume = (sub) => {
+    confirmAction({
+        header: 'Réactiver l’abonnement',
+        message: `Réactiver l’abonnement de ${sub.user?.name ?? 'cet utilisateur'} ?`,
+        acceptLabel: 'Réactiver',
+        rejectLabel: 'Annuler',
+        accept: () => router.post(route('billing.subscriptions.resume', sub.id), {}, { preserveScroll: true, preserveState: true }),
+    });
+};
+
+const askDelete = (sub) => {
+    confirmAction({
+        header: 'Supprimer l’abonnement',
+        message: 'Supprimer définitivement cet abonnement résilié ? Cette action est irréversible.',
+        acceptLabel: 'Supprimer',
+        rejectLabel: 'Annuler',
+        danger: true,
+        accept: () => {
+            detailOpen.value = false;
+            router.delete(route('billing.subscriptions.destroy', sub.id), { preserveScroll: true, preserveState: true });
+        },
+    });
+};
+
+const newSubOpen = ref(false);
+const subForm = useForm({
+    user_id: null,
+    plan_code: '',
+});
+
+const openNewSub = () => {
+    subForm.reset();
+    subForm.clearErrors();
+    newSubOpen.value = true;
+};
+
+const saveSubscription = () => {
+    subForm.post(route('billing.subscriptions.store'), {
+        preserveScroll: true,
+        onSuccess: () => { newSubOpen.value = false; subForm.reset(); },
+    });
+};
+
+const planDialogOpen = ref(false);
+const planForm = useForm({
     id: null,
+    code: '',
     name: '',
+    description: '',
     price: 0,
-    interval: 'monthly',
-    features: '',
-    status: 'active',
-    color: '#6366F1'
+    currency: 'USD',
+    interval: 'month',
+    duration_months: 1,
+    featuresText: '',
+    is_active: true,
 });
 
-const subDetail = ref(null);
+planForm.transform((data) => ({
+    code: data.code,
+    name: data.name,
+    description: data.description,
+    price: Math.round((Number(data.price) || 0) * 100),
+    currency: data.currency,
+    interval: data.interval,
+    duration_months: data.duration_months,
+    features: String(data.featuresText || '').split('\n').map((l) => l.trim()).filter(Boolean),
+    is_active: data.is_active,
+}));
 
-// --- FILTERS CONFIG ---
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    'plan.name': { value: null, matchMode: FilterMatchMode.IN },
-    status: { value: null, matchMode: FilterMatchMode.EQUALS },
-    verified: { value: null, matchMode: FilterMatchMode.EQUALS }
-});
-
-// --- CONSTANTS & DATA ---
-const statuses = ref(['Active', 'Pending', 'Expired', 'Canceled']);
-const intervals = ref([
-    { label: 'Mensuel', value: 'monthly' },
-    { label: 'Trimestriel', value: 'quarterly' },
-    { label: 'Annuel', value: 'yearly' }
-]);
-
-const plansList = ref([
-    { name: 'Starter', code: 'START', count: 450, mrr: 4500, color: 'emerald' },
-    { name: 'Professional', code: 'PRO', count: 890, mrr: 12450, color: 'indigo' },
-    { name: 'Enterprise', code: 'ENT', count: 120, mrr: 35000, color: 'amber' }
-]);
-
-// --- MOCK DATA GENERATION ---
-const loadSubscriptions = () => {
-    loading.value = true;
-    setTimeout(() => {
-        const data = [];
-        const names = ['Alice Vasseur', 'Thomas Legrand', 'Sophie Martin', 'Jean Dupont', 'Marie Curie', 'Luc Besson', 'Marc Levy'];
-        const planNames = ['Starter', 'Professional', 'Enterprise'];
-
-        for (let i = 1; i <= 50; i++) {
-            const planIdx = Math.floor(Math.random() * 3);
-            const statusIdx = Math.floor(Math.random() * 4);
-            data.push({
-                id: 1000 + i,
-                user: {
-                    name: names[Math.floor(Math.random() * names.length)],
-                    email: `user${i}@example.com`,
-                    avatar: `https://i.pravatar.cc/150?u=${i}`
-                },
-                plan: {
-                    name: planNames[planIdx],
-                    price: [19, 49, 199][planIdx],
-                    code: ['START', 'PRO', 'ENT'][planIdx]
-                },
-                startDate: new Date(2023, Math.floor(Math.random() * 11), Math.floor(Math.random() * 28)),
-                nextBilling: new Date(2025, 2, 15),
-                status: statuses.value[statusIdx],
-                paymentMethod: 'Visa **** 4242',
-                usage: Math.floor(Math.random() * 100)
-            });
-        }
-        subscriptions.value = data;
-        loading.value = false;
-    }, 1000);
-};
-
-// --- CHARTS DATA ---
-const revenueChartData = ref({
-    labels: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Fév'],
-    datasets: [
-        {
-            label: 'Revenu Récurrent (MRR)',
-            data: [42000, 45000, 44000, 51000, 56000, 59500],
-            fill: true,
-            borderColor: '#6366F1',
-            tension: 0.4,
-            backgroundColor: 'rgba(99, 102, 241, 0.1)'
-        }
-    ]
-});
-
-const distributionChartData = ref({
-    labels: ['Starter', 'Professional', 'Enterprise'],
-    datasets: [{
-        data: [450, 890, 120],
-        backgroundColor: ['#10B981', '#6366F1', '#F59E0B'],
-        hoverBackgroundColor: ['#059669', '#4F46E5', '#D97706']
-    }]
-});
-
-const chartOptions = {
-    plugins: {
-        legend: { labels: { color: '#495057' } }
-    },
-    scales: {
-        x: { ticks: { color: '#495057' }, grid: { color: '#ebedef' } },
-        y: { ticks: { color: '#495057' }, grid: { color: '#ebedef' } }
-    }
-};
-
-// --- ACTIONS ---
 const openNewPlan = () => {
-    plan.value = { id: null, name: '', price: 0, interval: 'monthly', features: '', status: 'active' };
-    submitted.value = false;
-    displayPlanDialog.value = true;
+    planForm.reset();
+    planForm.clearErrors();
+    planForm.id = null;
+    planForm.interval = 'month';
+    planForm.duration_months = 1;
+    planForm.currency = 'USD';
+    planForm.is_active = true;
+    planDialogOpen.value = true;
 };
 
-const hideDialog = () => {
-    displayPlanDialog.value = false;
-    submitted.value = false;
+const openEditPlan = (plan) => {
+    planForm.clearErrors();
+    planForm.id = plan.id;
+    planForm.code = plan.code;
+    planForm.name = plan.name;
+    planForm.description = plan.description ?? '';
+    planForm.price = (plan.price ?? 0) / 100;
+    planForm.currency = plan.currency ?? 'USD';
+    planForm.interval = plan.interval ?? 'month';
+    planForm.duration_months = plan.duration_months ?? 1;
+    planForm.featuresText = (plan.features ?? []).join('\n');
+    planForm.is_active = !!plan.is_active;
+    planDialogOpen.value = true;
 };
 
 const savePlan = () => {
-    submitted.value = true;
-    if (plan.value.name.trim()) {
-        toast.add({ severity: 'success', summary: 'Succès', detail: 'Plan mis à jour avec succès', life: 3000 });
-        displayPlanDialog.value = false;
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => { planDialogOpen.value = false; planForm.reset(); },
+    };
+    if (planForm.id) {
+        planForm.put(route('billing.plans.update', planForm.id), options);
+    } else {
+        planForm.post(route('billing.plans.store'), options);
     }
 };
 
-const viewSubscription = (data) => {
-    subDetail.value = { ...data };
-    displaySubDialog.value = true;
+const togglePlanActive = (plan) => {
+    router.put(route('billing.plans.update', plan.id), { is_active: plan.is_active }, {
+        preserveScroll: true,
+        preserveState: true,
+    });
 };
 
-const getStatusSeverity = (status) => {
-    switch (status) {
-        case 'Active': return 'success';
-        case 'Pending': return 'warning';
-        case 'Expired': return 'danger';
-        case 'Canceled': return 'info';
-        default: return null;
-    }
+const askDeletePlan = (plan) => {
+    confirmAction({
+        header: 'Supprimer le plan',
+        message: `Supprimer le plan « ${plan.name} » ? Impossible s’il est utilisé par des abonnements.`,
+        acceptLabel: 'Supprimer',
+        rejectLabel: 'Annuler',
+        danger: true,
+        accept: () => router.delete(route('billing.plans.destroy', plan.id), { preserveScroll: true }),
+    });
 };
 
-const exportCSV = () => {
-    // Logic for PrimeVue export
-};
-
-const toggleSubStatus = () => {
-    const newStatus = subDetail.value.status === 'Active' ? 'Canceled' : 'Active';
-    subDetail.value.status = newStatus;
-    toast.add({ severity: 'info', summary: 'Statut Modifié', detail: `L'abonnement est maintenant ${newStatus}`, life: 3000 });
-};
-
-// --- LIFECYCLE ---
-onMounted(() => {
-    loadSubscriptions();
-});
-
-// Computed for total revenue
-const totalMRR = computed(() => {
-    return subscriptions.value.reduce((acc, curr) => acc + curr.plan.price, 0).toLocaleString();
-});
-
-const activeCount = computed(() => {
-    return subscriptions.value.filter(s => s.status === 'Active').length;
-});
-
+const intervalOptions = [
+    { label: 'Mensuel', value: 'month' },
+    { label: 'Annuel', value: 'year' },
+];
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Gestion des Abonnements" />
+        <Head title="Abonnements & Plans" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+        <div class="page-bg min-h-screen">
+            <PageHeader
+                title="Abonnements & Plans"
+                subtitle="Gérez les abonnements réels et les offres tarifaires"
+                icon="pi-credit-card"
+                accent="indigo"
+                badge="Facturation"
+                :actions="[
+                    { label: 'Gérer les plans', icon: 'pi-cog', variant: 'secondary', onClick: () => activeTabIndex = 1 },
+                    { label: 'Exporter CSV', icon: 'pi-download', variant: 'secondary', onClick: downloadExport },
+                    { label: 'Nouveau Abonnement', icon: 'pi-plus', variant: 'primary', onClick: openNewSub },
+                ]"
+            />
 
-            <!-- HEADER SECTION -->
-            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
-                        <i class="pi pi-credit-card text-blue-600 text-2xl"></i>
-                        Abonnements & Plans
-                    </h1>
-                    <p class="text-slate-500 font-medium mt-1">Gérez vos revenus récurrents et les offres tarifaires</p>
-                </div>
-                <div class="flex gap-3">
-                    <Button label="Nouveau Plan" icon="pi pi-plus" class="p-button-primary shadow-md" @click="openNewPlan" />
-                    <Button label="Exporter" icon="pi pi-download" class="p-button-outlined p-button-secondary" @click="exportCSV" />
-                </div>
-            </header>
+            <div class="page-container page-section">
+            <TabView v-model:activeIndex="activeTabIndex">
+                <TabPanel header="Abonnements">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 pt-2">
+                        <Card class="border-none shadow-sm rounded-xl">
+                            <template #content>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">MRR (actifs)</span>
+                                        <div class="text-3xl font-black text-slate-800">{{ formatCents(stats.mrrCents) }}</div>
+                                    </div>
+                                    <div class="bg-emerald-50 p-3 rounded-xl"><i class="pi pi-chart-line text-emerald-600"></i></div>
+                                </div>
+                                <p class="mt-3 text-xs text-slate-400">Total encaissé : <span class="font-semibold text-slate-600">{{ formatCents(stats.totalCollectedCents) }}</span></p>
+                            </template>
+                        </Card>
 
-            <!-- STATS CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
-                    <template #content>
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Revenu Mensuel (MRR)</span>
-                                <div class="text-3xl font-black text-slate-800">{{ totalMRR }} €</div>
-                            </div>
-                            <div class="bg-emerald-50 p-3 rounded-xl">
-                                <i class="pi pi-chart-line text-emerald-600"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-xs">
-                            <span class="text-emerald-500 font-bold mr-2"><i class="pi pi-arrow-up"></i> +8.4%</span>
-                            <span class="text-slate-400 font-medium text-[10px]">PAR RAPPORT AU MOIS DERNIER</span>
-                        </div>
-                    </template>
-                </Card>
+                        <Card class="border-none shadow-sm rounded-xl">
+                            <template #content>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Abonnements actifs</span>
+                                        <div class="text-3xl font-black text-slate-800">{{ stats.totalActive ?? 0 }}</div>
+                                    </div>
+                                    <div class="bg-blue-50 p-3 rounded-xl"><i class="pi pi-users text-blue-600"></i></div>
+                                </div>
+                                <p class="mt-3 text-xs text-slate-400">{{ stats.total ?? 0 }} au total · {{ stats.totalCanceled ?? 0 }} résiliés · {{ stats.totalExpired ?? 0 }} expirés</p>
+                            </template>
+                        </Card>
 
-                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
-                    <template #content>
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Abonnements Actifs</span>
-                                <div class="text-3xl font-black text-slate-800">{{ activeCount }}</div>
-                            </div>
-                            <div class="bg-blue-50 p-3 rounded-xl">
-                                <i class="pi pi-users text-blue-600"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-xs">
-                            <span class="text-blue-500 font-bold mr-2">1,240 total</span>
-                            <span class="text-slate-400 font-medium text-[10px]">CLIENTS PAYANTS</span>
-                        </div>
-                    </template>
-                </Card>
+                        <Card class="border-none shadow-sm rounded-xl">
+                            <template #content>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Churn (résiliés / total)</span>
+                                        <div class="text-3xl font-black text-slate-800">{{ stats.churnNonDispo ? '—' : (stats.churnRate + ' %') }}</div>
+                                    </div>
+                                    <div class="bg-rose-50 p-3 rounded-xl"><i class="pi pi-user-minus text-rose-600"></i></div>
+                                </div>
+                                <p class="mt-3 text-xs text-slate-400">Estimatif simple — pas un taux cohorté mensuel</p>
+                            </template>
+                        </Card>
 
-                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
-                    <template #content>
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Taux d'Attrition (Churn)</span>
-                                <div class="text-3xl font-black text-slate-800">2.1%</div>
-                            </div>
-                            <div class="bg-red-50 p-3 rounded-xl">
-                                <i class="pi pi-sync text-red-600"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-xs">
-                            <span class="text-red-500 font-bold mr-2">-0.5%</span>
-                            <span class="text-slate-400 font-medium text-[10px]">AMÉLIORATION</span>
-                        </div>
-                    </template>
-                </Card>
+                        <Card class="border-none shadow-sm rounded-xl">
+                            <template #content>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">ARPU</span>
+                                        <div class="text-3xl font-black text-slate-800">{{ formatCents(stats.arpuCents) }}</div>
+                                    </div>
+                                    <div class="bg-amber-50 p-3 rounded-xl"><i class="pi pi-wallet text-amber-600"></i></div>
+                                </div>
+                                <p class="mt-3 text-xs text-slate-400">Revenu moyen par abonnement actif / mois</p>
+                            </template>
+                        </Card>
+                    </div>
 
-                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
-                    <template #content>
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="block text-slate-500 font-bold text-xs uppercase mb-1">ARPU (Revenu Moyen)</span>
-                                <div class="text-3xl font-black text-slate-800">34.50 €</div>
-                            </div>
-                            <div class="bg-amber-50 p-3 rounded-xl">
-                                <i class="pi pi-wallet text-amber-600"></i>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center text-xs">
-                            <span class="text-amber-500 font-bold mr-2"><i class="pi pi-arrow-up"></i> +2.10 €</span>
-                            <span class="text-slate-400 font-medium text-[10px]">VS TRIMESTRE PRÉCÉDENT</span>
-                        </div>
-                    </template>
-                </Card>
-            </div>
-
-            <!-- ANALYTICS SECTION -->
-            <div class="grid grid-cols-12 gap-8 mb-8">
-                <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-xl h-full">
-                        <template #title>
-                            <div class="flex justify-between items-center px-2">
-                                <span class="text-lg font-bold">Croissance des Revenus</span>
-                                <SelectButton v-model="selectedSubscriptions" :options="['6M', '1Y', 'ALL']" class="p-button-sm" />
-                            </div>
-                        </template>
+                    <Card class="border-none shadow-sm rounded-xl overflow-hidden">
                         <template #content>
-                            <Chart type="line" :data="revenueChartData" :options="chartOptions" class="h-64" />
-                        </template>
-                    </Card>
-                </div>
-                <div class="col-span-12 lg:col-span-4">
-                    <Card class="border-none shadow-sm rounded-xl h-full">
-                        <template #title><span class="text-lg font-bold px-2">Répartition des Plans</span></template>
-                        <template #content>
-                            <div class="flex flex-col items-center">
-                                <Chart type="doughnut" :data="distributionChartData" :options="{ cutout: '70%', plugins: { legend: { position: 'bottom' } } }" class="h-48 mb-4" />
-                                <div class="w-full space-y-3">
-                                    <div v-for="p in plansList" :key="p.code" class="flex items-center justify-between text-sm">
+                            <DataTable
+                                :value="subscriptions.data"
+                                dataKey="id"
+                                lazy
+                                :first="(subscriptions.current_page - 1) * subscriptions.per_page"
+                                :rows="subscriptions.per_page"
+                                :totalRecords="subscriptions.total"
+                                @page="onPage"
+                                stripedRows
+                                responsiveLayout="scroll"
+                                class="p-datatable-sm"
+                            >
+                                <template #header>
+                                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                                         <div class="flex items-center gap-2">
-                                            <div :class="`w-3 h-3 rounded-full bg-${p.color}-500` "></div>
-                                            <span class="text-slate-600">{{ p.name }}</span>
+                                            <h2 class="text-xl font-bold text-slate-800">Liste des abonnés</h2>
+                                            <Badge :value="subscriptions.total" severity="info" />
                                         </div>
-                                        <span class="font-bold text-slate-800">{{ p.count }} users</span>
+                                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                                            <IconField iconPosition="left" class="grow md:grow-0">
+                                                <InputIcon class="pi pi-search text-slate-400" />
+                                                <InputText v-model="filterForm.search" placeholder="Utilisateur, email, plan..." class="w-full md:w-64" aria-label="Recherche abonnements" />
+                                            </IconField>
+                                            <Select v-model="filterForm.status" :options="statusOptions" optionLabel="label" optionValue="value" class="w-44" aria-label="Filtrer par statut" />
+                                            <Select v-model="filterForm.plan" :options="planOptions" optionLabel="label" optionValue="value" class="w-44" aria-label="Filtrer par plan" />
+                                            <Button v-if="hasActiveFilters" icon="pi pi-filter-slash" text rounded severity="secondary" aria-label="Réinitialiser les filtres" @click="resetFilters" />
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                </template>
+
+                                <template #empty>
+                                    <div class="text-center py-8">
+                                        <i class="pi pi-inbox text-3xl text-slate-300 mb-2"></i>
+                                        <p class="text-slate-500">Aucun abonnement trouvé.</p>
+                                        <Button v-if="hasActiveFilters" label="Réinitialiser les filtres" text class="mt-2" @click="resetFilters" />
+                                    </div>
+                                </template>
+
+                                <Column header="Utilisateur" style="min-width: 15rem">
+                                    <template #body="{ data }">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0" aria-hidden="true">
+                                                {{ initials(data.user?.name) }}
+                                            </div>
+                                            <div class="flex flex-col min-w-0">
+                                                <span class="font-bold text-slate-700 leading-tight truncate">{{ data.user?.name ?? 'Utilisateur supprimé' }}</span>
+                                                <span class="text-xs text-slate-400 truncate">{{ data.user?.email ?? '—' }}</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </Column>
+
+                                <Column header="Plan" style="min-width: 11rem">
+                                    <template #body="{ data }">
+                                        <Tag :value="data.plan_name ?? data.plan?.name ?? '—'" severity="info" class="px-3" />
+                                        <div class="text-[11px] text-slate-400 mt-1 font-mono">{{ data.plan_code ?? '' }}</div>
+                                    </template>
+                                </Column>
+
+                                <Column header="Prix" style="min-width: 8rem">
+                                    <template #body="{ data }">
+                                        <span class="font-bold text-slate-800">{{ formatCents(data.plan_price) }}</span>
+                                        <span class="text-[11px] text-slate-400"> / {{ data.interval === 'year' ? 'an' : 'mois' }}</span>
+                                    </template>
+                                </Column>
+
+                                <Column header="Intervalle" style="min-width: 7rem">
+                                    <template #body="{ data }">{{ intervalLabel(data.interval) }}</template>
+                                </Column>
+
+                                <Column header="Début" style="min-width: 7rem">
+                                    <template #body="{ data }">{{ formatDate(data.starts_at ?? data.created_at) }}</template>
+                                </Column>
+
+                                <Column header="Fin" style="min-width: 7rem">
+                                    <template #body="{ data }">{{ formatDate(data.ends_at) }}</template>
+                                </Column>
+
+                                <Column header="Statut" style="min-width: 7rem">
+                                    <template #body="{ data }">
+                                        <Tag :value="statusTag(data.status).label" :severity="statusTag(data.status).severity" />
+                                    </template>
+                                </Column>
+
+                                <Column header="Actions" alignFrozen="right" frozen style="min-width: 9rem">
+                                    <template #body="{ data }">
+                                        <div class="flex items-center gap-1">
+                                            <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="`Voir la fiche de ${data.user?.name ?? 'l’abonné'}`" title="Voir le détail" @click="openDetail(data)" />
+                                            <Button v-if="data.status === 'active'" icon="pi pi-ban" text rounded severity="danger" aria-label="Résilier l’abonnement" title="Résilier" @click="askCancel(data)" />
+                                            <Button v-if="data.status === 'canceled'" icon="pi pi-refresh" text rounded severity="success" aria-label="Réactiver l’abonnement" title="Réactiver" @click="askResume(data)" />
+                                            <Button v-if="data.status === 'canceled'" icon="pi pi-trash" text rounded severity="danger" aria-label="Supprimer l’abonnement" title="Supprimer" @click="askDelete(data)" />
+                                        </div>
+                                    </template>
+                                </Column>
+                            </DataTable>
                         </template>
                     </Card>
-                </div>
-            </div>
+                </TabPanel>
 
-            <!-- MAIN DATA TABLE -->
-            <Card class="border-none shadow-sm rounded-xl overflow-hidden">
-                <template #content>
-                    <DataTable
-                        v-model:filters="filters"
-                        :value="subscriptions"
-                        :paginator="true"
-                        :rows="10"
-                        dataKey="id"
-                        :loading="loading"
-                        stripedRows
-                        v-model:selection="selectedSubscriptions"
-                        removableSort
-                        filterDisplay="menu"
-                        :globalFilterFields="['user.name', 'user.email', 'plan.name', 'status']"
-                        class="p-datatable-sm"
-                    >
-                        <template #header>
-                            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                                <div class="flex items-center gap-2">
-                                    <h3 class="text-xl font-bold text-slate-800">Liste des Abonnés</h3>
-                                    <Badge :value="subscriptions.length" severity="info" />
-                                </div>
-                                <span class="p-input-icon-left w-full md:w-auto">
-                                    <i class="pi pi-search" />
-                                    <InputText v-model="filters['global'].value" placeholder="Recherche globale..." class="w-full md:w-80" />
-                                </span>
-                            </div>
+                <TabPanel header="Plans">
+                    <div class="flex justify-between items-center mb-4 pt-2">
+                        <p class="text-sm text-slate-500">Plans tarifaires proposés à la souscription. Un plan utilisé par des abonnements ne peut pas être supprimé (désactivez-le).</p>
+                        <Button label="Nouveau plan" icon="pi pi-plus" @click="openNewPlan" />
+                    </div>
+
+                    <DataTable :value="plans" dataKey="id" stripedRows responsiveLayout="scroll" class="p-datatable-sm">
+                        <template #empty>
+                            <div class="text-center py-8 text-slate-500">Aucun plan. Créez le premier plan tarifaire.</div>
                         </template>
-
-                        <template #empty> Aucun abonnement trouvé. </template>
-                        <template #loading> Chargement des données... </template>
-
-                        <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-
-                        <Column field="user.name" header="Utilisateur" sortable style="min-width: 14rem">
+                        <Column header="Code" style="min-width: 8rem">
+                            <template #body="{ data }"><span class="font-mono text-xs text-slate-600">{{ data.code }}</span></template>
+                        </Column>
+                        <Column field="name" header="Nom" style="min-width: 11rem" />
+                        <Column header="Prix" style="min-width: 8rem">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-3">
-                                    <Avatar :image="data.user.avatar" shape="circle" size="medium" />
-                                    <div class="flex flex-col">
-                                        <span class="font-bold text-slate-700 leading-none mb-1">{{ data.user.name }}</span>
-                                        <span class="text-xs text-slate-400">{{ data.user.email }}</span>
-                                    </div>
-                                </div>
+                                <span class="font-bold">{{ formatCents(data.price) }}</span>
+                                <span class="text-[11px] text-slate-400"> / {{ data.interval === 'year' ? 'an' : 'mois' }}</span>
                             </template>
                         </Column>
-
-                        <Column field="plan.name" header="Offre" sortable style="min-width: 10rem">
+                        <Column header="Intervalle" style="min-width: 7rem">
+                            <template #body="{ data }">{{ intervalLabel(data.interval) }}</template>
+                        </Column>
+                        <Column header="Durée" style="min-width: 7rem">
+                            <template #body="{ data }">{{ data.duration_months }} mois</template>
+                        </Column>
+                        <Column header="Actif" style="min-width: 6rem">
                             <template #body="{ data }">
-                                <Tag :value="data.plan.name" :severity="data.plan.code === 'ENT' ? 'warning' : 'info'" class="px-3" />
+                                <InputSwitch v-model="data.is_active" :aria-label="`${data.is_active ? 'Désactiver' : 'Activer'} le plan ${data.name}`" @change="togglePlanActive(data)" />
                             </template>
                         </Column>
-
-                        <Column field="plan.price" header="Tarif" sortable style="min-width: 8rem">
+                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 7rem">
                             <template #body="{ data }">
-                                <span class="font-bold text-slate-800">{{ data.plan.price }} €<span class="text-[10px] text-slate-400">/mois</span></span>
-                            </template>
-                        </Column>
-
-                        <Column field="startDate" header="Inscrit le" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                {{ data.startDate.toLocaleDateString() }}
-                            </template>
-                        </Column>
-
-                        <Column field="usage" header="Usage" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex justify-between text-[10px] font-bold">
-                                        <span>{{ data.usage }}%</span>
-                                        <span class="text-slate-400">Quota</span>
-                                    </div>
-                                    <ProgressBar :value="data.usage" :showValue="false" style="height: 6px"
-                                        :color="data.usage > 90 ? '#F43F5E' : '#6366F1'" />
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column field="status" header="Statut" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <Badge :value="data.status" :severity="getStatusSeverity(data.status)" />
-                            </template>
-                        </Column>
-
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 8rem">
-                            <template #body="{ data }">
-                                <div class="flex gap-2">
-                                    <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-secondary" @click="viewSubscription(data)" />
-                                    <Button icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text p-button-secondary" />
+                                <div class="flex items-center gap-1">
+                                    <Button icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Modifier le plan ${data.name}`" title="Modifier" @click="openEditPlan(data)" />
+                                    <Button icon="pi pi-trash" text rounded severity="danger" :aria-label="`Supprimer le plan ${data.name}`" title="Supprimer" @click="askDeletePlan(data)" />
                                 </div>
                             </template>
                         </Column>
                     </DataTable>
+                </TabPanel>
+            </TabView>
+            </div>
+
+            <Dialog v-model:visible="newSubOpen" modal class="snc-dialog" :style="{ width: '30rem' }" :breakpoints="{ '640px': '95vw' }">
+                <template #header>
+                    <span class="p-dialog-title flex items-center gap-2">
+                        <i class="pi pi-user-plus"></i>
+                        Nouveau abonnement
+                    </span>
                 </template>
-            </Card>
-
-            <!-- MODAL: CREATE/EDIT PLAN -->
-            <Dialog v-model:visible="displayPlanDialog" :style="{width: '550px'}" header="Détails du Plan Tarifaire" :modal="true" class="p-fluid">
-                <div class="space-y-6 pt-4">
-                    <div class="field">
-                        <label for="name" class="font-bold block mb-2">Nom de l'offre</label>
-                        <InputText id="name" v-model.trim="plan.name" required="true" autofocus :class="{'p-invalid': submitted && !plan.name}" placeholder="ex: Pro Max" />
-                        <small class="p-error" v-if="submitted && !plan.name">Le nom est obligatoire.</small>
+                <div class="space-y-4 pt-2">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2" for="sub-user">Utilisateur</label>
+                        <Select id="sub-user" v-model="subForm.user_id" :options="userOptions" optionLabel="label" optionValue="value" filter class="w-full" placeholder="Rechercher un utilisateur..." />
+                        <small v-if="subForm.errors.user_id" class="p-error" role="alert">{{ subForm.errors.user_id }}</small>
                     </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2" for="sub-plan">Plan</label>
+                        <Select id="sub-plan" v-model="subForm.plan_code" :options="activePlanOptions" optionLabel="label" optionValue="value" class="w-full" placeholder="Choisir un plan actif..." />
+                        <small v-if="subForm.errors.plan_code" class="p-error" role="alert">{{ subForm.errors.plan_code }}</small>
+                        <p class="text-xs text-slate-400 mt-2">Création manuelle par un administrateur. Aucun paiement n’est encaissé automatiquement.</p>
+                    </div>
+                </div>
+                <template #footer>
+                    <Button label="Annuler" text severity="secondary" @click="newSubOpen = false" />
+                    <Button label="Créer l’abonnement" icon="pi pi-check" :loading="subForm.processing" :disabled="!subForm.user_id || !subForm.plan_code" @click="saveSubscription" />
+                </template>
+            </Dialog>
 
+            <Dialog v-model:visible="planDialogOpen" modal class="snc-dialog" :style="{ width: '36rem' }" :breakpoints="{ '640px': '95vw' }">
+                <template #header>
+                    <span class="p-dialog-title flex items-center gap-2">
+                        <i class="pi pi-cog"></i>
+                        {{ planForm.id ? 'Modifier le plan' : 'Nouveau plan' }}
+                    </span>
+                </template>
+                <div class="space-y-4 pt-2">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="field">
-                            <label for="price" class="font-bold block mb-2">Prix (€)</label>
-                            <InputNumber id="price" v-model="plan.price" mode="currency" currency="EUR" locale="fr-FR" />
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-code">Code</label>
+                            <InputText id="plan-code" v-model.trim="planForm.code" :disabled="!!planForm.id" placeholder="ex: starter" class="w-full" :class="{ 'p-invalid': planForm.errors.code }" />
+                            <small v-if="planForm.errors.code" class="p-error" role="alert">{{ planForm.errors.code }}</small>
                         </div>
-                        <div class="field">
-                            <label for="interval" class="font-bold block mb-2">Cycle de facturation</label>
-                            <Dropdown id="interval" v-model="plan.interval" :options="intervals" optionLabel="label" optionValue="value" />
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-name">Nom</label>
+                            <InputText id="plan-name" v-model.trim="planForm.name" placeholder="ex: Professional" class="w-full" :class="{ 'p-invalid': planForm.errors.name }" />
+                            <small v-if="planForm.errors.name" class="p-error" role="alert">{{ planForm.errors.name }}</small>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-desc">Description</label>
+                        <Textarea id="plan-desc" v-model="planForm.description" rows="2" class="w-full" autoResize />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-price">Prix (USD)</label>
+                            <InputNumber id="plan-price" v-model="planForm.price" mode="currency" currency="USD" locale="fr-FR" class="w-full" :minFractionDigits="2" />
+                            <small v-if="planForm.errors.price" class="p-error" role="alert">{{ planForm.errors.price }}</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-interval">Intervalle</label>
+                            <Select id="plan-interval" v-model="planForm.interval" :options="intervalOptions" optionLabel="label" optionValue="value" class="w-full" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-duration">Durée (mois)</label>
+                            <InputNumber id="plan-duration" v-model="planForm.duration_months" :min="1" :max="120" class="w-full" showButtons />
+                            <small v-if="planForm.errors.duration_months" class="p-error" role="alert">{{ planForm.errors.duration_months }}</small>
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <label class="flex items-center gap-3 cursor-pointer" for="plan-active">
+                                <InputSwitch id="plan-active" v-model="planForm.is_active" />
+                                <span class="text-sm font-semibold text-slate-600">Plan actif (visible à la souscription)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-features">Fonctionnalités (une par ligne)</label>
+                        <Textarea id="plan-features" v-model="planForm.featuresText" rows="4" class="w-full" placeholder="Accès illimité&#10;Support prioritaire&#10;Certificats" />
+                        <small v-if="planForm.errors.features" class="p-error" role="alert">{{ planForm.errors.features }}</small>
+                    </div>
+                </div>
+                <template #footer>
+                    <Button label="Annuler" text severity="secondary" @click="planDialogOpen = false" />
+                    <Button label="Enregistrer" icon="pi pi-check" :loading="planForm.processing" :disabled="!planForm.name || (!planForm.id && !planForm.code)" @click="savePlan" />
+                </template>
+            </Dialog>
+
+            <Dialog v-model:visible="detailOpen" modal class="snc-dialog" :style="{ width: '40rem' }" :breakpoints="{ '640px': '95vw' }">
+                <template #header>
+                    <span class="p-dialog-title flex items-center gap-2">
+                        <i class="pi pi-id-card"></i>
+                        Fiche abonné
+                    </span>
+                </template>
+                <div v-if="detailSub" class="pt-2">
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl mb-5">
+                        <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-black shrink-0" aria-hidden="true">
+                            {{ initials(detailSub.user?.name) }}
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-xl font-black text-slate-800 leading-tight">{{ detailSub.user?.name ?? 'Utilisateur supprimé' }}</h2>
+                            <p class="text-slate-500 text-sm truncate">{{ detailSub.user?.email ?? '—' }}</p>
+                            <Tag class="mt-2" :value="statusTag(detailSub.status).label" :severity="statusTag(detailSub.status).severity" />
                         </div>
                     </div>
 
-                    <div class="field">
-                        <label for="features" class="font-bold block mb-2">Fonctionnalités incluses (une par ligne)</label>
-                        <Textarea id="features" v-model="plan.features" rows="4" placeholder="Accès illimité&#10;Support 24/7&#10;Stockage 100Go" />
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Plan actuel</span>
+                            <div class="font-bold text-slate-800">{{ detailSub.plan_name ?? detailSub.plan?.name ?? '—' }}</div>
+                            <div class="text-xs text-slate-400 font-mono">{{ detailSub.plan_code ?? '' }}</div>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cycle</span>
+                            <div class="font-semibold text-slate-700">{{ intervalLabel(detailSub.interval) }} · {{ formatCents(detailSub.plan_price) }}</div>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Client depuis</span>
+                            <div class="font-semibold text-slate-700">{{ formatDate(detailSub.created_at) }}</div>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Début</span>
+                            <div class="font-semibold text-slate-700">{{ formatDate(detailSub.starts_at ?? detailSub.created_at) }}</div>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Fin</span>
+                            <div class="font-semibold text-slate-700">{{ formatDate(detailSub.ends_at) }}</div>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Total encaissé</span>
+                            <div class="font-bold text-slate-800">{{ formatCents(detailSub.total_paid) }}</div>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Référence</span>
+                            <div class="font-mono text-xs text-slate-500 break-all">{{ detailSub.stripe_id ?? '—' }}</div>
+                        </div>
                     </div>
 
-                    <div class="field">
-                        <label class="font-bold block mb-2">Status du plan</label>
-                        <div class="flex gap-4">
-                            <div class="flex items-center">
-                                <Checkbox inputId="status1" name="status" value="active" v-model="plan.status" />
-                                <label for="status1" class="ml-2">Actif (Visible par les clients)</label>
-                            </div>
+                    <Divider />
+
+                    <div class="flex flex-wrap justify-between items-center gap-3 bg-rose-50 border border-rose-100 p-4 rounded-xl">
+                        <div>
+                            <h3 class="font-bold text-rose-800 text-sm">Zone d’administration</h3>
+                            <p class="text-xs text-rose-600">La résiliation prend effet immédiatement (sans période de grâce).</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <Button v-if="detailSub.status === 'active'" label="Résilier l’abonnement" icon="pi pi-ban" outlined severity="danger" @click="askCancel(detailSub)" />
+                            <Button v-if="detailSub.status === 'canceled'" label="Réactiver" icon="pi pi-refresh" outlined severity="success" @click="askResume(detailSub)" />
+                            <Button v-if="detailSub.status === 'canceled'" label="Supprimer" icon="pi pi-trash" severity="danger" @click="askDelete(detailSub)" />
                         </div>
                     </div>
                 </div>
                 <template #footer>
-                    <Button label="Annuler" icon="pi pi-times" class="p-button-text" @click="hideDialog" />
-                    <Button label="Enregistrer l'offre" icon="pi pi-check" class="p-button-primary" @click="savePlan" />
+                    <Button label="Fermer" text severity="secondary" @click="detailOpen = false" />
                 </template>
             </Dialog>
-
-            <!-- MODAL: VIEW SUBSCRIPTION DETAIL -->
-            <Dialog v-model:visible="displaySubDialog" :style="{width: '700px'}" header="Fiche Abonné" :modal="true" v-if="subDetail">
-                <div class="p-2">
-                    <div class="flex items-center gap-6 mb-8 p-4 bg-slate-50 rounded-xl">
-                        <Avatar :image="subDetail.user.avatar" size="xlarge" shape="circle" class="border-4 border-white shadow-sm" />
-                        <div class="flex-1">
-                            <h2 class="text-2xl font-black text-slate-800">{{ subDetail.user.name }}</h2>
-                            <p class="text-slate-500 font-medium">{{ subDetail.user.email }}</p>
-                            <div class="mt-2 flex gap-2">
-                                <Tag value="Vérifié" severity="success" icon="pi pi-check-circle" />
-                                <Tag :value="subDetail.status" :severity="getStatusSeverity(subDetail.status)" />
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xs font-bold text-slate-400 block uppercase">Client depuis</span>
-                            <span class="font-bold text-slate-800">{{ subDetail.startDate.toLocaleDateString() }}</span>
-                        </div>
-                    </div>
-
-                    <TabView>
-                        <TabPanel header="Abonnement">
-                            <div class="grid grid-cols-2 gap-8 py-4">
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Plan actuel</label>
-                                        <div class="text-lg font-black text-blue-600">{{ subDetail.plan.name }}</div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Dernier Paiement</label>
-                                        <div class="font-bold text-slate-700">Le 15/02/2025 - {{ subDetail.plan.price }} €</div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Méthode de paiement</label>
-                                        <div class="flex items-center gap-2 font-medium text-slate-700">
-                                            <i class="pi pi-credit-card"></i> {{ subDetail.paymentMethod }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                                        <i class="pi pi-info-circle"></i> Notes internes
-                                    </h4>
-                                    <p class="text-sm text-slate-500 italic">Client fidèle, utilise principalement le module de statistiques avancées. Potentiel upgrade vers Enterprise en Q3.</p>
-                                </div>
-                            </div>
-
-                            <Divider />
-
-                            <div class="flex justify-between items-center bg-red-50 p-4 rounded-xl mt-4">
-                                <div>
-                                    <h4 class="font-bold text-red-800">Zone de Danger</h4>
-                                    <p class="text-xs text-red-600">L'annulation prendra effet à la fin du cycle de facturation actuel.</p>
-                                </div>
-                                <Button :label="subDetail.status === 'Active' ? 'Résilier l\'abonnement' : 'Réactiver'"
-                                    :class="subDetail.status === 'Active' ? 'p-button-danger p-button-outlined' : 'p-button-success'"
-                                    @click="toggleSubStatus" />
-                            </div>
-                        </TabPanel>
-
-                        <TabPanel header="Historique Facturation">
-                            <div class="py-2">
-                                <DataTable :value="[
-                                    { id: 1, date: '15 Jan 2025', amount: '49.00 €', status: 'Payé', ref: 'INV-2025-001' },
-                                    { id: 2, date: '15 Déc 2024', amount: '49.00 €', status: 'Payé', ref: 'INV-2024-098' },
-                                    { id: 3, date: '15 Nov 2024', amount: '49.00 €', status: 'Payé', ref: 'INV-2024-045' }
-                                ]" class="p-datatable-sm">
-                                    <Column field="date" header="Date"></Column>
-                                    <Column field="ref" header="Facture"></Column>
-                                    <Column field="amount" header="Montant" class="font-bold"></Column>
-                                    <Column field="status" header="Statut">
-                                        <template #body="{ data }">
-                                            <span class="text-emerald-500 font-bold"><i class="pi pi-check"></i> {{ data.status }}</span>
-                                        </template>
-                                    </Column>
-                                    <Column header="PDF">
-                                        <template #body>
-                                            <Button icon="pi pi-file-pdf" class="p-button-text p-button-sm p-button-secondary" />
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                            </div>
-                        </TabPanel>
-
-                        <TabPanel header="Logs d'activité">
-                            <div class="space-y-4 py-4">
-                                <div class="flex gap-3 text-sm">
-                                    <div class="text-blue-500"><i class="pi pi-circle-fill text-[8px]"></i></div>
-                                    <div>
-                                        <span class="font-bold">Changement de carte</span> - 12/02/2025
-                                        <p class="text-slate-400 text-xs">Utilisateur a mis à jour ses informations bancaires.</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-3 text-sm">
-                                    <div class="text-slate-300"><i class="pi pi-circle-fill text-[8px]"></i></div>
-                                    <div>
-                                        <span class="font-bold">Connexion réussie</span> - 10/02/2025
-                                        <p class="text-slate-400 text-xs">IP: 192.168.1.1 (Paris, FR)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </TabPanel>
-                    </TabView>
-                </div>
-                <template #footer>
-                    <Button label="Fermer" icon="pi pi-times" class="p-button-secondary p-button-text" @click="displaySubDialog = false" />
-                    <Button label="Envoyer un message" icon="pi pi-envelope" class="p-button-primary" />
-                </template>
-            </Dialog>
-
-            <!-- FOOTER INFO -->
-            <footer class="mt-12 text-center text-slate-400 text-sm pb-8">
-                <p>&copy; 2026 SubNetCongo Analytics. Tous droits réservés.</p>
-                <div class="flex justify-center gap-4 mt-2">
-                    <a href="#" class="hover:text-blue-500">Conditions d'utilisation</a>
-                    <span>•</span>
-                    <a href="#" class="hover:text-blue-500">Politique de confidentialité</a>
-                </div>
-            </footer>
-
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-/* Custom PrimeVue Overrides */
-:deep(.p-card) {
-    border-radius: 1rem;
-}
-
-:deep(.p-datatable .p-datatable-header) {
-    background: transparent;
-    padding: 1.5rem 0;
-    border: none;
-}
-
 :deep(.p-datatable .p-datatable-thead > tr > th) {
     background: #F1F5F9;
     color: #475569;
     text-transform: uppercase;
-    font-size: 0.75rem;
-    font-weight: 800;
+    font-size: 0.72rem;
+    font-weight: 700;
     letter-spacing: 0.025em;
-    padding: 1rem;
-}
-
-:deep(.p-progressbar .p-progressbar-value) {
-    border-radius: 10px;
-}
-
-:deep(.p-tabview .p-tabview-panels) {
-    padding: 1rem 0;
-}
-
-:deep(.p-dialog .p-dialog-header) {
-    padding: 1.5rem;
-    background: #fff;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-:deep(.p-dialog .p-dialog-content) {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-.field label {
-    font-size: 0.875rem;
-    color: #334155;
-}
-
-/* Animations simples */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-/* Glassmorphism subtle */
-.bg-white-glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 </style>

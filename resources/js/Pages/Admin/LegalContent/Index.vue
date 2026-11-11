@@ -2,8 +2,6 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
-import PageCard from '@/Components/PageCard.vue';
-import Card from 'primevue/card';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import InputText from 'primevue/inputtext';
@@ -28,19 +26,17 @@ const privacyForm = useForm({
 
 const submitLegal = () => {
     const data = Object.entries(legalForm.legal).map(([key, value]) => ({ key, value })).filter(i => i.key);
-    legalForm.post(route('admin.legal-content.update', 'legal'), {
-        data,
+    legalForm.transform(() => data).put(route('admin.legal-content.update', 'legal'), {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Succès', detail: 'Mentions légales enregistrées.', life: 3000 }),
+        onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez vérifier les champs du formulaire.', life: 4000 }),
     });
 };
 
 const submitPrivacy = () => {
     const data = Object.entries(privacyForm.privacy).map(([key, value]) => ({ key, value })).filter(i => i.key);
-    privacyForm.post(route('admin.legal-content.update', 'privacy'), {
-        data,
+    privacyForm.transform(() => data).put(route('admin.legal-content.update', 'privacy'), {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Succès', detail: 'Politique de confidentialité enregistrée.', life: 3000 }),
+        onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez vérifier les champs du formulaire.', life: 4000 }),
     });
 };
 </script>

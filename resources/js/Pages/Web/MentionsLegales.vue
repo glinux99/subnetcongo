@@ -1,9 +1,62 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
+    legal_content: { type: Object, default: () => ({}) },
+});
+
+const page = usePage();
+
+// `legal` est partagé globalement par HandleInertiaRequests (LegalInfo::first()).
+const legal = computed(() => page.props.legal || null);
+const identity = computed(() => props.identity || {});
+
+const missing = 'Information non renseignée';
+
+const companyName = computed(() => legal.value?.company_name || identity.value?.site_name || 'SubnetCongo');
+
+const capitalDisplay = computed(() => {
+    const raw = legal.value?.capital_social;
+    if (!raw) return null;
+    const trimmed = String(raw).trim();
+    return /[A-Za-z]/.test(trimmed) ? trimmed : `${trimmed} ${legal.value?.currency || 'CDF'}`;
+});
+
+const legalFormCapital = computed(() => {
+    const parts = [];
+    if (legal.value?.legal_form) parts.push(legal.value.legal_form);
+    if (capitalDisplay.value) parts.push(`au capital de ${capitalDisplay.value}`);
+    return parts.length ? parts.join(' ') : null;
+});
+
+const seatAddress = computed(() => {
+    const l = legal.value;
+    const parts = [l?.address_line, l?.city, l?.province, l?.country].filter(Boolean);
+    if (parts.length) return parts.join(', ');
+    return identity.value?.contact_address || 'Kinshasa, RDC';
+});
+
+const legalFilled = computed(() => {
+    const l = legal.value;
+    if (!l) return false;
+    return ['company_name', 'legal_form', 'rccm', 'ifu', 'tax_id', 'nif', 'vat_number', 'capital_social', 'address_line', 'po_box', 'website'].some((k) => l[k]);
+});
+
+const legalUpdated = computed(() => {
+    const iso = legal.value?.updated_at;
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+});
+
+const websiteHref = computed(() => {
+    const w = legal.value?.website;
+    if (!w) return null;
+    return /^https?:\/\//i.test(w) ? w : `https://${w}`;
 });
 </script>
 
@@ -46,44 +99,68 @@ const props = defineProps({
                     <div class="text-slate-600 leading-relaxed mb-6">
                         Le site internet <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> est édité et exploité par la société :
                     </div>
-                    
+
                     <!-- Fiche entreprise (Grille professionnelle) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 bg-slate-50 p-6 sm:p-8 rounded-xl border border-slate-200 text-sm">
+                    <div v-if="legalFilled" class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 bg-slate-50 p-6 sm:p-8 rounded-xl border border-slate-200 text-sm">
                         <div>
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Dénomination sociale</span>
-                            <span class="font-semibold text-slate-900 text-base">SUBNETCONGO SARL</span>
+                            <span class="font-semibold text-slate-900 text-base">{{ legal?.company_name || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Forme Juridique & Capital</span>
-                            <span class="font-medium text-slate-700">SARL au capital de 10.000.000 CDF</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Forme juridique & Capital</span>
+                            <span class="font-medium text-slate-700">{{ legalFormCapital || missing }}</span>
                         </div>
                         <div>
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Immatriculation (RCCM)</span>
-                            <span class="font-medium text-slate-700 font-mono">CD/KIN/RCCM/25-B-00000</span>
+                            <span class="font-medium text-slate-700 font-mono">{{ legal?.rccm || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Identification Nationale (ID.NAT)</span>
-                            <span class="font-medium text-slate-700 font-mono">01-9-N00000A</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Identifiant Fiscal Unique (IFU)</span>
+                            <span class="font-medium text-slate-700 font-mono">{{ legal?.ifu || missing }}</span>
                         </div>
                         <div>
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Numéro d'impôt</span>
-                            <span class="font-medium text-slate-700 font-mono">A123456789B</span>
+                            <span class="font-medium text-slate-700 font-mono">{{ legal?.tax_id || missing }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Numéro d'identification (NIF)</span>
+                            <span class="font-medium text-slate-700 font-mono">{{ legal?.nif || missing }}</span>
+                        </div>
+                        <div v-if="legal?.vat_number">
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">N° TVA</span>
+                            <span class="font-medium text-slate-700 font-mono">{{ legal.vat_number }}</span>
+                        </div>
+                        <div v-if="legal?.po_box">
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Boîte postale</span>
+                            <span class="font-medium text-slate-700">{{ legal.po_box }}</span>
                         </div>
                         <div>
                             <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Siège social</span>
-                            <span class="font-medium text-slate-700">{{ identity.contact_address || 'Kinshasa, RDC' }}</span>
+                            <span class="font-medium text-slate-700">{{ seatAddress }}</span>
+                        </div>
+                        <div v-if="websiteHref">
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Site web</span>
+                            <a :href="websiteHref" target="_blank" rel="noopener" class="font-medium text-[#003399] hover:underline break-all">{{ legal.website }}</a>
                         </div>
                         <div class="md:col-span-2 pt-4 border-t border-slate-200 mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Contact direct</span>
-                                <span class="font-medium text-[#003399]">{{ identity.contact_phone || '+243 000 000 000' }}</span><br>
-                                <span class="font-medium text-[#003399]">{{ identity.contact_email || 'contact@subnetcongo.cd' }}</span>
+                                <span class="font-medium text-[#003399]">{{ identity.contact_phone || 'Contact non renseigné' }}</span><br>
+                                <span class="font-medium text-[#003399]">{{ identity.contact_email || 'contact non renseigné' }}</span>
                             </div>
                             <div>
                                 <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Directeur de publication</span>
-                                <span class="font-medium text-slate-700">Le Gérant de SUBNETCONGO SARL</span>
+                                <span class="font-medium text-slate-700">Le Gérant de {{ companyName }}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Fiche non renseignée : repli élégant -->
+                    <div v-else class="border border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50">
+                        <i class="pi pi-info-circle text-3xl text-slate-300 mb-3" aria-hidden="true"></i>
+                        <p class="font-semibold text-slate-700">Informations non renseignées</p>
+                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Les informations légales de la société seront affichées ici dès qu'elles auront été complétées depuis l'espace d'administration.</p>
+                        <p class="text-sm text-[#003399] mt-4">{{ identity.contact_email || 'contact@subnetcongo.cd' }} · {{ identity.contact_phone || '' }}</p>
                     </div>
                 </article>
 
@@ -97,8 +174,8 @@ const props = defineProps({
                         <p>L'hébergement du site et des infrastructures ERP est assuré par :</p>
                         <div class="bg-blue-50/50 p-4 border border-blue-100 rounded-lg">
                             <ul class="space-y-2 text-sm">
-                                <li><strong class="text-slate-800">Prestataire :</strong> SUBNETCONGO SARL (Infrastructure interne)</li>
-                                <li><strong class="text-slate-800">Localisation des serveurs :</strong> {{ identity.contact_address || 'Kinshasa, République Démocratique du Congo' }}</li>
+                                <li><strong class="text-slate-800">Prestataire :</strong> {{ companyName }} (Infrastructure interne)</li>
+                                <li><strong class="text-slate-800">Localisation des serveurs :</strong> {{ seatAddress }}</li>
                                 <li><strong class="text-slate-800">Supervision :</strong> Assurée 24/7 par nos équipes techniques.</li>
                             </ul>
                         </div>
@@ -112,10 +189,10 @@ const props = defineProps({
                         Propriété intellectuelle
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>L'ensemble du contenu du site <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> — incluant, de manière non limitative, les textes, graphiques, logos, icônes, interfaces, codes sources, vidéos, et logiciels de l'ERP — est la propriété exclusive de SUBNETCONGO SARL.</p>
+                        <p>L'ensemble du contenu du site <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> — incluant, de manière non limitative, les textes, graphiques, logos, icônes, interfaces, codes sources, vidéos, et logiciels de l'ERP — est la propriété exclusive de {{ companyName }}.</p>
                         <p>Ces éléments sont protégés par les lois congolaises et internationales relatives à la propriété intellectuelle, notamment le Code de la Propriété Intellectuelle congolais et les conventions internationales dont la RDC est signataire.</p>
                         <div class="border-l-4 border-red-500 pl-4 bg-red-50/50 p-4 rounded-r-lg mt-4 text-sm text-slate-700">
-                            <strong>Avertissement pénal :</strong> Toute reproduction, représentation, modification ou extraction (par data mining ou autres) de tout ou partie des éléments du site, sans l'autorisation écrite préalable de SUBNETCONGO SARL, est strictement interdite et constitutive d'une contrefaçon sanctionnée par les articles 79 à 91 du Code Pénal Congolais (Loi n° 09/001 du 10 janvier 2009).
+                            <strong>Avertissement pénal :</strong> Toute reproduction, représentation, modification ou extraction (par data mining ou autres) de tout ou partie des éléments du site, sans l'autorisation écrite préalable de {{ companyName }}, est strictement interdite et constitutive d'une contrefaçon sanctionnée par les articles 79 à 91 du Code Pénal Congolais (Loi n° 09/001 du 10 janvier 2009).
                         </div>
                     </div>
                 </article>
@@ -156,7 +233,7 @@ const props = defineProps({
                         Sécurité des transactions
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>SUBNETCONGO SARL s'engage à mettre en œuvre toutes les mesures techniques et organisationnelles appropriées pour garantir la sécurité et la confidentialité de vos données.</p>
+                        <p>{{ companyName }} s'engage à mettre en œuvre toutes les mesures techniques et organisationnelles appropriées pour garantir la sécurité et la confidentialité de vos données.</p>
                         <p>Les échanges de données entre votre navigateur et nos serveurs (notamment les identifiants de connexion à l'ERP) sont cryptés via le protocole <strong>SSL/TLS (HTTPS)</strong>.</p>
                     </div>
                 </article>
@@ -168,7 +245,7 @@ const props = defineProps({
                         Limitation de responsabilité
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>L'utilisation de la plateforme se fait "en l'état". Bien que nous nous efforcions d'assurer une disponibilité de 99,9%, SUBNETCONGO SARL décline toute responsabilité en cas :</p>
+                        <p>L'utilisation de la plateforme se fait "en l'état". Bien que nous nous efforcions d'assurer une disponibilité de 99,9%, {{ companyName }} décline toute responsabilité en cas :</p>
                         <ul class="list-disc pl-5 space-y-2">
                             <li>D'interruption temporaire du service pour cause de maintenance technique.</li>
                             <li>D'attaques informatiques externes, de défaillance du réseau internet congolais ou de cas de force majeure.</li>
@@ -194,8 +271,8 @@ const props = defineProps({
             
             <!-- Date de mise à jour -->
             <div class="max-w-4xl mx-auto mt-8 text-center text-sm text-slate-400">
-                Dernière mise à jour : <span class="font-semibold text-slate-500">Mars 2024</span><br>
-                SUBNETCONGO se réserve le droit de modifier ces mentions à tout moment.
+                <p v-if="legalUpdated">Dernière mise à jour : <span class="font-semibold text-slate-500">{{ legalUpdated }}</span><br></p>
+                {{ companyName }} se réserve le droit de modifier ces mentions à tout moment.
             </div>
 
         </section>

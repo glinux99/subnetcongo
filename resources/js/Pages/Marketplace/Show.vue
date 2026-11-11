@@ -1,29 +1,36 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { router, Link, usePage } from '@inertiajs/vue3';
+import { router, Link, usePage, Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Rating from 'primevue/rating';
 import Avatar from 'primevue/avatar';
-import Divider from 'primevue/divider';
-import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import Toast from 'primevue/toast';
+import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
     course: Object,
+    stats: Object,
     relatedCourses: Array,
     reviews: Array,
     isEnrolled: Boolean,
     enrollmentStatus: String,
     isInWishlist: Boolean,
+    inWishlist: Boolean,
     cartCount: Number,
     liveSession: Object,
 });
+
+const averageRating = computed(() => props.stats?.rating ?? null);
+const reviewsCount = computed(() => props.stats?.reviews_count ?? props.reviews?.length ?? 0);
+const studentsCount = computed(() => props.stats?.students ?? props.course?.enrollments_count ?? 0);
+const lessonsCount = computed(() => props.stats?.lessons_count ?? props.course?.lessons_count ?? 0);
+const durationHours = computed(() => props.stats?.duration_hours ?? ((props.course?.duration_minutes ?? 0) / 60).toFixed(1));
+const wishlisted = computed(() => props.isInWishlist ?? props.inWishlist ?? false);
 
 const toast = useToast();
 const page = usePage();
@@ -81,7 +88,8 @@ const statusSeverity = (s) => ({
     suspended: 'danger', rejected: 'danger', cancelled: 'secondary', expired: 'secondary',
 }[s] ?? 'secondary');
 
-const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storage/${path}` : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800');
+const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storage/${path}` : '/media/lms/thumbnails/course-1.jpg');
+const handleImageError = (event) => { event.target.src = '/media/lms/thumbnails/course-1.jpg'; };
 </script>
 
 <template>
@@ -120,18 +128,19 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                         <h1 class="text-3xl font-black text-white tracking-tight">{{ course.title }}</h1>
                         <Tag :value="course.level || 'Tous niveaux'" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest capitalize" />
                     </div>
-                    <p class="text-slate-300 text-base leading-relaxed mb-6 max-w-3xl">{{ course.short_description }}</p>
+                    <p class="text-slate-300 text-base leading-relaxed mb-6 max-w-3xl">{{ course.short_info || course.short_description || course.title }}</p>
                     <div class="flex items-center gap-6 text-sm flex-wrap">
-                        <div class="flex items-center gap-2">
-                            <Rating :modelValue="Number(averageRating) || 4.5" readonly :stars="5" />
-                            <span class="font-black text-white">{{ Number(averageRating) || '4.5' }}</span>
-                            <span class="text-slate-400">({{ reviews?.length ?? 0 }} avis)</span>
+                        <div v-if="averageRating != null" class="flex items-center gap-2">
+                            <Rating :modelValue="averageRating" readonly :stars="5" />
+                            <span class="font-black text-white">{{ averageRating }}</span>
+                            <span class="text-slate-400">({{ reviewsCount }} avis)</span>
                         </div>
+                        <span v-else class="text-slate-400 italic">Pas encore noté</span>
                         <span class="text-slate-400">·</span>
-                        <span class="text-slate-300 font-medium">{{ course.enrollments_count ?? 0 }} apprenants</span>
+                        <span class="text-slate-300 font-medium">{{ studentsCount }} apprenant{{ studentsCount > 1 ? 's' : '' }}</span>
                     </div>
                     <div class="flex items-center gap-3 mt-6">
-                        <Avatar :label="course.instructor?.name?.[0]" :image="course.instructor?.avatar_url" shape="circle" class="!bg-blue-500 !text-white !w-10 !h-10" />
+                        <Avatar :label="course.instructor?.name?.[0]" :image="course.instructor?.avatar" shape="circle" class="!bg-blue-500 !text-white !w-10 !h-10" />
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instructeur</p>
                             <p class="font-black text-white text-sm">{{ course.instructor?.name }}</p>
@@ -180,18 +189,26 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                                         <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center"><i class="pi pi-star text-lg"></i></div>
                                         Avis des apprenants
                                     </h2>
-                                    <Rating :modelValue="Number(averageRating) || 0" readonly :stars="5" />
+                                    <div v-if="averageRating != null" class="flex flex-col items-end">
+                                        <Rating :modelValue="averageRating" readonly :stars="5" />
+                                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">{{ averageRating }}/5 · {{ reviewsCount }} avis</p>
+                                    </div>
                                 </div>
-                                <div v-if="!reviews?.length" class="text-center py-10 text-slate-400 text-sm">Aucun avis pour le moment.</div>
+                                <div v-if="!reviews?.length" class="text-center py-10">
+                                    <i class="pi pi-star text-3xl text-slate-300 mb-3 block"></i>
+                                    <p class="text-slate-400 text-sm font-bold">Aucun avis pour le moment.</p>
+                                    <p class="text-slate-400 text-xs mt-1">Soyez le premier à partager votre expérience après votre inscription.</p>
+                                </div>
                                 <div v-else class="space-y-4">
                                     <div v-for="review in reviews" :key="review.id" class="border-b border-slate-100 pb-4 last:border-0">
                                         <div class="flex items-center gap-3 mb-2">
-                                            <Avatar :label="review.user?.name?.[0]" shape="circle" class="!bg-gradient-to-br !from-blue-500 !to-blue-500 !text-white !w-9 !h-9 !text-xs !font-black" />
+                                            <Avatar :label="review.user_name?.[0]" :image="review.user_avatar" shape="circle" class="!bg-blue-500 !text-white !w-9 !h-9 !text-xs !font-black" />
                                             <div>
-                                                <p class="font-black text-sm">{{ review.user?.name }}</p>
+                                                <p class="font-black text-sm">{{ review.user_name ?? 'Apprenant' }}</p>
                                                 <Rating :modelValue="review.rating" readonly :stars="5" class="text-xs" />
                                             </div>
                                         </div>
+                                        <p v-if="review.title" class="text-sm font-black text-slate-800 mb-0.5">{{ review.title }}</p>
                                         <p class="text-sm text-slate-600">{{ review.comment }}</p>
                                     </div>
                                 </div>
@@ -201,7 +218,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                         <!-- Sidebar Achat -->
                         <aside class="lg:col-span-1">
                             <div class="bg-white rounded-xl border border-slate-200 shadow-xl p-6 sticky top-6">
-                                <img :src="getImageUrl(course.thumbnail_path || course.image)" class="w-full rounded-2xl mb-5 shadow-lg" />
+                                <img :src="getImageUrl(course.thumbnail_path || course.image)" @error="handleImageError" alt="Aperçu du cours" class="w-full rounded-2xl mb-5 shadow-lg" />
                                 <div class="text-center mb-5">
                                     <p class="text-5xl font-black text-blue-600 font-mono">{{ formatPrice(course.effective_price ?? course.price) }}</p>
                                     <p v-if="course.discount_price" class="text-sm text-slate-400 line-through mt-1">{{ formatPrice(course.price) }}</p>
@@ -209,11 +226,11 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                                 <div class="space-y-3 mb-5 pb-5 border-b border-slate-100">
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
                                         <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-clock text-xs"></i></div>
-                                        <span class="font-bold">{{ course.duration_hours ?? 0 }}h de contenu</span>
+                                        <span class="font-bold">{{ durationHours }}h de contenu</span>
                                     </div>
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
                                         <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
-                                        <span class="font-bold">{{ course.lessons_count ?? 0 }} leçons</span>
+                                        <span class="font-bold">{{ lessonsCount }} leçons</span>
                                     </div>
                                     <div class="flex items-center gap-3 text-sm text-slate-600">
                                         <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center"><i class="pi pi-globe text-xs"></i></div>
@@ -247,7 +264,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
 
                                     <Button v-if="enrollmentStatus === 'pending'" label="Voir mes inscriptions" icon="pi pi-list" outlined :href="route('student.my-enrollments')" as="Link" class="!border-amber-200 !text-amber-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
 
-                                    <Button :label="isInWishlist ? 'Retirer des favoris' : 'Ajouter aux favoris'" :icon="isInWishlist ? 'pi pi-heart-fill' : 'pi pi-heart'" @click="toggleWishlist" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
+                                    <Button :label="wishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'" :icon="wishlisted ? 'pi pi-heart-fill' : 'pi pi-heart'" @click="toggleWishlist" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3 w-full" />
 
                                     <p v-if="!authUser" class="text-[10px] text-center text-slate-400 mt-2">
                                         <Link :href="route('login')" class="text-blue-600 font-black uppercase tracking-widest hover:underline">Connectez-vous</Link> pour vous inscrire.
@@ -268,7 +285,7 @@ const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storag
                 <h2 class="text-2xl font-black text-slate-800 mb-6">Cours similaires</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                     <Link v-for="rc in relatedCourses" :key="rc.id" :href="route('marketplace.show', rc.slug)" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all group">
-                        <img :src="getImageUrl(rc.thumbnail_path || rc.image)" class="h-32 w-full object-cover group-hover:scale-105 transition" />
+                        <img :src="getImageUrl(rc.thumbnail_path || rc.image)" @error="handleImageError" :alt="rc.title" class="h-32 w-full object-cover group-hover:scale-105 transition" />
                         <div class="p-4">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ rc.instructor?.name }}</p>
                             <h4 class="text-sm font-black text-slate-800 line-clamp-2 mb-2 tracking-tight">{{ rc.title }}</h4>

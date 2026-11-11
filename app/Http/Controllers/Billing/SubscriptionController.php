@@ -3,560 +3,296 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class SubscriptionController extends Controller
 {
     /**
-     * Constructeur du contrôleur.
-     * Applique les middlewares de permissions pour sécuriser l'accès.
-     */
-    public function __construct()
-    {
-        // Exemple de gestion des permissions via Middleware
-        // $this->middleware('can:view-subscription')->only(['index', 'show', 'export']);
-        // $this->middleware('can:create-subscription')->only(['create', 'store']);
-        // $this->middleware('can:update-subscription')->only(['edit', 'update', 'cancel', 'resume']);
-        // $this->middleware('can:delete-subscription')->only(['destroy', 'bulkDestroy']);
-    }
-
-    /**
-     * Affiche la liste des abonnements avec recherche avancée, filtres et pagination.
-     *
-     * @param Request $request
-     * @return \Inertia\Response
+     * Liste paginée des abonnements, statistiques réelles et plans.
+     * Supporte l'export CSV via ?export=csv (mêmes filtres que la liste).
      */
     public function index(Request $request)
     {
-        // Récupération des paramètres de filtrage
         $search = $request->input('search');
         $status = $request->input('status');
         $plan = $request->input('plan');
-        $dateStart = $request->input('date_start');
-        $dateEnd = $request->input('date_end');
-        $perPage = $request->input('per_page', 10);
-        $sortField = $request->input('sort_field', 'created_at');
-        $sortDirection = $request->input('sort_direction', 'desc');
+        $perPage = (int) $request->input('per_page', 15);
+        $perPage = max(1, min($perPage, 100));
 
-        // Construction de la requête
-        $query = Subscription::with(['user:id,name,email,profile_photo'])
+        $baseQuery = Subscription::with(['user:id,name,email', 'plan'])
             ->when($search, function ($q, $search) {
                 $q->where(function ($subQ) use ($search) {
                     $subQ->where('stripe_id', 'like', "%{$search}%")
-                         ->orWhere('plan_name', 'like', "%{$search}%")
-                         ->orWhereHas('user', function ($userQ) use ($search) {
-                             $userQ->where('name', 'like', "%{$search}%")
-                                   ->orWhere('email', 'like', "%{$search}%");
-                         });
+                        ->orWhere('plan_name', 'like', "%{$search}%")
+                        ->orWhere('plan_code', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQ) use ($search) {
+                            $userQ->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
                 });
             })
-            ->when($status, function ($q, $status) {
-                $q->where('stripe_status', $status);
-            })
-            ->when($plan, function ($q, $plan) {
-                $q->where('plan_name', $plan);
-            })
-            ->when($dateStart && $dateEnd, function ($q) use ($dateStart, $dateEnd) {
-                $q->whereBetween('created_at', [$dateStart, $dateEnd]);
-            });
+            ->when($status, fn ($q, $status) => $q->where('status', $status))
+            ->when($plan, fn ($q, $plan) => $q->where('plan_code', $plan));
 
-        // Tri dynamique
-        $validSorts = ['created_at', 'ends_at', 'stripe_status', 'plan_name', 'stripe_price'];
-        if (in_array($sortField, $validSorts)) {
-            $query->orderBy($sortField, $sortDirection);
-        } else {
-            $query->orderBy('created_at', 'desc');
+        // Export CSV réel (flux streamé), mêmes filtres que la page
+        if ($request->input('export') === 'csv') {
+            return $this->streamCsv((clone $baseQuery)->orderBy('created_at', 'desc')->get());
         }
 
-        // Pagination
-        $subscriptions = $query->paginate($perPage)->withQueryString();
-
-        // Statistiques rapides pour le header de la page
-        $stats = [
-            'total' => Subscription::count(),
-            'active' => Subscription::where('stripe_status', 'active')->count(),
-            'canceled' => Subscription::where('stripe_status', 'canceled')->count(),
-            'trialing' => Subscription::where('stripe_status', 'trialing')->count(),
-        ];
+        $subscriptions = (clone $baseQuery)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('Billing/Subscriptions', [
             'subscriptions' => $subscriptions,
-            'filters' => $request->all(['search', 'status', 'plan', 'date_start', 'date_end', 'per_page', 'sort_field', 'sort_direction']),
-            'stats' => $stats,
-            'plans' => $this->getAvailablePlans(), // Liste des plans pour le filtre
+            'filters' => $request->only(['search', 'status', 'plan', 'per_page']),
+            'stats' => $this->buildStats(),
+            'plans' => SubscriptionPlan::orderBy('price')->get(),
+            'users' => User::select('id', 'name', 'email')->orderBy('name')->get(),
+            'selectedSubscription' => $this->resolveSelectedSubscription($request),
         ]);
     }
 
-    /**
-     * Affiche le formulaire de création d'un nouvel abonnement.
-     *
-     * @return \Inertia\Response
-     */
+    /** La création se fait via le dialog "Nouveau Abonnement" sur la liste. */
     public function create()
     {
-        return Inertia::render('Billing/Subscriptions', [
-            'users' => User::select('id', 'name', 'email')->orderBy('name')->get(),
-            'plans' => $this->getAvailablePlans(),
-        ]);
+        return redirect()->route('billing.subscriptions.index');
     }
 
-    /**
-     * Enregistre un nouvel abonnement dans la base de données.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** L'édition se fait via la fiche abonné sur la liste. */
+    public function edit(Subscription $subscription)
+    {
+        return redirect()->route('billing.subscriptions.index', ['selected' => $subscription->id]);
+    }
+
+    /** Redirige vers la liste en ouvrant la fiche abonné (?selected=ID). */
+    public function show(Subscription $subscription)
+    {
+        return redirect()->route('billing.subscriptions.index', ['selected' => $subscription->id]);
+    }
+
+    /** Création manuelle d'un abonnement (admin, hors tunnel de paiement). */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'plan_name' => 'required|string|max:255',
-            'stripe_price' => 'nullable|string|max:255',
-            'quantity' => 'integer|min:1|default:1',
-            'trial_days' => 'nullable|integer|min:0',
-            'status' => 'required|in:active,trialing,past_due,canceled,incomplete',
+            'plan_code' => 'required|exists:subscription_plans,code',
+            'starts_at' => 'nullable|date',
         ]);
 
-        DB::beginTransaction();
+        $plan = SubscriptionPlan::where('code', $validated['plan_code'])->firstOrFail();
+        $startsAt = !empty($validated['starts_at']) ? Carbon::parse($validated['starts_at']) : now();
 
-        try {
-            // Simulation de la création Stripe ID si non fourni
-            $stripeId = 'sub_' . Str::random(24);
-
-            $subscription = Subscription::create([
+        DB::transaction(function () use ($validated, $plan, $startsAt) {
+            Subscription::create([
                 'user_id' => $validated['user_id'],
-                'plan_name' => $validated['plan_name'],
-                'stripe_id' => $stripeId,
-                'stripe_status' => $validated['status'],
-                'stripe_price' => $validated['stripe_price'],
-                'quantity' => $request->input('quantity', 1),
-                'trial_ends_at' => $request->trial_days ? Carbon::now()->addDays($request->trial_days) : null,
-                'ends_at' => null, // Par défaut null pour un abonnement récurrent
+                'name' => $plan->code,
+                'plan_code' => $plan->code,
+                'plan_name' => $plan->name,
+                'plan_price' => $plan->price,
+                'currency' => $plan->currency,
+                'interval' => $plan->interval,
+                'quantity' => 1,
+                'status' => 'active',
+                'stripe_status' => 'active',
+                'stripe_id' => 'sub_' . Str::random(24),
+                'starts_at' => $startsAt,
+                'ends_at' => $startsAt->copy()->addMonths($plan->duration_months),
+                // NOTE : création manuelle par un admin. Aucun appel Stripe n'est effectué ;
+                // total_paid reflète le prix catalogue du plan.
+                'total_paid' => $plan->price,
             ]);
+        });
 
-            // Logique métier supplémentaire (ex: envoyer un email de bienvenue)
-            // $subscription->user->notify(new SubscriptionCreated($subscription));
-
-            DB::commit();
-
-            return Redirect::route('billing.subscriptions.index')
-                ->with('success', 'Abonnement créé avec succès.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return Redirect::back()
-                ->with('error', 'Erreur lors de la création de l\'abonnement : ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('billing.subscriptions.index')
+            ->with('success', 'Abonnement créé avec succès.');
     }
 
     /**
-     * Affiche les détails d'un abonnement spécifique.
-     *
-     * @param Subscription $subscription
-     * @return \Inertia\Response
-     */
-    public function show(Subscription $subscription)
-    {
-        $subscription->load('user');
-
-        // Calcul de la durée restante ou passée
-        $duration = $subscription->created_at->diffForHumans();
-
-        // Simulation de factures liées (si un modèle Invoice existait)
-        $invoices = []; // $subscription->user->invoices()->latest()->take(5)->get();
-
-        return Inertia::render('Billing/Subscriptions', [
-            'subscription' => $subscription,
-            'duration' => $duration,
-            'invoices' => $invoices,
-            'activity_logs' => [], // Placeholder pour les logs d'activité
-        ]);
-    }
-
-    /**
-     * Affiche le formulaire d'édition d'un abonnement.
-     *
-     * @param Subscription $subscription
-     * @return \Inertia\Response
-     */
-    public function edit(Subscription $subscription)
-    {
-        return Inertia::render('Billing/Subscriptions', [
-            'subscription' => $subscription,
-            'users' => User::select('id', 'name', 'email')->get(), // Pour info, généralement on ne change pas le user d'une souscription
-            'plans' => $this->getAvailablePlans(),
-        ]);
-    }
-
-    /**
-     * Met à jour les informations d'un abonnement.
-     *
-     * @param Request $request
-     * @param Subscription $subscription
-     * @return \Illuminate\Http\RedirectResponse
+     * Mise à jour d'un abonnement.
+     * Accepte un statut seul (résiliation / réactivation) ou des champs d'édition.
      */
     public function update(Request $request, Subscription $subscription)
     {
         $validated = $request->validate([
-            'plan_name' => 'required|string|max:255',
-            'stripe_status' => 'required|in:active,trialing,past_due,canceled,incomplete,incomplete_expired',
-            'quantity' => 'integer|min:1',
-            'trial_ends_at' => 'nullable|date',
-            'ends_at' => 'nullable|date|after_or_equal:today',
+            'status' => 'sometimes|in:active,trialing,past_due,canceled,expired',
+            'plan_code' => 'sometimes|exists:subscription_plans,code',
+            'quantity' => 'sometimes|integer|min:1',
+            'ends_at' => 'nullable|date',
         ]);
 
-        try {
-            $subscription->update([
-                'plan_name' => $validated['plan_name'],
-                'stripe_status' => $validated['stripe_status'],
-                'quantity' => $validated['quantity'],
-                'trial_ends_at' => $validated['trial_ends_at'],
-                'ends_at' => $validated['ends_at'],
-            ]);
-
-            return Redirect::route('billing.subscriptions.index')
-                ->with('success', 'Abonnement mis à jour avec succès.');
-
-        } catch (\Exception $e) {
-            return Redirect::back()
-                ->with('error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+        if (array_key_exists('status', $validated) && count($validated) === 1) {
+            return $validated['status'] === 'canceled'
+                ? $this->applyCancel($subscription)
+                : $this->applyResume($subscription, $validated['status']);
         }
+
+        if (!empty($validated['plan_code'])) {
+            $plan = SubscriptionPlan::where('code', $validated['plan_code'])->firstOrFail();
+            $validated['plan_name'] = $plan->name;
+            $validated['plan_price'] = $plan->price;
+            $validated['currency'] = $plan->currency;
+            $validated['interval'] = $plan->interval;
+        }
+
+        $subscription->update($validated);
+
+        return redirect()->route('billing.subscriptions.index')
+            ->with('success', 'Abonnement mis à jour.');
     }
 
-    /**
-     * Supprime un abonnement (Soft delete ou Hard delete selon le modèle).
-     *
-     * @param Subscription $subscription
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** Suppression : uniquement les abonnements résiliés (historique admin). */
     public function destroy(Subscription $subscription)
     {
-        try {
-            // Si on voulait annuler sur Stripe avant de supprimer :
-            // $this->cancelStripeSubscription($subscription->stripe_id);
-
-            $subscription->delete();
-
-            return Redirect::back()->with('success', 'Abonnement supprimé.');
-        } catch (\Exception $e) {
-            return Redirect::back()->with('error', 'Impossible de supprimer l\'abonnement.');
+        if ($subscription->status !== 'canceled') {
+            return redirect()->back()
+                ->with('error', 'Seuls les abonnements résiliés peuvent être supprimés.');
         }
+
+        $subscription->delete();
+
+        return redirect()->back()->with('success', 'Abonnement supprimé.');
     }
 
-    /**
-     * Suppression multiple d'abonnements.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:subscriptions,id',
-        ]);
-
-        $count = Subscription::whereIn('id', $request->ids)->delete();
-
-        return Redirect::back()->with('success', "$count abonnements supprimés.");
-    }
-
-    /**
-     * Annule un abonnement (définit la date de fin mais garde le statut actif jusqu'à la fin de la période).
-     *
-     * @param Subscription $subscription
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** Résiliation immédiate : statut canceled + date de fin = maintenant. */
     public function cancel(Subscription $subscription)
     {
-        if ($subscription->stripe_status === 'canceled') {
-            return Redirect::back()->with('warning', 'Cet abonnement est déjà annulé.');
-        }
-
-        // Logique : on met ends_at à la fin de la période courante (simulée ici à +30 jours si non définie)
-        // Dans un vrai cas Stripe, on appellerait l'API Stripe.
-        $endDate = Carbon::now();
-
-        $subscription->update([
-            'stripe_status' => 'canceled',
-            'ends_at' => $endDate,
-        ]);
-
-        return Redirect::back()->with('success', 'Abonnement annulé immédiatement.');
+        return $this->applyCancel($subscription);
     }
 
-    /**
-     * Reprend un abonnement annulé (Grace Period).
-     *
-     * @param Subscription $subscription
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** Réactivation d'un abonnement résilié : statut active, date de fin effacée. */
     public function resume(Subscription $subscription)
     {
-        if ($subscription->stripe_status === 'active') {
-            return Redirect::back()->with('info', 'Cet abonnement est déjà actif.');
+        return $this->applyResume($subscription, 'active');
+    }
+
+    private function applyCancel(Subscription $subscription)
+    {
+        if ($subscription->status === 'canceled') {
+            return redirect()->back()->with('warning', 'Cet abonnement est déjà résilié.');
         }
 
         $subscription->update([
-            'stripe_status' => 'active',
-            'ends_at' => null, // Retire la date de fin programmée
+            'status' => 'canceled',
+            'stripe_status' => 'canceled',
+            'ends_at' => now(),
         ]);
 
-        return Redirect::back()->with('success', 'Abonnement réactivé avec succès.');
+        return redirect()->back()->with('success', 'Abonnement résilié.');
+    }
+
+    private function applyResume(Subscription $subscription, string $status = 'active')
+    {
+        if ($subscription->status === 'active') {
+            return redirect()->back()->with('info', 'Cet abonnement est déjà actif.');
+        }
+
+        $subscription->update([
+            'status' => $status,
+            'stripe_status' => $status,
+            'ends_at' => null,
+        ]);
+
+        return redirect()->back()->with('success', 'Abonnement réactivé.');
+    }
+
+    private function resolveSelectedSubscription(Request $request): ?Subscription
+    {
+        $id = $request->input('selected');
+
+        if (!$id) {
+            return null;
+        }
+
+        return Subscription::with(['user:id,name,email', 'plan'])->find($id);
     }
 
     /**
-     * Exporte les abonnements filtrés en CSV.
+     * Statistiques calculées depuis la base.
      *
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * MRR : somme des prix mensuels normalisés des abonnements actifs
+     *       (interval = year -> prix / 12). Arpu : MRR / nb actifs.
+     * Churn : résiliés / total — ratio de vie simple, PAS un taux de churn
+     *         mensuel cohorté (nécessite Stripe / historique de statuts pour
+     *         être précis). Retourne null quand la base est vide -> "—" côté UI.
      */
-    public function export(Request $request)
+    private function buildStats(): array
     {
-        $fileName = 'subscriptions_export_' . date('Y-m-d_H-i') . '.csv';
+        $actives = Subscription::where('status', 'active')->get(['plan_price', 'interval']);
 
-        // Réutilisation de la logique de filtrage (simplifiée ici)
-        $query = Subscription::with('user');
-
-        if ($request->status) {
-            $query->where('stripe_status', $request->status);
-        }
-        if ($request->plan) {
-            $query->where('plan_name', $request->plan);
+        $mrrCents = 0;
+        foreach ($actives as $sub) {
+            $price = (int) ($sub->plan_price ?? 0);
+            $mrrCents += $sub->interval === 'year' ? intdiv($price, 12) : $price;
         }
 
-        $subscriptions = $query->get();
+        $total = Subscription::count();
+        $totalActive = $actives->count();
+        $totalCanceled = Subscription::where('status', 'canceled')->count();
+        $totalExpired = Subscription::where('status', 'expired')->count();
+        $totalCollectedCents = (int) Subscription::sum('total_paid');
+
+        $churnRate = $total > 0 ? round($totalCanceled / $total * 100, 1) : null;
+        $arpuCents = $totalActive > 0 ? intdiv($mrrCents, $totalActive) : 0;
+
+        return [
+            'total' => $total,
+            'totalActive' => $totalActive,
+            'totalCanceled' => $totalCanceled,
+            'totalExpired' => $totalExpired,
+            'mrrCents' => $mrrCents,
+            'arpuCents' => $arpuCents,
+            'totalCollectedCents' => $totalCollectedCents,
+            'churnRate' => $churnRate,
+            'churnNonDispo' => $churnRate === null,
+            'currency' => 'USD',
+        ];
+    }
+
+    private function streamCsv($subscriptions)
+    {
+        $fileName = 'abonnements_export_' . now()->format('Y-m-d_H-i') . '.csv';
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate',
         ];
 
-        $columns = ['ID', 'Utilisateur', 'Email', 'Plan', 'Statut', 'Prix', 'Créé le', 'Fin le'];
-
-        $callback = function() use($subscriptions, $columns) {
+        $callback = function () use ($subscriptions) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+            // BOM UTF-8 pour Excel
+            fwrite($file, "\xEF\xBB\xBF");
+            fputcsv($file, ['ID', 'Utilisateur', 'Email', 'Plan', 'Code plan', 'Intervalle', 'Prix (USD)', 'Statut', 'Total payé (USD)', 'Créé le', 'Fin le'], ';');
 
             foreach ($subscriptions as $sub) {
-                $row['ID']  = $sub->id;
-                $row['Utilisateur'] = $sub->user ? $sub->user->name : 'N/A';
-                $row['Email'] = $sub->user ? $sub->user->email : 'N/A';
-                $row['Plan']  = $sub->plan_name;
-                $row['Statut']  = $sub->stripe_status;
-                $row['Prix']  = $sub->stripe_price;
-                $row['Créé le']  = $sub->created_at->format('Y-m-d H:i');
-                $row['Fin le']  = $sub->ends_at ? $sub->ends_at->format('Y-m-d') : 'Récurrent';
-
-                fputcsv($file, array_values($row));
+                fputcsv($file, [
+                    $sub->id,
+                    $sub->user->name ?? 'N/A',
+                    $sub->user->email ?? 'N/A',
+                    $sub->plan_name ?? $sub->plan?->name ?? '—',
+                    $sub->plan_code ?? '—',
+                    $sub->interval === 'year' ? 'Annuel' : ($sub->interval === 'month' ? 'Mensuel' : ($sub->interval ?? '—')),
+                    $sub->plan_price !== null ? number_format($sub->plan_price / 100, 2, '.', '') : '—',
+                    $sub->status,
+                    number_format(($sub->total_paid ?? 0) / 100, 2, '.', ''),
+                    $sub->created_at?->format('Y-m-d H:i'),
+                    $sub->ends_at ? $sub->ends_at->format('Y-m-d') : '—',
+                ], ';');
             }
 
             fclose($file);
         };
 
-        return Response::stream($callback, 200, $headers);
-    }
-
-    /**
-     * Synchronise le statut d'un abonnement avec le fournisseur de paiement (Simulation).
-     *
-     * @param Subscription $subscription
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function syncStatus(Subscription $subscription)
-    {
-        // Ici, on ferait un appel API vers Stripe/PayPal
-        // $stripeSub = \Stripe\Subscription::retrieve($subscription->stripe_id);
-        // $subscription->update(['stripe_status' => $stripeSub->status]);
-
-        // Simulation
-        $statuses = ['active', 'past_due', 'canceled'];
-        $randomStatus = $statuses[array_rand($statuses)];
-
-        $subscription->update(['stripe_status' => $randomStatus]);
-
-        return Redirect::back()->with('success', "Statut synchronisé : $randomStatus");
-    }
-
-    /**
-     * Retourne les statistiques globales des abonnements pour un tableau de bord.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function stats()
-    {
-        $totalRevenue = Subscription::where('stripe_status', 'active')->sum('stripe_price') ?? 0; // Suppose que stripe_price contient le montant
-
-        $data = [
-            'total_subscriptions' => Subscription::count(),
-            'active_subscriptions' => Subscription::where('stripe_status', 'active')->count(),
-            'churn_rate' => $this->calculateChurnRate(),
-            'monthly_recurring_revenue' => $totalRevenue,
-            'recent_activity' => Subscription::latest()->take(5)->with('user:id,name')->get(),
-            'plans_distribution' => Subscription::select('plan_name', DB::raw('count(*) as total'))
-                ->groupBy('plan_name')
-                ->pluck('total', 'plan_name'),
-        ];
-
-        return response()->json($data);
-    }
-
-    /**
-     * Méthode privée pour calculer le taux de désabonnement (Churn Rate).
-     * (Nombre de désabonnements ce mois-ci / Total abonnés début de mois) * 100
-     *
-     * @return float
-     */
-    private function calculateChurnRate()
-    {
-        $startOfMonth = Carbon::now()->startOfMonth();
-
-        $totalStart = Subscription::where('created_at', '<', $startOfMonth)
-            ->where(function($q) use ($startOfMonth) {
-                $q->whereNull('ends_at')
-                  ->orWhere('ends_at', '>=', $startOfMonth);
-            })->count();
-
-        if ($totalStart == 0) return 0;
-
-        $cancelledThisMonth = Subscription::where('stripe_status', 'canceled')
-            ->where('updated_at', '>=', $startOfMonth)
-            ->count();
-
-        return round(($cancelledThisMonth / $totalStart) * 100, 2);
-    }
-
-    /**
-     * Retourne la liste des plans disponibles dans le système.
-     * Pourrait provenir d'un fichier de config ou d'une table 'plans'.
-     *
-     * @return array
-     */
-    private function getAvailablePlans()
-    {
-        return [
-            [
-                'id' => 'basic_monthly',
-                'name' => 'Basic Monthly',
-                'price' => 9.99,
-                'currency' => 'USD',
-                'features' => ['Access to basic courses', 'Community support']
-            ],
-            [
-                'id' => 'pro_monthly',
-                'name' => 'Pro Monthly',
-                'price' => 19.99,
-                'currency' => 'USD',
-                'features' => ['All courses', 'Priority support', 'Certificates']
-            ],
-            [
-                'id' => 'enterprise_yearly',
-                'name' => 'Enterprise Yearly',
-                'price' => 199.99,
-                'currency' => 'USD',
-                'features' => ['Unlimited users', 'API Access', 'Dedicated manager']
-            ],
-        ];
-    }
-
-    /**
-     * Action de masse pour changer le statut.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function bulkStatusUpdate(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:subscriptions,id',
-            'status' => 'required|in:active,canceled,past_due'
-        ]);
-
-        $updateData = ['stripe_status' => $request->status];
-
-        // Si on annule, on met une date de fin
-        if ($request->status === 'canceled') {
-            $updateData['ends_at'] = Carbon::now();
-        } elseif ($request->status === 'active') {
-            $updateData['ends_at'] = null;
-        }
-
-        Subscription::whereIn('id', $request->ids)->update($updateData);
-
-        return Redirect::back()->with('success', 'Statuts mis à jour pour la sélection.');
-    }
-
-    /**
-     * Génère une facture PDF pour un abonnement (Simulation).
-     *
-     * @param Subscription $subscription
-     * @return mixed
-     */
-    public function downloadInvoice(Subscription $subscription)
-    {
-        // Vérification des droits
-        if (Auth::id() !== $subscription->user_id && !Auth::user()->can('manage-invoices')) {
-            abort(403);
-        }
-
-        // Logique de génération PDF (ex: DomPDF ou Snappy)
-        // $pdf = PDF::loadView('invoices.subscription', compact('subscription'));
-        // return $pdf->download('invoice-'.$subscription->id.'.pdf');
-
-        return Redirect::back()->with('info', 'Le téléchargement de facture est simulé.');
-    }
-
-    /**
-     * Envoie un rappel de paiement pour les abonnements 'past_due'.
-     *
-     * @param Subscription $subscription
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function sendPaymentReminder(Subscription $subscription)
-    {
-        if ($subscription->stripe_status !== 'past_due') {
-            return Redirect::back()->with('error', 'Cet abonnement n\'est pas en retard de paiement.');
-        }
-
-        // Mail::to($subscription->user)->send(new PaymentReminderMail($subscription));
-
-        return Redirect::back()->with('success', 'Rappel de paiement envoyé à ' . $subscription->user->email);
-    }
-
-    /**
-     * Vérifie si l'utilisateur a un abonnement actif (Helper API).
-     *
-     * @param Request $request
-     * @param string $userId
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function checkStatus(Request $request, $userId)
-    {
-        $hasActive = Subscription::where('user_id', $userId)
-            ->where(function($q) {
-                $q->where('stripe_status', 'active')
-                  ->orWhere('stripe_status', 'trialing');
-            })
-            ->where(function($q) {
-                $q->whereNull('ends_at')
-                  ->orWhere('ends_at', '>', Carbon::now());
-            })
-            ->exists();
-
-        return response()->json(['is_active' => $hasActive]);
+        return response()->stream($callback, 200, $headers);
     }
 }

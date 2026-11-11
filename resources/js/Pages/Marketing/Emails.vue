@@ -1,681 +1,474 @@
 <script setup>
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, computed, onMounted } from 'vue';
-import { Head } from '@inertiajs/vue3';
-import { useI18n } from 'vue-i18n';
-import { useToast } from 'primevue/usetoast';
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
-
-// --- PRIME VUE IMPORTS ---
-import Card from 'primevue/card';
-import Chart from 'primevue/chart';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+import PageHeader from '@/Components/PageHeader.vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
-import Badge from 'primevue/badge';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
 import Editor from 'primevue/editor';
-import InputSwitch from 'primevue/inputswitch';
-import ProgressBar from 'primevue/progressbar';
-import MultiSelect from 'primevue/multiselect';
-import Menu from 'primevue/menu';
-import InlineMessage from 'primevue/inlinemessage';
-import Divider from 'primevue/divider';
-import Calendar from 'primevue/calendar';
-import OverlayPanel from 'primevue/overlaypanel';
-import PickList from 'primevue/picklist';
-import ScrollPanel from 'primevue/scrollpanel';
-import Avatar from 'primevue/avatar';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 
-const { t } = useI18n();
-const toast = useToast();
-
-// --- ETATS DE GESTION ---
-const loading = ref(true);
-const activeTab = ref(0);
-const displayAutomationDialog = ref(false);
-const displayTemplateDialog = ref(false);
-const displayPreviewDialog = ref(false);
-const submitted = ref(false);
-
-// --- DONNEES SIMULEES (Automation & Campaigns) ---
-const automations = ref([]);
-const templates = ref([]);
-const logs = ref([]);
-
-const triggerOptions = ref([
-    { label: 'Nouvelle Inscription', value: 'on_signup', icon: 'pi pi-user-plus' },
-    { label: 'Cours Terminé', value: 'course_completed', icon: 'pi pi-check-circle' },
-    { label: 'Inactivité (7 jours)', value: 'inactivity_7d', icon: 'pi pi-clock' },
-    { label: 'Obtention Certificat', value: 'certificate_earned', icon: 'pi pi-verified' },
-    { label: 'Paiement Échoué', value: 'payment_failed', icon: 'pi pi-exclamation-triangle' }
-]);
-
-const currentAutomation = ref({
-    id: null,
-    name: '',
-    trigger: 'on_signup',
-    template_id: null,
-    delay: 0,
-    status: true,
-    stats: { sent: 0, opened: 0, clicked: 0 }
+const props = defineProps({
+    campaigns: {
+        type: Object,
+        default: () => ({ data: [], total: 0, per_page: 15, current_page: 1, last_page: 1 }),
+    },
+    stats: {
+        type: Object,
+        default: () => ({ total: 0, active: 0, sent: 0, draft: 0, sent_total: 0 }),
+    },
+    filters: { type: Object, default: () => ({ search: '', status: '' }) },
+    mode: { type: String, default: 'index' },
+    campaign: { type: Object, default: null },
+    recipientsCount: { type: Number, default: 0 },
+    recipientsPreview: { type: Array, default: () => [] },
 });
 
-const currentTemplate = ref({
-    id: null,
+const confirmAction = useConfirmAction();
+
+// --- Filtres (recherche + statut) via route Inertia ---
+const search = ref(props.filters?.search ?? '');
+const statusFilter = ref(props.filters?.status ?? '');
+
+const statusOptions = [
+    { label: 'Tous les statuts', value: '' },
+    { label: 'Brouillon', value: 'draft' },
+    { label: 'Programmée', value: 'scheduled' },
+    { label: "En file d'envoi", value: 'queued' },
+    { label: 'Envoyée', value: 'sent' },
+];
+
+const audienceOptions = [
+    { label: 'Tous les utilisateurs', value: 'all' },
+    { label: 'Étudiants', value: 'students' },
+    { label: 'Formateurs', value: 'instructors' },
+];
+
+const applyFilters = () => {
+    router.get(route('marketing.emails.index'), {
+        search: search.value || undefined,
+        status: statusFilter.value || undefined,
+    }, { preserveState: true, preserveScroll: true, replace: true });
+};
+
+const onPage = (event) => {
+    router.get(route('marketing.emails.index'), {
+        search: search.value || undefined,
+        status: statusFilter.value || undefined,
+        page: event.page + 1,
+    }, { preserveState: true, preserveScroll: true });
+};
+
+// --- Formulaire création / édition (même page, mode create/edit) ---
+const emptyForm = () => ({
     name: '',
     subject: '',
-    content: '<h1>Bonjour {user_name},</h1><p>Bienvenue sur SubNetCongo !</p>',
-    category: 'Transactionnel'
+    from_name: '',
+    from_email: '',
+    body: '',
+    target_audience: 'all',
+    status: 'draft',
+    scheduled_at: null,
 });
 
-// --- CHARTS CONFIG ---
-const emailStatsData = ref({
-    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-    datasets: [
-        {
-            label: 'Emails Envoyés',
-            data: [1200, 1500, 1100, 1800, 2200, 900, 800],
-            borderColor: '#6366F1',
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            fill: true,
-            tension: 0.4
-        },
-        {
-            label: 'Ouvertures',
-            data: [800, 1100, 750, 1300, 1600, 600, 550],
-            borderColor: '#10B981',
-            fill: false,
-            tension: 0.4
-        }
-    ]
-});
+const form = useForm(emptyForm());
+const formOpen = ref(props.mode === 'create' || props.mode === 'edit');
+const editingId = ref(props.mode === 'edit' ? props.campaign?.id ?? null : null);
 
-const deliveryChartData = ref({
-    labels: ['Délivrés', 'Brebis (Bounce)', 'Spam'],
-    datasets: [{
-        data: [98.2, 1.5, 0.3],
-        backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-        hoverOffset: 10
-    }]
-});
+const fillFromCampaign = (c) => {
+    if (!c) return;
+    form.name = c.name ?? '';
+    form.subject = c.subject ?? '';
+    form.from_name = c.from_name ?? '';
+    form.from_email = c.from_email ?? '';
+    form.body = c.body ?? '';
+    form.target_audience = c.target_audience ?? 'all';
+    form.status = c.status === 'sent' ? 'draft' : (c.status ?? 'draft');
+    form.scheduled_at = c.scheduled_at ?? null;
+};
 
-const chartOptions = {
-    maintainAspectRatio: false,
-    plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 11 } } }
-    },
-    scales: {
-        x: { display: true, grid: { display: false } },
-        y: { display: true, grid: { color: '#f1f5f9' } }
+watch(() => props.mode, (mode) => {
+    if (mode === 'create') {
+        editingId.value = null;
+        form.clearErrors();
+        form.defaults(emptyForm()).reset();
+        formOpen.value = true;
+    } else if (mode === 'edit') {
+        editingId.value = props.campaign?.id ?? null;
+        form.clearErrors();
+        fillFromCampaign(props.campaign);
+        formOpen.value = true;
+    }
+}, { immediate: true });
+
+const openCreate = () => {
+    editingId.value = null;
+    form.clearErrors();
+    form.defaults(emptyForm()).reset();
+    formOpen.value = true;
+};
+
+const openEdit = (c) => {
+    editingId.value = c.id;
+    form.clearErrors();
+    fillFromCampaign(c);
+    formOpen.value = true;
+};
+
+const closeForm = () => {
+    formOpen.value = false;
+    form.clearErrors();
+    if (props.mode !== 'index') {
+        router.get(route('marketing.emails.index'), {}, { replace: true, preserveScroll: true });
     }
 };
 
-// --- INITIALISATION DES DONNEES ---
-const initData = () => {
-    loading.value = true;
-    setTimeout(() => {
-        // Automatisations
-        automations.value = [
-            { id: 1, name: 'Bienvenue Élèves', trigger: 'on_signup', template: 'Welcome Email', delay: 0, status: true, stats: { sent: 4500, opened: 3800, clicked: 1200 } },
-            { id: 2, name: 'Relance Inactivité', trigger: 'inactivity_7d', template: 'We miss you', delay: 24, status: true, stats: { sent: 1200, opened: 450, clicked: 80 } },
-            { id: 3, name: 'Félicitations Certificat', trigger: 'certificate_earned', template: 'Diploma Issued', delay: 0, status: false, stats: { sent: 850, opened: 820, clicked: 300 } },
-            { id: 4, name: 'Alerte Paiement', trigger: 'payment_failed', template: 'Billing Issue', delay: 0, status: true, stats: { sent: 120, opened: 115, clicked: 95 } }
-        ];
-
-        // Templates
-        templates.value = [
-            { id: 101, name: 'Welcome Email', subject: 'Bienvenue dans l\'aventure SubNetCongo !', category: 'Onboarding', last_mod: '2025-01-15' },
-            { id: 102, name: 'Course Update', subject: 'Nouveau contenu disponible dans votre cours', category: 'Education', last_mod: '2025-02-01' },
-            { id: 103, name: 'Monthly Newsletter', subject: 'Les actualités E-learning du mois de Février', category: 'Marketing', last_mod: '2025-02-05' },
-            { id: 104, name: 'Password Reset', subject: 'Réinitialisation de votre mot de passe', category: 'System', last_mod: '2024-12-10' }
-        ];
-
-        // Logs
-        const statuses = ['delivered', 'opened', 'clicked', 'bounced'];
-        for (let i = 0; i < 25; i++) {
-            logs.value.push({
-                id: 5000 + i,
-                recipient: `student_${i}@email.cd`,
-                subject: 'Rappel de votre session live',
-                sent_at: '2025-02-07 10:30',
-                status: statuses[Math.floor(Math.random() * 4)],
-                device: Math.random() > 0.5 ? 'Desktop' : 'Mobile'
-            });
-        }
-        loading.value = false;
-    }, 1500);
-};
-
-// --- ACTIONS ET LOGIQUE ---
-const openNewAutomation = () => {
-    currentAutomation.value = { id: null, name: '', trigger: 'on_signup', template_id: null, delay: 0, status: true };
-    displayAutomationDialog.value = true;
-};
-
-const openNewTemplate = () => {
-    currentTemplate.value = { id: null, name: '', subject: '', content: '', category: 'Marketing' };
-    displayTemplateDialog.value = true;
-};
-
-const saveAutomation = () => {
-    submitted.value = true;
-    if (currentAutomation.value.name.trim()) {
-        toast.add({ severity: 'success', summary: 'Automation Sauvegardée', detail: 'Le workflow a été mis à jour.', life: 3000 });
-        displayAutomationDialog.value = false;
+const submitWithStatus = (status) => {
+    form.status = status;
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => { formOpen.value = false; form.defaults(emptyForm()).reset(); },
+    };
+    if (editingId.value) {
+        form.put(route('marketing.emails.update', editingId.value), options);
+    } else {
+        form.post(route('marketing.emails.store'), options);
     }
 };
 
-const deleteAutomation = (id) => {
-    automations.value = automations.value.filter(a => a.id !== id);
-    toast.add({ severity: 'warn', summary: 'Supprimé', detail: 'L\'automatisation a été retirée.', life: 3000 });
-};
+// --- Aperçu (mode show) ---
+const previewOpen = ref(props.mode === 'show');
+watch(() => props.mode, (mode) => { previewOpen.value = mode === 'show'; });
 
-const toggleStatus = (id) => {
-    const auto = automations.value.find(a => a.id === id);
-    if (auto) auto.status = !auto.status;
-};
-
-const getStatusSeverity = (status) => {
-    switch (status) {
-        case 'delivered': return 'info';
-        case 'opened': return 'success';
-        case 'clicked': return 'warning';
-        case 'bounced': return 'danger';
-        default: return 'secondary';
+const closePreview = () => {
+    previewOpen.value = false;
+    if (props.mode !== 'index') {
+        router.get(route('marketing.emails.index'), {}, { replace: true, preserveScroll: true });
     }
 };
 
-const getTriggerIcon = (val) => {
-    return triggerOptions.value.find(o => o.value === val)?.icon || 'pi pi-bolt';
+// --- Envoi test ---
+const testForm = useForm({ test_email: '' });
+const testDialogOpen = ref(false);
+const testCampaignId = ref(null);
+
+const openTest = (c) => {
+    testCampaignId.value = c.id;
+    testForm.clearErrors();
+    testForm.reset();
+    testDialogOpen.value = true;
 };
 
-const testEmail = () => {
-    toast.add({ severity: 'info', summary: 'Envoi en cours', detail: 'Un email de test a été envoyé à votre adresse admin.', life: 3000 });
+const submitTest = () => {
+    testForm.post(route('marketing.emails.send-test', testCampaignId.value), {
+        preserveScroll: true,
+        onSuccess: () => { testDialogOpen.value = false; testForm.reset(); },
+    });
 };
 
-onMounted(() => {
-    initData();
-});
+// --- Suppression / Duplication ---
+const removeCampaign = (c) => {
+    confirmAction({
+        message: `Supprimer définitivement « ${c.name || c.subject} » ?`,
+        header: 'Supprimer la campagne',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('marketing.emails.destroy', c.id), { preserveScroll: true }),
+    });
+};
+
+const duplicateCampaign = (c) => {
+    router.get(route('marketing.emails.duplicate', c.id));
+};
+
+const viewCampaign = (c) => {
+    router.get(route('marketing.emails.show', c.id));
+};
+
+// --- Helpers affichage ---
+const formatDate = (d) => d
+    ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(d))
+    : '—';
+
+const statusLabel = (s) => ({
+    draft: 'Brouillon',
+    scheduled: 'Programmée',
+    queued: "En file d'envoi",
+    sent: 'Envoyée',
+}[s] ?? s);
+
+const statusSeverity = (s) => ({
+    draft: 'secondary',
+    scheduled: 'info',
+    queued: 'warn',
+    sent: 'success',
+}[s] ?? 'secondary');
+
+const audienceLabel = (a) => ({
+    all: 'Tous',
+    students: 'Étudiants',
+    instructors: 'Formateurs',
+}[a] ?? a);
+
+const kpis = computed(() => [
+    { label: 'Total campagnes', value: props.stats?.total ?? 0, icon: 'pi pi-megaphone', color: 'bg-blue-50 text-blue-600' },
+    { label: 'Actives', value: props.stats?.active ?? 0, icon: 'pi pi-bolt', color: 'bg-amber-50 text-amber-600' },
+    { label: 'Envoyées', value: props.stats?.sent ?? 0, icon: 'pi pi-send', color: 'bg-emerald-50 text-emerald-600' },
+    { label: 'Emails délivrés', value: props.stats?.sent_total ?? 0, icon: 'pi pi-envelope', color: 'bg-sky-50 text-sky-600' },
+]);
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Email Automation - SubNetCongo" />
+        <Head title="Campagnes email — SubNetCongo" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
-            
-            <!-- HEADER -->
-            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-                <div class="flex items-center gap-5">
-                    <div class="bg-blue-600 p-4 rounded-xl shadow-xl shadow-blue-100 rotate-2">
-                        <i class="pi pi-envelope text-white text-3xl"></i>
+        <div class="page-bg min-h-screen font-sans">
+            <PageHeader
+                title="Campagnes email"
+                subtitle="Créez, ciblez et envoyez vos campagnes à votre audience"
+                icon="pi-envelope"
+                accent="blue"
+                badge="Marketing"
+                :actions="[{ label: 'Nouvelle campagne', icon: 'pi-plus', variant: 'primary', onClick: openCreate }]"
+            />
+
+            <div class="page-container page-section">
+            <!-- KPI RÉELS -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div v-for="kpi in kpis" :key="kpi.label" class="page-card flex items-center gap-4">
+                    <div class="p-3 rounded-xl" :class="kpi.color">
+                        <i :class="kpi.icon" class="text-xl" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Email Marketing & Automation</h1>
-                        <p class="text-slate-500 font-medium">Automatisez vos communications pour engager vos élèves</p>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <Button label="Nouvelle Campagne" icon="pi pi-megaphone" class="p-button-outlined p-button-indigo border-2 font-bold" />
-                    <Button label="Créer Automation" icon="pi pi-plus" class="p-button-primary shadow-lg px-6 font-bold" @click="openNewAutomation" />
-                </div>
-            </header>
-
-            <!-- KPI DASHBOARD -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div v-for="kpi in [
-                    { label: 'Total Envoyés', val: '24,850', color: 'indigo', icon: 'pi-send', trend: '+14%' },
-                    { label: 'Taux d\'Ouverture', val: '42.8%', color: 'emerald', icon: 'pi-eye', trend: '+5.2%' },
-                    { label: 'Taux de Clic', val: '12.4%', color: 'amber', icon: 'pi-external-link', trend: '+2.1%' },
-                    { label: 'Délivrabilité', val: '98.2%', color: 'rose', icon: 'pi-verified', trend: 'Stable' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-all">
-                    <div :class="`p-4 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600` ">
-                        <i :class="`pi ${kpi.icon} text-2xl` "></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-black text-slate-800">{{ kpi.val }}</span>
-                            <span :class="`text-[10px] font-bold ${kpi.trend.includes('+') ? 'text-emerald-500' : 'text-slate-400'}` ">{{ kpi.trend }}</span>
-                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ kpi.label }}</p>
+                        <p class="text-2xl font-black text-slate-800 tabular-nums">{{ kpi.value }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- ANALYTICS VISUALS -->
-            <div class="grid grid-cols-12 gap-8 mb-10">
-                <div class="col-span-12 lg:col-span-8">
-                    <Card class="border-none shadow-sm rounded-xl overflow-hidden h-full">
-                        <template #title>
-                            <div class="flex justify-between items-center px-4 pt-2">
-                                <span class="text-xl font-black text-slate-800 tracking-tight">Volume & Engagement Hebdomadaire</span>
-                                <SelectButton :options="['7J', '30J', '12M']" modelValue="7J" class="p-button-sm" />
-                            </div>
-                        </template>
-                        <template #content>
-                            <div class="h-[320px]">
-                                <Chart type="line" :data="emailStatsData" :options="chartOptions" class="h-full" />
-                            </div>
-                        </template>
-                    </Card>
-                </div>
-                <div class="col-span-12 lg:col-span-4">
-                    <Card class="border-none shadow-sm rounded-xl h-full flex flex-col justify-center">
-                        <template #title><span class="text-xl font-black text-slate-800 px-4">Statut de Délivrance</span></template>
-                        <template #content>
-                            <div class="h-[250px] relative">
-                                <Chart type="doughnut" :data="deliveryChartData" :options="{ ...chartOptions, cutout: '75%' }" class="h-full" />
-                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span class="text-4xl font-black text-emerald-500">98.2%</span>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">SANTÉ ENVOI</span>
-                                </div>
-                            </div>
-                            <div class="mt-6 space-y-3 px-4">
-                                <div class="flex justify-between text-xs">
-                                    <span class="font-bold text-slate-500"><i class="pi pi-circle-fill text-emerald-500 mr-2 text-[8px]"></i> Succès</span>
-                                    <span class="font-black text-slate-800">24,380 emails</span>
-                                </div>
-                                <div class="flex justify-between text-xs">
-                                    <span class="font-bold text-slate-500"><i class="pi pi-circle-fill text-red-500 mr-2 text-[8px]"></i> Rejetés</span>
-                                    <span class="font-black text-slate-800">470 emails</span>
-                                </div>
-                            </div>
-                        </template>
-                    </Card>
-                </div>
-            </div>
-
-            <!-- MAIN CONTENT TABS -->
-            <div class="bg-white rounded-[1rem] shadow-sm border border-slate-50 p-6">
-                <TabView v-model:activeIndex="activeTab" class="custom-tabview">
-                    
-                    <!-- TAB 1: AUTOMATIONS -->
-                    <TabPanel>
-                        <template #header>
-                            <div class="flex items-center gap-2">
-                                <i class="pi pi-bolt"></i>
-                                <span>Workflows Automatisés</span>
-                            </div>
-                        </template>
-                        <div class="pt-6">
-                            <DataTable :value="automations" class="p-datatable-sm" responsiveLayout="scroll">
-                                <template #header>
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="text-lg font-black text-slate-700">Flux de communication actifs</h3>
-                                        <div class="p-input-icon-left">
-                                            <i class="pi pi-search" />
-                                            <InputText placeholder="Filtrer les automations..." class="p-inputtext-sm rounded-xl" />
-                                        </div>
-                                    </div>
-                                </template>
-                                <Column field="name" header="NOM DE L'AUTOMATION" style="min-width: 15rem">
-                                    <template #body="{ data }">
-                                        <div class="flex flex-col">
-                                            <span class="font-black text-slate-800">{{ data.name }}</span>
-                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ID: #AUTO-{{ data.id }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="trigger" header="DÉCLENCHEUR" style="min-width: 12rem">
-                                    <template #body="{ data }">
-                                        <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full w-fit">
-                                            <i :class="getTriggerIcon(data.trigger)" class="text-xs"></i>
-                                            <span class="text-[10px] font-black uppercase">{{ data.trigger.replace('_', ' ') }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="stats" header="PERFORMANCE" style="min-width: 18rem">
-                                    <template #body="{ data }">
-                                        <div class="flex gap-4">
-                                            <div class="flex flex-col">
-                                                <span class="text-[10px] font-bold text-slate-400">ENVOYÉS</span>
-                                                <span class="font-black text-slate-700 text-sm">{{ data.stats.sent }}</span>
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-[10px] font-bold text-slate-400">OUVERTURE</span>
-                                                <span class="font-black text-emerald-500 text-sm">{{ ((data.stats.opened / data.stats.sent) * 100).toFixed(1) }}%</span>
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-[10px] font-bold text-slate-400">CLICS</span>
-                                                <span class="font-black text-amber-500 text-sm">{{ ((data.stats.clicked / data.stats.sent) * 100).toFixed(1) }}%</span>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="status" header="ÉTAT" style="width: 8rem">
-                                    <template #body="{ data }">
-                                        <InputSwitch v-model="data.status" @change="toggleStatus(data.id)" />
-                                    </template>
-                                </Column>
-                                <Column header="ACTIONS" style="width: 8rem">
-                                    <template #body="{ data }">
-                                        <div class="flex gap-2">
-                                            <Button icon="pi pi-pencil" class="p-button-text p-button-secondary p-button-sm p-button-rounded" />
-                                            <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm p-button-rounded" @click="deleteAutomation(data.id)" />
-                                        </div>
-                                    </template>
-                                </Column>
-                            </DataTable>
-                        </div>
-                    </TabPanel>
-
-                    <!-- TAB 2: TEMPLATES -->
-                    <TabPanel>
-                        <template #header>
-                            <div class="flex items-center gap-2">
-                                <i class="pi pi-clone"></i>
-                                <span>Bibliothèque de Modèles</span>
-                            </div>
-                        </template>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
-                            <div @click="openNewTemplate" class="border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center p-8 hover:bg-slate-50 cursor-pointer transition-colors group">
-                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500 transition-all">
-                                    <i class="pi pi-plus text-2xl"></i>
-                                </div>
-                                <span class="mt-4 font-black text-slate-500 group-hover:text-blue-600">Nouveau Modèle</span>
-                            </div>
-
-                            <div v-for="tpl in templates" :key="tpl.id" class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden group hover:shadow-xl transition-all">
-                                <div class="h-40 bg-slate-100 relative overflow-hidden flex items-center justify-center text-slate-300">
-                                    <i class="pi pi-envelope text-6xl opacity-20"></i>
-                                    <div class="absolute inset-0 bg-blue-600/80 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button icon="pi pi-eye" class="p-button-rounded p-button-sm p-button-white" @click="displayPreviewDialog = true" />
-                                        <Button icon="pi pi-pencil" class="p-button-rounded p-button-sm p-button-white" />
-                                    </div>
-                                </div>
-                                <div class="p-5">
-                                    <Tag :value="tpl.category" severity="info" class="text-[9px] mb-2 px-3 py-1" />
-                                    <h4 class="font-black text-slate-800 text-sm truncate">{{ tpl.name }}</h4>
-                                    <p class="text-xs text-slate-400 truncate mb-4">{{ tpl.subject }}</p>
-                                    <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 pt-3 border-t border-slate-50">
-                                        <span>MAJ: {{ tpl.last_mod }}</span>
-                                        <Button icon="pi pi-copy" class="p-button-text p-button-sm p-button-secondary p-0" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </TabPanel>
-
-                    <!-- TAB 3: LOGS & TRACKING -->
-                    <TabPanel>
-                        <template #header>
-                            <div class="flex items-center gap-2">
-                                <i class="pi pi-list"></i>
-                                <span>Journal des Envois</span>
-                            </div>
-                        </template>
-                        <div class="pt-6">
-                            <DataTable :value="logs" :paginator="true" :rows="10" class="p-datatable-sm" responsiveLayout="scroll">
-                                <Column field="recipient" header="DESTINATAIRE" style="min-width: 14rem">
-                                    <template #body="{ data }">
-                                        <div class="flex items-center gap-2">
-                                            <Avatar icon="pi pi-user" shape="circle" size="small" class="bg-slate-100" />
-                                            <span class="font-bold text-slate-700">{{ data.recipient }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="subject" header="OBJET" style="min-width: 18rem"></Column>
-                                <Column field="sent_at" header="DATE D'ENVOI" sortable></Column>
-                                <Column field="status" header="STATUT">
-                                    <template #body="{ data }">
-                                        <Badge :value="data.status" :severity="getStatusSeverity(data.status)" class="uppercase text-[9px] px-3 py-1" />
-                                    </template>
-                                </Column>
-                                <Column field="device" header="CANAL">
-                                    <template #body="{ data }">
-                                        <i :class="data.device === 'Desktop' ? 'pi pi-desktop' : 'pi pi-mobile'" class="text-slate-400"></i>
-                                    </template>
-                                </Column>
-                                <Column header="TRACK" style="width: 5rem">
-                                    <template #body>
-                                        <Button icon="pi pi-info-circle" class="p-button-text p-button-secondary p-button-sm" />
-                                    </template>
-                                </Column>
-                            </DataTable>
-                        </div>
-                    </TabPanel>
-
-                </TabView>
-            </div>
-
-            <!-- MODAL: CREATION AUTOMATION -->
-            <Dialog v-model:visible="displayAutomationDialog" :modal="true" :style="{ width: '600px' }" header="⚙️ Configurer une Automation" class="p-fluid email-modal">
-                <div class="space-y-6 pt-4">
-                    <div class="field">
-                        <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Nom de l'automation</label>
-                        <InputText v-model="currentAutomation.name" placeholder="ex: Relance de bienvenue J+1" class="rounded-xl border-2" />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="field">
-                            <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Déclencheur (Trigger)</label>
-                            <Dropdown v-model="currentAutomation.trigger" :options="triggerOptions" optionLabel="label" optionValue="value" class="rounded-xl">
-                                <template #option="slotProps">
-                                    <div class="flex items-center gap-2">
-                                        <i :class="slotProps.option.icon"></i>
-                                        <span>{{ slotProps.option.label }}</span>
-                                    </div>
-                                </template>
-                            </Dropdown>
-                        </div>
-                        <div class="field">
-                            <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Délai d'envoi (Heures)</label>
-                            <InputNumber v-model="currentAutomation.delay" showButtons :min="0" suffix=" h" />
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="font-black text-slate-700 text-sm mb-2 block uppercase tracking-wide">Modèle d'email à envoyer</label>
-                        <Dropdown v-model="currentAutomation.template_id" :options="templates" optionLabel="name" optionValue="id" placeholder="Choisir un template..." class="rounded-xl" />
-                    </div>
-
-                    <div class="p-6 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-4">
-                        <i class="pi pi-info-circle text-2xl text-blue-500"></i>
-                        <p class="text-xs font-medium text-blue-700 leading-relaxed">
-                            Cette automation sera active immédiatement. Tous les futurs utilisateurs correspondant au déclencheur recevront l'email après le délai défini.
-                        </p>
+            <!-- TABLE DES CAMPAGNES -->
+            <div class="page-card">
+                <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
+                        <h2 class="text-lg font-black text-slate-800">Vos campagnes</h2>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <IconField iconPosition="left" class="w-full sm:w-72">
+                            <InputIcon class="pi pi-search" />
+                            <InputText v-model="search" placeholder="Rechercher un nom ou un objet…" class="w-full" aria-label="Rechercher une campagne" @keyup.enter="applyFilters" />
+                        </IconField>
+                        <Select v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" class="w-full sm:w-48" aria-label="Filtrer par statut" @change="applyFilters" />
+                        <Button icon="pi pi-search" aria-label="Lancer la recherche" @click="applyFilters" />
                     </div>
                 </div>
-                <template #footer>
-                    <div class="flex justify-between items-center w-full pt-4 border-t border-slate-50">
-                        <Button label="Envoyer Test" icon="pi pi-send" class="p-button-text p-button-secondary font-bold" @click="testEmail" />
-                        <div class="flex gap-2">
-                            <Button label="Annuler" class="p-button-text p-button-secondary" @click="displayAutomationDialog = false" />
-                            <Button label="Enregistrer Automation" icon="pi pi-check" class="p-button-primary px-8 shadow-lg shadow-blue-100" @click="saveAutomation" />
-                        </div>
-                    </div>
-                </template>
-            </Dialog>
 
-            <!-- MODAL: EDITEUR DE TEMPLATE -->
-            <Dialog v-model:visible="displayTemplateDialog" :modal="true" :maximized="true" header="🎨 Éditeur de Modèle Email" class="p-fluid">
-                <div class="grid grid-cols-12 gap-8 h-full py-4">
-                    <!-- Config Sidebar -->
-                    <div class="col-span-12 lg:col-span-3 space-y-6 bg-slate-50 p-6 rounded-[1rem] border border-slate-200">
-                        <h3 class="text-lg font-black text-slate-800 mb-6">Paramètres Généraux</h3>
-                        <div class="field">
-                            <label class="font-bold text-slate-500 text-xs uppercase mb-2 block">Nom interne</label>
-                            <InputText v-model="currentTemplate.name" class="border-none shadow-sm" />
-                        </div>
-                        <div class="field">
-                            <label class="font-bold text-slate-500 text-xs uppercase mb-2 block">Objet de l'email</label>
-                            <InputText v-model="currentTemplate.subject" placeholder="L'élève verra ceci..." class="border-none shadow-sm" />
-                        </div>
-                        <div class="field">
-                            <label class="font-bold text-slate-500 text-xs uppercase mb-2 block">Catégorie</label>
-                            <Dropdown v-model="currentTemplate.category" :options="['Marketing', 'Système', 'Education', 'Vente']" class="border-none shadow-sm" />
-                        </div>
-
-                        <Divider />
-
-                        <div class="p-4 bg-white rounded-2xl shadow-sm space-y-4">
-                            <h4 class="text-[10px] font-black text-slate-400 uppercase">Variables dynamiques</h4>
-                            <div class="flex flex-wrap gap-2">
-                                <Tag v-for="tag in ['{user_name}', '{course_title}', '{reset_link}', '{cert_url}']" :key="tag" :value="tag" class="cursor-pointer hover:bg-blue-500" />
-                            </div>
-                        </div>
-
-                        <div class="mt-auto pt-10">
-                            <Button label="Sauvegarder Modèle" icon="pi pi-save" class="p-button-indigo w-full shadow-lg" />
-                        </div>
-                    </div>
-
-                    <!-- Editor Space -->
-                    <div class="col-span-12 lg:col-span-9 flex flex-col gap-4">
-                        <div class="flex-1 rounded-xl overflow-hidden border border-slate-200">
-                            <Editor v-model="currentTemplate.content" editorStyle="height: 60vh" />
-                        </div>
-                        <div class="bg-slate-900 p-6 rounded-xl text-white flex justify-between items-center">
-                            <div class="flex items-center gap-4">
-                                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                <span class="text-sm font-bold">Aperçu en temps réel activé</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <Button label="Prévisualiser" icon="pi pi-eye" class="p-button-text p-button-white p-button-sm" @click="displayPreviewDialog = true" />
-                                <Button label="Code HTML" icon="pi pi-code" class="p-button-text p-button-white p-button-sm" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Dialog>
-
-            <!-- MODAL: PREVIEW -->
-            <Dialog v-model:visible="displayPreviewDialog" :modal="true" :style="{ width: '500px' }" header="Aperçu Mobile/Desktop" class="p-fluid">
-                <div class="bg-slate-100 p-8 flex justify-center">
-                    <div class="w-full bg-white shadow-2xl rounded-xl overflow-hidden max-w-[400px] border border-slate-200">
-                        <div class="bg-slate-50 p-3 border-b border-slate-100 flex items-center gap-2">
+                <DataTable :value="campaigns?.data ?? []" dataKey="id" :lazy="true" :paginator="true"
+                           :rows="campaigns?.per_page ?? 15" :totalRecords="campaigns?.total ?? 0"
+                           :first="((campaigns?.current_page ?? 1) - 1) * (campaigns?.per_page ?? 15)"
+                           @page="onPage" responsiveLayout="scroll" class="p-datatable-sm">
+                    <Column header="Nom" style="min-width: 12rem">
+                        <template #body="{ data }">
+                            <span class="font-bold text-slate-800">{{ data.name || '(Sans nom)' }}</span>
+                        </template>
+                    </Column>
+                    <Column field="subject" header="Objet" style="min-width: 16rem">
+                        <template #body="{ data }">
+                            <span class="text-slate-600 line-clamp-1">{{ data.subject }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Audience" style="width: 9rem">
+                        <template #body="{ data }">
+                            <span class="text-sm text-slate-600">{{ audienceLabel(data.target_audience) }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Statut" style="width: 9rem">
+                        <template #body="{ data }">
+                            <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
+                        </template>
+                    </Column>
+                    <Column header="Envoyés" style="width: 7rem">
+                        <template #body="{ data }">
+                            <span class="tabular-nums font-bold text-slate-800">{{ data.sent_count ?? 0 }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Créée le" style="width: 11rem">
+                        <template #body="{ data }">
+                            <span class="text-sm text-slate-500">{{ formatDate(data.created_at) }}</span>
+                        </template>
+                    </Column>
+                    <Column header="Actions" style="width: 15rem">
+                        <template #body="{ data }">
                             <div class="flex gap-1">
-                                <div class="w-2 h-2 rounded-full bg-red-400"></div>
-                                <div class="w-2 h-2 rounded-full bg-amber-400"></div>
-                                <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                                <Button icon="pi pi-eye" text rounded severity="secondary" v-tooltip.top="'Voir'" aria-label="Voir la campagne" @click="viewCampaign(data)" />
+                                <Button icon="pi pi-copy" text rounded severity="secondary" v-tooltip.top="'Dupliquer'" aria-label="Dupliquer la campagne" @click="duplicateCampaign(data)" />
+                                <Button icon="pi pi-send" text rounded severity="info" v-tooltip.top="'Envoyer un test'" aria-label="Envoyer un email de test" @click="openTest(data)" />
+                                <Button v-if="data.status !== 'sent'" icon="pi pi-pencil" text rounded severity="secondary" v-tooltip.top="'Modifier'" aria-label="Modifier la campagne" @click="openEdit(data)" />
+                                <Button v-if="['draft', 'scheduled'].includes(data.status)" icon="pi pi-trash" text rounded severity="danger" v-tooltip.top="'Supprimer'" aria-label="Supprimer la campagne" @click="removeCampaign(data)" />
                             </div>
-                            <span class="text-[8px] font-mono text-slate-400">https://subnetcongo.cd/email-preview</span>
+                        </template>
+                    </Column>
+
+                    <template #empty>
+                        <div class="py-16 text-center">
+                            <i class="pi pi-inbox text-4xl text-slate-300 mb-4" aria-hidden="true"></i>
+                            <p class="font-bold text-slate-700">Aucune campagne pour le moment</p>
+                            <p class="text-sm text-slate-500 mt-1">Créez votre première campagne avec le bouton « Nouvelle campagne ».</p>
                         </div>
-                        <div class="p-6">
-                            <div class="flex justify-center mb-6">
-                                <img src="/logo-subnet.png" class="h-8 opacity-50" />
-                            </div>
-                            <div v-html="currentTemplate.content" class="text-slate-700 leading-relaxed text-sm"></div>
-                            <Divider />
-                            <div class="text-[10px] text-center text-slate-400">
-                                © 2026 SubNetCongo. Vous recevez cet email car vous êtes inscrit sur notre plateforme.<br/>
-                                <a href="#" class="underline">Se désabonner</a>
-                            </div>
-                        </div>
+                    </template>
+                </DataTable>
+            </div>
+            </div>
+        </div>
+
+        <!-- DIALOGUE : CRÉATION / ÉDITION (même page) -->
+        <Dialog v-model:visible="formOpen" modal class="snc-dialog" :style="{ width: '46rem' }" :breakpoints="{ '960px': '95vw' }"
+                @hide="closeForm">
+            <template #header>
+                <span class="p-dialog-title flex items-center gap-2">
+                    <i :class="['pi', editingId ? 'pi-pencil' : 'pi-megaphone']"></i>
+                    {{ editingId ? 'Modifier la campagne' : 'Nouvelle campagne' }}
+                </span>
+            </template>
+            <form class="flex flex-col gap-4 pt-2" @submit.prevent="submitWithStatus(form.status)">
+                <div class="field">
+                    <label for="campaign-name" class="font-bold text-slate-700 text-sm mb-1 block">Nom <span class="text-rose-500">*</span></label>
+                    <InputText id="campaign-name" v-model="form.name" class="w-full" :invalid="!!form.errors.name" placeholder="ex : Newsletter de novembre" />
+                    <small v-if="form.errors.name" class="text-rose-500" role="alert">{{ form.errors.name }}</small>
+                </div>
+
+                <div class="field">
+                    <label for="campaign-subject" class="font-bold text-slate-700 text-sm mb-1 block">Objet <span class="text-rose-500">*</span></label>
+                    <InputText id="campaign-subject" v-model="form.subject" class="w-full" :invalid="!!form.errors.subject" placeholder="Objet visible par les destinataires" />
+                    <small v-if="form.errors.subject" class="text-rose-500" role="alert">{{ form.errors.subject }}</small>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="field">
+                        <label for="campaign-from-name" class="font-bold text-slate-700 text-sm mb-1 block">Nom d'expéditeur</label>
+                        <InputText id="campaign-from-name" v-model="form.from_name" class="w-full" :invalid="!!form.errors.from_name" placeholder="SubNetCongo Academy" />
+                        <small v-if="form.errors.from_name" class="text-rose-500" role="alert">{{ form.errors.from_name }}</small>
+                    </div>
+                    <div class="field">
+                        <label for="campaign-from-email" class="font-bold text-slate-700 text-sm mb-1 block">Email d'expéditeur</label>
+                        <InputText id="campaign-from-email" v-model="form.from_email" class="w-full" :invalid="!!form.errors.from_email" placeholder="academy@subnetcongo.net" />
+                        <small v-if="form.errors.from_email" class="text-rose-500" role="alert">{{ form.errors.from_email }}</small>
                     </div>
                 </div>
-                <template #footer>
-                    <Button label="Fermer" @click="displayPreviewDialog = false" class="p-button-text p-button-secondary" />
-                </template>
-            </Dialog>
 
-            <footer class="mt-12 text-center text-slate-400 text-sm pb-8 font-medium">
-                © 2026 SubNetCongo CRM - Système d'Automatisation des Emails v2.4.
-            </footer>
+                <div class="field">
+                    <label for="campaign-audience" class="font-bold text-slate-700 text-sm mb-1 block">Audience <span class="text-rose-500">*</span></label>
+                    <Select id="campaign-audience" v-model="form.target_audience" :options="audienceOptions" optionLabel="label" optionValue="value" class="w-full" :invalid="!!form.errors.target_audience" />
+                    <small v-if="form.errors.target_audience" class="text-rose-500" role="alert">{{ form.errors.target_audience }}</small>
+                </div>
 
-        </div>
+                <div class="field">
+                    <label for="campaign-body" class="font-bold text-slate-700 text-sm mb-1 block">Corps du message <span class="text-rose-500">*</span></label>
+                    <Editor id="campaign-body" v-model="form.body" editorStyle="height: 220px" />
+                    <small v-if="form.errors.body" class="text-rose-500" role="alert">{{ form.errors.body }}</small>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <Button type="button" label="Annuler" text severity="secondary" @click="closeForm" />
+                    <Button type="button" label="Enregistrer le brouillon" icon="pi pi-save" outlined severity="secondary" :loading="form.processing" @click="submitWithStatus('draft')" />
+                    <Button type="button" label="Envoyer maintenant" icon="pi pi-send" :loading="form.processing" @click="submitWithStatus('queued')" />
+                </div>
+            </form>
+        </Dialog>
+
+        <!-- DIALOGUE : APERÇU (mode show) -->
+        <Dialog v-model:visible="previewOpen" modal class="snc-dialog" :style="{ width: '46rem' }" :breakpoints="{ '960px': '95vw' }"
+                @hide="closePreview">
+            <template #header>
+                <span class="p-dialog-title flex items-center gap-2">
+                    <i class="pi pi-eye"></i>
+                    Aperçu de la campagne
+                </span>
+            </template>
+            <div v-if="campaign" class="flex flex-col gap-4 pt-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Statut</p>
+                        <Tag :value="statusLabel(campaign.status)" :severity="statusSeverity(campaign.status)" class="mt-1" />
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Audience</p>
+                        <p class="font-bold text-slate-800 mt-1">{{ audienceLabel(campaign.target_audience) }}</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Envoyés</p>
+                        <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.sent_count ?? 0 }} / {{ campaign.total_recipients ?? 0 }}</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Échecs</p>
+                        <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.bounces_count ?? 0 }}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Objet</p>
+                    <p class="font-bold text-slate-800">{{ campaign.subject }}</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Corps</p>
+                    <!-- HTML rédigé par un administrateur, rendu tel quel -->
+                    <div class="border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto text-sm text-slate-700" v-html="campaign.body"></div>
+                </div>
+
+                <div>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Destinataires ciblés ({{ recipientsCount }})</p>
+                    <div class="border border-slate-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-slate-100">
+                        <div v-for="r in recipientsPreview" :key="r.id" class="flex justify-between items-center px-4 py-2 text-sm">
+                            <span class="font-medium text-slate-700">{{ r.name }}</span>
+                            <span class="text-slate-400">{{ r.email }}</span>
+                        </div>
+                        <p v-if="recipientsCount > recipientsPreview.length" class="px-4 py-2 text-xs text-slate-400 italic">
+                            … et {{ recipientsCount - recipientsPreview.length }} autre(s) destinataire(s).
+                        </p>
+                        <p v-if="recipientsCount === 0" class="px-4 py-3 text-sm text-slate-400 italic">Aucun destinataire pour cette audience.</p>
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <Button v-if="campaign && campaign.status !== 'sent'" label="Modifier" icon="pi pi-pencil" outlined severity="secondary" @click="closePreview(); openEdit(campaign)" />
+                    <Button label="Fermer" text severity="secondary" @click="closePreview" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- DIALOGUE : ENVOI TEST -->
+        <Dialog v-model:visible="testDialogOpen" modal class="snc-dialog" :style="{ width: '28rem' }">
+            <template #header>
+                <span class="p-dialog-title flex items-center gap-2">
+                    <i class="pi pi-send"></i>
+                    Envoyer un email de test
+                </span>
+            </template>
+            <form class="flex flex-col gap-3 pt-2" @submit.prevent="submitTest">
+                <p class="text-sm text-slate-500">Un aperçu de la campagne sera envoyé immédiatement à cette adresse.</p>
+                <InputText v-model="testForm.test_email" type="email" placeholder="destinataire@exemple.com" class="w-full" :invalid="!!testForm.errors.test_email" aria-label="Email de test" />
+                <small v-if="testForm.errors.test_email" class="text-rose-500" role="alert">{{ testForm.errors.test_email }}</small>
+                <div class="flex justify-end gap-2">
+                    <Button type="button" label="Annuler" text severity="secondary" @click="testDialogOpen = false" />
+                    <Button type="submit" label="Envoyer le test" icon="pi pi-send" :loading="testForm.processing" />
+                </div>
+            </form>
+        </Dialog>
     </AppLayout>
 </template>
 
 <style scoped>
-/* Custom Scrollbars */
-:deep(.p-scrollpanel-bar) {
-    background: #e2e8f0;
-    opacity: 1;
-}
-
-/* TabView Customization */
-:deep(.custom-tabview .p-tabview-nav) {
-    background: transparent;
-    border-bottom: 2px solid #f1f5f9;
-}
-
-:deep(.custom-tabview .p-tabview-nav li .p-tabview-nav-link) {
-    background: transparent;
-    border: none;
-    font-weight: 800;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    padding: 1.5rem 2rem;
-    transition: all 0.3s ease;
-}
-
-:deep(.custom-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-    color: #6366f1;
-    border-bottom: 2px solid #6366f1;
-}
-
-:deep(.custom-tabview .p-tabview-panels) {
-    background: transparent;
-    padding: 0;
-}
-
-/* DataTable Customization */
-:deep(.p-datatable-header) {
-    background: transparent;
-    border: none;
-    padding: 2rem 0;
-}
-
 :deep(.p-datatable-thead > tr > th) {
-    background: #f8fafc;
-    color: #64748b;
     font-size: 0.7rem;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 1.25rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-:deep(.p-datatable-tbody > tr) {
-    background: white;
-    transition: background 0.2s;
-}
-
-:deep(.p-datatable-tbody > tr:hover) {
-    background: #f1f5f9/50 !important;
-}
-
-/* InputSwitch Customization */
-:deep(.p-inputswitch.p-inputswitch-checked .p-inputswitch-slider) {
-    background: #10B981;
-}
-
-/* Editor Styling */
-:deep(.p-editor-container .p-editor-toolbar) {
-    border-top-left-radius: 1.5rem;
-    border-top-right-radius: 1.5rem;
-    background: #f8fafc;
-}
-
-:deep(.p-editor-container .p-editor-content) {
-    border-bottom-left-radius: 1.5rem;
-    border-bottom-right-radius: 1.5rem;
-    background: white;
-}
-
-/* Card Overrides */
-:deep(.p-card-body) {
-    padding: 1.5rem;
-}
-
-/* Transitions */
-.p-button-indigo {
-    background: #6366F1;
-    border: none;
-    color: white;
-}
-
-.p-button-indigo:hover {
-    background: #4F46E5;
+    color: #64748b;
 }
 </style>

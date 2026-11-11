@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -20,24 +20,37 @@ const props = defineProps({
     country: Object,
     currency: String,
     symbol: String,
+    coupon: Object,
 });
 
-const form = ref({
+const page = usePage();
+const form = useForm({
     billing_name: props.user?.name ?? '',
     billing_email: props.user?.email ?? '',
     country_code: props.country?.code ?? props.user?.country_code ?? 'CD',
-    provider: props.recommendedProvider ?? 'orange_money',
+    provider: props.recommendedProvider ?? props.providers?.[0]?.provider ?? 'orange_money',
     phone_number: props.user?.phone ?? '',
 });
 
-const formError = ref(null);
-const submitting = ref(false);
 const requestingValidation = ref(false);
+const couponCode = ref('');
+const applyingCoupon = ref(false);
+const activeCoupon = computed(() => props.cart?.coupon_code ?? null);
+const appliedDiscountLocal = computed(() => props.cart?.coupon_discount_local ?? 0);
+const taxRatePercent = computed(() => {
+    const rate = Number(props.cart?.tax_rate ?? 0) * 100;
+    return rate % 1 === 0 ? String(rate) : rate.toFixed(2);
+});
 
-const providerOptions = computed(() => props.providers?.map(p => ({ label: p.label, value: p.key })) ?? []);
+const formError = computed(() => {
+    const first = Object.values(form.errors ?? {})[0];
+    return first ?? page.props.flash?.error ?? null;
+});
+
+const providerOptions = computed(() => props.providers?.map(p => ({ label: p.label, value: p.provider })) ?? []);
 const countryOptions  = computed(() => props.countries ?? []);
 
-const selectedCountry = computed(() => props.countries?.find(c => c.value === form.value.country_code) || null);
+const selectedCountry = computed(() => props.countries?.find(c => c.value === form.country_code) || null);
 
 const formatLocal = (amount) => {
     const currency = props.currency ?? 'USD';
@@ -52,32 +65,42 @@ const changeCountry = (code) => {
     if (! code || code === props.country?.code) return;
     router.post(route('marketplace.country.set'), { country_code: code }, {
         preserveScroll: true,
-        onSuccess: () => router.reload({ only: ['cart', 'subtotal', 'total', 'currency', 'symbol', 'recommendedProvider'] }),
+        onSuccess: () => router.reload({ only: ['cart', 'subtotal', 'total', 'currency', 'symbol', 'recommendedProvider', 'providers'] }),
     });
 };
 
 watch(() => props.country?.code, (newCode) => {
-    if (newCode) form.value.country_code = newCode;
+    if (newCode) form.country_code = newCode;
 });
 
-const submit = () => {
-    formError.value = null;
-    submitting.value = true;
-    router.post(route('marketplace.process'), form.value, {
-        onError: (e) => { formError.value = e.message ?? e.error ?? 'Une erreur est survenue.'; submitting.value = false; },
-        onFinish: () => { submitting.value = false; },
+const applyCoupon = () => {
+    const code = couponCode.value.trim();
+    if (!code) return;
+    applyingCoupon.value = true;
+    router.post(route('marketplace.cart.apply-coupon'), { code }, {
+        preserveScroll: true,
+        onSuccess: () => { couponCode.value = ''; router.reload({ only: ['cart', 'subtotal', 'total', 'recommendedProvider'] }); },
+        onFinish: () => { applyingCoupon.value = false; },
+    });
+};
+const removeCoupon = () => {
+    router.delete(route('marketplace.cart.remove-coupon'), {
+        preserveScroll: true,
+        onSuccess: () => router.reload({ only: ['cart', 'subtotal', 'total', 'recommendedProvider'] }),
     });
 };
 
+const submit = () => {
+    form.post(route('marketplace.process'));
+};
+
 const requestAdminValidation = () => {
-    formError.value = null;
     requestingValidation.value = true;
     router.post(route('marketplace.request-validation'), {
-        note: form.value.billing_name ? 'Demandé par ' + form.value.billing_name : null,
-        country_code: form.value.country_code,
-        phone_number: form.value.phone_number,
+        note: form.billing_name ? 'Demandé par ' + form.billing_name : null,
+        country_code: form.country_code,
+        phone_number: form.phone_number,
     }, {
-        onError: (e) => { formError.value = e.message ?? e.error ?? 'Une erreur est survenue.'; requestingValidation.value = false; },
         onFinish: () => { requestingValidation.value = false; },
     });
 };
@@ -113,7 +136,7 @@ const requestAdminValidation = () => {
                         <i class="pi pi-exclamation-triangle"></i>{{ formError }}
                     </div>
 
-                    <form @submit.prevent class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 space-y-5">
                             <!-- PAYS & DEVISE -->
                             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
@@ -210,13 +233,29 @@ const requestAdminValidation = () => {
                                     <span class="truncate text-slate-300 flex-1 pr-2 font-medium">{{ item.course?.title }}</span>
                                     <span class="font-black font-mono">{{ formatLocal(item.price_local) }}</span>
                                 </div>
+                                <!-- Code promo -->
+                                <div class="mb-4 relative z-10">
+                                    <label for="checkout-coupon" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Code promo</label>
+                                    <div v-if="activeCoupon" class="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-3 py-2">
+                                        <span class="text-xs font-black text-emerald-300 font-mono flex items-center gap-2 min-w-0 truncate"><i class="pi pi-tag"></i> {{ activeCoupon }}</span>
+                                        <Button label="Retirer" text size="small" class="!text-[10px] !font-black !uppercase !tracking-widest !text-rose-300 hover:!text-rose-200 shrink-0" @click="removeCoupon" />
+                                    </div>
+                                    <div v-else class="flex gap-2">
+                                        <InputText id="checkout-coupon" v-model="couponCode" placeholder="Ex: BIENVENUE10" class="flex-1 !rounded-xl !text-sm uppercase !bg-white/10 !border-white/10 !text-white placeholder:!text-slate-500" @keyup.enter="applyCoupon" />
+                                        <Button label="Appliquer" icon="pi pi-check" :loading="applyingCoupon" @click="applyCoupon" class="!bg-white/10 hover:!bg-white/20 !border !border-white/10 !text-white !rounded-xl !text-[10px] !font-black !uppercase !tracking-widest" />
+                                    </div>
+                                </div>
                                 <div class="flex justify-between py-2 text-xs text-slate-400 relative z-10">
                                     <span>Sous-total</span>
                                     <span class="font-mono">{{ formatLocal(cart?.subtotal_local) }}</span>
                                 </div>
+                                <div v-if="appliedDiscountLocal > 0" class="flex justify-between py-2 text-xs text-emerald-400 relative z-10">
+                                    <span>Remise (code promo)</span>
+                                    <span class="font-mono">- {{ formatLocal(appliedDiscountLocal) }}</span>
+                                </div>
                                 <div class="flex justify-between py-2 text-xs text-slate-400 relative z-10">
-                                    <span>Taxes</span>
-                                    <span class="font-mono">{{ formatLocal(0) }}</span>
+                                    <span>TVA ({{ taxRatePercent }}%)</span>
+                                    <span class="font-mono">{{ formatLocal(cart?.tax_local) }}</span>
                                 </div>
                                 <div class="flex justify-between py-4 text-lg font-black relative z-10 border-t border-white/10">
                                     <span>Total</span>
@@ -229,7 +268,7 @@ const requestAdminValidation = () => {
                                         type="submit"
                                         label="Payer maintenant"
                                         icon="pi pi-lock"
-                                        :loading="submitting"
+                                        :loading="form.processing"
                                         :disabled="requestingValidation"
                                         class="!bg-blue-500 hover:!bg-blue-400 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full"
                                     />
@@ -240,7 +279,7 @@ const requestAdminValidation = () => {
                                         severity="secondary"
                                         outlined
                                         :loading="requestingValidation"
-                                        :disabled="submitting"
+                                        :disabled="form.processing"
                                         @click="requestAdminValidation"
                                         class="!bg-white/5 hover:!bg-white/10 !text-white !border-white/20 hover:!border-white/40 !rounded-xl !font-black !uppercase !tracking-widest !text-xs !py-3 w-full"
                                     />

@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartItem;
+use App\Models\Coupon;
 use App\Models\Course;
 use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentGatewaySetting;
+use App\Models\Setting;
+use App\Models\WebSetting;
 use App\Models\Wishlist;
 use App\Notifications\CourseEnrolledNotification;
 use App\Services\CountriesService;
@@ -16,6 +19,8 @@ use App\Services\Payment\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -60,7 +65,20 @@ class MarketplaceController extends Controller
               ->when($sort === 'price_high', fn ($q) => $q->orderBy('price', 'desc'))
               ->when($sort === 'popular', fn ($q) => $q->withCount('enrollments')->orderByDesc('enrollments_count'));
 
+        $totalFiltered = (clone $query)->count();
+        $freeCount = (clone $query)->where('price', 0)->count();
+        $paidCount = (clone $query)->where('price', '>', 0)->count();
+
         $courses = $query->paginate(12)->withQueryString();
+
+        $pageRatingStats = $this->reviewStats($courses->pluck('id')->all());
+        $courses->getCollection()->transform(function ($course) use ($pageRatingStats) {
+            $stat = $pageRatingStats[$course->getKey()] ?? null;
+            $course->setAttribute('reviews_avg_rating', $stat['avg_rating'] ?? null);
+            $course->setAttribute('reviews_count', $stat['count'] ?? 0);
+            return $course;
+        });
+        $globalRating = $this->globalReviewStats();
 
         // Enrichissement pour utilisateurs connectés
         $enrolledIds = [];
@@ -80,6 +98,13 @@ class MarketplaceController extends Controller
             'wishlistIds' => $wishlistIds,
             'cartCount' => $this->getCartCount($request),
             'categories' => \App\Models\Category::where('parent_id', null)->orderBy('name')->get(['id', 'name']),
+            'stats' => [
+                'total_published' => $totalFiltered,
+                'free' => $freeCount,
+                'paid' => $paidCount,
+                'avg_rating' => $globalRating['avg_rating'],
+                'reviews_count' => $globalRating['count'],
+            ],
         ]);
     }
 
@@ -92,17 +117,30 @@ class MarketplaceController extends Controller
             $course->load([
             'instructor:id,name,bio,avatar',
             'category:id,name',
+            'modules' => fn ($q) => $q->withCount('lessons')->orderBy('order'),
             'modules.lessons' => fn ($q) => $q->orderBy('order'),
-            'reviews' => fn ($q) => $q->where('is_approved', true)->latest()->limit(10),
-            'reviews.user:id,name,avatar',
         ]);
 
+        $reviews = $this->flatApprovedReviews($course->id);
+        $reviewAgg = $this->reviewAggregate($course->id);
+
+        $lessonsCount = (int) $course->lessons()->count();
+        $enrollmentsCount = (int) $course->enrollments()->count();
+        $durationHours = round(((int) ($course->duration_minutes ?? 0)) / 60, 1);
+        $avgRating = $reviewAgg['count'] > 0 ? round($reviewAgg['avg_rating'], 1) : null;
+
+        $course->setAttribute('enrollments_count', $enrollmentsCount);
+        $course->setAttribute('lessons_count', $lessonsCount);
+        $course->setAttribute('duration_hours', $durationHours);
+        $course->setAttribute('short_description', $course->short_info ?: $course->title);
+        $course->append('effective_price');
+
         $stats = [
-            'students' => $course->enrollments()->count(),
-            'rating' => round($course->reviews()->avg('rating') ?? 0, 1),
-            'reviews_count' => $course->reviews()->count(),
-            'lessons_count' => $course->lessons()->count(),
-            'duration_hours' => round(($course->duration_minutes ?? 0) / 60, 1),
+            'students' => $enrollmentsCount,
+            'rating' => $avgRating,
+            'reviews_count' => $reviewAgg['count'],
+            'lessons_count' => $lessonsCount,
+            'duration_hours' => $durationHours,
         ];
 
         $isEnrolled = false;
@@ -125,7 +163,8 @@ class MarketplaceController extends Controller
             ->where('status', Course::STATUS_PUBLISHED)
             ->where('id', '!=', $course->id)
             ->when($course->category_id, fn ($q) => $q->where('category_id', $course->category_id))
-            ->limit(4)->get();
+            ->limit(4)->get()
+            ->each->append('effective_price');
 
         return Inertia::render('Marketplace/Show', [
             'course' => $course,
@@ -133,7 +172,9 @@ class MarketplaceController extends Controller
             'isEnrolled' => $isEnrolled,
             'enrollmentStatus' => $enrollmentStatus,
             'inWishlist' => $inWishlist,
-            'related' => $related,
+            'isInWishlist' => $inWishlist,
+            'relatedCourses' => $related,
+            'reviews' => $reviews,
             'cartCount' => $this->getCartCount($request),
             'liveSession' => (function () use ($course) {
                 $session = \App\Models\LiveSession::where('course_id', $course->id)
@@ -150,8 +191,7 @@ class MarketplaceController extends Controller
             })(),
         ]);
         } catch (\Throwable $th) {
-            //throw $th;
-            return $th;
+            throw $th;
         }
     }
 
@@ -165,12 +205,11 @@ class MarketplaceController extends Controller
         $countryCode = $this->resolveCountryCode($request, $user);
         $country     = CountriesService::find($countryCode) ?? CountriesService::find('CD');
 
-        $items = $this->getCartItems($request)->load('course.instructor:id,name', 'course.category:id,name');
+        [$items, $usdSubtotal, $coupon, $couponDiscount, $usdTax, $usdTotal, $taxRate] = $this->resolveCartTotals($request);
 
         // On annote chaque item (prix converti, estGratuit, etc.)
         $free  = [];
         $paid  = [];
-        $usdSubtotal = 0.0;
         foreach ($items as $item) {
             $course = $item->course;
             $priceUsd  = (float) ($item->price - $item->discount_amount);
@@ -186,14 +225,14 @@ class MarketplaceController extends Controller
                 $free[] = $itemArray;
             } else {
                 $paid[] = $itemArray;
-                $usdSubtotal += $priceUsd;
             }
         }
 
-        $usdTax     = round($usdSubtotal * 0.0, 2);
-        $usdTotal   = $usdSubtotal + $usdTax;
         $localTotal = CountriesService::convertFromUsd($usdTotal, $country['code'] ?? 'CD');
         $localSub   = CountriesService::convertFromUsd($usdSubtotal, $country['code'] ?? 'CD');
+        $localTax   = CountriesService::convertFromUsd($usdTax, $country['code'] ?? 'CD');
+        $localCouponDiscount = CountriesService::convertFromUsd($couponDiscount, $country['code'] ?? 'CD');
+        $localDiscount = CountriesService::convertFromUsd((float) $items->sum('discount_amount') + $couponDiscount, $country['code'] ?? 'CD');
 
         return Inertia::render('Marketplace/Cart', [
             'cart' => [
@@ -203,13 +242,20 @@ class MarketplaceController extends Controller
                 'subtotal'  => $usdSubtotal,
                 'subtotal_local' => $localSub['amount'],
                 'tax'       => $usdTax,
-                'discount'  => (float) $items->sum('discount_amount'),
+                'tax_local' => $localTax['amount'],
+                'tax_rate'  => $taxRate,
+                'discount'  => (float) $items->sum('discount_amount') + $couponDiscount,
+                'discount_local' => $localDiscount['amount'],
+                'coupon_code' => $coupon?->code,
+                'coupon_discount' => $couponDiscount,
+                'coupon_discount_local' => $localCouponDiscount['amount'],
                 'total'     => $usdTotal,
                 'total_local'    => $localTotal['amount'],
                 'currency'  => $localTotal['currency'],
                 'symbol'    => $localTotal['symbol'],
                 'count'     => $items->count(),
             ],
+            'coupon'    => $coupon ? ['code' => $coupon->code, 'description' => $coupon->description, 'discount_type' => $coupon->discount_type, 'discount_value' => (float) $coupon->discount_value] : null,
             'items'     => $items,
             'subtotal'  => $usdSubtotal,
             'cartCount' => $items->count(),
@@ -443,6 +489,59 @@ class MarketplaceController extends Controller
     }
 
     /**
+     * Appliquer un code promo au panier.
+     */
+    public function applyCoupon(Request $request)
+    {
+        $data = $request->validate(['code' => 'required|string|max:50']);
+        $code = strtoupper(trim($data['code']));
+
+        $coupon = Coupon::where('code', $code)->where('is_active', true)->first();
+        if (! $coupon) {
+            return Redirect::back()->with('error', 'Code promo invalide.');
+        }
+        if ($coupon->starts_at && $coupon->starts_at->isFuture()) {
+            return Redirect::back()->with('error', "Ce code promo n'est pas encore valide.");
+        }
+        if ($coupon->expires_at && $coupon->expires_at->isPast()) {
+            return Redirect::back()->with('error', 'Ce code promo a expire.');
+        }
+        if ($coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit) {
+            return Redirect::back()->with('error', "Ce code promo a atteint sa limite d'utilisation.");
+        }
+
+        $items = $this->getCartItems($request);
+        if ($items->isEmpty()) {
+            return Redirect::back()->with('error', 'Votre panier est vide.');
+        }
+
+        $subtotal = (float) $items->sum(fn ($i) => max(0.0, (float) $i->price - (float) $i->discount_amount));
+        if ($coupon->min_amount && $subtotal < (float) $coupon->min_amount) {
+            return Redirect::back()->with('error', 'Ce code promo requiert un montant minimum de ' . number_format((float) $coupon->min_amount, 2) . ' USD.');
+        }
+
+        $request->session()->put('cart.coupon_code', $coupon->code);
+        foreach ($items as $item) {
+            $item->update(['coupon_code' => $coupon->code]);
+        }
+
+        return Redirect::back()->with('cart.applied_coupon', $coupon->code)->with('success', "Code promo {$coupon->code} applique.");
+    }
+
+    /**
+     * Retirer le code promo du panier.
+     */
+    public function removeCoupon(Request $request)
+    {
+        $request->session()->forget('cart.coupon_code');
+        $query = CartItem::query();
+        $this->scopeCartQuery($request, $query);
+        $query->update(['coupon_code' => null]);
+
+        return Redirect::back()->with('success', 'Code promo retire.');
+    }
+
+    /**
      * Toggle wishlist.
      */
     public function toggleWishlist(Request $request, Course $course)
@@ -466,21 +565,16 @@ class MarketplaceController extends Controller
         $countryCode = $this->resolveCountryCode($request, $user);
         $country     = CountriesService::find($countryCode) ?? CountriesService::find('CD');
 
-        $items = $this->getCartItems($request)->load('course');
-        // On ne procède au checkout que pour les items payants
-        $paidItems = $items->filter(fn ($i) => (float) ($i->price - $i->discount_amount) > 0);
+        [$items, $subtotalUsd, $coupon, $couponDiscount, $taxUsd, $totalUsd, $taxRate] = $this->resolveCartTotals($request);
+        $paidItems = $items->filter(fn ($i) => (float) ($i->price - $i->discount_amount) > 0)->values();
         if ($paidItems->isEmpty()) {
-            // Si le panier ne contient que des gratuits, on propose l'inscription directe
             return redirect()->route('marketplace.cart')->with('info', 'Votre panier ne contient que des cours gratuits : utilisez "S\'inscrire gratuitement".');
         }
-
-        $subtotalUsd = (float) $paidItems->sum(fn ($i) => $i->price - $i->discount_amount);
-        $taxUsd      = round($subtotalUsd * 0.0, 2);
-        $totalUsd    = $subtotalUsd + $taxUsd;
 
         $subtotal = CountriesService::convertFromUsd($subtotalUsd, $country['code'] ?? 'CD');
         $tax      = CountriesService::convertFromUsd($taxUsd, $country['code'] ?? 'CD');
         $total    = CountriesService::convertFromUsd($totalUsd, $country['code'] ?? 'CD');
+        $localCouponDiscount = CountriesService::convertFromUsd($couponDiscount, $country['code'] ?? 'CD');
 
         $providers = $this->paymentService->enabledProviders()->map(fn ($p) => [
             'provider' => $p->provider,
@@ -491,16 +585,21 @@ class MarketplaceController extends Controller
         return Inertia::render('Marketplace/Checkout', [
             'cart' => [
                 'items'          => $items,
-                'paid'           => $paidItems->values(),
+                'paid'           => $paidItems,
                 'subtotal'       => $subtotalUsd,
                 'subtotal_local' => $subtotal['amount'],
                 'tax'            => $taxUsd,
                 'tax_local'      => $tax['amount'],
+                'tax_rate'       => $taxRate,
+                'coupon_code'    => $coupon?->code,
+                'coupon_discount' => $couponDiscount,
+                'coupon_discount_local' => $localCouponDiscount['amount'],
                 'total'          => $totalUsd,
                 'total_local'    => $total['amount'],
                 'currency'       => $total['currency'],
                 'symbol'         => $total['symbol'],
             ],
+            'coupon'            => $coupon ? ['code' => $coupon->code, 'description' => $coupon->description] : null,
             'items'             => $items,
             'subtotal'          => $subtotalUsd,
             'total'             => $totalUsd,
@@ -630,23 +729,24 @@ class MarketplaceController extends Controller
         ]);
 
         $user = $request->user();
-        $items = $this->getCartItems($request)->load('course');
+        [$items, $subtotal, $coupon, $couponDiscount, $tax, $total] = $this->resolveCartTotals($request);
         if ($items->isEmpty()) {
             return back()->with('error', 'Panier vide');
         }
-
-        $subtotal = $items->sum(fn ($i) => $i->price - $i->discount_amount);
-        $tax = round($subtotal * 0.0, 2);
-        $total = $subtotal + $tax;
+        $totalRounded = round($total, 2);
+        if ($totalRounded <= 0) {
+            return back()->with('error', 'Votre panier ne contient que des cours gratuits : utilisez "S\'inscrire gratuitement".');
+        }
 
         // Création de la commande en BDD (aligné schéma existant)
         $order = Order::create([
             'user_id' => $user->id,
             'order_number' => 'ORD-' . strtoupper(Str::random(10)),
             'status' => 'pending',
-            'amount' => $total,
+            'amount' => $totalRounded,
             'tax_amount' => $tax,
-            'discount_amount' => 0,
+            'discount_amount' => $couponDiscount,
+            'coupon_code' => $coupon?->code,
             'currency' => 'USD',
             'payment_provider' => $data['provider'],
             'phone_number' => $data['phone_number'] ?? null,
@@ -666,7 +766,7 @@ class MarketplaceController extends Controller
 
         // Initiation du paiement
         $gateway = $this->paymentService->gateway($data['provider']);
-        $intent = $gateway->createIntent($total, 'USD', [
+        $intent = $gateway->createIntent($totalRounded, 'USD', [
             'order_id' => $order->id,
             'user_id' => $user->id,
         ]);
@@ -790,16 +890,193 @@ class MarketplaceController extends Controller
         $user = $request->user();
         $sessionId = $request->session()->getId();
         if ($user) {
-            // Inclut : les items explicitement attachés à cet utilisateur
-            //          + les items anonymes (session) pour reprise de panier post-login
-            $query->where(function ($q) use ($user, $sessionId) {
-                $q->where('user_id', $user->id)
-                  ->orWhere('session_id', $sessionId)
-                  ->orWhereNull('user_id');
-            });
+            CartItem::whereNull('user_id')
+                ->where('session_id', $sessionId)
+                ->update(['user_id' => $user->id, 'session_id' => null]);
+            $query->where('user_id', $user->id);
         } else {
-            $query->where('session_id', $sessionId);
+            $query->where('session_id', $sessionId)->whereNull('user_id');
         }
+    }
+
+    /**
+     * Taux de TVA applicable au panier (web_settings/settings, groupe payment, cle vat_rate). Defaut 0.
+     */
+    private function getCartRate(): float
+    {
+        try {
+            $rate = null;
+            if (Schema::hasTable('web_settings')) {
+                $rate = WebSetting::where('group', 'payment')->where('key', 'vat_rate')->value('value');
+            }
+            if ($rate === null && Schema::hasTable('settings')) {
+                $rate = Setting::where('group', 'payment')->where('key', 'vat_rate')->value('value');
+            }
+            $rate = (float) ($rate ?? 0);
+            return $rate > 1 ? $rate / 100 : max(0.0, $rate);
+        } catch (\Throwable $e) {
+            return 0.0;
+        }
+    }
+
+    private function getCartCoupon(Request $request): ?Coupon
+    {
+        try {
+            $code = $request->session()->get('cart.coupon_code')
+                ?: $this->getCartItems($request)->pluck('coupon_code')->filter()->first();
+            if (! $code) {
+                return null;
+            }
+            $coupon = Coupon::where('code', $code)->where('is_active', true)->first();
+            if (! $coupon) {
+                return null;
+            }
+            if ($coupon->starts_at && $coupon->starts_at->isFuture()) return null;
+            if ($coupon->expires_at && $coupon->expires_at->isPast()) return null;
+            if ($coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit) return null;
+            return $coupon;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Calcule les totaux reels du panier (sous-total, remise coupon, TVA, total).
+     *
+     * @return array{0:\Illuminate\Support\Collection,1:float,2:?Coupon,3:float,4:float,5:float,6:float}
+     */
+    private function resolveCartTotals(Request $request): array
+    {
+        $items = $this->getCartItems($request)->load('course.instructor:id,name', 'course.category:id,name');
+        $subtotal = 0.0;
+        foreach ($items as $item) {
+            $subtotal += max(0.0, (float) $item->price - (float) $item->discount_amount);
+        }
+        $rate = $this->getCartRate();
+        $coupon = $this->getCartCoupon($request);
+        $couponDiscount = $coupon ? $this->computeCouponDiscount($coupon, $subtotal) : 0.0;
+        $taxBase = max(0.0, $subtotal - $couponDiscount);
+        $tax = round($taxBase * $rate, 2);
+        $total = $taxBase + $tax;
+        return [$items, $subtotal, $coupon, $couponDiscount, $tax, $total, $rate];
+    }
+
+    private function computeCouponDiscount(Coupon $coupon, float $subtotal): float
+    {
+        if ($coupon->min_amount && $subtotal < (float) $coupon->min_amount) {
+            return 0.0;
+        }
+        $value = (float) $coupon->discount_value;
+        return match ($coupon->discount_type) {
+            'percent' => round($subtotal * min($value, 100) / 100, 2),
+            'fixed' => min($value, $subtotal),
+            default => 0.0,
+        };
+    }
+
+    /**
+     * Nom de la table d'avis marketplace si elle existe (course_reviews ecrit par review(), sinon reviews).
+     */
+    private function reviewsTable(): ?string
+    {
+        if (Schema::hasTable('course_reviews')) {
+            return 'course_reviews';
+        }
+        if (Schema::hasTable('reviews')) {
+            return 'reviews';
+        }
+        return null;
+    }
+
+    /**
+     * @param array<int> $courseIds
+     * @return array<int, array{avg_rating: float, count: int}>
+     */
+    private function reviewStats(array $courseIds): array
+    {
+        $table = $this->reviewsTable();
+        if (! $table || empty($courseIds)) {
+            return [];
+        }
+        return DB::table($table)
+            ->whereIn('course_id', $courseIds)
+            ->where('is_approved', true)
+            ->selectRaw('course_id, AVG(rating) as avg_rating, COUNT(*) as c')
+            ->groupBy('course_id')
+            ->get()
+            ->mapWithKeys(fn ($r) => [(int) $r->course_id => ['avg_rating' => round((float) $r->avg_rating, 1), 'count' => (int) $r->c]])
+            ->all();
+    }
+
+    /**
+     * @return array{avg_rating: ?float, count: int}
+     */
+    private function globalReviewStats(): array
+    {
+        $table = $this->reviewsTable();
+        if (! $table) {
+            return ['avg_rating' => null, 'count' => 0];
+        }
+        $row = DB::table($table)
+            ->where('is_approved', true)
+            ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as c')
+            ->first();
+        $count = (int) ($row->c ?? 0);
+        return ['avg_rating' => $count > 0 ? round((float) $row->avg_rating, 1) : null, 'count' => $count];
+    }
+
+    /**
+     * @return array{avg_rating: float, count: int}
+     */
+    private function reviewAggregate(int $courseId): array
+    {
+        $table = $this->reviewsTable();
+        if (! $table) {
+            return ['avg_rating' => 0.0, 'count' => 0];
+        }
+        $row = DB::table($table)
+            ->where('course_id', $courseId)
+            ->where('is_approved', true)
+            ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as c')
+            ->first();
+        return ['avg_rating' => (float) ($row->avg_rating ?? 0), 'count' => (int) ($row->c ?? 0)];
+    }
+
+    private function flatApprovedReviews(int $courseId, int $limit = 10): array
+    {
+        $table = $this->reviewsTable();
+        if (! $table) {
+            return [];
+        }
+        $hasTitle = $table === 'course_reviews';
+        $columns = $hasTitle
+            ? ['id', 'user_id', 'rating', 'title', 'comment', 'created_at']
+            : ['id', 'user_id', 'rating', 'comment', 'created_at'];
+        $rows = DB::table($table)
+            ->where('course_id', $courseId)
+            ->where('is_approved', true)
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get($columns);
+        if ($rows->isEmpty()) {
+            return [];
+        }
+        $users = DB::table('users')
+            ->whereIn('id', $rows->pluck('user_id')->unique()->all())
+            ->get(['id', 'name', 'avatar'])
+            ->keyBy('id');
+        return $rows->map(function ($r) use ($users, $hasTitle) {
+            $u = $users->get($r->user_id);
+            return [
+                'id' => $r->id,
+                'rating' => (int) $r->rating,
+                'title' => $hasTitle ? ($r->title ?? null) : null,
+                'comment' => $r->comment,
+                'created_at' => $r->created_at,
+                'user_name' => $u?->name,
+                'user_avatar' => $u?->avatar,
+            ];
+        })->values()->all();
     }
 
     private function upsertCartItem(Request $request, Course $course)
@@ -846,7 +1123,7 @@ class MarketplaceController extends Controller
                 $enrollment->progress_percent = $enrollment->progress_percent ?? 0;
                 $enrollment->enrolled_at = $enrollment->enrolled_at ?? now();
                 $enrollment->reviewed_at = now();
-                $enrollment->reviewed_by = $enrollment->reviewed_by ?? 1; // 1 = système
+                $enrollment->reviewed_by = $enrollment->reviewed_by ?? $order->user_id;
                 $enrollment->save();
 
                 // Notification
@@ -861,7 +1138,17 @@ class MarketplaceController extends Controller
 
             // Vider le panier
             CartItem::where('user_id', $order->user_id)->delete();
+
+            if ($order->coupon_code) {
+                Coupon::where('code', $order->coupon_code)->increment('used_count');
+            }
         });
+
+        try {
+            session()->forget('cart.coupon_code');
+        } catch (\Throwable $e) {
+            \Log::debug('Session indisponible pour oublier le coupon panier: ' . $e->getMessage());
+        }
 
         // Emails transactionnels hors transaction (évite les envois en cas de rollback)
         try {

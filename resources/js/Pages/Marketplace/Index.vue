@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link, usePage, Head } from '@inertiajs/vue3';
+import { router, Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
@@ -10,7 +10,6 @@ import Rating from 'primevue/rating';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 
-const page = usePage();
 const props = defineProps({
     courses: Object,
     filters: Object,
@@ -18,6 +17,7 @@ const props = defineProps({
     wishlistIds: Array,
     cartCount: Number,
     categories: Array,
+    stats: Object,
 });
 
 // État des filtres
@@ -27,14 +27,14 @@ const level = ref(props.filters?.level ?? null);
 const priceRange = ref(props.filters?.price_range ?? null);
 const sort = ref(props.filters?.sort ?? 'popular');
 
-// Placeholder par défaut si l'image échoue
-const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600';
+const PLACEHOLDER_IMAGE = '/media/lms/thumbnails/course-1.jpg';
 
 const stats = computed(() => ({
-    total: props.courses?.total ?? 0,
-    free: (props.courses?.data ?? []).filter(c => !c.price || c.price == 0).length,
-    paid: (props.courses?.data ?? []).filter(c => c.price > 0).length,
-    avg_rating: 4.8,
+    total: props.stats?.total_published ?? props.courses?.total ?? 0,
+    free: props.stats?.free ?? 0,
+    paid: props.stats?.paid ?? 0,
+    avg_rating: props.stats?.avg_rating ?? null,
+    reviews_count: props.stats?.reviews_count ?? 0,
 }));
 
 // Options de filtrage
@@ -55,6 +55,7 @@ const sortOptions = [
     { label: 'Plus populaires', value: 'popular' },
     { label: 'Nouveautés', value: 'newest' },
     { label: 'Prix croissant', value: 'price_low' },
+    { label: 'Prix décroissant', value: 'price_high' },
 ];
 
 const apply = () => {
@@ -84,7 +85,7 @@ const handleImageError = (event) => {
 
 const formatPrice = (price) => {
     if (!price || price == 0) return 'Gratuit';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(price);
 };
 </script>
 
@@ -141,10 +142,12 @@ const formatPrice = (price) => {
                     <!-- KPI STRIP (Premium Cards) -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
                         <div v-for="stat in [
-                            { label: 'Cours dispos', val: stats.total, icon: 'shopping-bag', color: 'bg-blue-50 text-blue-600' },
+                            { label: 'Cours publiés', val: stats.total, icon: 'shopping-bag', color: 'bg-blue-50 text-blue-600' },
                             { label: 'Gratuits', val: stats.free, icon: 'gift', color: 'bg-emerald-50 text-emerald-600' },
-                            { label: 'Certifiants', val: stats.paid, icon: 'star', color: 'bg-amber-50 text-amber-600' },
-                            { label: 'Rating Global', val: stats.avg_rating, icon: 'verified', color: 'bg-blue-50 text-blue-600', suffix: '/5' }
+                            { label: 'Payants', val: stats.paid, icon: 'credit-card', color: 'bg-amber-50 text-amber-600' },
+                            ...(stats.avg_rating !== null
+                                ? [{ label: 'Avis moyen', val: stats.avg_rating, icon: 'star', color: 'bg-blue-50 text-blue-600', suffix: '/5' }]
+                                : [{ label: 'Avis', val: 'Aucun', icon: 'star', color: 'bg-slate-100 text-slate-400' }])
                         ]" :key="stat.label" class="p-3 sm:p-6 rounded-xl border border-slate-100 bg-white hover:shadow-lg transition-all group">
                             <div :class="stat.color" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-2 sm:mb-4 group-hover:scale-110 transition-transform">
                                 <i :class="`pi pi-${stat.icon} text-sm sm:text-base`"></i>
@@ -231,10 +234,11 @@ const formatPrice = (price) => {
                                         </div>
 
                                         <div class="flex justify-between items-center pt-2">
-                                            <div class="flex items-center gap-1.5 sm:gap-2">
-                                                <Rating :modelValue="4.5" readonly :stars="5" :cancel="false" class="text-[9px] sm:text-[10px]" />
-                                                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400">(240)</span>
+                                            <div v-if="course.reviews_avg_rating != null" class="flex items-center gap-1.5 sm:gap-2">
+                                                <Rating :modelValue="course.reviews_avg_rating" readonly :stars="5" :cancel="false" class="text-[9px] sm:text-[10px]" />
+                                                <span class="text-[9px] sm:text-[10px] font-bold text-slate-400">({{ course.reviews_count ?? 0 }})</span>
                                             </div>
+                                            <span v-else class="text-[9px] sm:text-[10px] font-bold text-slate-300 italic">Pas encore d'avis</span>
                                             <span class="text-base sm:text-lg font-black text-slate-900">{{ formatPrice(course.price) }}</span>
                                         </div>
 
@@ -274,7 +278,7 @@ const formatPrice = (price) => {
     transition: all 0.3s ease;
 }
 :deep(.p-select:hover) {
-    border-color: #8B5CF6;
+    border-color: #2563EB;
 }
 :deep(.p-rating-item-active .p-rating-icon) {
     color: #F59E0B;

@@ -1,638 +1,621 @@
 <script setup>
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, computed, onMounted } from 'vue';
-import { Head } from '@inertiajs/vue3';
-import { useI18n } from 'vue-i18n';
+import PageHeader from '@/Components/PageHeader.vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useToast } from 'primevue/usetoast';
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
+import { useConfirmAction } from '@/composables/useConfirmAction';
+import debounce from 'lodash/debounce';
 
-// --- PRIME VUE IMPORTS ---
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Dialog from 'primevue/dialog';
-import InputNumber from 'primevue/inputnumber';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
 import Avatar from 'primevue/avatar';
-import ProgressBar from 'primevue/progressbar';
-import MultiSelect from 'primevue/multiselect';
-import Menu from 'primevue/menu';
-import InlineMessage from 'primevue/inlinemessage';
+import InputNumber from 'primevue/inputnumber';
 import Divider from 'primevue/divider';
-import Calendar from 'primevue/calendar';
-import OverlayPanel from 'primevue/overlaypanel';
+import Tooltip from 'primevue/tooltip';
 
-const { t } = useI18n();
-const toast = useToast();
-
-// --- ETATS DE GESTION ---
-const loading = ref(true);
-const affiliates = ref([]);
-const selectedAffiliates = ref(null);
-const expandedRows = ref([]);
-const displayDetailsDialog = ref(false);
-const displaySettingsDialog = ref(false);
-const currentAffiliate = ref(null);
-const op = ref();
-
-// --- FILTRES ---
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    tier: { value: null, matchMode: FilterMatchMode.EQUALS },
-    status: { value: null, matchMode: FilterMatchMode.EQUALS }
+const props = defineProps({
+    affiliates: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
+    stats: { type: Object, default: () => ({}) },
+    chart: { type: Object, default: () => ({ labels: [], signups: [], conversions: [] }) },
+    top_affiliates: { type: Array, default: () => [] },
+    tiers: { type: Array, default: () => [] },
+    statuses: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
+    affiliateDetail: { type: Object, default: null },
 });
 
-const tiers = ref([
-    { label: 'Bronze (10%)', value: 'BRONZE', color: '#cd7f32' },
-    { label: 'Silver (15%)', value: 'SILVER', color: '#c0c0c0' },
-    { label: 'Gold (25%)', value: 'GOLD', color: '#ffd700' },
-    { label: 'Platinum (40%)', value: 'PLATINUM', color: '#e5e4e2' }
-]);
+const toast = useToast();
+const confirmAction = useConfirmAction();
 
-const statuses = ref(['Active', 'Pending', 'Suspended']);
+// --- FORMATAGE ---
+const fmtNumber = (n) => new Intl.NumberFormat('fr-FR').format(Number(n ?? 0));
+const fmtMoney = (n) => `${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n ?? 0))} $`;
+const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';
 
-// --- GENERATION DE DONNEES (Simulant une API E-learning) ---
-const loadAffiliateData = () => {
-    loading.value = true;
-    setTimeout(() => {
-        const mockData = [];
-        const names = ['Jean-Pierre Bemba', 'Fatima Traoré', 'Alphonse Kabongo', 'Grâce Mutombo', 'David Nkulu', 'Sarah Mendy', 'Ismaël Cissé'];
-        
-        for (let i = 1; i <= 40; i++) {
-            const tierIdx = Math.floor(Math.random() * 4);
-            const salesCount = Math.floor(Math.random() * 150);
-            mockData.push({
-                id: i,
-                user: {
-                    name: names[i % names.length] + ' ' + (i > 7 ? i : ''),
-                    email: `affiliate${i}@subnetcongo.cd`,
-                    avatar: `https://i.pravatar.cc/150?u=aff${i}`,
-                    joined_at: new Date(2023, Math.floor(Math.random() * 12), 15)
-                },
-                tier: tiers.value[tierIdx].value,
-                stats: {
-                    clicks: Math.floor(Math.random() * 5000),
-                    conversions: salesCount,
-                    conversion_rate: ((salesCount / 5000) * 100).toFixed(2),
-                    total_revenue: salesCount * 45, // Prix moyen formation
-                    commission_earned: (salesCount * 45 * (tierIdx + 1) * 0.1).toFixed(2)
-                },
-                balance: {
-                    pending: (Math.random() * 500).toFixed(2),
-                    withdrawable: (Math.random() * 2000).toFixed(2),
-                    last_payout: '12/01/2025'
-                },
-                status: i % 15 === 0 ? 'Suspended' : (i % 8 === 0 ? 'Pending' : 'Active'),
-                recent_sales: [
-                    { id: 101, course: 'Masterclass Laravel Pro', date: '2025-02-01', amount: 99, commission: 14.85 },
-                    { id: 102, course: 'UI/UX Design Avancé', date: '2025-01-28', amount: 150, commission: 22.50 },
-                    { id: 103, course: 'Sécurité Web Congolaise', date: '2025-01-25', amount: 75, commission: 11.25 }
-                ]
-            });
-        }
-        affiliates.value = mockData;
-        loading.value = false;
-    }, 1200);
+const STATUS_LABELS = { active: 'Actif', pending: 'En attente', inactive: 'Inactif', banned: 'Banni' };
+const STATUS_SEVERITY = { active: 'success', pending: 'warning', inactive: 'secondary', banned: 'danger' };
+const PAYOUT_STATUS = { pending: 'En attente', processing: 'En cours', completed: 'Payé', failed: 'Échoué' };
+const PAYOUT_SEVERITY = { pending: 'warning', processing: 'info', completed: 'success', failed: 'danger' };
+
+const statusLabel = (s) => STATUS_LABELS[s] ?? s;
+const statusSeverity = (s) => STATUS_SEVERITY[s] ?? 'info';
+const payoutLabel = (s) => PAYOUT_STATUS[s] ?? s;
+const payoutSeverity = (s) => PAYOUT_SEVERITY[s] ?? 'info';
+const tierOf = (value) => props.tiers.find((t) => t.value === value) ?? { label: value, color: '#94a3b8' };
+const tierLabel = (value) => tierOf(value).label;
+const tierColor = (value) => tierOf(value).color;
+
+const initials = (name) => {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || name.substring(0, 2).toUpperCase();
 };
 
-// --- LOGIQUE DES GRAPHIQUES ---
-const performanceChartData = ref({
-    labels: ['Août', 'Sep', 'Oct', 'Nov', 'Déc', 'Jan', 'Fév'],
+// --- FILTRES SERVEUR ---
+const search = ref(props.filters.search || '');
+const statusFilter = ref(props.filters.status || null);
+const tierFilter = ref(props.filters.tier || null);
+
+const filterParams = () => {
+    const params = {};
+    if (search.value) params.search = search.value;
+    if (statusFilter.value) params.status = statusFilter.value;
+    if (tierFilter.value) params.tier = tierFilter.value;
+    return params;
+};
+
+const applyFilters = debounce(() => {
+    router.get(route('marketing.affiliates.index'), filterParams(), { preserveState: true, preserveScroll: true, replace: true });
+}, 350);
+
+watch([search, statusFilter, tierFilter], applyFilters);
+
+const onPage = (event) => {
+    router.get(route('marketing.affiliates.index'), {
+        ...filterParams(),
+        page: event.page + 1,
+        per_page: event.rows,
+    }, { preserveState: true, preserveScroll: true, replace: true });
+};
+
+const exportCsv = () => {
+    const params = new URLSearchParams(filterParams());
+    window.location.href = `${route('marketing.affiliates.export')}?${params.toString()}`;
+};
+
+// --- CHARGEMENT / TABLE ---
+const tableLoading = ref(false);
+let stopStart = null;
+let stopFinish = null;
+onMounted(() => {
+    stopStart = router.on('start', () => { tableLoading.value = true; });
+    stopFinish = router.on('finish', () => { tableLoading.value = false; });
+});
+onBeforeUnmount(() => { stopStart?.(); stopFinish?.(); });
+
+const firstRow = computed(() => ((props.affiliates?.current_page ?? 1) - 1) * (props.affiliates?.per_page ?? 10));
+
+// --- GRAPHE (données réelles, 6 derniers mois) ---
+const chartData = computed(() => ({
+    labels: props.chart?.labels ?? [],
     datasets: [
         {
-            label: 'Commissions Générées ($)',
-            data: [1200, 1900, 1700, 2400, 3100, 2800, 3500],
-            fill: false,
-            borderColor: '#2563EB', // Orange SubNetCongo
-            tension: 0.4,
-            pointBackgroundColor: '#2563EB'
+            label: 'Nouveaux affiliés',
+            data: props.chart?.signups ?? [],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.12)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointBackgroundColor: '#2563eb',
         },
         {
-            label: 'Nouveaux Affiliés',
-            data: [5, 12, 8, 15, 20, 18, 25],
-            fill: true,
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            borderColor: '#6366F1',
-            tension: 0.4
-        }
-    ]
-});
+            label: 'Conversions',
+            data: props.chart?.conversions ?? [],
+            borderColor: '#f97316',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.35,
+            pointRadius: 3,
+            pointBackgroundColor: '#f97316',
+        },
+    ],
+}));
 
 const chartOptions = {
     maintainAspectRatio: false,
-    plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true } }
-    },
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
     scales: {
         x: { grid: { display: false } },
-        y: { grid: { color: '#f1f5f9' }, border: { dash: [5, 5] } }
-    }
+        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } },
+    },
 };
 
 // --- ACTIONS ---
-const showDetails = (data) => {
-    currentAffiliate.value = data;
-    displayDetailsDialog.value = true;
+const showDetail = (affiliate) => {
+    router.get(route('marketing.affiliates.show', affiliate.id), {}, { only: ['affiliateDetail'], preserveState: true, preserveScroll: true });
 };
 
-const openSettings = () => {
-    displaySettingsDialog.value = true;
+const detailVisible = ref(false);
+watch(() => props.affiliateDetail, (value) => { if (value) detailVisible.value = true; });
+
+const approveAffiliate = (affiliate) => {
+    confirmAction({
+        message: `Approuver ${affiliate.name} ? Son compte affilié sera activé immédiatement.`,
+        acceptLabel: 'Approuver',
+        accept: () => router.post(route('marketing.affiliates.approve', affiliate.id), {}, { preserveScroll: true }),
+    });
 };
 
-const getTierColor = (tier) => {
-    return tiers.value.find(t => t.value === tier)?.color || '#94a3b8';
+const rejectAffiliate = (affiliate) => {
+    confirmAction({
+        message: `Refuser la demande de ${affiliate.name} ? Le compte en attente sera définitivement supprimé.`,
+        header: 'Refuser la demande',
+        acceptLabel: 'Refuser et supprimer',
+        danger: true,
+        accept: () => router.post(route('marketing.affiliates.reject', affiliate.id), {}, { preserveScroll: true }),
+    });
 };
 
-const getStatusSeverity = (status) => {
-    switch (status) {
-        case 'Active': return 'success';
-        case 'Pending': return 'warning';
-        case 'Suspended': return 'danger';
-        default: return 'info';
+const generatePayout = (affiliate) => {
+    confirmAction({
+        message: `Générer un paiement en attente de ${fmtMoney(affiliate.unpaid_earnings)} pour ${affiliate.name} ? Le solde à payer sera remis à zéro.`,
+        header: 'Générer un paiement',
+        acceptLabel: 'Générer',
+        accept: () => router.post(route('marketing.affiliates.generate-payout', affiliate.id), {}, { preserveScroll: true }),
+    });
+};
+
+const destroyAffiliate = (affiliate) => {
+    confirmAction({
+        message: `Supprimer ${affiliate.name} ? Son affiliation sera désactivée (statut inactif) et l'historique des ventes est conservé.`,
+        header: 'Supprimer l’affilié',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: () => router.delete(route('marketing.affiliates.destroy', affiliate.id), { preserveScroll: true }),
+    });
+};
+
+const copyCode = async (code) => {
+    try {
+        await navigator.clipboard.writeText(code);
+        toast.add({ severity: 'success', summary: 'Copié', detail: `Code ${code} copié dans le presse-papier.`, life: 2500 });
+    } catch (e) {
+        toast.add({ severity: 'warn', summary: 'Copie impossible', detail: `Code : ${code}`, life: 4000 });
     }
 };
 
-const approvePayout = () => {
-    toast.add({ severity: 'success', summary: 'Paiement Approuvé', detail: 'Le virement a été initié pour ce partenaire.', life: 4000 });
+// --- NOUVEL AFFILIÉ ---
+const showNewDialog = ref(false);
+const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+const clientEmailError = ref('');
+
+const form = useForm({ name: '', email: '', tier: 'bronze', commission_rate: 10 });
+
+const openNewDialog = () => {
+    clientEmailError.value = '';
+    showNewDialog.value = true;
 };
 
-const toggleTier = (event) => {
-    op.value.toggle(event);
+const submitNewAffiliate = () => {
+    clientEmailError.value = '';
+    if (!emailRegex.test(form.email)) {
+        clientEmailError.value = 'Adresse email invalide (ex : prenom.nom@domaine.cd).';
+        return;
+    }
+    form.post(route('marketing.affiliates.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showNewDialog.value = false;
+            form.reset();
+        },
+    });
 };
-
-// --- CALCULS STATISTIQUES ---
-const totalCommissionMonth = computed(() => {
-    return affiliates.value.reduce((acc, curr) => acc + parseFloat(curr.stats.commission_earned), 0).toLocaleString();
-});
-
-const totalSalesCount = computed(() => {
-    return affiliates.value.reduce((acc, curr) => acc + curr.stats.conversions, 0);
-});
-
-onMounted(() => {
-    loadAffiliateData();
-});
-
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Gestion Affiliation - SubNetCongo" />
+        <Head title="Programme d'affiliation - SubNetCongo" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
-            
-            <!-- EN-TETE -->
-            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-                <div class="flex items-center gap-5">
-                    <div class="bg-blue-600 p-4 rounded-2xl shadow-lg shadow-blue-500/20">
-                        <i class="pi pi-share-alt text-white text-3xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Programme d'Affiliation</h1>
-                        <p class="text-slate-500 font-medium">Suivez vos partenaires et optimisez vos ventes de formations</p>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <Button label="Paramètres des Paliers" icon="pi pi-cog" class="p-button-outlined p-button-secondary border-2" @click="openSettings" />
-                    <Button label="Nouvelle Campagne" icon="pi pi-megaphone" class="!bg-blue-600 hover:!bg-blue-700 !border-none !text-white shadow-md px-6" />
-                </div>
-            </header>
+        <div class="page-bg min-h-screen font-sans">
 
+            <PageHeader
+                title="Programme d'Affiliation"
+                subtitle="Suivez vos partenaires et optimisez les ventes de formations"
+                icon="pi-share-alt"
+                accent="blue"
+                badge="Marketing"
+                :actions="[
+                    { label: 'Exporter CSV', icon: 'pi-file-export', variant: 'secondary', onClick: exportCsv },
+                    { label: 'Nouvel affilié', icon: 'pi-plus', variant: 'primary', onClick: openNewDialog },
+                ]"
+            />
+
+            <div class="page-container page-section">
             <!-- KPI CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <Card v-for="kpi in [
-                    { label: 'Partenaires Actifs', val: '1,284', icon: 'pi-users', color: 'blue', trend: '+12%' },
-                    { label: 'Ventes Affiliées', val: totalSalesCount, icon: 'pi-shopping-cart', color: 'red', trend: '+24%' },
-                    { label: 'Commissions à Payer', val: '4,150.00 $', icon: 'pi-wallet', color: 'red', trend: '-5%' },
-                    { label: 'Revenu Net Généré', val: '42,900 $', icon: 'pi-chart-bar', color: 'emerald', trend: '+18%' }
-                ]" :key="kpi.label" class="border-none shadow-sm rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 mb-8">
+                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
                     <template #content>
-                        <div class="flex justify-between items-center mb-4">
-                            <div :class="`p-3 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600` ">
-                                <i :class="`pi ${kpi.icon} text-xl` "></i>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Partenaires actifs</span>
+                                <div class="text-3xl font-black text-slate-800">{{ fmtNumber(stats.active) }}</div>
+                                <span class="text-[10px] text-slate-400 font-bold">sur {{ fmtNumber(stats.total) }} inscrits</span>
                             </div>
-                            <Tag :value="kpi.trend" :severity="kpi.trend.includes('+') ? 'success' : 'danger'" class="rounded-lg" />
+                            <div class="p-3 rounded-2xl bg-blue-50 text-blue-600"><i class="pi pi-users text-xl"></i></div>
                         </div>
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</div>
-                        <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
+                    </template>
+                </Card>
+                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
+                    <template #content>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">En attente</span>
+                                <div class="text-3xl font-black text-amber-600">{{ fmtNumber(stats.pending) }}</div>
+                                <span class="text-[10px] text-slate-400 font-bold">demandes à valider</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-amber-50 text-amber-600"><i class="pi pi-clock text-xl"></i></div>
+                        </div>
+                    </template>
+                </Card>
+                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
+                    <template #content>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Liens cliqués</span>
+                                <div class="text-3xl font-black text-slate-800">{{ fmtNumber(stats.total_clicks) }}</div>
+                                <span class="text-[10px] text-slate-400 font-bold">clics cumulés</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-sky-50 text-sky-600"><i class="pi pi-link text-xl"></i></div>
+                        </div>
+                    </template>
+                </Card>
+                <Card class="border-none shadow-sm rounded-xl overflow-hidden">
+                    <template #content>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ventes affiliées</span>
+                                <div class="text-3xl font-black text-slate-800">{{ fmtNumber(stats.total_conversions) }}</div>
+                                <span class="text-[10px] text-slate-400 font-bold">conversions</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600"><i class="pi pi-shopping-cart text-xl"></i></div>
+                        </div>
+                    </template>
+                </Card>
+                <Card class="border-none shadow-sm rounded-xl overflow-hidden col-span-2 md:col-span-1">
+                    <template #content>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Commissions à payer</span>
+                                <div class="text-2xl font-black text-rose-600">{{ fmtMoney(stats.unpaid_earnings) }}</div>
+                                <span class="text-[10px] text-slate-400 font-bold">{{ fmtMoney(stats.total_paid) }} déjà payés</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-rose-50 text-rose-600"><i class="pi pi-wallet text-xl"></i></div>
+                        </div>
                     </template>
                 </Card>
             </div>
 
-            <!-- PERFORMANCE GRAPH -->
-            <div class="grid grid-cols-12 gap-8 mb-10">
+            <!-- GRAPHE + TOP PARTENAIRES -->
+            <div class="grid grid-cols-12 gap-6 mb-8">
                 <div class="col-span-12 lg:col-span-8">
                     <Card class="h-full border-none shadow-sm rounded-xl">
                         <template #title>
                             <div class="flex justify-between items-center px-4 pt-2">
-                                <span class="text-xl font-black text-slate-800">Evolution du Programme</span>
-                                <div class="flex gap-2">
-                                    <Button label="Jour" class="p-button-text p-button-sm text-slate-400" />
-                                    <Button label="Mois" class="p-button-sm bg-blue-50 text-blue-600 border-none font-bold" />
-                                </div>
+                                <span class="text-xl font-black text-slate-800">Évolution du programme</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">6 derniers mois</span>
                             </div>
                         </template>
                         <template #content>
-                            <div class="h-[350px]">
-                                <Chart type="line" :data="performanceChartData" :options="chartOptions" class="h-full" />
+                            <div class="h-[300px]">
+                                <Chart type="line" :data="chartData" :options="chartOptions" class="h-full" />
                             </div>
                         </template>
                     </Card>
                 </div>
 
                 <div class="col-span-12 lg:col-span-4">
-                    <Card class="h-full border-none shadow-sm rounded-xl bg-slate-900 text-white overflow-hidden">
+                    <Card class="h-full border-none shadow-sm rounded-xl">
+                        <template #title>
+                            <div class="px-4 pt-2 flex justify-between items-center">
+                                <span class="text-xl font-black text-slate-800">Top partenaires</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">par gains</span>
+                            </div>
+                        </template>
                         <template #content>
-                            <div class="relative z-10">
-                                <h3 class="text-2xl font-bold mb-6">Top Formations <br/><span class="text-orange-400">par Affiliation</span></h3>
-                                <div class="space-y-6">
-                                    <div v-for="course in [
-                                        { name: 'Devenir Freelance Web', share: 45, color: 'bg-orange-500' },
-                                        { name: 'IA & Productivité', share: 32, color: 'bg-blue-500' },
-                                        { name: 'Excel pour Entreprise', share: 18, color: 'bg-emerald-500' }
-                                    ]" :key="course.name">
-                                        <div class="flex justify-between text-sm mb-2 font-medium">
-                                            <span>{{ course.name }}</span>
-                                            <span class="text-slate-400">{{ course.share }}%</span>
-                                        </div>
-                                        <div class="w-full bg-slate-800 rounded-full h-2">
-                                            <div :class="`h-2 rounded-full ${course.color}` " :style="{ width: course.share + '%' }"></div>
-                                        </div>
+                            <div v-if="top_affiliates.length" class="space-y-3">
+                                <div v-for="partner in top_affiliates" :key="partner.id" class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                                    <div class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: tierColor(partner.tier) }"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-bold text-slate-800 text-sm leading-tight truncate">{{ partner.name }}</p>
+                                        <p class="text-[10px] font-mono text-slate-400">{{ partner.code }} · {{ tierLabel(partner.tier) }}</p>
                                     </div>
-                                </div>
-                                <div class="mt-10 p-4 rounded-2xl bg-slate-800/50 border border-slate-700">
-                                    <div class="text-xs text-slate-400 uppercase font-bold mb-1">Moyenne Commission / Vente</div>
-                                    <div class="text-2xl font-black">18.45 $</div>
+                                    <span class="font-black text-slate-800 text-sm whitespace-nowrap">{{ fmtMoney(partner.total_earnings) }}</span>
                                 </div>
                             </div>
-                            <!-- Décoration Background -->
-                            <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-orange-500/20 blur-3xl rounded-full"></div>
+                            <p v-else class="text-sm text-slate-400 text-center py-8">Aucun affilié pour le moment.</p>
+                            <Divider />
+                            <div class="flex justify-between items-center px-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total payé</span>
+                                <span class="font-black text-emerald-600">{{ fmtMoney(stats.total_paid) }}</span>
+                            </div>
                         </template>
                     </Card>
                 </div>
             </div>
 
-            <!-- TABLEAU DES AFFILIES -->
+            <!-- TABLEAU DES AFFILIÉS -->
             <Card class="border-none shadow-sm rounded-xl overflow-hidden">
                 <template #content>
-                    <DataTable 
-                        v-model:filters="filters"
-                        :value="affiliates" 
-                        :paginator="true" 
-                        :rows="10" 
-                        dataKey="id" 
-                        :loading="loading"
-                        v-model:selection="selectedAffiliates"
-                        v-model:expandedRows="expandedRows"
-                        filterDisplay="menu"
-                        :globalFilterFields="['user.name', 'user.email']"
-                        class="p-datatable-lg custom-affiliate-table"
+                    <DataTable
+                        :value="affiliates?.data ?? []"
+                        :loading="tableLoading"
+                        :lazy="true"
+                        :paginator="true"
+                        :rows="affiliates?.per_page ?? 10"
+                        :totalRecords="affiliates?.total ?? 0"
+                        :first="firstRow"
+                        :rowsPerPageOptions="[10, 25, 50]"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                        currentPageReportTemplate="Affichage {first} à {last} sur {totalRecords} partenaires"
+                        currentPageReportTemplate="Affichage {first} à {last} sur {totalRecords} affiliés"
+                        dataKey="id"
+                        responsiveLayout="scroll"
+                        @page="onPage"
+                        class="p-datatable-lg"
                     >
                         <template #header>
-                            <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-2">
+                            <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 px-2 py-2">
                                 <div class="flex items-center gap-3">
-                                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter">Annuaire Partenaires</h2>
-                                    <Badge :value="affiliates.length" severity="warning" />
+                                    <h2 class="text-xl font-black text-slate-800">Annuaire des partenaires</h2>
+                                    <Badge :value="affiliates?.total ?? 0" severity="warning" />
                                 </div>
-                                <span class="p-input-icon-left w-full md:w-auto">
-                                    <i class="pi pi-search" />
-                                    <InputText v-model="filters['global'].value" placeholder="Chercher un nom ou email..." class="w-full md:w-80 rounded-xl border-slate-200" />
-                                </span>
-                            </div>
-                        </template>
-
-                        <!-- Expansion pour détails rapides -->
-                        <template #expansion="{ data }">
-                            <div class="p-6 bg-slate-50/50 border-y border-slate-100">
-                                <h4 class="text-sm font-black text-slate-500 uppercase mb-4 tracking-widest">Dernières conversions générées</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div v-for="sale in data.recent_sales" :key="sale.id" class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-                                        <div>
-                                            <p class="font-bold text-slate-800 text-sm mb-1">{{ sale.course }}</p>
-                                            <p class="text-[10px] text-slate-400 font-bold uppercase">{{ sale.date }}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="font-black text-blue-600">{{ sale.commission }} $</p>
-                                            <p class="text-[9px] text-slate-300 font-bold">COMMISSION</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-4 flex justify-end">
-                                    <Button label="Voir tout l'historique de vente" icon="pi pi-external-link" class="p-button-text p-button-sm font-bold text-blue-500" />
+                                <div class="flex flex-col md:flex-row gap-2">
+                                    <span class="p-input-icon-left w-full md:w-64">
+                                        <i class="pi pi-search" />
+                                        <InputText v-model="search" placeholder="Nom, email ou code..." class="w-full" />
+                                    </span>
+                                    <Select v-model="statusFilter" :options="statuses" :optionLabel="(s) => STATUS_LABELS[s] ?? s" placeholder="Tous les statuts" showClear class="w-full md:w-44" />
+                                    <Select v-model="tierFilter" :options="tiers" optionLabel="label" optionValue="value" placeholder="Tous les tiers" showClear class="w-full md:w-44" />
                                 </div>
                             </div>
                         </template>
 
-                        <Column expander style="width: 3rem" />
+                        <template #empty>
+                            <div class="text-center py-10">
+                                <i class="pi pi-users text-4xl text-slate-300 mb-3"></i>
+                                <p class="font-bold text-slate-500">Aucun affilié trouvé</p>
+                                <p class="text-xs text-slate-400">Modifiez vos filtres ou créez un nouvel affilié.</p>
+                            </div>
+                        </template>
 
-                        <Column field="user.name" header="PARTENAIRE" sortable style="min-width: 18rem">
+                        <Column field="referral_code" header="Code" style="min-width: 9rem">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-4">
-                                    <div class="relative">
-                                        <Avatar :image="data.user.avatar" shape="circle" size="large" class="border-2 border-white shadow-sm" />
-                                        <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white" :class="data.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'"></div>
-                                    </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="px-2 py-1 bg-slate-100 border border-slate-200 rounded font-mono text-xs font-bold text-blue-700">{{ data.referral_code }}</span>
+                                    <Button icon="pi pi-copy" class="p-button-rounded p-button-text p-button-secondary p-button-sm" v-tooltip.top="'Copier le code'" @click="copyCode(data.referral_code)" aria-label="Copier le code" />
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column field="name" header="Nom" style="min-width: 14rem">
+                            <template #body="{ data }">
+                                <div class="flex items-center gap-3">
+                                    <Avatar :label="initials(data.name)" shape="circle" class="bg-blue-100 text-blue-700 font-bold" />
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-slate-800 text-base leading-tight">{{ data.user.name }}</span>
-                                        <span class="text-xs text-slate-400 font-medium italic">{{ data.user.email }}</span>
+                                        <span class="font-bold text-slate-800 leading-tight">{{ data.name }}</span>
+                                        <span class="text-[10px] text-slate-400">depuis {{ fmtDate(data.joined_at) }}</span>
                                     </div>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="tier" header="PALIER" sortable style="min-width: 10rem">
+                        <Column field="email" header="Email" style="min-width: 12rem">
+                            <template #body="{ data }">
+                                <span class="text-sm text-slate-600">{{ data.email }}</span>
+                            </template>
+                        </Column>
+
+                        <Column field="tier" header="Tier" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full" :style="{ backgroundColor: getTierColor(data.tier) }"></div>
-                                    <span class="font-black text-[11px] tracking-widest uppercase text-slate-600">{{ data.tier }}</span>
+                                    <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: tierColor(data.tier) }"></span>
+                                    <span class="text-xs font-bold text-slate-600 uppercase">{{ data.tier }}</span>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="stats.conversions" header="VENTES" sortable class="text-center" style="min-width: 8rem">
+                        <Column field="clicks" header="Clics" style="min-width: 6rem">
+                            <template #body="{ data }"><span class="font-bold text-slate-700">{{ fmtNumber(data.clicks) }}</span></template>
+                        </Column>
+
+                        <Column field="conversions" header="Conversions" style="min-width: 7rem">
                             <template #body="{ data }">
-                                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg font-black">{{ data.stats.conversions }}</span>
+                                <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded font-black text-sm">{{ fmtNumber(data.conversions) }}</span>
                             </template>
                         </Column>
 
-                        <Column field="stats.commission_earned" header="GAINS TOTAUX" sortable style="min-width: 10rem">
+                        <Column field="unpaid_earnings" header="À payer" style="min-width: 8rem">
                             <template #body="{ data }">
-                                <div class="flex flex-col">
-                                    <span class="font-black text-slate-800">{{ data.stats.commission_earned }} $</span>
-                                    <div class="flex items-center gap-1 text-[9px] text-emerald-500 font-bold uppercase">
-                                        <i class="pi pi-arrow-up text-[8px]"></i> +{{ (Math.random()*15).toFixed(1) }}%
-                                    </div>
+                                <span :class="Number(data.unpaid_earnings) > 0 ? 'font-black text-rose-600' : 'text-slate-400'">{{ fmtMoney(data.unpaid_earnings) }}</span>
+                            </template>
+                        </Column>
+
+                        <Column field="status" header="Statut" style="min-width: 8rem">
+                            <template #body="{ data }">
+                                <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
+                            </template>
+                        </Column>
+
+                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 11rem">
+                            <template #body="{ data }">
+                                <div class="flex gap-1">
+                                    <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-secondary" v-tooltip.top="'Voir le détail'" @click="showDetail(data)" aria-label="Voir le détail" />
+                                    <Button v-if="data.status === 'pending'" icon="pi pi-check" class="p-button-rounded p-button-text p-button-success" v-tooltip.top="'Approuver'" @click="approveAffiliate(data)" aria-label="Approuver" />
+                                    <Button v-if="Number(data.unpaid_earnings) > 0" icon="pi pi-wallet" class="p-button-rounded p-button-text p-button-warning" v-tooltip.top="'Générer le paiement'" @click="generatePayout(data)" aria-label="Générer un paiement" />
+                                    <Button v-else icon="pi pi-wallet" class="p-button-rounded p-button-text p-button-warning" disabled v-tooltip.top="'Rien à payer'" aria-label="Rien à payer" />
+                                    <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" v-tooltip.top="'Supprimer'" @click="destroyAffiliate(data)" aria-label="Supprimer" />
                                 </div>
-                            </template>
-                        </Column>
-
-                        <Column field="balance.withdrawable" header="SOLDE DISPO" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <span class="font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded text-sm">{{ data.balance.withdrawable }} $</span>
-                            </template>
-                        </Column>
-
-                        <Column field="status" header="STATUT" sortable style="min-width: 10rem">
-                            <template #body="{ data }">
-                                <Badge :value="data.status" :severity="getStatusSeverity(data.status)" class="px-4 py-1" />
-                            </template>
-                        </Column>
-
-                        <Column header="ACTION" alignFrozen="right" frozen style="min-width: 6rem">
-                            <template #body="{ data }">
-                                <Button icon="pi pi-cog" class="p-button-rounded p-button-text p-button-secondary" @click="showDetails(data)" />
                             </template>
                         </Column>
                     </DataTable>
                 </template>
             </Card>
 
-            <!-- MODALE: DETAILS AFFILIE -->
-            <Dialog v-model:visible="displayDetailsDialog" :modal="true" :style="{ width: '850px' }" header="Gestion Partenaire" class="p-fluid affiliate-modal" v-if="currentAffiliate">
-                <div class="grid grid-cols-12 gap-6 pt-4">
-                    <!-- Sidebar Profil -->
-                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
-                        <div class="text-center mb-6">
-                            <Avatar :image="currentAffiliate.user.avatar" size="xlarge" shape="circle" class="border-4 border-white shadow-xl mb-4" />
-                            <h3 class="text-xl font-black text-slate-800">{{ currentAffiliate.user.name }}</h3>
-                            <p class="text-slate-500 text-sm font-medium mb-4">{{ currentAffiliate.user.email }}</p>
-                            <Button label="Changer le Palier" icon="pi pi-sort-alt" class="p-button-outlined p-button-sm" @click="toggleTier" />
-                            
-                            <OverlayPanel ref="op">
-                                <div class="flex flex-col gap-2 p-2">
-                                    <Button v-for="t in tiers" :key="t.value" :label="t.label" class="p-button-text p-button-sm text-left font-bold" @click="currentAffiliate.tier = t.value" />
-                                </div>
-                            </OverlayPanel>
+            <!-- DIALOG : DÉTAIL AFFILIÉ -->
+            <Dialog v-model:visible="detailVisible" :modal="true" class="snc-dialog" :style="{ width: '950px', maxWidth: '95vw' }" v-if="affiliateDetail">
+                <template #header>
+                    <span class="p-dialog-title flex items-center gap-2">
+                        <i class="pi pi-id-card"></i>
+                        Détail du partenaire
+                    </span>
+                </template>
+                <div class="grid grid-cols-12 gap-6 pt-2">
+                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                        <div class="text-center mb-4">
+                            <Avatar :label="initials(affiliateDetail.name)" shape="circle" size="xlarge" class="bg-blue-100 text-blue-700 font-black text-2xl mb-3" />
+                            <h3 class="text-xl font-black text-slate-800">{{ affiliateDetail.name }}</h3>
+                            <p class="text-slate-500 text-sm mb-3">{{ affiliateDetail.email }}</p>
+                            <div class="flex justify-center gap-2">
+                                <Tag :value="statusLabel(affiliateDetail.status)" :severity="statusSeverity(affiliateDetail.status)" />
+                                <Tag :value="tierLabel(affiliateDetail.tier)" severity="info" />
+                            </div>
                         </div>
-
-                        <Divider />
-
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm">
-                                <span class="text-xs font-bold text-slate-400 uppercase">Taux de conversion</span>
-                                <span class="font-black text-blue-600">{{ currentAffiliate.stats.conversion_rate }}%</span>
-                            </div>
-                            <div class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm">
-                                <span class="text-xs font-bold text-slate-400 uppercase">Total Clics</span>
-                                <span class="font-black text-slate-800">{{ currentAffiliate.stats.clicks }}</span>
-                            </div>
-                            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                                <p class="text-[10px] font-black text-emerald-600 uppercase mb-2">Solde à payer</p>
-                                <div class="text-3xl font-black text-emerald-800 mb-3">{{ currentAffiliate.balance.withdrawable }} $</div>
-                                <Button label="Approuver Paiement" icon="pi pi-check" class="p-button-success p-button-sm w-full font-bold shadow-lg shadow-emerald-200" @click="approvePayout" />
-                            </div>
+                        <div class="flex items-center justify-between bg-white p-2 rounded-xl border border-slate-100 mb-2">
+                            <span class="font-mono text-xs font-bold text-blue-700">{{ affiliateDetail.referral_code }}</span>
+                            <Button icon="pi pi-copy" class="p-button-rounded p-button-text p-button-sm" @click="copyCode(affiliateDetail.referral_code)" aria-label="Copier le code" />
+                        </div>
+                        <div class="text-[11px] text-slate-400 text-center mb-4">Partenaire depuis {{ fmtDate(affiliateDetail.joined_at) }} · commission {{ affiliateDetail.commission_rate }} %</div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between bg-white p-2 rounded-xl"><span class="text-slate-500">Clics</span><strong>{{ fmtNumber(affiliateDetail.clicks) }}</strong></div>
+                            <div class="flex justify-between bg-white p-2 rounded-xl"><span class="text-slate-500">Conversions</span><strong>{{ fmtNumber(affiliateDetail.conversions) }}</strong></div>
+                            <div class="flex justify-between bg-white p-2 rounded-xl"><span class="text-slate-500">Taux de conversion</span><strong>{{ affiliateDetail.conversion_rate }} %</strong></div>
                         </div>
                     </div>
 
-                    <!-- Main Content -->
                     <div class="col-span-12 lg:col-span-8">
-                        <TabView class="custom-tabs">
-                            <TabPanel header="Performances">
-                                <div class="space-y-6 pt-4">
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="p-4 border-2 border-slate-100 rounded-2xl">
-                                            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Revenu apporté</p>
-                                            <div class="text-2xl font-black text-slate-800">{{ currentAffiliate.stats.total_revenue }} $</div>
-                                        </div>
-                                        <div class="p-4 border-2 border-slate-100 rounded-2xl text-right">
-                                            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Partenariat depuis</p>
-                                            <div class="text-base font-black text-slate-800">15 Oct 2023</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <h4 class="font-black text-slate-800 border-l-4 border-orange-500 pl-3">Top 3 Formations vendues</h4>
-                                    <DataTable :value="currentAffiliate.recent_sales" class="p-datatable-sm rounded-xl overflow-hidden border border-slate-100">
-                                        <Column field="course" header="Cours"></Column>
-                                        <Column field="amount" header="Prix ($)" class="font-bold"></Column>
-                                        <Column field="commission" header="Comm. ($)">
-                                            <template #body="{ data }">
-                                                <span class="text-orange-500 font-bold">{{ data.commission }}</span>
-                                            </template>
-                                        </Column>
-                                    </DataTable>
-                                </div>
-                            </TabPanel>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                            <div class="p-3 border border-slate-100 rounded-2xl bg-white">
+                                <p class="text-[9px] font-black text-slate-400 uppercase">Revenus approuvés</p>
+                                <p class="text-lg font-black text-slate-800">{{ fmtMoney(affiliateDetail.referrals_amount) }}</p>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-2xl bg-white">
+                                <p class="text-[9px] font-black text-slate-400 uppercase">Commissions gagnées</p>
+                                <p class="text-lg font-black text-slate-800">{{ fmtMoney(affiliateDetail.referrals_commission) }}</p>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-2xl bg-white">
+                                <p class="text-[9px] font-black text-slate-400 uppercase">Déjà payé</p>
+                                <p class="text-lg font-black text-emerald-700">{{ fmtMoney(affiliateDetail.payouts_paid) }}</p>
+                            </div>
+                            <div class="p-3 border border-rose-100 rounded-2xl bg-rose-50">
+                                <p class="text-[9px] font-black text-rose-400 uppercase">À payer</p>
+                                <p class="text-lg font-black text-rose-700">{{ fmtMoney(affiliateDetail.unpaid_earnings) }}</p>
+                            </div>
+                        </div>
 
-                            <TabPanel header="Liens & Assets">
-                                <div class="space-y-4 pt-4">
-                                    <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                                        <label class="block text-xs font-bold text-blue-400 uppercase mb-2 tracking-widest">Lien d'affiliation principal</label>
-                                        <div class="flex gap-2">
-                                            <InputText readonly value="https://subnetcongo.cd/ref/aff-28492" class="flex-1 bg-white border-none font-medium text-blue-700" />
-                                            <Button icon="pi pi-copy" class="p-button-indigo" />
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="p-4 border border-slate-200 rounded-2xl flex items-center justify-between">
-                                            <span class="text-sm font-bold">Bannières (V.2025)</span>
-                                            <Button icon="pi pi-download" class="p-button-text p-button-sm" />
-                                        </div>
-                                        <div class="p-4 border border-slate-200 rounded-2xl flex items-center justify-between">
-                                            <span class="text-sm font-bold">Email Templates</span>
-                                            <Button icon="pi pi-download" class="p-button-text p-button-sm" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </TabPanel>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <Button v-if="affiliateDetail.status === 'pending'" label="Approuver" icon="pi pi-check" class="p-button-success p-button-sm" @click="approveAffiliate(affiliateDetail)" />
+                            <Button v-if="affiliateDetail.status === 'pending'" label="Refuser" icon="pi pi-times" class="p-button-danger p-button-outlined p-button-sm" @click="rejectAffiliate(affiliateDetail)" />
+                            <Button label="Générer un paiement" icon="pi pi-wallet" class="p-button-warning p-button-sm" :disabled="Number(affiliateDetail.unpaid_earnings) <= 0" @click="generatePayout(affiliateDetail)" />
+                            <Button label="Supprimer" icon="pi pi-trash" class="p-button-danger p-button-text p-button-sm" @click="destroyAffiliate(affiliateDetail)" />
+                        </div>
 
-                            <TabPanel header="Journal Actions">
-                                <div class="space-y-4 pt-4 max-h-[300px] overflow-y-auto pr-2">
-                                    <div v-for="log in [
-                                        { date: 'Hier, 14:20', text: 'Changement de palier par Admin : Bronze -> Silver' },
-                                        { date: '01 Fév, 09:12', text: 'Paiement de 450.00 $ traité avec succès' },
-                                        { date: '28 Jan, 16:45', text: 'Nouveau record : 10 ventes en 24h' }
-                                    ]" :key="log.date" class="flex gap-4 items-start">
-                                        <div class="w-2 h-2 rounded-full bg-slate-300 mt-1.5"></div>
-                                        <div>
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase">{{ log.date }}</p>
-                                            <p class="text-sm text-slate-700 font-medium">{{ log.text }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </TabPanel>
-                        </TabView>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Derniers referrals</h4>
+                                <table v-if="affiliateDetail.referrals?.length" class="w-full text-xs">
+                                    <thead>
+                                        <tr class="text-left text-slate-400 border-b border-slate-100">
+                                            <th class="pb-1">Cours</th><th class="pb-1">Date</th><th class="pb-1 text-right">Comm.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="ref in affiliateDetail.referrals" :key="ref.id" class="border-b border-slate-50">
+                                            <td class="py-1.5 pr-2 font-medium text-slate-700 max-w-[140px] truncate">{{ ref.course }}</td>
+                                            <td class="py-1.5 pr-2 text-slate-500">{{ fmtDate(ref.date) }}</td>
+                                            <td class="py-1.5 text-right font-bold text-orange-600">{{ fmtMoney(ref.commission) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p v-else class="text-xs text-slate-400 py-4 text-center">Aucun referral pour le moment.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Derniers paiements</h4>
+                                <table v-if="affiliateDetail.payouts?.length" class="w-full text-xs">
+                                    <thead>
+                                        <tr class="text-left text-slate-400 border-b border-slate-100">
+                                            <th class="pb-1">Date</th><th class="pb-1">Montant</th><th class="pb-1 text-right">Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="payout in affiliateDetail.payouts" :key="payout.id" class="border-b border-slate-50">
+                                            <td class="py-1.5 pr-2 text-slate-500">{{ fmtDate(payout.payout_date ?? payout.created_at) }}</td>
+                                            <td class="py-1.5 pr-2 font-bold text-slate-800">{{ fmtMoney(payout.amount) }}</td>
+                                            <td class="py-1.5 text-right"><Tag :value="payoutLabel(payout.status)" :severity="payoutSeverity(payout.status)" class="text-[9px]" /></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p v-else class="text-xs text-slate-400 py-4 text-center">Aucun paiement pour le moment.</p>
+                            </div>
+                        </div>
+
+                        <p v-if="affiliateDetail.notes" class="mt-4 text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3"><strong>Notes :</strong> {{ affiliateDetail.notes }}</p>
                     </div>
                 </div>
-                <template #footer>
-                    <div class="flex justify-between w-full border-t border-slate-100 pt-4">
-                        <Button label="Suspendre Partenariat" icon="pi pi-ban" class="p-button-danger p-button-text font-bold" />
-                        <div class="flex gap-2">
-                            <Button label="Envoyer un message" icon="pi pi-envelope" class="p-button-text p-button-secondary" />
-                            <Button label="Enregistrer modifications" icon="pi pi-save" class="p-button-indigo px-8" @click="displayDetailsDialog = false" />
-                        </div>
-                    </div>
-                </template>
             </Dialog>
 
-            <!-- MODALE: PARAMETRES PALIERS -->
-            <Dialog v-model:visible="displaySettingsDialog" :style="{ width: '500px' }" header="Configuration des Tiers" :modal="true">
-                <div class="space-y-6 pt-4">
-                    <InlineMessage severity="info" class="w-full">Les taux définis ici s'appliquent sur le montant HT des formations vendues.</InlineMessage>
-                    <div v-for="t in tiers" :key="t.value" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-4 h-4 rounded-full" :style="{ backgroundColor: t.color }"></div>
-                                <span class="font-black text-slate-800 uppercase text-sm tracking-widest">{{ t.label.split(' ')[0] }}</span>
-                            </div>
-                            <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" />
+            <!-- DIALOG : NOUVEL AFFILIÉ -->
+            <Dialog v-model:visible="showNewDialog" :modal="true" class="snc-dialog" :style="{ width: '480px' }">
+                <template #header>
+                    <span class="p-dialog-title flex items-center gap-2">
+                        <i class="pi pi-user-plus"></i>
+                        Nouvel affilié
+                    </span>
+                </template>
+                <form class="p-fluid space-y-4 pt-2" @submit.prevent="submitNewAffiliate">
+                    <div class="field">
+                        <label for="aff-name" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Nom complet</label>
+                        <InputText id="aff-name" v-model="form.name" placeholder="ex : Grâce Mutombo" :class="{ 'p-invalid': form.errors.name }" />
+                        <small class="p-error" v-if="form.errors.name">{{ form.errors.name }}</small>
+                    </div>
+                    <div class="field">
+                        <label for="aff-email" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Email</label>
+                        <InputText id="aff-email" v-model="form.email" type="email" placeholder="ex : partenaire@domaine.cd" :class="{ 'p-invalid': form.errors.email || clientEmailError }" />
+                        <small class="p-error" v-if="clientEmailError">{{ clientEmailError }}</small>
+                        <small class="p-error" v-else-if="form.errors.email">{{ form.errors.email }}</small>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="field">
+                            <label for="aff-tier" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Tier</label>
+                            <Select id="aff-tier" v-model="form.tier" :options="tiers" optionLabel="label" optionValue="value" class="w-full" />
+                            <small class="p-error" v-if="form.errors.tier">{{ form.errors.tier }}</small>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="field">
-                                <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Taux (%)</label>
-                                <InputNumber v-model="t.rate" suffix="%" class="w-full" />
-                            </div>
-                            <div class="field">
-                                <label class="text-xs font-bold text-slate-400 uppercase mb-2 block">Ventes requises</label>
-                                <InputNumber v-model="t.minSales" placeholder="ex: 50" class="w-full" />
-                            </div>
+                        <div class="field">
+                            <label for="aff-rate" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Commission (%)</label>
+                            <InputNumber id="aff-rate" v-model="form.commission_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="0" :maxFractionDigits="2" class="w-full" />
+                            <small class="p-error" v-if="form.errors.commission_rate">{{ form.errors.commission_rate }}</small>
                         </div>
                     </div>
-                    <Button label="Ajouter un nouveau palier" icon="pi pi-plus" class="p-button-outlined p-button-indigo w-full border-2 border-dashed" />
-                </div>
-                <template #footer>
-                    <Button label="Fermer" class="p-button-text" @click="displaySettingsDialog = false" />
-                    <Button label="Appliquer les changements" icon="pi pi-check" class="p-button-indigo" />
-                </template>
+                    <p class="text-[11px] text-slate-400 leading-snug">L'affilié sera créé avec le statut <strong>En attente</strong>. Il devra être approuvé avant de pouvoir générer des commissions. Si l'email existe déjà, il sera rattaché à ce compte.</p>
+                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                        <Button type="button" label="Annuler" class="p-button-text p-button-secondary" @click="showNewDialog = false" />
+                        <Button type="submit" label="Créer la demande" icon="pi pi-check" :loading="form.processing" />
+                    </div>
+                </form>
             </Dialog>
 
-            <footer class="mt-12 text-center text-slate-400 text-sm pb-8 font-medium">
-                © 2026 SubNetCongo - Système LMS & Affiliation Intégré.
+            <footer class="mt-12 text-center text-slate-400 text-xs pb-6 font-medium">
+                © 2026 SubNetCongo — Programme d'affiliation
             </footer>
+            </div>
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-/* Custom PrimeVue styles matching capture design */
-:deep(.p-card) {
-    background: white;
-}
-
-:deep(.p-datatable.custom-affiliate-table) {
-    border: none;
-}
-
-:deep(.p-datatable-header) {
-    background: transparent;
-    padding: 2rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-:deep(.p-datatable-thead > tr > th) {
-    background: #f8fafc;
-    color: #64748b;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    padding: 1.5rem 1rem;
-    text-transform: uppercase;
-}
-
-:deep(.p-datatable-tbody > tr) {
-    transition: all 0.2s ease;
-}
-
-:deep(.p-datatable-tbody > tr:hover) {
-    background-color: #f1f5f9/30 !important;
-}
-
-:deep(.p-paginator) {
-    border: none;
-    padding: 2rem;
-    background: transparent;
-}
-
-:deep(.p-tabview-nav) {
-    border-bottom: 2px solid #f1f5f9;
-}
-
-:deep(.p-tabview-nav li .p-tabview-nav-link) {
-    font-weight: 800;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    border: none !important;
-    background: transparent !important;
-}
-
-:deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-    color: #6366f1 !important;
-    border-bottom: 2px solid #6366f1 !important;
-}
-
-/* Modal styles */
-:deep(.p-dialog-header) {
-    background: white;
-    padding: 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-:deep(.p-dialog-content) {
-    padding: 0;
-}
-
-.p-button-indigo {
-    background: #6366f1;
-    border: none;
-}
-
-.p-button-indigo:hover {
-    background: #4f46e5;
-}
-
-/* Table Animation */
-.p-datatable-row-expansion-enter-active {
-    transition: all 0.3s ease-out;
-}
-</style>

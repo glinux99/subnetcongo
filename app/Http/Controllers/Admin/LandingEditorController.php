@@ -7,6 +7,7 @@ use App\Models\LandingSlide;
 use App\Models\LandingStat;
 use App\Models\LandingTechnology;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -47,11 +48,18 @@ class LandingEditorController extends Controller
 
     public function reorderSlides(Request $request)
     {
-        $request->validate(['ids' => 'required|array']);
-        foreach ($request->ids as $index => $id) {
-            LandingSlide::where('id', $id)->update(['position' => $index + 1]);
-        }
-        return response()->json(['success' => true]);
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:landing_slides,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            foreach ($request->ids as $index => $id) {
+                LandingSlide::where('id', $id)->update(['position' => $index + 1]);
+            }
+        });
+
+        return Redirect::back()->with('success', 'Ordre des slides mis à jour.');
     }
 
     public function toggleSlide(LandingSlide $slide)
@@ -62,6 +70,10 @@ class LandingEditorController extends Controller
 
     private function validateSlide(Request $request, ?int $id = null): array
     {
+        if (! $request->filled('position')) {
+            $request->merge(['position' => null]);
+        }
+
         $data = $request->validate([
             'badge'      => 'nullable|string|max:100',
             'title'      => 'required|string|max:255',
@@ -89,6 +101,9 @@ class LandingEditorController extends Controller
         }
 
         unset($data['bg_image_file'], $data['main_image_file']);
+        if (array_key_exists('position', $data) && $data['position'] === null) {
+            unset($data['position']); // store: recalculé juste après ; update: conserve la position actuelle
+        }
         return $data;
     }
 
@@ -103,6 +118,10 @@ class LandingEditorController extends Controller
     // ── TECHNOLOGIES ───────────────────────────────────────────
     public function storeTech(Request $request)
     {
+        if (! $request->filled('position')) {
+            $request->merge(['position' => null]);
+        }
+
         $data = $request->validate([
             'name'        => 'required|string|max:100',
             'slug'        => 'nullable|string|max:100|unique:landing_technologies,slug',
@@ -114,13 +133,17 @@ class LandingEditorController extends Controller
             'is_active'   => 'boolean',
         ]);
         if (empty($data['slug'])) $data['slug'] = Str::slug($data['name']);
-        $data['position'] = $data['position'] ?? (LandingTechnology::max('position') + 1);
+        if (empty($data['position'])) $data['position'] = (LandingTechnology::max('position') ?? 0) + 1;
         LandingTechnology::create($data);
         return Redirect::back()->with('success', 'Technologie ajoutée.');
     }
 
     public function updateTech(Request $request, LandingTechnology $tech)
     {
+        if (! $request->filled('position')) {
+            $request->merge(['position' => null]);
+        }
+
         $data = $request->validate([
             'name'        => 'required|string|max:100',
             'slug'        => 'nullable|string|max:100|unique:landing_technologies,slug,' . $tech->id,
@@ -132,6 +155,9 @@ class LandingEditorController extends Controller
             'is_active'   => 'boolean',
         ]);
         if (empty($data['slug'])) $data['slug'] = Str::slug($data['name']);
+        if (array_key_exists('position', $data) && $data['position'] === null) {
+            unset($data['position']); // conserve la position actuelle
+        }
         $tech->update($data);
         return Redirect::back()->with('success', 'Technologie mise à jour.');
     }
@@ -178,13 +204,23 @@ class LandingEditorController extends Controller
 
     private function validateStat(Request $request): array
     {
-        return $request->validate([
+        if (! $request->filled('position')) {
+            $request->merge(['position' => null]);
+        }
+
+        $data = $request->validate([
             'label'     => 'required|string|max:100',
             'value'     => 'required|string|max:50',
             'icon'      => 'nullable|string|max:50',
             'color'     => 'nullable|string|max:20',
-            'position'  => 'nullable|integer',
+            'position'  => 'nullable|integer|min:1',
             'is_active' => 'boolean',
         ]);
+
+        if (array_key_exists('position', $data) && $data['position'] === null) {
+            unset($data['position']); // store: recalculé juste après ; update: conserve la position actuelle
+        }
+
+        return $data;
     }
 }

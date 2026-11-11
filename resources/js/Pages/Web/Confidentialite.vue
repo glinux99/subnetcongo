@@ -1,9 +1,42 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
+    privacy_content: { type: Object, default: () => ({}) },
+});
+
+const page = usePage();
+
+// `legal` est partagé globalement par HandleInertiaRequests (LegalInfo::first()).
+const legal = computed(() => page.props.legal || null);
+const identity = computed(() => props.identity || {});
+
+const missing = 'Information non renseignée';
+
+const companyName = computed(() => legal.value?.company_name || identity.value?.site_name || 'SubnetCongo');
+
+const seatAddress = computed(() => {
+    const l = legal.value;
+    const parts = [l?.address_line, l?.city, l?.province, l?.country].filter(Boolean);
+    if (parts.length) return parts.join(', ');
+    return identity.value?.contact_address || 'Kinshasa, RDC';
+});
+
+const legalFilled = computed(() => {
+    const l = legal.value;
+    if (!l) return false;
+    return ['company_name', 'rccm', 'ifu', 'nif', 'capital_social', 'address_line'].some((k) => l[k]);
+});
+
+const legalUpdated = computed(() => {
+    const iso = legal.value?.updated_at;
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 });
 </script>
 
@@ -44,7 +77,9 @@ const props = defineProps({
                         Qui sommes-nous ?
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p><strong>{{ identity.site_name || 'SubnetCongo' }}</strong> (ci-après « nous ») est la plateforme de formation en ligne et de services technologiques de <strong>SUBNETCONGO SARL</strong>, société immatriculée au RCCM de Kinshasa (CD/KIN/RCCM/25-B-00000), dont le siège social est situé à {{ identity.contact_address || 'Kinshasa, RDC' }}.</p>
+                        <p><strong>{{ companyName }}</strong> (ci-après « nous ») édite la plateforme de formation en ligne et de services technologiques accessible sur ce site.</p>
+                        <p v-if="legalFilled">La plateforme est éditée par <strong>{{ legal?.company_name || missing }}</strong><template v-if="legal?.legal_form">, {{ legal.legal_form }}</template><template v-if="legal?.rccm">, société immatriculée au RCCM <strong class="font-mono">{{ legal.rccm }}</strong></template><template v-if="legal?.ifu">, IFU <strong class="font-mono">{{ legal.ifu }}</strong></template>, dont le siège social est situé à {{ seatAddress }}.</p>
+                        <p v-else class="text-slate-500 italic">Les informations d'immatriculation de la société seront affichées ici dès qu'elles auront été renseignées depuis l'espace d'administration.</p>
                         <p>En tant que responsable de traitement, nous nous engageons à protéger la confidentialité de vos données personnelles et à garantir un niveau de sécurité élevé conformément à la <strong>Loi n° 20/017 du 25 novembre 2020</strong> portant protection des données à caractère personnel en République Démocratique du Congo.</p>
                     </div>
                 </article>
@@ -188,9 +223,11 @@ const props = defineProps({
                     Pour les aspects juridiques de l'entreprise, veuillez consulter nos 
                     <Link :href="route('mentions-legales')" class="text-[#E11D48] font-bold hover:underline">Mentions Légales</Link>.
                 </p>
+                <p v-if="legalUpdated">
+                    Dernière mise à jour : <span class="font-semibold text-slate-600">{{ legalUpdated }}</span><br>
+                </p>
                 <p>
-                    Dernière mise à jour : <span class="font-semibold text-slate-600">4 Septembre 2026</span><br>
-                    SUBNETCONGO se réserve le droit de modifier cette politique pour se conformer aux évolutions légales en RDC.
+                    {{ companyName }} se réserve le droit de modifier cette politique pour se conformer aux évolutions légales en RDC.
                 </p>
             </div>
 

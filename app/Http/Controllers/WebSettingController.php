@@ -68,6 +68,16 @@ class WebSettingController extends Controller
     }
 
     /**
+     * Vignette locale déterministe pour un cours sans image (fichiers présents dans public/media/lms/thumbnails).
+     */
+    private static function localCourseThumbnail(int $id): string
+    {
+        $available = [1, 3, 4, 5, 7, 8, 9, 10];
+        $n = $available[abs($id) % count($available)];
+        return '/media/lms/thumbnails/course-' . $n . '.jpg';
+    }
+
+    /**
      * Page d'accueil (Landing) — 100% backend-driven.
      */
     public function landing()
@@ -105,9 +115,9 @@ class WebSettingController extends Controller
                 'slug'       => $c->slug,
                 'category'   => $c->category?->name ?? '—',
                 'instructor' => $c->instructor?->name ?? '—',
-                'image'      => $c->image ?? $c->thumbnail ?? asset('images/placeholder-course.jpg'),
-                'rating'     => (float) ($c->rating ?? 4.7),
-                'duration'   => ($c->duration_hours ?? 0) . 'h',
+                'image'      => $c->image ?? $c->thumbnail ?? self::localCourseThumbnail($c->id),
+                'rating'     => $c->rating !== null ? (float) $c->rating : null,
+                'duration'   => $c->duration_hours ? ((int) $c->duration_hours) . 'h' : null,
                 'level'      => $c->level ?? 'all',
                 'is_live'    => (bool) ($c->has_live ?? false),
                 'price'      => (float) ($c->price ?? 0),
@@ -124,7 +134,7 @@ class WebSettingController extends Controller
                 'id'         => $t->id,
                 'name'       => $t->name ?? $t->author_name ?? 'Apprenant',
                 'role'       => $t->role ?? '',
-                'avatar'     => $t->avatar ?? $t->author_avatar ?? 'https://i.pravatar.cc/150?u=' . $t->id,
+                'avatar'     => $t->avatar ?? $t->author_avatar ?? null,
                 'content'    => $t->content ?? $t->message ?? '',
                 'rating'     => (int) ($t->rating ?? 5),
             ])->toArray();
@@ -325,15 +335,17 @@ class WebSettingController extends Controller
     public function mentionsLegales()
     {
         $props = $this->sharedProps();
-        $legal = WebSetting::group('legal');
-        return Inertia::render('Web/MentionsLegales', array_merge($props, ['legal' => $legal]));
+        // NB: la prop partagée 'legal' (LegalInfo) est prioritaire pour la fiche entreprise.
+        // Le contenu éditorial WebSetting (group legal) reste disponible sous 'legal_content'.
+        $legalContent = WebSetting::group('legal');
+        return Inertia::render('Web/MentionsLegales', array_merge($props, ['legal_content' => $legalContent]));
     }
 
     public function confidentialite()
     {
         $props = $this->sharedProps();
-        $privacy = WebSetting::group('privacy');
-        return Inertia::render('Web/Confidentialite', array_merge($props, ['privacy' => $privacy]));
+        $privacyContent = WebSetting::group('privacy');
+        return Inertia::render('Web/Confidentialite', array_merge($props, ['privacy_content' => $privacyContent]));
     }
 
     /**

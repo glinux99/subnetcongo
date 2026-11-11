@@ -77,6 +77,32 @@
             if(empty($text)) return '';
             return str_replace(array_keys($vars), array_values($vars), $text);
         }
+
+        /**
+         * MENTIONS LÉGALES (pied de page) — issues de legal_info.
+         * N'interrompt jamais le rendu du certificat : en cas d'erreur, rien n'est affiché.
+         */
+        $legalMention = null;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('legal_info')) {
+                $legalInfo = \App\Models\LegalInfo::first();
+                if ($legalInfo) {
+                    $capital = $legalInfo->capital_social;
+                    if ($capital && ! preg_match('/[A-Za-z]/', (string) $capital)) {
+                        $capital = trim($capital) . ' ' . ($legalInfo->currency ?? 'CDF');
+                    }
+                    $mentionParts = array_filter([
+                        $legalInfo->company_name,
+                        $legalInfo->rccm ? 'RCCM : ' . $legalInfo->rccm : null,
+                        $legalInfo->ifu ? 'IFU : ' . $legalInfo->ifu : null,
+                        $capital ? 'Capital : ' . $capital : null,
+                    ]);
+                    $legalMention = $mentionParts ? implode('  ·  ', $mentionParts) : null;
+                }
+            }
+        } catch (\Throwable $e) {
+            $legalMention = null;
+        }
     @endphp
 
     <style>
@@ -235,6 +261,13 @@
 
         </div>
     @endforeach
+
+    <!-- MENTIONS LÉGALES (pied de page, discret) -->
+    @if(! empty($legalMention))
+        <div style="position: absolute; bottom: 8px; left: 0; width: 100%; text-align: center; z-index: 20;">
+            <span style="display: inline-block; font-family: 'Helvetica', 'Arial', sans-serif; font-size: 8px; letter-spacing: 0.4px; color: #475569; background-color: rgba(255, 255, 255, 0.78); padding: 2px 12px; border-radius: 9999px;">{{ $legalMention }}</span>
+        </div>
+    @endif
 
 </body>
 </html>

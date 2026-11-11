@@ -40,6 +40,10 @@ const prefillSubject = (subject) => {
 const page = usePage();
 const flash = computed(() => page.props.flash || {});
 
+// Identité légale réelle : prop passée par le contrôleur (LegalInfo::first()),
+// avec repli sur la prop partagée par HandleInertiaRequests.
+const legalInertia = computed(() => props.legal ?? page.props.legal ?? null);
+
 // ============================================================================
 // DONNÉES STATIQUES
 // ============================================================================
@@ -48,9 +52,9 @@ const contactCards = computed(() => [
         icon: 'pi-map-marker', color: '#E1251B', bg: 'bg-red-500/10',
         label: 'Adresse', title: 'Siège social',
         lines: [
-            props.legal?.address_line || props.identity.contact_address || 'Kinshasa, RDC',
-            [props.legal?.city, props.legal?.province, props.legal?.country].filter(Boolean).join(', ') || null,
-            props.legal?.po_box ? `BP : ${props.legal.po_box}` : null,
+            legalInertia.value?.address_line || props.identity.contact_address || 'Kinshasa, RDC',
+            [legalInertia.value?.city, legalInertia.value?.province, legalInertia.value?.country].filter(Boolean).join(', ') || null,
+            legalInertia.value?.po_box ? `BP : ${legalInertia.value.po_box}` : null,
         ].filter(Boolean),
         action: null,
     },
@@ -296,7 +300,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                         </div>
 
                         <!-- Infos légales -->
-                        <div v-if="legal && (legal.company_name || legal.rccm || legal.ifu || legal.tax_id)" class="reveal-on-scroll bg-[#0B1221] text-white p-7 rounded-[1.25rem] shadow-lg relative overflow-hidden">
+                        <div v-if="legalInertia && (legalInertia.company_name || legalInertia.rccm || legalInertia.ifu || legalInertia.tax_id)" class="reveal-on-scroll bg-[#0B1221] text-white p-7 rounded-[1.25rem] shadow-lg relative overflow-hidden">
                             <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-600/20 blur-2xl rounded-full"></div>
                             <div class="relative">
                                 <div class="flex items-center gap-3 mb-5">
@@ -306,29 +310,29 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                     <h3 class="font-black">Informations légales</h3>
                                 </div>
                                 <dl class="space-y-3 text-sm">
-                                    <div v-if="legal.company_name">
+                                    <div v-if="legalInertia.company_name">
                                         <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Raison sociale</dt>
-                                        <dd class="font-bold">{{ legal.company_name }}<span v-if="legal.legal_form" class="text-slate-400"> {{ legal.legal_form }}</span></dd>
+                                        <dd class="font-bold">{{ legalInertia.company_name }}<span v-if="legalInertia.legal_form" class="text-slate-400"> {{ legalInertia.legal_form }}</span></dd>
                                     </div>
-                                    <div v-if="legal.rccm">
+                                    <div v-if="legalInertia.rccm">
                                         <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">RCCM</dt>
-                                        <dd class="font-mono">{{ legal.rccm }}</dd>
+                                        <dd class="font-mono">{{ legalInertia.rccm }}</dd>
                                     </div>
-                                    <div v-if="legal.ifu">
+                                    <div v-if="legalInertia.ifu">
                                         <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">IFU</dt>
-                                        <dd class="font-mono">{{ legal.ifu }}</dd>
+                                        <dd class="font-mono">{{ legalInertia.ifu }}</dd>
                                     </div>
-                                    <div v-if="legal.tax_id">
+                                    <div v-if="legalInertia.tax_id">
                                         <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">N° Contribuable</dt>
-                                        <dd class="font-mono">{{ legal.tax_id }}</dd>
+                                        <dd class="font-mono">{{ legalInertia.tax_id }}</dd>
                                     </div>
-                                    <div v-if="legal.nif">
+                                    <div v-if="legalInertia.nif">
                                         <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">NIF</dt>
-                                        <dd class="font-mono">{{ legal.nif }}</dd>
+                                        <dd class="font-mono">{{ legalInertia.nif }}</dd>
                                     </div>
-                                    <div v-if="legal.capital_social">
+                                    <div v-if="legalInertia.capital_social">
                                         <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Capital social</dt>
-                                        <dd class="font-bold">{{ legal.capital_social }}</dd>
+                                        <dd class="font-bold">{{ legalInertia.capital_social }}</dd>
                                     </div>
                                 </dl>
                             </div>

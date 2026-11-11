@@ -8,8 +8,8 @@
  * ============================================================================
  */
 
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 // ============================================================================
@@ -36,19 +36,27 @@ const props = defineProps({
 });
 
 // ============================================================================
-// 2. CONSTANTES ET DONNÉES DE SECOURS (FALLBACKS RÉALISTES)
+// 2. CONSTANTES ET DONNÉES RÉELLES (aucune donnée inventée)
 // ============================================================================
-const DEFAULT_COURSE_IMAGE = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop';
-const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=f1f5f9&color=64748b&name=';
+const THUMB_FILES = [1, 3, 4, 5, 7, 8, 9, 10]; // fichiers présents dans public/media/lms/thumbnails
+const localCourseThumb = (course) => `/media/lms/thumbnails/course-${THUMB_FILES[Math.abs(course?.id ?? 0) % THUMB_FILES.length]}.jpg`;
 
-const mockCourses = [
-    { id: 1, title: 'Sécurité des SI : Audit et Pentesting', category: 'SÉCURITÉ', is_live: false, is_free: false, price: 150, rating: '4.8', duration: '45h', instructor: 'Sarah K.', image: null },
-    { id: 2, title: 'Administration Cisco CCNA (Module 1)', category: 'RÉSEAUX', is_live: true, is_free: false, price: 200, rating: '4.7', duration: '60h', instructor: 'Jean-Paul M.', image: null },
-    { id: 3, title: 'Architecture Cloud AWS pour Entreprises', category: 'CLOUD', is_live: false, is_free: false, price: 180, rating: '5.0', duration: '30h', instructor: 'Ali B.', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072' },
-    { id: 4, title: 'Maîtrise de Linux Enterprise Server', category: 'SYSTÈMES', is_live: false, is_free: true, price: 0, rating: '4.6', duration: '20h', instructor: 'Marc T.', image: null },
-    { id: 5, title: 'Déploiement SD-WAN avec Fortinet', category: 'RÉSEAUX', is_live: true, is_free: false, price: 250, rating: '4.9', duration: '50h', instructor: 'Elise D.', image: null },
-    { id: 6, title: 'DevSecOps : Intégration continue sécurisée', category: 'SÉCURITÉ', is_live: false, is_free: false, price: 300, rating: '4.8', duration: '40h', instructor: 'Sarah K.', image: null }
-];
+const AVATAR_COLORS = ['#2563EB', '#EE1C25', '#10B981', '#F59E0B', '#6366F1', '#0EA5E9'];
+const avatarColor = (name) => {
+    let hash = 0;
+    const str = String(name || '?');
+    for (let i = 0; i < str.length; i += 1) hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+};
+const initials = (name) => {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    return (((parts[0]?.[0] || 'S') + (parts[1]?.[0] || '')) || 'S').toUpperCase();
+};
+const isPiIcon = (icon) => typeof icon === 'string' && icon.startsWith('pi-');
+const isExternalUrl = (url) => {
+    if (!/^https?:\/\//i.test(url || '')) return false;
+    try { return new URL(url).origin !== window.location.origin; } catch { return true; }
+};
 
 const learningPaths = [
     { title: 'Ingénieur Réseau Certifié', desc: 'Du CCNA au CCNP, maîtrisez le routage et la commutation.', courses_count: 5, time: '6 mois', icon: 'pi-sitemap' },
@@ -91,9 +99,24 @@ const slides = computed(() => {
         }));
     }
     return [
-        { badge: 'Excellence & Innovation', title: 'Propulsez votre Carrière IT', highlight: 'Aujourd\'hui', description: 'Formez-vous aux technologies de demain avec des experts du réseau et de la cybersécurité.', bgImage: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=2069', mainImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070' },
-        { badge: 'Infrastructures Critiques', title: 'Déployez des Réseaux', highlight: 'Performants', description: 'Solutions d\'ingénierie et d\'infogérance adaptées aux entreprises.', bgImage: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2034', mainImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070' }
+        { badge: 'Excellence & Innovation', title: 'Propulsez votre carrière IT', highlight: "aujourd'hui", description: "Formez-vous aux technologies de demain avec des experts du réseau et de la cybersécurité.", bgImage: null, mainImage: null, icon: null, cardTitle: null, cardSub: null, ctaLabel: null, ctaUrl: null }
     ];
+});
+
+const activeSlideObj = computed(() => slides.value[activeSlide.value] || {});
+const heroPrimaryLabel = computed(() => activeSlideObj.value.ctaLabel || 'Explorer le Catalogue');
+const heroPrimaryUrl = computed(() => activeSlideObj.value.ctaUrl || route('academy'));
+
+const activeHeroCard = computed(() => {
+    const s = activeSlideObj.value;
+    if (!s) return null;
+    if (!s.mainImage && !s.cardTitle && !s.cardSub) return null;
+    return {
+        image: s.mainImage || null,
+        title: s.cardTitle || null,
+        sub: s.cardSub || null,
+        icon: s.icon && s.icon !== 'pi-globe' ? s.icon : null,
+    };
 });
 
 const startProgress = () => {
@@ -126,7 +149,8 @@ const selectedCategory = ref('Tous');
 const searchQuery = ref('');
 const isAnimatingCourses = ref(false);
 
-const baseCourses = computed(() => (props.courses.length ? props.courses : mockCourses));
+const hasCatalog = computed(() => props.courses.length > 0);
+const baseCourses = computed(() => props.courses);
 const allCategories = computed(() => ['Tous', ...new Set(baseCourses.value.map(c => c.category).filter(Boolean))]);
 
 const filteredCourses = computed(() => {
@@ -165,27 +189,71 @@ const statsSection = ref(null);
 const statsVisible = ref(false);
 const displayStats = ref([]);
 
-const parseStatValue = (v) => {
-    if (v === null || v === undefined) return 0;
-    const cleaned = String(v).replace(/[^\d.]/g, '');
-    return parseInt(cleaned, 10) || 0;
+const RING_CIRCUMFERENCE = 2 * Math.PI * 26;
+const toStatNumber = (raw) => parseFloat(String(raw).replace(',', '.')) || 0;
+const formatStatValue = (n) => Math.round(n).toLocaleString('fr-FR');
+
+const parseStatValue = (value) => {
+    const trimmed = String(value ?? '').trim();
+    if (!trimmed) return { target: 0, suffix: '', animated: false, ring: false, display: '—' };
+
+    // Espaces insécables/classiques ignorés pour l'analyse (« 3 500 » → « 3500 »)
+    const normalized = trimmed.replace(/[\s\u00A0\u202F]+/g, '');
+
+    // Pourcentage : « 98% » → compteur 0→98 avec suffixe % ; anneau car borne 0-100
+    const percent = normalized.match(/^(\d{1,3}(?:[.,]\d+)?)%$/);
+    if (percent) {
+        const n = toStatNumber(percent[1]);
+        return { target: n, suffix: '%', animated: true, ring: n <= 100, display: null };
+    }
+
+    // Numérique pur ≤ 100 (« 98 », « 100 ») → compteur + anneau ; au-delà (« 850 ») pas d'anneau
+    if (/^\d+(?:[.,]\d+)?$/.test(normalized)) {
+        const n = toStatNumber(normalized);
+        return { target: n, suffix: '', animated: true, ring: n <= 100, display: null };
+    }
+
+    // Nombre + suffixe composé : « 850+ », « 15K+ », « 1M+ » → compteur + suffixe conservé
+    const suffixed = normalized.match(/^(\d+(?:[.,]\d+)?)([^\d].*)$/);
+    if (suffixed) {
+        const suffix = suffixed[2];
+        // « 24/7 » (mesure de disponibilité) n'est pas un nombre animable
+        if (suffix.startsWith('/')) return { target: 0, suffix: '', animated: false, ring: false, display: trimmed };
+        return { target: toStatNumber(suffixed[1]), suffix, animated: true, ring: false, display: null };
+    }
+
+    // Texte pur : affiché tel quel, sans compteur ni anneau
+    return { target: 0, suffix: '', animated: false, ring: false, display: trimmed };
+};
+
+const ringDashoffset = (stat) => {
+    if (!stat.ring || stat.target <= 0) return RING_CIRCUMFERENCE;
+    const progress = Math.min(Math.max((stat.current || 0) / stat.target, 0), 1);
+    return RING_CIRCUMFERENCE * (1 - progress);
 };
 
 const buildStats = () => {
     if (props.adminStats && props.adminStats.length) {
-        return props.adminStats.map((s) => ({
-            current: 0,
-            target: parseStatValue(s.value),
-            label: s.label,
-            icon: s.icon || 'pi-chart-bar',
-            color: s.color || '#2563EB',
-        }));
+        return props.adminStats.map((s) => {
+            const parsed = parseStatValue(s.value);
+            return {
+                current: 0,
+                target: parsed.target,
+                suffix: parsed.suffix,
+                animated: parsed.animated,
+                ring: parsed.ring,
+                display: parsed.display,
+                label: s.label,
+                icon: s.icon || 'pi-chart-bar',
+                color: s.color || '#2563EB',
+            };
+        });
     }
     return [
-        { current: 0, target: props.stats?.students ?? 3500, label: 'Apprenants formés', icon: 'pi-users', color: '#003399' },
-        { current: 0, target: props.stats?.courses ?? 120, label: 'Cours & Modules', icon: 'pi-book', color: '#EE1C25' },
-        { current: 0, target: props.stats?.instructors ?? 25, label: 'Experts Certifiés', icon: 'pi-verified', color: '#10B981' },
-        { current: 0, target: props.stats?.success_rate ?? 98, label: 'Taux de réussite (%)', icon: 'pi-chart-line', color: '#F59E0B' },
+        { current: 0, target: props.stats?.students ?? 3500, suffix: '+', animated: true, ring: false, display: null, label: 'Apprenants formés', icon: 'pi-users', color: '#003399' },
+        { current: 0, target: props.stats?.courses ?? 120, suffix: '+', animated: true, ring: false, display: null, label: 'Cours & Modules', icon: 'pi-book', color: '#EE1C25' },
+        { current: 0, target: props.stats?.instructors ?? 25, suffix: '+', animated: true, ring: false, display: null, label: 'Experts Certifiés', icon: 'pi-verified', color: '#10B981' },
+        { current: 0, target: props.stats?.success_rate ?? 98, suffix: '%', animated: true, ring: false, display: null, label: 'Taux de réussite (%)', icon: 'pi-chart-line', color: '#F59E0B' },
     ];
 };
 
@@ -195,6 +263,7 @@ watch(() => props.adminStats, () => { displayStats.value = buildStats(); });
 
 const animateStats = () => {
     displayStats.value.forEach((stat) => {
+        if (!stat.animated || stat.target <= 0) return;
         const increment = Math.ceil(stat.target / 60);
         const timer = setInterval(() => {
             stat.current += increment;
@@ -302,7 +371,7 @@ const schemaOrgData = computed(() => {
             <div class="absolute inset-0 z-0 bg-[#020617]">
                 <transition-group name="hero-fade">
                     <div v-for="(slide, index) in slides" :key="index" v-show="activeSlide === index" class="absolute inset-0 w-full h-full">
-                        <img :src="slide.bgImage" class="w-full h-full object-cover opacity-40 scale-105 animate-slow-zoom" alt="Background" />
+                        <img v-if="slide.bgImage" :src="slide.bgImage" class="w-full h-full object-cover opacity-40 scale-105 animate-slow-zoom" alt="" />
                         <div class="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/90 to-transparent"></div>
                     </div>
                 </transition-group>
@@ -316,29 +385,51 @@ const schemaOrgData = computed(() => {
                 <div class="lg:col-span-7 space-y-8">
                     <transition name="slide-up-fade" mode="out-in">
                         <div :key="activeSlide" class="space-y-6">
-                            <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white">
+                            <div v-if="slides[activeSlide]?.badge" class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white">
                                 <span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span></span>
                                 <span class="text-xs font-bold uppercase tracking-widest text-blue-200">{{ slides[activeSlide].badge }}</span>
                             </div>
                             <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.1] tracking-tight">
-                                {{ slides[activeSlide].title }} <br />
-                                <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">
+                                {{ slides[activeSlide]?.title }} <br />
+                                <span v-if="slides[activeSlide]?.highlight" class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">
                                     {{ slides[activeSlide].highlight }}
                                 </span>
                             </h1>
-                            <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5">
+                            <p v-if="slides[activeSlide]?.description" class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5">
                                 {{ slides[activeSlide].description }}
                             </p>
                         </div>
                     </transition>
 
                     <div class="flex flex-wrap gap-4 pt-4 reveal-on-scroll delay-200">
-                        <Link :href="route('academy')" class="bg-white hover:bg-slate-100 text-[#0B1221] px-8 py-4 rounded-xl font-bold text-base shadow-lg transition-all flex items-center gap-2">
-                            Explorer le Catalogue <i class="pi pi-arrow-right"></i>
+                        <a v-if="isExternalUrl(heroPrimaryUrl)" :href="heroPrimaryUrl" target="_blank" rel="noopener" class="bg-white hover:bg-slate-100 text-[#0B1221] px-8 py-4 rounded-xl font-bold text-base shadow-lg transition-all flex items-center gap-2">
+                            {{ heroPrimaryLabel }} <i class="pi pi-arrow-right"></i>
+                        </a>
+                        <Link v-else :href="heroPrimaryUrl" class="bg-white hover:bg-slate-100 text-[#0B1221] px-8 py-4 rounded-xl font-bold text-base shadow-lg transition-all flex items-center gap-2">
+                            {{ heroPrimaryLabel }} <i class="pi pi-arrow-right"></i>
                         </Link>
                         <Link :href="route('contact')" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-base transition-all flex items-center gap-2">
                             Services B2B <i class="pi pi-briefcase"></i>
                         </Link>
+                    </div>
+                </div>
+
+                <!-- Carte flottante (main_image / card_title / card_sub de la slide) -->
+                <div v-if="activeHeroCard" class="lg:col-span-5 hidden lg:flex items-center justify-center" aria-hidden="true">
+                    <div class="relative animate-float-slow">
+                        <div class="absolute -inset-6 bg-gradient-to-br from-red-600/30 via-orange-500/10 to-blue-600/20 rounded-[2.5rem] blur-3xl"></div>
+                        <div class="relative w-[360px] xl:w-[400px] rounded-[1.75rem] border border-white/10 bg-white/[0.06] backdrop-blur-xl p-4 shadow-2xl shadow-black/50 ring-1 ring-white/5">
+                            <div v-if="activeHeroCard.icon" class="absolute -top-6 -left-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center shadow-xl shadow-red-600/40 -rotate-6 border border-white/20">
+                                <i v-if="isPiIcon(activeHeroCard.icon)" :class="['pi', activeHeroCard.icon, 'text-white', 'text-2xl']"></i>
+                                <span v-else class="text-3xl">{{ activeHeroCard.icon }}</span>
+                            </div>
+                            <img v-if="activeHeroCard.image" :src="activeHeroCard.image" :alt="activeHeroCard.title || 'SubnetCongo'" class="w-full h-[340px] xl:h-[380px] object-cover rounded-2xl border border-white/10" />
+                            <div v-if="activeHeroCard.title || activeHeroCard.sub" class="px-2 pt-4 pb-2">
+                                <div class="w-8 h-0.5 bg-red-500 rounded-full mb-3"></div>
+                                <p v-if="activeHeroCard.title" class="text-white font-black text-xl tracking-tight leading-snug">{{ activeHeroCard.title }}</p>
+                                <p v-if="activeHeroCard.sub" class="text-slate-400 text-sm mt-1.5 leading-relaxed">{{ activeHeroCard.sub }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -356,17 +447,16 @@ const schemaOrgData = computed(() => {
         <!-- ================================================================== -->
         <!-- SECTION 2 : PARTENAIRES / MARQUEE (Moins d'espace vertical) -->
         <!-- ================================================================== -->
-        <section class="py-8 bg-white border-b border-slate-100 overflow-hidden relative flex items-center">
+        <section v-if="technologies.length" class="py-8 bg-white border-b border-slate-100 overflow-hidden relative flex items-center">
             <div class="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10"></div>
             <div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10"></div>
 
             <div class="max-w-[1600px] mx-auto w-full px-4 flex items-center gap-12">
                 <p class="hidden lg:block text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">Technologies maîtrisées</p>
                 <div class="flex space-x-12 animate-marquee whitespace-nowrap items-center flex-1">
-                    <div v-for="tech in (technologies.length ? technologies : [
-                        {name:'Cisco',icon:'pi-verified'},{name:'Fortinet',icon:'pi-verified'},{name:'AWS',icon:'pi-verified'},{name:'Linux',icon:'pi-verified'},{name:'VMware',icon:'pi-verified'},{name:'Microsoft',icon:'pi-verified'},{name:'Palo Alto',icon:'pi-verified'}
-                    ])" :key="tech.slug || tech.name" class="flex items-center gap-2 text-slate-400 hover:text-slate-800 transition duration-300" :style="{ color: tech.color || '' }">
-                        <i :class="['pi', tech.icon || 'pi-verified', 'text-lg']"></i>
+                    <div v-for="tech in technologies" :key="tech.slug || tech.name" class="flex items-center gap-2 text-slate-400 hover:text-slate-800 transition duration-300">
+                        <i v-if="isPiIcon(tech.icon)" :class="['pi', tech.icon, 'text-lg']" :style="{ color: tech.color || undefined }"></i>
+                        <span v-else-if="tech.icon" class="text-lg leading-none">{{ tech.icon }}</span>
                         <span class="text-lg font-black font-sans tracking-tight">{{ tech.name }}</span>
                     </div>
                 </div>
@@ -387,7 +477,9 @@ const schemaOrgData = computed(() => {
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                     <div v-for="tech in technologies" :key="tech.id" class="reveal-on-scroll group bg-white p-6 rounded-xl border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300">
                         <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" :style="{ backgroundColor: (tech.color || '#003399') + '12', color: tech.color || '#003399' }">
-                            <i :class="['pi', tech.icon || 'pi-cog', 'text-2xl']"></i>
+                            <i v-if="isPiIcon(tech.icon)" :class="['pi', tech.icon, 'text-2xl']"></i>
+                            <span v-else-if="tech.icon" class="text-2xl leading-none">{{ tech.icon }}</span>
+                            <i v-else class="pi pi-cog text-2xl"></i>
                         </div>
                         <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ tech.category }}</p>
                         <h3 class="text-lg font-black text-slate-900 mb-2">{{ tech.name }}</h3>
@@ -403,13 +495,21 @@ const schemaOrgData = computed(() => {
         <section class="py-16 bg-[#F4F6F9]" id="stats-section" ref="statsSection">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                    <div v-for="(stat, idx) in displayStats" :key="idx" class="reveal-on-scroll bg-white p-8 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center group">
-                        <div class="w-14 h-14 rounded-lg flex items-center justify-center mb-4 transition-colors" :style="{ backgroundColor: (stat.color || '#2563EB') + '15', color: stat.color || '#2563EB' }">
-                            <i :class="['pi', stat.icon, 'text-xl']"></i>
+                    <div v-for="(stat, idx) in displayStats" :key="idx" class="reveal-on-scroll bg-white p-8 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                        <div class="relative w-16 h-16 flex items-center justify-center mb-4">
+                            <svg v-if="stat.ring" viewBox="0 0 64 64" class="absolute inset-0 w-full h-full -rotate-90" aria-hidden="true">
+                                <circle cx="32" cy="32" r="26" stroke="#E2E8F0" stroke-width="4" fill="none" />
+                                <circle cx="32" cy="32" r="26" :stroke="stat.color || '#2563EB'" stroke-width="4" fill="none" stroke-linecap="round"
+                                        :stroke-dasharray="RING_CIRCUMFERENCE" :stroke-dashoffset="ringDashoffset(stat)"
+                                        style="transition: stroke-dashoffset 0.25s linear" />
+                            </svg>
+                            <div class="w-12 h-12 rounded-lg flex items-center justify-center transition-colors relative" :style="{ backgroundColor: (stat.color || '#2563EB') + '15', color: stat.color || '#2563EB' }">
+                                <i :class="['pi', stat.icon, 'text-xl']"></i>
+                            </div>
                         </div>
                         <div class="flex items-baseline gap-1 text-[#0B1221]">
-                            <span class="text-4xl lg:text-5xl font-black tracking-tighter">{{ stat.current }}</span>
-                            <span class="text-xl font-black text-red-500">+</span>
+                            <span class="text-4xl lg:text-5xl font-black tracking-tighter">{{ stat.animated ? formatStatValue(stat.current) : stat.display }}</span>
+                            <span v-if="stat.suffix" class="text-xl font-black text-red-500">{{ stat.suffix }}</span>
                         </div>
                         <p class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mt-2">{{ stat.label }}</p>
                     </div>
@@ -420,7 +520,7 @@ const schemaOrgData = computed(() => {
         <!-- ================================================================== -->
         <!-- SECTION 4 : CATALOGUE DE COURS (Design fidèle SubnetCongo) -->
         <!-- ================================================================== -->
-        <section class="py-20 bg-white relative overflow-hidden" id="courses">
+        <section v-if="hasCatalog" class="py-20 bg-white relative overflow-hidden" id="courses">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
 
                 <!-- En-tête + Recherche & Filtres -->
@@ -461,7 +561,7 @@ const schemaOrgData = computed(() => {
                         >
                             <!-- Header Image -->
                             <div class="relative h-[220px] sm:h-[240px] w-full shrink-0 overflow-hidden bg-slate-900">
-                                <img :src="course.image || DEFAULT_COURSE_IMAGE" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100" alt="Course cover" />
+                                <img :src="course.image || localCourseThumb(course)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100" :alt="`Couverture du cours : ${course.title}`" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
 
                                 <!-- Badges (Haut Gauche et Bas Gauche) -->
@@ -477,7 +577,8 @@ const schemaOrgData = computed(() => {
                             <div class="p-6 md:p-8 flex-1 flex flex-col w-full bg-white">
                                 <!-- Auteur -->
                                 <div class="flex items-center gap-2.5 mb-3">
-                                    <img :src="course.instructor_avatar || `${DEFAULT_AVATAR}${course.instructor || 'X'}`" class="w-6 h-6 rounded-full object-cover border border-slate-200"/>
+                                    <img v-if="course.instructor_avatar" :src="course.instructor_avatar" :alt="course.instructor" class="w-6 h-6 rounded-full object-cover border border-slate-200"/>
+                                    <div v-else class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black text-white border border-slate-200" :style="{ backgroundColor: avatarColor(course.instructor) }" aria-hidden="true">{{ initials(course.instructor) }}</div>
                                     <span class="text-xs text-slate-500 font-bold uppercase">Par {{ course.instructor || 'Expert IT' }}</span>
                                 </div>
 
@@ -490,12 +591,12 @@ const schemaOrgData = computed(() => {
                                 <div class="flex-1"></div>
 
                                 <!-- Meta (Notes & Heures) -->
-                                <div class="flex items-center gap-6 mb-6">
-                                    <div class="flex items-center gap-1.5 text-sm font-bold text-slate-800">
-                                        <i class="pi pi-star-fill text-amber-400 text-xs"></i> {{ course.rating || '4.8' }}
+                                <div v-if="course.rating || course.duration" class="flex items-center gap-6 mb-6">
+                                    <div v-if="course.rating" class="flex items-center gap-1.5 text-sm font-bold text-slate-800">
+                                        <i class="pi pi-star-fill text-amber-400 text-xs"></i> {{ course.rating }}
                                     </div>
-                                    <div class="flex items-center gap-1.5 text-sm font-medium text-slate-500">
-                                        <i class="pi pi-clock text-slate-400 text-xs"></i> {{ course.duration || '45h' }}
+                                    <div v-if="course.duration" class="flex items-center gap-1.5 text-sm font-medium text-slate-500">
+                                        <i class="pi pi-clock text-slate-400 text-xs"></i> {{ course.duration }}
                                     </div>
                                 </div>
 
@@ -606,8 +707,10 @@ const schemaOrgData = computed(() => {
         <!-- ================================================================== -->
         <!-- SECTION 7 : FAQ (Dense et propre) -->
         <!-- ================================================================== -->
-        <section class="py-20 bg-[#0B1221] text-white">
-            <div class="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-12">
+        <section class="py-20 bg-[#0B1221] text-white relative overflow-hidden">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNCIvPjwvc3ZnPg==')] pointer-events-none"></div>
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[720px] h-[280px] bg-red-600/10 blur-[140px] rounded-full pointer-events-none"></div>
+            <div class="relative max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="text-center mb-12 reveal-on-scroll">
                     <h2 class="text-3xl md:text-4xl font-black tracking-tight">Questions fréquentes</h2>
                 </div>
@@ -629,8 +732,9 @@ const schemaOrgData = computed(() => {
         <!-- ================================================================== -->
         <!-- SECTION 8 : CTA FINAL -->
         <!-- ================================================================== -->
-        <section class="py-20 bg-white border-t border-slate-100 text-center">
-            <div class="max-w-[800px] mx-auto px-4 reveal-on-scroll">
+        <section class="py-20 bg-white border-t border-slate-100 text-center relative overflow-hidden">
+            <div class="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[640px] h-[320px] bg-gradient-to-t from-red-100/60 to-transparent blur-3xl rounded-full pointer-events-none"></div>
+            <div class="relative max-w-[800px] mx-auto px-4 reveal-on-scroll">
                 <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">Prêt à développer vos compétences ?</h2>
                 <p class="text-lg text-slate-500 mb-10">Rejoignez des milliers de professionnels qui nous font confiance.</p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -666,6 +770,16 @@ const schemaOrgData = computed(() => {
 @keyframes marquee {
     0% { transform: translateX(0%); }
     100% { transform: translateX(-100%); }
+}
+@keyframes float-slow {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(1deg); }
+}
+.animate-float-slow {
+    animation: float-slow 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .animate-float-slow { animation: none; }
 }
 .animate-marquee {
     animation: marquee 40s linear infinite;

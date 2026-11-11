@@ -3,315 +3,309 @@
 namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\EmailCampaign; // Modèle à créer
-use App\Models\EmailList; // Modèle à créer
-use App\Models\EmailTemplate; // Modèle à créer
+use App\Mail\CampaignMail;
+use App\Models\EmailCampaign;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Response;
 use Inertia\Inertia;
-// use App\Jobs\SendEmailCampaignJob; // Job à créer pour l'envoi en arrière-plan
-// use App\Mail\CampaignMail; // Mailable à créer
 
 class EmailCampaignController extends Controller
 {
     /**
-     * Constructeur pour appliquer les middlewares de permissions.
+     * Audiences ciblables par une campagne.
      */
-    public function __construct()
+    private const AUDIENCES = ['all', 'students', 'instructors'];
+
+    /**
+     * Requête visant les destinataires selon l'audience de la campagne.
+     */
+    private function audienceQuery(?string $audience)
     {
-        // Exemple de permissions
-        // $this->middleware('can:view-campaigns')->only(['index', 'show', 'export']);
-        // $this->middleware('can:manage-campaigns')->except(['index', 'show', 'export']);
+        return match ($audience) {
+            'students' => User::role('student')->whereNotNull('email')->where('email', '!=', ''),
+            'instructors' => User::role('instructor')->whereNotNull('email')->where('email', '!=', ''),
+            default => User::whereNotNull('email')->where('email', '!=', ''),
+        };
     }
 
     /**
-     * Affiche la liste des campagnes email.
-     *
-     * @param Request $request
-     * @return \Inertia\Response
+     * Envoi synchrone de la campagne (simplifié : pas de queue).
+     * Retourne ['total', 'sent', 'failed'].
+     */
+    private function deliverCampaign(EmailCampaign $campaign): array
+    {
+        $recipients = $this->audienceQuery($campaign->target_audience)
+            ->get(['id', 'name', 'email']);
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient->email)->send(new CampaignMail($campaign));
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                Log::warning('Échec envoi campagne #' . $campaign->id . ' vers ' . $recipient->email . ' : ' . $e->getMessage());
+            }
+        }
+
+        $campaign->update([
+            'total_recipients' => $recipients->count(),
+            'sent_count' => $sent,
+            'bounces_count' => $campaign->bounces_count + $failed,
+            'sent_at' => now(),
+            'status' => 'sent',
+            'scheduled_at' => null,
+        ]);
+
+        return ['total' => $recipients->count(), 'sent' => $sent, 'failed' => $failed];
+    }
+
+    private function validateCampaign(Request $request): array
+    {
+        return $request->validate([
+            'name' => 'required|string|max:255',
+            'subject' => 'required|string|max:255',
+            'from_name' => 'nullable|string|max:255',
+            'from_email' => 'nullable|email|max:255',
+            'body' => 'required|string',
+            'target_audience' => 'required|in:' . implode(',', self::AUDIENCES),
+            'status' => 'required|in:draft,scheduled,queued',
+            'scheduled_at' => 'nullable|date|after:now',
+        ]);
+    }
+
+    /**
+     * Liste des campagnes avec statistiques réelles.
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
         $status = $request->input('status');
-        $sortField = $request->input('sort_field', 'created_at');
-        $sortDirection = $request->input('sort_direction', 'desc');
-        $perPage = $request->input('per_page', 15);
 
-        $query = EmailCampaign::query()
+        $campaigns = EmailCampaign::query()
+            ->with('user:id,name')
             ->when($search, function ($q, $search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('subject', 'like', "%{$search}%");
+                $q->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('subject', 'like', "%{$search}%");
+                });
             })
-            ->when($status, function ($q, $status) {
-                $q->where('status', $status);
-            });
-
-        $validSorts = ['name', 'subject', 'status', 'scheduled_at', 'sent_at', 'created_at'];
-        if (in_array($sortField, $validSorts)) {
-            $query->orderBy($sortField, $sortDirection);
-        }
-
-        $campaigns = $query->paginate($perPage)->withQueryString();
+            ->when($status, fn ($q, $status) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->paginate(15)
+            ->withQueryString();
 
         $stats = [
             'total' => EmailCampaign::count(),
-            'draft' => EmailCampaign::where('status', 'draft')->count(),
-            'scheduled' => EmailCampaign::where('status', 'scheduled')->count(),
+            'active' => EmailCampaign::whereIn('status', ['scheduled', 'queued'])->count(),
             'sent' => EmailCampaign::where('status', 'sent')->count(),
+            'draft' => EmailCampaign::where('status', 'draft')->count(),
+            'sent_total' => (int) EmailCampaign::sum('sent_count'),
         ];
 
         return Inertia::render('Marketing/Emails', [
+            'mode' => 'index',
             'campaigns' => $campaigns,
-            'filters' => $request->all(['search', 'status', 'sort_field', 'sort_direction', 'per_page']),
             'stats' => $stats,
+            'filters' => $request->only(['search', 'status']),
         ]);
     }
 
     /**
-     * Affiche le formulaire de création d'une campagne.
-     *
-     * @return \Inertia\Response
+     * Formulaire de création (même page, mode création).
      */
     public function create()
     {
-        // Simule la récupération des listes de diffusion et des templates
-        $emailLists = []; // EmailList::get(['id', 'name']);
-        $emailTemplates = []; // EmailTemplate::get(['id', 'name']);
-
         return Inertia::render('Marketing/Emails', [
-            'emailLists' => $emailLists,
-            'emailTemplates' => $emailTemplates,
+            'mode' => 'create',
+            'campaign' => null,
         ]);
     }
 
     /**
-     * Enregistre une nouvelle campagne.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Enregistre la campagne. Si status = queued, envoi synchrone (simplifié).
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'subject' => 'required|string|max:255',
-            'from_name' => 'required|string|max:255',
-            'from_email' => 'required|email|max:255',
-            'html_content' => 'required|string',
-            'email_list_id' => 'nullable|exists:email_lists,id',
-            'status' => 'required|in:draft,scheduled',
-            'scheduled_at' => 'nullable|date|after:now',
-        ]);
+        $validated = $this->validateCampaign($request);
 
         if ($validated['status'] === 'scheduled' && empty($validated['scheduled_at'])) {
-            return Redirect::back()->withErrors(['scheduled_at' => 'Une date de programmation est requise pour une campagne programmée.'])->withInput();
+            return Redirect::back()
+                ->withErrors(['scheduled_at' => 'Une date de programmation est requise pour une campagne programmée.'])
+                ->withInput();
         }
 
         try {
-            EmailCampaign::create($validated + ['user_id' => Auth::id()]);
+            $campaign = EmailCampaign::create($validated + ['user_id' => Auth::id()]);
 
-            return Redirect::route('marketing.campaigns.index')
+            if ($campaign->status === 'queued') {
+                $result = $this->deliverCampaign($campaign);
+
+                return Redirect::route('marketing.emails.index')
+                    ->with('success', "Campagne envoyée à {$result['sent']}/{$result['total']} destinataire(s)" . ($result['failed'] ? " ({$result['failed']} échec(s))." : '.'));
+            }
+
+            return Redirect::route('marketing.emails.index')
                 ->with('success', 'Campagne créée avec succès.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Erreur création campagne : ' . $e->getMessage());
+
             return Redirect::back()
-                ->with('error', 'Erreur lors de la création: ' . $e->getMessage())
+                ->with('error', 'Erreur lors de la création : ' . $e->getMessage())
                 ->withInput();
         }
     }
 
     /**
-     * Affiche les détails et statistiques d'une campagne.
-     *
-     * @param EmailCampaign $campaign
-     * @return \Inertia\Response
+     * Aperçu d'une campagne + destinataires ciblés prévus.
      */
-    public function show(EmailCampaign $campaign)
+    public function show(EmailCampaign $email)
     {
-        // $campaign->load('emailList');
+        $email->load('user:id,name,email');
 
-        // Simulation de données de performance
-        $performance_chart = [
-            'labels' => ['Ouvertures', 'Clics', 'Désabonnements', 'Rebonds'],
-            'data' => [
-                $campaign->opens_count ?? 0,
-                $campaign->clicks_count ?? 0,
-                $campaign->unsubscribes_count ?? 0,
-                $campaign->bounces_count ?? 0,
-            ],
-        ];
+        $recipientsCount = $this->audienceQuery($email->target_audience)->count();
+        $recipientsPreview = $this->audienceQuery($email->target_audience)
+            ->orderBy('name')
+            ->limit(25)
+            ->get(['id', 'name', 'email']);
 
         return Inertia::render('Marketing/Emails', [
-            'campaign' => $campaign,
-            'performance_chart' => $performance_chart,
+            'mode' => 'show',
+            'campaign' => $email,
+            'recipientsCount' => $recipientsCount,
+            'recipientsPreview' => $recipientsPreview,
         ]);
     }
 
     /**
-     * Affiche le formulaire d'édition d'une campagne.
-     *
-     * @param EmailCampaign $campaign
-     * @return \Inertia\Response
+     * Formulaire d'édition (même page, mode édition).
      */
-    public function edit(EmailCampaign $campaign)
+    public function edit(EmailCampaign $email)
     {
-        if (!in_array($campaign->status, ['draft', 'scheduled'])) {
-            return Redirect::route('marketing.campaigns.show', $campaign)
-                ->with('warning', 'Seules les campagnes en brouillon ou programmées peuvent être modifiées.');
+        if ($email->status === 'sent') {
+            return Redirect::route('marketing.emails.show', $email)
+                ->with('error', 'Une campagne envoyée ne peut plus être modifiée.');
         }
 
-        $emailLists = []; // EmailList::get(['id', 'name']);
-        $emailTemplates = []; // EmailTemplate::get(['id', 'name']);
-
         return Inertia::render('Marketing/Emails', [
-            'campaign' => $campaign,
-            'emailLists' => $emailLists,
-            'emailTemplates' => $emailTemplates,
+            'mode' => 'edit',
+            'campaign' => $email,
         ]);
     }
 
     /**
-     * Met à jour une campagne.
-     *
-     * @param Request $request
-     * @param EmailCampaign $campaign
-     * @return \Illuminate\Http\RedirectResponse
+     * Met à jour la campagne. Si status devient queued, envoi synchrone.
      */
-    public function update(Request $request, EmailCampaign $campaign)
+    public function update(Request $request, EmailCampaign $email)
     {
-        if (!in_array($campaign->status, ['draft', 'scheduled'])) {
-            return Redirect::back()->with('error', 'Cette campagne ne peut plus être modifiée.');
+        if ($email->status === 'sent') {
+            return Redirect::back()->with('error', 'Une campagne envoyée ne peut plus être modifiée.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'subject' => 'required|string|max:255',
-            'from_name' => 'required|string|max:255',
-            'from_email' => 'required|email|max:255',
-            'html_content' => 'required|string',
-            'email_list_id' => 'nullable|exists:email_lists,id',
-            'status' => 'required|in:draft,scheduled',
-            'scheduled_at' => 'nullable|date|after:now',
-        ]);
+        $validated = $this->validateCampaign($request);
 
         if ($validated['status'] === 'scheduled' && empty($validated['scheduled_at'])) {
-            return Redirect::back()->withErrors(['scheduled_at' => 'Une date de programmation est requise.'])->withInput();
+            return Redirect::back()
+                ->withErrors(['scheduled_at' => 'Une date de programmation est requise.'])
+                ->withInput();
         }
 
         try {
-            $campaign->update($validated);
+            $email->update($validated);
 
-            return Redirect::route('marketing.campaigns.index')
+            if ($email->status === 'queued') {
+                $result = $this->deliverCampaign($email);
+
+                return Redirect::route('marketing.emails.index')
+                    ->with('success', "Campagne envoyée à {$result['sent']}/{$result['total']} destinataire(s)" . ($result['failed'] ? " ({$result['failed']} échec(s))." : '.'));
+            }
+
+            return Redirect::route('marketing.emails.index')
                 ->with('success', 'Campagne mise à jour.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Erreur mise à jour campagne #' . $email->id . ' : ' . $e->getMessage());
+
             return Redirect::back()
-                ->with('error', 'Erreur de mise à jour: ' . $e->getMessage());
+                ->with('error', 'Erreur de mise à jour : ' . $e->getMessage())
+                ->withInput();
         }
     }
 
     /**
-     * Supprime une campagne (uniquement si en brouillon).
-     *
-     * @param EmailCampaign $campaign
-     * @return \Illuminate\Http\RedirectResponse
+     * Supprime une campagne (brouillons et programmées uniquement).
      */
-    public function destroy(EmailCampaign $campaign)
+    public function destroy(EmailCampaign $email)
     {
-        if ($campaign->status !== 'draft') {
-            return Redirect::back()->with('error', 'Seuls les brouillons peuvent être supprimés.');
+        if (! in_array($email->status, ['draft', 'scheduled'], true)) {
+            return Redirect::back()->with('error', 'Seuls les brouillons et campagnes programmées peuvent être supprimés.');
         }
 
         try {
-            $campaign->delete();
-            return Redirect::route('marketing.campaigns.index')
+            $email->delete();
+
+            return Redirect::route('marketing.emails.index')
                 ->with('success', 'Campagne supprimée.');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Erreur suppression campagne #' . $email->id . ' : ' . $e->getMessage());
+
             return Redirect::back()->with('error', 'Impossible de supprimer la campagne.');
         }
     }
 
     /**
-     * Duplique une campagne existante pour en créer un nouveau brouillon.
-     *
-     * @param EmailCampaign $campaign
-     * @return \Illuminate\Http\RedirectResponse
+     * Duplique une campagne en nouveau brouillon.
      */
-    public function duplicate(EmailCampaign $campaign)
+    public function duplicate(EmailCampaign $email)
     {
         try {
-            $newCampaign = $campaign->replicate()->fill([
-                'name' => $campaign->name . ' (Copie)',
+            $clone = $email->replicate()->fill([
+                'name' => 'Copie ' . ($email->name ?: $email->subject),
                 'status' => 'draft',
                 'scheduled_at' => null,
                 'sent_at' => null,
+                'total_recipients' => 0,
+                'sent_count' => 0,
                 'opens_count' => 0,
                 'clicks_count' => 0,
+                'bounces_count' => 0,
+                'user_id' => Auth::id(),
             ]);
-            $newCampaign->save();
+            $clone->save();
 
-            return Redirect::route('marketing.campaigns.edit', $newCampaign)
-                ->with('success', 'Campagne dupliquée. Vous pouvez maintenant la modifier.');
-        } catch (\Exception $e) {
-            return Redirect::back()->with('error', 'Erreur lors de la duplication: ' . $e->getMessage());
+            return Redirect::route('marketing.emails.show', $clone)
+                ->with('success', 'Campagne dupliquée en brouillon.');
+        } catch (\Throwable $e) {
+            Log::error('Erreur duplication campagne #' . $email->id . ' : ' . $e->getMessage());
+
+            return Redirect::back()->with('error', 'Erreur lors de la duplication : ' . $e->getMessage());
         }
     }
 
     /**
-     * Envoie un email de test.
-     *
-     * @param Request $request
-     * @param EmailCampaign $campaign
-     * @return \Illuminate\Http\RedirectResponse
+     * Envoie immédiatement un email de test via CampaignMail.
      */
-    public function sendTest(Request $request, EmailCampaign $campaign)
+    public function sendTest(Request $request, EmailCampaign $email)
     {
-        $request->validate(['email' => 'required|email']);
-        $testEmail = $request->input('email');
+        $validated = $request->validate([
+            'test_email' => 'required|email|max:255',
+        ]);
+
+        $testEmail = $validated['test_email'];
 
         try {
-            // On simule la création d'un Mailable
-            // Mail::to($testEmail)->send(new CampaignMail($campaign));
+            Mail::to($testEmail)->send(new CampaignMail($email, $testEmail));
 
             return Redirect::back()->with('success', "Email de test envoyé à {$testEmail}.");
-        } catch (\Exception $e) {
-            return Redirect::back()->with('error', "Impossible d'envoyer l'email de test: " . $e->getMessage());
-        }
-    }
+        } catch (\Throwable $e) {
+            Log::error('Erreur envoi test campagne #' . $email->id . ' : ' . $e->getMessage());
 
-    /**
-     * Met en file d'attente l'envoi d'une campagne.
-     *
-     * @param EmailCampaign $campaign
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function send(EmailCampaign $campaign)
-    {
-        if ($campaign->status !== 'draft') {
-            return Redirect::back()->with('warning', 'Cette campagne n\'est pas un brouillon.');
-        }
-        if (empty($campaign->email_list_id)) {
-            return Redirect::back()->with('error', 'Aucune liste de diffusion n\'est associée à cette campagne.');
-        }
-
-        try {
-            $campaign->update([
-                'status' => 'queued',
-                'scheduled_at' => now(), // On envoie maintenant
-            ]);
-
-            // Déclencher le job d'envoi
-            // SendEmailCampaignJob::dispatch($campaign);
-
-            return Redirect::route('marketing.campaigns.show', $campaign)
-                ->with('success', 'La campagne a été mise dans la file d\'attente pour envoi.');
-        } catch (\Exception $e) {
-            return Redirect::back()->with('error', 'Erreur lors du lancement de la campagne: ' . $e->getMessage());
+            return Redirect::back()->with('error', "Impossible d'envoyer l'email de test : " . $e->getMessage());
         }
     }
 }

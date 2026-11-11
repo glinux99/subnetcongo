@@ -248,6 +248,8 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('marketplace')->name('marketplace.')->group(function () {
         Route::get('/', [App\Http\Controllers\MarketplaceController::class, 'index'])->name('index');
         Route::get('/cart', [App\Http\Controllers\MarketplaceController::class, 'cart'])->name('cart');
+        Route::post('/cart/apply-coupon', [App\Http\Controllers\MarketplaceController::class, 'applyCoupon'])->name('cart.apply-coupon');
+        Route::delete('/cart/remove-coupon', [App\Http\Controllers\MarketplaceController::class, 'removeCoupon'])->name('cart.remove-coupon');
         Route::post('/cart/enroll-free', [App\Http\Controllers\MarketplaceController::class, 'enrollFreeCart'])->name('cart.enroll-free');
         Route::post('/country', [App\Http\Controllers\MarketplaceController::class, 'setCountry'])->name('country.set');
         Route::get('/checkout', [App\Http\Controllers\MarketplaceController::class, 'checkout'])->name('checkout');
@@ -347,7 +349,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('forums/threads/{id}/upvote', [App\Http\Controllers\Social\ForumController::class, 'upvoteThread'])->name('forums.threads.upvote');
         // Liens historiques numériques -> redirection 301 vers le ticket_number
         Route::get('support/{legacy}', function ($legacy) {
-            $ticket = \App\Models\SupportTicket::where('ticket_number', $legacy)->first();
+            $ticket = \App\Models\SupportTicket::where('ticket_number', $legacy)->first()
+                ?? (ctype_digit((string) $legacy) ? \App\Models\SupportTicket::find((int) $legacy) : null);
             abort_if(! $ticket, 404);
             return response()->redirectToRoute('social.support.show', $ticket->ticket_number, 301);
         })->whereNumber('legacy');
@@ -361,8 +364,14 @@ Route::middleware(['auth'])->group(function () {
 
     // 5. Marketing & Ventes
     Route::prefix('marketing')->name('marketing.')->middleware(['has_role:superadmin,admin,finance-manager,marketing-manager'])->group(function () {
+        Route::get('emails/duplicate/{email}', [App\Http\Controllers\Marketing\EmailCampaignController::class, 'duplicate'])->name('emails.duplicate');
+        Route::post('emails/{email}/send-test', [App\Http\Controllers\Marketing\EmailCampaignController::class, 'sendTest'])->name('emails.send-test');
         Route::resource('emails', App\Http\Controllers\Marketing\EmailCampaignController::class);
         Route::resource('coupons', App\Http\Controllers\Marketing\CouponController::class);
+        Route::get('affiliates/export', [App\Http\Controllers\Marketing\AffiliateController::class, 'export'])->name('affiliates.export');
+        Route::post('affiliates/{affiliate}/approve', [App\Http\Controllers\Marketing\AffiliateController::class, 'approve'])->name('affiliates.approve');
+        Route::post('affiliates/{affiliate}/reject', [App\Http\Controllers\Marketing\AffiliateController::class, 'reject'])->name('affiliates.reject');
+        Route::post('affiliates/{affiliate}/generate-payout', [App\Http\Controllers\Marketing\AffiliateController::class, 'generatePayout'])->name('affiliates.generate-payout');
         Route::resource('affiliates', App\Http\Controllers\Marketing\AffiliateController::class);
     });
 
