@@ -17,16 +17,17 @@ class UserSeeder extends Seeder
         );
         $superAdmin->assignRole('superadmin');
 
-        // 2. Création de Formateurs (Instructors) avec des noms réalistes
+        // 2. Création de Formateurs (Instructors) — équipe réelle SubNet Congo
+        // (emails fournis par WhatsApp ; emails manquants basés sur le pattern gmail existant —
+        //  à corriger confirmés par le client.)
         $instructors = [
-            ['name' => 'Jean-Pierre Mbemba', 'email' => 'jp.mbemba@subnetcongo.net', 'specialty' => 'Réseaux Cisco'],
-            ['name' => 'Marie-Claire N\'Gouaka', 'email' => 'mc.ngouaka@subnetcongo.net', 'specialty' => 'Cybersécurité'],
-            ['name' => 'François Makosso', 'email' => 'f.makosso@subnetcongo.net', 'specialty' => 'Télécoms Satellites'],
-            ['name' => 'Aminata Diallo', 'email' => 'a.diallo@subnetcongo.net', 'specialty' => 'Cloud & DevOps'],
-            ['name' => 'Pierre Massamba', 'email' => 'p.massamba@subnetcongo.net', 'specialty' => 'Développement Web'],
-            ['name' => 'Claudette Mouamba', 'email' => 'c.mouamba@subnetcongo.net', 'specialty' => 'Linux & Open Source'],
-            ['name' => 'Antoine Ondongo', 'email' => 'a.ondongo@subnetcongo.net', 'specialty' => 'Infrastructure'],
-            ['name' => 'Céline Ngouabi', 'email' => 'c.ngouabi@subnetcongo.net', 'specialty' => 'Sécurité Réseau'],
+            ['name' => 'Katya Muholu Joackim',  'email' => 'joackimmuholu@gmail.com',  'specialty' => 'Réseaux & Sécurité Électronique'],
+            ['name' => 'Salomon Makanga',       'email' => 'makangasalomon@gmail.com', 'specialty' => 'Bureautique & Gestion de Projets'],
+            ['name' => 'Djongelo Okito Albert', 'email' => 'djongueloalbert@gmail.com','specialty' => 'Réseaux Informatiques'],
+            ['name' => 'Ephatas Kasyono Prisca','email' => 'ephatakasyono@gmail.com',  'specialty' => 'Réseaux Informatiques'],
+            ['name' => 'Marc Tubadi',           'email' => 'marctubadi1@gmail.com',    'specialty' => 'Robotique, Systèmes Embarqués & IA'],
+            ['name' => 'Akose Stiva',           'email' => 'akosestive@gmail.com',     'specialty' => 'Systèmes Embarqués & IoT'],
+            ['name' => 'Tonny Kayayalo',        'email' => 'tonnykayayalo@gmail.com',  'specialty' => 'Télécommunications & VSAT'],
         ];
 
         foreach ($instructors as $instructorData) {
@@ -75,6 +76,6 @@ class UserSeeder extends Seeder
             $student->assignRole('student');
         }
 
-        $this->command->info('8 instructeurs et 20 étudiants créés avec succès !');
+        $this->command->info('7 instructeurs et 20 étudiants créés avec succès !');
     }
 }

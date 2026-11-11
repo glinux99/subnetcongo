@@ -2,6 +2,7 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import axios from 'axios';
 import { ref, computed, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -9,10 +10,12 @@ import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
+import SncSection from '@/Components/SncSection.vue';
 import Editor from 'primevue/editor';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import SncEmailChips from '@/Components/EmailChipsInput.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 
 const props = defineProps({
@@ -29,6 +32,7 @@ const props = defineProps({
     campaign: { type: Object, default: null },
     recipientsCount: { type: Number, default: 0 },
     recipientsPreview: { type: Array, default: () => [] },
+    audienceGroups: { type: Array, default: () => [] },
 });
 
 const confirmAction = useConfirmAction();
@@ -45,11 +49,23 @@ const statusOptions = [
     { label: 'Envoyée', value: 'sent' },
 ];
 
-const audienceOptions = [
+const audienceOptions = computed(() => [
     { label: 'Tous les utilisateurs', value: 'all' },
     { label: 'Étudiants', value: 'students' },
     { label: 'Formateurs', value: 'instructors' },
-];
+    { label: 'Groupe d\'audience personnalisé', value: 'group' },
+]);
+
+const groupOptions = computed(() =>
+    (props.audienceGroups || []).map((g) => ({
+        label: `${g.name} (${g.members?.length ?? 0} contact${(g.members?.length ?? 0) > 1 ? 's' : ''})`,
+        value: g.id,
+    }))
+);
+
+const selectedGroup = computed(() =>
+    (props.audienceGroups || []).find((g) => g.id === form.audience_group_id) ?? null
+);
 
 const applyFilters = () => {
     router.get(route('marketing.emails.index'), {
@@ -74,6 +90,9 @@ const emptyForm = () => ({
     from_email: '',
     body: '',
     target_audience: 'all',
+    audience_group_id: null,
+    extra_emails: [],
+    excluded_emails: [],
     status: 'draft',
     scheduled_at: null,
 });
@@ -90,6 +109,9 @@ const fillFromCampaign = (c) => {
     form.from_email = c.from_email ?? '';
     form.body = c.body ?? '';
     form.target_audience = c.target_audience ?? 'all';
+    form.audience_group_id = c.audience_group_id ?? null;
+    form.extra_emails = Array.isArray(c.extra_emails) ? [...c.extra_emails] : [];
+    form.excluded_emails = Array.isArray(c.excluded_emails) ? [...c.excluded_emails] : [];
     form.status = c.status === 'sent' ? 'draft' : (c.status ?? 'draft');
     form.scheduled_at = c.scheduled_at ?? null;
 };
@@ -173,6 +195,100 @@ const submitTest = () => {
     });
 };
 
+// --- Groupes d'audience (CRUD JSON) ---
+const groupsOpen = ref(false);
+const groupsLoading = ref(false);
+const groupsError = ref('');
+const groups = ref([]);
+const newGroup = ref({ name: '', description: '' });
+const memberDrafts = ref({}); // { [groupId]: email string }
+const memberErrors = ref({});
+
+const syncGroups = () => {
+    groups.value = (props.audienceGroups || []).map((g) => ({
+        ...g,
+        members: [...(g.members || [])],
+    }));
+};
+
+const openGroups = async () => {
+    groupsOpen.value = true;
+    groupsLoading.value = true;
+    groupsError.value = '';
+    try {
+        const { data } = await axios.get(route('marketing.audience-groups.index'));
+        groups.value = data.groups || [];
+    } catch (e) {
+        groupsError.value = 'Impossible de charger les groupes.';
+    } finally {
+        groupsLoading.value = false;
+    }
+};
+
+const reloadGroups = async () => {
+    const { data } = await axios.get(route('marketing.audience-groups.index'));
+    groups.value = data.groups || [];
+    router.reload({ only: ['audienceGroups'] });
+};
+
+const createGroup = async () => {
+    groupsError.value = '';
+    try {
+        await axios.post(route('marketing.audience-groups.store'), {
+            name: newGroup.value.name.trim(),
+            description: newGroup.value.description.trim() || null,
+        });
+        newGroup.value = { name: '', description: '' };
+        await reloadGroups();
+    } catch (e) {
+        groupsError.value = e.response?.data?.message || 'Erreur lors de la création du groupe.';
+    }
+};
+
+const deleteGroup = async (g) => {
+    confirmAction({
+        message: `Supprimer le groupe « ${g.name} » ? Les campagnes qui l'utilisent perdront leur audience.`,
+        header: 'Supprimer le groupe',
+        acceptLabel: 'Supprimer',
+        danger: true,
+        accept: async () => {
+            try {
+                await axios.delete(route('marketing.audience-groups.destroy', g.id));
+                if (form.audience_group_id === g.id) form.audience_group_id = null;
+                await reloadGroups();
+            } catch (e) {
+                groupsError.value = 'Impossible de supprimer le groupe.';
+            }
+        },
+    });
+};
+
+const addMember = async (g) => {
+    const raw = (memberDrafts.value[g.id] || '').trim();
+    if (!raw) return;
+    const emails = raw.split(/[\s,;]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const invalid = emails.filter((e) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+    memberErrors.value[g.id] = invalid.length ? `Email invalide : ${invalid.join(', ')}` : '';
+    const valid = emails.filter((e) => !invalid.includes(e));
+    if (!valid.length) return;
+    try {
+        await axios.post(route('marketing.audience-groups.members.store', g.id), { emails: valid });
+        memberDrafts.value[g.id] = '';
+        await reloadGroups();
+    } catch (e) {
+        memberErrors.value[g.id] = e.response?.data?.message || 'Erreur lors de l\'ajout.';
+    }
+};
+
+const removeMember = async (g, m) => {
+    try {
+        await axios.delete(route('marketing.audience-groups.members.destroy', [g.id, m.id]));
+        await reloadGroups();
+    } catch (e) {
+        memberErrors.value[g.id] = 'Impossible de retirer ce contact.';
+    }
+};
+
 // --- Suppression / Duplication ---
 const removeCampaign = (c) => {
     confirmAction({
@@ -211,10 +327,11 @@ const statusSeverity = (s) => ({
     sent: 'success',
 }[s] ?? 'secondary');
 
-const audienceLabel = (a) => ({
+const audienceLabel = (a, c) => ({
     all: 'Tous',
     students: 'Étudiants',
     instructors: 'Formateurs',
+    group: c?.audience_group?.name ? `Groupe : ${c.audience_group.name}` : 'Groupe',
 }[a] ?? a);
 
 const kpis = computed(() => [
@@ -236,7 +353,10 @@ const kpis = computed(() => [
                 icon="pi-envelope"
                 accent="blue"
                 badge="Marketing"
-                :actions="[{ label: 'Nouvelle campagne', icon: 'pi-plus', variant: 'primary', onClick: openCreate }]"
+                :actions="[
+                    { label: 'Groupes d\'audience', icon: 'pi-users', variant: 'secondary', onClick: openGroups },
+                    { label: 'Nouvelle campagne', icon: 'pi-plus', variant: 'primary', onClick: openCreate },
+                ]"
             />
 
             <div class="page-container page-section">
@@ -283,7 +403,7 @@ const kpis = computed(() => [
                     </Column>
                     <Column header="Audience" style="width: 9rem">
                         <template #body="{ data }">
-                            <span class="text-sm text-slate-600">{{ audienceLabel(data.target_audience) }}</span>
+                            <span class="text-sm text-slate-600">{{ audienceLabel(data.target_audience, data) }}</span>
                         </template>
                     </Column>
                     <Column header="Statut" style="width: 9rem">
@@ -326,103 +446,155 @@ const kpis = computed(() => [
         </div>
 
         <!-- DIALOGUE : CRÉATION / ÉDITION (même page) -->
-        <Dialog v-model:visible="formOpen" modal class="snc-dialog" :style="{ width: '46rem' }" :breakpoints="{ '960px': '95vw' }"
-                @hide="closeForm">
-            <template #header>
-                <span class="p-dialog-title flex items-center gap-2">
-                    <i :class="['pi', editingId ? 'pi-pencil' : 'pi-megaphone']"></i>
-                    {{ editingId ? 'Modifier la campagne' : 'Nouvelle campagne' }}
-                </span>
-            </template>
-            <form class="flex flex-col gap-4 pt-2" @submit.prevent="submitWithStatus(form.status)">
-                <div class="field">
-                    <label for="campaign-name" class="font-bold text-slate-700 text-sm mb-1 block">Nom <span class="text-rose-500">*</span></label>
-                    <InputText id="campaign-name" v-model="form.name" class="w-full" :invalid="!!form.errors.name" placeholder="ex : Newsletter de novembre" />
-                    <small v-if="form.errors.name" class="text-rose-500" role="alert">{{ form.errors.name }}</small>
-                </div>
+        <SncDialog
+            v-model:visible="formOpen"
+            :title="editingId ? 'Modifier la campagne' : 'Nouvelle campagne'"
+            subtitle="Rédigez le message, choisissez l'audience et planifiez l'envoi"
+            :icon="editingId ? 'pi-pencil' : 'pi-megaphone'"
+            :icon-class="editingId ? 'from-amber-500 to-orange-500' : 'from-blue-600 to-indigo-600'"
+            width="760px"
+            @hide="closeForm"
+        >
+            <form class="flex flex-col gap-5" @submit.prevent="submitWithStatus(form.status)">
+                <SncSection icon="pi-file-edit" title="Contenu du message" subtitle="Ce que les destinataires verront" icon-class="from-blue-500 to-indigo-600">
+                    <div class="flex flex-col gap-4">
+                        <div class="field">
+                            <label for="campaign-name" class="font-bold text-slate-700 text-sm mb-1 block">Nom <span class="text-rose-500">*</span></label>
+                            <InputText id="campaign-name" v-model="form.name" class="w-full" :invalid="!!form.errors.name" placeholder="ex : Newsletter de novembre" />
+                            <small v-if="form.errors.name" class="text-rose-500" role="alert">{{ form.errors.name }}</small>
+                        </div>
 
-                <div class="field">
-                    <label for="campaign-subject" class="font-bold text-slate-700 text-sm mb-1 block">Objet <span class="text-rose-500">*</span></label>
-                    <InputText id="campaign-subject" v-model="form.subject" class="w-full" :invalid="!!form.errors.subject" placeholder="Objet visible par les destinataires" />
-                    <small v-if="form.errors.subject" class="text-rose-500" role="alert">{{ form.errors.subject }}</small>
-                </div>
+                        <div class="field">
+                            <label for="campaign-subject" class="font-bold text-slate-700 text-sm mb-1 block">Objet <span class="text-rose-500">*</span></label>
+                            <InputText id="campaign-subject" v-model="form.subject" class="w-full" :invalid="!!form.errors.subject" placeholder="Objet visible par les destinataires" />
+                            <small v-if="form.errors.subject" class="text-rose-500" role="alert">{{ form.errors.subject }}</small>
+                        </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="field">
-                        <label for="campaign-from-name" class="font-bold text-slate-700 text-sm mb-1 block">Nom d'expéditeur</label>
-                        <InputText id="campaign-from-name" v-model="form.from_name" class="w-full" :invalid="!!form.errors.from_name" placeholder="SubNetCongo Academy" />
-                        <small v-if="form.errors.from_name" class="text-rose-500" role="alert">{{ form.errors.from_name }}</small>
+                        <div class="field">
+                            <label for="campaign-body" class="font-bold text-slate-700 text-sm mb-1 block">Corps du message <span class="text-rose-500">*</span></label>
+                            <Editor id="campaign-body" v-model="form.body" editorStyle="height: 220px" />
+                            <small v-if="form.errors.body" class="text-rose-500" role="alert">{{ form.errors.body }}</small>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label for="campaign-from-email" class="font-bold text-slate-700 text-sm mb-1 block">Email d'expéditeur</label>
-                        <InputText id="campaign-from-email" v-model="form.from_email" class="w-full" :invalid="!!form.errors.from_email" placeholder="academy@subnetcongo.net" />
-                        <small v-if="form.errors.from_email" class="text-rose-500" role="alert">{{ form.errors.from_email }}</small>
+                </SncSection>
+
+                <SncSection icon="pi-send" title="Expédition & audience" subtitle="Expéditeur et destinataires ciblés" icon-class="from-emerald-500 to-teal-600">
+                    <div class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="field">
+                                <label for="campaign-from-name" class="font-bold text-slate-700 text-sm mb-1 block">Nom d'expéditeur</label>
+                                <InputText id="campaign-from-name" v-model="form.from_name" class="w-full" :invalid="!!form.errors.from_name" placeholder="SubNetCongo Academy" />
+                                <small v-if="form.errors.from_name" class="text-rose-500" role="alert">{{ form.errors.from_name }}</small>
+                            </div>
+                            <div class="field">
+                                <label for="campaign-from-email" class="font-bold text-slate-700 text-sm mb-1 block">Email d'expéditeur</label>
+                                <InputText id="campaign-from-email" v-model="form.from_email" class="w-full" :invalid="!!form.errors.from_email" placeholder="academy@subnetcongo.net" />
+                                <small v-if="form.errors.from_email" class="text-rose-500" role="alert">{{ form.errors.from_email }}</small>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="campaign-audience" class="font-bold text-slate-700 text-sm mb-1 block">Audience <span class="text-rose-500">*</span></label>
+                            <Select id="campaign-audience" v-model="form.target_audience" :options="audienceOptions" optionLabel="label" optionValue="value" class="w-full" :invalid="!!form.errors.target_audience" />
+                            <small v-if="form.errors.target_audience" class="text-rose-500" role="alert">{{ form.errors.target_audience }}</small>
+                        </div>
+
+                        <div v-if="form.target_audience === 'group'" class="field">
+                            <label for="campaign-group" class="font-bold text-slate-700 text-sm mb-1 block">Groupe d'audience <span class="text-rose-500">*</span></label>
+                            <Select
+                                id="campaign-group"
+                                v-model="form.audience_group_id"
+                                :options="groupOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Choisir un groupe…"
+                                class="w-full"
+                                :invalid="!!form.errors.audience_group_id"
+                                :disabled="!groupOptions.length"
+                            />
+                            <div class="flex items-center justify-between mt-1.5">
+                                <small v-if="form.errors.audience_group_id" class="text-rose-500" role="alert">{{ form.errors.audience_group_id }}</small>
+                                <small v-else-if="selectedGroup" class="text-slate-400">
+                                    {{ selectedGroup.members?.length ?? 0 }} contact{{ (selectedGroup.members?.length ?? 0) > 1 ? 's' : '' }} dans ce groupe
+                                </small>
+                                <small v-else-if="!groupOptions.length" class="text-slate-400">Aucun groupe — créez-en un via « Groupes d'audience »</small>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-4">
+                            <SncEmailChips
+                                v-model="form.extra_emails"
+                                label="Emails supplémentaires"
+                                placeholder="ajouter un email…"
+                                hint="Ces adresses recevront la campagne en plus de l'audience sélectionnée."
+                            />
+                            <SncEmailChips
+                                v-model="form.excluded_emails"
+                                label="Emails à exclure"
+                                placeholder="exclure un email…"
+                                hint="Ces adresses ne recevront pas la campagne, même si elles font partie de l'audience."
+                            />
+                        </div>
                     </div>
-                </div>
-
-                <div class="field">
-                    <label for="campaign-audience" class="font-bold text-slate-700 text-sm mb-1 block">Audience <span class="text-rose-500">*</span></label>
-                    <Select id="campaign-audience" v-model="form.target_audience" :options="audienceOptions" optionLabel="label" optionValue="value" class="w-full" :invalid="!!form.errors.target_audience" />
-                    <small v-if="form.errors.target_audience" class="text-rose-500" role="alert">{{ form.errors.target_audience }}</small>
-                </div>
-
-                <div class="field">
-                    <label for="campaign-body" class="font-bold text-slate-700 text-sm mb-1 block">Corps du message <span class="text-rose-500">*</span></label>
-                    <Editor id="campaign-body" v-model="form.body" editorStyle="height: 220px" />
-                    <small v-if="form.errors.body" class="text-rose-500" role="alert">{{ form.errors.body }}</small>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <Button type="button" label="Annuler" text severity="secondary" @click="closeForm" />
-                    <Button type="button" label="Enregistrer le brouillon" icon="pi pi-save" outlined severity="secondary" :loading="form.processing" @click="submitWithStatus('draft')" />
-                    <Button type="button" label="Envoyer maintenant" icon="pi pi-send" :loading="form.processing" @click="submitWithStatus('queued')" />
-                </div>
+                </SncSection>
             </form>
-        </Dialog>
+
+            <template #footer>
+                <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="closeForm" />
+                <Button label="Enregistrer le brouillon" icon="pi pi-save" outlined severity="secondary" :loading="form.processing" @click="submitWithStatus('draft')" />
+                <Button label="Envoyer maintenant" icon="pi pi-send" :loading="form.processing" @click="submitWithStatus('queued')" />
+            </template>
+        </SncDialog>
 
         <!-- DIALOGUE : APERÇU (mode show) -->
-        <Dialog v-model:visible="previewOpen" modal class="snc-dialog" :style="{ width: '46rem' }" :breakpoints="{ '960px': '95vw' }"
-                @hide="closePreview">
-            <template #header>
-                <span class="p-dialog-title flex items-center gap-2">
-                    <i class="pi pi-eye"></i>
-                    Aperçu de la campagne
-                </span>
-            </template>
-            <div v-if="campaign" class="flex flex-col gap-4 pt-2">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <div class="bg-slate-50 rounded-xl p-3">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Statut</p>
-                        <Tag :value="statusLabel(campaign.status)" :severity="statusSeverity(campaign.status)" class="mt-1" />
+        <SncDialog
+            v-model:visible="previewOpen"
+            title="Aperçu de la campagne"
+            subtitle="Statistiques, contenu et destinataires ciblés"
+            icon="pi-eye"
+            icon-class="from-violet-500 to-purple-600"
+            width="760px"
+            @hide="closePreview"
+        >
+            <div v-if="campaign" class="flex flex-col gap-5">
+                <SncSection icon="pi-chart-bar" title="Statistiques d'envoi" icon-class="from-blue-500 to-indigo-600">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                        <div class="bg-slate-50 rounded-xl p-3">
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Statut</p>
+                            <Tag :value="statusLabel(campaign.status)" :severity="statusSeverity(campaign.status)" class="mt-1" />
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-3">
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Audience</p>
+                            <p class="font-bold text-slate-800 mt-1">{{ audienceLabel(campaign.target_audience, campaign) }}</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-3">
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Envoyés</p>
+                            <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.sent_count ?? 0 }} / {{ campaign.total_recipients ?? 0 }}</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-3">
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Échecs</p>
+                            <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.bounces_count ?? 0 }}</p>
+                        </div>
                     </div>
-                    <div class="bg-slate-50 rounded-xl p-3">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Audience</p>
-                        <p class="font-bold text-slate-800 mt-1">{{ audienceLabel(campaign.target_audience) }}</p>
-                    </div>
-                    <div class="bg-slate-50 rounded-xl p-3">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Envoyés</p>
-                        <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.sent_count ?? 0 }} / {{ campaign.total_recipients ?? 0 }}</p>
-                    </div>
-                    <div class="bg-slate-50 rounded-xl p-3">
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Échecs</p>
-                        <p class="font-bold text-slate-800 mt-1 tabular-nums">{{ campaign.bounces_count ?? 0 }}</p>
-                    </div>
-                </div>
+                </SncSection>
 
-                <div>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Objet</p>
-                    <p class="font-bold text-slate-800">{{ campaign.subject }}</p>
-                </div>
+                <SncSection icon="pi-envelope" title="Contenu" subtitle="Objet et corps du message" icon-class="from-emerald-500 to-teal-600">
+                    <div class="flex flex-col gap-4">
+                        <div>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Objet</p>
+                            <p class="font-bold text-slate-800">{{ campaign.subject }}</p>
+                        </div>
 
-                <div>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Corps</p>
-                    <!-- HTML rédigé par un administrateur, rendu tel quel -->
-                    <div class="border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto text-sm text-slate-700" v-html="campaign.body"></div>
-                </div>
+                        <div>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Corps</p>
+                            <!-- HTML rédigé par un administrateur, rendu tel quel -->
+                            <div class="border border-slate-200 rounded-xl p-4 max-h-64 overflow-y-auto text-sm text-slate-700 bg-white" v-html="campaign.body"></div>
+                        </div>
+                    </div>
+                </SncSection>
 
-                <div>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Destinataires ciblés ({{ recipientsCount }})</p>
-                    <div class="border border-slate-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-slate-100">
+                <SncSection icon="pi-users" title="Destinataires ciblés" :subtitle="`${recipientsCount} destinataire(s)`" icon-class="from-amber-500 to-orange-500">
+                    <div class="border border-slate-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-slate-100 bg-white">
                         <div v-for="r in recipientsPreview" :key="r.id" class="flex justify-between items-center px-4 py-2 text-sm">
                             <span class="font-medium text-slate-700">{{ r.name }}</span>
                             <span class="text-slate-400">{{ r.email }}</span>
@@ -432,34 +604,131 @@ const kpis = computed(() => [
                         </p>
                         <p v-if="recipientsCount === 0" class="px-4 py-3 text-sm text-slate-400 italic">Aucun destinataire pour cette audience.</p>
                     </div>
-                </div>
+                </SncSection>
             </div>
+
             <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button v-if="campaign && campaign.status !== 'sent'" label="Modifier" icon="pi pi-pencil" outlined severity="secondary" @click="closePreview(); openEdit(campaign)" />
-                    <Button label="Fermer" text severity="secondary" @click="closePreview" />
-                </div>
+                <Button v-if="campaign && campaign.status !== 'sent'" label="Modifier" icon="pi pi-pencil" outlined severity="secondary" @click="closePreview(); openEdit(campaign)" />
+                <Button label="Fermer" icon="pi pi-times" text severity="secondary" @click="closePreview" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- DIALOGUE : ENVOI TEST -->
-        <Dialog v-model:visible="testDialogOpen" modal class="snc-dialog" :style="{ width: '28rem' }">
-            <template #header>
-                <span class="p-dialog-title flex items-center gap-2">
-                    <i class="pi pi-send"></i>
-                    Envoyer un email de test
-                </span>
-            </template>
-            <form class="flex flex-col gap-3 pt-2" @submit.prevent="submitTest">
-                <p class="text-sm text-slate-500">Un aperçu de la campagne sera envoyé immédiatement à cette adresse.</p>
-                <InputText v-model="testForm.test_email" type="email" placeholder="destinataire@exemple.com" class="w-full" :invalid="!!testForm.errors.test_email" aria-label="Email de test" />
-                <small v-if="testForm.errors.test_email" class="text-rose-500" role="alert">{{ testForm.errors.test_email }}</small>
-                <div class="flex justify-end gap-2">
-                    <Button type="button" label="Annuler" text severity="secondary" @click="testDialogOpen = false" />
-                    <Button type="submit" label="Envoyer le test" icon="pi pi-send" :loading="testForm.processing" />
+        <SncDialog
+            v-model:visible="testDialogOpen"
+            title="Envoyer un email de test"
+            subtitle="Un aperçu de la campagne sera envoyé immédiatement"
+            icon="pi-send"
+            icon-class="from-cyan-500 to-blue-600"
+            width="440px"
+        >
+            <form class="flex flex-col gap-4" @submit.prevent="submitTest">
+                <div class="field">
+                    <label for="test-email" class="font-bold text-slate-700 text-sm mb-1 block">Email de test <span class="text-rose-500">*</span></label>
+                    <InputText id="test-email" v-model="testForm.test_email" type="email" placeholder="destinataire@exemple.com" class="w-full" :invalid="!!testForm.errors.test_email" aria-label="Email de test" />
+                    <small v-if="testForm.errors.test_email" class="text-rose-500" role="alert">{{ testForm.errors.test_email }}</small>
                 </div>
             </form>
-        </Dialog>
+
+            <template #footer>
+                <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="testDialogOpen = false" />
+                <Button type="submit" label="Envoyer le test" icon="pi pi-send" :loading="testForm.processing" @click="submitTest" />
+            </template>
+        </SncDialog>
+
+        <!-- DIALOGUE : GROUPES D'AUDIENCE -->
+        <SncDialog
+            v-model:visible="groupsOpen"
+            title="Groupes d'audience"
+            subtitle="Créez et gérez vos listes de contacts pour les campagnes"
+            icon="pi-users"
+            icon-class="from-indigo-500 to-violet-600"
+            width="720px"
+        >
+            <div class="p-fluid flex flex-col gap-4">
+                <p v-if="groupsError" class="text-rose-500 text-sm font-semibold bg-rose-50 border border-rose-200 rounded-lg px-3 py-2" role="alert">{{ groupsError }}</p>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Nouveau groupe</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputText v-model="newGroup.name" placeholder="Nom du groupe (ex. Anciens étudiants)" :invalid="!newGroup.name.trim() && !!groupsError" aria-label="Nom du groupe" />
+                        <InputText v-model="newGroup.description" placeholder="Description (optionnel)" aria-label="Description du groupe" />
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <Button label="Créer le groupe" icon="pi pi-plus" size="small" :disabled="!newGroup.name.trim()" @click="createGroup" />
+                    </div>
+                </div>
+
+                <div v-if="groupsLoading" class="py-10 text-center text-slate-400">
+                    <i class="pi pi-spin pi-spinner text-2xl"></i>
+                </div>
+
+                <div v-else-if="!groups.length" class="py-10 text-center text-slate-400">
+                    <i class="pi pi-users text-3xl mb-2 block"></i>
+                    Aucun groupe pour le moment. Créez votre premier groupe ci-dessus.
+                </div>
+
+                <div v-else class="space-y-3">
+                    <div
+                        v-for="g in groups"
+                        :key="g.id"
+                        class="rounded-xl border border-slate-200 bg-white overflow-hidden"
+                    >
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-50/80 border-b border-slate-100">
+                            <div class="min-w-0">
+                                <p class="font-bold text-slate-800 truncate">{{ g.name }}</p>
+                                <p v-if="g.description" class="text-xs text-slate-500 truncate">{{ g.description }}</p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full px-2.5 py-1">
+                                    <i class="pi pi-user text-[10px]"></i> {{ g.members?.length ?? 0 }}
+                                </span>
+                                <Button icon="pi pi-trash" text rounded severity="danger" size="small" aria-label="Supprimer le groupe" @click="deleteGroup(g)" />
+                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            <div v-if="g.members?.length" class="flex flex-wrap gap-2 mb-3">
+                                <span
+                                    v-for="m in g.members"
+                                    :key="m.id"
+                                    class="inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-semibold"
+                                >
+                                    <i class="pi pi-envelope text-[10px] opacity-70"></i>
+                                    {{ m.email }}
+                                    <button
+                                        type="button"
+                                        class="w-4 h-4 rounded-full bg-indigo-200/70 hover:bg-rose-500 hover:text-white text-indigo-700 flex items-center justify-center transition-colors"
+                                        :aria-label="`Retirer ${m.email}`"
+                                        @click="removeMember(g, m)"
+                                    >
+                                        <i class="pi pi-times text-[9px]"></i>
+                                    </button>
+                                </span>
+                            </div>
+                            <p v-else class="text-xs text-slate-400 mb-3">Aucun contact dans ce groupe.</p>
+
+                            <div class="flex gap-2">
+                                <InputText
+                                    v-model="memberDrafts[g.id]"
+                                    placeholder="Ajouter un email (Entrée pour valider)…"
+                                    class="flex-1"
+                                    :class="{ 'p-invalid': !!memberErrors[g.id] }"
+                                    @keydown.enter.prevent="addMember(g)"
+                                    :aria-label="`Ajouter un contact à ${g.name}`"
+                                />
+                                <Button icon="pi pi-plus" severity="secondary" outlined :aria-label="'Ajouter'" @click="addMember(g)" />
+                            </div>
+                            <small v-if="memberErrors[g.id]" class="text-rose-500 mt-1 block" role="alert">{{ memberErrors[g.id] }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Fermer" icon="pi pi-times" text severity="secondary" @click="groupsOpen = false" />
+            </template>
+        </SncDialog>
     </AppLayout>
 </template>
 

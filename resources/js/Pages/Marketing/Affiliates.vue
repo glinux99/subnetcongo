@@ -16,7 +16,8 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
+import SncSection from '@/Components/SncSection.vue';
 import Avatar from 'primevue/avatar';
 import InputNumber from 'primevue/inputnumber';
 import Divider from 'primevue/divider';
@@ -471,15 +472,20 @@ const submitNewAffiliate = () => {
             </Card>
 
             <!-- DIALOG : DÉTAIL AFFILIÉ -->
-            <Dialog v-model:visible="detailVisible" :modal="true" class="snc-dialog" :style="{ width: '950px', maxWidth: '95vw' }" v-if="affiliateDetail">
-                <template #header>
-                    <span class="p-dialog-title flex items-center gap-2">
-                        <i class="pi pi-id-card"></i>
-                        Détail du partenaire
-                    </span>
-                </template>
-                <div class="grid grid-cols-12 gap-6 pt-2">
-                    <div class="col-span-12 lg:col-span-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+            <SncDialog
+                v-model:visible="detailVisible"
+                title="Détail du partenaire"
+                subtitle="Profil, performances et historique des commissions"
+                icon="pi-id-card"
+                icon-class="from-blue-600 to-indigo-600"
+                width="960px"
+                v-if="affiliateDetail"
+            >
+                <div class="grid grid-cols-12 gap-5">
+                    <div class="col-span-12">
+                    <SncSection icon="pi-user" title="Profil & performances" subtitle="Identité, code de parrainage et indicateurs clés" icon-class="from-slate-600 to-slate-700">
+                    <div class="grid grid-cols-12 gap-6">
+                    <div class="col-span-12 lg:col-span-4">
                         <div class="text-center mb-4">
                             <Avatar :label="initials(affiliateDetail.name)" shape="circle" size="xlarge" class="bg-blue-100 text-blue-700 font-black text-2xl mb-3" />
                             <h3 class="text-xl font-black text-slate-800">{{ affiliateDetail.name }}</h3>
@@ -519,13 +525,6 @@ const submitNewAffiliate = () => {
                                 <p class="text-[9px] font-black text-rose-400 uppercase">À payer</p>
                                 <p class="text-lg font-black text-rose-700">{{ fmtMoney(affiliateDetail.unpaid_earnings) }}</p>
                             </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <Button v-if="affiliateDetail.status === 'pending'" label="Approuver" icon="pi pi-check" class="p-button-success p-button-sm" @click="approveAffiliate(affiliateDetail)" />
-                            <Button v-if="affiliateDetail.status === 'pending'" label="Refuser" icon="pi pi-times" class="p-button-danger p-button-outlined p-button-sm" @click="rejectAffiliate(affiliateDetail)" />
-                            <Button label="Générer un paiement" icon="pi pi-wallet" class="p-button-warning p-button-sm" :disabled="Number(affiliateDetail.unpaid_earnings) <= 0" @click="generatePayout(affiliateDetail)" />
-                            <Button label="Supprimer" icon="pi pi-trash" class="p-button-danger p-button-text p-button-sm" @click="destroyAffiliate(affiliateDetail)" />
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -569,48 +568,65 @@ const submitNewAffiliate = () => {
 
                         <p v-if="affiliateDetail.notes" class="mt-4 text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3"><strong>Notes :</strong> {{ affiliateDetail.notes }}</p>
                     </div>
+                    </div>
+                    </SncSection>
+                    </div>
                 </div>
-            </Dialog>
+
+                <template #footer>
+                    <Button label="Fermer" icon="pi pi-times" text severity="secondary" @click="detailVisible = false" />
+                    <Button v-if="affiliateDetail.status === 'pending'" label="Approuver" icon="pi pi-check" severity="success" size="small" @click="approveAffiliate(affiliateDetail)" />
+                    <Button v-if="affiliateDetail.status === 'pending'" label="Refuser" icon="pi pi-times" severity="danger" outlined size="small" @click="rejectAffiliate(affiliateDetail)" />
+                    <Button label="Générer un paiement" icon="pi pi-wallet" severity="warning" outlined size="small" :disabled="Number(affiliateDetail.unpaid_earnings) <= 0" @click="generatePayout(affiliateDetail)" />
+                    <Button label="Supprimer" icon="pi pi-trash" severity="danger" text size="small" @click="destroyAffiliate(affiliateDetail)" />
+                </template>
+            </SncDialog>
 
             <!-- DIALOG : NOUVEL AFFILIÉ -->
-            <Dialog v-model:visible="showNewDialog" :modal="true" class="snc-dialog" :style="{ width: '480px' }">
-                <template #header>
-                    <span class="p-dialog-title flex items-center gap-2">
-                        <i class="pi pi-user-plus"></i>
-                        Nouvel affilié
-                    </span>
-                </template>
-                <form class="p-fluid space-y-4 pt-2" @submit.prevent="submitNewAffiliate">
-                    <div class="field">
-                        <label for="aff-name" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Nom complet</label>
-                        <InputText id="aff-name" v-model="form.name" placeholder="ex : Grâce Mutombo" :class="{ 'p-invalid': form.errors.name }" />
-                        <small class="p-error" v-if="form.errors.name">{{ form.errors.name }}</small>
-                    </div>
-                    <div class="field">
-                        <label for="aff-email" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Email</label>
-                        <InputText id="aff-email" v-model="form.email" type="email" placeholder="ex : partenaire@domaine.cd" :class="{ 'p-invalid': form.errors.email || clientEmailError }" />
-                        <small class="p-error" v-if="clientEmailError">{{ clientEmailError }}</small>
-                        <small class="p-error" v-else-if="form.errors.email">{{ form.errors.email }}</small>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="field">
-                            <label for="aff-tier" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Tier</label>
-                            <Select id="aff-tier" v-model="form.tier" :options="tiers" optionLabel="label" optionValue="value" class="w-full" />
-                            <small class="p-error" v-if="form.errors.tier">{{ form.errors.tier }}</small>
+            <SncDialog
+                v-model:visible="showNewDialog"
+                title="Nouvel affilié"
+                subtitle="Créez une demande de partenariat avec commission personnalisée"
+                icon="pi-user-plus"
+                icon-class="from-emerald-500 to-teal-600"
+                width="560px"
+            >
+                <form class="flex flex-col gap-4" @submit.prevent="submitNewAffiliate">
+                    <SncSection icon="pi-id-card" title="Informations du partenaire" icon-class="from-blue-500 to-indigo-600">
+                        <div class="flex flex-col gap-4">
+                            <div class="field">
+                                <label for="aff-name" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Nom complet</label>
+                                <InputText id="aff-name" v-model="form.name" placeholder="ex : Grâce Mutombo" class="w-full" :class="{ 'p-invalid': form.errors.name }" />
+                                <small class="p-error" v-if="form.errors.name">{{ form.errors.name }}</small>
+                            </div>
+                            <div class="field">
+                                <label for="aff-email" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Email</label>
+                                <InputText id="aff-email" v-model="form.email" type="email" placeholder="ex : partenaire@domaine.cd" class="w-full" :class="{ 'p-invalid': form.errors.email || clientEmailError }" />
+                                <small class="p-error" v-if="clientEmailError">{{ clientEmailError }}</small>
+                                <small class="p-error" v-else-if="form.errors.email">{{ form.errors.email }}</small>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="field">
+                                    <label for="aff-tier" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Tier</label>
+                                    <Select id="aff-tier" v-model="form.tier" :options="tiers" optionLabel="label" optionValue="value" class="w-full" />
+                                    <small class="p-error" v-if="form.errors.tier">{{ form.errors.tier }}</small>
+                                </div>
+                                <div class="field">
+                                    <label for="aff-rate" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Commission (%)</label>
+                                    <InputNumber id="aff-rate" v-model="form.commission_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="0" :maxFractionDigits="2" class="w-full" />
+                                    <small class="p-error" v-if="form.errors.commission_rate">{{ form.errors.commission_rate }}</small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="aff-rate" class="text-xs font-bold text-slate-500 uppercase mb-1 block">Commission (%)</label>
-                            <InputNumber id="aff-rate" v-model="form.commission_rate" suffix=" %" :min="0" :max="100" :minFractionDigits="0" :maxFractionDigits="2" class="w-full" />
-                            <small class="p-error" v-if="form.errors.commission_rate">{{ form.errors.commission_rate }}</small>
-                        </div>
-                    </div>
+                    </SncSection>
                     <p class="text-[11px] text-slate-400 leading-snug">L'affilié sera créé avec le statut <strong>En attente</strong>. Il devra être approuvé avant de pouvoir générer des commissions. Si l'email existe déjà, il sera rattaché à ce compte.</p>
-                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
-                        <Button type="button" label="Annuler" class="p-button-text p-button-secondary" @click="showNewDialog = false" />
-                        <Button type="submit" label="Créer la demande" icon="pi pi-check" :loading="form.processing" />
-                    </div>
                 </form>
-            </Dialog>
+
+                <template #footer>
+                    <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="showNewDialog = false" />
+                    <Button type="submit" label="Créer la demande" icon="pi pi-check" :loading="form.processing" @click="submitNewAffiliate" />
+                </template>
+            </SncDialog>
 
             <footer class="mt-12 text-center text-slate-400 text-xs pb-6 font-medium">
                 © 2026 SubNetCongo — Programme d'affiliation

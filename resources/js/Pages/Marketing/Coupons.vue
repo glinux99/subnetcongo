@@ -427,153 +427,341 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
         </div>
 
         <!-- Dialogue création / édition -->
-        <SncDialog
-            v-model:visible="couponDialog"
-            :title="dialogTitle"
-            subtitle="Configurez la remise, ses limites et sa période de validité"
-            :icon="mode === 'edit' ? 'pi-pencil' : 'pi-ticket'"
-            width="720px"
-            @hide="closeDialog"
+     <SncDialog
+    v-model:visible="couponDialog"
+    :title="dialogTitle"
+    subtitle="Configurez la remise commerciale, ses restrictions et sa période d'éligibilité"
+    :icon="mode === 'edit' ? 'pi-pencil' : 'pi-ticket'"
+    width="760px"
+    @hide="closeDialog"
+>
+    <div class="space-y-6 py-1">
+
+        <!-- ============================================================== -->
+        <!-- LIVE TICKET PREVIEW (Effet Wow / Feedback Visuel Instantané)    -->
+        <!-- ============================================================== -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-[#0B1120] to-slate-900 border border-slate-800 p-4 sm:p-5 shadow-xl">
+            <!-- Cercles découpe coupon (effet ticket) -->
+            <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#05070E] border-r border-slate-800"></div>
+            <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#05070E] border-l border-slate-800"></div>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+                <div class="flex items-center gap-3.5 text-center sm:text-left">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/20 to-rose-600/5 border border-rose-500/30 flex items-center justify-center text-rose-500 shrink-0">
+                        <i class="pi pi-ticket text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 justify-center sm:justify-start">
+                            <span class="font-mono text-base sm:text-lg font-black tracking-wider text-white">
+                                {{ couponForm.code || 'SERPENT-XXXXXX' }}
+                            </span>
+                            <span v-if="couponForm.is_active" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span> ACTIF
+                            </span>
+                            <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700/50 text-slate-400 border border-slate-600">
+                                DÉSACTIVÉ
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            {{ couponForm.description || 'Aucune note interne renseignée' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Montant Badge -->
+                <div class="text-center sm:text-right bg-white/[0.04] sm:bg-transparent px-4 py-2 rounded-xl border border-white/5 sm:border-none w-full sm:w-auto">
+                    <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold block">Réduction</span>
+                    <span class="text-xl sm:text-2xl font-black text-rose-500 font-mono">
+                        {{ couponForm.discount_value ? (couponForm.discount_type === 'percent' ? `-${couponForm.discount_value}%` : `-${couponForm.discount_value} $`) : '0.00' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- SECTION 1 : CODE & IDENTIFIANT                                 -->
+        <!-- ============================================================== -->
+        <SncSection 
+            icon="pi-key" 
+            title="Identifiant & Description" 
+            subtitle="Code d'activation requis par le client et usage interne" 
+            icon-class="from-indigo-600 to-slate-800"
         >
-            <div class="space-y-5">
-            <!-- Section : informations -->
-            <SncSection icon="pi-id-card" title="Informations" subtitle="Identité et libellé du coupon" icon-class="from-slate-600 to-slate-700">
             <div class="grid grid-cols-12 gap-4">
-                <!-- Code -->
+                <!-- Champ Code avec bouton intégré -->
                 <div class="col-span-12">
-                    <label for="coupon-code" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Code</label>
-                    <div class="flex gap-2">
+                    <label for="coupon-code" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                        <span>Code du coupon <span class="text-rose-500">*</span></span>
+                        <span class="text-[11px] font-normal lowercase text-slate-400">Majuscules automatiques</span>
+                    </label>
+                    <div class="relative flex items-center">
                         <InputText
                             id="coupon-code"
                             v-model="couponForm.code"
-                            placeholder="Laissez vide pour générer automatiquement (SERPENT-XXXXXX)"
-                            class="font-mono"
-                            :class="{ 'p-invalid': couponForm.errors.code }"
-                            @blur="couponForm.code = (couponForm.code || '').toUpperCase()"
+                            placeholder="ex: RENTREE2026"
+                            class="w-full font-mono font-bold tracking-wider uppercase pl-3.5 pr-28 h-11 text-sm bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl transition-all focus:ring-2 focus:ring-rose-500/20"
+                            :class="{ '!border-rose-500': couponForm.errors.code }"
+                            @blur="couponForm.code = (couponForm.code || '').toUpperCase().trim()"
                         />
-                        <Button
-                            icon="pi pi-sparkles"
-                            outlined
-                            severity="secondary"
-                            v-tooltip.top="'Générer un code aléatoire'"
-                            aria-label="Générer un code aléatoire"
-                            @click="generateCode"
-                        />
+                        <div class="absolute right-1.5 flex items-center">
+                            <Button
+                                icon="pi pi-sparkles"
+                                label="Générer"
+                                size="small"
+                                severity="secondary"
+                                text
+                                class="!h-8 !px-2.5 !text-xs !font-bold hover:!bg-rose-500/10 hover:!text-rose-500 transition-colors"
+                                v-tooltip.top="'Générer un code sécurisé aléatoire'"
+                                @click="generateCode"
+                            />
+                        </div>
                     </div>
-                    <small v-if="couponForm.errors.code" class="p-error" role="alert">{{ couponForm.errors.code }}</small>
+                    <small v-if="couponForm.errors.code" class="text-xs text-rose-500 mt-1 flex items-center gap-1 font-medium">
+                        <i class="pi pi-exclamation-circle text-xs"></i> {{ couponForm.errors.code }}
+                    </small>
                 </div>
 
                 <!-- Description -->
                 <div class="col-span-12">
-                    <label for="coupon-desc" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Description</label>
+                    <label for="coupon-desc" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
+                        Description / Contexte
+                    </label>
                     <Textarea
                         id="coupon-desc"
                         v-model="couponForm.description"
                         rows="2"
                         autoResize
-                        placeholder="Usage interne, ex. : campagne rentrée 2026"
-                        :class="{ 'p-invalid': couponForm.errors.description }"
+                        placeholder="Précisez l'objectif : Campagne influenceurs, geste commercial, Black Friday..."
+                        class="w-full text-sm rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-rose-500/20"
+                        :class="{ '!border-rose-500': couponForm.errors.description }"
                     />
-                    <small v-if="couponForm.errors.description" class="p-error" role="alert">{{ couponForm.errors.description }}</small>
+                    <small v-if="couponForm.errors.description" class="text-xs text-rose-500 mt-1 flex items-center gap-1 font-medium">
+                        <i class="pi pi-exclamation-circle text-xs"></i> {{ couponForm.errors.description }}
+                    </small>
                 </div>
             </div>
-            </SncSection>
+        </SncSection>
 
-            <!-- Section : remise & limites -->
-            <SncSection icon="pi-percentage" title="Remise & limites" subtitle="Valeur de la réduction et règles d'utilisation" icon-class="from-emerald-500 to-teal-600">
+        <!-- ============================================================== -->
+        <!-- SECTION 2 : CONDITIONS TARIFAIRES                              -->
+        <!-- ============================================================== -->
+        <SncSection 
+            icon="pi-percentage" 
+            title="Valeur & Plafonds d'utilisation" 
+            subtitle="Définissez l'avantage client et les seuils de rentabilité" 
+            icon-class="from-emerald-500 to-teal-700"
+        >
             <div class="grid grid-cols-12 gap-4">
-                <!-- Type -->
-                <div class="col-span-12 md:col-span-6">
-                    <label for="coupon-type" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Type de remise</label>
-                    <Select
-                        id="coupon-type"
-                        v-model="couponForm.discount_type"
-                        :options="typeOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        class="w-full"
-                    />
-                    <small v-if="couponForm.errors.discount_type" class="p-error" role="alert">{{ couponForm.errors.discount_type }}</small>
+                
+                <!-- Type de remise (Style Toggle Segmenté moderne) -->
+                <div class="col-span-12 sm:col-span-6">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
+                        Modèle de calcul
+                    </label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-900/80 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                        <button
+                            type="button"
+                            @click="couponForm.discount_type = 'percent'"
+                            :class="couponForm.discount_type === 'percent' 
+                                ? 'bg-white dark:bg-slate-800 text-rose-500 font-bold shadow-sm border border-slate-200/50 dark:border-slate-700' 
+                                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
+                            class="flex items-center justify-center gap-2 py-2 rounded-lg text-xs transition-all"
+                        >
+                            <i class="pi pi-percentage text-xs"></i>
+                            Pourcentage
+                        </button>
+                        <button
+                            type="button"
+                            @click="couponForm.discount_type = 'fixed'"
+                            :class="couponForm.discount_type === 'fixed' 
+                                ? 'bg-white dark:bg-slate-800 text-rose-500 font-bold shadow-sm border border-slate-200/50 dark:border-slate-700' 
+                                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
+                            class="flex items-center justify-center gap-2 py-2 rounded-lg text-xs transition-all"
+                        >
+                            <i class="pi pi-dollar text-xs"></i>
+                            Montant Fixe
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Valeur -->
-                <div class="col-span-12 md:col-span-6">
-                    <label for="coupon-value" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Valeur</label>
+                <!-- Montant / Valeur -->
+                <div class="col-span-12 sm:col-span-6">
+                    <label for="coupon-value" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                        <span>Montant déduit <span class="text-rose-500">*</span></span>
+                        <span class="text-[11px] font-semibold text-rose-500">
+                            {{ couponForm.discount_type === 'percent' ? 'Max 100%' : 'En devises USD' }}
+                        </span>
+                    </label>
                     <InputNumber
                         id="coupon-value"
                         v-model="couponForm.discount_value"
                         :min="0"
                         :max="couponForm.discount_type === 'percent' ? 100 : undefined"
-                        :suffix="couponForm.discount_type === 'percent' ? ' %' : ' USD'"
+                        :suffix="couponForm.discount_type === 'percent' ? ' %' : ' $'"
                         :minFractionDigits="0"
                         :maxFractionDigits="2"
-                        class="w-full"
-                        :class="{ 'p-invalid': couponForm.errors.discount_value }"
+                        class="w-full !rounded-xl"
+                        inputClass="!h-10 !text-sm !font-bold !bg-slate-50 dark:!bg-slate-900 !rounded-xl"
+                        :class="{ '!border-rose-500': couponForm.errors.discount_value }"
                     />
-                    <small v-if="couponForm.errors.discount_value" class="p-error" role="alert">{{ couponForm.errors.discount_value }}</small>
+                    <small v-if="couponForm.errors.discount_value" class="text-xs text-rose-500 mt-1 flex items-center gap-1 font-medium">
+                        <i class="pi pi-exclamation-circle text-xs"></i> {{ couponForm.errors.discount_value }}
+                    </small>
                 </div>
 
-                <!-- Limite globale -->
-                <div class="col-span-6 md:col-span-4">
-                    <label for="coupon-limit" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Limite globale</label>
-                    <InputNumber id="coupon-limit" v-model="couponForm.usage_limit" :min="1" allowEmpty placeholder="Illimitée" class="w-full" :class="{ 'p-invalid': couponForm.errors.usage_limit }" />
-                    <small v-if="couponForm.errors.usage_limit" class="p-error" role="alert">{{ couponForm.errors.usage_limit }}</small>
-                    <small v-else class="text-slate-400">Vide = illimitée</small>
+                <!-- Ligne 2 : Limites & Montant Minimum -->
+                <div class="col-span-12 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    
+                    <!-- Limite globale -->
+                    <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
+                        <label for="coupon-limit" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider block mb-1">
+                            Quota global
+                        </label>
+                        <InputNumber 
+                            id="coupon-limit" 
+                            v-model="couponForm.usage_limit" 
+                            :min="1" 
+                            allowEmpty 
+                            placeholder="Illimité (∞)" 
+                            class="w-full"
+                            inputClass="!h-9 !text-xs !bg-transparent !border-0 !p-0 font-semibold focus:!ring-0"
+                        />
+                        <span class="text-[10px] text-slate-400 block border-t border-slate-200/60 dark:border-slate-800 pt-1 mt-1">Ex: 100 premiers acheteurs</span>
+                    </div>
+
+                    <!-- Limite / user -->
+                    <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
+                        <label for="coupon-per-user" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider block mb-1">
+                            Par client
+                        </label>
+                        <InputNumber 
+                            id="coupon-per-user" 
+                            v-model="couponForm.max_uses_per_user" 
+                            :min="1" 
+                            class="w-full"
+                            inputClass="!h-9 !text-xs !bg-transparent !border-0 !p-0 font-semibold focus:!ring-0"
+                        />
+                        <span class="text-[10px] text-slate-400 block border-t border-slate-200/60 dark:border-slate-800 pt-1 mt-1">Nombre d'usages autorisés</span>
+                    </div>
+
+                    <!-- Panier minimum -->
+                    <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
+                        <label for="coupon-min" class="text-[11px] font-bold uppercase text-slate-500 tracking-wider block mb-1">
+                            Panier minimum
+                        </label>
+                        <InputNumber 
+                            id="coupon-min" 
+                            v-model="couponForm.min_amount" 
+                            :min="0" 
+                            allowEmpty 
+                            suffix=" $"
+                            placeholder="Aucun ($0)" 
+                            class="w-full"
+                            inputClass="!h-9 !text-xs !bg-transparent !border-0 !p-0 font-semibold focus:!ring-0"
+                        />
+                        <span class="text-[10px] text-slate-400 block border-t border-slate-200/60 dark:border-slate-800 pt-1 mt-1">Déclencheur d'activation</span>
+                    </div>
                 </div>
 
-                <!-- Limite par utilisateur -->
-                <div class="col-span-6 md:col-span-4">
-                    <label for="coupon-per-user" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Limite / utilisateur</label>
-                    <InputNumber id="coupon-per-user" v-model="couponForm.max_uses_per_user" :min="1" class="w-full" :class="{ 'p-invalid': couponForm.errors.max_uses_per_user }" />
-                    <small v-if="couponForm.errors.max_uses_per_user" class="p-error" role="alert">{{ couponForm.errors.max_uses_per_user }}</small>
-                </div>
-
-                <!-- Min. achat -->
-                <div class="col-span-12 md:col-span-4">
-                    <label for="coupon-min" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Min. achat</label>
-                    <InputNumber id="coupon-min" v-model="couponForm.min_amount" :min="0" allowEmpty :maxFractionDigits="2" placeholder="Aucun" suffix=" USD" class="w-full" :class="{ 'p-invalid': couponForm.errors.min_amount }" />
-                    <small v-if="couponForm.errors.min_amount" class="p-error" role="alert">{{ couponForm.errors.min_amount }}</small>
-                </div>
             </div>
-            </SncSection>
+        </SncSection>
 
-            <!-- Section : validité -->
-            <SncSection icon="pi-calendar" title="Validité & statut" subtitle="Période d'utilisation et activation" icon-class="from-amber-500 to-orange-500">
+        <!-- ============================================================== -->
+        <!-- SECTION 3 : CALENDRIER & STATUT                                -->
+        <!-- ============================================================== -->
+        <SncSection 
+            icon="pi-calendar-clock" 
+            title="Fenêtre temporelle & Statut" 
+            subtitle="Dates de prise d'effet et contrôle d'activité instantané" 
+            icon-class="from-amber-500 to-rose-600"
+        >
             <div class="grid grid-cols-12 gap-4">
-                <!-- Dates -->
-                <div class="col-span-6">
-                    <label for="coupon-start" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Date de début</label>
-                    <DatePicker id="coupon-start" v-model="couponForm.starts_at" showIcon dateFormat="dd/mm/yy" :manualInput="false" class="w-full" :class="{ 'p-invalid': couponForm.errors.starts_at }" />
-                    <small v-if="couponForm.errors.starts_at" class="p-error" role="alert">{{ couponForm.errors.starts_at }}</small>
+                <!-- Date de Début -->
+                <div class="col-span-12 sm:col-span-6">
+                    <label for="coupon-start" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
+                        Date d'ouverture
+                    </label>
+                    <DatePicker 
+                        id="coupon-start" 
+                        v-model="couponForm.starts_at" 
+                        showIcon 
+                        dateFormat="dd/mm/yy" 
+                        :manualInput="false" 
+                        class="w-full" 
+                        inputClass="!h-10 !text-sm !bg-slate-50 dark:!bg-slate-900 !rounded-xl"
+                        :class="{ '!border-rose-500': couponForm.errors.starts_at }" 
+                    />
+                    <small v-if="couponForm.errors.starts_at" class="text-xs text-rose-500 mt-1 block">{{ couponForm.errors.starts_at }}</small>
                 </div>
 
-                <div class="col-span-6">
-                    <label for="coupon-end" class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1 block">Date de fin</label>
-                    <DatePicker id="coupon-end" v-model="couponForm.expires_at" showIcon dateFormat="dd/mm/yy" :manualInput="false" :minDate="couponForm.starts_at || undefined" class="w-full" :class="{ 'p-invalid': couponForm.errors.expires_at }" />
-                    <small v-if="couponForm.errors.expires_at" class="p-error" role="alert">{{ couponForm.errors.expires_at }}</small>
+                <!-- Date d'Expiration -->
+                <div class="col-span-12 sm:col-span-6">
+                    <label for="coupon-end" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
+                        Date d'expiration
+                    </label>
+                    <DatePicker 
+                        id="coupon-end" 
+                        v-model="couponForm.expires_at" 
+                        showIcon 
+                        dateFormat="dd/mm/yy" 
+                        :manualInput="false" 
+                        :minDate="couponForm.starts_at || undefined" 
+                        class="w-full" 
+                        inputClass="!h-10 !text-sm !bg-slate-50 dark:!bg-slate-900 !rounded-xl"
+                        :class="{ '!border-rose-500': couponForm.errors.expires_at }" 
+                    />
+                    <small v-if="couponForm.errors.expires_at" class="text-xs text-rose-500 mt-1 block">{{ couponForm.errors.expires_at }}</small>
                 </div>
 
-                <!-- Actif -->
-                <div class="col-span-12 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
-                    <div>
-                        <label for="coupon-active" class="font-semibold text-slate-800 dark:text-slate-100">Coupon actif</label>
-                        <p class="text-xs text-slate-500">Un coupon inactif est refusé au paiement.</p>
+                <!-- Toggle Switch Carte Interactive -->
+                <div class="col-span-12 flex items-center justify-between p-4 rounded-xl border transition-all duration-300"
+                    :class="couponForm.is_active 
+                        ? 'bg-emerald-500/[0.04] border-emerald-500/30 dark:bg-emerald-950/20' 
+                        : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+                            :class="couponForm.is_active ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'">
+                            <i :class="couponForm.is_active ? 'pi pi-check' : 'pi pi-power-off'" class="text-sm"></i>
+                        </div>
+                        <div>
+                            <label for="coupon-active" class="font-bold text-sm text-slate-800 dark:text-slate-100 cursor-pointer">
+                                {{ couponForm.is_active ? 'Coupon immédiatement activé' : 'Coupon désactivé / En pause' }}
+                            </label>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                {{ couponForm.is_active ? 'Le coupon peut être appliqué au checkout dès maintenant.' : 'Le coupon sera refusé lors du paiement.' }}
+                            </p>
+                        </div>
                     </div>
                     <ToggleSwitch id="coupon-active" v-model="couponForm.is_active" />
                 </div>
-            </div>
-            </SncSection>
-            </div>
 
-            <template #footer>
-                <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="closeDialog" />
-                <Button
-                    :label="mode === 'edit' ? 'Enregistrer' : 'Créer le coupon'"
-                    icon="pi pi-check"
-                    :loading="couponForm.processing"
-                    @click="submitForm"
-                />
-            </template>
-        </SncDialog>
+            </div>
+        </SncSection>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- FOOTER ACTIONS                                                 -->
+    <!-- ============================================================== -->
+    <template #footer>
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <Button 
+                label="Annuler" 
+                icon="pi pi-times" 
+                text 
+                severity="secondary" 
+                class="!px-4 !py-2.5 !text-xs !font-bold rounded-xl"
+                @click="closeDialog" 
+            />
+            <Button
+                :label="mode === 'edit' ? 'Sauvegarder les modifications' : 'Créer et activer le coupon'"
+                icon="pi pi-check"
+                :loading="couponForm.processing"
+                class="!px-5 !py-2.5 !text-xs !font-bold !bg-rose-600 hover:!bg-rose-700 !border-none !shadow-lg !shadow-rose-600/30 rounded-xl"
+                @click="submitForm"
+            />
+        </div>
+    </template>
+</SncDialog>
     </AppLayout>
 </template>

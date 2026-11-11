@@ -14,10 +14,10 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
+import SncSection from '@/Components/SncSection.vue';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
-import Divider from 'primevue/divider';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import InputSwitch from 'primevue/inputswitch';
@@ -516,161 +516,177 @@ const intervalOptions = [
             </TabView>
             </div>
 
-            <Dialog v-model:visible="newSubOpen" modal class="snc-dialog" :style="{ width: '30rem' }" :breakpoints="{ '640px': '95vw' }">
-                <template #header>
-                    <span class="p-dialog-title flex items-center gap-2">
-                        <i class="pi pi-user-plus"></i>
-                        Nouveau abonnement
-                    </span>
-                </template>
-                <div class="space-y-4 pt-2">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2" for="sub-user">Utilisateur</label>
-                        <Select id="sub-user" v-model="subForm.user_id" :options="userOptions" optionLabel="label" optionValue="value" filter class="w-full" placeholder="Rechercher un utilisateur..." />
-                        <small v-if="subForm.errors.user_id" class="p-error" role="alert">{{ subForm.errors.user_id }}</small>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2" for="sub-plan">Plan</label>
-                        <Select id="sub-plan" v-model="subForm.plan_code" :options="activePlanOptions" optionLabel="label" optionValue="value" class="w-full" placeholder="Choisir un plan actif..." />
-                        <small v-if="subForm.errors.plan_code" class="p-error" role="alert">{{ subForm.errors.plan_code }}</small>
-                        <p class="text-xs text-slate-400 mt-2">Création manuelle par un administrateur. Aucun paiement n’est encaissé automatiquement.</p>
-                    </div>
+            <SncDialog
+                v-model:visible="newSubOpen"
+                title="Nouvel abonnement"
+                subtitle="Création manuelle — aucun paiement n'est encaissé automatiquement"
+                icon="pi-user-plus"
+                icon-class="from-blue-600 to-indigo-600"
+                width="560px"
+            >
+                <div class="flex flex-col gap-4">
+                    <SncSection icon="pi-user" title="Utilisateur & plan" icon-class="from-slate-600 to-slate-700">
+                        <div class="flex flex-col gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-2" for="sub-user">Utilisateur</label>
+                                <Select id="sub-user" v-model="subForm.user_id" :options="userOptions" optionLabel="label" optionValue="value" filter class="w-full" placeholder="Rechercher un utilisateur..." />
+                                <small v-if="subForm.errors.user_id" class="p-error" role="alert">{{ subForm.errors.user_id }}</small>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-2" for="sub-plan">Plan</label>
+                                <Select id="sub-plan" v-model="subForm.plan_code" :options="activePlanOptions" optionLabel="label" optionValue="value" class="w-full" placeholder="Choisir un plan actif..." />
+                                <small v-if="subForm.errors.plan_code" class="p-error" role="alert">{{ subForm.errors.plan_code }}</small>
+                            </div>
+                        </div>
+                    </SncSection>
                 </div>
                 <template #footer>
-                    <Button label="Annuler" text severity="secondary" @click="newSubOpen = false" />
-                    <Button label="Créer l’abonnement" icon="pi pi-check" :loading="subForm.processing" :disabled="!subForm.user_id || !subForm.plan_code" @click="saveSubscription" />
+                    <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="newSubOpen = false" />
+                    <Button label="Créer l'abonnement" icon="pi pi-check" :loading="subForm.processing" :disabled="!subForm.user_id || !subForm.plan_code" @click="saveSubscription" />
                 </template>
-            </Dialog>
+            </SncDialog>
 
-            <Dialog v-model:visible="planDialogOpen" modal class="snc-dialog" :style="{ width: '36rem' }" :breakpoints="{ '640px': '95vw' }">
-                <template #header>
-                    <span class="p-dialog-title flex items-center gap-2">
-                        <i class="pi pi-cog"></i>
-                        {{ planForm.id ? 'Modifier le plan' : 'Nouveau plan' }}
-                    </span>
-                </template>
-                <div class="space-y-4 pt-2">
-                    <div class="grid grid-cols-2 gap-4">
+            <SncDialog
+                v-model:visible="planDialogOpen"
+                :title="planForm.id ? 'Modifier le plan' : 'Nouveau plan'"
+                subtitle="Configurez le prix, la facturation et les fonctionnalités"
+                icon="pi-cog"
+                :icon-class="planForm.id ? 'from-amber-500 to-orange-500' : 'from-violet-500 to-purple-600'"
+                width="640px"
+            >
+                <div class="flex flex-col gap-5">
+                    <SncSection icon="pi-id-card" title="Identité du plan" icon-class="from-blue-500 to-indigo-600">
+                        <div class="flex flex-col gap-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-code">Code</label>
+                                    <InputText id="plan-code" v-model.trim="planForm.code" :disabled="!!planForm.id" placeholder="ex: starter" class="w-full" :class="{ 'p-invalid': planForm.errors.code }" />
+                                    <small v-if="planForm.errors.code" class="p-error" role="alert">{{ planForm.errors.code }}</small>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-name">Nom</label>
+                                    <InputText id="plan-name" v-model.trim="planForm.name" placeholder="ex: Professional" class="w-full" :class="{ 'p-invalid': planForm.errors.name }" />
+                                    <small v-if="planForm.errors.name" class="p-error" role="alert">{{ planForm.errors.name }}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-desc">Description</label>
+                                <Textarea id="plan-desc" v-model="planForm.description" rows="2" class="w-full" autoResize />
+                            </div>
+                        </div>
+                    </SncSection>
+
+                    <SncSection icon="pi-credit-card" title="Tarification" subtitle="Prix, intervalle et durée d'accès" icon-class="from-emerald-500 to-teal-600">
+                        <div class="flex flex-col gap-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-price">Prix (USD)</label>
+                                    <InputNumber id="plan-price" v-model="planForm.price" mode="currency" currency="USD" locale="fr-FR" class="w-full" :minFractionDigits="2" />
+                                    <small v-if="planForm.errors.price" class="p-error" role="alert">{{ planForm.errors.price }}</small>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-interval">Intervalle</label>
+                                    <Select id="plan-interval" v-model="planForm.interval" :options="intervalOptions" optionLabel="label" optionValue="value" class="w-full" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 items-end">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-duration">Durée (mois)</label>
+                                    <InputNumber id="plan-duration" v-model="planForm.duration_months" :min="1" :max="120" class="w-full" showButtons />
+                                    <small v-if="planForm.errors.duration_months" class="p-error" role="alert">{{ planForm.errors.duration_months }}</small>
+                                </div>
+                                <div class="flex items-center gap-3 pb-1">
+                                    <InputSwitch id="plan-active" v-model="planForm.is_active" />
+                                    <label for="plan-active" class="text-sm font-semibold text-slate-600 cursor-pointer">Plan actif (visible à la souscription)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </SncSection>
+
+                    <SncSection icon="pi-list-check" title="Fonctionnalités" subtitle="Une fonctionnalité par ligne" icon-class="from-amber-500 to-orange-500">
                         <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-code">Code</label>
-                            <InputText id="plan-code" v-model.trim="planForm.code" :disabled="!!planForm.id" placeholder="ex: starter" class="w-full" :class="{ 'p-invalid': planForm.errors.code }" />
-                            <small v-if="planForm.errors.code" class="p-error" role="alert">{{ planForm.errors.code }}</small>
+                            <Textarea id="plan-features" v-model="planForm.featuresText" rows="4" class="w-full" placeholder="Accès illimité&#10;Support prioritaire&#10;Certificats" />
+                            <small v-if="planForm.errors.features" class="p-error" role="alert">{{ planForm.errors.features }}</small>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-name">Nom</label>
-                            <InputText id="plan-name" v-model.trim="planForm.name" placeholder="ex: Professional" class="w-full" :class="{ 'p-invalid': planForm.errors.name }" />
-                            <small v-if="planForm.errors.name" class="p-error" role="alert">{{ planForm.errors.name }}</small>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-desc">Description</label>
-                        <Textarea id="plan-desc" v-model="planForm.description" rows="2" class="w-full" autoResize />
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-price">Prix (USD)</label>
-                            <InputNumber id="plan-price" v-model="planForm.price" mode="currency" currency="USD" locale="fr-FR" class="w-full" :minFractionDigits="2" />
-                            <small v-if="planForm.errors.price" class="p-error" role="alert">{{ planForm.errors.price }}</small>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-interval">Intervalle</label>
-                            <Select id="plan-interval" v-model="planForm.interval" :options="intervalOptions" optionLabel="label" optionValue="value" class="w-full" />
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-duration">Durée (mois)</label>
-                            <InputNumber id="plan-duration" v-model="planForm.duration_months" :min="1" :max="120" class="w-full" showButtons />
-                            <small v-if="planForm.errors.duration_months" class="p-error" role="alert">{{ planForm.errors.duration_months }}</small>
-                        </div>
-                        <div class="flex items-end pb-1">
-                            <label class="flex items-center gap-3 cursor-pointer" for="plan-active">
-                                <InputSwitch id="plan-active" v-model="planForm.is_active" />
-                                <span class="text-sm font-semibold text-slate-600">Plan actif (visible à la souscription)</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2" for="plan-features">Fonctionnalités (une par ligne)</label>
-                        <Textarea id="plan-features" v-model="planForm.featuresText" rows="4" class="w-full" placeholder="Accès illimité&#10;Support prioritaire&#10;Certificats" />
-                        <small v-if="planForm.errors.features" class="p-error" role="alert">{{ planForm.errors.features }}</small>
-                    </div>
+                    </SncSection>
                 </div>
                 <template #footer>
-                    <Button label="Annuler" text severity="secondary" @click="planDialogOpen = false" />
+                    <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="planDialogOpen = false" />
                     <Button label="Enregistrer" icon="pi pi-check" :loading="planForm.processing" :disabled="!planForm.name || (!planForm.id && !planForm.code)" @click="savePlan" />
                 </template>
-            </Dialog>
+            </SncDialog>
 
-            <Dialog v-model:visible="detailOpen" modal class="snc-dialog" :style="{ width: '40rem' }" :breakpoints="{ '640px': '95vw' }">
-                <template #header>
-                    <span class="p-dialog-title flex items-center gap-2">
-                        <i class="pi pi-id-card"></i>
-                        Fiche abonné
-                    </span>
-                </template>
-                <div v-if="detailSub" class="pt-2">
-                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl mb-5">
-                        <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-black shrink-0" aria-hidden="true">
-                            {{ initials(detailSub.user?.name) }}
+            <SncDialog
+                v-model:visible="detailOpen"
+                title="Fiche abonné"
+                subtitle="Informations du compte et gestion du cycle de vie"
+                icon="pi-id-card"
+                icon-class="from-slate-600 to-slate-700"
+                width="640px"
+            >
+                <div v-if="detailSub" class="flex flex-col gap-5">
+                    <SncSection icon="pi-user" title="Abonné" icon-class="from-blue-500 to-indigo-600">
+                        <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                            <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-black shrink-0" aria-hidden="true">
+                                {{ initials(detailSub.user?.name) }}
+                            </div>
+                            <div class="min-w-0">
+                                <h2 class="text-xl font-black text-slate-800 leading-tight">{{ detailSub.user?.name ?? 'Utilisateur supprimé' }}</h2>
+                                <p class="text-slate-500 text-sm truncate">{{ detailSub.user?.email ?? '—' }}</p>
+                                <Tag class="mt-2" :value="statusTag(detailSub.status).label" :severity="statusTag(detailSub.status).severity" />
+                            </div>
                         </div>
-                        <div class="min-w-0">
-                            <h2 class="text-xl font-black text-slate-800 leading-tight">{{ detailSub.user?.name ?? 'Utilisateur supprimé' }}</h2>
-                            <p class="text-slate-500 text-sm truncate">{{ detailSub.user?.email ?? '—' }}</p>
-                            <Tag class="mt-2" :value="statusTag(detailSub.status).label" :severity="statusTag(detailSub.status).severity" />
-                        </div>
-                    </div>
+                    </SncSection>
 
-                    <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Plan actuel</span>
-                            <div class="font-bold text-slate-800">{{ detailSub.plan_name ?? detailSub.plan?.name ?? '—' }}</div>
-                            <div class="text-xs text-slate-400 font-mono">{{ detailSub.plan_code ?? '' }}</div>
+                    <SncSection icon="pi-info-circle" title="Détails de l'abonnement" icon-class="from-emerald-500 to-teal-600">
+                        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Plan actuel</span>
+                                <div class="font-bold text-slate-800">{{ detailSub.plan_name ?? detailSub.plan?.name ?? '—' }}</div>
+                                <div class="text-xs text-slate-400 font-mono">{{ detailSub.plan_code ?? '' }}</div>
+                            </div>
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cycle</span>
+                                <div class="font-semibold text-slate-700">{{ intervalLabel(detailSub.interval) }} · {{ formatCents(detailSub.plan_price) }}</div>
+                            </div>
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Client depuis</span>
+                                <div class="font-semibold text-slate-700">{{ formatDate(detailSub.created_at) }}</div>
+                            </div>
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Début</span>
+                                <div class="font-semibold text-slate-700">{{ formatDate(detailSub.starts_at ?? detailSub.created_at) }}</div>
+                            </div>
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Fin</span>
+                                <div class="font-semibold text-slate-700">{{ formatDate(detailSub.ends_at) }}</div>
+                            </div>
+                            <div>
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Total encaissé</span>
+                                <div class="font-bold text-slate-800">{{ formatCents(detailSub.total_paid) }}</div>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Référence</span>
+                                <div class="font-mono text-xs text-slate-500 break-all">{{ detailSub.stripe_id ?? '—' }}</div>
+                            </div>
                         </div>
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cycle</span>
-                            <div class="font-semibold text-slate-700">{{ intervalLabel(detailSub.interval) }} · {{ formatCents(detailSub.plan_price) }}</div>
-                        </div>
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Client depuis</span>
-                            <div class="font-semibold text-slate-700">{{ formatDate(detailSub.created_at) }}</div>
-                        </div>
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Début</span>
-                            <div class="font-semibold text-slate-700">{{ formatDate(detailSub.starts_at ?? detailSub.created_at) }}</div>
-                        </div>
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Fin</span>
-                            <div class="font-semibold text-slate-700">{{ formatDate(detailSub.ends_at) }}</div>
-                        </div>
-                        <div>
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Total encaissé</span>
-                            <div class="font-bold text-slate-800">{{ formatCents(detailSub.total_paid) }}</div>
-                        </div>
-                        <div class="col-span-2">
-                            <span class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Référence</span>
-                            <div class="font-mono text-xs text-slate-500 break-all">{{ detailSub.stripe_id ?? '—' }}</div>
-                        </div>
-                    </div>
+                    </SncSection>
 
-                    <Divider />
-
-                    <div class="flex flex-wrap justify-between items-center gap-3 bg-rose-50 border border-rose-100 p-4 rounded-xl">
-                        <div>
-                            <h3 class="font-bold text-rose-800 text-sm">Zone d’administration</h3>
-                            <p class="text-xs text-rose-600">La résiliation prend effet immédiatement (sans période de grâce).</p>
+                    <SncSection icon="pi-exclamation-triangle" title="Zone d'administration" subtitle="Actions irréversibles sur l'abonnement" icon-class="from-rose-500 to-red-600">
+                        <div class="flex flex-wrap justify-between items-center gap-3 bg-rose-50 border border-rose-100 p-4 rounded-xl">
+                            <p class="text-xs text-rose-600 max-w-xs">La résiliation prend effet immédiatement (sans période de grâce).</p>
+                            <div class="flex gap-2">
+                                <Button v-if="detailSub.status === 'active'" label="Résilier l'abonnement" icon="pi pi-ban" outlined severity="danger" size="small" @click="askCancel(detailSub)" />
+                                <Button v-if="detailSub.status === 'canceled'" label="Réactiver" icon="pi pi-refresh" outlined severity="success" size="small" @click="askResume(detailSub)" />
+                                <Button v-if="detailSub.status === 'canceled'" label="Supprimer" icon="pi pi-trash" severity="danger" size="small" @click="askDelete(detailSub)" />
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <Button v-if="detailSub.status === 'active'" label="Résilier l’abonnement" icon="pi pi-ban" outlined severity="danger" @click="askCancel(detailSub)" />
-                            <Button v-if="detailSub.status === 'canceled'" label="Réactiver" icon="pi pi-refresh" outlined severity="success" @click="askResume(detailSub)" />
-                            <Button v-if="detailSub.status === 'canceled'" label="Supprimer" icon="pi pi-trash" severity="danger" @click="askDelete(detailSub)" />
-                        </div>
-                    </div>
+                    </SncSection>
                 </div>
                 <template #footer>
-                    <Button label="Fermer" text severity="secondary" @click="detailOpen = false" />
+                    <Button label="Fermer" icon="pi pi-times" text severity="secondary" @click="detailOpen = false" />
                 </template>
-            </Dialog>
+            </SncDialog>
         </div>
     </AppLayout>
 </template>

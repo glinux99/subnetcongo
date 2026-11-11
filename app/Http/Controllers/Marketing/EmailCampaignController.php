@@ -18,18 +18,26 @@ class EmailCampaignController extends Controller
     /**
      * Audiences ciblables par une campagne.
      */
-    private const AUDIENCES = ['all', 'students', 'instructors'];
+    private const AUDIENCES = ['all', 'students', 'instructors', 'group'];
 
     /**
-     * Requête visant les destinataires selon l'audience de la campagne.
+     * Groupes d'audience pour les formulaires (Inertia).
      */
-    private function audienceQuery(?string $audience)
+    private function audienceGroupsProp(): array
     {
-        return match ($audience) {
-            'students' => User::role('student')->whereNotNull('email')->where('email', '!=', ''),
-            'instructors' => User::role('instructor')->whereNotNull('email')->where('email', '!=', ''),
-            default => User::whereNotNull('email')->where('email', '!=', ''),
-        };
+        return \App\Models\EmailAudienceGroup::with('members:id,group_id,email,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($g) => [
+                'id' => $g->id,
+                'name' => $g->name,
+                'description' => $g->description,
+                'members' => $g->members->map(fn ($m) => [
+                    'id' => $m->id,
+                    'email' => $m->email,
+                    'name' => $m->name,
+                ])->values(),
+            ])->values()->all();
     }
 
     /**
@@ -38,8 +46,8 @@ class EmailCampaignController extends Controller
      */
     private function deliverCampaign(EmailCampaign $campaign): array
     {
-        $recipients = $this->audienceQuery($campaign->target_audience)
-            ->get(['id', 'name', 'email']);
+        $campaign->loadMissing('audienceGroup.members');
+        $recipients = $campaign->recipients();
 
         $sent = 0;
         $failed = 0;
@@ -75,6 +83,11 @@ class EmailCampaignController extends Controller
             'from_email' => 'nullable|email|max:255',
             'body' => 'required|string',
             'target_audience' => 'required|in:' . implode(',', self::AUDIENCES),
+            'audience_group_id' => 'nullable|required_if:target_audience,group|exists:email_audience_groups,id',
+            'extra_emails' => 'nullable|array|max:500',
+            'extra_emails.*' => 'email|max:255',
+            'excluded_emails' => 'nullable|array|max:500',
+            'excluded_emails.*' => 'email|max:255',
             'status' => 'required|in:draft,scheduled,queued',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
@@ -89,7 +102,7 @@ class EmailCampaignController extends Controller
         $status = $request->input('status');
 
         $campaigns = EmailCampaign::query()
-            ->with('user:id,name')
+            ->with(['user:id,name', 'audienceGroup:id,name'])
             ->when($search, function ($q, $search) {
                 $q->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -114,6 +127,7 @@ class EmailCampaignController extends Controller
             'campaigns' => $campaigns,
             'stats' => $stats,
             'filters' => $request->only(['search', 'status']),
+            'audienceGroups' => $this->audienceGroupsProp(),
         ]);
     }
 
@@ -125,6 +139,7 @@ class EmailCampaignController extends Controller
         return Inertia::render('Marketing/Emails', [
             'mode' => 'create',
             'campaign' => null,
+            'audienceGroups' => $this->audienceGroupsProp(),
         ]);
     }
 
@@ -167,19 +182,23 @@ class EmailCampaignController extends Controller
      */
     public function show(EmailCampaign $email)
     {
-        $email->load('user:id,name,email');
+        $email->load(['user:id,name,email', 'audienceGroup:id,name']);
 
-        $recipientsCount = $this->audienceQuery($email->target_audience)->count();
-        $recipientsPreview = $this->audienceQuery($email->target_audience)
-            ->orderBy('name')
-            ->limit(25)
-            ->get(['id', 'name', 'email']);
+        $email->loadMissing('audienceGroup.members');
+        $recipients = $email->recipients();
+        $recipientsCount = $recipients->count();
+        $recipientsPreview = $recipients
+            ->sortBy(fn ($r) => strtolower($r->name))
+            ->take(25)
+            ->map(fn ($r, $i) => ['id' => $i, 'name' => $r->name, 'email' => $r->email])
+            ->values();
 
         return Inertia::render('Marketing/Emails', [
             'mode' => 'show',
             'campaign' => $email,
             'recipientsCount' => $recipientsCount,
             'recipientsPreview' => $recipientsPreview,
+            'audienceGroups' => $this->audienceGroupsProp(),
         ]);
     }
 
@@ -196,6 +215,7 @@ class EmailCampaignController extends Controller
         return Inertia::render('Marketing/Emails', [
             'mode' => 'edit',
             'campaign' => $email,
+            'audienceGroups' => $this->audienceGroupsProp(),
         ]);
     }
 

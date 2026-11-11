@@ -168,22 +168,32 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         </header>
 
         <!-- ================================================================== -->
-        <!-- SECTION : MARQUEE TECHNOLOGIES (identique à la Landing) -->
+        <!-- SECTION : STACK TECHNIQUE — Bandeau défilant continu -->
         <!-- ================================================================== -->
-        <section v-if="technologies.length" class="py-8 bg-white border-b border-slate-100 overflow-hidden relative flex items-center">
-            <div class="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10"></div>
-            <div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10"></div>
-            <div class="max-w-[1600px] mx-auto w-full px-4 flex items-center gap-12">
-                <p class="hidden lg:block text-xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap shrink-0">Technologies maîtrisées</p>
-                <div class="flex space-x-12 animate-marquee whitespace-nowrap items-center flex-1">
-                    <div v-for="tech in technologies" :key="tech.slug || tech.name" class="flex items-center gap-2 text-slate-400 hover:text-slate-800 transition duration-300" :style="{ color: tech.color || '' }">
-                        <i :class="['pi', tech.icon || 'pi-verified', 'text-lg']"></i>
-                        <span class="text-lg font-black font-sans tracking-tight">{{ tech.name }}</span>
+        <section v-if="technologies.length" class="relative overflow-hidden bg-white border-b border-slate-100">
+            <div class="pointer-events-none absolute inset-y-0 left-0 w-20 sm:w-32 bg-gradient-to-r from-white via-white/70 to-transparent z-10"></div>
+            <div class="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-32 bg-gradient-to-l from-white via-white/70 to-transparent z-10"></div>
+
+            <div class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-12 flex items-center gap-4 sm:gap-8 lg:gap-12 py-4 sm:py-5">
+                <span class="sr-only">Technologies maîtrisées : {{ technologies.map(t => t.name).join(', ') }}</span>
+
+                <div class="flex items-center gap-3 sm:gap-4 shrink-0 pr-4 sm:pr-8 lg:pr-12 border-r border-slate-200">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#003399] to-[#1e40af] flex items-center justify-center shadow-lg shadow-blue-900/10">
+                        <i class="pi pi-cog text-white text-base sm:text-lg"></i>
                     </div>
-                    <!-- Doublon pour boucle fluide -->
-                    <div v-for="tech in technologies" :key="'dup-' + (tech.slug || tech.name)" class="flex items-center gap-2 text-slate-400 hover:text-slate-800 transition duration-300" :style="{ color: tech.color || '' }" aria-hidden="true">
-                        <i :class="['pi', tech.icon || 'pi-verified', 'text-lg']"></i>
-                        <span class="text-lg font-black font-sans tracking-tight">{{ tech.name }}</span>
+                    <div class="leading-tight">
+                        <p class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Technologies</p>
+                        <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mt-0.5">Maîtrisées</p>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-hidden" aria-hidden="true">
+                    <div class="animate-marquee flex items-center gap-6 sm:gap-10 whitespace-nowrap w-max">
+                        <div v-for="(tech, i) in [...technologies, ...technologies]" :key="`${tech.id ?? tech.slug}-${i}`"
+                             class="flex items-center gap-2">
+                            <i :class="['pi', tech.icon || 'pi-cog']" class="text-lg sm:text-xl" :style="{ color: tech.color || '#003399' }"></i>
+                            <span class="text-base sm:text-lg font-black tracking-tight" :style="{ color: tech.color || '#0B1221' }">{{ tech.name }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -436,13 +446,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 }
 
 @keyframes marquee {
-    0% { transform: translateX(0%); }
-    100% { transform: translateX(-100%); }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 .animate-marquee {
-    animation: marquee 40s linear infinite;
-    display: inline-flex;
-    min-width: 100%;
+    animation: marquee 32s linear infinite;
+    will-change: transform;
 }
 .animate-marquee:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+    .animate-marquee { animation: none; }
+}
 </style>

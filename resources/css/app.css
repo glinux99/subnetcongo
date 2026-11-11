@@ -523,3 +523,89 @@
     background: #0f172a;
     border-top-color: rgba(51, 65, 85, 0.6);
 }
+
+/* ---------- Inputs PrimeVue arrondis dans les dialogs ---------- */
+.p-dialog.snc-dialog .p-inputtext,
+.p-dialog.snc-dialog .p-select,
+.p-dialog.snc-dialog .p-inputnumber-input,
+.p-dialog.snc-dialog .p-datepicker-input {
+    border-radius: 0.65rem;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    color: #0f172a;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.p-dialog.snc-dialog .p-inputtext::placeholder { color: #94a3b8; }
+.p-dialog.snc-dialog .p-inputtext:hover,
+.p-dialog.snc-dialog .p-select:hover,
+.p-dialog.snc-dialog .p-inputnumber:hover,
+.p-dialog.snc-dialog .p-datepicker:hover {
+    border-color: #cbd5e1;
+}
+.p-dialog.snc-dialog .p-inputtext:focus,
+.p-dialog.snc-dialog .p-select.p-focus,
+.p-dialog.snc-dialog .p-inputnumber.p-focus .p-inputnumber-input,
+.p-dialog.snc-dialog .p-datepicker.p-focus .p-datepicker-input {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    outline: none;
+}
+.p-dialog.snc-dialog .p-inputtext.p-invalid,
+.p-dialog.snc-dialog .p-select.p-invalid,
+.p-dialog.snc-dialog .p-invalid .p-inputtext {
+    border-color: #f43f5e;
+}
+.p-dialog.snc-dialog .p-select {
+    border-radius: 0.65rem;
+}
+.p-dialog.snc-dialog .p-select .p-select-label {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+}
+.p-dialog.snc-dialog .p-inputtext {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+}
+.p-dialog.snc-dialog .p-inputnumber .p-inputnumber-input {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+}
+.p-dialog.snc-dialog .p-datepicker-input {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+}
+.p-dialog.snc-dialog .p-editor .p-editor-content {
+    border-radius: 0 0 0.65rem 0.65rem;
+}
+.p-dialog.snc-dialog .p-editor .p-editor-toolbar {
+    border-radius: 0.65rem 0.65rem 0 0;
+    border-color: #e2e8f0;
+}
+.p-dialog.snc-dialog .p-editor {
+    border-radius: 0.65rem;
+    border: 1.5px solid #e2e8f0;
+}
+.p-dialog.snc-dialog .p-editor:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.app-dark .p-dialog.snc-dialog .p-inputtext,
+.app-dark .p-dialog.snc-dialog .p-select,
+.app-dark .p-dialog.snc-dialog .p-inputnumber-input,
+.app-dark .p-dialog.snc-dialog .p-datepicker-input {
+    background: #0f172a;
+    border-color: rgba(51, 65, 85, 0.8);
+    color: #f1f5f9;
+}
+.app-dark .p-dialog.snc-dialog .p-inputtext::placeholder { color: #64748b; }
+.app-dark .p-dialog.snc-dialog .p-inputtext:hover,
+.app-dark .p-dialog.snc-dialog .p-select:hover,
+.app-dark .p-dialog.snc-dialog .p-inputnumber:hover,
+.app-dark .p-dialog.snc-dialog .p-datepicker:hover {
+    border-color: #475569;
+}
+.app-dark .p-dialog.snc-dialog .p-editor,
+.app-dark .p-dialog.snc-dialog .p-editor .p-editor-toolbar {
+    border-color: rgba(51, 65, 85, 0.8);
+    background: #0f172a;
+}

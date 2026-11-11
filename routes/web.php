@@ -366,6 +366,12 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('marketing')->name('marketing.')->middleware(['has_role:superadmin,admin,finance-manager,marketing-manager'])->group(function () {
         Route::get('emails/duplicate/{email}', [App\Http\Controllers\Marketing\EmailCampaignController::class, 'duplicate'])->name('emails.duplicate');
         Route::post('emails/{email}/send-test', [App\Http\Controllers\Marketing\EmailCampaignController::class, 'sendTest'])->name('emails.send-test');
+        Route::get('audience-groups', [App\Http\Controllers\Marketing\EmailAudienceGroupController::class, 'index'])->name('audience-groups.index');
+        Route::post('audience-groups', [App\Http\Controllers\Marketing\EmailAudienceGroupController::class, 'store'])->name('audience-groups.store');
+        Route::put('audience-groups/{audienceGroup}', [App\Http\Controllers\Marketing\EmailAudienceGroupController::class, 'update'])->name('audience-groups.update');
+        Route::delete('audience-groups/{audienceGroup}', [App\Http\Controllers\Marketing\EmailAudienceGroupController::class, 'destroy'])->name('audience-groups.destroy');
+        Route::post('audience-groups/{audienceGroup}/members', [App\Http\Controllers\Marketing\EmailAudienceGroupController::class, 'addMembers'])->name('audience-groups.members.store');
+        Route::delete('audience-groups/{audienceGroup}/members/{member}', [App\Http\Controllers\Marketing\EmailAudienceGroupController::class, 'removeMember'])->name('audience-groups.members.destroy');
         Route::resource('emails', App\Http\Controllers\Marketing\EmailCampaignController::class);
         Route::resource('coupons', App\Http\Controllers\Marketing\CouponController::class);
         Route::get('affiliates/export', [App\Http\Controllers\Marketing\AffiliateController::class, 'export'])->name('affiliates.export');
