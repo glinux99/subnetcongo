@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -63,31 +64,22 @@ const destroy = () => {
 <template>
     <AppLayout>
         <Head :title="`Inscription #${enrollment.id}`" />
-        <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-5xl mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg border border-white/10">
-                            <i class="pi pi-id-card text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                <h1 class="text-2xl font-black text-white tracking-tight">Inscription #{{ enrollment.id }}</h1>
-                                <Tag :value="statusLabel(enrollment.status)" :severity="statusSeverity(enrollment.status)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
-                            </div>
-                            <p class="text-slate-400 font-medium text-sm">{{ enrollment.course?.title }}</p>
-                        </div>
+        <div class="page-bg min-h-screen font-sans">
+            <PageHeader
+                :title="`Inscription #${enrollment.id}`"
+                :subtitle="enrollment.course?.title"
+                icon="pi-id-card"
+                accent="blue"
+                :actions="[{ label: 'Retour', icon: 'pi-arrow-left', variant: 'secondary', href: route('admin.enrollments.index') }]"
+            >
+                <template #meta>
+                    <div class="mt-3">
+                        <Tag :value="statusLabel(enrollment.status)" :severity="statusSeverity(enrollment.status)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
                     </div>
-                    <Link :href="route('admin.enrollments.index')">
-                        <Button label="Retour" icon="pi pi-arrow-left" outlined class="!text-white !border-white/20 hover:!bg-white/10 !rounded-xl" />
-                    </Link>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
-            <div class="max-w-5xl mx-auto px-4 lg:px-6 -mt-6 relative z-20 space-y-4">
+            <div class="page-container page-section !max-w-5xl">
                 <!-- Actions -->
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-wrap items-center gap-3">
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mr-auto">Actions</h3>

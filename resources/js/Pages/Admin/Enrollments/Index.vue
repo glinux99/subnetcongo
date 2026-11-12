@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
@@ -95,57 +97,39 @@ const quickReject = (id) => {
     <AppLayout>
         <Head title="Gestion des Inscriptions | Admin" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
-            
-            <!-- HEADER ULTIMATE V30 -->
-            <div class="bg-[#0F172A] relative overflow-hidden pt-12 pb-24 px-8">
-                <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[120px]"></div>
-                <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]"></div>
-                
-                <div class="max-w-[1600px] mx-auto relative z-10">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-8">
-                        <div>
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/20">Enrollment Management</span>
-                            </div>
-                            <h1 class="text-4xl font-black text-white tracking-tighter italic uppercase">
-                                Flux des <span class="text-red-500">Inscriptions</span>
-                            </h1>
-                            <p class="text-slate-400 mt-2 font-medium max-w-xl">Supervisez les admissions, validez les paiements et gérez les accès aux parcours de formation.</p>
-                        </div>
-                        
-                        <div class="flex items-center gap-4 bg-white/5 p-2 rounded-xl border border-white/10 backdrop-blur-xl">
-                            <div class="px-6 py-2 text-center border-r border-white/10">
-                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Taux de conversion</p>
-                                <p class="text-white font-black text-xl italic">84%</p>
-                            </div>
-                            <div class="px-6 py-2 text-center">
-                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nouveaux (24h)</p>
-                                <p class="text-red-500 font-black text-xl italic">+{{ stats?.today ?? 0 }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="page-bg min-h-screen font-sans">
 
-            <div class="max-w-[1600px] mx-auto px-6 -mt-12 relative z-20">
-                
-                <!-- KPI STRIP V30 -->
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                    <div v-for="kpi in [
-                        { label: 'En attente', val: stats?.pending, color: 'text-red-500', bg: 'bg-red-500/10', icon: 'pi-clock' },
-                        { label: 'Actives', val: stats?.active, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: 'pi-check-circle' },
-                        { label: 'Terminées', val: stats?.completed, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: 'pi-trophy' },
-                        { label: 'Suspendues', val: stats?.suspended, color: 'text-red-500', bg: 'bg-red-500/10', icon: 'pi-ban' },
-                        { label: 'Refusées', val: stats?.rejected, color: 'text-slate-400', bg: 'bg-slate-500/10', icon: 'pi-times-circle' },
-                        { label: 'Total global', val: enrollments?.total, color: 'text-slate-900', bg: 'bg-slate-900/5', icon: 'pi-users' },
-                    ]" :key="kpi.label" class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 group hover:shadow-xl transition-all duration-500">
-                        <div :class="[kpi.bg, kpi.color]" class="w-10 h-10 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-6 transition-transform">
-                            <i :class="['pi', kpi.icon, 'text-lg']"></i>
+            <PageHeader
+                title="Flux des Inscriptions"
+                subtitle="Supervisez les admissions, validez les paiements et gérez les accès aux parcours de formation."
+                badge="Enrollment Management"
+                icon="pi-id-card"
+                accent="blue"
+            >
+                <template #actions>
+                    <div class="flex items-center gap-4 bg-white/5 p-2 rounded-xl border border-white/10 backdrop-blur-xl">
+                        <div class="px-6 py-2 text-center border-r border-white/10">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Taux de conversion</p>
+                            <p class="text-white font-black text-xl italic">84%</p>
                         </div>
-                        <h3 class="text-2xl font-black text-slate-900 tracking-tighter tabular-nums">{{ kpi.val ?? 0 }}</h3>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ kpi.label }}</p>
+                        <div class="px-6 py-2 text-center">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nouveaux (24h)</p>
+                            <p class="text-blue-300 font-black text-xl italic">+{{ stats?.today ?? 0 }}</p>
+                        </div>
                     </div>
+                </template>
+            </PageHeader>
+
+            <div class="page-container page-section">
+
+                <!-- KPI STRIP -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <PageKpi label="En attente" :value="stats?.pending ?? 0" icon="pi-clock" color="amber" />
+                    <PageKpi label="Actives" :value="stats?.active ?? 0" icon="pi-check-circle" color="blue" />
+                    <PageKpi label="Terminées" :value="stats?.completed ?? 0" icon="pi-trophy" color="emerald" />
+                    <PageKpi label="Suspendues" :value="stats?.suspended ?? 0" icon="pi-ban" color="red" />
+                    <PageKpi label="Refusées" :value="stats?.rejected ?? 0" icon="pi-times-circle" color="slate" />
+                    <PageKpi label="Total global" :value="enrollments?.total ?? 0" icon="pi-users" color="indigo" />
                 </div>
 
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
@@ -167,15 +151,15 @@ const quickReject = (id) => {
                         </div>
 
                         <!-- BULK ACTION BAR -->
-                        <div v-if="selected.length" class="flex items-center justify-between p-4 bg-[#0F172A] rounded-xl animate-fade-in shadow-2xl">
-                            <div class="flex items-center gap-4 px-4 text-white">
-                                <div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-black text-xs">{{ selected.length }}</div>
+                        <div v-if="selected.length" class="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl animate-fade-in">
+                            <div class="flex items-center gap-4 px-4 text-slate-700">
+                                <div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-black text-xs text-white">{{ selected.length }}</div>
                                 <span class="text-xs font-bold uppercase tracking-widest">Éléments sélectionnés</span>
                             </div>
                             <div class="flex gap-2">
                                 <Button label="Approuver" icon="pi pi-check" severity="success" size="small" @click="askBulk('approve')" class="!rounded-xl !text-[10px] !font-black !px-6" />
                                 <Button label="Refuser" icon="pi pi-times" severity="danger" size="small" @click="askBulk('reject')" class="!rounded-xl !text-[10px] !font-black !px-6" />
-                                <Button label="Annuler" text @click="selected = []" class="!text-white/50 !text-xs" />
+                                <Button label="Annuler" text @click="selected = []" class="!text-slate-400 !text-xs" />
                             </div>
                         </div>
                     </div>

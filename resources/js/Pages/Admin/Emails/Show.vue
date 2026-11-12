@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
@@ -143,10 +145,40 @@ const hasHtml = computed(() => {
     <AppLayout>
         <Head :title="email.subject || 'Lecture Email'" />
         
-        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
-            
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1200px] mx-auto">
-                
+        <div class="min-h-screen bg-slate-50 font-sans pb-20">
+
+            <!-- PageHeader -->
+            <PageHeader
+                title="Lecture Email"
+                :subtitle="`Sujet : ${email.subject || '(sans objet)'}`"
+                badge="Webmail Client"
+                icon="pi-envelope"
+                accent="blue"
+            >
+                <template #meta>
+                    <div class="flex items-center gap-2 mt-3">
+                        <Tag v-if="email.flagged" value="Important" severity="danger" class="!rounded-full !text-xs" />
+                        <Tag v-if="email.has_attachments" icon="pi pi-paperclip" value="Pièces jointes" severity="secondary" class="!rounded-full !text-xs" />
+                    </div>
+                </template>
+                <template #actions>
+                    <button v-if="email.flagged" type="button" class="btn-header-secondary !px-3" @click="unflag" v-tooltip.top="'Retirer le marqueur'" :aria-label="'Retirer le marqueur'">
+                        <i class="pi pi-star-fill text-red-400"></i>
+                    </button>
+                    <button v-else type="button" class="btn-header-secondary !px-3" @click="markAsFlagged" v-tooltip.top="'Marquer comme important'" :aria-label="'Marquer comme important'">
+                        <i class="pi pi-star"></i>
+                    </button>
+                    <button type="button" class="btn-header-secondary !px-3" @click="showReplyForm = true" v-tooltip.top="'Répondre'" aria-label="Répondre">
+                        <i class="pi pi-reply"></i>
+                    </button>
+                    <button type="button" class="btn-header-secondary !px-3" @click="moveToTrash" v-tooltip.top="'Supprimer'" aria-label="Supprimer">
+                        <i class="pi pi-trash text-red-400"></i>
+                    </button>
+                </template>
+            </PageHeader>
+
+            <div class="max-w-[1200px] mx-auto px-4 md:px-6 pt-6">
+
                 <!-- Lien de retour type Breadcrumb -->
                 <div class="flex items-center text-sm px-1 mb-3">
                     <Link :href="route('admin.emails.index')" class="text-slate-500 hover:text-slate-800 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
@@ -154,79 +186,17 @@ const hasHtml = computed(() => {
                     </Link>
                 </div>
 
-                <!-- 1. BANNIÈRE SOMBRE -->
-                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                    
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                        
-                        <!-- Partie Gauche (Titres) -->
-                        <div class="max-w-3xl">
-                            <span class="inline-block border border-red-900/50 text-[#ff4d4d] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
-                                Webmail Client
-                            </span>
-
-                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-3 leading-none">
-                                <span class="text-white">LECTURE</span>
-                                <span class="text-[#EF4444]">EMAIL</span>
-                            </h1>
-
-                            <p class="text-slate-400 text-sm md:text-base italic leading-relaxed font-bold flex items-center gap-2">
-                                Sujet : <span class="text-white">{{ email.subject || '(sans objet)' }}</span>
-                            </p>
-                            
-                            <!-- Badges -->
-                            <div class="flex items-center gap-2 mt-4">
-                                <Tag v-if="email.flagged" value="Important" class="!bg-red-500/20 !text-red-400 !border !border-red-500/30 !rounded-full !px-3" />
-                                <Tag v-if="email.has_attachments" icon="pi pi-paperclip" value="Pièces jointes" class="!bg-slate-700/50 !text-slate-300 !border !border-slate-600/50 !rounded-full !px-3" />
-                            </div>
-                        </div>
-
-                        <!-- Partie Droite (Actions) -->
-                        <div class="flex items-center gap-2 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700">
-                            <Button v-if="email.flagged" icon="pi pi-star-fill" class="!text-red-400 hover:!bg-slate-700 !w-10 !h-10 !p-0" text rounded @click="unflag" v-tooltip.top="'Retirer le marqueur'" />
-                            <Button v-else icon="pi pi-star" class="!text-slate-400 hover:!text-white hover:!bg-slate-700 !w-10 !h-10 !p-0" text rounded @click="markAsFlagged" v-tooltip.top="'Marquer comme important'" />
-                            
-                            <div class="w-px h-6 bg-slate-700 mx-1"></div>
-                            
-                            <Button icon="pi pi-reply" class="!text-slate-400 hover:!text-white hover:!bg-slate-700 !w-10 !h-10 !p-0" text rounded @click="showReplyForm = true" v-tooltip.top="'Répondre'" />
-                            <Button icon="pi pi-trash" class="!text-[#EF4444] hover:!bg-red-900/50 !w-10 !h-10 !p-0" text rounded @click="moveToTrash" v-tooltip.top="'Supprimer'" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. CARTES D'INFORMATIONS (Chevauchement) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                    
-                    <!-- Expéditeur -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex items-center gap-4 h-32">
-                        <div :class="['w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm shrink-0', getAvatarColor(getFromName(email.from))]">
-                            {{ getInitials(getFromName(email.from)) }}
-                        </div>
-                        <div class="min-w-0">
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Expéditeur</div>
-                            <div class="text-lg font-black text-slate-800 truncate" :title="getFromName(email.from)">{{ getFromName(email.from) }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Destinataires -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center h-32">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="pi pi-envelope text-blue-400"></i> Adresses</div>
-                        <div class="text-sm text-slate-600 truncate"><span class="font-medium text-slate-400 w-8 inline-block">De:</span> <span class="font-bold text-slate-800">{{ getFromEmail(email.from) }}</span></div>
-                        <div class="text-sm text-slate-600 truncate"><span class="font-medium text-slate-400 w-8 inline-block">À:</span> {{ toDisplay || 'Moi' }}</div>
-                    </div>
-
-                    <!-- Date & Poids -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center h-32">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="pi pi-calendar text-blue-400"></i> Réception</div>
-                        <div class="text-[13px] font-bold text-slate-800 capitalize">{{ formatDate(email.date) }}</div>
-                        <div class="text-xs text-slate-400 mt-1 font-mono">Poids du message : {{ formatSize(email.size) }}</div>
-                    </div>
+                <!-- Informations email -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <PageKpi label="Expéditeur" :value="getFromName(email.from)" icon="pi-user" color="blue" :subtext="getFromEmail(email.from)" />
+                    <PageKpi label="Destinataires" :value="toDisplay || 'Moi'" icon="pi-envelope" color="indigo" />
+                    <PageKpi label="Réception" :value="formatDate(email.date)" icon="pi-calendar" color="emerald" :subtext="'Poids du message : ' + formatSize(email.size)" />
                 </div>
 
                 <!-- ============================================================================== -->
                 <!-- CONTENU DE L'EMAIL ET RÉPONSE                                                  -->
                 <!-- ============================================================================== -->
-                <div class="mt-6 space-y-6 px-2 md:px-4 relative z-20">
+                <div class="space-y-6">
                     
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                         
@@ -341,7 +311,7 @@ const hasHtml = computed(() => {
 
                                 <div class="flex items-center gap-3">
                                     <Button type="button" label="Annuler" text @click="showReplyForm = false" class="!text-slate-500 font-bold" />
-                                    <Button type="submit" label="Envoyer le message" icon="pi pi-send" :loading="replyForm.processing" class="!bg-[#EF4444] hover:!bg-red-600 !border-none !rounded-xl px-6 font-bold shadow-md shadow-red-500/20" />
+                                    <Button type="submit" label="Envoyer le message" icon="pi pi-send" :loading="replyForm.processing" class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-xl px-6 font-bold shadow-md shadow-blue-500/20" />
                                 </div>
                             </div>
                         </form>

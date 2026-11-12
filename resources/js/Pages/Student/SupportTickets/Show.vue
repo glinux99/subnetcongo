@@ -5,6 +5,7 @@ import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import PageCard from '@/Components/PageCard.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Textarea from 'primevue/textarea';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -39,31 +40,31 @@ const formatDate = (iso) => { if(!iso) return ''; try { return new Date(iso).toL
 <template>
     <AppLayout>
         <Head :title="t('pages.support_ticket_show.headTitle', { number: ticket.ticket_number })" />
-        <div class="page-bg min-h-screen">
-            <header class="page-header">
-                <div class="page-header-orb-1" aria-hidden="true"></div>
-                <div class="max-w-[1000px] mx-auto relative z-10">
-                    <Link :href="route('student.support.index')" class="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white mb-5 rounded">
-                        <i class="pi pi-arrow-left text-xs" aria-hidden="true"></i> {{ t('pages.support_ticket_show.backLink') }}
-                    </Link>
-                    <div class="flex items-start justify-between gap-4 flex-wrap">
-                        <div class="min-w-0">
-                            <p class="text-slate-400 text-xs font-mono">{{ ticket.ticket_number }}</p>
-                            <h1 class="page-header-title mt-1 break-words">{{ ticket.subject }}</h1>
-                            <div class="flex items-center gap-2 mt-3 flex-wrap">
-                                <Tag :value="statusLabel(ticket.status)" :severity="statusSeverity(ticket.status)" />
-                                <Tag :value="t('pages.support_ticket_show.priorityTag', { priority: priorityLabel(ticket.priority).toLowerCase() })" :severity="prioritySeverity(ticket.priority)" />
-                                <Tag v-if="ticket.category" :value="ticket.category.name" :style="{ backgroundColor: ticket.category.color }" class="!text-white" />
-                            </div>
-                        </div>
-                        <button v-if="ticket.status !== 'closed'" type="button" class="btn-header-secondary" @click="closeTicket">
-                            <i class="pi pi-check-circle" aria-hidden="true"></i> {{ t('pages.support_ticket_show.closeBtn') }}
-                        </button>
+        <div class="page-bg min-h-screen font-sans">
+            <PageHeader
+                :title="ticket.subject"
+                :subtitle="ticket.ticket_number"
+                icon="pi-ticket"
+                accent="blue"
+            >
+                <template #meta>
+                    <div class="flex items-center gap-2 mt-3 flex-wrap">
+                        <Tag :value="statusLabel(ticket.status)" :severity="statusSeverity(ticket.status)" />
+                        <Tag :value="t('pages.support_ticket_show.priorityTag', { priority: priorityLabel(ticket.priority).toLowerCase() })" :severity="prioritySeverity(ticket.priority)" />
+                        <Tag v-if="ticket.category" :value="ticket.category.name" :style="{ backgroundColor: ticket.category.color }" class="!text-white" />
                     </div>
-                </div>
-            </header>
+                </template>
+                <template #actions>
+                    <Link :href="route('student.support.index')" class="btn-header-secondary">
+                        <i class="pi pi-arrow-left" aria-hidden="true"></i> {{ t('pages.support_ticket_show.backLink') }}
+                    </Link>
+                    <button v-if="ticket.status !== 'closed'" type="button" class="btn-header-secondary" @click="closeTicket">
+                        <i class="pi pi-check-circle" aria-hidden="true"></i> {{ t('pages.support_ticket_show.closeBtn') }}
+                    </button>
+                </template>
+            </PageHeader>
 
-            <div class="max-w-[1000px] mx-auto px-4 md:px-6 -mt-16 relative z-20 pb-20 space-y-6">
+            <div class="page-container page-section !max-w-[1000px]">
                 <PageCard :title="t('pages.support_ticket_show.conversationTitle')">
                     <ol class="space-y-3">
                         <li

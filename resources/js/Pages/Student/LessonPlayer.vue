@@ -2,8 +2,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import ProgressBar from 'primevue/progressbar';
-import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
@@ -259,31 +259,22 @@ const submitAsk = () => {
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
-            <header class="page-header" role="banner">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" aria-hidden="true"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none" aria-hidden="true"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none" aria-hidden="true"></div>
-                <div class="max-w-[1600px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10" aria-hidden="true">
-                            <i class="pi pi-play text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                <h1 class="text-3xl font-black text-white tracking-tight">{{ lesson?.title }}</h1>
-                                <Tag :value="lesson?.type" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
-                            </div>
-                            <p class="text-slate-400 font-medium text-sm">{{ course?.title }} · {{ course?.instructor }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 text-white/80 text-[10px] font-black uppercase tracking-widest">
+            <PageHeader
+                :title="lesson?.title ?? t('pages.lesson_player.headFallback')"
+                :subtitle="course ? [course.title, course.instructor].filter(Boolean).join(' · ') : ''"
+                :badge="lesson?.type"
+                icon="pi-play"
+                accent="red"
+            >
+                <template #meta>
+                    <div class="flex items-center gap-2 text-white/80 text-[10px] font-black uppercase tracking-widest mt-2">
                         <i class="pi pi-clock text-blue-400" aria-hidden="true"></i>
                         <span>{{ t('pages.lesson_player.timeSpent', { time: `${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s` }) }}</span>
                     </div>
-                </div>
-            </header>
+                </template>
+            </PageHeader>
 
-            <main id="lesson-content" class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20" role="main">
+            <main id="lesson-content" class="page-container page-section" role="main">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-8 space-y-5">
                         <!-- Module Intro & Content (affiché avant la leçon) -->

@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -66,103 +68,34 @@ const formatDate = (iso) => {
     <AppLayout>
         <Head :title="t('pages.support_tickets.headTitle')" />
         
-        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
-            
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
-                
+        <div class="page-bg min-h-screen font-sans">
 
-                <!-- 1. BANNIÈRE SOMBRE -->
-                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                    
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                        
-                        <!-- Partie Gauche (Titres) -->
-                        <div class="max-w-3xl">
-                            <span class="inline-block border border-blue-900/50 text-blue-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-blue-950/30 mb-4 uppercase">
-                                Help Desk
-                            </span>
+            <PageHeader
+                :title="`${t('pages.support_tickets.titlePart1')} ${t('pages.support_tickets.titlePart2')}`"
+                :subtitle="t('pages.support_tickets.pageSubtitle')"
+                badge="Help Desk"
+                icon="pi-ticket"
+                accent="blue"
+                :actions="[
+                    { label: t('pages.support_tickets.refresh'), icon: 'pi-sync', variant: 'secondary', onClick: apply },
+                    { label: t('pages.support_tickets.newTicket'), icon: 'pi-plus', variant: 'primary', href: route('student.support.create') },
+                ]"
+            />
 
-                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">{{ t('pages.support_tickets.titlePart1') }}</span>
-                                <span class="text-[#FF3B3B]">{{ t('pages.support_tickets.titlePart2') }}</span>
-                            </h1>
+            <div class="page-container page-section">
 
-                            <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                {{ t('pages.support_tickets.pageSubtitle') }}
-                            </p>
-                        </div>
-
-                        <!-- Partie Droite (Boutons) -->
-                        <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
-                            <Button 
-                                :label="t('pages.support_tickets.refresh')" 
-                                icon="pi pi-sync" 
-                                @click="apply"
-                                class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
-                            />
-                            <Link :href="route('student.support.create')" class="w-full sm:w-auto">
-                                <Button 
-                                    :label="t('pages.support_tickets.newTicket')" 
-                                    icon="pi pi-plus" 
-                                    class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
-                                />
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. CARTES KPI (Chevauchement) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                    
-                    <!-- KPI 1 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                            <i class="pi pi-list text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiTotal') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.total ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 2 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-sky-50 flex items-center justify-center">
-                            <i class="pi pi-envelope-open text-sky-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiOpen') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.open ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 3 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-amber-50 flex items-center justify-center">
-                            <i class="pi pi-clock text-amber-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiPending') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.pending ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 4 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center">
-                            <i class="pi pi-check-circle text-emerald-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiResolved') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.resolved ?? 0 }}</div>
-                        </div>
-                    </div>
+                <!-- CARTES KPI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <PageKpi :label="t('pages.support_tickets.kpiTotal')" :value="stats?.total ?? 0" icon="pi-list" color="blue" />
+                    <PageKpi :label="t('pages.support_tickets.kpiOpen')" :value="stats?.open ?? 0" icon="pi-envelope-open" color="sky" />
+                    <PageKpi :label="t('pages.support_tickets.kpiPending')" :value="stats?.pending ?? 0" icon="pi-clock" color="amber" />
+                    <PageKpi :label="t('pages.support_tickets.kpiResolved')" :value="stats?.resolved ?? 0" icon="pi-check-circle" color="emerald" />
                 </div>
 
                 <!-- ============================================================================== -->
                 <!-- ZONE DU TABLEAU (Filtres et Liste)                                             -->
                 <!-- ============================================================================== -->
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative z-20 mt-6">
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                     
                     <!-- Zone des filtres -->
                     <div class="flex flex-wrap items-center gap-3 mb-6">

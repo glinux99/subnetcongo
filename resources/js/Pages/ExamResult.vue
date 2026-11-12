@@ -2,8 +2,8 @@
 import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
-import Tag from 'primevue/tag';
 import Knob from 'primevue/knob';
 import Divider from 'primevue/divider';
 import Timeline from 'primevue/timeline';
@@ -65,28 +65,16 @@ const getCorrectOptionTexts = (options) => {
         <Head :title="`${t('pages.exam_result.head_prefix')} — ${result?.exam?.title ?? t('pages.exam_result.exam_fallback')}`" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[100px] pointer-events-none"
-                     :class="passed ? 'bg-emerald-600/15' : 'bg-red-600/15'"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[900px] mx-auto relative z-10 flex items-center gap-5">
-                    <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border border-white/10"
-                         :class="passed ? 'bg-gradient-to-br from-emerald-600 to-blue-600' : 'bg-gradient-to-br from-red-600 to-red-800'">
-                        <i :class="passed ? 'pi pi-check-circle text-white text-3xl' : 'pi pi-times-circle text-white text-3xl'"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3 mb-1 flex-wrap">
-                            <h1 class="text-3xl font-black text-white tracking-tight">{{ passed ? t('pages.exam_result.congrats') : t('pages.exam_result.failed_title') }}</h1>
-                            <Tag :value="passed ? t('pages.exam_result.status_passed') : t('pages.exam_result.status_failed')" :severity="passed ? 'success' : 'danger'"
-                                 class="!text-[10px] !font-black !uppercase !tracking-widest" />
-                        </div>
-                        <p class="text-slate-400 font-medium text-sm">{{ result?.exam?.title ?? t('pages.exam_result.result_fallback') }}</p>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                :title="passed ? t('pages.exam_result.congrats') : t('pages.exam_result.failed_title')"
+                :subtitle="result?.exam?.title ?? t('pages.exam_result.result_fallback')"
+                :badge="passed ? t('pages.exam_result.status_passed') : t('pages.exam_result.status_failed')"
+                :icon="passed ? 'pi-check-circle' : 'pi-times-circle'"
+                accent="red"
+            />
 
-            <div class="max-w-[900px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
-                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
+            <div class="page-container page-section">
+                <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px] max-w-[900px] w-full mx-auto">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
                             <Knob v-model="score" :size="140" :strokeWidth="10" :readonly="true"

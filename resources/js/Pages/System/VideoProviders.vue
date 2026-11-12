@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -83,20 +84,21 @@ const severity = (provider) => (props.configured?.[provider] ? 'success' : 'warn
         <Toast />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="page-header">
-                <div class="max-w-[1400px] mx-auto relative z-10 flex items-center justify-between gap-4 flex-wrap">
-                    <div>
-                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{{ t('pages.video_providers.config_system') }}</p>
-                        <h1 class="text-3xl font-black text-white tracking-tight">{{ t('pages.video_providers.videoconf_title') }}</h1>
-                        <p class="text-slate-400 text-sm mt-1">{{ t('pages.video_providers.videoconf_subtitle') }}</p>
-                    </div>
+            <PageHeader
+                :title="t('pages.video_providers.videoconf_title')"
+                :subtitle="t('pages.video_providers.videoconf_subtitle')"
+                :badge="t('pages.video_providers.config_system')"
+                icon="pi-video"
+                accent="blue"
+            >
+                <template #actions>
                     <Link :href="route('system.settings')">
                         <Button :label="t('pages.video_providers.general_settings')" icon="pi pi-arrow-left" outlined class="!text-white !border-white/30" />
                     </Link>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
-            <div class="max-w-[1400px] mx-auto px-4 lg:px-6 -mt-6 relative z-20 space-y-6">
+            <div class="page-container page-section">
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                     <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{{ t('pages.video_providers.default_provider') }}</label>
                     <Select v-model="form.default_provider" :options="providerOptions" optionLabel="label" optionValue="value" class="w-full md:w-96" />

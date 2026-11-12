@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { router, Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
@@ -93,68 +95,52 @@ const formatPrice = (price) => {
     <AppLayout>
         <Head title="Marketplace | SubnetCongo Academy" />
 
-        <div class="page-bg min-h-screen font-sans pb-20">
+        <div class="page-bg min-h-screen font-sans">
 
-            <!-- HEADER ULTIMATE V30 (Premium Dark Mesh) -->
-            <div class="bg-[#0F172A] pt-8 sm:pt-12 pb-20 sm:pb-24 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
-                <div class="absolute top-[-10%] right-[-10%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-blue-600/20 rounded-full blur-[100px] sm:blur-[120px] pointer-events-none"></div>
-                <div class="absolute bottom-[-10%] left-[-5%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-blue-600/10 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none"></div>
-
-                <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
-                    <div class="text-center md:text-left">
-                        <div class="flex items-center justify-center md:justify-start gap-2 sm:gap-3 mb-3 sm:mb-4">
-                            <span class="px-2 sm:px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-[9px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest">Digital Learning Hub</span>
+            <PageHeader
+                title="Catalogue Marketplace"
+                subtitle="Apprenez des meilleurs experts tech en RDC. Des formations certifiantes pour propulser votre carrière."
+                badge="Digital Learning Hub"
+                icon="pi-shopping-bag"
+                accent="red"
+            >
+                <template #actions>
+                    <Link :href="route('marketplace.cart')" class="group relative px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 transition-all">
+                        <i class="pi pi-shopping-cart text-white text-base sm:text-lg group-hover:scale-110 transition-transform"></i>
+                        <div class="text-left">
+                            <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Panier</p>
+                            <p class="text-white font-bold text-xs">{{ props.cartCount || 0 }} article(s)</p>
                         </div>
-                        <h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
-                            Catalogue <span class="text-blue-500">Marketplace</span>
-                        </h1>
-                        <p class="text-slate-400 mt-3 sm:mt-4 max-w-lg text-xs sm:text-sm font-medium leading-relaxed">
-                            Apprenez des meilleurs experts tech en RDC. Des formations certifiantes pour propulser votre carrière.
-                        </p>
-                    </div>
+                        <span v-if="props.cartCount" class="absolute -top-1.5 sm:-top-2 -right-1.5 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#0F172A]">{{ props.cartCount }}</span>
+                    </Link>
+                </template>
+            </PageHeader>
 
-                    <div class="flex items-center gap-3 sm:gap-4">
-                        <Link :href="route('marketplace.cart')" class="group relative px-4 sm:px-6 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 transition-all">
-                            <i class="pi pi-shopping-cart text-white text-base sm:text-lg group-hover:scale-110 transition-transform"></i>
-                            <div class="text-left">
-                                <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Panier</p>
-                                <p class="text-white font-bold text-xs">{{ props.cartCount || 0 }} article(s)</p>
-                            </div>
-                            <span v-if="props.cartCount" class="absolute -top-1.5 sm:-top-2 -right-1.5 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#0F172A]">{{ props.cartCount }}</span>
-                        </Link>
-                    </div>
-                </div>
+            <!-- CONTENT SECTION -->
+            <div class="page-container page-section">
 
-                <!-- Global Search Pro -->
-                <div class="max-w-3xl mx-auto mt-6 sm:mt-10 relative z-10">
+                <!-- Global Search -->
+                <div class="max-w-3xl w-full">
                     <IconField iconPosition="left">
                         <InputIcon class="pi pi-search text-slate-400" />
                         <InputText v-model="search" @keyup.enter="apply" placeholder="Qu'allez-vous maîtriser aujourd'hui ?"
-                            class="w-full !bg-white/5 !backdrop-blur-md !border-white/10 !rounded-xl !py-3.5 sm:!py-5 !pl-12 sm:!pl-14 !text-white placeholder:!text-slate-500 focus:!bg-white/10 focus:!border-blue-500/50 transition-all text-sm sm:text-base" />
+                            class="w-full !rounded-xl !py-3.5 sm:!py-4 !pl-12 !text-slate-700 placeholder:!text-slate-400 !bg-white border-slate-200 focus:!border-blue-500 transition-all text-sm sm:text-base shadow-sm" />
                     </IconField>
                 </div>
-            </div>
 
-            <!-- CONTENT SECTION -->
-            <div class="max-w-11xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-12 relative z-20">
                 <div class="bg-white rounded-[1rem] shadow-2xl border border-slate-200/50 p-4 sm:p-6 lg:p-10">
 
-                    <!-- KPI STRIP (Premium Cards) -->
+                    <!-- KPI STRIP -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
-                        <div v-for="stat in [
-                            { label: 'Cours publiés', val: stats.total, icon: 'shopping-bag', color: 'bg-blue-50 text-blue-600' },
-                            { label: 'Gratuits', val: stats.free, icon: 'gift', color: 'bg-emerald-50 text-emerald-600' },
-                            { label: 'Payants', val: stats.paid, icon: 'credit-card', color: 'bg-amber-50 text-amber-600' },
-                            ...(stats.avg_rating !== null
-                                ? [{ label: 'Avis moyen', val: stats.avg_rating, icon: 'star', color: 'bg-blue-50 text-blue-600', suffix: '/5' }]
-                                : [{ label: 'Avis', val: 'Aucun', icon: 'star', color: 'bg-slate-100 text-slate-400' }])
-                        ]" :key="stat.label" class="p-3 sm:p-6 rounded-xl border border-slate-100 bg-white hover:shadow-lg transition-all group">
-                            <div :class="stat.color" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-2 sm:mb-4 group-hover:scale-110 transition-transform">
-                                <i :class="`pi pi-${stat.icon} text-sm sm:text-base`"></i>
-                            </div>
-                            <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5 sm:mb-1">{{ stat.label }}</p>
-                            <h3 class="text-lg sm:text-2xl font-black text-slate-800">{{ stat.val }}<span v-if="stat.suffix" class="text-xs sm:text-sm opacity-50">{{ stat.suffix }}</span></h3>
-                        </div>
+                        <PageKpi label="Cours publiés" :value="stats.total" icon="pi-shopping-bag" color="blue" />
+                        <PageKpi label="Gratuits" :value="stats.free" icon="pi-gift" color="emerald" />
+                        <PageKpi label="Payants" :value="stats.paid" icon="pi-credit-card" color="amber" />
+                        <PageKpi
+                            :label="stats.avg_rating !== null ? 'Avis moyen' : 'Avis'"
+                            :value="stats.avg_rating !== null ? `${stats.avg_rating}/5` : 'Aucun'"
+                            icon="pi-star"
+                            :color="stats.avg_rating !== null ? 'blue' : 'slate'"
+                        />
                     </div>
 
                     <div class="flex flex-col lg:flex-row gap-6 sm:gap-10">

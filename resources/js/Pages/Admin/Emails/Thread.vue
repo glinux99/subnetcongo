@@ -1,6 +1,7 @@
 <script setup>
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import Textarea from 'primevue/textarea';
@@ -84,42 +85,22 @@ const goToEmail = (msgNumber) => {
 <template>
     <AppLayout>
         <Head title="Conversation" />
-        <div class="page-bg min-h-screen font-sans pb-20">
-            <!-- Header -->
-            <div class="bg-[#0f172a] pt-10 pb-16 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
-                <div class="max-w-[1100px] mx-auto relative z-10">
-                    <Link :href="route('admin.emails.index')" class="text-slate-400 hover:text-white text-xs flex items-center gap-2 mb-4 transition">
-                        <i class="pi pi-arrow-left"></i> Retour à la boîte de réception
-                    </Link>
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 class="text-xl font-black text-white tracking-tight">
-                                Conversation ({{ thread.length }} messages)
-                            </h1>
-                            <p class="text-slate-400 text-sm mt-1">{{ email.subject }}</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <Button
-                                label="Répondre"
-                                icon="pi pi-reply"
-                                size="small"
-                                @click="startReply(email.from?.[0]?.email)"
-                                class="!rounded-xl !bg-red-500 !border-red-500"
-                            />
-                            <Button
-                                label="Transférer"
-                                icon="pi pi-send"
-                                size="small"
-                                outlined
-                                @click="router.visit(route('admin.emails.forward', messageNumber))"
-                                class="!rounded-xl"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="min-h-screen bg-slate-50 font-sans pb-20">
+            <!-- PageHeader -->
+            <PageHeader
+                :title="`Conversation (${thread.length} messages)`"
+                :subtitle="email.subject"
+                badge="Webmail"
+                icon="pi-comments"
+                accent="blue"
+                :actions="[
+                    { label: 'Retour', icon: 'pi-arrow-left', href: route('admin.emails.index'), variant: 'secondary' },
+                    { label: 'Transférer', icon: 'pi-send', onClick: () => router.visit(route('admin.emails.forward', messageNumber)), variant: 'secondary' },
+                    { label: 'Répondre', icon: 'pi-reply', onClick: () => startReply(email.from?.[0]?.email), variant: 'primary' }
+                ]"
+            />
 
-            <div class="max-w-[1100px] mx-auto px-4 lg:px-6 -mt-8 relative z-20 space-y-6">
+            <div class="max-w-[1100px] mx-auto px-4 lg:px-6 pt-6 space-y-6">
                 <!-- Thread Messages -->
                 <div class="space-y-4">
                     <div
@@ -240,7 +221,7 @@ const goToEmail = (msgNumber) => {
                         label="Répondre à cette conversation"
                         icon="pi pi-reply"
                         @click="startReply(thread[thread.length - 1]?.from?.[0]?.email)"
-                        class="!rounded-xl !bg-red-500 !border-red-500"
+                        class="!rounded-xl !bg-blue-600 hover:!bg-blue-500 !border-blue-600"
                     />
                 </div>
             </div>

@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
@@ -141,107 +143,39 @@ const moveToTrash = (messageNumber) => {
     <AppLayout>
         <Head title="Boîte email" />
         
-        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
-            
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
-                
+        <div class="min-h-screen bg-slate-50 font-sans pb-20">
 
-                <!-- 1. BANNIÈRE SOMBRE -->
-                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                    
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                        
-                        <!-- Partie Gauche (Titres) -->
-                        <div class="max-w-3xl">
-                            <span class="inline-block border border-red-900/50 text-[#ff4d4d] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
-                                Connecté : {{ account }}
-                            </span>
+            <!-- PageHeader -->
+            <PageHeader
+                title="Boîte Email"
+                subtitle="Gérez vos correspondances IMAP directement depuis la plateforme. Lisez, classez et répondez à vos emails sans quitter votre environnement de travail."
+                :badge="account ? 'Connecté : ' + account : 'Connecté'"
+                icon="pi-envelope"
+                accent="blue"
+                :actions="[
+                    { label: 'Nouveau message', icon: 'pi-pen-to-square', href: route('admin.emails.compose'), variant: 'primary' },
+                    { label: 'Actualiser', icon: 'pi-sync', onClick: applyFilters, variant: 'secondary' }
+                ]"
+            />
 
-                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">BOÎTE</span>
-                                <span class="text-[#EF4444]">EMAIL</span>
-                            </h1>
+            <div class="max-w-[1600px] mx-auto px-4 md:px-6 pt-6">
 
-                            <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                Gérez vos correspondances IMAP directement depuis la plateforme. Lisez, classez et répondez à vos emails sans quitter votre environnement de travail.
-                            </p>
+                <!-- KPI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <PageKpi label="Total Emails" :value="stats.total ?? 0" icon="pi-inbox" color="blue" />
+                    <PageKpi label="Non lus" :value="stats.unread ?? 0" icon="pi-envelope" color="red" />
+                    <PageKpi label="Quota serveur" :value="(stats.quota?.percent ?? 0) + '%'" icon="pi-database" color="red">
+                        <div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden w-full">
+                            <div class="h-full rounded-full bg-red-500 transition-all duration-500" :style="{ width: Math.min(stats.quota?.percent ?? 0, 100) + '%' }"></div>
                         </div>
-
-                        <!-- Partie Droite (Boutons) -->
-                        <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
-                            <Button 
-                                label="Actualiser" 
-                                icon="pi pi-sync" 
-                                @click="applyFilters"
-                                class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
-                            />
-                            <Button 
-                                label="Nouveau message" 
-                                icon="pi pi-pen-to-square" 
-                                @click="router.visit(route('admin.emails.compose'))"
-                                class="!bg-[#EF4444] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. CARTES KPI (Chevauchement) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                    
-                    <!-- KPI 1 : Total -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                            <i class="pi pi-inbox text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Emails</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats.total ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 2 : Non Lus -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                            <i class="pi pi-envelope text-red-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Non lus</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats.unread ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 3 : Quota -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                            <i class="pi pi-database text-red-500 text-sm"></i>
-                        </div>
-                        <div class="w-full">
-                            <div class="flex justify-between items-end mb-2">
-                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quota serveur</div>
-                                <div class="text-xl font-black text-slate-800 leading-none">{{ stats.quota?.percent ?? 0 }}<span class="text-xs text-slate-400 ml-0.5">%</span></div>
-                            </div>
-                            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden w-full">
-                                <div :class="['h-full rounded-full transition-all duration-500', (stats.quota?.percent ?? 0) > 85 ? 'bg-red-500' : 'bg-red-500']" :style="{ width: Math.min(stats.quota?.percent ?? 0, 100) + '%' }"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 4 : Dossiers -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                            <i class="pi pi-folder-open text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dossiers Sync.</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ folders.length }}</div>
-                        </div>
-                    </div>
+                    </PageKpi>
+                    <PageKpi label="Dossiers Sync." :value="folders.length" icon="pi-folder-open" color="blue" />
                 </div>
 
                 <!-- ============================================================================== -->
                 <!-- ZONE DU WEBMAIL (Sidebar + Liste)                                              -->
                 <!-- ============================================================================== -->
-                <div class="relative z-20 mt-6">
+                <div class="mt-6">
                     
                     <!-- Message d'erreur -->
                     <div v-if="error" class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 shadow-sm flex items-center gap-3 text-red-700">

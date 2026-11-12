@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
@@ -100,41 +101,28 @@ const isValid = computed(() => form.to && form.subject && form.body);
 <template>
     <AppLayout>
         <Head :title="t('pages.admin_emails_compose.page_title')" />
-        <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
-            
-            <!-- HEADER (Inspiré de votre image) -->
-            <div class="bg-[#11131f] pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden">
-                <div class="max-w-[1000px] mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    
-                    <!-- Titre & Sous-titre -->
-                    <div>
-                        <div class="mb-3">
-                            <span class="border border-red-500/30 bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider">
-                                V11.5
-                            </span>
-                        </div>
-                        <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase italic flex flex-wrap items-center gap-x-3">
-                            {{ t('pages.admin_emails_compose.hero_title_1') }} <span class="text-[#ef4444]">{{ t('pages.admin_emails_compose.hero_title_2') }}</span>
-                        </h1>
-                        <p class="text-slate-400 mt-3 text-sm italic max-w-xl">
-                            {{ t('pages.admin_emails_compose.hero_subtitle') }}
-                        </p>
-                    </div>
+        <div class="min-h-screen bg-slate-50 pb-20 font-sans">
 
-                    <!-- Actions Haut Droite (Inspiré de l'image) -->
-                    <div class="flex items-center gap-3">
-                        <Link :href="route('admin.emails.index')" class="flex items-center gap-2 px-4 py-2.5 bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded-md text-sm font-medium transition duration-200">
-                            <i class="pi pi-arrow-left"></i> {{ t('pages.admin_emails_compose.btn_back') }}
-                        </Link>
-                        <button @click="saveDraft" class="flex items-center gap-2 px-4 py-2.5 bg-[#ef4444] hover:bg-red-600 text-white rounded-md text-sm font-medium transition duration-200 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                            <i class="pi pi-save"></i> {{ t('pages.admin_emails_compose.btn_draft') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <!-- PageHeader -->
+            <PageHeader
+                :title="`${t('pages.admin_emails_compose.hero_title_1')} ${t('pages.admin_emails_compose.hero_title_2')}`"
+                :subtitle="t('pages.admin_emails_compose.hero_subtitle')"
+                badge="V11.5"
+                icon="pi-pen-to-square"
+                accent="blue"
+            >
+                <template #actions>
+                    <Link :href="route('admin.emails.index')" class="btn-header-secondary">
+                        <i class="pi pi-arrow-left"></i> {{ t('pages.admin_emails_compose.btn_back') }}
+                    </Link>
+                    <button type="button" class="btn-header-primary" @click="saveDraft">
+                        <i class="pi pi-save"></i> {{ t('pages.admin_emails_compose.btn_draft') }}
+                    </button>
+                </template>
+            </PageHeader>
 
-            <!-- COMPOSER (Inspiré de l'ergonomie Gmail, Chevauchant le header) -->
-            <div class="max-w-[1000px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
+            <!-- COMPOSER -->
+            <div class="max-w-[1000px] mx-auto px-4 lg:px-6 pt-6 relative z-20">
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden flex flex-col">
                     
                     <!-- Ligne "À" avec Cc/Cci intégrés -->

@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
@@ -25,11 +26,6 @@ const isLiveKit = computed(() => props.session?.provider === 'livekit');
 const providerLabel = computed(() => {
     const p = props.session?.provider;
     return ({ zoom: 'Zoom', meet: 'Google Meet', bbb: 'BigBlueButton', jitsi: 'Jitsi Meet', livekit: 'LiveKit (In-App)' })[p] ?? t('pages.live_session_player.provider_fallback');
-});
-
-const providerColor = computed(() => {
-    const p = props.session?.provider;
-    return ({ zoom: 'from-blue-500 to-blue-700', meet: 'from-emerald-500 to-emerald-700', bbb: 'from-blue-500 to-blue-700', jitsi: 'from-slate-600 to-slate-800', livekit: 'from-red-500 to-red-700' })[p] ?? 'from-blue-500 to-red-500';
 });
 
 const joinUrl = computed(() => props.session?.meeting_url);
@@ -76,23 +72,14 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
         <Head :title="session?.title || t('pages.live_session_player.head_fallback')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[1600px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
-                    <div class="flex items-center gap-5">
-                        <div :class="['w-16 h-16 bg-gradient-to-br rounded-2xl flex items-center justify-center shadow-lg border border-white/10', providerColor]">
-                            <i class="pi pi-video text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                <h1 class="text-3xl font-black text-white tracking-tight">{{ session?.title }}</h1>
-                                <Tag :value="session?.status" :severity="session?.status === 'Live' ? 'success' : 'info'" class="!text-[10px] !font-black !uppercase !tracking-widest" />
-                            </div>
-                            <p class="text-slate-400 font-medium text-sm">{{ providerLabel }} · {{ t('pages.live_session_player.code') }} : {{ session?.passcode ?? '—' }}</p>
-                        </div>
-                    </div>
+            <PageHeader
+                :title="session?.title || t('pages.live_session_player.head_fallback')"
+                :subtitle="`${providerLabel} · ${t('pages.live_session_player.code')} : ${session?.passcode ?? '—'}`"
+                :badge="session?.status"
+                icon="pi-video"
+                accent="red"
+            >
+                <template #actions>
                     <div class="flex items-center gap-3 text-white/80 text-[10px] font-black uppercase tracking-widest">
                         <div class="bg-red-500/20 text-red-300 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center gap-2">
                             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -102,10 +89,10 @@ const openInNewTab = () => joinUrl.value && window.open(joinUrl.value, '_blank',
                         <span v-else class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-full border border-amber-500/30">{{ t('pages.live_session_player.demo_mode') }}</span>
                         <span>~{{ t('pages.live_session_player.minutes_left', { count: minutesLeft }) }}</span>
                     </div>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
+            <div class="page-container page-section">
                 <div v-if="isLiveKit" class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-6">
                     <VideoConference :session="session" :user="user" :requires-confirmation="requires_confirmation" />
                 </div>

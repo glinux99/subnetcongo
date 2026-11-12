@@ -1,6 +1,8 @@
 <script setup>
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
@@ -57,84 +59,38 @@ const formatDate = (iso) => {
     <AppLayout>
         <Head :title="t('pages.admin_contact_message.head_title', { ticket: message.ticket_number })" />
         
-        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
-            
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1200px] mx-auto">
-                
-                <!-- Lien de retour type Breadcrumb -->
-                <div class="flex items-center text-sm px-1 mb-3">
-                    <Link :href="route('admin.messages.index')" class="text-slate-500 hover:text-slate-800 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
-                        <i class="pi pi-arrow-left"></i> {{ t('pages.admin_contact_message.back_to_inbox') }}
-                    </Link>
-                </div>
+        <div class="page-bg min-h-screen font-sans">
 
-                <!-- 1. BANNIÈRE SOMBRE -->
-                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                    
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                        
-                        <!-- Partie Gauche (Titres) -->
-                        <div class="max-w-3xl">
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="inline-block border border-red-900/50 text-red-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 uppercase">
-                                    {{ t('pages.admin_contact_message.ticket_badge', { ticket: message.ticket_number }) }}
-                                </span>
-                                <Tag :value="statusLabel(message.status)" :severity="statusSeverity(message.status)" class="!text-[9px] !font-bold !uppercase !tracking-wider px-2" />
-                            </div>
-
-                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-3 leading-none">
-                                <span class="text-white">{{ t('pages.admin_contact_message.hero_title_1') }}</span>
-                                <span class="text-[#EF4444]">{{ t('pages.admin_contact_message.hero_title_2') }}</span>
-                            </h1>
-
-                            <p class="text-slate-400 text-sm md:text-base italic leading-relaxed font-bold">
-                                {{ t('pages.admin_contact_message.subject_label') }} <span class="text-white">{{ message.subject }}</span>
-                            </p>
-                        </div>
+            <PageHeader
+                :title="`${t('pages.admin_contact_message.hero_title_1')} ${t('pages.admin_contact_message.hero_title_2')}`"
+                :subtitle="`${t('pages.admin_contact_message.subject_label')} ${message.subject}`"
+                :badge="t('pages.admin_contact_message.ticket_badge', { ticket: message.ticket_number })"
+                icon="pi-envelope"
+                accent="blue"
+                :actions="[{ label: t('pages.admin_contact_message.back_to_inbox'), icon: 'pi-arrow-left', variant: 'secondary', href: route('admin.messages.index') }]"
+            >
+                <template #meta>
+                    <div class="mt-3">
+                        <Tag :value="statusLabel(message.status)" :severity="statusSeverity(message.status)" class="!text-[9px] !font-bold !uppercase !tracking-wider px-2" />
                     </div>
-                </div>
+                </template>
+            </PageHeader>
 
-                <!-- 2. CARTES KPI / EXPÉDITEUR (Chevauchement) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                    
-                    <!-- Nom -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-32">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center mb-2">
-                            <i class="pi pi-user text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_message.kpi_sender') }}</div>
-                            <div class="text-lg font-black text-slate-800 truncate">{{ message.name }}</div>
-                        </div>
-                    </div>
+            <div class="page-container page-section">
 
-                    <!-- Email -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-32">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center mb-2">
-                            <i class="pi pi-envelope text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_message.kpi_email') }}</div>
-                            <a :href="`mailto:${message.email}`" class="text-lg font-black text-blue-600 hover:text-blue-800 transition-colors truncate block">{{ message.email }}</a>
-                        </div>
-                    </div>
-
-                    <!-- Téléphone -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-32">
-                        <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center mb-2">
-                            <i class="pi pi-phone text-red-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_message.kpi_phone') }}</div>
-                            <div class="text-lg font-black text-slate-800 truncate">{{ message.phone || t('pages.admin_contact_message.phone_empty') }}</div>
-                        </div>
-                    </div>
+                <!-- CARTES KPI / EXPÉDITEUR -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <PageKpi :label="t('pages.admin_contact_message.kpi_sender')" :value="message.name" icon="pi-user" color="blue" />
+                    <a :href="`mailto:${message.email}`" class="block hover:no-underline">
+                        <PageKpi :label="t('pages.admin_contact_message.kpi_email')" :value="message.email" icon="pi-envelope" color="sky" />
+                    </a>
+                    <PageKpi :label="t('pages.admin_contact_message.kpi_phone')" :value="message.phone || t('pages.admin_contact_message.phone_empty')" icon="pi-phone" color="red" />
                 </div>
 
                 <!-- ============================================================================== -->
                 <!-- CONTENU DU MESSAGE ET RÉPONSE                                                  -->
                 <!-- ============================================================================== -->
-                <div class="mt-6 space-y-6 px-2 md:px-4 relative z-20">
+                <div class="space-y-6">
                     
                     <!-- Message Reçu -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">

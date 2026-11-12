@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import Button from 'primevue/button';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
@@ -39,40 +41,25 @@ const engagementRate = computed(() => {
     <AppLayout>
         <Head :title="`${t('pages.live_session_report.head_prefix')} — ${session?.title}`" />
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[1600px] mx-auto relative z-10 flex items-center justify-between gap-5 flex-wrap">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10">
-                            <i class="pi pi-chart-bar text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-3xl font-black text-white tracking-tight">{{ t('pages.live_session_report.heading') }}</h1>
-                            <p class="text-slate-400 font-medium text-sm">{{ session?.title }} · {{ session?.course?.title }}</p>
-                        </div>
-                    </div>
+            <PageHeader
+                :title="t('pages.live_session_report.heading')"
+                :subtitle="[session?.title, session?.course?.title].filter(Boolean).join(' · ')"
+                icon="pi-chart-bar"
+                accent="red"
+            >
+                <template #actions>
                     <Link :href="route('live-sessions.index')">
                         <Button :label="t('pages.live_session_report.btn_back')" icon="pi pi-arrow-left" outlined class="!text-white !border-white/20 hover:!bg-white/10 !rounded-xl" />
                     </Link>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div v-for="kpi in [
-                        { label: t('pages.live_session_report.kpi_registered'), value: stats?.total_registered ?? 0, icon: 'pi-users', color: 'from-blue-500 to-blue-500' },
-                        { label: t('pages.live_session_report.kpi_attendees'), value: stats?.actual_attendees ?? 0, icon: 'pi-check-circle', color: 'from-emerald-500 to-teal-500' },
-                        { label: t('pages.live_session_report.kpi_attendance_rate'), value: `${engagementRate}%`, icon: 'pi-percentage', color: 'from-blue-600 to-blue-700' },
-                        { label: t('pages.live_session_report.kpi_peak'), value: stats?.peak_participants ?? 0, icon: 'pi-bolt', color: 'from-red-600 to-red-700' },
-                    ]" :key="kpi.label" class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                        <div :class="['w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg mb-3', kpi.color]">
-                            <i :class="['pi', kpi.icon, 'text-xl']"></i>
-                        </div>
-                        <div class="text-2xl font-black text-slate-800 tracking-tight">{{ kpi.value }}</div>
-                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ kpi.label }}</div>
-                    </div>
+            <div class="page-container page-section">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <PageKpi :label="t('pages.live_session_report.kpi_registered')" :value="stats?.total_registered ?? 0" icon="pi-users" color="blue" />
+                    <PageKpi :label="t('pages.live_session_report.kpi_attendees')" :value="stats?.actual_attendees ?? 0" icon="pi-check-circle" color="emerald" />
+                    <PageKpi :label="t('pages.live_session_report.kpi_attendance_rate')" :value="`${engagementRate}%`" icon="pi-percentage" color="sky" />
+                    <PageKpi :label="t('pages.live_session_report.kpi_peak')" :value="stats?.peak_participants ?? 0" icon="pi-bolt" color="red" />
                 </div>
 
                 <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-6">

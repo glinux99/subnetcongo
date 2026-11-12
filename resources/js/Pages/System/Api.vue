@@ -13,6 +13,7 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { ref, reactive, computed, onMounted } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
@@ -410,34 +411,23 @@ const exportLogs = () => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- HEADER -->
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-
-                <div class="max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10">
-                            <i class="pi pi-server text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3 mb-1">
-                                <h1 class="text-3xl font-black text-white tracking-tight">API Gateway Control</h1>
-                                <Tag :value="healthStatus.status === 'healthy' ? 'ONLINE' : t('pages.api.degraded')" :severity="healthStatus.status === 'healthy' ? 'success' : 'danger'" class="text-[10px] font-black uppercase tracking-widest" />
-                            </div>
-                            <p class="text-slate-400 font-medium text-sm">{{ t('pages.api.monitoring') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-3">
-                        <SplitButton :label="t('pages.api.export')" icon="pi pi-download" :model="exportOptions" class="p-button-outlined p-button-secondary bg-slate-800/50 text-white border-slate-700" />
-                        <Button :label="t('pages.api.generate_token')" icon="pi pi-key" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold" @click="openCreateTokenWizard" />
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                title="API Gateway Control"
+                :subtitle="t('pages.api.monitoring')"
+                icon="pi-server"
+                accent="blue"
+            >
+                <template #meta>
+                    <Tag :value="healthStatus.status === 'healthy' ? 'ONLINE' : t('pages.api.degraded')" :severity="healthStatus.status === 'healthy' ? 'success' : 'danger'" class="!text-[10px] !font-black !uppercase !tracking-widest mt-3" />
+                </template>
+                <template #actions>
+                    <SplitButton :label="t('pages.api.export')" icon="pi pi-download" :model="exportOptions" class="p-button-outlined p-button-secondary bg-slate-800/50 text-white border-slate-700" />
+                    <Button :label="t('pages.api.generate_token')" icon="pi pi-key" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold" @click="openCreateTokenWizard" />
+                </template>
+            </PageHeader>
 
             <!-- MAIN -->
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
+            <div class="page-container page-section">
                 <div class="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden min-h-[600px] flex flex-col">
                     <TabView v-model:activeIndex="activeTab" class="custom-tabview flex-1 flex flex-col">
 

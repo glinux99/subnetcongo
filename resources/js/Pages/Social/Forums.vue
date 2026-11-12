@@ -1,5 +1,7 @@
 <script setup>
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
@@ -326,43 +328,26 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
-            <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-blue-900 text-white pt-12 pb-24 px-6 lg:px-12 relative overflow-hidden flex-shrink-0 shadow-xl border-b border-blue-900/50">
-                <div class="absolute -right-32 -top-32 w-[40rem] h-[40rem] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute -left-20 bottom-0 w-[30rem] h-[30rem] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+            <PageHeader
+                title="Communauté"
+                :subtitle="isInstructor ? 'Espace Professeur : Gérez vos évaluations, animez vos groupes et interagissez avec les étudiants.' : 'Espace Étudiant : Discutez, collaborez sur le forum et remettez vos devoirs.'"
+                icon="pi-globe"
+                accent="blue"
+            />
 
-                <div class="relative z-20 max-w-[1600px] 2xl:max-w-[95%] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div class="flex items-center gap-6">
-                        <div class="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
-                            <i class="pi pi-globe text-3xl text-blue-300"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-3xl lg:text-4xl font-black tracking-tight text-white mb-1">Communauté</h1>
-                            <p class="text-blue-200/90 font-medium text-sm max-w-lg leading-relaxed">
-                                {{ isInstructor ? "Espace Professeur : Gérez vos évaluations, animez vos groupes et interagissez avec les étudiants." : "Espace Étudiant : Discutez, collaborez sur le forum et remettez vos devoirs." }}
-                            </p>
-                        </div>
+            <div class="page-container">
+
+                <!-- KPI raccourcis -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+                    <div @click="activeHubSection = 'chat'" class="cursor-pointer">
+                        <PageKpi label="Messages" :value="props.stats.unread_messages" icon="pi-envelope" color="red" />
                     </div>
-
-                    <div class="flex flex-wrap gap-4">
-                        <div class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-2xl flex items-center gap-5 hover:bg-white/10 transition-all cursor-pointer shadow-lg group" @click="activeHubSection = 'chat'">
-                            <div class="w-12 h-12 bg-red-500/20 text-red-400 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><i class="pi pi-envelope text-xl"></i></div>
-                            <div>
-                                <p class="text-[10px] uppercase font-black text-blue-200 tracking-widest mb-0.5">Messages</p>
-                                <p class="text-2xl font-black leading-none text-white">{{ props.stats.unread_messages }}</p>
-                            </div>
-                        </div>
-                        <div v-if="!isInstructor" class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-4 rounded-2xl flex items-center gap-5 hover:bg-white/10 transition-all cursor-pointer shadow-lg group" @click="activeHubSection = 'assignments'">
-                            <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"><i class="pi pi-file-edit text-xl"></i></div>
-                            <div>
-                                <p class="text-[10px] uppercase font-black text-blue-200 tracking-widest mb-0.5">Devoirs Dûs</p>
-                                <p class="text-2xl font-black leading-none text-white">{{ props.stats.pending_assignments }}</p>
-                            </div>
-                        </div>
+                    <div v-if="!isInstructor" @click="activeHubSection = 'assignments'" class="cursor-pointer">
+                        <PageKpi label="Devoirs Dûs" :value="props.stats.pending_assignments" icon="pi-file-edit" color="amber" />
                     </div>
                 </div>
-            </div>
 
-            <div class="flex-1 max-w-[1600px] 2xl:max-w-[95%] mx-auto w-full px-4 lg:px-8 -mt-12 relative z-30 flex flex-col lg:flex-row gap-8 items-start">
+                <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
 
                 <aside class="w-full lg:w-80 flex-shrink-0 sticky top-24">
                     <div class="bg-white/90 backdrop-blur-xl rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 p-5">
@@ -636,6 +621,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                         </template>
                     </div>
                 </main>
+                </div>
             </div>
         </div>
 

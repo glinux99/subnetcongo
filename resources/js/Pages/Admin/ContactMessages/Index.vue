@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -55,96 +57,31 @@ const formatDate = (iso) => {
     <AppLayout>
         <Head :title="t('pages.admin_contact_messages.page_title')" />
         
-        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
-            
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
-                
+        <div class="page-bg min-h-screen font-sans">
 
-                <!-- 1. BANNIÈRE SOMBRE -->
-                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                    
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                        
-                        <!-- Partie Gauche (Titres) -->
-                        <div class="max-w-3xl">
-                            <span class="inline-block border border-red-900/50 text-red-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
-                                {{ t('pages.admin_contact_messages.badge') }}
-                            </span>
+            <PageHeader
+                :title="`${t('pages.admin_contact_messages.hero_title_1')} ${t('pages.admin_contact_messages.hero_title_2')}`"
+                :subtitle="t('pages.admin_contact_messages.hero_subtitle')"
+                :badge="t('pages.admin_contact_messages.badge')"
+                icon="pi-inbox"
+                accent="blue"
+                :actions="[{ label: t('pages.admin_contact_messages.btn_refresh'), icon: 'pi-sync', variant: 'secondary', onClick: apply }]"
+            />
 
-                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">{{ t('pages.admin_contact_messages.hero_title_1') }}</span>
-                                <span class="text-[#EF4444]">{{ t('pages.admin_contact_messages.hero_title_2') }}</span>
-                            </h1>
+            <div class="page-container page-section">
 
-                            <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                {{ t('pages.admin_contact_messages.hero_subtitle') }}
-                            </p>
-                        </div>
-
-                        <!-- Partie Droite (Boutons) -->
-                        <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
-                            <Button 
-                                :label="t('pages.admin_contact_messages.btn_refresh')" 
-                                icon="pi pi-sync" 
-                                @click="apply"
-                                class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. CARTES KPI (Chevauchement) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                    
-                    <!-- KPI 1 : Total -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                            <i class="pi pi-inbox text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_total') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.total ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 2 : Nouveaux -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                            <i class="pi pi-bell text-red-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_new') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.new ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 3 : Répondus -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                            <i class="pi pi-reply text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_replied') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.replied ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 4 : Archivés -->
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center">
-                            <i class="pi pi-folder text-slate-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_archived') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.archived ?? 0 }}</div>
-                        </div>
-                    </div>
+                <!-- CARTES KPI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <PageKpi :label="t('pages.admin_contact_messages.kpi_total')" :value="stats?.total ?? 0" icon="pi-inbox" color="blue" />
+                    <PageKpi :label="t('pages.admin_contact_messages.kpi_new')" :value="stats?.new ?? 0" icon="pi-bell" color="red" />
+                    <PageKpi :label="t('pages.admin_contact_messages.kpi_replied')" :value="stats?.replied ?? 0" icon="pi-reply" color="emerald" />
+                    <PageKpi :label="t('pages.admin_contact_messages.kpi_archived')" :value="stats?.archived ?? 0" icon="pi-folder" color="slate" />
                 </div>
 
                 <!-- ============================================================================== -->
                 <!-- ZONE DU TABLEAU (Filtres et Liste)                                             -->
                 <!-- ============================================================================== -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative z-20 mt-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                     
                     <!-- Zone des filtres -->
                     <div class="flex flex-wrap items-center gap-3 mb-6">
