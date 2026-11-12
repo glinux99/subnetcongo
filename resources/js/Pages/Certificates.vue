@@ -8,6 +8,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -565,118 +567,73 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- TABLEAU DE BORD PRINCIPAL (HORS ÉDITEUR)                                       -->
         <!-- ============================================================================== -->
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4">
-            
+        <div class="page-bg min-h-screen font-sans pb-20">
 
-            <!-- 1. BANNIÈRE SOMBRE -->
-            <!-- Padding bottom (pb-24) large pour laisser la place aux cartes de remonter -->
-            <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                    
-                    <!-- Partie Gauche (Titres) -->
-                    <div class="max-w-3xl">
-                        <!-- Badge -->
-                        <span class="inline-block border border-emerald-900/50 text-emerald-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-emerald-950/30 mb-4 uppercase">
-                            Blockchain Ready
-                        </span>
+            <PageHeader
+                :title="`${t('pages.certificates.titlePart1')} ${t('pages.certificates.titlePart2')}`"
+                :subtitle="t('pages.certificates.subtitle')"
+                badge="Blockchain Ready"
+                icon="pi-verified"
+                accent="red"
+            >
+                <template #actions>
+                    <Button
+                        :label="t('pages.certificates.auditLog')"
+                        icon="pi pi-history"
+                        class="!bg-white/10 hover:!bg-white/20 !border !border-white/15 !text-white !rounded-xl !text-xs !font-bold"
+                    />
+                    <Button
+                        :label="t('pages.certificates.bulkIssue')"
+                        icon="pi pi-send"
+                        @click="openBulkIssuance"
+                        class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white !rounded-xl !text-xs !font-bold shadow-lg shadow-red-900/40"
+                    />
+                </template>
+            </PageHeader>
 
-                        <!-- Titre Principal (Italique, très gras, espacement réduit) -->
-                        <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                            <span class="text-white">{{ t('pages.certificates.titlePart1') }}</span>
-                            <span class="text-[#FF3B3B]">{{ t('pages.certificates.titlePart2') }}</span>
-                        </h1>
+            <div class="page-container page-section">
 
-                        <!-- Sous-titre -->
-                        <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                            {{ t('pages.certificates.subtitle') }}
-                        </p>
-                    </div>
+            <!-- ── CARTES KPI ── -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-                    <!-- Partie Droite (Boutons) -->
-                    <div class="flex flex-wrap items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
-                        <Button 
-                            :label="t('pages.certificates.auditLog')" 
-                            icon="pi pi-history" 
-                            class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
-                        />
-                        <Button 
-                            :label="t('pages.certificates.bulkIssue')" 
-                            icon="pi pi-send" 
-                            @click="openBulkIssuance"
-                            class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. CARTES KPI (Chevauchement) -->
-            <!-- Le -mt-16 fait remonter les cartes sur la bannière sombre. Le z-20 les garde au premier plan -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                
                 <!-- KPI 1 : Total Délivrés -->
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                    <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                        <i class="pi pi-copy text-red-500 text-sm"></i>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiTotalIssued') }}</div>
-                        <div class="flex items-end gap-2">
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.total_issued || '2,450' }}</div>
-                            <span class="text-[10px] font-bold text-emerald-500 mb-0.5 flex items-center"><i class="pi pi-arrow-up text-[8px] mr-1"></i>12%</span>
-                        </div>
-                    </div>
-                </div>
+                <PageKpi
+                    :label="t('pages.certificates.kpiTotalIssued')"
+                    :value="props.stats?.total_issued || '2,450'"
+                    icon="pi-copy" color="red" :trend="12"
+                />
 
                 <!-- KPI 2 : Taux de Réussite -->
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden">
-                    <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center relative z-10">
-                        <i class="pi pi-chart-pie text-emerald-500 text-sm"></i>
-                    </div>
-                    <div class="relative z-10">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiSuccessRate') }}</div>
-                        <div class="flex items-end gap-1">
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.success_rate || 78 }}</div>
-                            <span class="text-sm text-slate-400 font-bold mb-0.5">%</span>
-                        </div>
-                    </div>
-                    <!-- Barre de progression minimaliste superposée au bas de la carte -->
-                    <ProgressBar :value="props.stats?.success_rate || 78" :showValue="false" class="absolute bottom-0 left-0 w-full h-1 border-none" :pt="{ value: { class: 'bg-emerald-500' } }"></ProgressBar>
-                </div>
+                <PageKpi
+                    :label="t('pages.certificates.kpiSuccessRate')"
+                    :value="`${props.stats?.success_rate || 78}%`"
+                    icon="pi-chart-pie" color="emerald"
+                >
+                    <ProgressBar :value="props.stats?.success_rate || 78" :showValue="false" class="mt-3 h-1.5" :pt="{ value: { class: 'bg-emerald-500' } }"></ProgressBar>
+                </PageKpi>
 
                 <!-- KPI 3 : Vérifications Web -->
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                    <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                        <i class="pi pi-globe text-blue-500 text-sm"></i>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiWebChecks') }}</div>
-                        <div class="flex items-end gap-2">
-                            <div class="text-2xl font-black text-slate-800 leading-none">14.2k</div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded">{{ t('pages.certificates.viewsAbbr') }}</span>
-                        </div>
-                    </div>
-                </div>
+                <PageKpi
+                    :label="t('pages.certificates.kpiWebChecks')"
+                    value="14.2k"
+                    icon="pi-globe" color="sky"
+                    :subtext="t('pages.certificates.viewsAbbr')"
+                />
 
                 <!-- KPI 4 : Titres Révoqués -->
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                    <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                        <i class="pi pi-shield-slash text-red-500 text-sm"></i>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiRevoked') }}</div>
-                        <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.revocation_rate || 14 }}</div>
-                    </div>
-                </div>
-                
+                <PageKpi
+                    :label="t('pages.certificates.kpiRevoked')"
+                    :value="props.stats?.revocation_rate || 14"
+                    icon="pi-shield-slash" color="rose"
+                />
+
             </div>
-        </div>
-        <div class="page-bg min-h-screen font-sans pb-20">
+
 
         
 
             <!-- SYSTÈME D'ONGLETS PRINCIPAL -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="flex border-b border-slate-100 bg-slate-50/80 px-6 pt-4 gap-2">
                     <button @click="activeMainTab = 'log'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'log' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
                         <i class="pi pi-list"></i> {{ t('pages.certificates.tabLog') }}
@@ -835,6 +792,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         </div>
                     </div>
                 </div>
+            </div>
+
             </div>
         </div>
 

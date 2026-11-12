@@ -10,6 +10,8 @@
  * @author  SubnetCongo Framework Division
  */
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -450,105 +452,33 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-<!-- ============================================================================== -->
-    <!-- HEADER DE PAGE ET KPI (Style Dark Hub)                                         -->
     <!-- ============================================================================== -->
-    <div class="flex flex-col gap-2 mb-12">
-        
+    <!-- HEADER DE PAGE (Design System PageHeader)                                       -->
+    <!-- ============================================================================== -->
+    <PageHeader
+        :title="`${t('pages.cohorts.titleLine1')} ${t('pages.cohorts.titleHighlight')}`"
+        :subtitle="t('pages.cohorts.subtitle')"
+        badge="Group Architect"
+        icon="pi-objects-column"
+        accent="indigo"
+        :actions="[
+            { label: t('pages.cohorts.createCohort'), icon: 'pi-plus-circle', variant: 'primary', onClick: openNewCohort },
+        ]"
+    />
 
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        Group Architect
-                    </span>
-
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">{{ t('pages.cohorts.titleLine1') }}</span>
-                        <span class="text-[#E92B2B]">{{ t('pages.cohorts.titleHighlight') }}</span>
-                    </h1>
-
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        {{ t('pages.cohorts.subtitle') }}
-                    </p>
-                </div>
-
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
-                    <Button 
-                        :label="t('pages.cohorts.createCohort')" 
-                        icon="pi pi-plus-circle" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                        @click="openNewCohort" 
-                    />
-                </div>
-            </div>
-        </div>
+    <div class="page-container page-section">
 
         <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- KPI CARDS                                                                       -->
         <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
-            
-            <!-- KPI 1 : Total Groupes -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-objects-column text-blue-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiTotalGroups') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_cohorts || 0 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 2 : Élèves Groupés -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-users text-emerald-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiStudentsGrouped') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_enrolled_students || 0 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 3 : Cours Assignés -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-book text-amber-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiCoursesAssigned') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.active_courses_in_cohorts || 0 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 4 : Complétion Moyenne (avec barre de progression intégrée) -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36 relative overflow-hidden">
-                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-2 z-10 relative">
-                    <i class="pi pi-chart-line text-red-500 text-lg"></i>
-                </div>
-                <div class="z-10 relative">
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiAvgCompletion') }}</h3>
-                    <div class="flex items-end gap-2">
-                        <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.avg_cohort_completion || 0 }}</p>
-                        <span class="text-xs font-bold text-red-500 mb-1">%</span>
-                    </div>
-                </div>
-                <!-- Barre de progression de fond -->
-                <ProgressBar :value="props.stats.avg_cohort_completion || 0" :showValue="false" class="absolute bottom-0 left-0 w-full h-1 border-none" :pt="{ value: { class: 'bg-red-500' } }"></ProgressBar>
-            </div>
-            
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <PageKpi :label="t('pages.cohorts.kpiTotalGroups')" :value="props.stats.total_cohorts || 0" icon="pi-objects-column" color="blue" />
+            <PageKpi :label="t('pages.cohorts.kpiStudentsGrouped')" :value="props.stats.total_enrolled_students || 0" icon="pi-users" color="emerald" />
+            <PageKpi :label="t('pages.cohorts.kpiCoursesAssigned')" :value="props.stats.active_courses_in_cohorts || 0" icon="pi-book" color="amber" />
+            <PageKpi :label="t('pages.cohorts.kpiAvgCompletion')" :value="`${props.stats.avg_cohort_completion || 0}%`" icon="pi-chart-line" color="red">
+                <ProgressBar :value="props.stats.avg_cohort_completion || 0" :showValue="false" class="mt-2 h-1.5" :pt="{ value: { class: 'bg-red-500' } }"></ProgressBar>
+            </PageKpi>
         </div>
-    </div>
 
             <!-- DATATABLE DES COHORTES -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -621,6 +551,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     </template>
                 </DataTable>
             </div>
+        </div>
         </div>
 
         <!-- ============================================================================== -->

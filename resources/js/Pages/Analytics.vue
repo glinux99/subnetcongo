@@ -6,6 +6,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -28,13 +30,11 @@ import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import AvatarGroup from 'primevue/avatargroup';
 import Divider from 'primevue/divider';
-import Badge from 'primevue/badge';
 import Chip from 'primevue/chip';
 import Sidebar from 'primevue/sidebar';
 import Dialog from 'primevue/dialog';
 import Menu from 'primevue/menu';
 import OverlayPanel from 'primevue/overlaypanel';
-import Skeleton from 'primevue/skeleton';
 import Knob from 'primevue/knob';
 import ScrollPanel from 'primevue/scrollpanel';
 import InputSwitch from 'primevue/inputswitch';
@@ -206,10 +206,10 @@ const reportTypeOptions = computed(() => [
 ]);
 
 const kpis = computed(() => [
-    { label: t('pages.analytics.kpiMrr'), val: '$42,000', trend: '+18.5%', color: 'indigo', icon: 'pi-dollar' },
-    { label: t('pages.analytics.kpiActiveLearners'), val: '8,420', trend: '+5.2%', color: 'emerald', icon: 'pi-users' },
-    { label: t('pages.analytics.kpiCompletion'), val: '74.8%', trend: '+2.1%', color: 'amber', icon: 'pi-verified' },
-    { label: t('pages.analytics.kpiNewSignups'), val: '1,250', trend: '+22.4%', color: 'rose', icon: 'pi-user-plus' }
+    { label: t('pages.analytics.kpiMrr'), val: '$42,000', trend: 18.5, color: 'indigo', icon: 'pi-dollar' },
+    { label: t('pages.analytics.kpiActiveLearners'), val: '8,420', trend: 5.2, color: 'emerald', icon: 'pi-users' },
+    { label: t('pages.analytics.kpiCompletion'), val: '74.8%', trend: 2.1, color: 'amber', icon: 'pi-verified' },
+    { label: t('pages.analytics.kpiNewSignups'), val: '1,250', trend: 22.4, color: 'rose', icon: 'pi-user-plus' }
 ]);
 
 const provincesList = computed(() => [
@@ -228,57 +228,27 @@ onMounted(() => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- --- HEADER: COMMAND CENTER --- -->
-            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-                <div class="space-y-2">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-blue-600 p-5 rounded-[1rem] shadow-2xl shadow-blue-100 relative group">
-                            <i class="pi pi-chart-bar text-white text-3xl"></i>
-                            <div class="absolute -top-1 -right-1 flex h-4 w-4">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
-                            </div>
-                        </div>
-                        <div>
-                            <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">LMS Business Intelligence</h1>
-                            <p class="text-slate-500 font-medium">{{ t('pages.analytics.subtitle') }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap gap-3 p-3 bg-white rounded-[1rem] shadow-sm border border-slate-100">
+            <PageHeader
+                title="LMS Business Intelligence"
+                :subtitle="t('pages.analytics.subtitle')"
+                icon="pi-chart-bar"
+                accent="blue"
+            >
+                <template #actions>
                     <Calendar v-model="dateRange" selectionMode="range" :showIcon="true" class="w-64" :placeholder="t('pages.analytics.periodPlaceholder')" />
-                    <Divider layout="vertical" />
-                    <Button :label="t('pages.analytics.export')" icon="pi pi-upload" class="p-button-outlined p-button-secondary rounded-xl" @click="exportMenu.toggle($event)" />
+                    <Button :label="t('pages.analytics.export')" icon="pi pi-upload" class="!bg-white/10 hover:!bg-white/20 !text-white !border-white/15 !rounded-xl !font-bold !text-xs" @click="exportMenu.toggle($event)" />
                     <Menu ref="exportMenu" :model="exportItems" :popup="true" />
-                    <Button :label="t('pages.analytics.refresh')" icon="pi pi-sync" class="p-button-primary shadow-xl shadow-blue-200 px-6 rounded-xl font-bold" @click="runGlobalAudit" :loading="loading" />
-                </div>
-            </header>
+                    <Button :label="t('pages.analytics.refresh')" icon="pi pi-sync" class="!bg-blue-600 hover:!bg-blue-500 !text-white !border-none !rounded-xl !font-bold !text-xs !px-6" @click="runGlobalAudit" :loading="loading" />
+                </template>
+            </PageHeader>
 
-            <!-- --- SECTION 1: GLOBAL KPIs (SKELETON READY) --- -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-                <div v-for="kpi in kpis" :key="kpi.label" class="bg-white p-8 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
-                    <div v-if="loading"><Skeleton width="100%" height="100px" /></div>
-                    <div v-else>
-                        <div class="flex justify-between items-start mb-6">
-                            <div :class="`p-4 rounded-xl bg-${kpi.color}-50 text-${kpi.color}-600 group-hover:scale-110 transition-transform` ">
-                                <i :class="`pi ${kpi.icon} text-xl` "></i>
-                            </div>
-                            <Badge :value="kpi.trend" :severity="kpi.trend.startsWith('+') ? 'success' : 'danger'" />
-                        </div>
-                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ kpi.label }}</h3>
-                        <p class="text-3xl font-black text-slate-800 mt-2 tracking-tight">{{ kpi.val }}</p>
-                        <div class="mt-4 flex items-center gap-2">
-                            <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
-                                <div :class="`bg-${kpi.color}-500 h-full w-[70%]` "></div>
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-400 italic">{{ t('pages.analytics.vsLastMonth') }}</span>
-                        </div>
-                    </div>
-                    <!-- Background Decoration -->
-                    <div :class="`absolute -right-4 -bottom-4 text-8xl text-${kpi.color}-50 opacity-0 group-hover:opacity-100 transition-opacity` ">
-                        <i :class="`pi ${kpi.icon}` "></i>
-                    </div>
-                </div>
+            <div class="page-container page-section">
+
+            <!-- --- SECTION 1: GLOBAL KPIs --- -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <PageKpi v-for="kpi in kpis" :key="kpi.label"
+                    :label="kpi.label" :value="kpi.val" :icon="kpi.icon" :color="kpi.color"
+                    :trend="kpi.trend" :subtext="t('pages.analytics.vsLastMonth')" :loading="loading" />
             </div>
 
             <!-- --- SECTION 2: MAIN FINANCIAL & ENGAGEMENT CHARTS --- -->
@@ -514,6 +484,7 @@ onMounted(() => {
             </div>
 
 
+            </div>
         </div>
     </AppLayout>
 </template>

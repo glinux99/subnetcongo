@@ -17,6 +17,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -428,116 +430,36 @@ onBeforeUnmount(() => {
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-<!-- ============================================================================== -->
-    <!-- HEADER DE PAGE ET KPI (Style Dark Hub)                                         -->
     <!-- ============================================================================== -->
-    <div class="flex flex-col gap-2 mb-12">
-        
+    <!-- HEADER DE PAGE (Design System PageHeader)                                       -->
+    <!-- ============================================================================== -->
+    <PageHeader
+        :title="`CRM ${t('pages.students.titleHighlight')}`"
+        :subtitle="t('pages.students.subtitle')"
+        badge="Enterprise Data"
+        icon="pi-users"
+        accent="indigo"
+        :actions="[
+            { label: t('pages.students.engagementReports'), icon: 'pi-chart-pie', variant: 'secondary' },
+            { label: t('pages.students.integrateLearner'), icon: 'pi-user-plus', variant: 'primary', onClick: openNew },
+        ]"
+    />
 
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        Enterprise Data
-                    </span>
-
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">CRM</span>
-                        <span class="text-[#E92B2B]">{{ t('pages.students.titleHighlight') }}</span>
-                    </h1>
-
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        {{ t('pages.students.subtitle') }}
-                    </p>
-                </div>
-
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <Button 
-                        :label="t('pages.students.engagementReports')" 
-                        icon="pi pi-chart-pie" 
-                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
-                    />
-                    <Button 
-                        :label="t('pages.students.integrateLearner')" 
-                        icon="pi pi-user-plus" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                        @click="openNew" 
-                    />
-                </div>
-            </div>
-        </div>
+    <div class="page-container page-section">
 
         <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- KPI CARDS                                                                       -->
         <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
-            
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-users text-6xl text-blue-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-users text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.students.kpiTotalHeadcount') }}</p>
-                        </div>
-                        <div class="flex items-baseline gap-2">
-                            <h3 class="text-4xl font-black text-slate-800">{{ props.stats.total_students || 0 }}</h3>
-                        </div>
-                    </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <PageKpi :label="t('pages.students.kpiTotalHeadcount')" :value="props.stats.total_students || 0" icon="pi-users" color="blue" />
+            <PageKpi :label="t('pages.students.kpiActiveAccounts')" :value="props.stats.active_students || 0" icon="pi-bolt" color="emerald">
+                <div class="mt-2 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-emerald-500 h-full transition-all duration-1000" :style="{ width: ((props.stats.active_students / (props.stats.total_students || 1)) * 100) + '%' }"></div>
                 </div>
-
-                <!-- Actifs -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-check-circle text-6xl text-emerald-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-bolt text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.students.kpiActiveAccounts') }}</p>
-                        </div>
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats.active_students || 0 }}</h3>
-                        <div class="mt-2 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-emerald-500 h-full transition-all duration-1000" :style="{ width: ((props.stats.active_students / (props.stats.total_students || 1)) * 100) + '%' }"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Progression Moyenne -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-chart-line text-6xl text-amber-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-chart-bar text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.students.kpiAvgProgress') }}</p>
-                        </div>
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats.avg_progress || 0 }}%</h3>
-                        <p class="text-xs text-slate-400 mt-1">{{ t('pages.students.targetDb', { target: props.meta.target_progress || 80 }) }}</p>
-                    </div>
-                </div>
-
-                <!-- Certifiés -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-verified text-6xl text-blue-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-verified text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.students.kpiCertifiedYear') }}</p>
-                        </div>
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats.certified_this_year || 0 }}</h3>
-                        <p class="text-xs text-blue-500 font-medium mt-1 flex items-center gap-1"><i class="pi pi-star-fill"></i> {{ t('pages.students.officialGraduates') }}</p>
-                    </div>
-                </div>
+            </PageKpi>
+            <PageKpi :label="t('pages.students.kpiAvgProgress')" :value="`${props.stats.avg_progress || 0}%`" icon="pi-chart-bar" color="amber" :subtext="t('pages.students.targetDb', { target: props.meta.target_progress || 80 })" />
+            <PageKpi :label="t('pages.students.kpiCertifiedYear')" :value="props.stats.certified_this_year || 0" icon="pi-verified" color="blue" :subtext="t('pages.students.officialGraduates')" />
         </div>
-    </div>
-
-         
 
             <!-- ============================================================================== -->
             <!-- DATA GRID : ANNUAIRE DES ÉTUDIANTS                                             -->
@@ -784,6 +706,7 @@ onBeforeUnmount(() => {
                     </template>
                 </DataTable>
             </div>
+    </div>
         </div>
 
         <!-- ============================================================================== -->

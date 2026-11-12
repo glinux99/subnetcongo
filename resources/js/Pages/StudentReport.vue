@@ -122,7 +122,7 @@ const headerActions = computed(() => [
                 :title="student.name"
                 :subtitle="t('pages.student_report_detail.subtitle', { email: student.email })"
                 icon="pi-id-card"
-                accent="red"
+                accent="blue"
                 :badge="t('pages.student_report_detail.badge')"
                 :actions="headerActions"
             >

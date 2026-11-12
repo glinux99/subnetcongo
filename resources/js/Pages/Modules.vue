@@ -18,6 +18,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -525,102 +527,41 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
   <div class="page-bg min-h-screen font-sans pb-20">
 
     <!-- ============================================================================== -->
-    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- HEADER DE PAGE (PageHeader — Design System)                                     -->
     <!-- ============================================================================== -->
-    <div class="flex flex-col gap-2 mb-12">
-        
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge Architect -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        Architect
-                    </span>
+    <PageHeader
+        :title="`${t('pages.modules.titlePart1')} ${t('pages.modules.titlePart2')}`"
+        :subtitle="t('pages.modules.subtitle')"
+        badge="Architect"
+        icon="pi pi-sitemap"
+        accent="red"
+    >
+        <template #actions>
+            <Button
+                :label="t('pages.modules.createModuleButton')"
+                icon="pi pi-plus"
+                class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white font-bold shadow-lg shadow-red-900/50 transition-colors px-6 py-3"
+                @click="openNewModule"
+            />
+        </template>
+    </PageHeader>
 
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">{{ t('pages.modules.titlePart1') }}</span>
-                        <span class="text-[#E92B2B]">{{ t('pages.modules.titlePart2') }}</span>
-                    </h1>
+    <div class="page-container page-section">
 
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        {{ t('pages.modules.subtitle') }}
-                    </p>
-                </div>
-
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <Button 
-                        :label="t('pages.modules.createModuleButton')" 
-                        icon="pi pi-plus" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6 py-3" 
-                        @click="openNewModule" 
-                    />
-                </div>
-            </div>
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS                                                                       -->
+        <!-- ============================================================================== -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <PageKpi :label="t('pages.modules.kpiTotalModules')" :value="stats.total_modules" icon="pi-folder-open" color="blue" />
+            <PageKpi :label="t('pages.modules.kpiTotalLessons')" :value="stats.total_lessons" icon="pi-file" color="emerald" />
+            <PageKpi :label="t('pages.modules.kpiVideoHours')" :value="`${stats.video_hours}h`" icon="pi-video" color="red" />
+            <PageKpi :label="t('pages.modules.kpiAttachments')" :value="stats.total_attachments" icon="pi-paperclip" color="amber" />
         </div>
 
         <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- DATA GRID : GESTION DES MODULES (VUE ARCHITECTE)                                -->
         <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
-            
-            <!-- KPI 1 : Modules -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-folder-open text-blue-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.modules.kpiTotalModules') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_modules }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 2 : Leçons -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-file text-emerald-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.modules.kpiTotalLessons') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_lessons }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 3 : Heures de vidéo -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-video text-red-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.modules.kpiVideoHours') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.video_hours }}<span class="text-lg text-slate-400 ml-1">h</span></p>
-                </div>
-            </div>
-
-            <!-- KPI 4 : Ressources jointes -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-paperclip text-amber-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.modules.kpiAttachments') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ stats.total_attachments }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================================== -->
-    <!-- DATA GRID : GESTION DES MODULES (VUE ARCHITECTE) - (Code inchangé)             -->
-    <!-- ============================================================================== -->
-    <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden mt-6">
+        <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden">
 
         <!-- TOOLBAR -->
         <div class="bg-slate-50 border-b border-slate-200 p-5 flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -797,6 +738,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </div>
             </template>
         </DataTable>
+    </div>
     </div>
 </div>
 

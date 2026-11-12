@@ -5,6 +5,8 @@
  * ======================================================================================
  */
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, computed, onMounted, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -116,47 +118,27 @@ watch(selectedReportType, fetchReportData);
 
         <div class="page-bg min-h-screen font-sans pb-20">
             
-            <!-- ── HEADER : FINANCIAL COMMAND (Mesh Gradient Ruby) ── -->
-            <header class="bg-[#0F172A] pt-12 pb-28 px-8 relative overflow-hidden">
-                <div class="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-red-600/15 rounded-full blur-[120px] pointer-events-none"></div>
-                <div class="absolute bottom-[-20%] left-[-5%] w-[400px] h-[400px] bg-red-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+            <!-- ── HEADER : FINANCIAL COMMAND ── -->
+            <PageHeader
+                :title="`${t('pages.sales_reports.titlePart1')} ${t('pages.sales_reports.titleHighlight')} ${t('pages.sales_reports.titlePart2')}`"
+                :subtitle="t('pages.sales_reports.subtitle')"
+                :badge="t('pages.sales_reports.badge')"
+                icon="pi-wallet"
+                accent="emerald"
+            >
+                <template #actions>
+                    <DatePicker v-model="dateRange" selectionMode="range" :placeholder="t('pages.sales_reports.periodPlaceholder')" class="!bg-white/10 !border !border-white/20 !text-white" @date-select="applyGlobalFilters" />
+                    <Button :label="t('pages.sales_reports.export')" icon="pi pi-download" @click="exportMenu.toggle($event)" class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-6 !py-3 !text-xs !font-black !uppercase !tracking-widest" />
+                    <Menu ref="exportMenu" :model="[{label: t('pages.sales_reports.exportCsv'), icon: 'pi pi-file-excel'}, {label: t('pages.sales_reports.exportPdf'), icon: 'pi pi-file-pdf'}]" :popup="true" />
+                </template>
+            </PageHeader>
 
-                <div class="max-w-[1700px] mx-auto relative z-10 flex flex-col lg:flex-row justify-between items-center gap-8">
-                    <div class="text-center lg:text-left">
-                        <div class="flex items-center justify-center lg:justify-start gap-3 mb-4">
-                            <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-red-500/20">{{ t('pages.sales_reports.badge') }}</span>
-                        </div>
-                        <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
-                            {{ t('pages.sales_reports.titlePart1') }} <span class="text-red-600">{{ t('pages.sales_reports.titleHighlight') }}</span> {{ t('pages.sales_reports.titlePart2') }}
-                        </h1>
-                        <p class="text-slate-400 mt-4 max-w-xl text-sm font-medium leading-relaxed italic">
-                            {{ t('pages.sales_reports.subtitle') }}
-                        </p>
-                    </div>
+            <div class="page-container page-section">
 
-                    <div class="flex flex-wrap items-center justify-center gap-4 bg-white/5 p-2 rounded-[1rem] border border-white/10 backdrop-blur-xl">
-                        <DatePicker v-model="dateRange" selectionMode="range" :placeholder="t('pages.sales_reports.periodPlaceholder')" class="!bg-transparent !border-none !text-white !w-64" @date-select="applyGlobalFilters" />
-                        <div class="w-[1px] h-8 bg-white/10 mx-2"></div>
-                        <Button :label="t('pages.sales_reports.export')" icon="pi pi-download" @click="exportMenu.toggle($event)" class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest" />
-                        <Menu ref="exportMenu" :model="[{label: t('pages.sales_reports.exportCsv'), icon: 'pi pi-file-excel'}, {label: t('pages.sales_reports.exportPdf'), icon: 'pi pi-file-pdf'}]" :popup="true" />
-                    </div>
-                </div>
-            </header>
-
-            <main class="max-w-[1700px] mx-auto px-8 -mt-16 relative z-20 space-y-8">
-                
                 <!-- ── KPI INSIGHTS ── -->
                 <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div v-for="stat in kpiStats" :key="stat.label" class="bg-white p-8 rounded-[1rem] border border-slate-200/60 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
-                        <div class="relative z-10">
-                            <div :class="`bg-${stat.c}-50 text-${stat.c}-600`" class="w-12 h-12 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
-                                <i :class="['pi', stat.i, 'text-xl']"></i>
-                            </div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{{ stat.label }}</p>
-                            <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">{{ stat.val }}</h2>
-                            <Tag :severity="stat.g >= 0 ? 'success' : 'danger'" :value="`${stat.g >= 0 ? '+' : ''}${stat.g}%`" class="!mt-4 !rounded-lg !text-[9px] !font-black" />
-                        </div>
-                    </div>
+                    <PageKpi v-for="stat in kpiStats" :key="stat.label"
+                        :label="stat.label" :value="stat.val" :icon="stat.i" :color="stat.c" :trend="stat.g" />
                 </section>
 
                 <!-- ── ANALYTICS GRID ── -->
@@ -235,7 +217,7 @@ watch(selectedReportType, fetchReportData);
                         </Column>
                     </DataTable>
                 </section>
-            </main>
+            </div>
         </div>
 
         <!-- ── TRANSACTION INSPECTOR DRAWER ── -->

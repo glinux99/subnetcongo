@@ -249,7 +249,7 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                 title="Codes promo"
                 subtitle="Créez et pilotez les réductions appliquées à la marketplace"
                 icon="pi-ticket"
-                accent="blue"
+                accent="emerald"
                 badge="Marketing"
                 :actions="[{ label: 'Nouveau coupon', icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
             />

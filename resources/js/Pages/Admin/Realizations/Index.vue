@@ -212,7 +212,7 @@ const firstRow = computed(() => ((props.realizations?.current_page || 1) - 1) * 
                 title="Nos réalisations"
                 subtitle="Gérez le portfolio de projets présentés sur le site public"
                 icon="pi-briefcase"
-                accent="blue"
+                accent="violet"
                 badge="Site web"
                 :actions="[{ label: 'Nouvelle réalisation', icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
             />

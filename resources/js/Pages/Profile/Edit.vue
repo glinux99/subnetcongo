@@ -31,7 +31,7 @@ defineProps({
                 :subtitle="t('pages.profile.subtitle')"
                 icon="pi-user"
                 :badge="t('pages.profile.badge')"
-                accent="blue"
+                accent="indigo"
             />
 
             <!-- CONTENEUR HARMONISÉ -->

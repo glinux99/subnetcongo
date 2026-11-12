@@ -38,7 +38,7 @@ const statusSeverity = (s) => (s === 'Live' ? 'danger' : 'info');
             :title="t('pages.live_session_student.head_title')"
             :subtitle="t('pages.live_session_student.subtitle')"
             icon="pi-desktop"
-            accent="indigo"
+            accent="red"
         />
 
         <div class="mt-4 flex flex-wrap gap-2">

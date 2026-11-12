@@ -54,7 +54,7 @@ const copyVerifyLink = async (cert) => {
             <PageHeader
                 :title="t('pages.student_certificates.pageTitle')"
                 icon="pi-verified"
-                accent="emerald"
+                accent="red"
                 :badge="t('pages.student_certificates.pageBadge')"
                 :subtitle="t('pages.student_certificates.pageSubtitle')"
             />

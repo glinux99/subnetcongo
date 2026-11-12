@@ -105,7 +105,7 @@ const submitAnswer = () => {
                 :subtitle="t('pages.instructor_questions.subtitle')"
                 icon="pi-inbox"
                 :badge="t('pages.instructor_questions.badge')"
-                accent="blue"
+                accent="red"
             />
 
             <!-- CONTENEUR HARMONISÉ -->

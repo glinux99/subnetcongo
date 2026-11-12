@@ -305,7 +305,7 @@ const intervalOptions = [
                 title="Abonnements & Plans"
                 subtitle="Gérez les abonnements réels et les offres tarifaires"
                 icon="pi-credit-card"
-                accent="indigo"
+                accent="emerald"
                 badge="Facturation"
                 :actions="[
                     { label: 'Gérer les plans', icon: 'pi-cog', variant: 'secondary', onClick: () => activeTabIndex = 1 },

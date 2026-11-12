@@ -102,7 +102,7 @@ const kpis = computed(() => [
                 :title="t('pages.student_reports.title')"
                 :subtitle="t('pages.student_reports.subtitle')"
                 icon="pi-chart-bar"
-                accent="red"
+                accent="blue"
                 :badge="t('pages.student_reports.badge')"
                 :actions="headerActions"
             />

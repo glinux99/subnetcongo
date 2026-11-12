@@ -71,7 +71,7 @@ const markResolved = () => {
                 :subtitle="`${question.course?.title || t('pages.question_detail.courseFallback')}${question.lesson ? ' · ' + question.lesson.title : ''}`"
                 icon="pi-comments"
                 badge="Q&A"
-                accent="blue"
+                accent="red"
                 :actions="[
                     { label: t('pages.question_detail.backToQuestions'), icon: 'pi-arrow-left', href: route('student.questions.index') }
                 ]"

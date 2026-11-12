@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { router, Head } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
@@ -87,41 +88,27 @@ const remove = async (id) => {
     <AppLayout>
         <Head :title="t('pages.notifications.head_title')" />
         <div class="page-bg min-h-screen font-sans pb-20">
-            <!-- HEADER (Premium Dark Mode with Glow) -->
-            <div class="bg-[#0f172a] pt-10 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
-                <!-- Abstract Glow Effects -->
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none transition-transform duration-1000 animate-pulse"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <!-- Subtle Texture -->
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
-
-                <div class="max-w-[1000px] mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div class="flex items-center gap-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.3)] border border-white/10 shrink-0">
-                            <i class="pi pi-bell text-white text-2xl"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3 mb-1.5 flex-wrap">
-                                <h1 class="text-3xl font-black text-white tracking-tight">{{ t('pages.notifications.heading') }}</h1>
-                                <Tag v-if="unreadLocal > 0" :value="t('pages.notifications.unread_count', { count: unreadLocal })" class="!bg-red-500/20 !text-red-400 !border !border-red-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
-                            </div>
-                            <p class="text-slate-400 font-medium text-sm">{{ t('pages.notifications.subtitle') }}</p>
-                        </div>
-                    </div>
-
+            <PageHeader
+                :title="t('pages.notifications.heading')"
+                :subtitle="t('pages.notifications.subtitle')"
+                :badge="unreadLocal > 0 ? t('pages.notifications.unread_count', { count: unreadLocal }) : ''"
+                icon="pi-bell"
+                accent="blue"
+            >
+                <template #actions>
                     <Button
                         v-if="unreadLocal > 0"
                         :label="t('pages.notifications.mark_all_read')"
                         icon="pi pi-check-circle"
                         :loading="isMarkingAll"
                         @click="markAll"
-                        class="!bg-white/10 hover:!bg-white/20 !text-white !border-white/10 !backdrop-blur-md !rounded-xl !font-bold !text-xs !py-3 !px-5 transition-all shadow-lg"
+                        class="!bg-white/10 hover:!bg-white/20 !text-white !border-white/15 !backdrop-blur-md !rounded-xl !font-bold !text-xs !py-3 !px-5 transition-all"
                     />
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
-            <!-- MAIN CONTENT (Overlapping Header) -->
-            <div class="max-w-[1000px] mx-auto px-4 lg:px-6 -mt-12 relative z-20">
+            <!-- MAIN CONTENT -->
+            <div class="page-container page-section">
                 <div class="bg-white rounded-[1rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-6 lg:p-10 min-h-[500px]">
 
                     <!-- Segmented Control Filter -->

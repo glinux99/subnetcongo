@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -176,102 +178,45 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
     <AppLayout>
         <Head :title="t('pages.live_sessions.head_title')" />
         
-        <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
-            
-            <div class="flex flex-col mb-12 px-4 md:px-6 pt-4 max-w-[1600px] mx-auto">
-                
+        <div class="page-bg min-h-screen font-sans pb-20">
 
-                <!-- 1. BANNIÈRE SOMBRE -->
-                <div class="relative bg-[#16151E] rounded-xl pt-10 pb-24 px-6 md:px-10 shadow-lg overflow-hidden border border-slate-800">
-                    
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10 w-full">
-                        
-                        <!-- Partie Gauche (Titres) -->
-                        <div class="max-w-3xl">
-                            <span class="inline-block border border-red-900/50 text-[#ff4d4d] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
-                                Live Classroom
-                            </span>
+            <PageHeader
+                :title="`${t('pages.live_sessions.title_part1')} ${t('pages.live_sessions.title_part2')}`"
+                :subtitle="t('pages.live_sessions.subtitle')"
+                badge="Live Classroom"
+                icon="pi-video"
+                accent="red"
+            >
+                <template #actions>
+                    <Button
+                        :label="t('pages.live_sessions.btn_refresh')"
+                        icon="pi pi-sync"
+                        @click="search_"
+                        class="!bg-white/10 hover:!bg-white/20 !border !border-white/15 !text-white !rounded-xl !text-xs !font-bold"
+                    />
+                    <Button
+                        :label="t('pages.live_sessions.btn_schedule')"
+                        icon="pi pi-plus"
+                        @click="showCreate = true"
+                        class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white !rounded-xl !text-xs !font-bold shadow-lg shadow-red-900/40"
+                    />
+                </template>
+            </PageHeader>
 
-                            <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">{{ t('pages.live_sessions.title_part1') }}</span>
-                                <span class="text-[#FF3B3B]">{{ t('pages.live_sessions.title_part2') }}</span>
-                            </h1>
+            <div class="page-container page-section">
 
-                            <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                {{ t('pages.live_sessions.subtitle') }}
-                            </p>
-                        </div>
-
-                        <!-- Partie Droite (Boutons) -->
-                        <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
-                            <Button 
-                                :label="t('pages.live_sessions.btn_refresh')" 
-                                icon="pi pi-sync" 
-                                @click="search_"
-                                class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
-                            />
-                            <Button 
-                                :label="t('pages.live_sessions.btn_schedule')" 
-                                icon="pi pi-plus" 
-                                @click="showCreate = true"
-                                class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. CARTES KPI (Chevauchement) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-4 -mt-16 relative z-20">
-                    
-                    <!-- KPI 1 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                            <i class="pi pi-bolt text-red-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_live') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.live_now ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 2 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                            <i class="pi pi-calendar text-blue-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_scheduled_today') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.scheduled_today ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 3 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center">
-                            <i class="pi pi-users text-emerald-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_avg_attendance') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.avg_attendance ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- KPI 4 -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between h-36">
-                        <div class="w-8 h-8 rounded bg-amber-50 flex items-center justify-center">
-                            <i class="pi pi-server text-amber-500 text-sm"></i>
-                        </div>
-                        <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_storage') }}</div>
-                            <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.storage_used ?? '0 B' }}</div>
-                        </div>
-                    </div>
+                <!-- ── CARTES KPI ── -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <PageKpi :label="t('pages.live_sessions.kpi_live')" :value="kpis?.live_now ?? 0" icon="pi-bolt" color="red" />
+                    <PageKpi :label="t('pages.live_sessions.kpi_scheduled_today')" :value="kpis?.scheduled_today ?? 0" icon="pi-calendar" color="sky" />
+                    <PageKpi :label="t('pages.live_sessions.kpi_avg_attendance')" :value="kpis?.avg_attendance ?? 0" icon="pi-users" color="emerald" />
+                    <PageKpi :label="t('pages.live_sessions.kpi_storage')" :value="kpis?.storage_used ?? '0 B'" icon="pi-server" color="amber" />
                 </div>
 
                 <!-- ============================================================================== -->
                 <!-- ZONE DU TABLEAU (Filtres et DataTable)                                         -->
                 <!-- ============================================================================== -->
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative z-20 mt-6">
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative z-20">
                     
                     <!-- Zone des filtres -->
                     <div class="flex flex-wrap items-center gap-3 mb-6">

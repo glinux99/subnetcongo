@@ -17,6 +17,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -421,114 +423,31 @@ onMounted(() => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- ============================================================================== -->
-            <!-- HEADER DE PAGE ET KPI                                                          -->
+            <!-- HEADER DE PAGE (Design System PageHeader)                                       -->
             <!-- ============================================================================== -->
-          <!-- ============================================================================== -->
-    <!-- HEADER DE PAGE ET KPI (Style Dark Hub)                                         -->
-    <!-- ============================================================================== -->
-    <div class="flex flex-col gap-2 mb-12">
-        
+            <PageHeader
+                :title="`${t('pages.instructors.titleLine1')} ${t('pages.instructors.titleHighlight')}`"
+                :subtitle="t('pages.instructors.subtitle')"
+                badge="HR Management"
+                icon="pi-briefcase"
+                accent="indigo"
+                :actions="[
+                    { label: t('pages.instructors.financialReports'), icon: 'pi-file-excel', variant: 'secondary' },
+                    { label: t('pages.instructors.recruitExpert'), icon: 'pi-user-plus', variant: 'primary', onClick: openNew },
+                ]"
+            />
 
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge HR Management -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        HR Management
-                    </span>
+            <div class="page-container page-section">
 
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">{{ t('pages.instructors.titleLine1') }}</span>
-                        <span class="text-[#E92B2B]">{{ t('pages.instructors.titleHighlight') }}</span>
-                    </h1>
-
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        {{ t('pages.instructors.subtitle') }}
-                    </p>
+                <!-- ============================================================================== -->
+                <!-- KPI CARDS                                                                       -->
+                <!-- ============================================================================== -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <PageKpi :label="t('pages.instructors.kpiTotalExperts')" :value="props.stats.total_instructors || 0" icon="pi-briefcase" color="blue" />
+                    <PageKpi :label="t('pages.instructors.kpiActiveCourses')" :value="props.stats.active_courses || 0" icon="pi-book" color="emerald" />
+                    <PageKpi :label="t('pages.instructors.kpiQualityRating')" :value="props.stats.avg_rating || '0.0'" icon="pi-star-fill" color="amber" subtext="/ 5.0" />
+                    <PageKpi :label="t('pages.instructors.kpiTotalCommissions')" :value="formatCurrency(props.stats.total_commissions)" icon="pi-wallet" color="red" />
                 </div>
-
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <Button 
-                        :label="t('pages.instructors.financialReports')" 
-                        icon="pi pi-file-excel" 
-                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
-                    />
-                    <Button 
-                        :label="t('pages.instructors.recruitExpert')" 
-                        icon="pi pi-user-plus" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                        @click="openNew" 
-                    />
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
-        <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
-            
-            <!-- KPI 1 : Effectif Instructeurs -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-briefcase text-blue-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiTotalExperts') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_instructors || 0 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 2 : Cours Dispensés -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-book text-emerald-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiActiveCourses') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.active_courses || 0 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 3 : Note Moyenne -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-star-fill text-amber-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiQualityRating') }}</h3>
-                    <div class="flex items-center gap-2">
-                        <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.avg_rating || '0.0' }}</p>
-                        <!-- Petit badge propre pour indiquer que c'est sur 5, remplaçant les étoiles pour garder le design minimaliste -->
-                        <span class="text-[10px] font-bold text-amber-500 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md uppercase tracking-wider">/ 5.0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KPI 4 : Commissions Versées -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-wallet text-red-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiTotalCommissions') }}</h3>
-                    <!-- Application de votre fonction formatCurrency -->
-                    <p class="text-3xl font-extrabold text-slate-900 truncate" :title="formatCurrency(props.stats.total_commissions)">
-                        {{ formatCurrency(props.stats.total_commissions) }}
-                    </p>
-                </div>
-            </div>
-            
-        </div>
-    </div>
 
             <!-- ============================================================================== -->
             <!-- DATA GRID : ANNUAIRE DES INSTRUCTEURS                                          -->
@@ -742,6 +661,7 @@ onMounted(() => {
                 </DataTable>
             </div>
         </div>
+    </div>
 
         <!-- ============================================================================== -->
         <!-- DIALOG ÉDITEUR ULTRA PRO (INSTRUCTOR WORKSPACE)                                -->

@@ -17,6 +17,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount, nextTick } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -983,127 +985,51 @@ onBeforeUnmount(() => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- ============================================================================== -->
-            <!-- HEADER DE PAGE ET KPI                                                          -->
+            <!-- HEADER DE PAGE (PageHeader — Design System)                                     -->
             <!-- ============================================================================== -->
-            <!-- ============================================================================== -->
-<!-- HEADER DE PAGE ET KPI (Style Dark "Intelligence Hub")                          -->
-<!-- ============================================================================== -->
-<div class="flex flex-col gap-3 mb-10">
-    
+            <PageHeader
+                :title="`${t('pages.courses.headerTitlePart1')} ${t('pages.courses.headerTitlePart2')}`"
+                :subtitle="t('pages.courses.headerDescription')"
+                :badge="t('pages.courses.enterpriseBadge')"
+                icon="pi pi-book"
+                accent="red"
+            >
+                <template #actions>
+                    <Button
+                        :label="t('pages.courses.headerInsightsButton')"
+                        icon="pi pi-chart-pie"
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white font-medium transition-colors"
+                        @click="analyticsDialog = true"
+                    />
+                    <Button
+                        :label="t('pages.courses.headerNewCategoryButton')"
+                        icon="pi pi-tags"
+                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white font-medium transition-colors"
+                        @click="openCategoryDialog"
+                    />
+                    <Button
+                        :label="t('pages.courses.headerNewCourseButton')"
+                        icon="pi pi-plus"
+                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white font-bold shadow-lg shadow-red-900/50 transition-colors px-6"
+                        @click="openNew"
+                    />
+                </template>
+            </PageHeader>
 
-    <!-- Bannière sombre (Dark Banner) -->
-    <!-- NB: Si vous voulez faire chevaucher des cartes KPI en dessous plus tard, changez 'py-8' par 'pt-10 pb-28' -->
-    <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl py-8 px-6 md:px-10 shadow-lg overflow-hidden">
-        
-        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 relative z-10">
-            
-            <!-- Partie Gauche (Titres et Description) -->
-            <div class="space-y-4 max-w-3xl">
-                <!-- Badge stylisé (Remplace le composant <Badge> basique pour coller au design) -->
-                <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                    {{ t('pages.courses.enterpriseBadge') }}
-                </span>
-
-                <!-- Titre Principal (Italique, gras, partie en rouge) -->
-                <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                    <span class="text-white">{{ t('pages.courses.headerTitlePart1') }}</span>
-                    <span class="text-[#E92B2B]">{{ t('pages.courses.headerTitlePart2') }}</span>
-                </h1>
-
-                <!-- Description -->
-                <p class="text-slate-400 text-sm md:text-base italic leading-relaxed">
-                    {{ t('pages.courses.headerDescription') }}
-                </p>
-            </div>
-
-            <!-- Partie Droite (Boutons d'actions conservés avec vos fonctions) -->
-            <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full xl:w-auto">
-                
-                <!-- Bouton Secondaire 1 -->
-                <Button
-                    :label="t('pages.courses.headerInsightsButton')"
-                    icon="pi pi-chart-pie"
-                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors"
-                    @click="analyticsDialog = true"
-                />
-                
-                <!-- Bouton Secondaire 2 -->
-                <Button
-                    :label="t('pages.courses.headerNewCategoryButton')"
-                    icon="pi pi-tags"
-                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors"
-                    @click="openCategoryDialog"
-                />
-                
-                <!-- Bouton Principal (Rouge) -->
-                <Button
-                    :label="t('pages.courses.headerNewCourseButton')"
-                    icon="pi pi-plus"
-                    class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6"
-                    @click="openNew"
-                />
-            </div>
-        </div>
-    </div>
-</div>
+            <div class="page-container page-section">
 
             <!-- KPI DASHBOARD (4 CARTES) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <!-- KPI 1 -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-book text-6xl text-blue-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-book text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiCoursesVolume') }}</p>
-                        </div>
-                        <div class="flex items-baseline gap-2">
-                            <h3 class="text-4xl font-black text-slate-800">{{ props.stats.total_courses || 0 }}</h3>
-                            <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">{{ t('pages.courses.kpiMonthlyGrowth') }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- KPI 2 -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-users text-6xl text-emerald-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-users text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiActiveLearners') }}</p>
-                        </div>
-                        <div class="flex items-baseline gap-2">
-                            <h3 class="text-4xl font-black text-slate-800">{{ props.stats.total_students || 0 }}</h3>
-                            <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">+5.2%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- KPI 3 -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-wallet text-6xl text-amber-600"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-wallet text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiMrr') }}</p>
-                        </div>
-                        <h3 class="text-4xl font-black text-slate-800">{{ formatCurrency(props.meta.total_revenue || 0) }}</h3>
-                    </div>
-                </div>
-
-                <!-- KPI 4 -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-red-300 transition-all duration-300 hover:shadow-md flex flex-col justify-between">
-                    <div class="relative z-10">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="pi pi-bullseye text-sm"></i></div>
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiCompletionRate') }}</p>
-                            </div>
-                            <span class="text-lg font-black text-red-600">{{ props.meta.completion_rate || 0 }}%</span>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <PageKpi :label="t('pages.courses.kpiCoursesVolume')" :value="props.stats.total_courses || 0" icon="pi-book" color="blue">
+                    <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">{{ t('pages.courses.kpiMonthlyGrowth') }}</span>
+                </PageKpi>
+                <PageKpi :label="t('pages.courses.kpiActiveLearners')" :value="props.stats.total_students || 0" icon="pi-users" color="emerald">
+                    <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">+5.2%</span>
+                </PageKpi>
+                <PageKpi :label="t('pages.courses.kpiMrr')" :value="formatCurrency(props.meta.total_revenue || 0)" icon="pi-wallet" color="amber" />
+                <PageKpi :label="t('pages.courses.kpiCompletionRate')" :value="`${props.meta.completion_rate || 0}%`" icon="pi-bullseye" color="red">
                     <ProgressBar :value="props.meta.completion_rate || 0" :showValue="false" class="h-2.5 mt-2 bg-slate-100 rounded-full" color="#e11d48"></ProgressBar>
-                </div>
+                </PageKpi>
             </div>
 
             <!-- ============================================================================== -->
@@ -1350,6 +1276,7 @@ onBeforeUnmount(() => {
                 </DataTable>
             </div>
 
+            </div>
         </div>
 
 

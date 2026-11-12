@@ -235,7 +235,7 @@ const submitNewAffiliate = () => {
                 title="Programme d'Affiliation"
                 subtitle="Suivez vos partenaires et optimisez les ventes de formations"
                 icon="pi-share-alt"
-                accent="blue"
+                accent="emerald"
                 badge="Marketing"
                 :actions="[
                     { label: 'Exporter CSV', icon: 'pi-file-export', variant: 'secondary', onClick: exportCsv },

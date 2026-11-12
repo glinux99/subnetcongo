@@ -10,6 +10,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -499,71 +501,53 @@ onMounted(() => {
             <!-- ============================================================================== -->
             <!-- HEADER ET NAVIGATION GLOBALE                                                   -->
             <!-- ============================================================================== -->
-            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 mb-10">
-                <div class="space-y-3 w-full xl:w-auto">
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            {{ t('pages.grading.consoleTitle') }}
-                            <Badge value="Instructor Space" severity="info" class="text-[10px] bg-blue-100 text-blue-700 border border-blue-200"></Badge>
-                        </h1>
-                        <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            {{ t('pages.grading.consoleSubtitle') }}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button :label="t('pages.grading.cohortViewButton')" icon="pi pi-chart-bar" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm font-medium w-full sm:w-auto" @click="statisticsSidebar = true" />
-                    <Button :label="t('pages.grading.globalPlagiarismButton')" icon="pi pi-shield" class="p-button-outlined p-button-danger bg-white shadow-sm font-medium w-full sm:w-auto" @click="plagiarismSidebar = true" />
-                </div>
-            </div>
+            <PageHeader
+                :title="t('pages.grading.consoleTitle')"
+                :subtitle="t('pages.grading.consoleSubtitle')"
+                badge="Instructor Space"
+                icon="pi-clipboard"
+                accent="red"
+            >
+                <template #actions>
+                    <Button :label="t('pages.grading.cohortViewButton')" icon="pi pi-chart-bar" class="!bg-white/10 hover:!bg-white/20 !text-white !border-white/15 !rounded-xl !text-xs !font-bold" @click="statisticsSidebar = true" />
+                    <Button :label="t('pages.grading.globalPlagiarismButton')" icon="pi pi-shield" class="!bg-red-600/80 hover:!bg-red-600 !text-white !border-none !rounded-xl !text-xs !font-bold" @click="plagiarismSidebar = true" />
+                </template>
+            </PageHeader>
+
+            <div class="page-container page-section">
 
             <!-- ============================================================================== -->
             <!-- KPI DASHBOARD                                                                  -->
             <!-- ============================================================================== -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-red-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="pi pi-inbox text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.pendingCorrectionLabel') }}</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.pending || 12 }}</h3>
-                        <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-md">{{ t('pages.grading.urgentCountLabel') }}</span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-chart-line text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.globalAverageLabel') }}</p>
-                    </div>
-                    <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.average || 74.2 }}%</h3>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-red-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-bolt text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.slaProductivityLabel') }}</p>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <h3 class="text-4xl font-black text-slate-800">4.5h</h3>
-                        <span class="text-xs font-medium text-emerald-500">{{ t('pages.grading.avgTimePerCopyLabel') }}</span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-exclamation-triangle text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.appealsPlagiarismLabel') }}</p>
-                    </div>
-                    <h3 class="text-4xl font-black text-amber-600">{{ props.stats?.appeals || 2 }}</h3>
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <PageKpi
+                    :label="t('pages.grading.pendingCorrectionLabel')"
+                    :value="props.stats?.pending || 12"
+                    icon="pi-inbox" color="red"
+                    :subtext="t('pages.grading.urgentCountLabel')"
+                />
+                <PageKpi
+                    :label="t('pages.grading.globalAverageLabel')"
+                    :value="`${props.stats?.average || 74.2}%`"
+                    icon="pi-chart-line" color="blue"
+                />
+                <PageKpi
+                    :label="t('pages.grading.slaProductivityLabel')"
+                    value="4.5h"
+                    icon="pi-bolt" color="emerald"
+                    :subtext="t('pages.grading.avgTimePerCopyLabel')"
+                />
+                <PageKpi
+                    :label="t('pages.grading.appealsPlagiarismLabel')"
+                    :value="props.stats?.appeals || 2"
+                    icon="pi-exclamation-triangle" color="amber"
+                />
             </div>
 
             <!-- ============================================================================== -->
             <!-- DATA GRID : FILE D'ATTENTE DES SOUMISSIONS                                     -->
             <!-- ============================================================================== -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
                 <!-- Toolbar de filtrage -->
                 <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -717,6 +701,8 @@ onMounted(() => {
                 <div class="relative z-10 w-full lg:w-auto">
                     <Button :label="t('pages.grading.configureAiButton')" icon="pi pi-cog" class="p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold px-8 py-3 w-full shadow-lg" />
                 </div>
+            </div>
+
             </div>
 
         </div>

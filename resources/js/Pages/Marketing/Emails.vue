@@ -351,7 +351,7 @@ const kpis = computed(() => [
                 title="Campagnes email"
                 subtitle="Créez, ciblez et envoyez vos campagnes à votre audience"
                 icon="pi-envelope"
-                accent="blue"
+                accent="emerald"
                 badge="Marketing"
                 :actions="[
                     { label: 'Groupes d\'audience', icon: 'pi-users', variant: 'secondary', onClick: openGroups },

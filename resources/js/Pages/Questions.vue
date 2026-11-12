@@ -17,6 +17,8 @@
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
@@ -317,109 +319,47 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
   <div class="page-bg min-h-screen font-sans pb-20">
 
     <!-- ============================================================================== -->
-    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- HEADER DE PAGE (PageHeader — Design System)                                     -->
     <!-- ============================================================================== -->
-    <div class="flex flex-col gap-2 mb-12">
-        
+    <PageHeader
+        :title="`${t('pages.questions.titlePart1')} ${t('pages.questions.titlePart2')}`"
+        :subtitle="t('pages.questions.subtitle')"
+        badge="v11.5"
+        icon="pi pi-question-circle"
+        accent="red"
+    >
+        <template #actions>
+            <Button
+                :label="t('pages.questions.importButton')"
+                icon="pi pi-upload"
+                class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white font-medium transition-colors shadow-none"
+                @click="importDialog = true"
+            />
+            <Button
+                :label="t('pages.questions.createButton')"
+                icon="pi pi-plus"
+                class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white font-bold shadow-lg shadow-red-900/50 transition-colors px-6"
+                @click="openNew"
+            />
+        </template>
+    </PageHeader>
 
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        v11.5
-                    </span>
+    <div class="page-container page-section">
 
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">{{ t('pages.questions.titlePart1') }}</span>
-                        <span class="text-[#E92B2B]">{{ t('pages.questions.titlePart2') }}</span>
-                    </h1>
-
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        {{ t('pages.questions.subtitle') }}
-                    </p>
-                </div>
-
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <Button 
-                        :label="t('pages.questions.importButton')" 
-                        icon="pi pi-upload" 
-                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
-                        @click="importDialog = true" 
-                    />
-                    <Button 
-                        :label="t('pages.questions.createButton')" 
-                        icon="pi pi-plus" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                        @click="openNew" 
-                    />
-                </div>
-            </div>
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS                                                                       -->
+        <!-- ============================================================================== -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <PageKpi :label="t('pages.questions.kpiTotal')" :value="props.statistics?.total_items || 1245" icon="pi-list" color="blue" />
+            <PageKpi :label="t('pages.questions.kpiActive')" :value="props.statistics?.active_items || 980" icon="pi-check-circle" color="emerald" />
+            <PageKpi :label="t('pages.questions.kpiAvgPoints')" :value="`${props.statistics?.avg_difficulty || 1.5} pts`" icon="pi-star" color="amber" />
+            <PageKpi :label="t('pages.questions.kpiReview')" :value="props.statistics?.needs_review || 14" icon="pi-exclamation-triangle" color="red" />
         </div>
 
         <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- DATA GRID : TABLEAU DES QUESTIONS                                               -->
         <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
-            
-            <!-- KPI 1 : Total Items -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-list text-blue-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiTotal') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.total_items || 1245 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 2 : Items Actifs -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-check-circle text-emerald-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiActive') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.active_items || 980 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 3 : Barème Moyen -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-star text-amber-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiAvgPoints') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.avg_difficulty || 1.5 }}<span class="text-lg text-slate-400 ml-1">pts</span></p>
-                </div>
-            </div>
-
-            <!-- KPI 4 : À Réviser -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-exclamation-triangle text-red-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiReview') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.needs_review || 14 }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================================== -->
-    <!-- DATA GRID : TABLEAU DES QUESTIONS (Inchangé)                                   -->
-    <!-- ============================================================================== -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
 
         <!-- Toolbar de filtre -->
         <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -543,7 +483,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
     <!-- ============================================================================== -->
     <!-- STATS FOOTER SECTION (Inchangé)                                                -->
     <!-- ============================================================================== -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
             <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> {{ t('pages.questions.difficultyChartTitle') }}</h3>
             <Chart type="bar" :data="chartData" :options="chartOptions" class="h-48" />
@@ -558,6 +498,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             </div>
             <Button :label="t('pages.questions.aiButton')" class="p-button-sm p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold mt-6 w-full hover:bg-blue-50" />
         </div>
+    </div>
     </div>
 </div>
 

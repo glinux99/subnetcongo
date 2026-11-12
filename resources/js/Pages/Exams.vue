@@ -16,6 +16,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
@@ -524,113 +526,49 @@ onMounted(() => {
    <div class="page-bg min-h-screen font-sans pb-20">
 
     <!-- ============================================================================== -->
-    <!-- HEADER DE PAGE (Dark Intelligence Hub Style)                                   -->
+    <!-- HEADER DE PAGE (PageHeader — Design System)                                     -->
     <!-- ============================================================================== -->
-    <div class="flex flex-col gap-2 mb-12">
-        
+    <PageHeader
+        title="Assessment Center"
+        :subtitle="t('pages.exams.heroSubtitle')"
+        :badge="t('pages.exams.badgeCertifications')"
+        icon="pi pi-file"
+        accent="red"
+    >
+        <template #actions>
+            <Button
+                :label="t('pages.exams.auditImportsButton')"
+                icon="pi pi-database"
+                class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white font-medium transition-colors shadow-none"
+                @click="importExportSidebar = true"
+            />
+            <Button
+                :label="t('pages.exams.newExamButton')"
+                icon="pi pi-plus"
+                class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white font-bold shadow-lg shadow-red-900/50 transition-colors px-6"
+                @click="openNew"
+            />
+        </template>
+    </PageHeader>
 
-        <!-- Bannière Sombre avec padding bas (pb-28) pour le chevauchement -->
-        <div class="relative bg-gradient-to-r from-[#111322] via-[#151326] to-[#1c1825] rounded-xl pt-10 pb-28 px-6 md:px-10 shadow-lg overflow-hidden">
-            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
-                
-                <!-- Partie Gauche (Titres) -->
-                <div class="space-y-4 max-w-3xl">
-                    <!-- Badge Certifications -->
-                    <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        {{ t('pages.exams.badgeCertifications') }}
-                    </span>
+    <div class="page-container page-section">
 
-                    <!-- Titre Principal (Italique, gras, 2 couleurs) -->
-                    <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">Assessment</span>
-                        <span class="text-[#E92B2B]">Center</span>
-                    </h1>
-
-                    <!-- Sous-titre -->
-                    <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        {{ t('pages.exams.heroSubtitle') }}
-                    </p>
-                </div>
-
-                <!-- Partie Droite (Boutons) -->
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <Button 
-                        :label="t('pages.exams.auditImportsButton')" 
-                        icon="pi pi-database" 
-                        class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
-                        @click="importExportSidebar = true" 
-                    />
-                    <Button 
-                        :label="t('pages.exams.newExamButton')" 
-                        icon="pi pi-plus" 
-                        class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                        @click="openNew" 
-                    />
-                </div>
-            </div>
+        <!-- ============================================================================== -->
+        <!-- KPI CARDS                                                                       -->
+        <!-- ============================================================================== -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <PageKpi :label="t('pages.exams.kpiActiveExams')" :value="props.stats_overview?.total || 24" icon="pi-verified" color="blue" />
+            <PageKpi :label="t('pages.exams.kpiAttemptsMonth')" :value="props.stats_overview?.attempts?.toLocaleString()" icon="pi-users" color="red">
+                <span class="text-[10px] font-bold text-red-500 bg-red-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Live</span>
+            </PageKpi>
+            <PageKpi :label="t('pages.exams.kpiPassRate')" :value="`${props.stats_overview?.avg_success_rate ?? 0}%`" icon="pi-chart-pie" color="amber" />
+            <PageKpi :label="t('pages.exams.kpiAntiCheat')" :value="props.stats_overview?.anti_cheat_alerts" icon="pi-shield" color="red" />
         </div>
 
         <!-- ============================================================================== -->
-        <!-- KPI CARDS (Overlapping / Chevauchement)                                        -->
+        <!-- DATA GRID : TABLEAU DES ÉVALUATIONS                                              -->
         <!-- ============================================================================== -->
-        <!-- Marge négative (-mt-16) pour faire remonter les cartes sur la bannière sombre -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 md:px-6 -mt-16 relative z-20">
-            
-            <!-- KPI 1 : Examens Actifs -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-blue-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-verified text-blue-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiActiveExams') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.total || 24 }}</p>
-                </div>
-            </div>
-
-            <!-- KPI 2 : Tentatives (Ce mois) -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-users text-red-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiAttemptsMonth') }}</h3>
-                    <div class="flex items-center gap-2">
-                        <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.attempts?.toLocaleString() }}</p>
-                        <!-- Le badge 'Live' est conservé et adapté pour tenir dans ce layout -->
-                        <span class="text-[10px] font-bold text-red-500 bg-red-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Live</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KPI 3 : Taux de Réussite -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-amber-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-chart-pie text-amber-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiPassRate') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.avg_success_rate }}<span class="text-lg text-slate-400 ml-1">%</span></p>
-                </div>
-            </div>
-
-            <!-- KPI 4 : Alertes Anti-Triche -->
-            <div class="bg-white rounded-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between h-36">
-                <div class="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center mb-4">
-                    <i class="pi pi-shield text-red-500 text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiAntiCheat') }}</h3>
-                    <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.anti_cheat_alerts }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================================== -->
-    <!-- DATA GRID : TABLEAU DES ÉVALUATIONS (Inchangé)                                 -->
-    <!-- ============================================================================== -->
-    <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden mt-6">
+        <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden">
 
         <!-- Toolbar de filtre -->
         <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -768,6 +706,7 @@ onMounted(() => {
                 </div>
             </template>
         </DataTable>
+    </div>
     </div>
 </div>
 

@@ -1,5 +1,7 @@
 <script setup>
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { ref, computed, onMounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
@@ -211,21 +213,16 @@ onMounted(() => {
         <div class="page-bg min-h-screen font-sans pb-20">
             
             <!-- HEADER SECTION -->
-            <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-                <div class="flex items-center gap-6">
-                    <div class="bg-emerald-600 p-4 rounded-xl shadow-xl shadow-emerald-100 -rotate-3 hover:rotate-0 transition-transform cursor-pointer">
-                        <i class="pi pi-chart-bar text-white text-3xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">Analyse des Revenus</h1>
-                        <p class="text-slate-500 font-medium">Suivi financier détaillé et performances des ventes</p>
-                    </div>
-                </div>
-                
-                <div class="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-                    <Calendar v-model="dateRange" selectionMode="range" :manualInput="false" placeholder="Période" class="w-64 border-none" icon="pi pi-calendar" showIcon />
+            <PageHeader
+                title="Analyse des Revenus"
+                subtitle="Suivi financier détaillé et performances des ventes"
+                icon="pi-chart-bar"
+                accent="emerald"
+            >
+                <template #actions>
+                    <Calendar v-model="dateRange" selectionMode="range" :manualInput="false" placeholder="Période" class="w-64" icon="pi pi-calendar" showIcon />
                     <Divider layout="vertical" class="hidden md:block" />
-                    <Button icon="pi pi-download" label="Exporter" class="p-button-text p-button-indigo font-bold" @click="toggleExport" />
+                    <Button icon="pi pi-download" label="Exporter" class="!bg-white/10 hover:!bg-white/20 !text-white !border-white/15 !rounded-xl !font-bold !text-xs" @click="toggleExport" />
                     <OverlayPanel ref="opExport">
                         <div class="flex flex-col gap-2 w-48">
                             <Button label="Format Excel (.xlsx)" icon="pi pi-file-excel" class="p-button-text p-button-secondary text-left" @click="exportCSV" />
@@ -233,26 +230,20 @@ onMounted(() => {
                             <Button label="Format CSV (.csv)" icon="pi pi-file" class="p-button-text p-button-secondary text-left" @click="exportCSV" />
                         </div>
                     </OverlayPanel>
-                </div>
-            </header>
+                </template>
+            </PageHeader>
+
+            <div class="page-container page-section">
 
             <!-- KPI DASHBOARD -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div v-for="kpi in [
-                    { label: 'Chiffre d\'Affaire Brut', val: totalGrossRevenue + ' $', color: 'indigo', icon: 'pi-wallet', trend: '+18.4%' },
-                    { label: 'Panier Moyen (AOV)', val: averageOrderValue + ' $', color: 'emerald', icon: 'pi-shopping-cart', trend: '+2.1%' },
-                    { label: 'Remboursements', val: totalRefunds + ' $', color: 'rose', icon: 'pi-history', trend: '-5.2%' },
-                    { label: 'Revenu Net (TVA déduite)', val: (parseFloat(totalGrossRevenue.replace(',','')) * 0.84).toLocaleString() + ' $', color: 'amber', icon: 'pi-percentage', trend: '+15.8%' }
-                ]" :key="kpi.label" class="bg-white p-6 rounded-[1rem] border border-slate-50 shadow-sm hover:shadow-xl transition-all duration-300 group">
-                    <div class="flex justify-between items-start mb-6">
-                        <div :class="`p-4 rounded-2xl bg-${kpi.color}-50 text-${kpi.color}-600 group-hover:scale-110 transition-transform` ">
-                            <i :class="`pi ${kpi.icon} text-2xl` "></i>
-                        </div>
-                        <Badge :value="kpi.trend" :severity="kpi.trend.includes('+') ? 'success' : 'danger'" class="rounded-lg px-2" />
-                    </div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.label }}</p>
-                    <div class="text-3xl font-black text-slate-800 tracking-tighter">{{ kpi.val }}</div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <PageKpi v-for="kpi in [
+                    { label: 'Chiffre d\'Affaire Brut', val: totalGrossRevenue + ' $', color: 'indigo', icon: 'pi-wallet', trend: 18.4 },
+                    { label: 'Panier Moyen (AOV)', val: averageOrderValue + ' $', color: 'emerald', icon: 'pi-shopping-cart', trend: 2.1 },
+                    { label: 'Remboursements', val: totalRefunds + ' $', color: 'rose', icon: 'pi-history', trend: -5.2 },
+                    { label: 'Revenu Net (TVA déduite)', val: (parseFloat(totalGrossRevenue.replace(',','')) * 0.84).toLocaleString() + ' $', color: 'amber', icon: 'pi-percentage', trend: 15.8 }
+                ]" :key="kpi.label"
+                    :label="kpi.label" :value="kpi.val" :icon="kpi.icon" :color="kpi.color" :trend="kpi.trend" />
             </div>
 
             <!-- ANALYTICS SECTION -->
@@ -545,6 +536,7 @@ onMounted(() => {
                 © 2026 SubNetCongo Financial Suite v3.2. Système de rapports sécurisé.
             </footer>
 
+            </div>
         </div>
     </AppLayout>
 </template>

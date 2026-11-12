@@ -129,7 +129,7 @@ const submitAsk = () => {
                 :subtitle="t('pages.student_questions.pageSubtitle')"
                 icon="pi-question-circle"
                 :badge="t('pages.student_questions.pageBadge')"
-                accent="blue"
+                accent="red"
                 :actions="[
                     { label: t('pages.student_questions.actionAsk'), icon: 'pi-plus', onClick: openAsk, variant: 'primary' }
                 ]"
