@@ -2,6 +2,8 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -14,7 +16,7 @@ const page = usePage();
 const legal = computed(() => page.props.legal || null);
 const identity = computed(() => props.identity || {});
 
-const missing = 'Information non renseignée';
+const missing = t('public.mentions.missing');
 
 const companyName = computed(() => legal.value?.company_name || identity.value?.site_name || 'SubnetCongo');
 
@@ -28,7 +30,7 @@ const capitalDisplay = computed(() => {
 const legalFormCapital = computed(() => {
     const parts = [];
     if (legal.value?.legal_form) parts.push(legal.value.legal_form);
-    if (capitalDisplay.value) parts.push(`au capital de ${capitalDisplay.value}`);
+    if (capitalDisplay.value) parts.push(`${t('public.mentions.capital_join')} ${capitalDisplay.value}`);
     return parts.length ? parts.join(' ') : null;
 });
 
@@ -36,7 +38,7 @@ const seatAddress = computed(() => {
     const l = legal.value;
     const parts = [l?.address_line, l?.city, l?.province, l?.country].filter(Boolean);
     if (parts.length) return parts.join(', ');
-    return identity.value?.contact_address || 'Kinshasa, RDC';
+    return identity.value?.contact_address || t('public.mentions.seat_fallback');
 });
 
 const legalFilled = computed(() => {
@@ -61,7 +63,7 @@ const websiteHref = computed(() => {
 </script>
 
 <template>
-    <Head :title="`Mentions Légales - ${identity.site_name || 'SubnetCongo'}`" />
+    <Head :title="`${t('public.mentions.head_title')} - ${identity.site_name || 'SubnetCongo'}`" />
     <AppLayout>
         
         <!-- En-tête de la page -->
@@ -74,12 +76,12 @@ const websiteHref = computed(() => {
             <div class="relative max-w-5xl mx-auto px-6 text-center z-10">
                 <span class="inline-flex items-center gap-2 text-red-400 mb-4">
                     <span class="w-8 h-[2px] bg-red-400"></span>
-                    <span class="font-bold uppercase tracking-[0.3em] text-xs">Informations réglementaires</span>
+                    <span class="font-bold uppercase tracking-[0.3em] text-xs">{{ t('public.mentions.pill') }}</span>
                     <span class="w-8 h-[2px] bg-red-400"></span>
                 </span>
-                <h1 class="text-4xl md:text-6xl font-black mt-2 tracking-tight">Mentions <span class="text-[#E11D48]">Légales</span></h1>
+                <h1 class="text-4xl md:text-6xl font-black mt-2 tracking-tight">{{ t('public.mentions.hero_title') }}</h1>
                 <p class="text-lg text-blue-200 mt-6 max-w-3xl mx-auto font-medium">
-                    Conformément aux dispositions de la loi congolaise n° 20/017 du 25 novembre 2020 relative au numérique en RDC.
+                    {{ t('public.mentions.hero_sub') }}
                 </p>
             </div>
         </section>
@@ -94,63 +96,63 @@ const websiteHref = computed(() => {
                 <article>
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">01</span>
-                        Identification de l'éditeur
+                        {{ t('public.mentions.editor_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed mb-6">
-                        Le site internet <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> est édité et exploité par la société :
+                        {{ t('public.mentions.edit_lead') }} <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> {{ t('public.mentions.edit_lead_2') }}
                     </div>
 
                     <!-- Fiche entreprise (Grille professionnelle) -->
                     <div v-if="legalFilled" class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 bg-slate-50 p-6 sm:p-8 rounded-xl border border-slate-200 text-sm">
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Dénomination sociale</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_company') }}</span>
                             <span class="font-semibold text-slate-900 text-base">{{ legal?.company_name || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Forme juridique & Capital</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_form_capital') }}</span>
                             <span class="font-medium text-slate-700">{{ legalFormCapital || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Immatriculation (RCCM)</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_rccm') }}</span>
                             <span class="font-medium text-slate-700 font-mono">{{ legal?.rccm || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Identifiant Fiscal Unique (IFU)</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_ifu') }}</span>
                             <span class="font-medium text-slate-700 font-mono">{{ legal?.ifu || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Numéro d'impôt</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_tax') }}</span>
                             <span class="font-medium text-slate-700 font-mono">{{ legal?.tax_id || missing }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Numéro d'identification (NIF)</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_nif') }}</span>
                             <span class="font-medium text-slate-700 font-mono">{{ legal?.nif || missing }}</span>
                         </div>
                         <div v-if="legal?.vat_number">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">N° TVA</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_vat') }}</span>
                             <span class="font-medium text-slate-700 font-mono">{{ legal.vat_number }}</span>
                         </div>
                         <div v-if="legal?.po_box">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Boîte postale</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_pobox') }}</span>
                             <span class="font-medium text-slate-700">{{ legal.po_box }}</span>
                         </div>
                         <div>
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Siège social</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_seat') }}</span>
                             <span class="font-medium text-slate-700">{{ seatAddress }}</span>
                         </div>
                         <div v-if="websiteHref">
-                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Site web</span>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_website') }}</span>
                             <a :href="websiteHref" target="_blank" rel="noopener" class="font-medium text-[#003399] hover:underline break-all">{{ legal.website }}</a>
                         </div>
                         <div class="md:col-span-2 pt-4 border-t border-slate-200 mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Contact direct</span>
-                                <span class="font-medium text-[#003399]">{{ identity.contact_phone || 'Contact non renseigné' }}</span><br>
-                                <span class="font-medium text-[#003399]">{{ identity.contact_email || 'contact non renseigné' }}</span>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_contact') }}</span>
+                                <span class="font-medium text-[#003399]">{{ identity.contact_phone || t('public.mentions.contact_fallback') }}</span><br>
+                                <span class="font-medium text-[#003399]">{{ identity.contact_email || t('public.mentions.contact_fallback') }}</span>
                             </div>
                             <div>
-                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Directeur de publication</span>
-                                <span class="font-medium text-slate-700">Le Gérant de {{ companyName }}</span>
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('public.mentions.label_director') }}</span>
+                                <span class="font-medium text-slate-700">{{ t('public.mentions.director_fallback') }} {{ companyName }}</span>
                             </div>
                         </div>
                     </div>
@@ -158,8 +160,8 @@ const websiteHref = computed(() => {
                     <!-- Fiche non renseignée : repli élégant -->
                     <div v-else class="border border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50">
                         <i class="pi pi-info-circle text-3xl text-slate-300 mb-3" aria-hidden="true"></i>
-                        <p class="font-semibold text-slate-700">Informations non renseignées</p>
-                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Les informations légales de la société seront affichées ici dès qu'elles auront été complétées depuis l'espace d'administration.</p>
+                        <p class="font-semibold text-slate-700">{{ t('public.mentions.not_filled_title') }}</p>
+                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">{{ t('public.mentions.not_filled_desc') }}</p>
                         <p class="text-sm text-[#003399] mt-4">{{ identity.contact_email || 'contact@subnetcongo.cd' }} · {{ identity.contact_phone || '' }}</p>
                     </div>
                 </article>
@@ -168,15 +170,15 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">02</span>
-                        Hébergement
+                        {{ t('public.mentions.host_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4">
-                        <p>L'hébergement du site et des infrastructures ERP est assuré par :</p>
+                        <p>{{ t('public.mentions.host_desc') }}</p>
                         <div class="bg-blue-50/50 p-4 border border-blue-100 rounded-lg">
                             <ul class="space-y-2 text-sm">
-                                <li><strong class="text-slate-800">Prestataire :</strong> {{ companyName }} (Infrastructure interne)</li>
-                                <li><strong class="text-slate-800">Localisation des serveurs :</strong> {{ seatAddress }}</li>
-                                <li><strong class="text-slate-800">Supervision :</strong> Assurée 24/7 par nos équipes techniques.</li>
+                                <li><strong class="text-slate-800">{{ t('public.mentions.host_label_provider') }}</strong> {{ companyName }} {{ t('public.mentions.host_provider_suffix') }}</li>
+                                <li><strong class="text-slate-800">{{ t('public.mentions.host_label_loc') }}</strong> {{ seatAddress }}</li>
+                                <li><strong class="text-slate-800">{{ t('public.mentions.host_label_supervision') }}</strong> {{ t('public.mentions.host_supervision_text') }}</li>
                             </ul>
                         </div>
                     </div>
@@ -186,13 +188,13 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">03</span>
-                        Propriété intellectuelle
+                        {{ t('public.mentions.ip_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>L'ensemble du contenu du site <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> — incluant, de manière non limitative, les textes, graphiques, logos, icônes, interfaces, codes sources, vidéos, et logiciels de l'ERP — est la propriété exclusive de {{ companyName }}.</p>
-                        <p>Ces éléments sont protégés par les lois congolaises et internationales relatives à la propriété intellectuelle, notamment le Code de la Propriété Intellectuelle congolais et les conventions internationales dont la RDC est signataire.</p>
+                        <p>{{ t('public.mentions.ip_p1_1') }} <strong>{{ identity.site_name || 'SubnetCongo' }}</strong> {{ t('public.mentions.ip_p1_2') }} {{ companyName }}.</p>
+                        <p>{{ t('public.mentions.ip_p2') }}</p>
                         <div class="border-l-4 border-red-500 pl-4 bg-red-50/50 p-4 rounded-r-lg mt-4 text-sm text-slate-700">
-                            <strong>Avertissement pénal :</strong> Toute reproduction, représentation, modification ou extraction (par data mining ou autres) de tout ou partie des éléments du site, sans l'autorisation écrite préalable de {{ companyName }}, est strictement interdite et constitutive d'une contrefaçon sanctionnée par les articles 79 à 91 du Code Pénal Congolais (Loi n° 09/001 du 10 janvier 2009).
+                            <strong>{{ t('public.mentions.legal_warning_title') }}</strong> {{ t('public.mentions.legal_warning') }} {{ companyName }}{{ t('public.mentions.legal_warning_2') }}
                         </div>
                     </div>
                 </article>
@@ -201,15 +203,15 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">04</span>
-                        Données personnelles et vie privée
+                        {{ t('public.mentions.data_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>Conformément à la <strong>Loi n° 20/017 du 25 novembre 2020</strong> portant sur le numérique en RDC, les données personnelles collectées via l'ERP, les formulaires de contact ou la plateforme de formation font l'objet d'un traitement hautement sécurisé.</p>
-                        <p>Ces données sont strictement nécessaires à : la gestion des accès, la facturation, le suivi pédagogique et le support technique.</p>
-                        <p>Vous disposez d'un droit d'accès, de rectification, de portabilité et d'effacement de vos données. Pour l'exercer, contactez notre Délégué à la Protection des Données (DPO) à : <a :href="`mailto:${identity.contact_email || 'contact@subnetcongo.cd'}`" class="text-[#003399] font-semibold hover:underline">{{ identity.contact_email || 'contact@subnetcongo.cd' }}</a>.</p>
+                        <p>{{ t('public.mentions.data_p1_1') }} <strong>Loi n° 20/017 du 25 novembre 2020</strong> {{ t('public.mentions.data_p1_2') }}</p>
+                        <p>{{ t('public.mentions.data_p2') }}</p>
+                        <p>{{ t('public.mentions.data_p3_1') }} <a :href="`mailto:${identity.contact_email || 'contact@subnetcongo.cd'}`" class="text-[#003399] font-semibold hover:underline">{{ identity.contact_email || 'contact@subnetcongo.cd' }}</a>.</p>
                         <p class="text-sm bg-slate-100 p-3 rounded">
-                            👉 Pour le détail complet, consultez notre 
-                            <Link :href="route('confidentialite')" class="text-[#E11D48] font-bold hover:underline">Politique de Confidentialité</Link>.
+                            {{ t('public.mentions.data_more') }} 
+                            <Link :href="route('confidentialite')" class="text-[#E11D48] font-bold hover:underline">{{ t('public.mentions.data_privacy') }}</Link>.
                         </p>
                     </div>
                 </article>
@@ -218,11 +220,11 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">05</span>
-                        Gestion des Cookies
+                        {{ t('public.mentions.cookies_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>Le site utilise des cookies (traceurs) pour garantir le bon fonctionnement de la plateforme (cookies de session ERP), améliorer la navigation, et réaliser des statistiques d'audience anonymes.</p>
-                        <p>Lors de votre première visite, un bandeau vous informe de la présence de ces cookies et vous invite à indiquer votre choix. Les cookies techniques, indispensables au fonctionnement des portails de connexion, ne requièrent pas de consentement préalable.</p>
+                        <p>{{ t('public.mentions.cookies_p1') }}</p>
+                        <p>{{ t('public.mentions.cookies_p2') }}</p>
                     </div>
                 </article>
 
@@ -230,11 +232,11 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">06</span>
-                        Sécurité des transactions
+                        {{ t('public.mentions.security_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>{{ companyName }} s'engage à mettre en œuvre toutes les mesures techniques et organisationnelles appropriées pour garantir la sécurité et la confidentialité de vos données.</p>
-                        <p>Les échanges de données entre votre navigateur et nos serveurs (notamment les identifiants de connexion à l'ERP) sont cryptés via le protocole <strong>SSL/TLS (HTTPS)</strong>.</p>
+                        <p>{{ companyName }} {{ t('public.mentions.security_p1_1') }}</p>
+                        <p>{{ t('public.mentions.security_p2') }} <strong>SSL/TLS (HTTPS)</strong>.</p>
                     </div>
                 </article>
 
@@ -242,16 +244,16 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">07</span>
-                        Limitation de responsabilité
+                        {{ t('public.mentions.liability_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>L'utilisation de la plateforme se fait "en l'état". Bien que nous nous efforcions d'assurer une disponibilité de 99,9%, {{ companyName }} décline toute responsabilité en cas :</p>
+                        <p>{{ t('public.mentions.liability_p1_1') }} {{ companyName }} {{ t('public.mentions.liability_p1_2') }}</p>
                         <ul class="list-disc pl-5 space-y-2">
-                            <li>D'interruption temporaire du service pour cause de maintenance technique.</li>
-                            <li>D'attaques informatiques externes, de défaillance du réseau internet congolais ou de cas de force majeure.</li>
-                            <li>De perte de données imputable à une mauvaise manipulation de la part de l'utilisateur.</li>
+                            <li>{{ t('public.mentions.liability_li1') }}</li>
+                            <li>{{ t('public.mentions.liability_li2') }}</li>
+                            <li>{{ t('public.mentions.liability_li3') }}</li>
                         </ul>
-                        <p>Les liens hypertextes sortants présents sur ce site ne sauraient engager la responsabilité de l'éditeur quant à leur contenu.</p>
+                        <p>{{ t('public.mentions.liability_p2') }}</p>
                     </div>
                 </article>
 
@@ -259,11 +261,11 @@ const websiteHref = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">08</span>
-                        Droit applicable & Juridiction
+                        {{ t('public.mentions.law_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p>Les présentes mentions légales sont soumises au <strong>droit de la République Démocratique du Congo</strong>.</p>
-                        <p>En cas de litige relatif à l'interprétation ou à l'exécution de ces dispositions, une résolution à l'amiable sera privilégiée. À défaut d'accord, le litige sera porté exclusivement devant les <strong>tribunaux compétents de Kinshasa/Gombe</strong>.</p>
+                        <p>{{ t('public.mentions.law_p1_1') }} <strong>{{ t('public.mentions.law_p1_2') }}</strong>.</p>
+                        <p>{{ t('public.mentions.law_p2_1') }} <strong>{{ t('public.mentions.law_p2_2') }}</strong>.</p>
                     </div>
                 </article>
 
@@ -271,8 +273,8 @@ const websiteHref = computed(() => {
             
             <!-- Date de mise à jour -->
             <div class="max-w-4xl mx-auto mt-8 text-center text-sm text-slate-400">
-                <p v-if="legalUpdated">Dernière mise à jour : <span class="font-semibold text-slate-500">{{ legalUpdated }}</span><br></p>
-                {{ companyName }} se réserve le droit de modifier ces mentions à tout moment.
+                <p v-if="legalUpdated">{{ t('public.mentions.update_date') }} <span class="font-semibold text-slate-500">{{ legalUpdated }}</span><br></p>
+                {{ companyName }} {{ t('public.mentions.update_reserve') }}
             </div>
 
         </section>

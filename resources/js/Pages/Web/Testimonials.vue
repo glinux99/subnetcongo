@@ -1,6 +1,8 @@
-<script setup>
+﻿<script setup>
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -11,13 +13,13 @@ const props = defineProps({
 </script>
 
 <template>
-    <Head :title="`Témoignages - ${identity.site_name || 'SubnetCongo'}`" />
+    <Head :title="`${t('public.testimonials.title')} - ${identity.site_name || 'SubnetCongo'}`" />
     <AppLayout>
         <section class="relative pt-32 pb-16 bg-[#001A4D] text-white">
             <div class="absolute inset-0 bg-gradient-to-b from-[#001A4D] to-[#003399] opacity-80"></div>
             <div class="relative max-w-[1500px] mx-auto px-6 text-center">
-                <h1 class="text-5xl md:text-7xl font-black tracking-tighter">Témoignages</h1>
-                <p class="text-xl text-blue-100 mt-4">Ce que disent nos apprenants et partenaires</p>
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter">{{ t('public.testimonials.title') }}</h1>
+                <p class="text-xl text-blue-100 mt-4">{{ t('public.testimonials.subtitle') }}</p>
             </div>
         </section>
 
@@ -40,7 +42,7 @@ const props = defineProps({
                 </div>
                 <div v-else class="text-center py-20 text-slate-500">
                     <i class="pi pi-comments text-6xl mb-3"></i>
-                    <p class="text-xl font-bold">Aucun témoignage approuvé pour le moment.</p>
+                    <p class="text-xl font-bold">{{ t('public.testimonials.empty') }}</p>
                 </div>
             </div>
         </section>

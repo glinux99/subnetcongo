@@ -8,26 +8,33 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import InputSwitch from 'primevue/inputswitch';
 import Dialog from 'primevue/dialog';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
 });
 
+// Libellés/descriptions traduits via clés i18n (les tableaux restent mutables pour le drag & drop)
+const widgetLabel = (key) => t(`pages.web_widgets.w_${key}_label`);
+const widgetDesc = (key) => t(`pages.web_widgets.w_${key}_desc`);
+
 // Widgets actuellement sur la page
 const widgetTypes = ref([
-    { key: 'hero_slider',  label: 'Hero Slider',     desc: 'Slides pleine page avec CTAs (géré depuis Landing).', icon: 'pi pi-images', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
-    { key: 'course_grid',  label: 'Grille de cours', desc: 'Affiche les cours publiés (géré sur Academy).', icon: 'pi pi-th-large', color: 'text-emerald-500', bg: 'bg-emerald-50', active: true },
-    { key: 'stats',        label: 'Statistiques',    desc: 'Compteurs agrégés (étudiants, cours, etc.).', icon: 'pi pi-chart-bar', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
-    { key: 'testimonials', label: 'Témoignages',     desc: 'Carousel des témoignages approuvés.', icon: 'pi pi-comments', color: 'text-amber-500', bg: 'bg-amber-50', active: false },
+    { key: 'hero_slider',  icon: 'pi pi-images', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
+    { key: 'course_grid',  icon: 'pi pi-th-large', color: 'text-emerald-500', bg: 'bg-emerald-50', active: true },
+    { key: 'stats',        icon: 'pi pi-chart-bar', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
+    { key: 'testimonials', icon: 'pi pi-comments', color: 'text-amber-500', bg: 'bg-amber-50', active: false },
 ]);
 
 // Catalogue des widgets disponibles (non encore ajoutés)
 const availableWidgets = ref([
-    { key: 'blog_feed',    label: 'Fil d\'actualité', desc: '3 derniers articles de blog publiés.', icon: 'pi pi-megaphone', color: 'text-red-500', bg: 'bg-red-50', active: true },
-    { key: 'cta',          label: 'Appel à l\'action', desc: 'Bandeau CTA final (inscription / découverte).', icon: 'pi pi-bolt', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
-    { key: 'realizations', label: 'Réalisations',    desc: 'Carrousel des projets terrain publiés.', icon: 'pi pi-briefcase', color: 'text-cyan-500', bg: 'bg-cyan-50', active: false },
-    { key: 'faq',          label: 'FAQ',             desc: 'Questions/réponses configurables.', icon: 'pi pi-question-circle', color: 'text-slate-500', bg: 'bg-slate-100', active: true },
-    { key: 'partners',     label: 'Partenaires',     desc: 'Bandeau défilant des logos partenaires.', icon: 'pi pi-star', color: 'text-yellow-500', bg: 'bg-yellow-50', active: true },
+    { key: 'blog_feed',    icon: 'pi pi-megaphone', color: 'text-red-500', bg: 'bg-red-50', active: true },
+    { key: 'cta',          icon: 'pi pi-bolt', color: 'text-blue-500', bg: 'bg-blue-50', active: true },
+    { key: 'realizations', icon: 'pi pi-briefcase', color: 'text-cyan-500', bg: 'bg-cyan-50', active: false },
+    { key: 'faq',          icon: 'pi pi-question-circle', color: 'text-slate-500', bg: 'bg-slate-100', active: true },
+    { key: 'partners',     icon: 'pi pi-star', color: 'text-yellow-500', bg: 'bg-yellow-50', active: true },
 ]);
 
 // ---------------------------------------------------------
@@ -76,7 +83,7 @@ const removeWidget = (index) => {
 </script>
 
 <template>
-    <Head title="Configuration des Widgets" />
+    <Head :title="t('pages.web_widgets.title')" />
 
     <AppLayout>
         <div class="page-bg min-h-screen font-sans pb-32">
@@ -96,23 +103,23 @@ const removeWidget = (index) => {
                                 Landing Page Builder
                             </span>
                             <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                                <span class="text-white">Widgets</span>
-                                <span class="text-[#E92B2B]">Dynamiques</span>
+                                <span class="text-white">{{ t('pages.web_widgets.heading1') }}</span>
+                                <span class="text-[#E92B2B]">{{ t('pages.web_widgets.heading2') }}</span>
                             </h1>
                             <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                                Gérez les blocs dynamiques qui composent votre page d'accueil. <strong class="text-white">Glissez-déposez</strong> les cartes pour changer leur ordre d'affichage.
+                                {{ t('pages.web_widgets.subtitle') }} <strong class="text-white">{{ t('pages.web_widgets.dragDrop') }}</strong> {{ t('pages.web_widgets.subtitleSuffix') }}
                             </p>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                             <Button 
-                                label="Ajouter un widget" 
+                                :label="t('pages.web_widgets.addWidget')" 
                                 icon="pi pi-plus" 
                                 class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
                                 @click="showAddModal = true"
                             />
                             <Button 
-                                label="Prévisualiser" 
+                                :label="t('pages.web_widgets.preview')" 
                                 icon="pi pi-eye" 
                                 class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
                                 as="a"
@@ -132,9 +139,9 @@ const removeWidget = (index) => {
                 <!-- Zone vide si aucun widget -->
                 <div v-if="widgetTypes.length === 0" class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
                     <i class="pi pi-objects-column text-4xl text-slate-300 mb-3"></i>
-                    <h3 class="text-lg font-bold text-slate-800">Aucun widget actif</h3>
-                    <p class="text-sm text-slate-500 mb-4">Votre page d'accueil est vide. Ajoutez des widgets pour commencer.</p>
-                    <Button label="Ajouter depuis le catalogue" icon="pi pi-plus" outlined @click="showAddModal = true" />
+                    <h3 class="text-lg font-bold text-slate-800">{{ t('pages.web_widgets.emptyTitle') }}</h3>
+                    <p class="text-sm text-slate-500 mb-4">{{ t('pages.web_widgets.emptyText') }}</p>
+                    <Button :label="t('pages.web_widgets.addFromCatalog')" icon="pi pi-plus" outlined @click="showAddModal = true" />
                 </div>
 
                 <!-- Grille Drag & Drop -->
@@ -163,15 +170,15 @@ const removeWidget = (index) => {
                             <div class="flex flex-col items-end gap-1" @click.stop>
                                 <InputSwitch v-model="w.active" class="scale-75 origin-right" />
                                 <span class="text-[9px] font-bold uppercase tracking-widest" :class="w.active ? 'text-emerald-500' : 'text-slate-400'">
-                                    {{ w.active ? 'Actif' : 'Masqué' }}
+                                    {{ w.active ? t('pages.web_widgets.active') : t('pages.web_widgets.hidden') }}
                                 </span>
                             </div>
                         </div>
 
                         <!-- Contenu (Texte) -->
                         <div class="flex-1 mb-6">
-                            <h3 class="text-lg font-black text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{{ w.label }}</h3>
-                            <p class="text-slate-500 text-sm leading-relaxed">{{ w.desc }}</p>
+                            <h3 class="text-lg font-black text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">{{ widgetLabel(w.key) }}</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed">{{ widgetDesc(w.key) }}</p>
                         </div>
 
                         <!-- Action de pied de carte -->
@@ -179,14 +186,14 @@ const removeWidget = (index) => {
                             <Button 
                                 icon="pi pi-cog" 
                                 class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-slate-100 text-slate-600" 
-                                v-tooltip.top="'Configurer le widget'" 
+                                v-tooltip.top="t('pages.web_widgets.configureTip')" 
                             />
                             
                             <!-- Nouveau Bouton "Retirer" -->
                             <Button 
                                 icon="pi pi-trash" 
                                 class="p-button-rounded p-button-text p-button-danger hover:bg-red-50 text-red-400" 
-                                v-tooltip.top="'Retirer de la page'" 
+                                v-tooltip.top="t('pages.web_widgets.removeTip')" 
                                 @click="removeWidget(index)"
                             />
                         </div>
@@ -200,15 +207,15 @@ const removeWidget = (index) => {
             <Dialog 
                 v-model:visible="showAddModal" 
                 modal 
-                header="Catalogue de Widgets" 
+                :header="t('pages.web_widgets.modalTitle')" 
                 :style="{ width: '50rem' }" 
                 :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
             >
-                <p class="text-sm text-slate-500 mb-6">Sélectionnez un widget ci-dessous pour l'ajouter à votre page d'accueil.</p>
+                <p class="text-sm text-slate-500 mb-6">{{ t('pages.web_widgets.modalText') }}</p>
                 
                 <div v-if="availableWidgets.length === 0" class="text-center py-8 text-emerald-600 font-bold bg-emerald-50 rounded-xl border border-emerald-100">
                     <i class="pi pi-check-circle text-2xl mb-2"></i><br>
-                    Tous les widgets disponibles ont déjà été ajoutés à la page !
+                    {{ t('pages.web_widgets.modalAllAdded') }}
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,15 +229,15 @@ const removeWidget = (index) => {
                             <i :class="`${w.icon} text-lg`"></i>
                         </div>
                         <div class="flex-1">
-                            <h4 class="font-bold text-slate-800 text-sm group-hover:text-blue-700">{{ w.label }}</h4>
-                            <p class="text-[11px] text-slate-500 line-clamp-1">{{ w.desc }}</p>
+                            <h4 class="font-bold text-slate-800 text-sm group-hover:text-blue-700">{{ widgetLabel(w.key) }}</h4>
+                            <p class="text-[11px] text-slate-500 line-clamp-1">{{ widgetDesc(w.key) }}</p>
                         </div>
                         <i class="pi pi-plus-circle text-slate-300 group-hover:text-blue-500 text-xl transition-colors"></i>
                     </div>
                 </div>
 
                 <template #footer>
-                    <Button label="Fermer" icon="pi pi-times" @click="showAddModal = false" text class="p-button-secondary" />
+                    <Button :label="t('pages.web_widgets.close')" icon="pi pi-times" @click="showAddModal = false" text class="p-button-secondary" />
                 </template>
             </Dialog>
 

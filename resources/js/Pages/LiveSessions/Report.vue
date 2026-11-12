@@ -7,6 +7,9 @@ import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     session: Object,
@@ -34,7 +37,7 @@ const engagementRate = computed(() => {
 
 <template>
     <AppLayout>
-        <Head :title="`Rapport — ${session?.title}`" />
+        <Head :title="`${t('pages.live_session_report.head_prefix')} — ${session?.title}`" />
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
@@ -46,12 +49,12 @@ const engagementRate = computed(() => {
                             <i class="pi pi-chart-bar text-white text-3xl"></i>
                         </div>
                         <div>
-                            <h1 class="text-3xl font-black text-white tracking-tight">Rapport de session</h1>
+                            <h1 class="text-3xl font-black text-white tracking-tight">{{ t('pages.live_session_report.heading') }}</h1>
                             <p class="text-slate-400 font-medium text-sm">{{ session?.title }} · {{ session?.course?.title }}</p>
                         </div>
                     </div>
                     <Link :href="route('live-sessions.index')">
-                        <Button label="Retour" icon="pi pi-arrow-left" outlined class="!text-white !border-white/20 hover:!bg-white/10 !rounded-xl" />
+                        <Button :label="t('pages.live_session_report.btn_back')" icon="pi pi-arrow-left" outlined class="!text-white !border-white/20 hover:!bg-white/10 !rounded-xl" />
                     </Link>
                 </div>
             </div>
@@ -59,10 +62,10 @@ const engagementRate = computed(() => {
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-6 relative z-20">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div v-for="kpi in [
-                        { label: 'Inscrits', value: stats?.total_registered ?? 0, icon: 'pi-users', color: 'from-blue-500 to-blue-500' },
-                        { label: 'Présents', value: stats?.actual_attendees ?? 0, icon: 'pi-check-circle', color: 'from-emerald-500 to-teal-500' },
-                        { label: 'Taux présence', value: `${engagementRate}%`, icon: 'pi-percentage', color: 'from-blue-600 to-blue-700' },
-                        { label: 'Pic participants', value: stats?.peak_participants ?? 0, icon: 'pi-bolt', color: 'from-red-600 to-red-700' },
+                        { label: t('pages.live_session_report.kpi_registered'), value: stats?.total_registered ?? 0, icon: 'pi-users', color: 'from-blue-500 to-blue-500' },
+                        { label: t('pages.live_session_report.kpi_attendees'), value: stats?.actual_attendees ?? 0, icon: 'pi-check-circle', color: 'from-emerald-500 to-teal-500' },
+                        { label: t('pages.live_session_report.kpi_attendance_rate'), value: `${engagementRate}%`, icon: 'pi-percentage', color: 'from-blue-600 to-blue-700' },
+                        { label: t('pages.live_session_report.kpi_peak'), value: stats?.peak_participants ?? 0, icon: 'pi-bolt', color: 'from-red-600 to-red-700' },
                     ]" :key="kpi.label" class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                         <div :class="['w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg mb-3', kpi.color]">
                             <i :class="['pi', kpi.icon, 'text-xl']"></i>
@@ -73,16 +76,16 @@ const engagementRate = computed(() => {
                 </div>
 
                 <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-6">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Engagement en temps réel</h3>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">{{ t('pages.live_session_report.chart_title') }}</h3>
                     <div class="h-72">
                         <Chart type="line" :data="chartData" :options="chartOptions" />
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Liste des participants</h3>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">{{ t('pages.live_session_report.participants_title') }}</h3>
                     <DataTable :value="session?.attendees ?? []" stripedRows paginator :rows="10" responsiveLayout="scroll" class="text-sm">
-                        <Column header="Participant">
+                        <Column :header="t('pages.live_session_report.col_participant')">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <div class="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-black">
@@ -95,22 +98,22 @@ const engagementRate = computed(() => {
                                 </div>
                             </template>
                         </Column>
-                        <Column header="Arrivée">
+                        <Column :header="t('pages.live_session_report.col_joined_at')">
                             <template #body="{ data }">{{ data.joined_at ? new Date(data.joined_at).toLocaleTimeString('fr-FR') : '—' }}</template>
                         </Column>
-                        <Column header="Temps passé">
+                        <Column :header="t('pages.live_session_report.col_time_spent')">
                             <template #body="{ data }">{{ formatTime(data.seconds_spent ?? 0) }}</template>
                         </Column>
-                        <Column header="Dernier ping">
+                        <Column :header="t('pages.live_session_report.col_last_ping')">
                             <template #body="{ data }">{{ data.last_ping_at ? new Date(data.last_ping_at).toLocaleTimeString('fr-FR') : '—' }}</template>
                         </Column>
-                        <Column header="Statut">
+                        <Column :header="t('pages.live_session_report.col_status')">
                             <template #body="{ data }">
-                                <Tag :value="data.left_at ? 'Parti' : 'Actif'" :severity="data.left_at ? 'secondary' : 'success'" />
+                                <Tag :value="data.left_at ? t('pages.live_session_report.status_left') : t('pages.live_session_report.status_active')" :severity="data.left_at ? 'secondary' : 'success'" />
                             </template>
                         </Column>
                         <template #empty>
-                            <div class="text-center py-8 text-slate-400">Aucun participant.</div>
+                            <div class="text-center py-8 text-slate-400">{{ t('pages.live_session_report.no_participants') }}</div>
                         </template>
                     </DataTable>
                 </div>

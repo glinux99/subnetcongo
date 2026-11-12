@@ -10,6 +10,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -26,10 +28,10 @@ const submit = () => form.post(route('contact.store'), { onSuccess: () => form.r
 
 const formSection = ref(null);
 const quickChannels = [
-    { icon: 'pi-graduation-cap', label: 'Formation', desc: 'Inscription, cursus, certification', subject: 'Inscription à une formation', color: '#2563EB' },
-    { icon: 'pi-briefcase', label: 'Devis B2B', desc: 'Projet d\'entreprise, audit, infogérance', subject: 'Demande de devis B2B', color: '#E1251B' },
-    { icon: 'pi-handshake', label: 'Partenariat', desc: 'Collaboration académique ou commerciale', subject: 'Partenariat', color: '#10B981' },
-    { icon: 'pi-headphones', label: 'Support', desc: 'Problème technique, accès plateforme', subject: 'Support technique', color: '#F59E0B' },
+    { icon: 'pi-graduation-cap', label: t('public.contact.channel_training'), desc: t('public.contact.channel_training_desc'), subject: t('public.contact.channel_training_subject'), color: '#2563EB' },
+    { icon: 'pi-briefcase', label: t('public.contact.channel_b2b'), desc: t('public.contact.channel_b2b_desc'), subject: t('public.contact.channel_b2b_subject'), color: '#E1251B' },
+    { icon: 'pi-handshake', label: t('public.contact.channel_partner'), desc: t('public.contact.channel_partner_desc'), subject: t('public.contact.subject_partner'), color: '#10B981' },
+    { icon: 'pi-headphones', label: t('public.contact.channel_support'), desc: t('public.contact.channel_support_desc'), subject: t('public.contact.subject_support'), color: '#F59E0B' },
 ];
 
 const prefillSubject = (subject) => {
@@ -50,9 +52,9 @@ const legalInertia = computed(() => props.legal ?? page.props.legal ?? null);
 const contactCards = computed(() => [
     {
         icon: 'pi-map-marker', color: '#E1251B', bg: 'bg-red-500/10',
-        label: 'Adresse', title: 'Siège social',
+        label: t('public.contact.card_address'), title: t('public.contact.card_address_title'),
         lines: [
-            legalInertia.value?.address_line || props.identity.contact_address || 'Kinshasa, RDC',
+            legalInertia.value?.address_line || props.identity.contact_address || t('public.contact.card_kloaddr_fallback'),
             [legalInertia.value?.city, legalInertia.value?.province, legalInertia.value?.country].filter(Boolean).join(', ') || null,
             legalInertia.value?.po_box ? `BP : ${legalInertia.value.po_box}` : null,
         ].filter(Boolean),
@@ -60,35 +62,35 @@ const contactCards = computed(() => [
     },
     {
         icon: 'pi-envelope', color: '#2563EB', bg: 'bg-blue-500/10',
-        label: 'Email', title: 'Écrivez-nous',
+        label: t('public.contact.card_email'), title: t('public.contact.card_email_title'),
         lines: [props.identity.contact_email || 'contact@subnetcongo.cd'],
-        action: { label: 'Envoyer un email', href: `mailto:${props.identity.contact_email}` },
+        action: { label: t('public.contact.card_email_action'), href: `mailto:${props.identity.contact_email}` },
     },
     {
         icon: 'pi-phone', color: '#10B981', bg: 'bg-emerald-500/10',
-        label: 'Téléphone', title: 'Appelez-nous',
+        label: t('public.contact.card_phone'), title: t('public.contact.card_phone_title'),
         lines: [props.identity.contact_phone || '+243 000 000 000'],
-        action: { label: 'Appeler maintenant', href: `tel:${props.identity.contact_phone}` },
+        action: { label: t('public.contact.card_phone_action'), href: `tel:${props.identity.contact_phone}` },
     },
     {
         icon: 'pi-clock', color: '#F59E0B', bg: 'bg-amber-500/10',
-        label: 'Horaires', title: 'Disponibilité',
-        lines: ['Lun – Ven : 8h00 – 18h00', 'Sam : 9h00 – 13h00', 'Réponse sous 48h garantie'],
+        label: t('public.contact.card_hours'), title: t('public.contact.card_hours_title'),
+        lines: [t('public.contact.hours_1'), t('public.contact.hours_2'), t('public.contact.hours_3')],
         action: null,
     },
 ]);
 
 const processSteps = [
-    { icon: 'pi-send', title: 'Envoyez votre demande', desc: 'Remplissez le formulaire ou écrivez-nous directement. Décrivez votre besoin en quelques lignes.' },
-    { icon: 'pi-comments', title: 'Échange avec un expert', desc: 'Un membre de notre équipe vous recontacte sous 48h pour qualifier votre projet.' },
-    { icon: 'pi-check-circle', title: 'Solution & devis', desc: 'Vous recevez une proposition claire : formation, prestation ou partenariat sur mesure.' },
+    { icon: 'pi-send', title: t('public.contact.step_1_title'), desc: t('public.contact.step_1_desc') },
+    { icon: 'pi-comments', title: t('public.contact.step_2_title'), desc: t('public.contact.step_2_desc') },
+    { icon: 'pi-check-circle', title: t('public.contact.step_3_title'), desc: t('public.contact.step_3_desc') },
 ];
 
 const faqs = ref([
-    { q: 'Sous quel délai recevez-vous une réponse ?', a: 'Nous garantissons une réponse sous 48 heures ouvrées. Pour les urgences techniques, appelez directement notre ligne téléphonique.', open: false },
-    { q: 'Proposez-vous des formations en intra-entreprise ?', a: 'Oui, nous organisons des sessions sur mesure directement dans vos locaux ou en ligne. Contactez-nous avec vos besoins et nous construirons un programme adapté.', open: false },
-    { q: 'Comment demander un devis pour un projet B2B ?', a: 'Utilisez le formulaire ci-dessus en précisant "Demande de devis B2B" comme sujet, ou écrivez directement à notre service commercial. Joignez si possible un descriptif de votre infrastructure.', open: false },
-    { q: 'Acceptez-vous les demandes de partenariat ?', a: 'Absolument. Nous sommes ouverts aux partenariats académiques, techniques et commerciaux. Présentez-nous votre projet via le formulaire de contact.', open: false },
+    { q: t('public.contact.faq_1_q'), a: t('public.contact.faq_1_a'), open: false },
+    { q: t('public.contact.faq_2_q'), a: t('public.contact.faq_2_a'), open: false },
+    { q: t('public.contact.faq_3_q'), a: t('public.contact.faq_3_a'), open: false },
+    { q: t('public.contact.faq_4_q'), a: t('public.contact.faq_4_a'), open: false },
 ]);
 
 const toggleFaq = (index) => {
@@ -96,12 +98,12 @@ const toggleFaq = (index) => {
 };
 
 const subjectOptions = [
-    'Demande d\'information',
-    'Inscription à une formation',
-    'Demande de devis B2B',
-    'Partenariat',
-    'Support technique',
-    'Autre',
+    t('public.contact.subject_info'),
+    t('public.contact.subject_training'),
+    t('public.contact.subject_b2b'),
+    t('public.contact.subject_partner'),
+    t('public.contact.subject_support'),
+    t('public.contact.subject_other'),
 ];
 
 // ============================================================================
@@ -125,8 +127,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <template>
-    <Head :title="`Contact - ${identity.site_name || 'SubnetCongo'}`">
-        <meta name="description" content="Contactez SubnetCongo : formations, devis B2B, partenariats et support. Réponse sous 48h.">
+    <Head :title="`${t('public.contact.head_title')} - ${identity.site_name || 'SubnetCongo'}`">
+        <meta name="description" :content="t('public.contact.head_desc')">
     </Head>
 
     <AppLayout>
@@ -148,15 +150,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="max-w-3xl space-y-6">
                     <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white reveal-on-scroll">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Nous sommes à votre écoute</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">{{ t('public.contact.pill_listen') }}</span>
                     </div>
 
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight reveal-on-scroll delay-100">
-                        Parlons de <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">votre projet</span>
+                        {{ t('public.contact.hero_title_1') }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">{{ t('public.contact.hero_title_2') }}</span>
                     </h1>
 
                     <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5 reveal-on-scroll delay-200">
-                        Formation, prestation technique ou partenariat : une question, un besoin ? Notre équipe vous répond sous 48h.
+                        {{ t('public.contact.hero_sub') }}
                     </p>
                 </div>
             </div>
@@ -222,8 +224,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                     <i class="pi pi-send text-xl"></i>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-black text-[#0B1221]">Envoyez-nous un message</h2>
-                                    <p class="text-sm text-slate-500">Les champs marqués * sont obligatoires.</p>
+                                    <h2 class="text-2xl font-black text-[#0B1221]">{{ t('public.contact.form_title') }}</h2>
+                                    <p class="text-sm text-slate-500">{{ t('public.contact.form_required') }}</p>
                                 </div>
                             </div>
 
@@ -237,13 +239,13 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <form @submit.prevent="submit" class="space-y-5">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">Nom complet *</label>
-                                        <input v-model="form.name" type="text" placeholder="Jean-Paul Mulumba"
+                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">{{ t('public.contact.label_name') }}</label>
+                                        <input v-model="form.name" type="text" :placeholder="t('public.contact.placeholder_name')"
                                             class="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" required />
                                         <p v-if="form.errors.name" class="text-red-500 text-xs mt-1.5 font-bold">{{ form.errors.name }}</p>
                                     </div>
                                     <div>
-                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">Téléphone</label>
+                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">{{ t('public.contact.label_phone') }}</label>
                                         <input v-model="form.phone" type="tel" placeholder="+243 000 000 000"
                                             class="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" />
                                     </div>
@@ -251,16 +253,16 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">Email *</label>
-                                        <input v-model="form.email" type="email" placeholder="exemple@email.com"
+                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">{{ t('public.contact.label_email') }}</label>
+                                        <input v-model="form.email" type="email" :placeholder="t('public.contact.placeholder_email')"
                                             class="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" required />
                                         <p v-if="form.errors.email" class="text-red-500 text-xs mt-1.5 font-bold">{{ form.errors.email }}</p>
                                     </div>
                                     <div>
-                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">Sujet *</label>
+                                        <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">{{ t('public.contact.label_subject') }}</label>
                                         <select v-model="form.subject" required
                                             class="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2563EB] outline-none transition-all appearance-none cursor-pointer">
-                                            <option value="" disabled>Sélectionnez un sujet...</option>
+                                            <option value="" disabled>{{ t('public.contact.subject_placeholder') }}</option>
                                             <option v-for="s in subjectOptions" :key="s" :value="s">{{ s }}</option>
                                         </select>
                                         <p v-if="form.errors.subject" class="text-red-500 text-xs mt-1.5 font-bold">{{ form.errors.subject }}</p>
@@ -268,8 +270,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 </div>
 
                                 <div>
-                                    <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">Message *</label>
-                                    <textarea v-model="form.message" rows="6" placeholder="Décrivez votre besoin, votre projet ou votre question..."
+                                    <label class="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 block">{{ t('public.contact.label_message') }}</label>
+                                    <textarea v-model="form.message" rows="6" :placeholder="t('public.contact.placeholder_message')"
                                         class="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#2563EB] outline-none transition-all resize-none"></textarea>
                                     <p v-if="form.errors.message" class="text-red-500 text-xs mt-1.5 font-bold">{{ form.errors.message }}</p>
                                 </div>
@@ -277,7 +279,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 <button type="submit" :disabled="form.processing"
                                     class="w-full px-8 py-4 bg-[#0B1221] hover:bg-[#2563EB] text-white font-bold rounded-xl transition-colors shadow-lg shadow-slate-900/10 flex items-center justify-center gap-3 disabled:opacity-50">
                                     <i :class="['pi', form.processing ? 'pi-spin pi-spinner' : 'pi-send']"></i>
-                                    {{ form.processing ? 'Envoi en cours...' : 'Envoyer le message' }}
+                                    {{ form.processing ? t('public.contact.submitting') : t('public.contact.submit') }}
                                 </button>
                             </form>
                         </div>
@@ -287,7 +289,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div class="lg:col-span-4 space-y-6">
                         <!-- Réseaux sociaux -->
                         <div class="reveal-on-scroll bg-white p-7 rounded-[1.25rem] border border-slate-100 shadow-sm">
-                            <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 mb-5">Suivez-nous</h3>
+                            <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 mb-5">{{ t('public.contact.follow_us') }}</h3>
                             <div class="grid grid-cols-4 gap-3">
                                 <a v-for="soc in [
                                     { icon: 'facebook', link: identity.social_facebook, color: 'hover:bg-blue-600' },
@@ -310,11 +312,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                     <div class="w-10 h-10 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center">
                                         <i class="pi pi-id-card"></i>
                                     </div>
-                                    <h3 class="font-black">Informations légales</h3>
+                                    <h3 class="font-black">{{ t('public.contact.legal_title') }}</h3>
                                 </div>
                                 <dl class="space-y-3 text-sm">
                                     <div v-if="legalInertia.company_name">
-                                        <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Raison sociale</dt>
+                                        <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">{{ t('public.contact.legal_company') }}</dt>
                                         <dd class="font-bold">{{ legalInertia.company_name }}<span v-if="legalInertia.legal_form" class="text-slate-400"> {{ legalInertia.legal_form }}</span></dd>
                                     </div>
                                     <div v-if="legalInertia.rccm">
@@ -326,7 +328,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                         <dd class="font-mono">{{ legalInertia.ifu }}</dd>
                                     </div>
                                     <div v-if="legalInertia.tax_id">
-                                        <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">N° Contribuable</dt>
+                                        <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">{{ t('public.contact.legal_tax') }}</dt>
                                         <dd class="font-mono">{{ legalInertia.tax_id }}</dd>
                                     </div>
                                     <div v-if="legalInertia.nif">
@@ -334,7 +336,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                         <dd class="font-mono">{{ legalInertia.nif }}</dd>
                                     </div>
                                     <div v-if="legalInertia.capital_social">
-                                        <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Capital social</dt>
+                                        <dt class="text-slate-400 text-[10px] font-black uppercase tracking-widest">{{ t('public.contact.legal_capital') }}</dt>
                                         <dd class="font-bold">{{ legalInertia.capital_social }}</dd>
                                     </div>
                                 </dl>
@@ -348,8 +350,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                                     <i class="pi pi-bolt text-xl"></i>
                                 </div>
-                                <h3 class="text-xl font-black mb-2">Besoin d'une réponse rapide ?</h3>
-                                <p class="text-sm text-red-100 leading-relaxed mb-5">Pour les urgences techniques ou les demandes de devis prioritaires, appelez directement notre ligne.</p>
+                                <h3 class="text-xl font-black mb-2">{{ t('public.contact.urgent_title') }}</h3>
+                                <p class="text-sm text-red-100 leading-relaxed mb-5">{{ t('public.contact.urgent_desc') }}</p>
                                 <a :href="`tel:${identity.contact_phone}`" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors text-sm">
                                     <i class="pi pi-phone"></i> {{ identity.contact_phone }}
                                 </a>
@@ -368,9 +370,9 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="text-center max-w-3xl mx-auto mb-12 reveal-on-scroll">
                     <div class="inline-flex items-center gap-2 mb-2 justify-center">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">Comment ça marche</span>
+                        <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">{{ t('public.contact.how_it_works') }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-black text-[#0B1221] tracking-tight">De votre message à la solution</h2>
+                    <h2 class="text-3xl md:text-4xl font-black text-[#0B1221] tracking-tight">{{ t('public.contact.from_message') }}</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -396,9 +398,9 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="text-center mb-12 reveal-on-scroll">
                     <div class="inline-flex items-center gap-2 mb-2 justify-center">
                         <span class="w-6 h-1 bg-red-500 rounded-full"></span>
-                        <span class="font-bold uppercase tracking-widest text-xs text-red-400">Avant d'écrire</span>
+                        <span class="font-bold uppercase tracking-widest text-xs text-red-400">{{ t('public.contact.faq_before') }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-black tracking-tight">Questions fréquentes</h2>
+                    <h2 class="text-3xl md:text-4xl font-black tracking-tight">{{ t('public.contact.faq_title') }}</h2>
                 </div>
 
                 <div class="space-y-3">
@@ -420,14 +422,14 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         <!-- ================================================================== -->
         <section class="py-20 bg-white border-t border-slate-100 text-center">
             <div class="max-w-[800px] mx-auto px-4 reveal-on-scroll">
-                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">Prêt à passer à l'action ?</h2>
-                <p class="text-lg text-slate-500 mb-10">Parcourez notre catalogue ou découvrez qui nous sommes.</p>
+                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">{{ t('public.contact.cta_title') }}</h2>
+                <p class="text-lg text-slate-500 mb-10">{{ t('public.contact.cta_sub') }}</p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link :href="route('academy')" class="w-full sm:w-auto px-10 py-4 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 text-base inline-flex items-center justify-center gap-2">
-                        Explorer le catalogue <i class="pi pi-arrow-right"></i>
+                        {{ t('public.contact.cta_explore') }} <i class="pi pi-arrow-right"></i>
                     </Link>
                     <Link :href="route('about')" class="w-full sm:w-auto px-10 py-4 bg-[#F4F6F9] text-[#0B1221] font-bold rounded-xl hover:bg-slate-200 transition-colors text-base">
-                        À propos de nous
+                        {{ t('public.contact.cta_about') }}
                     </Link>
                 </div>
             </div>

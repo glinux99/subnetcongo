@@ -11,6 +11,9 @@ import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
 import RadioButton from 'primevue/radiobutton';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps({
     course: Object,
@@ -126,14 +129,14 @@ const markComplete = async () => {
             preserveScroll: true,
             onSuccess: () => {
                 percent.value = 100;
-                toast.add({ severity: 'success', summary: 'Leçon terminée', detail: 'Progression enregistrée.', life: 3000 });
+                toast.add({ severity: 'success', summary: t('pages.lesson_player.lessonDone'), detail: t('pages.lesson_player.progressSaved'), life: 3000 });
                 if (nextLesson.value) {
                     setTimeout(() => router.visit(route('student.lesson-player', { course: props.course.id, lesson: nextLesson.value.id })), 1500);
                 }
             }
         });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de marquer la leçon.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.lesson_player.errorSummary'), detail: t('pages.lesson_player.markError'), life: 3000 });
     }
 };
 
@@ -169,7 +172,7 @@ const onPause = () => { isPlaying.value = false; };
 const onEnded = () => {
     percent.value = 100;
     sendHeartbeat();
-    toast.add({ severity: 'success', summary: 'Vidéo terminée', detail: 'Cliquez sur "Marquer comme terminé" pour valider.', life: 4000 });
+    toast.add({ severity: 'success', summary: t('pages.lesson_player.videoDone'), detail: t('pages.lesson_player.videoDoneDetail'), life: 4000 });
 };
 
 onMounted(() => {
@@ -203,10 +206,17 @@ const onAskFileChange = (e) => {
     e.target.value = '';
 };
 const removeAskFile = (i) => askFiles.value.splice(i, 1);
-const formatFileSize = (b) => b < 1024 ? `${b} o` : b < 1048576 ? `${(b / 1024).toFixed(1)} Ko` : `${(b / 1048576).toFixed(1)} Mo`;
+const formatFileSize = (b) => b < 1024 ? t('pages.lesson_player.sizeBytes', { size: b }) : b < 1048576 ? t('pages.lesson_player.sizeKb', { size: (b / 1024).toFixed(1) }) : t('pages.lesson_player.sizeMb', { size: (b / 1048576).toFixed(1) });
+
+const priorityOptions = computed(() => [
+    { label: t('pages.lesson_player.priorityLow'), value: 'low' },
+    { label: t('pages.lesson_player.priorityNormal'), value: 'normal' },
+    { label: t('pages.lesson_player.priorityHigh'), value: 'high' },
+    { label: t('pages.lesson_player.priorityUrgent'), value: 'urgent' },
+]);
 
 const openAsk = () => {
-    askForm.value = { subject: `Question sur : ${props.lesson?.title ?? ''}`, body: '', priority: 'normal' };
+    askForm.value = { subject: t('pages.lesson_player.questionAbout', { title: props.lesson?.title ?? '' }), body: '', priority: 'normal' };
     askFiles.value = [];
     askErrors.value = {};
     showAskDialog.value = true;
@@ -214,7 +224,7 @@ const openAsk = () => {
 
 const submitAsk = () => {
     if (!askForm.value.subject.trim() || !askForm.value.body.trim()) {
-        askErrors.value = { form: 'Le sujet et le message sont obligatoires.' };
+        askErrors.value = { form: t('pages.lesson_player.errRequired') };
         return;
     }
     askSubmitting.value = true;
@@ -232,7 +242,7 @@ const submitAsk = () => {
             showAskDialog.value = false;
             askSubmitting.value = false;
             askFiles.value = [];
-            toast.add({ severity: 'success', summary: 'Question envoyée', detail: page.props?.flash?.success || 'L\'instructeur répondra sous 24-48h.', life: 3500 });
+            toast.add({ severity: 'success', summary: t('pages.lesson_player.questionSent'), detail: page.props?.flash?.success || t('pages.lesson_player.questionSentDetail'), life: 3500 });
         },
         onError: (e) => { askSubmitting.value = false; askErrors.value = e; },
     });
@@ -241,10 +251,10 @@ const submitAsk = () => {
 
 <template>
     <AppLayout>
-        <Head :title="lesson?.title || 'Leçon'" />
+        <Head :title="lesson?.title || t('pages.lesson_player.headFallback')" />
         <!-- Skip link pour accessibilité -->
         <a href="#lesson-content" class="sr-only-focusable absolute top-4 left-4 z-50 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">
-            Aller au contenu
+            {{ t('pages.lesson_player.skipLink') }}
         </a>
 
         <div class="page-bg min-h-screen font-sans pb-20">
@@ -268,7 +278,7 @@ const submitAsk = () => {
                     </div>
                     <div class="flex items-center gap-2 text-white/80 text-[10px] font-black uppercase tracking-widest">
                         <i class="pi pi-clock text-blue-400" aria-hidden="true"></i>
-                        <span>Temps passé : {{ Math.floor(timeSpent / 60) }}m {{ timeSpent % 60 }}s</span>
+                        <span>{{ t('pages.lesson_player.timeSpent', { time: `${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s` }) }}</span>
                     </div>
                 </div>
             </header>
@@ -284,7 +294,7 @@ const submitAsk = () => {
                                     <iframe
                                         :src="getYouTubeEmbedUrl(module.intro_video_url)"
                                         class="w-full h-full"
-                                        title="Vidéo d'introduction du module"
+                                        :title="t('pages.lesson_player.introVideoTitle')"
                                         frameborder="0"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowfullscreen
@@ -296,12 +306,12 @@ const submitAsk = () => {
                                         :src="module.intro_video_url"
                                         controls
                                         class="w-full h-full bg-black"
-                                        title="Vidéo d'introduction du module"
+                                        :title="t('pages.lesson_player.introVideoTitle')"
                                     ></video>
                                 </div>
                                 <div v-else class="text-center text-white/70 p-8" role="alert">
                                     <i class="pi pi-video text-5xl mb-3 block" aria-hidden="true"></i>
-                                    <p class="text-sm">Vidéo d'introduction non disponible.</p>
+                                    <p class="text-sm">{{ t('pages.lesson_player.introVideoUnavailable') }}</p>
                                 </div>
                             </div>
 
@@ -335,7 +345,7 @@ const submitAsk = () => {
                             ></video>
                             <div v-else class="text-center text-white/70 p-8" role="alert">
                                 <i class="pi pi-video text-5xl mb-3 block" aria-hidden="true"></i>
-                                <p class="text-sm">Vidéo non disponible pour cette leçon.</p>
+                                <p class="text-sm">{{ t('pages.lesson_player.videoUnavailable') }}</p>
                             </div>
                             <h2 id="video-title" class="sr-only">{{ lesson?.title }}</h2>
                         </section>
@@ -344,7 +354,7 @@ const submitAsk = () => {
                         <section v-else-if="lesson?.type === 'document'" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" aria-labelledby="document-title">
                             <header class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-3">
                                 <i class="pi pi-file-pdf text-red-500" aria-hidden="true"></i>
-                                <h2 id="document-title" class="text-sm font-black text-slate-700 uppercase tracking-wider">{{ lesson?.document_title || 'Document' }}</h2>
+                                <h2 id="document-title" class="text-sm font-black text-slate-700 uppercase tracking-wider">{{ lesson?.document_title || t('pages.lesson_player.documentFallback') }}</h2>
                             </header>
                             <div class="p-6">
                                 <div v-if="lesson?.document_url" class="space-y-4">
@@ -358,7 +368,7 @@ const submitAsk = () => {
                                             <i class="pi pi-download"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <div class="text-sm font-bold text-slate-800 truncate">Ouvrir le document</div>
+                                            <div class="text-sm font-bold text-slate-800 truncate">{{ t('pages.lesson_player.openDocument') }}</div>
                                             <div class="text-[10px] text-slate-500 font-mono truncate">{{ getDocumentUrl(lesson.document_url) }}</div>
                                         </div>
                                         <i class="pi pi-external-link text-slate-400" aria-hidden="true"></i>
@@ -366,7 +376,7 @@ const submitAsk = () => {
                                 </div>
                                 <div v-else class="text-sm text-slate-400 italic text-center py-8" role="alert">
                                     <i class="pi pi-file text-4xl mb-3 block text-slate-300" aria-hidden="true"></i>
-                                    Aucun document disponible pour cette leçon.
+                                    {{ t('pages.lesson_player.noDocument') }}
                                 </div>
                             </div>
                         </section>
@@ -376,14 +386,14 @@ const submitAsk = () => {
                             <header class="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 flex items-center gap-3">
                                 <i class="pi pi-check-square text-white text-lg" aria-hidden="true"></i>
                                 <div>
-                                    <h2 id="quiz-title" class="text-sm font-black text-white uppercase tracking-wider">{{ parsedQuiz.quiz_title || 'Quiz' }}</h2>
-                                    <p class="text-[10px] text-white/80">{{ parsedQuiz.questions?.length || 0 }} questions</p>
+                                    <h2 id="quiz-title" class="text-sm font-black text-white uppercase tracking-wider">{{ parsedQuiz.quiz_title || t('pages.lesson_player.quizFallback') }}</h2>
+                                    <p class="text-[10px] text-white/80">{{ t('pages.lesson_player.questionsCount', { count: parsedQuiz.questions?.length || 0 }) }}</p>
                                 </div>
                             </header>
                             <div class="p-6 space-y-6">
                                 <form v-if="!quizSubmitted" @submit.prevent="submitQuiz" class="space-y-6">
                                     <fieldset v-for="(q, qIdx) in parsedQuiz.questions" :key="qIdx" class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
-                                        <legend class="sr-only">Question {{ qIdx + 1 }}</legend>
+                                        <legend class="sr-only">{{ t('pages.lesson_player.questionLegend', { n: qIdx + 1 }) }}</legend>
                                         <div class="flex items-start gap-3 mb-4">
                                             <span class="text-xs font-black text-emerald-600 bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-100" aria-hidden="true">Q{{ qIdx + 1 }}</span>
                                             <p class="text-sm font-bold text-slate-800 flex-1" :id="`question-${qIdx}`">{{ q.text }}</p>
@@ -418,7 +428,7 @@ const submitAsk = () => {
                                                     :inputId="`q${qIdx}-true`"
                                                     :name="`question-${qIdx}`"
                                                 />
-                                                <span :for="`q${qIdx}-true`" class="text-sm font-bold text-slate-700">VRAI</span>
+                                                <span :for="`q${qIdx}-true`" class="text-sm font-bold text-slate-700">{{ t('pages.lesson_player.trueLabel') }}</span>
                                             </label>
                                             <label
                                                 class="flex-1 flex items-center justify-center gap-2 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 transition-colors focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2"
@@ -430,25 +440,25 @@ const submitAsk = () => {
                                                     :inputId="`q${qIdx}-false`"
                                                     :name="`question-${qIdx}`"
                                                 />
-                                                <span :for="`q${qIdx}-false`" class="text-sm font-bold text-slate-700">FAUX</span>
+                                                <span :for="`q${qIdx}-false`" class="text-sm font-bold text-slate-700">{{ t('pages.lesson_player.falseLabel') }}</span>
                                             </label>
                                         </div>
 
                                         <!-- Réponse courte -->
                                         <div v-else-if="q.type === 'short_answer'" class="space-y-1">
-                                            <label :for="`q${qIdx}-answer`" class="text-[10px] font-bold text-slate-500 uppercase">Votre réponse</label>
+                                            <label :for="`q${qIdx}-answer`" class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.lesson_player.yourAnswer') }}</label>
                                             <InputText
                                                 v-model="quizAnswers[qIdx]"
                                                 :id="`q${qIdx}-answer`"
                                                 class="w-full"
-                                                placeholder="Saisissez votre réponse..."
+                                                :placeholder="t('pages.lesson_player.answerPlaceholder')"
                                                 :aria-labelledby="`question-${qIdx}`"
                                             />
                                         </div>
                                     </fieldset>
                                     <Button
                                         type="submit"
-                                        label="Soumettre le quiz"
+                                        :label="t('pages.lesson_player.submitQuiz')"
                                         icon="pi pi-check"
                                         class="!bg-emerald-500 !border-none !rounded-xl !text-white !font-black !uppercase !tracking-widest"
                                     />
@@ -459,8 +469,8 @@ const submitAsk = () => {
                                     <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-2xl font-black" :class="quizScore >= 70 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'">
                                         {{ quizScore }}%
                                     </div>
-                                    <p class="text-sm font-bold text-slate-700">{{ quizScore >= 70 ? 'Bravo ! Vous avez réussi ce quiz.' : 'Vous n\'avez pas atteint le seuil de réussite.' }}</p>
-                                    <Button label="Réessayer" icon="pi pi-redo" class="!bg-slate-100 !text-slate-700 !border-slate-200 !rounded-xl" @click="resetQuiz" />
+                                    <p class="text-sm font-bold text-slate-700">{{ quizScore >= 70 ? t('pages.lesson_player.quizPass') : t('pages.lesson_player.quizFail') }}</p>
+                                    <Button :label="t('pages.lesson_player.retry')" icon="pi pi-redo" class="!bg-slate-100 !text-slate-700 !border-slate-200 !rounded-xl" @click="resetQuiz" />
                                 </div>
                             </div>
                         </section>
@@ -468,7 +478,7 @@ const submitAsk = () => {
                         <!-- Text/HTML Content -->
                         <div v-else class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                             <div v-if="lesson?.content" class="prose prose-sm max-w-none text-slate-700" v-html="lesson.content"></div>
-                            <div v-else class="text-sm text-slate-400 italic">Aucun contenu textuel pour cette leçon.</div>
+                            <div v-else class="text-sm text-slate-400 italic">{{ t('pages.lesson_player.noTextContent') }}</div>
                         </div>
                     </div>
 
@@ -480,15 +490,15 @@ const submitAsk = () => {
                                     <i class="pi pi-question-circle text-lg"></i>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Besoin d'aide ?</h3>
-                                    <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Posez une question à l'instructeur</p>
+                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ t('pages.lesson_player.helpTitle') }}</h3>
+                                    <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest">{{ t('pages.lesson_player.helpSub') }}</p>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-600 mb-3">L'instructeur vous répond généralement sous 24-48h.</p>
+                            <p class="text-xs text-slate-600 mb-3">{{ t('pages.lesson_player.helpDesc') }}</p>
                             <div class="flex gap-2">
-                                <Button label="Poser une question" icon="pi pi-plus" @click="openAsk" class="!flex-1 !bg-gradient-to-r !from-amber-500 !to-red-500 !border-none !rounded-xl !text-white !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
+                                <Button :label="t('pages.lesson_player.askQuestion')" icon="pi pi-plus" @click="openAsk" class="!flex-1 !bg-gradient-to-r !from-amber-500 !to-red-500 !border-none !rounded-xl !text-white !text-[10px] !font-black !uppercase !tracking-widest !py-2.5" />
                                 <Link :href="route('student.questions.index')" class="inline-flex">
-                                    <Button icon="pi pi-list" outlined class="!rounded-xl !text-amber-700 !border-amber-200" v-tooltip.bottom="'Mes questions'" />
+                                    <Button icon="pi pi-list" outlined class="!rounded-xl !text-amber-700 !border-amber-200" v-tooltip.bottom="t('pages.lesson_player.myQuestions')" />
                                 </Link>
                             </div>
                         </div>
@@ -497,8 +507,8 @@ const submitAsk = () => {
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-list text-lg"></i></div>
                                 <div>
-                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Plan du cours</h3>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ completedCount }}/{{ lessons?.length ?? 0 }} leçons</p>
+                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ t('pages.lesson_player.coursePlan') }}</h3>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('pages.lesson_player.lessonsCount', { done: completedCount, total: lessons?.length ?? 0 }) }}</p>
                                 </div>
                             </div>
                             <div class="space-y-1 max-h-96 overflow-y-auto pr-1">
@@ -517,8 +527,8 @@ const submitAsk = () => {
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><i class="pi pi-check-square text-lg"></i></div>
                                 <div>
-                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Tentatives Quiz Module</h3>
-                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Score de passage : {{ module.quiz_passing_score }}%</p>
+                                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ t('pages.lesson_player.quizAttemptsTitle') }}</h3>
+                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">{{ t('pages.lesson_player.passingScore', { score: module.quiz_passing_score }) }}</p>
                                 </div>
                             </div>
                             <div class="space-y-2">
@@ -529,11 +539,11 @@ const submitAsk = () => {
                                         </div>
                                         <div>
                                             <div class="text-xs font-bold text-slate-800">{{ attempt.score }}% ({{ attempt.score_out_of_20 }}/20)</div>
-                                            <div class="text-[9px] text-slate-400">{{ new Date(attempt.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) }}</div>
+                                            <div class="text-[9px] text-slate-400">{{ new Date(attempt.date).toLocaleDateString(locale, {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) }}</div>
                                         </div>
                                     </div>
                                     <span class="text-[9px] font-black" :class="attempt.score >= 50 ? 'text-emerald-600' : 'text-red-600'">
-                                        {{ attempt.score >= 50 ? 'Réussi' : 'Échoué' }}
+                                        {{ attempt.score >= 50 ? t('pages.lesson_player.quizPassed') : t('pages.lesson_player.quizFailed') }}
                                     </span>
                                 </div>
                             </div>
@@ -542,9 +552,9 @@ const submitAsk = () => {
                         <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"><i class="pi pi-file text-lg"></i></div>
-                                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Supports ({{ courseMaterials.length }})</h3>
+                                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ t('pages.lesson_player.materialsTitle', { count: courseMaterials.length }) }}</h3>
                             </div>
-                            <div v-if="courseMaterials.length === 0" class="text-xs text-slate-400 italic text-center py-4">Aucun support pour ce cours.</div>
+                            <div v-if="courseMaterials.length === 0" class="text-xs text-slate-400 italic text-center py-4">{{ t('pages.lesson_player.noMaterials') }}</div>
                             <div v-else class="space-y-2">
                                 <button v-for="m in courseMaterials" :key="m.id" type="button" class="flex items-center gap-2 p-2.5 hover:bg-slate-50 rounded-xl w-full text-left transition-colors" @click="downloadMaterial(m)">
                                     <i class="pi pi-download text-blue-500 text-xs"></i>
@@ -558,29 +568,29 @@ const submitAsk = () => {
             </main>
         </div>
 
-        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" header="Poser une question sur cette leçon" class="!rounded-xl" :closable="!askSubmitting">
+        <Dialog v-model:visible="showAskDialog" modal :style="{ width: '600px' }" :header="t('pages.lesson_player.askDialogTitle')" class="!rounded-xl" :closable="!askSubmitting">
             <div class="space-y-4 p-2">
                 <div class="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex items-center gap-3">
                     <i class="pi pi-info-circle text-amber-500"></i>
-                    <p class="text-xs text-amber-700">Votre instructeur vous répondra généralement sous 24-48h.</p>
+                    <p class="text-xs text-amber-700">{{ t('pages.lesson_player.askDialogInfo') }}</p>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Sujet</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">{{ t('pages.lesson_player.fieldSubject') }}</label>
                     <InputText v-model="askForm.subject" class="w-full !rounded-xl" />
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Message détaillé</label>
-                    <Textarea v-model="askForm.body" rows="5" class="w-full !rounded-xl" placeholder="Décrivez votre question ou votre blocage..." autoResize />
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">{{ t('pages.lesson_player.fieldBody') }}</label>
+                    <Textarea v-model="askForm.body" rows="5" class="w-full !rounded-xl" :placeholder="t('pages.lesson_player.bodyPlaceholder')" autoResize />
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Priorité</label>
-                    <Select v-model="askForm.priority" :options="[{label:'Faible', value:'low'},{label:'Normale', value:'normal'},{label:'Importante', value:'high'},{label:'Bloquante', value:'urgent'}]" optionLabel="label" optionValue="value" class="w-full" />
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">{{ t('pages.lesson_player.fieldPriority') }}</label>
+                    <Select v-model="askForm.priority" :options="priorityOptions" optionLabel="label" optionValue="value" class="w-full" />
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Pièces jointes (capture, fichier… · 5 max · 10Mo)</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">{{ t('pages.lesson_player.fieldAttachments') }}</label>
                     <label class="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-600 transition-colors">
                         <i class="pi pi-paperclip text-slate-500"></i>
-                        <span class="font-bold">Ajouter un fichier</span>
+                        <span class="font-bold">{{ t('pages.lesson_player.addFile') }}</span>
                         <input type="file" multiple class="hidden" @change="onAskFileChange" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.zip,.rar,.7z,.json,.xml" />
                     </label>
                     <div v-if="askFiles.length" class="mt-2 space-y-1.5">
@@ -599,8 +609,8 @@ const submitAsk = () => {
                 </div>
             </div>
             <template #footer>
-                <Button label="Annuler" outlined :disabled="askSubmitting" @click="showAskDialog = false" class="!rounded-xl" />
-                <Button :label="askSubmitting ? 'Envoi...' : 'Envoyer la question'" icon="pi pi-send" :loading="askSubmitting" @click="submitAsk" class="!bg-gradient-to-r !from-amber-500 !to-red-500 !border-none !rounded-xl" />
+                <Button :label="t('pages.lesson_player.cancel')" outlined :disabled="askSubmitting" @click="showAskDialog = false" class="!rounded-xl" />
+                <Button :label="askSubmitting ? t('pages.lesson_player.sending') : t('pages.lesson_player.sendQuestion')" icon="pi pi-send" :loading="askSubmitting" @click="submitAsk" class="!bg-gradient-to-r !from-amber-500 !to-red-500 !border-none !rounded-xl" />
             </template>
         </Dialog>
     </AppLayout>

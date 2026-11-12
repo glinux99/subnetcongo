@@ -12,12 +12,8 @@ class LandingContentSeeder extends Seeder
     public function run(): void
     {
         // ── SLIDES ─────────────────────────────────────────────
-        // Cleanup legacy test slides
-        LandingSlide::whereNotIn('badge', [
-            'Leader Connectivité RDC',
-            'Élite Technologique',
-            'Souveraineté Numérique',
-        ])->delete();
+        // Pas de suppression : le contenu de la landing est éditable en admin,
+        // on ne touche jamais aux slides existantes (déploiement non destructif).
 
         $slides = [
             [

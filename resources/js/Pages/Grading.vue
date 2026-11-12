@@ -14,6 +14,7 @@ import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
+import { useI18n } from 'vue-i18n';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 
@@ -54,6 +55,7 @@ import SplitButton from 'primevue/splitbutton';
 // ======================================================================================
 // PROPS & INITIALISATION
 // ======================================================================================
+const { t } = useI18n();
 const props = defineProps({
     submissions: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
     filters: { type: Object, default: () => ({}) },
@@ -112,14 +114,14 @@ const gradingForm = useForm({
  */
 const rubricLevelDefinitions = {
     clarity: [
-        { val: 0, label: 'Insuffisant', desc: 'Code illisible ou non structuré.' },
-        { val: 2.5, label: 'Acceptable', desc: 'Structure basique, lisibilité moyenne.' },
-        { val: 5, label: 'Excellent', desc: 'Respect parfait des conventions de nommage.' }
+        { val: 0, label: t('pages.grading.rubricClarityLowLabel'), desc: t('pages.grading.rubricClarityLowDesc') },
+        { val: 2.5, label: t('pages.grading.rubricClarityMidLabel'), desc: t('pages.grading.rubricClarityMidDesc') },
+        { val: 5, label: t('pages.grading.rubricClarityHighLabel'), desc: t('pages.grading.rubricClarityHighDesc') }
     ],
     technical_accuracy: [
-        { val: 0, label: 'Incorrect', desc: 'Erreurs de logique majeures.' },
-        { val: 3, label: 'Partiel', desc: 'Fonctionne mais présente des failles.' },
-        { val: 5, label: 'Optimal', desc: 'Solution technique irréprochable.' }
+        { val: 0, label: t('pages.grading.rubricTechLowLabel'), desc: t('pages.grading.rubricTechLowDesc') },
+        { val: 3, label: t('pages.grading.rubricTechMidLabel'), desc: t('pages.grading.rubricTechMidDesc') },
+        { val: 5, label: t('pages.grading.rubricTechHighLabel'), desc: t('pages.grading.rubricTechHighDesc') }
     ]
 };
 
@@ -131,7 +133,7 @@ const rubricLevelDefinitions = {
 const getRubricDescription = (key, value) => {
     const levels = rubricLevelDefinitions[key] || [];
     const match = [...levels].reverse().find(l => value >= l.val);
-    return match ? match.desc : 'Sélectionnez un score...';
+    return match ? match.desc : t('pages.grading.rubricSelectScore');
 };
 
 const currentPlagiarismDetails = ref([
@@ -260,18 +262,18 @@ const saveGrade = (status = 'graded') => {
 
     // Validation manuelle avant envoi pour correspondre aux règles backend
     if (!gradingForm.feedback || gradingForm.feedback.length < 5) {
-        toast.add({ severity: 'error', summary: 'Validation', detail: 'Le feedback est obligatoire (min 5 caractères).', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.grading.validationSummary'), detail: t('pages.grading.feedbackRequiredDetail'), life: 3000 });
         return;
     }
 
     let confirmMsg = '';
     let confirmHeader = '';
     if (status === 'graded') {
-        confirmMsg = `Vous êtes sur le point de valider définitivement la note de ${gradingForm.total_points}/100. L'apprenant en sera notifié.`;
-        confirmHeader = 'Publier la note';
+        confirmMsg = t('pages.grading.publishNoteMessage', { points: gradingForm.total_points });
+        confirmHeader = t('pages.grading.publishNoteHeader');
     } else if (status === 'revision_requested') {
-        confirmMsg = `L'apprenant devra soumettre une nouvelle version de son travail basée sur vos commentaires.`;
-        confirmHeader = 'Demander une révision';
+        confirmMsg = t('pages.grading.revisionRequestedMessage');
+        confirmHeader = t('pages.grading.revisionRequestedHeader');
     } else {
         // Simple sauvegarde de brouillon sans confirmation
         processSave(status);
@@ -283,8 +285,8 @@ const saveGrade = (status = 'graded') => {
         header: confirmHeader,
         icon: 'pi pi-exclamation-triangle',
         acceptClass: status === 'graded' ? 'p-button-primary' : 'p-button-warning',
-        acceptLabel: 'Confirmer',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.grading.confirmAction'),
+        rejectLabel: t('pages.grading.cancelAction'),
         accept: () => processSave(status)
     });
 };
@@ -313,18 +315,18 @@ const processSave = (status) => {
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => {
-            const summary = status === 'draft' ? 'Brouillon sauvegardé'
-                         : (status === 'graded' ? 'Correction Validée' : 'Révision demandée');
-            toast.add({ severity: 'success', summary, detail: 'Le dossier a été mis à jour avec succès.', life: 4000 });
+            const summary = status === 'draft' ? t('pages.grading.statusDraftSavedSummary')
+                         : (status === 'graded' ? t('pages.grading.statusGradedSummary') : t('pages.grading.statusRevisionSummary'));
+            toast.add({ severity: 'success', summary, detail: t('pages.grading.updateSuccessDetail'), life: 4000 });
             if (status !== 'draft') gradingDialog.value = false;
         },
         onError: (err) => {
-            let detail = 'Vérifiez les données du formulaire.';
+            let detail = t('pages.grading.checkFormDataDetail');
             if (err.feedback) detail = err.feedback;
 
             toast.add({
                 severity: 'error',
-                summary: 'Erreur de validation',
+                summary: t('pages.grading.validationErrorSummary'),
                 detail: detail,
                 life: 5000
             });
@@ -339,17 +341,17 @@ const confirmBulkPublish = () => {
     if(selectedSubmissions.value.length === 0) return;
 
     confirm.require({
-        message: `Vous êtes sur le point de publier définitivement les notes de ${selectedSubmissions.value.length} apprenants. Les notifications seront envoyées.`,
-        header: 'Publication en masse',
+        message: t('pages.grading.bulkPublishMessage', { count: selectedSubmissions.value.length }),
+        header: t('pages.grading.bulkPublishHeader'),
         icon: 'pi pi-send',
         acceptClass: 'p-button-primary',
-        acceptLabel: 'Publier',
+        acceptLabel: t('pages.grading.publishAction'),
         accept: () => {
             router.post(route('gradings.bulkPublish'), {
                 ids: selectedSubmissions.value.map(s => s.id)
             }, {
                 onSuccess: () => {
-                    toast.add({ severity: 'success', summary: 'Publication réussie', detail: 'Les notes ont été transmises aux apprenants.', life: 4000 });
+                    toast.add({ severity: 'success', summary: t('pages.grading.bulkPublishSuccessSummary'), detail: t('pages.grading.bulkPublishSuccessDetail'), life: 4000 });
                     selectedSubmissions.value = [];
                 }
             });
@@ -387,7 +389,7 @@ const captureSelection = () => {
 
 const generateAIFeedback = () => {
     aiLoading.value = true;
-    toast.add({ severity: 'info', summary: 'IA SubnetCongo', detail: 'Analyse sémantique de la copie en cours...', life: 3000 });
+    toast.add({ severity: 'info', summary: t('pages.grading.aiAnalysisSummary'), detail: t('pages.grading.aiAnalysisDetail'), life: 3000 });
 
     // Simulation d'un appel API vers un LLM
     setTimeout(() => {
@@ -406,7 +408,7 @@ const generateAIFeedback = () => {
 
         gradingForm.feedback = suggestedFeedback;
         aiLoading.value = false;
-        toast.add({ severity: 'success', summary: 'Génération terminée', detail: 'Le feedback a été pré-rempli. Vous pouvez le modifier.', life: 4000 });
+        toast.add({ severity: 'success', summary: t('pages.grading.aiGenerationDoneSummary'), detail: t('pages.grading.aiGenerationDoneDetail'), life: 4000 });
     }, 2000);
 };
 
@@ -415,7 +417,7 @@ const handleAnnotation = (event) => {
 };
 
 const saveAnnotation = () => {
-    toast.add({ severity: 'success', summary: 'Annotation ajoutée', detail: 'Le marqueur a été placé sur la copie.', life: 2000 });
+    toast.add({ severity: 'success', summary: t('pages.grading.annotationAddedSummary'), detail: t('pages.grading.annotationAddedDetail'), life: 2000 });
     annotationPanel.value.hide();
 };
 
@@ -434,7 +436,7 @@ const stopVoiceRecord = () => {
     clearInterval(recordInterval);
 
     if(recordTime.value > 1) {
-        toast.add({ severity: 'info', summary: 'Audio Enregistré', detail: `Un feedback vocal de ${formatTime(recordTime.value)} a été joint.`, life: 3000 });
+        toast.add({ severity: 'info', summary: t('pages.grading.audioRecordedSummary'), detail: t('pages.grading.audioRecordedDetail', { duration: formatTime(recordTime.value) }), life: 3000 });
     }
 };
 
@@ -449,14 +451,14 @@ const formatTime = (s) => {
 // ======================================================================================
 const scoreDistribution = ref({
     labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
-    datasets: [{ label: 'Apprenants', data: [1, 4, 12, 54, 18], backgroundColor: '#6366F1', borderRadius: 6 }]
+    datasets: [{ label: t('pages.grading.chartLearnersLabel'), data: [1, 4, 12, 54, 18], backgroundColor: '#6366F1', borderRadius: 6 }]
 });
 
 const cohortTrendData = ref({
     labels: ['Module 1', 'Module 2', 'Module 3', 'Final'],
     datasets: [
-        { label: 'Moyenne Cohorte', data: [65, 59, 80, 81], borderColor: '#10B981', tension: 0.4 },
-        { label: 'Cible Pédagogique', data: [70, 70, 70, 75], borderColor: '#94A3B8', borderDash: [5, 5], tension: 0 }
+        { label: t('pages.grading.cohortAverageLabel'), data: [65, 59, 80, 81], borderColor: '#10B981', tension: 0.4 },
+        { label: t('pages.grading.pedagogicalTargetLabel'), data: [70, 70, 70, 75], borderColor: '#94A3B8', borderDash: [5, 5], tension: 0 }
     ]
 });
 
@@ -467,10 +469,10 @@ const getUrgencySeverity = (u) => ({ critical: 'danger', high: 'danger', medium:
 
 const getStatusBadge = (s) => {
     const map = {
-        pending: { label: 'En attente', sev: 'secondary', icon: 'pi-clock' },
-        in_progress: { label: 'Brouillon', sev: 'warning', icon: 'pi-file-edit' },
-        revision_requested: { label: 'À réviser (Étudiant)', sev: 'danger', icon: 'pi-replay' },
-        graded: { label: 'Corrigé & Publié', sev: 'success', icon: 'pi-check-circle' }
+        pending: { label: t('pages.grading.statusPendingLabel'), sev: 'secondary', icon: 'pi-clock' },
+        in_progress: { label: t('pages.grading.statusDraftLabel'), sev: 'warning', icon: 'pi-file-edit' },
+        revision_requested: { label: t('pages.grading.statusRevisionLabel'), sev: 'danger', icon: 'pi-replay' },
+        graded: { label: t('pages.grading.statusGradedLabel'), sev: 'success', icon: 'pi-check-circle' }
     };
     return map[s] || { label: s, sev: 'info', icon: 'pi-info-circle' };
 };
@@ -489,7 +491,7 @@ onMounted(() => {
 
 <template>
     <AppLayout>
-        <Head title="Console de Correction | LMS Enterprise" />
+        <Head :title="t('pages.grading.headTitle')" />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
@@ -501,17 +503,17 @@ onMounted(() => {
                 <div class="space-y-3 w-full xl:w-auto">
                     <div>
                         <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Console de Correction
+                            {{ t('pages.grading.consoleTitle') }}
                             <Badge value="Instructor Space" severity="info" class="text-[10px] bg-blue-100 text-blue-700 border border-blue-200"></Badge>
                         </h1>
                         <p class="text-slate-500 text-sm md:text-base max-w-3xl mt-2 leading-relaxed">
-                            Gérez la file d'attente des copies, évaluez avec des grilles critériées, détectez les similarités et fournissez un feedback riche aux apprenants.
+                            {{ t('pages.grading.consoleSubtitle') }}
                         </p>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <Button label="Vue Cohorte (Analytics)" icon="pi pi-chart-bar" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm font-medium w-full sm:w-auto" @click="statisticsSidebar = true" />
-                    <Button label="Audit Plagiat Global" icon="pi pi-shield" class="p-button-outlined p-button-danger bg-white shadow-sm font-medium w-full sm:w-auto" @click="plagiarismSidebar = true" />
+                    <Button :label="t('pages.grading.cohortViewButton')" icon="pi pi-chart-bar" class="p-button-outlined p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm font-medium w-full sm:w-auto" @click="statisticsSidebar = true" />
+                    <Button :label="t('pages.grading.globalPlagiarismButton')" icon="pi pi-shield" class="p-button-outlined p-button-danger bg-white shadow-sm font-medium w-full sm:w-auto" @click="plagiarismSidebar = true" />
                 </div>
             </div>
 
@@ -522,18 +524,18 @@ onMounted(() => {
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-red-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="pi pi-inbox text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Attente Correction</p>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.pendingCorrectionLabel') }}</p>
                     </div>
                     <div class="flex items-baseline gap-2">
                         <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.pending || 12 }}</h3>
-                        <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-md">+2 urgentes</span>
+                        <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-md">{{ t('pages.grading.urgentCountLabel') }}</span>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-chart-line text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Moyenne Globale</p>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.globalAverageLabel') }}</p>
                     </div>
                     <h3 class="text-4xl font-black text-slate-800">{{ props.stats?.average || 74.2 }}%</h3>
                 </div>
@@ -541,18 +543,18 @@ onMounted(() => {
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-red-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-bolt text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">SLA Productivité</p>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.slaProductivityLabel') }}</p>
                     </div>
                     <div class="flex items-baseline gap-2">
                         <h3 class="text-4xl font-black text-slate-800">4.5h</h3>
-                        <span class="text-xs font-medium text-emerald-500">Temps moy/copie</span>
+                        <span class="text-xs font-medium text-emerald-500">{{ t('pages.grading.avgTimePerCopyLabel') }}</span>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all duration-300 hover:shadow-md">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-exclamation-triangle text-sm"></i></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Recours / Plagiats</p>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.grading.appealsPlagiarismLabel') }}</p>
                     </div>
                     <h3 class="text-4xl font-black text-amber-600">{{ props.stats?.appeals || 2 }}</h3>
                 </div>
@@ -568,12 +570,12 @@ onMounted(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Rechercher étudiant, matricule..." class="w-full sm:w-80 border-slate-200 font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.grading.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
 
-                        <Dropdown v-model="serverFilters.status" :options="['pending', 'in_progress', 'graded']" placeholder="État du flux" class="w-48 border-slate-200 font-medium" showClear>
+                        <Dropdown v-model="serverFilters.status" :options="['pending', 'in_progress', 'graded']" :placeholder="t('pages.grading.statusFilterPlaceholder')" class="w-48 border-slate-200 font-medium" showClear>
                             <template #option="slotProps">
                                 <span class="flex items-center gap-2"><i :class="`pi ${getStatusBadge(slotProps.option).icon}`"></i> {{ getStatusBadge(slotProps.option).label }}</span>
                             </template>
@@ -581,8 +583,8 @@ onMounted(() => {
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <Button v-if="selectedSubmissions.length > 0" icon="pi pi-send" :label="`Publier (${selectedSubmissions.length})`" class="p-button-primary shadow-sm" @click="confirmBulkPublish" />
-                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser la file'" />
+                        <Button v-if="selectedSubmissions.length > 0" icon="pi pi-send" :label="t('pages.grading.publishCount', { count: selectedSubmissions.length })" class="p-button-primary shadow-sm" @click="confirmBulkPublish" />
+                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.grading.refreshQueueTooltip')" />
                     </div>
                 </div>
 
@@ -605,20 +607,20 @@ onMounted(() => {
                             <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
                                 <i class="pi pi-check-circle text-5xl text-emerald-400"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-2">Pile de correction vide</h3>
-                            <p class="text-sm text-center text-slate-500">Toutes les copies ont été traitées. Prenez un café !</p>
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('pages.grading.emptyQueueTitle') }}</h3>
+                            <p class="text-sm text-center text-slate-500">{{ t('pages.grading.emptyQueueDesc') }}</p>
                         </div>
                     </template>
 
                     <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
                     <Column expander style="width: 3rem; background-color: #f8fafc;" />
 
-                    <Column field="student.name" header="Apprenant & Rendu" style="min-width: 22rem; background-color: #f8fafc;">
+                    <Column field="student.name" :header="t('pages.grading.colStudentSubmission')" style="min-width: 22rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex items-center gap-4 py-2">
                                 <div class="relative">
                                     <Avatar :image="data.student.avatar" shape="circle" size="large" class="shadow-sm border border-slate-200" />
-                                    <div v-if="data.status === 'in_progress'" class="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full flex items-center justify-center" v-tooltip.top="'Brouillon en cours'"><i class="pi pi-pencil text-[8px] text-white"></i></div>
+                                    <div v-if="data.status === 'in_progress'" class="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full flex items-center justify-center" v-tooltip.top="t('pages.grading.draftInProgressTooltip')"><i class="pi pi-pencil text-[8px] text-white"></i></div>
                                 </div>
                                 <div class="flex flex-col justify-center">
                                     <div class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer flex items-center gap-2" @click="openGrading(data)">
@@ -627,14 +629,14 @@ onMounted(() => {
                                     </div>
                                     <div class="text-xs text-slate-500 mt-1 font-medium flex items-center gap-2">
                                         <span class="flex items-center gap-1"><i class="pi pi-calendar text-[10px]"></i> {{ data.submitted_at }}</span>
-                                        <Tag v-if="data.similarity_score > 15" :severity="getSimilaritySeverity(data.similarity_score)" class="text-[9px] px-1 py-0"><i class="pi pi-shield text-[8px] mr-1"></i> Plagiat {{data.similarity_score}}%</Tag>
+                                        <Tag v-if="data.similarity_score > 15" :severity="getSimilaritySeverity(data.similarity_score)" class="text-[9px] px-1 py-0"><i class="pi pi-shield text-[8px] mr-1"></i> {{ t('pages.grading.plagiarismTag', { score: data.similarity_score }) }}</Tag>
                                     </div>
                                 </div>
                             </div>
                         </template>
                     </Column>
 
-                    <Column field="exam" header="Évaluation & Programme" style="min-width: 18rem; background-color: #f8fafc;">
+                    <Column field="exam" :header="t('pages.grading.colExamProgram')" style="min-width: 18rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1">
                                 <span class="font-bold text-slate-700 text-sm line-clamp-1">{{ data.exam }}</span>
@@ -643,7 +645,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="urgency" header="Priorité" style="background-color: #f8fafc;">
+                    <Column field="urgency" :header="t('pages.grading.colPriority')" style="background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
                                 <div v-if="data.urgency === 'critical'" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
@@ -652,7 +654,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="status" header="État Correction" style="background-color: #f8fafc; min-width: 12rem;">
+                    <Column field="status" :header="t('pages.grading.colCorrectionStatus')" style="background-color: #f8fafc; min-width: 12rem;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5 w-full">
                                 <div class="flex justify-between items-center text-[11px] font-bold" :class="`text-${getStatusBadge(data.status).sev}-700`">
@@ -664,31 +666,31 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 8rem;">
+                    <Column :header="t('pages.grading.colActions')" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 8rem;">
                         <template #body="{ data }">
-                            <Button label="Ouvrir Workspace" icon="pi pi-external-link" class="p-button-sm p-button-primary shadow-sm font-bold w-full" @click="openGrading(data)" />
+                            <Button :label="t('pages.grading.openWorkspaceButton')" icon="pi pi-external-link" class="p-button-sm p-button-primary shadow-sm font-bold w-full" @click="openGrading(data)" />
                         </template>
                     </Column>
 
                     <!-- LIGNE EXPANSIVE (Aperçu Historique Apprenant) -->
                     <template #expansion="{ data }">
                         <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
-                            <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-history text-blue-500"></i> Historique académique de l'apprenant</h4>
+                            <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-history text-blue-500"></i> {{ t('pages.grading.academicHistoryTitle') }}</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
-                                        <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Moyenne Générale</div>
+                                        <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">{{ t('pages.grading.generalAverageLabel') }}</div>
                                         <div class="text-2xl font-black text-slate-800">82.4%</div>
                                     </div>
                                     <Knob :modelValue="82.4" :size="50" readonly valueColor="#6366F1" rangeColor="#f1f5f9" />
                                 </div>
                                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                                    <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Précédente évaluation</div>
-                                    <div class="text-sm font-bold text-slate-700 truncate">Projet UI/UX Fondations</div>
-                                    <div class="text-xs text-emerald-600 mt-1 font-bold">Note : 18/20</div>
+                                    <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">{{ t('pages.grading.previousExamLabel') }}</div>
+                                    <div class="text-sm font-bold text-slate-700 truncate">{{ t('pages.grading.demoProjectName') }}</div>
+                                    <div class="text-xs text-emerald-600 mt-1 font-bold">{{ t('pages.grading.scoreWithValue') }}</div>
                                 </div>
                                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                                    <Button label="Voir le dossier complet" icon="pi pi-user" class="p-button-sm p-button-outlined p-button-secondary font-bold w-full" />
+                                    <Button :label="t('pages.grading.viewFullFileButton')" icon="pi pi-user" class="p-button-sm p-button-outlined p-button-secondary font-bold w-full" />
                                 </div>
                             </div>
                         </div>
@@ -706,14 +708,14 @@ onMounted(() => {
                         <i class="pi pi-sparkles text-3xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-black text-white mb-2">Auto-Grading & Assistant IA (SNC-AI)</h3>
+                        <h3 class="text-2xl font-black text-white mb-2">{{ t('pages.grading.aiAssistantTitle') }}</h3>
                         <p class="text-blue-100 text-sm leading-relaxed max-w-2xl">
-                            Gagnez du temps sur les questions ouvertes. Activez l'analyse sémantique pour générer des suggestions de feedback constructives pré-remplies basées sur votre grille critériée.
+                            {{ t('pages.grading.aiAssistantDesc') }}
                         </p>
                     </div>
                 </div>
                 <div class="relative z-10 w-full lg:w-auto">
-                    <Button label="Configurer l'Assistant IA" icon="pi pi-cog" class="p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold px-8 py-3 w-full shadow-lg" />
+                    <Button :label="t('pages.grading.configureAiButton')" icon="pi pi-cog" class="p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold px-8 py-3 w-full shadow-lg" />
                 </div>
             </div>
 
@@ -728,7 +730,7 @@ onMounted(() => {
             <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
 
                 <div class="flex items-center gap-6">
-                    <Button icon="pi pi-arrow-left" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 w-10 h-10" @click="gradingDialog = false" v-tooltip.bottom="'Quitter la correction'" />
+                    <Button icon="pi pi-arrow-left" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 w-10 h-10" @click="gradingDialog = false" v-tooltip.bottom="t('pages.grading.leaveCorrectionTooltip')" />
                     <div class="h-8 w-px bg-slate-200"></div>
 
                     <div class="flex items-center gap-4">
@@ -747,13 +749,13 @@ onMounted(() => {
 
                 <div class="flex items-center gap-6">
                     <div class="flex flex-col items-end border-r border-slate-200 pr-6 hidden md:flex">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Note Calculée</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.grading.calculatedNoteLabel') }}</span>
                         <div class="flex items-baseline gap-1">
                             <span class="text-2xl font-black" :class="gradingForm.total_points >= 50 ? 'text-emerald-600' : 'text-red-600'">{{ gradingForm.total_points }}</span>
                             <span class="text-sm font-bold text-slate-400">/ 100</span>
                         </div>
                     </div>
-                    <Button v-if="activeSubmission?.similarity_score > 15" :label="`Plagiat (${activeSubmission.similarity_score}%)`" icon="pi pi-shield" class="p-button-danger p-button-outlined p-button-sm font-bold bg-white" @click="plagiarismSidebar = true" />
+                    <Button v-if="activeSubmission?.similarity_score > 15" :label="t('pages.grading.plagiarismPercent', { score: activeSubmission.similarity_score })" icon="pi pi-shield" class="p-button-danger p-button-outlined p-button-sm font-bold bg-white" @click="plagiarismSidebar = true" />
                 </div>
             </div>
 
@@ -766,7 +768,7 @@ onMounted(() => {
 
                         <!-- Message Alerte Plagiat -->
                         <Message v-if="activeSubmission?.similarity_score > 20" severity="error" icon="pi pi-exclamation-triangle" class="border border-red-200 shadow-sm rounded-xl">
-                            <span class="font-bold">Intégrité Compromise :</span> Un taux de similarité de {{ activeSubmission.similarity_score }}% a été détecté. Veuillez examiner les sources avant validation.
+                            <span class="font-bold">{{ t('pages.grading.integrityCompromisedLabel') }}</span> {{ t('pages.grading.similarityDetected', { score: activeSubmission.similarity_score }) }}
                         </Message>
 
                         <!-- Boucle des Questions (Rendu Étudiant) -->
@@ -779,15 +781,15 @@ onMounted(() => {
                                     <h3 class="font-bold text-slate-800 text-sm">{{ q.question?.title || q.title }}</h3>
                                 </div>
                                 <div class="flex items-center gap-3 self-end sm:self-auto">
-                                    <Tag :value="`Barème: ${q.question?.max_points || q.max_points} pts`" severity="secondary" class="bg-white border border-slate-200 text-slate-600 font-bold" />
-                                    <Button icon="pi pi-comment" class="p-button-text p-button-secondary p-button-sm p-button-rounded bg-white border border-slate-200 shadow-sm w-8 h-8" @click="handleAnnotation($event)" v-tooltip.top="'Ajouter une annotation textuelle'" />
+                                    <Tag :value="t('pages.grading.gradingScale', { points: q.question?.max_points || q.max_points })" severity="secondary" class="bg-white border border-slate-200 text-slate-600 font-bold" />
+                                    <Button icon="pi pi-comment" class="p-button-text p-button-secondary p-button-sm p-button-rounded bg-white border border-slate-200 shadow-sm w-8 h-8" @click="handleAnnotation($event)" v-tooltip.top="t('pages.grading.addAnnotationTooltip')" />
                                 </div>
                             </div>
 
                             <!-- Student Answer Content -->
                             <div class="p-6 lg:p-8">
                                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
-                                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Énoncé</p>
+                                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{{ t('pages.grading.statementLabel') }}</p>
                                     <p class="text-sm font-medium text-slate-800">{{ q.question?.text || q.text }}</p>
                                 </div>
 
@@ -797,13 +799,13 @@ onMounted(() => {
 
                                     <div class="text-slate-800 leading-relaxed text-[15px] pl-4 font-serif">
                                         <pre v-if="q.student_answer" class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-sm font-mono overflow-x-auto border border-slate-800">{{ q.student_answer }}</pre>
-                                        <div v-else class="text-slate-400 italic">Aucune réponse fournie.</div>
+                                        <div v-else class="text-slate-400 italic">{{ t('pages.grading.noAnswerProvided') }}</div>
                                     </div>
                                 </div>
 
                                 <!-- Attribution manuelle des points (Optionnelle si Rubric) -->
                                 <div class="mt-8 flex justify-end items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Points accordés :</span>
+                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.grading.pointsAwardedLabel') }}</span>
                                     <InputNumber v-model="gradingForm.question_scores[q.id]" mode="decimal" showButtons :min="0" :max="q.question?.max_points || q.max_points" class="w-32" :pt="{ input: { class: 'text-center font-black text-blue-600' } }" />
                                 </div>
                             </div>
@@ -812,7 +814,7 @@ onMounted(() => {
                             <Accordion>
                                 <AccordionTab>
                                     <template #header>
-                                        <div class="flex items-center gap-2 text-xs font-bold text-emerald-600"><i class="pi pi-verified"></i> Afficher le Corrigé Type</div>
+                                        <div class="flex items-center gap-2 text-xs font-bold text-emerald-600"><i class="pi pi-verified"></i> {{ t('pages.grading.showModelAnswerLabel') }}</div>
                                     </template>
                                     <div class="p-5 bg-red-50/50 rounded-xl border border-emerald-100 text-sm text-emerald-800 leading-relaxed font-medium">
                                         {{ q.question?.ideal_answer || q.ideal_answer }}
@@ -832,7 +834,7 @@ onMounted(() => {
                         <!-- Grille d'évaluation (Rubric Engine) -->
                         <div v-if="activeSubmission?.rubric && activeSubmission.rubric.length > 0">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Grille Critériée</h3>
+                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">{{ t('pages.grading.rubricGridTitle') }}</h3>
                             </div>
 
                             <div class="space-y-6 bg-slate-50 p-5 rounded-xl border border-slate-100 shadow-inner">
@@ -843,7 +845,7 @@ onMounted(() => {
                                                 {{ rubric.label }}
                                                 <i class="pi pi-info-circle text-slate-300 text-[10px]" v-tooltip.top="rubric.help_text"></i>
                                             </div>
-                                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">Poids : {{ rubric.weight * 100 }}%</div>
+                                            <div class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-wider">{{ t('pages.grading.weightLabel', { percent: rubric.weight * 100 }) }}</div>
                                         </div>
                                         <div class="text-lg font-black" :class="(gradingForm.rubric_scores?.[rubric.key] ?? 0) >= (rubric.max/2) ? 'text-blue-600' : 'text-red-500'">
                                             {{ gradingForm.rubric_scores?.[rubric.key] ?? 0 }}<span class="text-xs text-slate-400 font-normal">/{{ rubric.max }}</span>
@@ -852,7 +854,7 @@ onMounted(() => {
                                     <Slider v-model="gradingForm.rubric_scores[rubric.key]" :min="0" :max="rubric.max" :step="0.5" class="w-full" />
                                     <!-- Description dynamique du niveau sélectionné -->
                                     <div class="p-3 bg-white rounded-lg border border-slate-100 text-[11px] text-slate-600 italic leading-snug">
-                                        <span class="font-bold text-blue-500 not-italic mr-1">Statut:</span>
+                                        <span class="font-bold text-blue-500 not-italic mr-1">{{ t('pages.grading.statusLabel') }}</span>
                                         {{ getRubricDescription(rubric.key, gradingForm.rubric_scores[rubric.key]) }}
                                     </div>
                                 </div>
@@ -864,17 +866,17 @@ onMounted(() => {
                         <!-- Feedback Constructif -->
                         <div>
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">Feedback Général</h3>
+                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest">{{ t('pages.grading.generalFeedbackTitle') }}</h3>
                                 <div class="flex gap-1">
-                                    <Button icon="pi pi-list" class="p-button-text p-button-secondary p-button-sm" v-tooltip.top="'Utiliser un canevas prédéfini'" />
-                                    <Button icon="pi pi-sparkles" label="Assistant IA" class="p-button-outlined p-button-info p-button-sm font-bold text-xs bg-blue-50" @click="generateAIFeedback" :loading="aiLoading" />
+                                    <Button icon="pi pi-list" class="p-button-text p-button-secondary p-button-sm" v-tooltip.top="t('pages.grading.presetCanvasTooltip')" />
+                                    <Button icon="pi pi-sparkles" :label="t('pages.grading.aiAssistantButton')" class="p-button-outlined p-button-info p-button-sm font-bold text-xs bg-blue-50" @click="generateAIFeedback" :loading="aiLoading" />
                                 </div>
                             </div>
 
                             <!-- Smart Suggestion Area -->
                             <div v-if="gradingForm.feedback === ''" class="mb-4 p-4 bg-blue-50 rounded-xl border border-dashed border-blue-200 text-center">
-                                <p class="text-xs text-blue-600 font-medium italic">"L'élève a bien respecté les contraintes de temps mais manque de rigueur sur le typage PHP."</p>
-                                <Button label="Utiliser cette suggestion" class="p-button-text p-button-sm text-[10px] font-bold mt-1" />
+                                <p class="text-xs text-blue-600 font-medium italic">{{ t('pages.grading.aiSuggestionQuote') }}</p>
+                                <Button :label="t('pages.grading.useSuggestionButton')" class="p-button-text p-button-sm text-[10px] font-bold mt-1" />
                             </div>
 
                             <!-- Audio Feedback Simulator -->
@@ -886,15 +888,15 @@ onMounted(() => {
                                         <i class="pi pi-microphone"></i>
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold">{{ isRecording ? 'Enregistrement en cours...' : 'Feedback Audio' }}</div>
-                                        <div class="text-[10px] font-medium uppercase" :class="isRecording ? 'text-red-500' : 'text-slate-400'">{{ isRecording ? formatTime(recordTime) : 'Maintenir pour parler' }}</div>
+                                        <div class="text-sm font-bold">{{ isRecording ? t('pages.grading.recordingInProgress') : t('pages.grading.audioFeedbackLabel') }}</div>
+                                        <div class="text-[10px] font-medium uppercase" :class="isRecording ? 'text-red-500' : 'text-slate-400'">{{ isRecording ? formatTime(recordTime) : t('pages.grading.pushToTalk') }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Rich Text Feedback -->
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                                <Editor v-model="gradingForm.feedback" editorStyle="height: 250px" placeholder="Rédigez un commentaire constructif global qui sera visible par l'étudiant..." />
+                                <Editor v-model="gradingForm.feedback" editorStyle="height: 250px" :placeholder="t('pages.grading.feedbackPlaceholder')" />
                             </div>
                         </div>
 
@@ -902,20 +904,20 @@ onMounted(() => {
 
                         <!-- Paramètres de workflow -->
                         <div class="space-y-4">
-                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-2">Paramètres de publication</h3>
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-2">{{ t('pages.grading.publicationSettingsTitle') }}</h3>
 
                             <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div>
-                                    <div class="text-sm font-bold text-slate-700">Publication Immédiate</div>
-                                    <div class="text-[11px] text-slate-500 mt-0.5">Rend la note visible après sauvegarde.</div>
+                                    <div class="text-sm font-bold text-slate-700">{{ t('pages.grading.immediatePublishLabel') }}</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">{{ t('pages.grading.immediatePublishDesc') }}</div>
                                 </div>
                                 <InputSwitch v-model="gradingForm.publish" />
                             </div>
 
                             <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div>
-                                    <div class="text-sm font-bold text-slate-700">Notifier l'apprenant</div>
-                                    <div class="text-[11px] text-slate-500 mt-0.5">Envoie un email avec le lien du feedback.</div>
+                                    <div class="text-sm font-bold text-slate-700">{{ t('pages.grading.notifyLearnerLabel') }}</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">{{ t('pages.grading.notifyLearnerDesc') }}</div>
                                 </div>
                                 <InputSwitch v-model="gradingForm.send_notification" :disabled="!gradingForm.publish" />
                             </div>
@@ -925,10 +927,10 @@ onMounted(() => {
                     <!-- Bottom Action Bar (Fixed Right Panel) -->
                     <div class="p-6 border-t border-slate-200 bg-slate-50 flex flex-col gap-3 z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
                         <div class="flex gap-2">
-                            <Button label="Brouillon" icon="pi pi-save" class="p-button-outlined p-button-secondary bg-white font-bold flex-1" @click="saveGrade('draft')" />
-                            <Button icon="pi pi-replay" class="p-button-outlined p-button-warning bg-white font-bold" v-tooltip.top="'Demander une révision à l\'étudiant'" @click="saveGrade('revision_requested')" />
+                            <Button :label="t('pages.grading.draftButton')" icon="pi pi-save" class="p-button-outlined p-button-secondary bg-white font-bold flex-1" @click="saveGrade('draft')" />
+                            <Button icon="pi pi-replay" class="p-button-outlined p-button-warning bg-white font-bold" v-tooltip.top="t('pages.grading.requestRevisionTooltip')" @click="saveGrade('revision_requested')" />
                         </div>
-                        <Button label="Valider la Correction" icon="pi pi-check-circle" class="p-button-primary w-full shadow-lg font-bold py-3 text-lg" @click="saveGrade('graded')" />
+                        <Button :label="t('pages.grading.validateCorrectionButton')" icon="pi pi-check-circle" class="p-button-primary w-full shadow-lg font-bold py-3 text-lg" @click="saveGrade('graded')" />
                     </div>
                 </div>
             </div>
@@ -939,12 +941,12 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <OverlayPanel ref="annotationPanel" class="w-[350px] shadow-2xl rounded-2xl border border-slate-200 p-0 overflow-hidden">
             <div class="p-5 bg-white">
-                <h4 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="pi pi-comment text-blue-500"></i> Placer un marqueur</h4>
-                <Dropdown :options="['Excellent point', 'Conceptuellement faux', 'Hors sujet', 'Erreur de syntaxe']" placeholder="Tag contextuel..." class="w-full mb-3 border-slate-200 text-sm" />
-                <Textarea rows="3" class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm focus:bg-white transition-colors" placeholder="Détaillez votre remarque..." />
+                <h4 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="pi pi-comment text-blue-500"></i> {{ t('pages.grading.placeMarkerTitle') }}</h4>
+                <Dropdown :options="[t('pages.grading.annotationTagExcellent'), t('pages.grading.annotationTagConceptWrong'), t('pages.grading.annotationTagOffTopic'), t('pages.grading.annotationTagSyntaxError')]" :placeholder="t('pages.grading.annotationTagPlaceholder')" class="w-full mb-3 border-slate-200 text-sm" />
+                <Textarea rows="3" class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm focus:bg-white transition-colors" :placeholder="t('pages.grading.annotationDetailPlaceholder')" />
                 <div class="flex justify-end gap-2 mt-4">
-                    <Button label="Annuler" class="p-button-text p-button-secondary p-button-sm font-bold" @click="annotationPanel.value.hide()" />
-                    <Button label="Sauvegarder" class="p-button-primary p-button-sm font-bold px-4" @click="saveAnnotation" />
+                    <Button :label="t('pages.grading.cancelButton')" class="p-button-text p-button-secondary p-button-sm font-bold" @click="annotationPanel.value.hide()" />
+                    <Button :label="t('pages.grading.saveButton')" class="p-button-primary p-button-sm font-bold px-4" @click="saveAnnotation" />
                 </div>
             </div>
         </OverlayPanel>
@@ -956,7 +958,7 @@ onMounted(() => {
             <template #header>
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center"><i class="pi pi-shield text-xl"></i></div>
-                    <h2 class="text-xl font-bold text-slate-800">Rapport d'Intégrité SNC</h2>
+                    <h2 class="text-xl font-bold text-slate-800">{{ t('pages.grading.integrityReportTitle') }}</h2>
                 </div>
             </template>
             <div class="p-6 space-y-8">
@@ -964,14 +966,14 @@ onMounted(() => {
                 <!-- Score Global -->
                 <div class="bg-white border border-slate-200 p-8 rounded-2xl text-center shadow-sm relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-2" :class="activeSubmission?.similarity_score > 20 ? 'bg-red-500' : 'bg-amber-400'"></div>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Taux de Similarité</div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('pages.grading.similarityRateLabel') }}</div>
                     <div class="text-6xl font-black mb-4" :class="activeSubmission?.similarity_score > 20 ? 'text-red-600' : 'text-amber-500'">{{ activeSubmission?.similarity_score || 22 }}%</div>
-                    <p class="text-sm text-slate-600 font-medium leading-relaxed">Cette copie présente des segments identiques à des publications existantes sur internet ou dans la base interne.</p>
+                    <p class="text-sm text-slate-600 font-medium leading-relaxed">{{ t('pages.grading.similarityReportDesc') }}</p>
                 </div>
 
                 <!-- Détails des sources -->
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Sources détectées</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.grading.detectedSourcesLabel') }}</h4>
                     <div v-for="source in currentPlagiarismDetails" :key="source.source" class="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-sm">
                         <div class="flex items-center gap-3">
                             <div :class="`w-2 h-2 rounded-full ${source.color}`"></div>
@@ -983,10 +985,10 @@ onMounted(() => {
 
                 <!-- Actions de décision -->
                 <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 mt-8">
-                    <h4 class="text-sm font-bold text-slate-800 mb-4">Décision Académique</h4>
+                    <h4 class="text-sm font-bold text-slate-800 mb-4">{{ t('pages.grading.academicDecisionTitle') }}</h4>
                     <div class="flex flex-col gap-3">
-                        <Button label="Invalider la copie (Attribuer 0)" icon="pi pi-ban" class="p-button-danger shadow-sm font-bold" />
-                        <Button label="Ignorer (Faux Positif)" icon="pi pi-check" class="p-button-outlined p-button-secondary bg-white font-bold" />
+                        <Button :label="t('pages.grading.invalidatePaperButton')" icon="pi pi-ban" class="p-button-danger shadow-sm font-bold" />
+                        <Button :label="t('pages.grading.ignoreFalsePositiveButton')" icon="pi pi-check" class="p-button-outlined p-button-secondary bg-white font-bold" />
                     </div>
                 </div>
             </div>
@@ -999,33 +1001,33 @@ onMounted(() => {
             <template #header>
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-chart-bar text-xl"></i></div>
-                    <h2 class="text-xl font-bold text-slate-800">Analytique Cohorte</h2>
+                    <h2 class="text-xl font-bold text-slate-800">{{ t('pages.grading.cohortAnalyticsTitle') }}</h2>
                 </div>
             </template>
             <div class="p-6 space-y-8">
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-center">
-                        <div class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">Moyenne Globale</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">{{ t('pages.grading.globalAverageLabel') }}</div>
                         <div class="text-3xl font-black text-blue-600">74.2%</div>
                     </div>
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm text-center">
-                        <div class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">Taux de Réussite</div>
+                        <div class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">{{ t('pages.grading.passRateLabel') }}</div>
                         <div class="text-3xl font-black text-emerald-600">92%</div>
                     </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 text-center">Distribution des Notes</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 text-center">{{ t('pages.grading.scoreDistributionLabel') }}</h4>
                     <Chart type="bar" :data="scoreDistribution" :options="{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5,5] } } } }" class="h-48" />
                 </div>
 
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Tendance de Progression</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{ t('pages.grading.progressionTrendLabel') }}</h4>
                     <Chart type="line" :data="cohortTrendData" :options="{ maintainAspectRatio: false, scales: { x: { grid: { display: false } } } }" class="h-48" />
                 </div>
 
-                <Button label="Générer Rapport PDF (Administration)" icon="pi pi-download" class="p-button-outlined p-button-secondary w-full font-bold bg-white" />
+                <Button :label="t('pages.grading.generatePdfReportButton')" icon="pi pi-download" class="p-button-outlined p-button-secondary w-full font-bold bg-white" />
             </div>
         </Sidebar>
 

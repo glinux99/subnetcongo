@@ -57,6 +57,8 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Tooltip from 'primevue/tooltip';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 // ======================================================================================
 // PROPS INERTIA
@@ -67,9 +69,9 @@ const props = defineProps({
     levels: {
         type: Array,
         default: () => [
-            { label: 'Débutant', value: 'beginner', icon: 'pi pi-star' },
-            { label: 'Intermédiaire', value: 'intermediate', icon: 'pi pi-star-half' },
-            { label: 'Expert', value: 'advanced', icon: 'pi pi-star-fill' }
+            { label: '', value: 'beginner', icon: 'pi pi-star' },
+            { label: '', value: 'intermediate', icon: 'pi pi-star-half' },
+            { label: '', value: 'advanced', icon: 'pi pi-star-fill' }
         ]
     },
     instructors: { type: Array, default: () => [] },
@@ -106,12 +108,12 @@ const autoSaveInterval = ref(null);
  * Intègre un système d'état pour valider chaque section indépendamment.
  */
 const editorMenu = ref([
-    { id: 'general', label: 'Informations Générales', description: 'Titre, description, prix', icon: 'pi pi-id-card' },
-    { id: 'media', label: 'Médias & Assets', description: 'Vignette, vidéo promo', icon: 'pi pi-image' },
-    { id: 'curriculum', label: 'Curriculum & Modules', description: 'Leçons, quiz, ressources', icon: 'pi pi-sitemap' },
-        { id: 'resources', label: 'Ressources', icon: 'pi pi-paperclip', description: 'Documents et fichiers joints' }, // NO
-    { id: 'seo', label: 'Optimisation SEO', description: 'Moteurs de recherche & sociaux', icon: 'pi pi-google' },
-    { id: 'settings', label: 'Paramètres Avancés', description: 'Certificats, accès, prérequis', icon: 'pi pi-cog' }
+    { id: 'general', label: t('pages.courses.editorGeneralLabel'), description: t('pages.courses.editorGeneralDesc'), icon: 'pi pi-id-card' },
+    { id: 'media', label: t('pages.courses.editorMediaLabel'), description: t('pages.courses.editorMediaDesc'), icon: 'pi pi-image' },
+    { id: 'curriculum', label: t('pages.courses.editorCurriculumLabel'), description: t('pages.courses.editorCurriculumDesc'), icon: 'pi pi-sitemap' },
+        { id: 'resources', label: t('pages.courses.editorResourcesLabel'), icon: 'pi pi-paperclip', description: t('pages.courses.editorResourcesDesc') }, // NO
+    { id: 'seo', label: t('pages.courses.editorSeoLabel'), description: t('pages.courses.editorSeoDesc'), icon: 'pi pi-google' },
+    { id: 'settings', label: t('pages.courses.editorSettingsLabel'), description: t('pages.courses.editorSettingsDesc'), icon: 'pi pi-cog' }
 ]);
 const activeEditorTab = ref('general');
 // 3. Méthodes pour gérer les ressources
@@ -193,7 +195,7 @@ const generateCategorySlug = () => {
 
 const saveCategory = () => {
     if (!categoryForm.name.trim()) {
-        toast.add({ severity: 'error', summary: 'Erreur de saisie', detail: 'Le nom de la catégorie est obligatoire.', life: 4000 });
+        toast.add({ severity: 'error', summary: t('pages.courses.validationNameRequiredSummary'), detail: t('pages.courses.categoryNameRequiredDetail'), life: 4000 });
         return;
     }
 
@@ -202,11 +204,11 @@ const saveCategory = () => {
         preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Catégorie créée', detail: 'La taxonomie a été mise à jour avec succès.', life: 3000 });
+            toast.add({ severity: 'success', summary: t('pages.courses.categoryCreatedSummary'), detail: t('pages.courses.categoryCreatedDetail'), life: 3000 });
             categoryDialog.value = false;
         },
         onError: (errors) => {
-            toast.add({ severity: 'error', summary: 'Erreur serveur', detail: 'Vérifiez les champs du formulaire.', life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.courses.categorySaveErrorSummary'), detail: t('pages.courses.categorySaveErrorDetail'), life: 5000 });
         },
         onFinish: () => savingCategory.value = false
     });
@@ -251,6 +253,9 @@ const courseForm = useForm({
  * Calcule dynamiquement si un onglet spécifique contient des erreurs bloquantes.
  * Permet d'afficher des indicateurs visuels dans le menu latéral.
  */
+const levelLabelKeys = { beginner: 'levelBeginner', intermediate: 'levelIntermediate', advanced: 'levelAdvanced' };
+const levelOptions = computed(() => props.levels.map(l => ({ ...l, label: l.label || t(`pages.courses.${levelLabelKeys[l.value] || 'levelBeginner'}`) })));
+
 const tabValidation = computed(() => {
     return {
         general: courseForm.title.length > 3 && courseForm.category_id !== null,
@@ -400,8 +405,8 @@ const saveCourse = (action = 'save') => {
     if (!isEntireFormValid.value) {
         toast.add({
             severity: 'warn',
-            summary: 'Données incomplètes',
-            detail: 'Veuillez remplir tous les champs obligatoires marqués d\'un astérisque.',
+            summary: t('pages.courses.formIncompleteSummary'),
+            detail: t('pages.courses.formIncompleteDetail'),
             life: 5000
         });
         // Redirection vers le premier onglet invalide
@@ -425,13 +430,13 @@ const saveCourse = (action = 'save') => {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-            const actionText = action === 'publish' ? 'publié' : 'sauvegardé';
-            toast.add({ severity: 'success', summary: 'Succès', detail: `Le cours a été ${actionText} avec succès.`, life: 4000 });
+            const actionText = action === 'publish' ? t('pages.courses.coursePublishedDetail') : t('pages.courses.courseSavedDetail');
+            toast.add({ severity: 'success', summary: t('pages.courses.saveSuccessSummary'), detail: actionText, life: 4000 });
             lastSavedAt.value = new Date();
             if (action !== 'draft') courseDialog.value = false;
         },
         onError: (errors) => {
-            toast.add({ severity: 'error', summary: 'Erreur système', detail: 'Des erreurs ont empêché la sauvegarde.', life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.courses.saveErrorSummary'), detail: t('pages.courses.saveErrorDetail'), life: 5000 });
             console.error('Validation Errors:', errors);
         }
     });
@@ -440,17 +445,17 @@ const saveCourse = (action = 'save') => {
 // Actions de masse et suppressions
 const confirmArchive = (id) => {
     confirm.require({
-        message: 'Cette action rendra le cours inaccessible aux nouveaux apprenants. Les apprenants inscrits y auront toujours accès. Confirmer ?',
-        header: 'Archivage du cours',
+        message: t('pages.courses.archiveCourseMessage'),
+        header: t('pages.courses.archiveCourseHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         rejectClass: 'p-button-secondary p-button-text',
-        acceptLabel: 'Oui, archiver',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.archiveAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             router.delete(route('courses.destroy', id), {
                 preserveScroll: true,
-                onSuccess: () => toast.add({ severity: 'info', summary: 'Archivé', detail: 'Le cours a été déplacé aux archives.', life: 3000 })
+                onSuccess: () => toast.add({ severity: 'info', summary: t('pages.courses.archivedSummary'), detail: t('pages.courses.archivedDetail'), life: 3000 })
             });
         }
     });
@@ -458,12 +463,12 @@ const confirmArchive = (id) => {
 
 const confirmBulkArchive = () => {
     confirm.require({
-        message: `Vous êtes sur le point d'archiver ${selectedCourses.value.length} cours. Confirmer ?`,
-        header: 'Archivage en masse',
+        message: t('pages.courses.bulkArchiveMessage', { n: selectedCourses.value.length }),
+        header: t('pages.courses.bulkArchiveHeader'),
         icon: 'pi pi-box',
         acceptClass: 'p-button-warning',
-        acceptLabel: 'Oui, archiver',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.archiveAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             const courseIds = selectedCourses.value.map(c => c.id);
             router.post(route('courses.bulk-destroy'), {
@@ -471,7 +476,7 @@ const confirmBulkArchive = () => {
             }, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.add({ severity: 'success', summary: 'Opération réussie', detail: 'Les cours sélectionnés ont été archivés.', life: 3000 });
+                    toast.add({ severity: 'success', summary: t('pages.courses.bulkOperationSuccessSummary'), detail: t('pages.courses.bulkArchiveSuccessDetail'), life: 3000 });
                     selectedCourses.value = [];
                 }
             });
@@ -481,12 +486,12 @@ const confirmBulkArchive = () => {
 
 const confirmBulkRestore = () => {
     confirm.require({
-        message: `Vous êtes sur le point de restaurer ${selectedCourses.value.length} cours. Ils seront placés dans les brouillons. Confirmer ?`,
-        header: 'Restauration en masse',
+        message: t('pages.courses.bulkRestoreMessage', { n: selectedCourses.value.length }),
+        header: t('pages.courses.bulkRestoreHeader'),
         icon: 'pi pi-undo',
         acceptClass: 'p-button-success',
-        acceptLabel: 'Oui, restaurer',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.restoreAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             const courseIds = selectedCourses.value.map(c => c.id);
             router.post(route('courses.bulk-restore'), {
@@ -494,7 +499,7 @@ const confirmBulkRestore = () => {
             }, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.add({ severity: 'success', summary: 'Opération réussie', detail: 'Les cours sélectionnés ont été restaurés.', life: 3000 });
+                    toast.add({ severity: 'success', summary: t('pages.courses.bulkOperationSuccessSummary'), detail: t('pages.courses.bulkRestoreSuccessDetail'), life: 3000 });
                     selectedCourses.value = [];
                 }
             });
@@ -504,17 +509,17 @@ const confirmBulkRestore = () => {
 
 const cloneCourse = (course) => {
     confirm.require({
-        message: `Voulez-vous vraiment cloner le cours "${course.title}" ? Une copie sera créée en tant que brouillon.`,
-        header: 'Clonage de cours',
+        message: t('pages.courses.cloneMessage', { title: course.title }),
+        header: t('pages.courses.cloneHeader'),
         icon: 'pi pi-copy',
         acceptClass: 'p-button-info',
-        acceptLabel: 'Oui, cloner',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.cloneAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             router.post(route('courses.duplicate', course.slug), {}, {
                 preserveScroll: true,
-                onSuccess: () => toast.add({ severity: 'success', summary: 'Clonage réussi', detail: 'Le cours a été dupliqué.', life: 3000 }),
-                onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Le clonage a échoué.', life: 3000 })
+                onSuccess: () => toast.add({ severity: 'success', summary: t('pages.courses.cloneSuccessSummary'), detail: t('pages.courses.cloneSuccessDetail'), life: 3000 }),
+                onError: () => toast.add({ severity: 'error', summary: t('pages.courses.cloneErrorSummary'), detail: t('pages.courses.cloneErrorDetail'), life: 3000 })
             });
         }
     });
@@ -522,16 +527,16 @@ const cloneCourse = (course) => {
 
 const restoreCourse = (courseId) => {
     confirm.require({
-        message: 'Restaurer ce cours le placera dans vos brouillons. Voulez-vous continuer ?',
-        header: 'Restaurer le cours',
+        message: t('pages.courses.restoreCourseMessage'),
+        header: t('pages.courses.restoreCourseHeader'),
         icon: 'pi pi-undo',
         acceptClass: 'p-button-success',
-        acceptLabel: 'Oui, restaurer',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.restoreAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             router.post(route('courses.restore', courseId), {}, {
                 preserveScroll: true,
-                onSuccess: () => toast.add({ severity: 'success', summary: 'Restauré', detail: 'Le cours est de nouveau un brouillon.', life: 3000 })
+                onSuccess: () => toast.add({ severity: 'success', summary: t('pages.courses.restoredSummary'), detail: t('pages.courses.restoredDetail'), life: 3000 })
             });
         }
     });
@@ -539,18 +544,18 @@ const restoreCourse = (courseId) => {
 
 const confirmPurge = (course) => {
     confirm.require({
-        message: `Vous êtes sur le point de supprimer DÉFINITIVEMENT le cours "${course.title}" et toutes ses données (inscriptions, leçons, etc.). Cette action est irréversible. Continuer ?`,
-        header: 'Suppression Définitive',
+        message: t('pages.courses.purgeMessage', { title: course.title }),
+        header: t('pages.courses.purgeHeader'),
         icon: 'pi pi-ban',
         acceptClass: 'p-button-danger',
-        acceptLabel: 'Oui, supprimer définitivement',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.purgeAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             router.delete(route('courses.purge', course.slug), {
                 preserveScroll: true,
                 onError: (errors) => {
-                    const errorMessage = Object.values(errors).flat().join(' ') || 'Une erreur est survenue.';
-                    toast.add({ severity: 'error', summary: 'Échec de la suppression', detail: errorMessage, life: 5000 });
+                    const errorMessage = Object.values(errors).flat().join(' ') || t('pages.courses.genericError');
+                    toast.add({ severity: 'error', summary: t('pages.courses.purgeFailedSummary'), detail: errorMessage, life: 5000 });
                 }
             });
         }
@@ -559,12 +564,12 @@ const confirmPurge = (course) => {
 
 const confirmBulkPurge = () => {
     confirm.require({
-        message: `Vous êtes sur le point de supprimer DÉFINITIVEMENT ${selectedCourses.value.length} cours archivés. Cette action est irréversible. Continuer ?`,
-        header: 'Suppression Définitive en Masse',
+        message: t('pages.courses.bulkPurgeMessage', { n: selectedCourses.value.length }),
+        header: t('pages.courses.bulkPurgeHeader'),
         icon: 'pi pi-ban',
         acceptClass: 'p-button-danger',
-        acceptLabel: 'Oui, purger la sélection',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.courses.bulkPurgeAcceptLabel'),
+        rejectLabel: t('pages.courses.cancel'),
         accept: () => {
             const courseIds = selectedCourses.value.map(c => c.id);
             router.post(route('courses.bulk-purge'), { ids: courseIds }, {
@@ -617,12 +622,12 @@ const getBlockIcon = (type) => {
 
 const getBlockPlaceholder = (type) => {
     const map = {
-        video: 'Titre de la vidéo...',
-        document: 'Titre du document...',
-        quiz: 'Titre du quiz...',
-        text: 'Titre du bloc texte...'
+        video: t('pages.courses.videoBlockPlaceholder'),
+        document: t('pages.courses.documentBlockPlaceholder'),
+        quiz: t('pages.courses.quizBlockPlaceholder'),
+        text: t('pages.courses.textBlockPlaceholder')
     };
-    return map[type] || 'Titre...';
+    return map[type] || t('pages.courses.titlePlaceholder');
 };
 
 const addQuestion = (block) => {
@@ -670,8 +675,8 @@ const onDocumentSelect = (event, sectionIndex, blockIndex) => {
 
 const removeSection = (index) => {
     confirm.require({
-        message: 'Supprimer ce module entraînera la suppression de toutes les leçons qu\'il contient. Confirmer ?',
-        header: 'Suppression de module',
+        message: t('pages.courses.removeModuleMessage'),
+        header: t('pages.courses.removeModuleHeader'),
         icon: 'pi pi-trash',
         acceptClass: 'p-button-danger',
         accept: () => courseForm.sections.splice(index, 1)
@@ -716,28 +721,28 @@ const addLesson = (sectionIndex, type = 'video') => {
     switch(type) {
         case 'video':
             block.video_source = 'youtube';
-            block.title = 'Nouvelle vidéo';
+            block.title = t('pages.courses.newVideoTitle');
             break;
         case 'document':
             block.document_url = '';
             block.document_title = '';
             block.document_mode = 'url';
             block.document_file = null;
-            block.title = 'Nouveau document';
+            block.title = t('pages.courses.newDocumentTitle');
             break;
         case 'quiz':
             block.quiz_mode = 'new';
             block.questions = [];
             block.new_quiz_title = '';
-            block.title = 'Nouveau quiz';
+            block.title = t('pages.courses.newQuizTitle');
             break;
         case 'text':
             block.content_text = '';
             block.content_html = '';
-            block.title = 'Nouveau contenu textuel';
+            block.title = t('pages.courses.newTextTitle');
             break;
         case 'assignment':
-            block.title = 'Nouvel exercice';
+            block.title = t('pages.courses.newAssignmentTitle');
             break;
     }
 
@@ -769,10 +774,10 @@ const formatDate = (date) => {
 
 const getStatusBadgeDef = (status) => {
     const definitions = {
-        published: { severity: 'success', label: 'Publié en ligne', icon: 'pi pi-globe' },
-        draft: { severity: 'secondary', label: 'Brouillon local', icon: 'pi pi-file-edit' },
-        pending: { severity: 'warning', label: 'En attente de validation', icon: 'pi pi-clock' },
-        archived: { severity: 'danger', label: 'Archivé (Inactif)', icon: 'pi pi-box' }
+        published: { severity: 'success', label: t('pages.courses.statusPublishedOnline'), icon: 'pi pi-globe' },
+        draft: { severity: 'secondary', label: t('pages.courses.statusDraftLocal'), icon: 'pi pi-file-edit' },
+        pending: { severity: 'warning', label: t('pages.courses.statusPendingValidation'), icon: 'pi pi-clock' },
+        archived: { severity: 'danger', label: t('pages.courses.statusArchivedInactive'), icon: 'pi pi-box' }
     };
     return definitions[status] || definitions['draft'];
 };
@@ -798,7 +803,7 @@ const enrichedCourses = computed(() => {
 // Prévisualisation SEO Google
 const seoPreviewTitle = computed(() => {
     const title = courseForm.seo_metadata.title || courseForm.title;
-    return title ? (title.length > 60 ? title.substring(0, 60) + '...' : title) : 'Titre optimisé de votre formation';
+    return title ? (title.length > 60 ? title.substring(0, 60) + '...' : title) : t('pages.courses.seoDefaultTitle');
 });
 
 const anySelectedNotArchived = computed(() => {
@@ -813,7 +818,7 @@ const allSelectedAreArchived = computed(() => {
 
 const seoPreviewDesc = computed(() => {
     const desc = courseForm.seo_metadata.description || courseForm.short_info;
-    return desc ? (desc.length > 155 ? desc.substring(0, 155) + '...' : desc) : 'Description concise et percutante qui apparaîtra dans les résultats de recherche Google pour inciter au clic.';
+    return desc ? (desc.length > 155 ? desc.substring(0, 155) + '...' : desc) : t('pages.courses.seoDefaultDesc');
 });
 
 
@@ -832,9 +837,9 @@ const chartOptions = {
 };
 
 const revenueChartData = ref({
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Jui'],
+    labels: [t('pages.courses.monthJan'), t('pages.courses.monthFeb'), t('pages.courses.monthMar'), t('pages.courses.monthApr'), t('pages.courses.monthMay'), t('pages.courses.monthJun'), t('pages.courses.monthJul')],
     datasets: [{
-        label: 'Revenus ($)',
+        label: t('pages.courses.chartRevenueLabel'),
         data: [4500, 7200, 6800, 9500, 12000, 15400, 18900],
         borderColor: '#4f46e5',
         backgroundColor: 'rgba(79, 70, 229, 0.05)',
@@ -906,13 +911,13 @@ const confirmRemoveResource = (index) => {
     const res = courseForm.resources[index];
     
     confirm.require({
-        message: `Voulez-vous vraiment supprimer la ressource "${res.title || 'ce document'}" ? Cette action est irréversible.`,
-        header: 'Confirmation de suppression',
+        message: t('pages.courses.resourceDeleteMessage', { title: res.title || t('pages.courses.resourceUntitled') }),
+        header: t('pages.courses.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => {
             removeResource(index);
-            toast.add({ severity: 'info', summary: 'Supprimé', detail: 'La ressource a été retirée de la liste.', life: 3000 });
+            toast.add({ severity: 'info', summary: t('pages.courses.deletedSummary'), detail: t('pages.courses.resourceRemovedDetail'), life: 3000 });
         }
     });
 };
@@ -971,7 +976,7 @@ onBeforeUnmount(() => {
 
 <template>
     <AppLayout>
-        <Head title="Architecte Pédagogique | LMS Enterprise" />
+        <Head :title="t('pages.courses.headTitle')" />
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
@@ -996,18 +1001,18 @@ onBeforeUnmount(() => {
             <div class="space-y-4 max-w-3xl">
                 <!-- Badge stylisé (Remplace le composant <Badge> basique pour coller au design) -->
                 <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                    Enterprise
+                    {{ t('pages.courses.enterpriseBadge') }}
                 </span>
 
                 <!-- Titre Principal (Italique, gras, partie en rouge) -->
                 <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                    <span class="text-white">Catalogue des</span>
-                    <span class="text-[#E92B2B]">Formations</span>
+                    <span class="text-white">{{ t('pages.courses.headerTitlePart1') }}</span>
+                    <span class="text-[#E92B2B]">{{ t('pages.courses.headerTitlePart2') }}</span>
                 </h1>
 
                 <!-- Description -->
                 <p class="text-slate-400 text-sm md:text-base italic leading-relaxed">
-                    Pilotez l'ingénierie de votre écosystème d'apprentissage. Concevez des cursus interactifs avancés, gérez les stratégies de monétisation et analysez l'engagement de vos cohortes.
+                    {{ t('pages.courses.headerDescription') }}
                 </p>
             </div>
 
@@ -1015,27 +1020,27 @@ onBeforeUnmount(() => {
             <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full xl:w-auto">
                 
                 <!-- Bouton Secondaire 1 -->
-                <Button 
-                    label="Insights & Rapports" 
-                    icon="pi pi-chart-pie" 
-                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors" 
-                    @click="analyticsDialog = true" 
+                <Button
+                    :label="t('pages.courses.headerInsightsButton')"
+                    icon="pi pi-chart-pie"
+                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors"
+                    @click="analyticsDialog = true"
                 />
                 
                 <!-- Bouton Secondaire 2 -->
-                <Button 
-                    label="Nouvelle Catégorie" 
-                    icon="pi pi-tags" 
-                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors" 
-                    @click="openCategoryDialog" 
+                <Button
+                    :label="t('pages.courses.headerNewCategoryButton')"
+                    icon="pi pi-tags"
+                    class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors"
+                    @click="openCategoryDialog"
                 />
                 
                 <!-- Bouton Principal (Rouge) -->
-                <Button 
-                    label="Forger un Nouveau Cours" 
-                    icon="pi pi-plus" 
-                    class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
-                    @click="openNew" 
+                <Button
+                    :label="t('pages.courses.headerNewCourseButton')"
+                    icon="pi pi-plus"
+                    class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6"
+                    @click="openNew"
                 />
             </div>
         </div>
@@ -1050,11 +1055,11 @@ onBeforeUnmount(() => {
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-4">
                             <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-book text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Volume de Cours</p>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiCoursesVolume') }}</p>
                         </div>
                         <div class="flex items-baseline gap-2">
                             <h3 class="text-4xl font-black text-slate-800">{{ props.stats.total_courses || 0 }}</h3>
-                            <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">+12% ce mois</span>
+                            <span class="text-xs font-medium text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">{{ t('pages.courses.kpiMonthlyGrowth') }}</span>
                         </div>
                     </div>
                 </div>
@@ -1065,7 +1070,7 @@ onBeforeUnmount(() => {
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-4">
                             <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-users text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Apprenants Actifs</p>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiActiveLearners') }}</p>
                         </div>
                         <div class="flex items-baseline gap-2">
                             <h3 class="text-4xl font-black text-slate-800">{{ props.stats.total_students || 0 }}</h3>
@@ -1080,7 +1085,7 @@ onBeforeUnmount(() => {
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-4">
                             <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-wallet text-sm"></i></div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">MRR (Revenu Mensuel)</p>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiMrr') }}</p>
                         </div>
                         <h3 class="text-4xl font-black text-slate-800">{{ formatCurrency(props.meta.total_revenue || 0) }}</h3>
                     </div>
@@ -1092,7 +1097,7 @@ onBeforeUnmount(() => {
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="pi pi-bullseye text-sm"></i></div>
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Tx. de Complétion</p>
+                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">{{ t('pages.courses.kpiCompletionRate') }}</p>
                             </div>
                             <span class="text-lg font-black text-red-600">{{ props.meta.completion_rate || 0 }}%</span>
                         </div>
@@ -1111,26 +1116,26 @@ onBeforeUnmount(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-auto">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Rechercher par titre, ID ou formateur..." class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.courses.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
 
-                        <Dropdown v-model="serverFilters.category_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Toutes les taxinomies" class="w-full sm:w-56 border-slate-200 shadow-sm" showClear>
+                        <Dropdown v-model="serverFilters.category_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.filterCategoryPlaceholder')" class="w-full sm:w-56 border-slate-200 shadow-sm" showClear>
                             <template #value="slotProps">
                                 <div v-if="slotProps.value" class="flex items-center gap-2 text-slate-700 font-medium">
                                     <i class="pi pi-folder-open text-slate-400"></i>
                                     <span>{{ props.categories.find(c => c.id === slotProps.value)?.name }}</span>
                                 </div>
-                                <span v-else class="text-slate-500">Filtrer par catégorie</span>
+                                <span v-else class="text-slate-500">{{ t('pages.courses.filterCategoryAll') }}</span>
                             </template>
                         </Dropdown>
 
                         <Dropdown v-model="serverFilters.status" :options="[
-                            {label:'Publié en ligne', value:'published', icon:'pi pi-globe', color:'text-emerald-500'},
-                            {label:'Brouillon local', value:'draft', icon:'pi pi-file-edit', color:'text-slate-500'},
-                            {label:'En attente', value:'pending', icon:'pi pi-clock', color:'text-amber-500'}
-                        ]" optionLabel="label" optionValue="value" placeholder="État de publication" class="w-full sm:w-48 border-slate-200 shadow-sm" showClear>
+                            {label: t('pages.courses.statusPublishedOnline'), value:'published', icon:'pi pi-globe', color:'text-emerald-500'},
+                            {label: t('pages.courses.statusDraftLocal'), value:'draft', icon:'pi pi-file-edit', color:'text-slate-500'},
+                            {label: t('pages.courses.statusFilterPending'), value:'pending', icon:'pi pi-clock', color:'text-amber-500'}
+                        ]" optionLabel="label" optionValue="value" :placeholder="t('pages.courses.statusFilterPlaceholder')" class="w-full sm:w-48 border-slate-200 shadow-sm" showClear>
                             <template #option="slotProps">
                                 <div class="flex items-center gap-2">
                                     <i :class="[slotProps.option.icon, slotProps.option.color]"></i>
@@ -1141,11 +1146,11 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
-                        <Button v-if="selectedCourses.length > 0 && anySelectedNotArchived" icon="pi pi-box" :label="`Archiver (${selectedCourses.length})`" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
-                        <Button v-if="selectedCourses.length > 0 && allSelectedAreArchived" icon="pi pi-undo" :label="`Restaurer (${selectedCourses.length})`" class="p-button-success p-button-outlined shadow-sm" @click="confirmBulkRestore" />
-                        <Button v-if="selectedCourses.length > 0 && allSelectedAreArchived" icon="pi pi-ban" :label="`Purger (${selectedCourses.length})`" class="p-button-danger p-button-outlined shadow-sm" @click="confirmBulkPurge" />
-                        <Button icon="pi pi-download" label="Export" class="p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm hidden sm:flex" v-tooltip.top="'Générer un rapport CSV/Excel'" />
-                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser les données'" />
+                        <Button v-if="selectedCourses.length > 0 && anySelectedNotArchived" icon="pi pi-box" :label="t('pages.courses.bulkArchiveButton', { n: selectedCourses.length })" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
+                        <Button v-if="selectedCourses.length > 0 && allSelectedAreArchived" icon="pi pi-undo" :label="t('pages.courses.bulkRestoreButton', { n: selectedCourses.length })" class="p-button-success p-button-outlined shadow-sm" @click="confirmBulkRestore" />
+                        <Button v-if="selectedCourses.length > 0 && allSelectedAreArchived" icon="pi pi-ban" :label="t('pages.courses.bulkPurgeButton', { n: selectedCourses.length })" class="p-button-danger p-button-outlined shadow-sm" @click="confirmBulkPurge" />
+                        <Button icon="pi pi-download" :label="t('pages.courses.exportLabel')" class="p-button-secondary bg-white text-slate-700 border-slate-200 shadow-sm hidden sm:flex" v-tooltip.top="t('pages.courses.exportTooltip')" />
+                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.courses.refreshTooltip')" />
                     </div>
                 </div>
 
@@ -1173,11 +1178,11 @@ onBeforeUnmount(() => {
                             <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                                 <i class="pi pi-inbox text-5xl text-slate-300"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-2">Aucun parcours pédagogique trouvé</h3>
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('pages.courses.emptyStateTitle') }}</h3>
                             <p class="text-sm max-w-md text-center text-slate-500 leading-relaxed mb-6">
-                                Il semblerait que votre catalogue soit vide avec les filtres actuels. Modifiez vos critères de recherche ou commencez à concevoir un nouveau cursus.
+                                {{ t('pages.courses.emptyStateDescription') }}
                             </p>
-                            <Button label="Concevoir une formation" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
+                            <Button :label="t('pages.courses.emptyStateAction')" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
                         </div>
                     </template>
 
@@ -1185,15 +1190,15 @@ onBeforeUnmount(() => {
                     <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
                     <Column expander style="width: 3rem; background-color: #f8fafc;" />
 
-                    <Column field="title" header="Identité & Classification du Cours" style="min-width: 25rem; background-color: #f8fafc;">
+                    <Column field="title" :header="t('pages.courses.columnCourseIdentity')" style="min-width: 25rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex items-center gap-4 py-2">
                                 <!-- Thumbnail -->
                                 <div class="w-24 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 relative group cursor-pointer" @click="editCourse(data)">
-                                    <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Vignette du cours" />
+                                    <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" :alt="t('pages.courses.thumbnailAlt')" />
                                     <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
                                         <i class="pi pi-image text-xl mb-1"></i>
-                                        <span class="text-[8px] uppercase font-bold tracking-widest">No Cover</span>
+                                        <span class="text-[8px] uppercase font-bold tracking-widest">{{ t('pages.courses.noCover') }}</span>
                                     </div>
                                     <div class="absolute inset-0 bg-blue-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <i class="pi pi-pencil text-white text-lg drop-shadow-md"></i>
@@ -1206,18 +1211,18 @@ onBeforeUnmount(() => {
                                         <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editCourse(data)">
                                             {{ data.title }}
                                         </span>
-                                        <i v-if="data.is_featured" class="pi pi-star-fill text-amber-400 text-xs" v-tooltip.top="'Formation recommandée (Mise en avant)'"></i>
-                                        <i v-if="data.certificate_enabled" class="pi pi-verified text-blue-500 text-xs" v-tooltip.top="'Certificat délivré à la fin'"></i>
+                                        <i v-if="data.is_featured" class="pi pi-star-fill text-amber-400 text-xs" v-tooltip.top="t('pages.courses.featuredTooltip')"></i>
+                                        <i v-if="data.certificate_enabled" class="pi pi-verified text-blue-500 text-xs" v-tooltip.top="t('pages.courses.certificateTooltip')"></i>
                                     </div>
 
                                     <div class="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                                         <span class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600">
                                             <i class="pi pi-folder text-[10px]"></i>
-                                            {{ data.category?.name || 'Général' }}
+                                            {{ data.category?.name || t('pages.courses.generalCategoryFallback') }}
                                         </span>
                                         <span class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600">
                                             <i class="pi pi-chart-bar text-[10px]"></i>
-                                            {{ props.levels.find(l => l.value === data.level)?.label || 'Débutant' }}
+                                            {{ levelOptions.find(l => l.value === data.level)?.label || t('pages.courses.levelBeginner') }}
                                         </span>
                                         <span v-if="data.estimated_duration" class="flex items-center gap-1 text-slate-400">
                                             <i class="pi pi-clock text-[10px]"></i> {{ data.estimated_duration }}h
@@ -1228,10 +1233,10 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="price" header="Tarification" style="min-width: 10rem; background-color: #f8fafc;">
+                    <Column field="price" :header="t('pages.courses.columnPricing')" style="min-width: 10rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div v-if="data.price == 0" class="flex items-center">
-                                <Badge value="100% GRATUIT" severity="success" class="text-[10px] tracking-wider border border-emerald-200 bg-emerald-50 text-emerald-700"></Badge>
+                                <Badge :value="t('pages.courses.freeBadge')" severity="success" class="text-[10px] tracking-wider border border-emerald-200 bg-emerald-50 text-emerald-700"></Badge>
                             </div>
                             <div v-else class="flex flex-col">
                                 <span v-if="data.promo_price" class="font-black text-red-600 text-sm flex items-center gap-1">
@@ -1245,22 +1250,22 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="metrics" header="Engagement & KPI" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="metrics" :header="t('pages.courses.columnMetrics')" style="min-width: 12rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-32">
-                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-users text-slate-400"></i> Apprenants</span>
+                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-users text-slate-400"></i> {{ t('pages.courses.metricLearners') }}</span>
                                     <span class="font-bold text-slate-700">{{ data.students_count?.toLocaleString() || 0 }}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs w-32">
-                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-money-bill text-slate-400"></i> Revenu</span>
+                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-money-bill text-slate-400"></i> {{ t('pages.courses.metricRevenue') }}</span>
                                     <span class="font-bold text-emerald-600">{{ formatCurrency(data.revenue_generated || 0) }}</span>
                                 </div>
                             </div>
                         </template>
                     </Column>
 
-                    <Column field="status" header="État de publication" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="status" :header="t('pages.courses.columnStatus')" style="min-width: 12rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <Tag
                                 :severity="getStatusBadgeDef(data.status).severity"
@@ -1272,17 +1277,17 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
+                    <Column :header="t('pages.courses.columnActions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
-                                <Button v-if="data.status !== 'archived'" icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Éditer le curriculum'" @click="editCourse(data)" />
-                                <Button v-if="data.status !== 'archived'" icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Cloner le cours'" @click="cloneCourse(data)" />
+                                <Button v-if="data.status !== 'archived'" icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.courses.editCurriculumTooltip')" @click="editCourse(data)" />
+                                <Button v-if="data.status !== 'archived'" icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.courses.cloneCourseTooltip')" @click="cloneCourse(data)" />
                                 <!-- <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Aperçu Public du cours'" /> -->
-                                <Button v-if="data.status !== 'archived'" icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="'Archiver le cours'" @click="confirmArchive(data.id)" />
-                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="'Restaurer le cours'" @click="restoreCourse(data.id)" >
+                                <Button v-if="data.status !== 'archived'" icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.courses.archiveCourseTooltip')" @click="confirmArchive(data.id)" />
+                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="t('pages.courses.restoreCourseTooltip')" @click="restoreCourse(data.id)" >
   <template v-slot:loadingicon="slotProps"></template>
 </Button>
-                                <Button v-if="data.status === 'archived'" icon="pi pi-ban" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="'Suppression Définitive'" @click="confirmPurge(data)" />
+                                <Button v-if="data.status === 'archived'" icon="pi pi-ban" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.courses.purgeCourseTooltip')" @click="confirmPurge(data)" />
                             </div>
                         </template>
                     </Column>
@@ -1294,19 +1299,19 @@ onBeforeUnmount(() => {
                                 <div class="flex items-center justify-between mb-6">
                                     <h4 class="font-bold text-slate-800 text-lg flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-sitemap"></i></div>
-                                        Architecture du Curriculum (Aperçu)
+                                        {{ t('pages.courses.curriculumPreviewTitle') }}
                                     </h4>
-                                    <Button label="Gérer les modules" icon="pi pi-cog" class="p-button-outlined p-button-sm p-button-secondary bg-white shadow-sm font-bold" @click="editCourse(data)" />
+                                    <Button :label="t('pages.courses.manageModulesButton')" icon="pi pi-cog" class="p-button-outlined p-button-sm p-button-secondary bg-white shadow-sm font-bold" @click="editCourse(data)" />
                                 </div>
 
                                 <div v-if="data.sections && data.sections.length > 0" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                     <div v-for="(section, idx) in data.sections" :key="idx" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                         <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
                                             <h5 class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                                                <span class="text-xs text-slate-400 font-mono uppercase tracking-widest bg-slate-50 px-2 py-1 rounded">Mod {{ idx + 1 }}</span>
-                                                <span class="truncate" :title="section.title">{{ section.title || 'Module sans titre' }}</span>
+                                                <span class="text-xs text-slate-400 font-mono uppercase tracking-widest bg-slate-50 px-2 py-1 rounded">{{ t('pages.courses.moduleAbbrev') }} {{ idx + 1 }}</span>
+                                                <span class="truncate" :title="section.title">{{ section.title || t('pages.courses.untitledModule') }}</span>
                                             </h5>
-                                            <Badge :value="section.lessons?.length || 0" severity="secondary" class="text-[10px]" v-tooltip.top="'Nombre de leçons'"></Badge>
+                                            <Badge :value="section.lessons?.length || 0" severity="secondary" class="text-[10px]" v-tooltip.top="t('pages.courses.lessonsCountTooltip')"></Badge>
                                         </div>
                                         <ul class="space-y-2">
                                             <li v-for="(lesson, lIdx) in (section.lessons || []).slice(0, 4)" :key="lIdx" class="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-transparent hover:border-slate-200 transition-colors">
@@ -1317,27 +1322,27 @@ onBeforeUnmount(() => {
                                                         'pi pi-question-circle text-emerald-500': lesson.type === 'quiz',
                                                         'pi pi-code text-amber-500': lesson.type === 'assignment'
                                                     }" class="text-sm flex-shrink-0"></i>
-                                                    <span class="truncate font-medium">{{ lesson.title || `Leçon ${lIdx + 1}` }}</span>
+                                                    <span class="truncate font-medium">{{ lesson.title || t('pages.courses.lessonFallback', { n: lIdx + 1 }) }}</span>
                                                 </div>
                                                 <div class="flex items-center gap-2 flex-shrink-0">
                                                     <span v-if="lesson.duration_minutes" class="text-[10px] text-slate-400 font-mono"><i class="pi pi-clock mr-1"></i>{{ lesson.duration_minutes }}m</span>
-                                                    <i v-if="lesson.is_free" class="pi pi-unlock text-emerald-500 text-[10px]" v-tooltip.top="'Accès libre (Preview)'"></i>
+                                                    <i v-if="lesson.is_free" class="pi pi-unlock text-emerald-500 text-[10px]" v-tooltip.top="t('pages.courses.freeAccessTooltip')"></i>
                                                 </div>
                                             </li>
                                             <li v-if="(section.lessons || []).length > 4" class="text-center pt-2">
-                                                <span class="text-[11px] font-bold text-blue-500 cursor-pointer hover:underline" @click="editCourse(data)">+ {{ section.lessons.length - 4 }} autres leçons</span>
+                                                <span class="text-[11px] font-bold text-blue-500 cursor-pointer hover:underline" @click="editCourse(data)">{{ t('pages.courses.moreLessonsLabel', { n: section.lessons.length - 4 }) }}</span>
                                             </li>
-                                            <li v-if="!(section.lessons || []).length" class="text-[11px] text-slate-400 italic text-center py-2">Module vide</li>
+                                            <li v-if="!(section.lessons || []).length" class="text-[11px] text-slate-400 italic text-center py-2">{{ t('pages.courses.emptyModule') }}</li>
                                         </ul>
                                     </div>
                                 </div>
                                 <div v-else class="text-slate-500 p-8 bg-white rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3">
                                     <i class="pi pi-compass text-3xl text-slate-300"></i>
                                     <div class="text-center">
-                                        <p class="font-bold text-slate-700">Aucun contenu pédagogique</p>
-                                        <p class="text-sm">Le programme de ce cours n'a pas encore été défini.</p>
+                                        <p class="font-bold text-slate-700">{{ t('pages.courses.noPedagogicalContent') }}</p>
+                                        <p class="text-sm">{{ t('pages.courses.noContentDescription') }}</p>
                                     </div>
-                                    <Button label="Construire le programme" icon="pi pi-hammer" class="p-button-text p-button-primary mt-2" @click="editCourse(data)" />
+                                    <Button :label="t('pages.courses.buildSyllabusButton')" icon="pi pi-hammer" class="p-button-text p-button-primary mt-2" @click="editCourse(data)" />
                                 </div>
                             </div>
                         </div>
@@ -1373,21 +1378,21 @@ onBeforeUnmount(() => {
                     </div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
-                            {{ courseForm.id ? 'Éditeur de Parcours' : 'Création Pédagogique' }}
+                            {{ courseForm.id ? t('pages.courses.editorTitleEdit') : t('pages.courses.editorTitleNew') }}
                             <Tag v-if="courseForm.status" :severity="getStatusBadgeDef(courseForm.status).severity" :value="getStatusBadgeDef(courseForm.status).label" class="text-[9px] uppercase tracking-wider px-2 py-0.5"></Tag>
                         </h2>
                         <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span class="truncate max-w-[200px] md:max-w-[400px]">{{ courseForm.title || 'Cours sans titre' }}</span>
-                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> Enregistré à {{ formatDate(lastSavedAt) }}</span>
-                            <span v-else-if="courseForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> Modifications en cours...</span>
+                            <span class="truncate max-w-[200px] md:max-w-[400px]">{{ courseForm.title || t('pages.courses.untitledCourse') }}</span>
+                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.courses.savedAtLabel', { time: formatDate(lastSavedAt) }) }}</span>
+                            <span v-else-if="courseForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.courses.modificationsInProgress') }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <Button icon="pi pi-external-link" label="Aperçu visuel" class="p-button-text p-button-secondary p-button-sm hidden lg:flex font-bold" v-tooltip.bottom="'Prévisualiser la page de vente du cours'" />
+                    <Button icon="pi pi-external-link" :label="t('pages.courses.previewVisualButton')" class="p-button-text p-button-secondary p-button-sm hidden lg:flex font-bold" v-tooltip.bottom="t('pages.courses.previewTooltip')" />
                     <div class="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
-                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="courseDialog = false" v-tooltip.bottom="'Fermer l\'espace de travail'" />
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="courseDialog = false" v-tooltip.bottom="t('pages.courses.closeWorkspaceTooltip')" />
                 </div>
             </div>
 
@@ -1397,7 +1402,7 @@ onBeforeUnmount(() => {
                 <!-- SIDEBAR DE NAVIGATION (STEPPER) -->
                 <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
                     <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100">
-                        Phases de conception
+                        {{ t('pages.courses.designPhasesLabel') }}
                     </div>
 
                     <div class="p-4 flex-1 space-y-2">
@@ -1438,9 +1443,9 @@ onBeforeUnmount(() => {
                                 <i :class="isEntireFormValid ? 'pi pi-check' : 'pi pi-exclamation-triangle'" class="text-lg"></i>
                             </div>
                             <div>
-                                <div class="text-xs font-bold text-slate-800">{{ isEntireFormValid ? 'Prêt à publier' : 'Informations requises' }}</div>
+                                <div class="text-xs font-bold text-slate-800">{{ isEntireFormValid ? t('pages.courses.readyToPublish') : t('pages.courses.requiredInfo') }}</div>
                                 <div class="text-[10px] text-slate-500 leading-tight mt-0.5">
-                                    {{ isEntireFormValid ? 'Tous les critères obligatoires sont remplis.' : 'Complétez les sections avec un avertissement.' }}
+                                    {{ isEntireFormValid ? t('pages.courses.readyToPublishHint') : t('pages.courses.requiredInfoHint') }}
                                 </div>
                             </div>
                         </div>
@@ -1461,36 +1466,36 @@ onBeforeUnmount(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Identité & Positionnement</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Les informations de base visibles sur la marketplace.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.courses.identitySectionTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.courses.identitySectionDesc') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     <!-- Titre -->
                                     <div class="col-span-1 md:col-span-2 space-y-2">
-                                        <label for="course_title" class="block text-sm font-bold text-slate-700">Titre de la formation <span class="text-red-500" aria-label="requis">*</span></label>
-                                        <InputText id="course_title" v-model="courseForm.title" @input="generateCourseSlug" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50/50 border-slate-300 focus:bg-white transition-colors" placeholder="Ex: Masterclass Vue.js 3 - De Zéro à Héros" :class="{'p-invalid': !courseForm.title || courseForm.title.length < 3}" aria-describedby="title-help" />
+                                        <label for="course_title" class="block text-sm font-bold text-slate-700">{{ t('pages.courses.titleLabel') }} <span class="text-red-500" :aria-label="t('pages.courses.requiredAria')">*</span></label>
+                                        <InputText id="course_title" v-model="courseForm.title" @input="generateCourseSlug" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50/50 border-slate-300 focus:bg-white transition-colors" :placeholder="t('pages.courses.titleExamplePlaceholder')" :class="{'p-invalid': !courseForm.title || courseForm.title.length < 3}" aria-describedby="title-help" />
                                         <div class="flex justify-between mt-1">
-                                            <small id="title-help" class="text-slate-500 font-medium text-[11px]"><i class="pi pi-info-circle mr-1"></i>Un titre clair et incluant des mots-clés convertit mieux.</small>
+                                            <small id="title-help" class="text-slate-500 font-medium text-[11px]"><i class="pi pi-info-circle mr-1"></i>{{ t('pages.courses.titleHelpText') }}</small>
                                             <small class="font-mono text-[10px]" :class="courseForm.title.length > 60 ? 'text-amber-500' : 'text-slate-400'">{{ courseForm.title.length }}/60</small>
                                         </div>
                                     </div>
 
                                     <!-- Slug -->
                                     <div class="col-span-1 md:col-span-2 space-y-2">
-                                        <label for="course_slug" class="block text-sm font-bold text-slate-700">Permalien (URL Slug)</label>
+                                        <label for="course_slug" class="block text-sm font-bold text-slate-700">{{ t('pages.courses.slugLabel') }}</label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-link text-slate-400" />
                                             <InputText id="course_slug" v-model="courseForm.slug" class="w-full bg-slate-100 text-slate-600 font-mono text-sm border-transparent focus:border-blue-400" placeholder="masterclass-vuejs-3" />
                                         </IconField>
-                                        <small class="text-slate-500 text-[11px]">L'URL publique sera : <code>https://lms.subnetcongo.com/courses/<strong>{{ courseForm.slug || '...' }}</strong></code></small>
+                                        <small class="text-slate-500 text-[11px]">{{ t('pages.courses.slugUrlHelp') }} <code>https://lms.subnetcongo.com/courses/<strong>{{ courseForm.slug || '...' }}</strong></code></small>
                                     </div>
 
                                     <!-- Résumé Court -->
                                     <div class="col-span-1 md:col-span-2 space-y-2 mt-2">
-                                        <label for="course_short_info" class="block text-sm font-bold text-slate-700">Accroche (Sous-titre / Résumé)</label>
-                                        <Textarea id="course_short_info" v-model="courseForm.short_info" rows="3" class="w-full p-3 bg-slate-50 border-slate-300 focus:bg-white" placeholder="Résumez la promesse pédagogique de cette formation en 2 ou 3 phrases percutantes..." maxlength="250" />
+                                        <label for="course_short_info" class="block text-sm font-bold text-slate-700">{{ t('pages.courses.shortInfoLabel') }}</label>
+                                        <Textarea id="course_short_info" v-model="courseForm.short_info" rows="3" class="w-full p-3 bg-slate-50 border-slate-300 focus:bg-white" :placeholder="t('pages.courses.shortInfoPlaceholder')" maxlength="250" />
                                         <div class="flex justify-end mt-1">
                                             <small class="font-mono text-[10px] text-slate-400">{{ courseForm.short_info.length }}/250</small>
                                         </div>
@@ -1498,14 +1503,14 @@ onBeforeUnmount(() => {
 
                                     <!-- Description Longue (Rich Text) -->
                                     <div class="col-span-1 md:col-span-2 space-y-2 mt-2">
-                                        <label class="block text-sm font-bold text-slate-700">Description Détaillée (Page de vente)</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.descriptionLabel') }}</label>
                                         <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm group hover:border-blue-300 transition-colors">
                                             <Editor
                                                 ref="editorRef"
                                                 v-model="courseForm.description"
                                                 @load="forceEditorLoad"
                                                 editorStyle="height: 300px; font-family: 'Inter', sans-serif;"
-                                                placeholder="Détaillez le programme, les objectifs, à qui s'adresse ce cours..." />
+                                                :placeholder="t('pages.courses.descriptionPlaceholder')" />
                                         </div>
                                     </div>
                                 </div>
@@ -1516,31 +1521,31 @@ onBeforeUnmount(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-tags"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Taxinomie & Niveau</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Aidez les apprenants à trouver ce contenu facilement.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.courses.taxonomySectionTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.courses.taxonomySectionDesc') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Catégorie Principale <span class="text-red-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.mainCategoryLabel') }} <span class="text-red-500">*</span></label>
                                         <div class="flex items-center gap-2">
-                                            <Dropdown v-model="courseForm.category_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Sélectionnez un domaine..." class="flex-1 border-slate-300 font-medium" filter filterPlaceholder="Chercher une catégorie..." :class="{'p-invalid': !courseForm.category_id}">
+                                            <Dropdown v-model="courseForm.category_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.categorySelectPlaceholder')" class="flex-1 border-slate-300 font-medium" filter :filterPlaceholder="t('pages.courses.categorySearchFilter')" :class="{'p-invalid': !courseForm.category_id}">
                                                 <template #value="slotProps">
                                                     <div v-if="slotProps.value" class="flex items-center gap-2">
                                                         <i class="pi pi-folder text-slate-400"></i>
                                                         <span>{{ props.categories.find(c => c.id === slotProps.value)?.name }}</span>
                                                     </div>
-                                                    <span v-else class="text-slate-400">Sélectionnez...</span>
+                                                    <span v-else class="text-slate-400">{{ t('pages.courses.selectEllipsis') }}</span>
                                                 </template>
                                             </Dropdown>
-                                            <Button icon="pi pi-plus" class="p-button-secondary bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 h-12 w-12 flex-shrink-0" v-tooltip.top="'Créer une nouvelle catégorie'" @click="openCategoryDialog" />
+                                            <Button icon="pi pi-plus" class="p-button-secondary bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 h-12 w-12 flex-shrink-0" v-tooltip.top="t('pages.courses.createCategoryTooltip')" @click="openCategoryDialog" />
                                         </div>
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Niveau de Difficulté</label>
-                                        <SelectButton v-model="courseForm.level" :options="props.levels" optionLabel="label" optionValue="value" aria-labelledby="basic" class="w-full flex">
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.difficultyLabel') }}</label>
+                                        <SelectButton v-model="courseForm.level" :options="levelOptions" optionLabel="label" optionValue="value" aria-labelledby="basic" class="w-full flex">
                                             <template #option="slotProps">
                                                 <div class="flex flex-col items-center justify-center p-1 py-2 gap-1 w-full">
                                                     <i :class="slotProps.option.icon" class="text-sm"></i>
@@ -1558,25 +1563,25 @@ onBeforeUnmount(() => {
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-money-bill"></i></div>
                                         <div>
-                                            <h3 class="text-lg font-bold text-slate-800 leading-none">Modèle Économique (Pricing)</h3>
-                                            <p class="text-xs text-slate-500 mt-1">Définissez la valeur monétaire de cette formation.</p>
+                                            <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.courses.pricingSectionTitle') }}</h3>
+                                            <p class="text-xs text-slate-500 mt-1">{{ t('pages.courses.pricingSectionDesc') }}</p>
                                         </div>
                                     </div>
-                                    <Badge v-if="courseForm.price === 0" value="Gratuit" severity="success"></Badge>
-                                    <Badge v-else value="Payant" severity="warning"></Badge>
+                                    <Badge v-if="courseForm.price === 0" :value="t('pages.courses.freeBadgeShort')" severity="success"></Badge>
+                                    <Badge v-else :value="t('pages.courses.paidBadgeShort')" severity="warning"></Badge>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Prix Standard (Valeur réelle)</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.standardPriceLabel') }}</label>
                                         <InputNumber v-model="courseForm.price" mode="currency" currency="USD" locale="en-US" class="w-full" :min="0" :pt="{ input: { class: 'text-xl font-black text-slate-800 p-4' } }" placeholder="$0.00" />
-                                        <small class="text-slate-500 text-[11px] block mt-1">Laissez à 0 pour offrir le cours gratuitement.</small>
+                                        <small class="text-slate-500 text-[11px] block mt-1">{{ t('pages.courses.freePriceHint') }}</small>
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Prix Promo (Optionnel)</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.promoPriceLabel') }}</label>
                                         <InputNumber v-model="courseForm.promo_price" mode="currency" currency="USD" locale="en-US" class="w-full" :min="0" :max="courseForm.price || undefined" :pt="{ input: { class: 'text-xl font-black text-red-600 p-4' } }" placeholder="$0.00" :disabled="!courseForm.price || courseForm.price === 0" />
-                                        <small class="text-slate-500 text-[11px] block mt-1">Doit être inférieur au prix standard. Crée un effet barré.</small>
+                                        <small class="text-slate-500 text-[11px] block mt-1">{{ t('pages.courses.promoPriceHint') }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -1589,7 +1594,7 @@ onBeforeUnmount(() => {
 
                             <!-- Vignette -->
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4">Cover / Image à la Une</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4">{{ t('pages.courses.coverTitle') }}</h3>
 
                                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 mt-6">
     <div class="lg:col-span-2">
@@ -1605,8 +1610,8 @@ onBeforeUnmount(() => {
           <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
             <i class="pi pi-cloud-upload text-2xl text-blue-300"></i>
           </div>
-          <p class="text-sm font-bold text-slate-600 mb-1">Aucune image sélectionnée</p>
-          <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Preview 16:9</p>
+          <p class="text-sm font-bold text-slate-600 mb-1">{{ t('pages.courses.noImageSelected') }}</p>
+          <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400">{{ t('pages.courses.previewAspect') }}</p>
         </div>
 
         <!-- Overlay interaction -->
@@ -1617,7 +1622,7 @@ onBeforeUnmount(() => {
             :maxFileSize="2000000"
             customUpload
             @select="onThumbnailSelect"
-            chooseLabel="Remplacer l'image"
+            :chooseLabel="t('pages.courses.replaceImageLabel')"
             class="p-button-sm p-button-rounded font-bold shadow-xl"
             auto
           />
@@ -1641,15 +1646,15 @@ onBeforeUnmount(() => {
 
     <div class="lg:col-span-3 flex flex-col justify-center space-y-6">
       <div>
-        <h4 class="font-bold text-slate-800 text-sm mb-2">Instructions pour la vignette</h4>
-        <p class="text-sm text-slate-500 leading-relaxed">Cette image sera la première chose que vos futurs apprenants verront. Une image de haute qualité augmente considérablement le taux de conversion.</p>
+        <h4 class="font-bold text-slate-800 text-sm mb-2">{{ t('pages.courses.thumbnailInstructionsTitle') }}</h4>
+        <p class="text-sm text-slate-500 leading-relaxed">{{ t('pages.courses.thumbnailInstructionsText') }}</p>
       </div>
 
       <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
         <ul class="space-y-3 text-sm text-slate-600">
-          <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>Ratio & Dimensions :</strong> 16:9 recommandé (1920x1080px ou 1280x720px).</li>
-          <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>Formats acceptés :</strong> .JPG, .PNG, .WebP.</li>
-          <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>Poids maximum :</strong> 2 Mo (optimisation automatique à l'upload).</li>
+          <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>{{ t('pages.courses.thumbnailRatioLabel') }}</strong> {{ t('pages.courses.thumbnailRatioText') }}</li>
+          <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>{{ t('pages.courses.thumbnailFormatsLabel') }}</strong> {{ t('pages.courses.thumbnailFormatsText') }}</li>
+          <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>{{ t('pages.courses.thumbnailMaxWeightLabel') }}</strong> {{ t('pages.courses.thumbnailMaxWeightText') }}</li>
         </ul>
       </div>
 <!--       
@@ -1660,7 +1665,7 @@ onBeforeUnmount(() => {
           :maxFileSize="2000000"
           customUpload
           @select="onThumbnailSelect"
-          chooseLabel="Parcourir les fichiers de votre ordinateur"
+          :chooseLabel="t('pages.courses.browseLocalFiles')"
           class="p-button-outlined p-button-secondary w-full border-dashed border-2 font-bold hover:bg-slate-50 py-3"
           auto
         />
@@ -1672,11 +1677,11 @@ onBeforeUnmount(() => {
 
                             <!-- Vidéo Promo -->
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4">Vidéo Teaser (Bande Annonce)</h3>
-                                <p class="text-sm text-slate-500 mb-6 mt-2">Les cours avec une vidéo de présentation ont en moyenne 35% d'inscriptions en plus.</p>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4">{{ t('pages.courses.teaserTitle') }}</h3>
+                                <p class="text-sm text-slate-500 mb-6 mt-2">{{ t('pages.courses.teaserDesc') }}</p>
 
                                 <div class="space-y-4">
-                                    <label class="block text-sm font-bold text-slate-700">URL du flux vidéo (YouTube, Vimeo, AWS S3)</label>
+                                    <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.videoUrlLabel') }}</label>
                                     <IconField iconPosition="left">
                                         <InputIcon class="pi pi-youtube text-red-500" />
                                         <InputText v-model="courseForm.preview_video_url" class="w-full p-4 font-mono text-sm bg-slate-50 border-slate-300" placeholder="https://www.youtube.com/watch?v=..." />
@@ -1685,8 +1690,8 @@ onBeforeUnmount(() => {
                                     <div v-if="courseForm.preview_video_url" class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-4">
                                         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100"><i class="pi pi-play text-blue-600"></i></div>
                                         <div>
-                                            <div class="font-bold text-sm text-slate-700">Vidéo détectée</div>
-                                            <a :href="courseForm.preview_video_url" target="_blank" class="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-0.5"><i class="pi pi-external-link text-[10px]"></i> Tester le lien</a>
+                                            <div class="font-bold text-sm text-slate-700">{{ t('pages.courses.videoDetected') }}</div>
+                                            <a :href="courseForm.preview_video_url" target="_blank" class="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-0.5"><i class="pi pi-external-link text-[10px]"></i> {{ t('pages.courses.testLink') }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -1700,12 +1705,12 @@ onBeforeUnmount(() => {
 
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-30">
                                 <div>
-                                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="pi pi-sitemap text-blue-600"></i> Syllabus & Scénario Pédagogique</h3>
-                                    <p class="text-sm text-slate-500 mt-1 max-w-xl">Structurez votre expertise en chapitres (Modules) et ajoutez-y des contenus interactifs (Leçons, Quiz, Exercices).</p>
+                                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="pi pi-sitemap text-blue-600"></i> {{ t('pages.courses.syllabusTitle') }}</h3>
+                                    <p class="text-sm text-slate-500 mt-1 max-w-xl">{{ t('pages.courses.syllabusDesc') }}</p>
                                 </div>
                                 <div class="flex gap-2 w-full md:w-auto">
-                                    <Button label="Générer avec l'IA" icon="pi pi-sparkles" class="p-button-outlined p-button-help bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hidden xl:flex font-bold text-sm" v-tooltip.top="'Beta : Générer un plan de cours auto.'" />
-                                    <Button label="Ajouter un Module" icon="pi pi-plus" class="p-button-primary shadow-md shadow-blue-500/20 font-bold px-5 w-full md:w-auto" @click="addSection" />
+                                    <Button :label="t('pages.courses.generateAiButton')" icon="pi pi-sparkles" class="p-button-outlined p-button-help bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hidden xl:flex font-bold text-sm" v-tooltip.top="t('pages.courses.generateAiTooltip')" />
+                                    <Button :label="t('pages.courses.addModuleButton')" icon="pi pi-plus" class="p-button-primary shadow-md shadow-blue-500/20 font-bold px-5 w-full md:w-auto" @click="addSection" />
                                 </div>
                             </div>
 
@@ -1714,9 +1719,9 @@ onBeforeUnmount(() => {
                                 <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
                                     <i class="pi pi-objects-column text-4xl text-blue-400"></i>
                                 </div>
-                                <h4 class="text-2xl font-black text-slate-800 mb-3">Toile pédagogique vierge</h4>
-                                <p class="text-slate-500 mb-8 max-w-lg text-base leading-relaxed">Un cours structuré commence par un premier grand chapitre. Créez votre premier module pour débuter l'ingénierie de votre formation.</p>
-                                <Button label="Créer le premier Module (Chapitre 1)" icon="pi pi-plus" class="p-button-outlined p-button-lg font-bold border-2 text-blue-600 hover:bg-blue-50" @click="addSection" />
+                                <h4 class="text-2xl font-black text-slate-800 mb-3">{{ t('pages.courses.emptyCurriculumTitle') }}</h4>
+                                <p class="text-slate-500 mb-8 max-w-lg text-base leading-relaxed">{{ t('pages.courses.emptyCurriculumDesc') }}</p>
+                                <Button :label="t('pages.courses.createFirstModuleButton')" icon="pi pi-plus" class="p-button-outlined p-button-lg font-bold border-2 text-blue-600 hover:bg-blue-50" @click="addSection" />
                             </div>
 
                             <!-- Liste des Modules -->
@@ -1732,15 +1737,15 @@ onBeforeUnmount(() => {
                                         </div>
 
                                         <div class="bg-blue-100 text-blue-700 font-black text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-md flex-shrink-0 border border-blue-200">
-                                            Module {{ sIdx + 1 }}
+                                            {{ t('pages.courses.moduleBadge') }} {{ sIdx + 1 }}
                                         </div>
 
-                                        <InputText v-model="section.title" class="flex-1 font-extrabold text-slate-800 bg-transparent border-transparent hover:border-slate-300 focus:bg-white text-lg p-2 transition-colors focus:ring-0" placeholder="Titre du module (ex: Les bases du langage)..." />
+                                        <InputText v-model="section.title" class="flex-1 font-extrabold text-slate-800 bg-transparent border-transparent hover:border-slate-300 focus:bg-white text-lg p-2 transition-colors focus:ring-0" :placeholder="t('pages.courses.moduleTitlePlaceholder')" />
 
                                         <div class="flex items-center gap-2 opacity-0 group-hover/module:opacity-100 transition-opacity flex-shrink-0">
-                                            <Badge :value="`${section.lessons?.length || 0} leçons`" severity="secondary" class="text-[10px] bg-white text-slate-600 border border-slate-200"></Badge>
+                                            <Badge :value="t('pages.courses.lessonsBadge', { n: section.lessons?.length || 0 })" severity="secondary" class="text-[10px] bg-white text-slate-600 border border-slate-200"></Badge>
                                             <div class="w-px h-5 bg-slate-300 mx-1"></div>
-                                            <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded bg-white hover:bg-red-50 w-9 h-9" @click="removeSection(sIdx)" v-tooltip.top="'Supprimer ce module entier'" />
+                                            <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded bg-white hover:bg-red-50 w-9 h-9" @click="removeSection(sIdx)" v-tooltip.top="t('pages.courses.deleteModuleTooltip')" />
                                         </div>
                                     </div>
 
@@ -1750,18 +1755,18 @@ onBeforeUnmount(() => {
                                         <!-- 1. DESCRIPTION & TEXTE DU MODULE -->
                                         <div class="bg-slate-50/50 rounded-xl border border-slate-200 p-5 space-y-4">
                                             <h4 class="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                                                <i class="pi pi-file-edit text-blue-500"></i> Contenu du Module
+                                                <i class="pi pi-file-edit text-blue-500"></i> {{ t('pages.courses.moduleContentTitle') }}
                                             </h4>
-                                            
+
                                             <div class="space-y-2">
-                                                <label class="block text-xs font-bold text-slate-600">Description courte</label>
-                                                <InputText v-model="section.description" class="w-full bg-white border-slate-200" placeholder="Résumé du module en une phrase..." />
+                                                <label class="block text-xs font-bold text-slate-600">{{ t('pages.courses.shortDescLabel') }}</label>
+                                                <InputText v-model="section.description" class="w-full bg-white border-slate-200" :placeholder="t('pages.courses.moduleDescPlaceholder')" />
                                             </div>
 
                                             <div class="space-y-2">
-                                                <label class="block text-xs font-bold text-slate-600">Texte principal du module <span class="text-red-500">*</span></label>
-                                                <Textarea v-model="section.text_content" rows="4" class="w-full bg-white border-slate-200 font-mono text-sm" placeholder="Contenu textuel, consignes, théorie, transcription vidéo..."></Textarea>
-                                                <div class="text-[10px] text-slate-400">Ce texte est affiché en haut du module avant les contenus multimédias.</div>
+                                                <label class="block text-xs font-bold text-slate-600">{{ t('pages.courses.moduleTextLabel') }} <span class="text-red-500">*</span></label>
+                                                <Textarea v-model="section.text_content" rows="4" class="w-full bg-white border-slate-200 font-mono text-sm" :placeholder="t('pages.courses.moduleTextPlaceholder')"></Textarea>
+                                                <div class="text-[10px] text-slate-400">{{ t('pages.courses.moduleTextHelp') }}</div>
                                             </div>
                                         </div>
 
@@ -1771,18 +1776,18 @@ onBeforeUnmount(() => {
                                             <div class="bg-red-50/30 rounded-xl border border-red-200 p-4 space-y-3">
                                                 <div class="flex items-center justify-between">
                                                     <label class="text-xs font-black text-red-700 uppercase tracking-wider flex items-center gap-2">
-                                                        <i class="pi pi-video"></i> Vidéo d'introduction
+                                                        <i class="pi pi-video"></i> {{ t('pages.courses.introVideoLabel') }}
                                                     </label>
                                                     <ToggleSwitch v-model="section.has_intro_video" />
                                                 </div>
                                                 
                                                 <div v-if="section.has_intro_video" class="space-y-3">
                                                     <div class="space-y-1">
-                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Titre de la vidéo</label>
-                                                        <InputText v-model="section.intro_video_title" class="w-full bg-white border-slate-200 text-xs" placeholder="Ex: Présentation du module" />
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.videoTitleLabel') }}</label>
+                                                        <InputText v-model="section.intro_video_title" class="w-full bg-white border-slate-200 text-xs" :placeholder="t('pages.courses.videoTitlePlaceholder')" />
                                                     </div>
                                                     <div class="space-y-1">
-                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">URL (YouTube / Vimeo / Lien direct)</label>
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.urlLabel') }}</label>
                                                         <InputText v-model="section.intro_video_url" class="w-full bg-white border-slate-200 text-xs font-mono" placeholder="https://www.youtube.com/watch?v=..." />
                                                     </div>
                                                 </div>
@@ -1792,19 +1797,19 @@ onBeforeUnmount(() => {
                                             <div class="bg-blue-50/30 rounded-xl border border-blue-200 p-4 space-y-3">
                                                 <div class="flex items-center justify-between">
                                                     <label class="text-xs font-black text-blue-700 uppercase tracking-wider flex items-center gap-2">
-                                                        <i class="pi pi-file-pdf"></i> Document du module
+                                                        <i class="pi pi-file-pdf"></i> {{ t('pages.courses.documentModuleLabel') }}
                                                     </label>
                                                     <ToggleSwitch v-model="section.has_document" />
                                                 </div>
                                                 
                                                 <div v-if="section.has_document" class="space-y-3">
                                                     <div class="space-y-1">
-                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du document</label>
-                                                        <InputText v-model="section.document_title" class="w-full bg-white border-slate-200 text-xs" placeholder="Ex: Guide pratique PDF" />
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.documentTitleLabel') }}</label>
+                                                        <InputText v-model="section.document_title" class="w-full bg-white border-slate-200 text-xs" :placeholder="t('pages.courses.documentTitlePlaceholder')" />
                                                     </div>
                                                     <div class="space-y-1">
-                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">URL ou fichier</label>
-                                                        <InputText v-model="section.document_url" class="w-full bg-white border-slate-200 text-xs font-mono" placeholder="https://... ou /storage/..." />
+                                                        <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.urlOrFileLabel') }}</label>
+                                                        <InputText v-model="section.document_url" class="w-full bg-white border-slate-200 text-xs font-mono" :placeholder="t('pages.courses.documentUrlPlaceholder')" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1814,13 +1819,13 @@ onBeforeUnmount(() => {
                                         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                             <div class="bg-slate-50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
                                                 <h4 class="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                                                    <i class="pi pi-objects-column text-blue-500"></i> Contenus du module
+                                                    <i class="pi pi-objects-column text-blue-500"></i> {{ t('pages.courses.moduleContentsTitle') }}
                                                 </h4>
                                                 <div class="flex gap-2">
-                                                    <Button icon="pi pi-video" class="p-button-sm p-button-outlined p-button-danger text-red-600 border-red-200 hover:bg-red-50" @click="addLesson(sIdx, 'video')" v-tooltip.top="'Ajouter une vidéo'" />
-                                                    <Button icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-info text-blue-600 border-blue-200 hover:bg-blue-50" @click="addLesson(sIdx, 'document')" v-tooltip.top="'Ajouter un document'" />
-                                                    <Button icon="pi pi-check-square" class="p-button-sm p-button-outlined p-button-success text-emerald-600 border-emerald-200 hover:bg-emerald-50" @click="addLesson(sIdx, 'quiz')" v-tooltip.top="'Ajouter un quiz'" />
-                                                    <Button icon="pi pi-align-left" class="p-button-sm p-button-outlined p-button-secondary text-slate-600 border-slate-200 hover:bg-slate-50" @click="addLesson(sIdx, 'text')" v-tooltip.top="'Ajouter du texte'" />
+                                                    <Button icon="pi pi-video" class="p-button-sm p-button-outlined p-button-danger text-red-600 border-red-200 hover:bg-red-50" @click="addLesson(sIdx, 'video')" v-tooltip.top="t('pages.courses.addVideoTooltip')" />
+                                                    <Button icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-info text-blue-600 border-blue-200 hover:bg-blue-50" @click="addLesson(sIdx, 'document')" v-tooltip.top="t('pages.courses.addDocumentTooltip')" />
+                                                    <Button icon="pi pi-check-square" class="p-button-sm p-button-outlined p-button-success text-emerald-600 border-emerald-200 hover:bg-emerald-50" @click="addLesson(sIdx, 'quiz')" v-tooltip.top="t('pages.courses.addQuizTooltip')" />
+                                                    <Button icon="pi pi-align-left" class="p-button-sm p-button-outlined p-button-secondary text-slate-600 border-slate-200 hover:bg-slate-50" @click="addLesson(sIdx, 'text')" v-tooltip.top="t('pages.courses.addTextTooltip')" />
                                                 </div>
                                             </div>
 
@@ -1841,10 +1846,10 @@ onBeforeUnmount(() => {
                                                             <div class="flex items-center gap-2">
                                                                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded border border-slate-200">
                                                                     <i class="pi pi-clock text-slate-400 text-[10px]"></i>
-                                                                    <InputNumber v-model="block.duration_minutes" class="w-14 h-7 text-xs" placeholder="min" :pt="{ input: { class: 'p-1 text-xs text-center' } }" />
+                                                                    <InputNumber v-model="block.duration_minutes" class="w-14 h-7 text-xs" :placeholder="t('pages.courses.minutesShort')" :pt="{ input: { class: 'p-1 text-xs text-center' } }" />
                                                                 </div>
                                                                 <ToggleSwitch v-model="block.is_free" />
-                                                                <span class="text-[10px] uppercase font-bold" :class="block.is_free ? 'text-emerald-600' : 'text-slate-400'">Extrait</span>
+                                                                <span class="text-[10px] uppercase font-bold" :class="block.is_free ? 'text-emerald-600' : 'text-slate-400'">{{ t('pages.courses.extractLabel') }}</span>
                                                                 <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm p-button-rounded w-7 h-7" @click="removeLesson(sIdx, bIdx)" />
                                                             </div>
                                                         </div>
@@ -1855,52 +1860,52 @@ onBeforeUnmount(() => {
                                                             <!-- Video Block -->
                                                             <div v-if="block.type === 'video'" class="space-y-3">
                                                                 <div class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Source vidéo</label>
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.videoSourceLabel') }}</label>
                                                                     <SelectButton v-model="block.video_source" :options="['youtube', 'vimeo', 's3', 'wistia']" class="w-full" />
                                                                 </div>
                                                                 <div class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">URL de la vidéo</label>
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.videoUrlBlockLabel') }}</label>
                                                                     <InputText v-model="block.video_url" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="https://www.youtube.com/watch?v=..." />
                                                                 </div>
                                                                 <div class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Durée (secondes)</label>
-                                                                    <InputNumber v-model="block.video_duration" class="w-full bg-slate-50 border-slate-200" placeholder="Durée en secondes" />
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.durationSecondsLabel') }}</label>
+                                                                    <InputNumber v-model="block.video_duration" class="w-full bg-slate-50 border-slate-200" :placeholder="t('pages.courses.durationSecondsPlaceholder')" />
                                                                 </div>
                                                             </div>
 
                                                             <!-- Document Block -->
                                                             <div v-if="block.type === 'document'" class="space-y-3">
                                                                 <div class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du document</label>
-                                                                    <InputText v-model="block.document_title" class="w-full bg-slate-50 border-slate-200 text-xs" placeholder="Titre affiché à l'apprenant" />
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.documentTitleLabel') }}</label>
+                                                                    <InputText v-model="block.document_title" class="w-full bg-slate-50 border-slate-200 text-xs" :placeholder="t('pages.courses.documentTitleShownPlaceholder')" />
                                                                 </div>
                                                                 
                                                                 <!-- Toggle URL / Fichier -->
                                                                 <div class="bg-slate-100 rounded-lg p-1 flex gap-1">
                                                                     <button type="button" @click="block.document_mode = 'url'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.document_mode === 'url' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
-                                                                        <i class="pi pi-link mr-1"></i> Lien URL
+                                                                        <i class="pi pi-link mr-1"></i> {{ t('pages.courses.urlLinkButton') }}
                                                                     </button>
                                                                     <button type="button" @click="block.document_mode = 'file'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.document_mode === 'file' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
-                                                                        <i class="pi pi-upload mr-1"></i> Importer
+                                                                        <i class="pi pi-upload mr-1"></i> {{ t('pages.courses.importButton') }}
                                                                     </button>
                                                                 </div>
                                                                 
                                                                 <!-- Mode URL -->
                                                                 <div v-if="block.document_mode === 'url'" class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">URL du document</label>
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.documentUrlBlockLabel') }}</label>
                                                                     <InputText v-model="block.document_url" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="https://..." />
                                                                 </div>
                                                                 
                                                                 <!-- Mode Fichier -->
                                                                 <div v-if="block.document_mode === 'file'" class="space-y-1">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Fichier à importer</label>
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.fileToImportLabel') }}</label>
                                                                     <FileUpload 
                                                                         mode="basic" 
                                                                         accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar"
                                                                         :maxFileSize="10000000"
                                                                         customUpload
                                                                         @select="onDocumentSelect($event, sIdx, bIdx)"
-                                                                        chooseLabel="Sélectionner un fichier"
+                                                                        :chooseLabel="t('pages.courses.selectFileLabel')"
                                                                         class="p-button-outlined p-button-secondary w-full border-dashed border-2"
                                                                         auto
                                                                     />
@@ -1915,69 +1920,69 @@ onBeforeUnmount(() => {
                                                                 <!-- Tabs: Nouveau quiz / Quiz existant -->
                                                                 <div class="bg-slate-100 rounded-lg p-1 flex gap-1">
                                                                     <button type="button" @click="block.quiz_mode = 'new'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.quiz_mode === 'new' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
-                                                                        <i class="pi pi-plus mr-1"></i> Créer
+                                                                        <i class="pi pi-plus mr-1"></i> {{ t('pages.courses.createButton') }}
                                                                     </button>
                                                                     <button type="button" @click="block.quiz_mode = 'existing'" :class="['flex-1 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all', block.quiz_mode === 'existing' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700']">
-                                                                        <i class="pi pi-check-square mr-1"></i> Choisir
+                                                                        <i class="pi pi-check-square mr-1"></i> {{ t('pages.courses.chooseButton') }}
                                                                     </button>
                                                                 </div>
 
                                                                  <!-- Mode: Créer un nouveau quiz -->
                                                                  <div v-if="block.quiz_mode === 'new'" class="space-y-3 border border-emerald-100 rounded-xl p-4 bg-emerald-50/30">
                                                                      <div class="space-y-1">
-                                                                         <label class="text-[10px] font-bold text-slate-500 uppercase">Titre du quiz</label>
-                                                                         <InputText v-model="block.new_quiz_title" class="w-full bg-white border-slate-200 text-xs" placeholder="Ex: Quiz de validation Module 1" />
+                                                                         <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.quizTitleLabel') }}</label>
+                                                                         <InputText v-model="block.new_quiz_title" class="w-full bg-white border-slate-200 text-xs" :placeholder="t('pages.courses.quizTitlePlaceholder')" />
                                                                      </div>
                                                                      
                                                                      <div class="space-y-2">
-                                                                         <label class="text-[10px] font-bold text-slate-500 uppercase">Questions</label>
+                                                                         <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.questionsLabel') }}</label>
                                                                          
                                                                          <div v-if="block.questions && block.questions.length > 0" class="space-y-3">
                                                                              <div v-for="(q, qIdx) in block.questions" :key="qIdx" class="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
                                                                                  <div class="flex items-center justify-between">
                                                                                      <span class="text-[10px] font-bold text-slate-500">Q{{ qIdx + 1 }}</span>
                                                                                      <div class="flex items-center gap-2">
-                                                                                         <Dropdown v-model="q.type" :options="[
-                                                                                             { label: 'QCM', value: 'multiple_choice' },
-                                                                                             { label: 'Vrai/Faux', value: 'true_false' },
-                                                                                             { label: 'Réponse courte', value: 'short_answer' }
-                                                                                         ]" optionLabel="label" optionValue="value" class="w-32 h-7 text-[10px]" />
+                                                                                          <Dropdown v-model="q.type" :options="[
+                                                                                              { label: t('pages.courses.qcmOption'), value: 'multiple_choice' },
+                                                                                              { label: t('pages.courses.trueFalseOption'), value: 'true_false' },
+                                                                                              { label: t('pages.courses.shortAnswerOption'), value: 'short_answer' }
+                                                                                          ]" optionLabel="label" optionValue="value" class="w-32 h-7 text-[10px]" />
                                                                                          <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm p-button-rounded w-6 h-6" @click="removeQuestion(block, qIdx)" />
                                                                                      </div>
                                                                                  </div>
-                                                                                 <InputText v-model="q.text" class="w-full bg-slate-50 border-slate-200 text-xs" placeholder="Texte de la question..." />
+                                                                                  <InputText v-model="q.text" class="w-full bg-slate-50 border-slate-200 text-xs" :placeholder="t('pages.courses.questionTextPlaceholder')" />
                                                                                  
                                                                                  <!-- QCM -->
                                                                                  <div v-if="q.type === 'multiple_choice'" class="space-y-1">
                                                                                      <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-2">
                                                                                          <RadioButton v-model="q.correct_answer" :value="String(oIdx)" :inputId="`q${qIdx}_o${oIdx}`" />
-                                                                                         <InputText v-model="q.options[oIdx]" class="flex-1 bg-slate-50 border-slate-200 text-xs" :placeholder="'Option ' + (oIdx + 1)" />
+                                                                                          <InputText v-model="q.options[oIdx]" class="flex-1 bg-slate-50 border-slate-200 text-xs" :placeholder="t('pages.courses.optionPlaceholder', { n: oIdx + 1 })" />
                                                                                          <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm w-6 h-6" @click="removeQuestionOption(q, oIdx)" v-if="q.options.length > 2" />
                                                                                      </div>
-                                                                                     <Button icon="pi pi-plus" label="Ajouter option" class="p-button-text p-button-sm text-xs" @click="addQuestionOption(q)" />
+                                                                                      <Button icon="pi pi-plus" :label="t('pages.courses.addOptionButton')" class="p-button-text p-button-sm text-xs" @click="addQuestionOption(q)" />
                                                                                  </div>
                                                                                  
                                                                                  <!-- Vrai/Faux -->
                                                                                  <div v-if="q.type === 'true_false'" class="flex justify-center">
-                                                                                     <SelectButton v-model="q.correct_answer" :options="[{label:'VRAI', value:'true'}, {label:'FAUX', value:'false'}]" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 font-black py-2 bg-white text-xs' } }" />
+                                                                                      <SelectButton v-model="q.correct_answer" :options="[{label: t('pages.courses.trueLabel'), value:'true'}, {label: t('pages.courses.falseLabel'), value:'false'}]" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 font-black py-2 bg-white text-xs' } }" />
                                                                                  </div>
                                                                                  
                                                                                  <!-- Réponse courte -->
                                                                                  <div v-if="q.type === 'short_answer'" class="space-y-1">
-                                                                                     <label class="text-[9px] font-bold text-slate-400 uppercase">Réponse attendue</label>
-                                                                                     <InputText v-model="q.correct_answer" class="w-full bg-slate-50 border-slate-200 text-xs font-mono" placeholder="Mot-clé exact..." />
+                                                                                      <label class="text-[9px] font-bold text-slate-400 uppercase">{{ t('pages.courses.expectedAnswerLabel') }}</label>
+                                                                                      <InputText v-model="q.correct_answer" class="w-full bg-slate-50 border-slate-200 text-xs font-mono" :placeholder="t('pages.courses.exactKeywordPlaceholder')" />
                                                                                  </div>
                                                                              </div>
                                                                          </div>
                                                                          
-                                                                         <Button icon="pi pi-plus" label="Ajouter une question" class="p-button-outlined p-button-sm w-full border-dashed border-2" @click="addQuestion(block)" />
+                                                                          <Button icon="pi pi-plus" :label="t('pages.courses.addQuestionButton')" class="p-button-outlined p-button-sm w-full border-dashed border-2" @click="addQuestion(block)" />
                                                                      </div>
                                                                  </div>
 
                                                                 <!-- Mode: Choisir un quiz existant -->
                                                                 <div v-if="block.quiz_mode === 'existing'" class="space-y-2">
-                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Quiz assigné</label>
-                                                                    <Dropdown v-model="block.quiz_id" :options="props.exams || []" optionLabel="title" optionValue="id" placeholder="Sélectionner un quiz existant..." class="w-full" showClear>
+                                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.assignedQuizLabel') }}</label>
+                                                                    <Dropdown v-model="block.quiz_id" :options="props.exams || []" optionLabel="title" optionValue="id" :placeholder="t('pages.courses.selectExistingQuizPlaceholder')" class="w-full" showClear>
                                                                         <template #option="slotProps">
                                                                             <div class="flex items-center gap-2 p-2">
                                                                                 <i class="pi pi-check-square text-emerald-500 text-xs"></i>
@@ -1987,15 +1992,15 @@ onBeforeUnmount(() => {
                                                                         </template>
                                                                     </Dropdown>
                                                                     <Message severity="info" class="text-xs">
-                                                                        Sélectionnez un quiz depuis la banque de questions existante.
+                                                                        {{ t('pages.courses.existingQuizMessage') }}
                                                                     </Message>
                                                                 </div>
                                                             </div>
 
                                                             <!-- Text Block -->
                                                             <div v-if="block.type === 'text'" class="space-y-2">
-                                                                <label class="text-[10px] font-bold text-slate-500 uppercase">Contenu textuel</label>
-                                                                <Textarea v-model="block.content_text" rows="4" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" placeholder="Saisissez le contenu textuel de ce bloc..."></Textarea>
+                                                                <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.textContentLabel') }}</label>
+                                                                <Textarea v-model="block.content_text" rows="4" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" :placeholder="t('pages.courses.textContentPlaceholder')"></Textarea>
                                                             </div>
 
                                                         </div>
@@ -2004,8 +2009,8 @@ onBeforeUnmount(() => {
 
                                                 <div v-else class="text-center py-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-400">
                                                     <i class="pi pi-objects-column text-3xl mb-2 block"></i>
-                                                    <p class="text-sm font-medium">Aucun contenu ajouté</p>
-                                                    <p class="text-xs mt-1">Utilisez les boutons ci-dessus pour ajouter vidéos, documents, quizzes ou texte.</p>
+                                                    <p class="text-sm font-medium">{{ t('pages.courses.noContentAdded') }}</p>
+                                                    <p class="text-xs mt-1">{{ t('pages.courses.useAddButtonsHint') }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -2013,35 +2018,35 @@ onBeforeUnmount(() => {
                                         <!-- 4. QUIZ DE FIN DE MODULE -->
                                         <div class="bg-blue-50/50 rounded-xl border border-blue-200 p-5 space-y-4">
                                             <h4 class="text-sm font-black text-blue-700 uppercase tracking-wider flex items-center gap-2">
-                                                <i class="pi pi-check-square"></i> Quiz de validation du module
+                                                <i class="pi pi-check-square"></i> {{ t('pages.courses.moduleQuizTitle') }}
                                             </h4>
                                             
                                             <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-blue-100">
                                                 <div>
-                                                    <div class="font-bold text-sm text-slate-800">Quiz obligatoire à la fin du module</div>
-                                                    <div class="text-[11px] text-slate-500">L'apprenant doit valider ce quiz pour progresser.</div>
+                                                    <div class="font-bold text-sm text-slate-800">{{ t('pages.courses.mandatoryQuizLabel') }}</div>
+                                                    <div class="text-[11px] text-slate-500">{{ t('pages.courses.mandatoryQuizHint') }}</div>
                                                 </div>
                                                 <ToggleSwitch v-model="section.has_quiz" />
                                             </div>
 
                                             <div v-if="section.has_quiz" class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
                                                 <div class="space-y-1">
-                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Obligatoire</label>
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.requiredLabel') }}</label>
                                                     <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-blue-100">
                                                         <Checkbox v-model="section.quiz_required" :binary="true" />
-                                                        <span class="text-xs text-slate-600">Requis</span>
+                                                        <span class="text-xs text-slate-600">{{ t('pages.courses.requiredShort') }}</span>
                                                     </div>
                                                 </div>
                                                 <div class="space-y-1">
-                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Poids (%)</label>
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.weightLabel') }}</label>
                                                     <InputNumber v-model="section.quiz_weight" :min="0" :max="100" class="w-full bg-white border-blue-100" placeholder="10" />
                                                 </div>
                                                 <div class="space-y-1">
-                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Note /20</label>
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.scoreLabel') }}</label>
                                                     <InputNumber v-model="section.quiz_passing_score" :min="0" :max="20" class="w-full bg-white border-blue-100" placeholder="10" />
                                                 </div>
                                                 <div class="space-y-1">
-                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">Tentatives</label>
+                                                    <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.attemptsLabel') }}</label>
                                                     <InputNumber v-model="section.quiz_attempts_allowed" :min="1" :max="10" class="w-full bg-white border-blue-100" placeholder="3" />
                                                 </div>
                                             </div>
@@ -2064,13 +2069,13 @@ onBeforeUnmount(() => {
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
             <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
-                <i class="pi pi-paperclip text-blue-600"></i> Bibliothèque de Ressources
+                <i class="pi pi-paperclip text-blue-600"></i> {{ t('pages.courses.resourcesLibraryTitle') }}
             </h3>
             <p class="text-sm text-slate-500 mt-1 max-w-xl">
-                Gérez les documents d'accompagnement. Les fichiers sont stockés de manière sécurisée sur le disque média.
+                {{ t('pages.courses.resourcesLibraryDesc') }}
             </p>
         </div>
-        <Button label="Joindre un nouveau fichier" icon="pi pi-plus" class="p-button-primary shadow-md font-bold" @click="addResource" />
+        <Button :label="t('pages.courses.attachFileButton')" icon="pi pi-plus" class="p-button-primary shadow-md font-bold" @click="addResource" />
     </div>
 
     <!-- LISTE DES RESSOURCES -->
@@ -2080,8 +2085,8 @@ onBeforeUnmount(() => {
                 
             <!-- Badge d'état (Nouveau vs Existant) -->
             <div class="absolute -top-2 -left-2">
-                <Tag v-if="res.is_new" value="Nouveau" severity="success" class="text-[8px] uppercase px-2 shadow-sm" />
-                <Tag v-else value="En ligne" severity="info" class="text-[8px] uppercase px-2 shadow-sm" />
+                <Tag v-if="res.is_new" :value="t('pages.courses.newTag')" severity="success" class="text-[8px] uppercase px-2 shadow-sm" />
+                <Tag v-else :value="t('pages.courses.onlineTag')" severity="info" class="text-[8px] uppercase px-2 shadow-sm" />
             </div>
 
             <!-- Icone Dynamique basée sur le type -->
@@ -2093,40 +2098,40 @@ onBeforeUnmount(() => {
             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                 <!-- Titre (Modifiable dans les deux cas) -->
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom de la ressource</label>
-                    <InputText v-model="res.title" class="w-full font-bold text-slate-700 bg-slate-50 border-transparent focus:bg-white p-3 rounded-xl" placeholder="Titre du document..." />
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('pages.courses.resourceNameLabel') }}</label>
+                    <InputText v-model="res.title" class="w-full font-bold text-slate-700 bg-slate-50 border-transparent focus:bg-white p-3 rounded-xl" :placeholder="t('pages.courses.resourceTitlePlaceholder')" />
                 </div>
 
                 <!-- Gestion du fichier -->
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fichier source</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('pages.courses.sourceFileLabel') }}</label>
                     
                     <!-- Cas 1 : Aucune sélection (Nouveau) -->
                     <div v-if="!res.file && !res.full_url" class="w-full">
-                        <FileUpload mode="basic" chooseLabel="Choisir un fichier local" @select="onResourceSelect($event, rIdx)" auto class="p-button-sm p-button-secondary w-full border-dashed border-2" />
+                        <FileUpload mode="basic" :chooseLabel="t('pages.courses.chooseLocalFileLabel')" @select="onResourceSelect($event, rIdx)" auto class="p-button-sm p-button-secondary w-full border-dashed border-2" />
                     </div>
 
                     <!-- Cas 2 : Fichier présent (Local ou Serveur) -->
                     <div v-else class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <div class="flex flex-col overflow-hidden">
                             <span class="text-xs font-black text-slate-700 truncate max-w-[200px]">
-                                {{ res.file ? res.file.name : 'Document déjà hébergé' }}
+                                {{ res.file ? res.file.name : t('pages.courses.hostedDoc') }}
                             </span>
                             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                {{ res.human_size || (res.file ? (res.file.size / 1024 / 1024).toFixed(2) + ' MB' : 'Taille inconnue') }}
+                                {{ res.human_size || (res.file ? (res.file.size / 1024 / 1024).toFixed(2) + ' MB' : t('pages.courses.unknownSize')) }}
                             </span>
                         </div>
                         
                         <!-- Actions sur le fichier -->
                         <div class="flex items-center gap-2">
                             <!-- Visualiser (Si PDF ou Image) -->
-                            <Button v-if="res.full_url" icon="pi pi-eye" class="p-button-text p-button-secondary p-button-sm w-8 h-8" v-tooltip.top="'Visualiser'" @click="viewResource(res.full_url)" />
+                            <Button v-if="res.full_url" icon="pi pi-eye" class="p-button-text p-button-secondary p-button-sm w-8 h-8" v-tooltip.top="t('pages.courses.viewTooltip')" @click="viewResource(res.full_url)" />
                             
                             <!-- Télécharger -->
-                            <Button v-if="res.full_url" icon="pi pi-download" class="p-button-text p-button-info p-button-sm w-8 h-8" v-tooltip.top="'Télécharger'" @click="downloadResource(res.full_url)" />
+                            <Button v-if="res.full_url" icon="pi pi-download" class="p-button-text p-button-info p-button-sm w-8 h-8" v-tooltip.top="t('pages.courses.downloadTooltip')" @click="downloadResource(res.full_url)" />
                             
                             <!-- Remplacer -->
-                            <Button icon="pi pi-refresh" class="p-button-text p-button-warning p-button-sm w-8 h-8" v-tooltip.top="'Remplacer le fichier'" @click="replaceFile(rIdx)" />
+                            <Button icon="pi pi-refresh" class="p-button-text p-button-warning p-button-sm w-8 h-8" v-tooltip.top="t('pages.courses.replaceFileTooltip')" @click="replaceFile(rIdx)" />
                         </div>
                     </div>
                 </div>
@@ -2134,7 +2139,7 @@ onBeforeUnmount(() => {
 
             <!-- Bouton Suppression (CRUD: Delete) -->
             <div class="flex-shrink-0 pt-4 lg:pt-0">
-                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded bg-white border border-slate-100 hover:bg-red-50 shadow-sm" @click="confirmRemoveResource(rIdx)" v-tooltip.left="'Supprimer définitivement'" />
+                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded bg-white border border-slate-100 hover:bg-red-50 shadow-sm" @click="confirmRemoveResource(rIdx)" v-tooltip.left="t('pages.courses.deleteForeverTooltip')" />
             </div>
         </div>
     </div>
@@ -2145,9 +2150,9 @@ onBeforeUnmount(() => {
             <i class="pi pi-paperclip text-4xl"></i>
         </div>
       
-        <h4 class="text-xl font-black text-slate-800 mb-2">Votre bibliothèque est vide</h4>
-        <p class="text-slate-500 text-sm max-w-sm mx-auto mb-8">Centralisez ici tous les supports de cours : Guides PDF, ressources ZIP, fichiers de configuration, etc.</p>
-        <Button label="Ajouter ma première ressource" icon="pi pi-plus" class="p-button-primary p-button-lg font-bold shadow-lg" @click="addResource" />
+        <h4 class="text-xl font-black text-slate-800 mb-2">{{ t('pages.courses.emptyLibraryTitle') }}</h4>
+        <p class="text-slate-500 text-sm max-w-sm mx-auto mb-8">{{ t('pages.courses.emptyLibraryDesc') }}</p>
+        <Button :label="t('pages.courses.addFirstResourceButton')" icon="pi pi-plus" class="p-button-primary p-button-lg font-bold shadow-lg" @click="addResource" />
     </div>
 </div>
                         <div v-show="activeEditorTab === 'seo'" class="space-y-8" role="tabpanel">
@@ -2155,39 +2160,39 @@ onBeforeUnmount(() => {
                             <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex gap-4 items-start shadow-sm">
                                 <i class="pi pi-lightbulb text-blue-500 text-2xl mt-1"></i>
                                 <div>
-                                    <h4 class="font-bold text-blue-900 mb-1">Pourquoi optimiser le SEO ?</h4>
-                                    <p class="text-sm text-blue-700 leading-relaxed">Les métadonnées aident les moteurs de recherche (Google, Bing) et les réseaux sociaux (LinkedIn, Twitter) à comprendre le sujet de votre cours. C'est votre principal levier d'acquisition de trafic organique gratuit.</p>
+                                    <h4 class="font-bold text-blue-900 mb-1">{{ t('pages.courses.seoWhyTitle') }}</h4>
+                                    <p class="text-sm text-blue-700 leading-relaxed">{{ t('pages.courses.seoWhyDesc') }}</p>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
                                 <!-- Formulaire SEO (Gauche) -->
                                 <div class="xl:col-span-7 space-y-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                    <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-search text-slate-400"></i> Balises Meta (HTML)</h3>
+                                    <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-search text-slate-400"></i> {{ t('pages.courses.metaTagsTitle') }}</h3>
 
                                     <div class="space-y-2">
                                         <div class="flex justify-between items-end mb-1">
-                                            <label class="block text-sm font-bold text-slate-700">Titre SEO (Balise Title)</label>
-                                            <span class="text-[10px] font-mono" :class="courseForm.seo_metadata.title?.length > 60 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ courseForm.seo_metadata.title?.length || 0 }} / 60 char. opti.</span>
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.seoTitleLabel') }}</label>
+                                            <span class="text-[10px] font-mono" :class="courseForm.seo_metadata.title?.length > 60 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ courseForm.seo_metadata.title?.length || 0 }} / 60 {{ t('pages.courses.seoCharOptimized') }}</span>
                                         </div>
-                                        <InputText v-model="courseForm.seo_metadata.title" class="w-full bg-slate-50 border-slate-300" placeholder="Laissez vide pour utiliser le titre du cours..." />
+                                        <InputText v-model="courseForm.seo_metadata.title" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.courses.seoTitlePlaceholder')" />
                                     </div>
 
                                     <div class="space-y-2">
                                         <div class="flex justify-between items-end mb-1">
-                                            <label class="block text-sm font-bold text-slate-700">Meta Description</label>
-                                            <span class="text-[10px] font-mono" :class="courseForm.seo_metadata.description?.length > 160 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ courseForm.seo_metadata.description?.length || 0 }} / 160 char. opti.</span>
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.metaDescriptionLabel') }}</label>
+                                            <span class="text-[10px] font-mono" :class="courseForm.seo_metadata.description?.length > 160 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ courseForm.seo_metadata.description?.length || 0 }} / 160 {{ t('pages.courses.seoCharOptimized') }}</span>
                                         </div>
-                                        <Textarea v-model="courseForm.seo_metadata.description" rows="4" class="w-full bg-slate-50 border-slate-300 leading-relaxed" placeholder="Résumé incitatif pour la page de recherche Google..." />
+                                        <Textarea v-model="courseForm.seo_metadata.description" rows="4" class="w-full bg-slate-50 border-slate-300 leading-relaxed" :placeholder="t('pages.courses.metaDescriptionPlaceholder')" />
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700 mb-1">Mots-clés cibles (Focus Keywords)</label>
+                                        <label class="block text-sm font-bold text-slate-700 mb-1">{{ t('pages.courses.focusKeywordsLabel') }}</label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-hashtag text-slate-400" />
-                                            <InputText v-model="courseForm.seo_metadata.keywords" class="w-full bg-slate-50 border-slate-300" placeholder="Ex: formation design, ux ui, figma..." />
+                                            <InputText v-model="courseForm.seo_metadata.keywords" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.courses.keywordsPlaceholder')" />
                                         </IconField>
-                                        <small class="text-slate-400 text-[11px]">Séparez les expressions par des virgules.</small>
+                                        <small class="text-slate-400 text-[11px]">{{ t('pages.courses.keywordsHelp') }}</small>
                                     </div>
                                 </div>
 
@@ -2197,14 +2202,14 @@ onBeforeUnmount(() => {
                                     <!-- Google Preview -->
                                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <i class="pi pi-google text-blue-500"></i> Aperçu SERP Google Desktop
+                                            <i class="pi pi-google text-blue-500"></i> {{ t('pages.courses.serpPreviewTitle') }}
                                         </h4>
                                         <div class="p-4 bg-white border border-slate-100 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.05)] cursor-text selection:bg-blue-100">
                                             <div class="flex items-center gap-3 mb-2">
                                                 <div class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">SC</div>
                                                 <div>
                                                     <div class="text-[13px] text-slate-800 font-medium leading-none">SubnetCongo LMS</div>
-                                                    <div class="text-[11px] text-slate-500 truncate max-w-[200px] mt-0.5">https://lms.subnetcongo.com/courses/{{ courseForm.slug || 'slug-du-cours' }}</div>
+                                                    <div class="text-[11px] text-slate-500 truncate max-w-[200px] mt-0.5">https://lms.subnetcongo.com/courses/{{ courseForm.slug || t('pages.courses.slugFallback') }}</div>
                                                 </div>
                                                 <i class="pi pi-ellipsis-v ml-auto text-slate-400 text-xs"></i>
                                             </div>
@@ -2216,12 +2221,12 @@ onBeforeUnmount(() => {
                                     <!-- Social Preview (OpenGraph) Mockup -->
                                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <i class="pi pi-linkedin text-blue-700"></i> Aperçu Partage Social
+                                            <i class="pi pi-linkedin text-blue-700"></i> {{ t('pages.courses.socialPreviewTitle') }}
                                         </h4>
                                         <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 shadow-sm">
                                             <div class="h-32 bg-slate-200 border-b border-slate-200 relative">
                                                 <img v-if="courseForm.thumbnail" :src="typeof courseForm.thumbnail === 'string' ? courseForm.thumbnail : (courseForm.thumbnail && typeof File !== 'undefined' && courseForm.thumbnail instanceof File ? URL.createObjectURL(courseForm.thumbnail) : '')" class="w-full h-full object-cover" />
-                                                <div v-else class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest"><i class="pi pi-image mr-2 text-lg"></i> Image OpenGraph</div>
+                                                <div v-else class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest"><i class="pi pi-image mr-2 text-lg"></i> {{ t('pages.courses.openGraphImage') }}</div>
                                             </div>
                                             <div class="p-3 bg-slate-100/50">
                                                 <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">lms.subnetcongo.com</div>
@@ -2242,7 +2247,7 @@ onBeforeUnmount(() => {
 
                             <!-- Paramètres Globaux -->
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Configuration & Déploiement</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.courses.settingsTitle') }}</h3>
 
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6">
                                     <!-- Options Toggles -->
@@ -2252,8 +2257,8 @@ onBeforeUnmount(() => {
                                             <div class="flex gap-4">
                                                 <div class="w-10 h-10 bg-white border border-slate-200 text-amber-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-star-fill"></i></div>
                                                 <div>
-                                                    <div class="font-bold text-slate-800 text-sm">Mise en avant (Featured)</div>
-                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">Placer ce cours dans le carrousel principal de la page d'accueil de la plateforme.</div>
+                                                    <div class="font-bold text-slate-800 text-sm">{{ t('pages.courses.featuredTitle') }}</div>
+                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">{{ t('pages.courses.featuredDesc') }}</div>
                                                 </div>
                                             </div>
                                             <ToggleSwitch v-model="courseForm.is_featured" />
@@ -2264,8 +2269,8 @@ onBeforeUnmount(() => {
                                             <div class="flex gap-4">
                                                 <div class="w-10 h-10 bg-white border border-slate-200 text-blue-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-verified"></i></div>
                                                 <div>
-                                                    <div class="font-bold text-slate-800 text-sm">Délivrance de Certificat</div>
-                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">Générer automatiquement un diplôme PDF nominatif à 100% de complétion.</div>
+                                                    <div class="font-bold text-slate-800 text-sm">{{ t('pages.courses.certificateTitle') }}</div>
+                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">{{ t('pages.courses.certificateDesc') }}</div>
                                                 </div>
                                             </div>
                                             <ToggleSwitch v-model="courseForm.certificate_enabled" />
@@ -2276,8 +2281,8 @@ onBeforeUnmount(() => {
                                             <div class="flex gap-4">
                                                 <div class="w-10 h-10 bg-white border border-slate-200 text-emerald-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-sign-in"></i></div>
                                                 <div>
-                                                    <div class="font-bold text-slate-800 text-sm">Inscription Obligatoire</div>
-                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">Bloque l'accès aux utilisateurs non connectés, même si le cours est gratuit.</div>
+                                                    <div class="font-bold text-slate-800 text-sm">{{ t('pages.courses.enrollmentTitle') }}</div>
+                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">{{ t('pages.courses.enrollmentDesc') }}</div>
                                                 </div>
                                             </div>
                                             <ToggleSwitch v-model="courseForm.requires_enrollment" />
@@ -2288,8 +2293,8 @@ onBeforeUnmount(() => {
                                             <div class="flex gap-4">
                                                 <div class="w-10 h-10 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-check-square"></i></div>
                                                 <div>
-                                                    <div class="font-bold text-slate-800 text-sm">Examen Final Obligatoire</div>
-                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">Un examen certifiant doit être réussi pour obtenir le diplôme.</div>
+                                                    <div class="font-bold text-slate-800 text-sm">{{ t('pages.courses.finalExamTitle') }}</div>
+                                                    <div class="text-xs text-slate-500 mt-1 leading-tight">{{ t('pages.courses.finalExamDesc') }}</div>
                                                 </div>
                                             </div>
                                             <ToggleSwitch v-model="courseForm.has_final_exam" />
@@ -2299,29 +2304,29 @@ onBeforeUnmount(() => {
                                     <!-- Quiz & Certification Settings -->
                                     <div class="space-y-6 col-span-1" v-if="courseForm.has_final_exam">
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700">Score de passage (/20)</label>
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.passingScoreLabel') }}</label>
                                             <InputNumber v-model="courseForm.passing_score_20" :min="0" :max="20" class="w-full" placeholder="Ex: 10" />
-                                            <div class="text-[10px] text-slate-500">Note minimale requise pour valider le cours.</div>
+                                            <div class="text-[10px] text-slate-500">{{ t('pages.courses.passingScoreHint') }}</div>
                                         </div>
 
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700">Pondération du Quiz Final (%)</label>
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.finalExamWeightLabel') }}</label>
                                             <InputNumber v-model="courseForm.final_exam_weight" :min="0" :max="100" class="w-full" placeholder="Ex: 70" />
-                                            <div class="text-[10px] text-slate-500">Pourcentage du score final provenant de l'examen.</div>
+                                            <div class="text-[10px] text-slate-500">{{ t('pages.courses.finalExamWeightHint') }}</div>
                                         </div>
 
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700">Pondération Totale des Quiz (%)</label>
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.quizTotalWeightLabel') }}</label>
                                             <InputNumber v-model="courseForm.quiz_weight_total" :min="0" :max="100" class="w-full" placeholder="Ex: 80" />
-                                            <div class="text-[10px] text-slate-500">Somme des pondérations de tous les quiz du cours.</div>
+                                            <div class="text-[10px] text-slate-500">{{ t('pages.courses.quizTotalWeightHint') }}</div>
                                         </div>
                                     </div>
 
                                     <!-- Attribution & Infos annexes -->
                                     <div class="space-y-6 col-span-1">
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-user text-blue-500"></i> Formateur / Instructeur Assigné <span class="text-red-500">*</span></label>
-                                            <Dropdown v-model="courseForm.instructor_id" :options="props.instructors" optionLabel="name" optionValue="id" placeholder="Sélectionnez l'expert référent..." class="w-full border-slate-300 bg-slate-50 font-medium" filter :class="{'p-invalid': !courseForm.instructor_id}">
+                                            <label class="block text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-user text-blue-500"></i> {{ t('pages.courses.instructorLabel') }} <span class="text-red-500">*</span></label>
+                                            <Dropdown v-model="courseForm.instructor_id" :options="props.instructors" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.instructorPlaceholder')" class="w-full border-slate-300 bg-slate-50 font-medium" filter :class="{'p-invalid': !courseForm.instructor_id}">
                                                 <template #value="slotProps">
                                                     <div v-if="slotProps.value" class="flex items-center gap-3">
                                                         <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
@@ -2329,14 +2334,14 @@ onBeforeUnmount(() => {
                                                         </div>
                                                         <span>{{ props.instructors.find(i => i.id === slotProps.value)?.name }}</span>
                                                     </div>
-                                                    <span v-else class="text-slate-400">Assignez un professeur...</span>
+                                                    <span v-else class="text-slate-400">{{ t('pages.courses.assignInstructor') }}</span>
                                                 </template>
                                             </Dropdown>
                                         </div>
 
                                         <div class="space-y-2 mt-4">
-                                            <label class="block text-sm font-bold text-slate-700">Prérequis conseillés</label>
-                                            <Textarea v-model="courseForm.prerequisites" rows="3" class="w-full bg-slate-50 border-slate-300" placeholder="Ex: Connaissances de base en HTML/CSS, ordinateur de moins de 5 ans..." />
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.prerequisitesLabel') }}</label>
+                                            <Textarea v-model="courseForm.prerequisites" rows="3" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.courses.prerequisitesPlaceholder')" />
                                         </div>
                                     </div>
                                 </div>
@@ -2350,17 +2355,17 @@ onBeforeUnmount(() => {
             <!-- WORKSPACE FOOTER (ACTIONS DE SAUVEGARDE) -->
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
                 <div class="text-xs text-slate-500 flex items-center gap-4">
-                    <Button label="Supprimer le brouillon" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm hidden md:flex font-medium" @click="courseDialog = false" v-if="!courseForm.id" />
+                    <Button :label="t('pages.courses.deleteDraftButton')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm hidden md:flex font-medium" @click="courseDialog = false" v-if="!courseForm.id" />
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <Button label="Enregistrer comme Brouillon" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 hover:bg-slate-50 border-slate-300" @click="saveCourse('draft')" :loading="courseForm.processing" />
+                    <Button :label="t('pages.courses.saveDraftButton')" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 hover:bg-slate-50 border-slate-300" @click="saveCourse('draft')" :loading="courseForm.processing" />
 
                     <div class="relative group">
-                        <Button label="Publier le Cours" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveCourse('publish')" :loading="courseForm.processing" :disabled="!isEntireFormValid" />
+                        <Button :label="t('pages.courses.publishButton')" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveCourse('publish')" :loading="courseForm.processing" :disabled="!isEntireFormValid" />
                         <!-- Tooltip custom si bloqué -->
                         <div v-if="!isEntireFormValid" class="absolute bottom-full right-0 mb-2 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                            Complétez d'abord les étapes obligatoires (marquées d'un <i class="pi pi-exclamation-circle text-amber-400"></i>) dans le menu pour activer la publication.
+                            {{ t('pages.courses.publishBlockedHintStart') }} <i class="pi pi-exclamation-circle text-amber-400"></i> {{ t('pages.courses.publishBlockedHintEnd') }}
                             <div class="absolute -bottom-1 right-8 w-2 h-2 bg-slate-800 transform rotate-45"></div>
                         </div>
                     </div>
@@ -2371,38 +2376,38 @@ onBeforeUnmount(() => {
         <!-- ============================================================================== -->
         <!-- DIALOG CRÉATION DE CATÉGORIE (TAXONOMIE)                                       -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="categoryDialog" header="Créer une catégories" :modal="true" :style="{ width: '500px' }" :draggable="false" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="bg-slate-50 p-0" headerClass="bg-white border-b border-slate-100 px-6 py-4">
+        <Dialog v-model:visible="categoryDialog" :header="t('pages.courses.createCategoryHeader')" :modal="true" :style="{ width: '500px' }" :draggable="false" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="bg-slate-50 p-0" headerClass="bg-white border-b border-slate-100 px-6 py-4">
             <div class="p-6 space-y-6">
                 <!-- Message info -->
                 <Message severity="info" :closable="false" class="m-0 border border-blue-100 bg-blue-50 text-blue-800">
-                    Les catégories structurent le catalogue. Une hiérarchie claire améliore l'expérience utilisateur.
+                    {{ t('pages.courses.categoryInfoMessage') }}
                 </Message>
 
                 <div class="space-y-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700">Nom de la catégorie <span class="text-red-500">*</span></label>
-                        <InputText v-model="categoryForm.name" @input="generateCategorySlug" placeholder="Ex: Développement Web, Management..." class="w-full p-3 font-bold text-slate-800 bg-white border-slate-300" autofocus :class="{'p-invalid': categoryForm.errors?.name}" />
+                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.categoryNameLabel') }} <span class="text-red-500">*</span></label>
+                        <InputText v-model="categoryForm.name" @input="generateCategorySlug" :placeholder="t('pages.courses.categoryNamePlaceholder')" class="w-full p-3 font-bold text-slate-800 bg-white border-slate-300" autofocus :class="{'p-invalid': categoryForm.errors?.name}" />
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700">Identifiant URL (Slug)</label>
+                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.slugFieldLabel') }}</label>
                         <InputText v-model="categoryForm.slug" placeholder="developpement-web" class="w-full p-2 text-sm font-mono text-slate-500 bg-slate-100 border-transparent" />
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700">Catégorie Parente (Optionnel)</label>
-                        <Dropdown v-model="categoryForm.parent_id" :options="props.categories" optionLabel="name" optionValue="id" placeholder="Catégorie racine..." class="w-full border-slate-300 bg-white" showClear filter />
+                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.parentCategoryLabel') }}</label>
+                        <Dropdown v-model="categoryForm.parent_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.rootCategoryOption')" class="w-full border-slate-300 bg-white" showClear filter />
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-slate-700">Description courte (SEO)</label>
-                        <Textarea v-model="categoryForm.description" rows="2" class="w-full bg-white border-slate-300" placeholder="Décrivez le contenu de cette catégorie..." />
+                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.categoryDescLabel') }}</label>
+                        <Textarea v-model="categoryForm.description" rows="2" class="w-full bg-white border-slate-300" :placeholder="t('pages.courses.categoryDescPlaceholder')" />
                     </div>
 
                     <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 mt-2">
                         <div>
-                            <div class="font-bold text-slate-800 text-sm">Visibilité publique</div>
-                            <div class="text-[11px] text-slate-500">Activer l'affichage dans le menu principal.</div>
+                            <div class="font-bold text-slate-800 text-sm">{{ t('pages.courses.publicVisibility') }}</div>
+                            <div class="text-[11px] text-slate-500">{{ t('pages.courses.publicVisibilityDesc') }}</div>
                         </div>
                         <ToggleSwitch v-model="categoryForm.is_active" />
                     </div>
@@ -2411,8 +2416,8 @@ onBeforeUnmount(() => {
 
             <template #footer>
                 <div class="flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
-                    <Button label="Créer la catégorie" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
+                    <Button :label="t('pages.courses.cancel')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
+                    <Button :label="t('pages.courses.createCategoryButton')" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
                 </div>
             </template>
         </Dialog>
@@ -2424,7 +2429,7 @@ onBeforeUnmount(() => {
             <template #header>
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 shadow-sm border border-blue-200"><i class="pi pi-chart-line text-lg"></i></div>
-                    <span class="font-black text-xl text-slate-800">Intelligence Pédagogique</span>
+                    <span class="font-black text-xl text-slate-800">{{ t('pages.courses.analyticsTitle') }}</span>
                 </div>
             </template>
 
@@ -2432,11 +2437,11 @@ onBeforeUnmount(() => {
 
                 <!-- Graphe de revenus -->
                 <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-chart-bar"></i> Évolution du CA (7 mois)</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-chart-bar"></i> {{ t('pages.courses.revenueEvolutionTitle') }}</h4>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-baseline gap-2 mb-4">
                             <span class="text-2xl font-black text-slate-800">$74,000</span>
-                            <span class="text-xs text-emerald-500 font-bold"><i class="pi pi-arrow-up text-[10px]"></i> 18% vs N-1</span>
+                            <span class="text-xs text-emerald-500 font-bold"><i class="pi pi-arrow-up text-[10px]"></i> {{ t('pages.courses.revenueGrowthLabel') }}</span>
                         </div>
                         <Chart type="line" :data="revenueChartData" :options="chartOptions" class="h-48 w-full" />
                     </div>
@@ -2444,7 +2449,7 @@ onBeforeUnmount(() => {
 
                 <!-- Top Formations -->
                 <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-trophy"></i> Best-Sellers (Top 4)</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-trophy"></i> {{ t('pages.courses.bestSellersTitle') }}</h4>
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <ul class="divide-y divide-slate-100">
                             <!-- Mockup dynamique -->
@@ -2454,8 +2459,8 @@ onBeforeUnmount(() => {
                                         #{{ i }}
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold text-slate-800 mb-0.5">Formation avancée {{ i }}</div>
-                                        <div class="text-[10px] text-slate-500 flex items-center gap-1"><i class="pi pi-users text-[9px]"></i> {{ 1500 - (i * 250) }} inscrits</div>
+                                        <div class="text-sm font-bold text-slate-800 mb-0.5">{{ t('pages.courses.advancedCourseLabel', { n: i }) }}</div>
+                                        <div class="text-[10px] text-slate-500 flex items-center gap-1"><i class="pi pi-users text-[9px]"></i> {{ t('pages.courses.enrolledCount', { n: 1500 - (i * 250) }) }}</div>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -2468,13 +2473,13 @@ onBeforeUnmount(() => {
 
                 <!-- Alertes & Qualité -->
                 <div>
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-shield"></i> Qualité & Alertes</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-shield"></i> {{ t('pages.courses.qualityAlertsTitle') }}</h4>
                     <div class="space-y-3">
                         <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 flex gap-3 items-start shadow-sm">
                             <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5"></i>
                             <div>
-                                <div class="text-sm font-bold text-amber-900">3 cours nécessitent une mise à jour</div>
-                                <div class="text-xs text-amber-700 mt-1 leading-tight">Leur taux d'achèvement a chuté sous les 20% ce mois-ci.</div>
+                                <div class="text-sm font-bold text-amber-900">{{ t('pages.courses.coursesNeedUpdate') }}</div>
+                                <div class="text-xs text-amber-700 mt-1 leading-tight">{{ t('pages.courses.completionDropHint') }}</div>
                             </div>
                         </div>
                     </div>
@@ -2482,7 +2487,7 @@ onBeforeUnmount(() => {
             </div>
             <template #footer>
                 <div class="flex justify-end p-4 bg-white border-t border-slate-100">
-                    <Button label="Fermer" class="p-button-secondary p-button-text font-bold" @click="analyticsDialog = false" />
+                    <Button :label="t('pages.courses.closeButton')" class="p-button-secondary p-button-text font-bold" @click="analyticsDialog = false" />
                 </div>
             </template>
         </Dialog>

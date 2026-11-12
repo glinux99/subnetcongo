@@ -8,6 +8,9 @@ import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps({ question: Object });
 
@@ -16,12 +19,12 @@ const reply = ref('');
 const replyFiles = ref([]);
 const submitting = ref(false);
 
-const statusLabel = (s) => ({ open: 'En attente', answered: 'Répondue', resolved: 'Résolue', closed: 'Fermée' }[s] ?? s);
+const statusLabel = (s) => ({ open: t('pages.question_detail.statusOpen'), answered: t('pages.question_detail.statusAnswered'), resolved: t('pages.question_detail.statusResolved'), closed: t('pages.question_detail.statusClosed') }[s] ?? s);
 const statusSeverity = (s) => ({ open: 'warn', answered: 'info', resolved: 'success', closed: 'secondary' }[s] ?? 'info');
-const priorityLabel = (p) => ({ urgent: 'Bloquante', high: 'Importante', normal: 'Normale', low: 'Faible' }[p] ?? p);
+const priorityLabel = (p) => ({ urgent: t('pages.question_detail.priorityUrgent'), high: t('pages.question_detail.priorityHigh'), normal: t('pages.question_detail.priorityNormal'), low: t('pages.question_detail.priorityLow') }[p] ?? p);
 const prioritySeverity = (p) => ({ urgent: 'danger', high: 'warn', normal: 'info', low: 'secondary' }[p] ?? 'info');
-const formatDate = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }) : '—';
-const formatSize = (b) => b < 1024 ? `${b} o` : b < 1048576 ? `${(b / 1024).toFixed(1)} Ko` : `${(b / 1048576).toFixed(1)} Mo`;
+const formatDate = (d) => d ? new Date(d).toLocaleString(locale.value, { dateStyle: 'long', timeStyle: 'short' }) : '—';
+const formatSize = (b) => b < 1024 ? t('pages.question_detail.sizeBytes', { size: b }) : b < 1048576 ? t('pages.question_detail.sizeKb', { size: (b / 1024).toFixed(1) }) : t('pages.question_detail.sizeMb', { size: (b / 1048576).toFixed(1) });
 
 const onFileChange = (e) => {
     const files = Array.from(e.target.files ?? []);
@@ -43,7 +46,7 @@ const sendReply = () => {
             reply.value = '';
             replyFiles.value = [];
             submitting.value = false;
-            toast.add({ severity: 'success', summary: 'Réponse envoyée', detail: page.props?.flash?.success ?? '', life: 2500 });
+            toast.add({ severity: 'success', summary: t('pages.question_detail.replySent'), detail: page.props?.flash?.success ?? '', life: 2500 });
         },
         onError: () => { submitting.value = false; },
     });
@@ -52,25 +55,25 @@ const sendReply = () => {
 const markResolved = () => {
     router.post(route('student.questions.resolve', props.question.uuid), {}, {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Question résolue', life: 2500 }),
+        onSuccess: () => toast.add({ severity: 'success', summary: t('pages.question_detail.resolvedToast'), life: 2500 }),
     });
 };
 </script>
 
 <template>
     <AppLayout>
-        <Head :title="question.subject || 'Détail de la Question'" />
+        <Head :title="question.subject || t('pages.question_detail.headFallback')" />
 
         <div class="page-bg min-h-screen">
             <!-- HEADER HARMONISÉ -->
             <PageHeader
-                :title="question.subject || 'Question'"
-                :subtitle="`${question.course?.title || 'Formation'}${question.lesson ? ' · ' + question.lesson.title : ''}`"
+                :title="question.subject || t('pages.question_detail.titleFallback')"
+                :subtitle="`${question.course?.title || t('pages.question_detail.courseFallback')}${question.lesson ? ' · ' + question.lesson.title : ''}`"
                 icon="pi-comments"
                 badge="Q&A"
                 accent="blue"
                 :actions="[
-                    { label: 'Retour aux questions', icon: 'pi-arrow-left', href: route('student.questions.index') }
+                    { label: t('pages.question_detail.backToQuestions'), icon: 'pi-arrow-left', href: route('student.questions.index') }
                 ]"
             >
                 <template #meta>
@@ -91,7 +94,7 @@ const markResolved = () => {
                                 <p class="text-sm font-black text-slate-800">{{ question.user?.name }}</p>
                                 <p class="text-xs font-mono text-slate-400">{{ formatDate(question.created_at) }}</p>
                             </div>
-                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-0.5">Vous · Apprenant</p>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-0.5">{{ t('pages.question_detail.studentTag') }}</p>
                         </div>
                     </div>
                     <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{ question.body }}</p>
@@ -99,7 +102,7 @@ const markResolved = () => {
                     <!-- Pièces jointes -->
                     <div v-if="question.attachments?.length" class="mt-5 pt-4 border-t border-slate-100">
                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <i class="pi pi-paperclip"></i> Pièces jointes ({{ question.attachments.length }})
+                            <i class="pi pi-paperclip"></i> {{ t('pages.question_detail.attachmentsTitle', { count: question.attachments.length }) }}
                         </p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a v-for="(att, i) in question.attachments" :key="i" :href="att.url" target="_blank" rel="noopener"
@@ -123,10 +126,10 @@ const markResolved = () => {
                         <Avatar :label="question.instructor?.name?.charAt(0)" :image="question.instructor?.avatar" shape="circle" class="!w-12 !h-12 !bg-emerald-600 !text-white !font-black shrink-0" />
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between flex-wrap gap-2">
-                                <p class="text-sm font-black text-emerald-900">{{ question.instructor?.name ?? 'Instructeur' }}</p>
+                                <p class="text-sm font-black text-emerald-900">{{ question.instructor?.name ?? t('pages.question_detail.instructorFallback') }}</p>
                                 <p class="text-xs font-mono text-emerald-700">{{ formatDate(question.answered_at) }}</p>
                             </div>
-                            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">Instructeur · Réponse officielle</p>
+                            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">{{ t('pages.question_detail.instructorTag') }}</p>
                         </div>
                     </div>
                     <p class="text-sm text-emerald-950 leading-relaxed whitespace-pre-line">{{ question.answer }}</p>
@@ -134,7 +137,7 @@ const markResolved = () => {
                     <!-- Pièces jointes de la réponse -->
                     <div v-if="question.answer_attachments?.length" class="mt-5 pt-4 border-t border-emerald-200">
                         <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <i class="pi pi-paperclip"></i> Pièces jointes ({{ question.answer_attachments.length }})
+                            <i class="pi pi-paperclip"></i> {{ t('pages.question_detail.attachmentsTitle', { count: question.answer_attachments.length }) }}
                         </p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a v-for="(att, i) in question.answer_attachments" :key="i" :href="att.url" target="_blank" rel="noopener"
@@ -177,19 +180,19 @@ const markResolved = () => {
 
                 <!-- ZONE DE RÉPONSE -->
                 <div v-if="question.status !== 'closed'" class="page-card p-6">
-                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-700 mb-3">Ajouter une précision ou répondre</h3>
-                    <Textarea v-model="reply" rows="4" class="w-full !rounded-xl" placeholder="Écrivez votre message..." autoResize />
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-700 mb-3">{{ t('pages.question_detail.replyTitle') }}</h3>
+                    <Textarea v-model="reply" rows="4" class="w-full !rounded-xl" :placeholder="t('pages.question_detail.replyPlaceholder')" autoResize />
 
                     <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                         <label class="flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-600 transition-colors">
                             <i class="pi pi-paperclip text-slate-500"></i>
-                            <span class="font-bold">Joindre un fichier</span>
+                            <span class="font-bold">{{ t('pages.question_detail.attachFile') }}</span>
                             <input type="file" multiple class="hidden" @change="onFileChange" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md,.zip,.rar,.7z,.json,.xml" />
                         </label>
 
                         <div class="flex gap-2">
-                            <Button v-if="question.status !== 'resolved'" label="Marquer comme résolu" icon="pi pi-check-circle" outlined @click="markResolved" class="!rounded-xl !text-xs !font-bold !text-emerald-600 !border-emerald-300" />
-                            <Button :label="submitting ? 'Envoi...' : 'Envoyer'" icon="pi pi-send" :loading="submitting" :disabled="!reply.trim()" @click="sendReply" class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-xl !text-xs !font-black !uppercase !tracking-widest text-white shadow-sm" />
+                            <Button v-if="question.status !== 'resolved'" :label="t('pages.question_detail.markResolved')" icon="pi pi-check-circle" outlined @click="markResolved" class="!rounded-xl !text-xs !font-bold !text-emerald-600 !border-emerald-300" />
+                            <Button :label="submitting ? t('pages.question_detail.sending') : t('pages.question_detail.send')" icon="pi pi-send" :loading="submitting" :disabled="!reply.trim()" @click="sendReply" class="!bg-blue-600 hover:!bg-blue-700 !border-none !rounded-xl !text-xs !font-black !uppercase !tracking-widest text-white shadow-sm" />
                         </div>
                     </div>
 

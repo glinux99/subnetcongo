@@ -5,6 +5,9 @@ import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import Divider from 'primevue/divider';
 import Message from 'primevue/message';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     status: {
@@ -24,49 +27,49 @@ const props = defineProps({
 
 const pageTitle = computed(() => {
     if (props.status === 'valid') {
-        return `Vérification : ${props.certificate.student}`;
+        return t('pages.verify_certificate.title_valid', { name: props.certificate.student });
     }
-    return 'Document Invalide';
+    return t('pages.verify_certificate.title_invalid');
 });
 
 const verificationStatus = computed(() => {
     if (!props.certificate || Object.keys(props.certificate).length === 0) {
         return {
-            label: 'Invalide',
+            label: t('pages.verify_certificate.status_invalid'),
             severity: 'danger',
             color: 'text-red-700',
             borderColor: 'border-red-500',
             icon: 'pi pi-exclamation-triangle',
-            message: props.message || 'Informations manquantes.'
+            message: props.message || t('pages.verify_certificate.missing_info')
         };
     }
     if (props.certificate.is_revoked) {
         return {
-            label: 'Révoqué',
+            label: t('pages.verify_certificate.status_revoked'),
             severity: 'danger',
             color: 'text-red-700',
             borderColor: 'border-red-600',
             icon: 'pi pi-ban',
-            message: `Ce titre a été révoqué le ${props.certificate.revoked_at || ''}. Raison : ${props.certificate.revocation_reason || 'Non spécifiée'}.`
+            message: t('pages.verify_certificate.revoked_message', { date: props.certificate.revoked_at || '', reason: props.certificate.revocation_reason || t('pages.verify_certificate.reason_unspecified') })
         };
     }
     if (props.certificate.is_expired) {
         return {
-            label: 'Expiré',
+            label: t('pages.verify_certificate.status_expired'),
             severity: 'warning',
             color: 'text-amber-700',
             borderColor: 'border-amber-500',
             icon: 'pi pi-history',
-            message: 'Ce certificat a atteint sa date de fin de validité.'
+            message: t('pages.verify_certificate.expired_message')
         };
     }
     return {
-        label: 'Authentique & Valide',
+        label: t('pages.verify_certificate.status_valid'),
         severity: 'success',
         color: 'text-emerald-700',
         borderColor: 'border-emerald-500',
         icon: 'pi pi-check-circle',
-        message: 'Ce document numérique est authentique et a été émis par notre centre de formation.'
+        message: t('pages.verify_certificate.valid_message')
     };
 });
 </script>
@@ -98,13 +101,13 @@ const verificationStatus = computed(() => {
                         <div class="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                             <i class="pi pi-times text-4xl text-red-500"></i>
                         </div>
-                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Vérification Échouée</h2>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">{{ t('pages.verify_certificate.verification_failed') }}</h2>
                         <p class="text-slate-600 max-w-md mx-auto leading-relaxed">
-                            {{ message || "Le code de vérification fourni ne correspond à aucun enregistrement dans notre base de données sécurisée." }}
+                            {{ message || t('pages.verify_certificate.invalid_fallback') }}
                         </p>
                         <Divider class="my-8" />
                         <button onclick="window.history.back()" class="text-slate-500 hover:text-slate-800 transition-colors flex items-center justify-center gap-2 mx-auto font-medium">
-                            <i class="pi pi-arrow-left"></i> Retour
+                            <i class="pi pi-arrow-left"></i> {{ t('pages.verify_certificate.back') }}
                         </button>
                     </div>
                 </template>
@@ -123,11 +126,11 @@ const verificationStatus = computed(() => {
                         <div class="flex flex-col md:flex-row items-start justify-between gap-6 mb-10 border-b border-slate-100 pb-8">
                             <div>
                                 <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-                                    Preuve de Certification
+                                    {{ t('pages.verify_certificate.proof_title') }}
                                 </h1>
                                 <div class="flex items-center gap-2 text-slate-500">
                                     <i class="pi pi-shield text-blue-600"></i>
-                                    <span class="text-sm font-medium">Document scellé numériquement</span>
+                                    <span class="text-sm font-medium">{{ t('pages.verify_certificate.digital_seal') }}</span>
                                 </div>
                             </div>
                             <div class="flex flex-col items-end">
@@ -152,12 +155,12 @@ const verificationStatus = computed(() => {
                         <!-- Grille d'informations -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                             <div class="space-y-1">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Titulaire du Certificat</p>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">{{ t('pages.verify_certificate.holder') }}</p>
                                 <p class="text-2xl font-bold text-slate-900 leading-tight">{{ certificate.student }}</p>
                             </div>
 
                             <div class="space-y-1">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Date d'Émission</p>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">{{ t('pages.verify_certificate.issued_at') }}</p>
                                 <p class="text-lg font-semibold text-slate-700 flex items-center gap-2">
                                     <i class="pi pi-calendar text-slate-400"></i>
                                     {{ certificate.issued_at }}
@@ -165,14 +168,14 @@ const verificationStatus = computed(() => {
                             </div>
 
                             <div class="md:col-span-2 space-y-1 bg-slate-50 p-4 rounded-lg">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Programme / Formation</p>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">{{ t('pages.verify_certificate.program') }}</p>
                                 <p class="text-xl font-bold text-blue-900 leading-snug">{{ certificate.course }}</p>
                             </div>
 
                             <div class="space-y-1">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Évaluation</p>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">{{ t('pages.verify_certificate.assessment') }}</p>
                                 <div class="flex items-center gap-3">
-                                    <span class="text-lg font-bold text-slate-800">{{ certificate.score ? `${certificate.score}%` : 'Réussite' }}</span>
+                                    <span class="text-lg font-bold text-slate-800">{{ certificate.score ? `${certificate.score}%` : t('pages.verify_certificate.passed_label') }}</span>
                                     <div class="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
                                         <div class="h-full bg-emerald-500" :style="{width: (certificate.score || 100) + '%'}"></div>
                                     </div>
@@ -180,7 +183,7 @@ const verificationStatus = computed(() => {
                             </div>
 
                             <div class="space-y-1">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">ID de Vérification</p>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">{{ t('pages.verify_certificate.verification_id') }}</p>
                                 <p class="font-mono text-sm bg-slate-100 px-2 py-1 rounded text-slate-600 break-all border border-slate-200">
                                     {{ certificate.id }}
                                 </p>
@@ -192,10 +195,10 @@ const verificationStatus = computed(() => {
                 <template #footer>
                     <div class="px-8 py-6 bg-slate-50/80 border-t border-slate-100 text-center">
                         <p class="text-xs text-slate-400 mb-2 italic">
-                            Ce document a été généré électroniquement. Aucune signature manuscrite n'est requise.
+                            {{ t('pages.verify_certificate.footer_note') }}
                         </p>
                         <p class="text-sm font-semibold text-slate-600">
-                            Trust Center <span class="text-blue-600">SubnetCongo</span> — Unité de Certification Académique
+                            {{ t('pages.verify_certificate.footer_trust_center') }} <span class="text-blue-600">SubnetCongo</span> — {{ t('pages.verify_certificate.footer_unit') }}
                         </p>
                     </div>
                 </template>
@@ -204,7 +207,7 @@ const verificationStatus = computed(() => {
             <!-- Liens d'aide -->
             <div class="mt-8 text-center">
                 <p class="text-slate-400 text-sm italic">
-                    Une question sur cette certification ? <a href="#" class="text-blue-500 underline underline-offset-4 hover:text-blue-700">Contacter le support</a>
+                    {{ t('pages.verify_certificate.help_prefix') }} <a href="#" class="text-blue-500 underline underline-offset-4 hover:text-blue-700">{{ t('pages.verify_certificate.help_link') }}</a>
                 </p>
             </div>
         </div>

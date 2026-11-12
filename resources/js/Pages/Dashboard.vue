@@ -35,6 +35,9 @@ import PageCard from '@/Components/PageCard.vue';
 import PageSection from '@/Components/PageSection.vue';
 import SncSkeleton from '@/Components/SncSkeleton.vue';
 import SncAlert from '@/Components/SncAlert.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // ======================================================================================
 // PROPS
@@ -108,12 +111,12 @@ const applyFilters = debounce(() => {
 
 const purgeCache = () => {
     confirm.require({
-        message: 'Voulez-vous forcer le recalcul de toute l\'intelligence analytique ?',
-        header: 'Purge du Cache',
+        message: t('pages.dashboard.purgeMessage'),
+        header: t('pages.dashboard.purgeHeader'),
         icon: 'pi pi-exclamation-triangle',
         accept: () => {
             router.post(route('admin.analytics.purge'), {}, {
-                onSuccess: () => toast.add({ severity: 'warn', summary: 'Cache Purgé', detail: 'Les données sont maintenant fraîches.' })
+                onSuccess: () => toast.add({ severity: 'warn', summary: t('pages.dashboard.cachePurged'), detail: t('pages.dashboard.cachePurgedDetail') })
             });
         }
     });
@@ -160,21 +163,21 @@ onBeforeUnmount(() => {
 
 <template>
     <AppLayout>
-        <Head title="Tableau de bord administrateur" />
+        <Head :title="t('pages.dashboard.headTitle')" />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen">
 
             <!-- Header avec PageHeader -->
             <PageHeader
-                :title="props.meta?.greeting || 'Tableau de bord'"
-                :subtitle="props.meta?.message || 'Vue d\'ensemble de la plateforme SUBNETCONGO'"
+                :title="props.meta?.greeting || t('pages.dashboard.fallbackTitle')"
+                :subtitle="props.meta?.message || t('pages.dashboard.fallbackSubtitle')"
                 icon="pi-chart-bar"
                 badge="Admin"
                 accent="blue"
                 :actions="[
-                    { label: 'Actualiser', icon: 'pi-refresh', onClick: () => router.reload() },
-                    { label: 'Purger cache', icon: 'pi-trash', onClick: purgeCache }
+                    { label: t('pages.dashboard.refresh'), icon: 'pi-refresh', onClick: () => router.reload() },
+                    { label: t('pages.dashboard.purgeCache'), icon: 'pi-trash', onClick: purgeCache }
                 ]"
             />
 
@@ -186,12 +189,12 @@ onBeforeUnmount(() => {
                         <InputText
                             v-model="activeFilters.search"
                             @input="applyFilters"
-                            placeholder="Rechercher..."
+                            :placeholder="t('pages.dashboard.searchPlaceholder')"
                             class="w-full sm:w-64 bg-slate-50 border-none rounded-xl font-bold focus:ring-blue-500"
                         />
                     </IconField>
-                    <Tag :value="`Année: ${activeFilters.year}`" class="!rounded-lg" />
-                    <Tag :value="`Mois: ${activeFilters.month}`" class="!rounded-lg" />
+                    <Tag :value="t('pages.dashboard.yearTag', { year: activeFilters.year })" class="!rounded-lg" />
+                    <Tag :value="t('pages.dashboard.monthTag', { month: activeFilters.month })" class="!rounded-lg" />
                 </div>
 
                 <!-- Skeleton loader -->
@@ -202,41 +205,41 @@ onBeforeUnmount(() => {
                 <!-- KPIs avec PageKpi -->
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                     <PageKpi
-                        label="Chiffre d'affaires"
+                        :label="t('pages.dashboard.kpiRevenue')"
                         :value="formatCurrency(props.kpis?.revenue?.total || 0)"
                         icon="pi-dollar"
                         color="blue"
                         :trend="props.kpis?.revenue?.progress || 0"
-                        :subtext="`Prédiction M+1: ${formatCurrency(props.kpis?.revenue?.predicted || 0)}`"
+                        :subtext="t('pages.dashboard.kpiRevenueSub', { amount: formatCurrency(props.kpis?.revenue?.predicted || 0) })"
                     />
                     <PageKpi
-                        label="Étudiants actifs"
+                        :label="t('pages.dashboard.kpiStudents')"
                         :value="formatNumber(props.kpis?.students?.total || 0)"
                         icon="pi-users"
                         color="indigo"
                         :trend="props.kpis?.students?.new_month || 0"
-                        :subtext="`Taux d'attrition: ${props.kpis?.students?.churn || 0}%`"
+                        :subtext="t('pages.dashboard.kpiStudentsSub', { rate: props.kpis?.students?.churn || 0 })"
                     />
                     <PageKpi
-                        label="Taux de complétion"
+                        :label="t('pages.dashboard.kpiCompletion')"
                         :value="`${props.kpis?.academic?.completion || 0}%`"
                         icon="pi-graduation-cap"
                         color="emerald"
-                        :subtext="`Diplômes: ${props.kpis?.academic?.certificates_issued || 0}`"
+                        :subtext="t('pages.dashboard.kpiCompletionSub', { count: props.kpis?.academic?.certificates_issued || 0 })"
                     />
                     <PageKpi
-                        label="Santé système"
+                        :label="t('pages.dashboard.kpiSystemHealth')"
                         :value="`${infraState.cpu}%`"
                         icon="pi-server"
                         color="violet"
-                        :subtext="`Latence: ${infraState.latency}ms`"
+                        :subtext="t('pages.dashboard.kpiHealthSub', { latency: infraState.latency })"
                     />
                 </div>
 
                 <!-- Graphiques -->
                 <div v-if="!isLoading" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <!-- Évolution des revenus -->
-                    <PageCard title="Évolution financière" subtitle="Comparatif annuel" class="lg:col-span-2">
+                    <PageCard :title="t('pages.dashboard.chartRevenueTitle')" :subtitle="t('pages.dashboard.chartRevenueSubtitle')" class="lg:col-span-2">
                         <div class="h-[350px]">
                             <Chart
                                 v-if="props.chartData?.revenue_evolution"
@@ -246,13 +249,13 @@ onBeforeUnmount(() => {
                                 class="h-full w-full"
                             />
                             <div v-else class="flex items-center justify-center h-full text-slate-400">
-                                Données non disponibles
+                                {{ t('pages.dashboard.noData') }}
                             </div>
                         </div>
                     </PageCard>
 
                     <!-- Radar compétences -->
-                    <PageCard title="Offre vs Demande" subtitle="Équilibre des compétences">
+                    <PageCard :title="t('pages.dashboard.chartSkillsTitle')" :subtitle="t('pages.dashboard.chartSkillsSubtitle')">
                         <div class="h-[350px]">
                             <Chart
                                 v-if="props.chartData?.skills_radar"
@@ -262,14 +265,14 @@ onBeforeUnmount(() => {
                                 class="h-full w-full"
                             />
                             <div v-else class="flex items-center justify-center h-full text-slate-400">
-                                Données non disponibles
+                                {{ t('pages.dashboard.noData') }}
                             </div>
                         </div>
                     </PageCard>
                 </div>
 
                 <!-- Détails infrastructure -->
-                <PageSection v-if="!isLoading" title="Infrastructure" subtitle="État des serveurs en temps réel">
+                <PageSection v-if="!isLoading" :title="t('pages.dashboard.infraTitle')" :subtitle="t('pages.dashboard.infraSubtitle')">
                     <PageCard>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="text-center">
@@ -312,21 +315,21 @@ onBeforeUnmount(() => {
                                         valueTemplate="{value}%"
                                     />
                                 </div>
-                                <p class="text-sm font-bold text-slate-800">Disque</p>
+                                <p class="text-sm font-bold text-slate-800">{{ t('pages.dashboard.disk') }}</p>
                             </div>
                         </div>
                         <div class="mt-6 pt-6 border-t border-slate-100 flex flex-wrap justify-between items-center gap-4">
                             <div class="flex items-center gap-4">
-                                <span class="text-sm text-slate-600">Latence DB:</span>
+                                <span class="text-sm text-slate-600">{{ t('pages.dashboard.dbLatency') }}:</span>
                                 <Tag :value="`${infraState.latency}ms`" severity="info" />
                             </div>
                             <div class="flex items-center gap-4">
-                                <span class="text-sm text-slate-600">Plateforme:</span>
+                                <span class="text-sm text-slate-600">{{ t('pages.dashboard.platform') }}:</span>
                                 <Tag :value="infraState.platform" severity="secondary" />
                             </div>
                             <div class="flex items-center gap-4">
                                 <span class="text-sm text-slate-600">Uptime:</span>
-                                <Tag :value="props.infra?.uptime || 'En cours'" severity="success" />
+                                <Tag :value="props.infra?.uptime || t('pages.dashboard.uptimeRunning')" severity="success" />
                             </div>
                         </div>
                     </PageCard>
@@ -335,7 +338,7 @@ onBeforeUnmount(() => {
                 <!-- Activités récentes et Support -->
                 <div v-if="!isLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <!-- Journal d'audit -->
-                    <PageCard title="Journal d'audit" :subtitle="`${props.activities?.length || 0} actions récentes`">
+                    <PageCard :title="t('pages.dashboard.auditTitle')" :subtitle="t('pages.dashboard.auditSubtitle', { count: props.activities?.length || 0 })">
                         <ScrollPanel style="height: 300px" class="pr-4">
                             <Timeline v-if="props.activities?.length" :value="props.activities">
                                 <template #marker="slotProps">
@@ -355,13 +358,13 @@ onBeforeUnmount(() => {
                                 </template>
                             </Timeline>
                             <div v-else class="flex items-center justify-center h-full text-slate-400 py-8">
-                                Aucune activité récente
+                                {{ t('pages.dashboard.noRecentActivity') }}
                             </div>
                         </ScrollPanel>
                     </PageCard>
 
                     <!-- Tickets support -->
-                    <PageCard title="Tickets de support" :subtitle="`${props.supportStatus?.open_tickets || 0} ouverts`">
+                    <PageCard :title="t('pages.dashboard.supportTickets')" :subtitle="t('pages.dashboard.openTickets', { count: props.supportStatus?.open_tickets || 0 })">
                         <div v-if="props.supportStatus?.recent_tickets?.length" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                             <div
                                 v-for="ticket in props.supportStatus.recent_tickets"
@@ -377,13 +380,13 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
                         <div v-else class="flex items-center justify-center py-8 text-slate-400">
-                            Aucun ticket ouvert
+                            {{ t('pages.dashboard.noOpenTickets') }}
                         </div>
                     </PageCard>
                 </div>
 
                 <!-- Leaderboard -->
-                <PageSection v-if="!isLoading && props.leaderboard?.length" title="Hall of Fame" subtitle="Top apprenants">
+                <PageSection v-if="!isLoading && props.leaderboard?.length" :title="t('pages.dashboard.hallOfFame')" :subtitle="t('pages.dashboard.topLearners')">
                     <PageCard>
                         <div class="space-y-4">
                             <div
@@ -396,7 +399,7 @@ onBeforeUnmount(() => {
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-sm font-bold text-slate-800">{{ student.name }}</p>
-                                    <p class="text-xs text-slate-500">{{ student.points || 0 }} points</p>
+                                    <p class="text-xs text-slate-500">{{ t('pages.dashboard.points', { count: student.points || 0 }) }}</p>
                                 </div>
                                 <Tag :value="student.courses_completed || 0" severity="info" class="text-[8px]" />
                             </div>

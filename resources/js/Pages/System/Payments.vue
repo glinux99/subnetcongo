@@ -12,6 +12,7 @@ import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 
 // --- PRIMEVUE IMPORTS ---
 import DataTable from 'primevue/datatable';
@@ -24,6 +25,7 @@ import InputSwitch from 'primevue/inputswitch';
 import Password from 'primevue/password';
 import Badge from 'primevue/badge';
 
+const { t } = useI18n();
 const toast = useToast();
 
 const props = defineProps({
@@ -61,7 +63,7 @@ const fetchGateways = () => {
 const toggleStatus = (gateway) => {
     // Optimistic UI update could go here
     router.post(route('system.payments.toggle', gateway.id), {}, {
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Statut mis à jour', detail: `La passerelle est maintenant ${gateway.enabled ? 'active' : 'inactive'}.`, life: 3000 }),
+        onSuccess: () => toast.add({ severity: 'success', summary: t('pages.payments.status_updated'), detail: t('pages.payments.gateway_now', { status: gateway.enabled ? t('pages.payments.status_active') : t('pages.payments.status_inactive') }), life: 3000 }),
         preserveScroll: true
     });
 };
@@ -69,12 +71,12 @@ const toggleStatus = (gateway) => {
 const confirmAction = useConfirmAction();
 const deleteGateway = (gateway) => {
     confirmAction({
-        header: 'Supprimer la passerelle',
-        message: 'Supprimer cette passerelle ? Cette action est irréversible.',
-        acceptLabel: 'Supprimer',
+        header: t('pages.payments.delete_header'),
+        message: t('pages.payments.delete_message'),
+        acceptLabel: t('pages.payments.delete'),
         danger: true,
         accept: () => router.delete(route('system.payments.destroy', gateway.id), {
-            onSuccess: () => toast.add({ severity: 'success', summary: 'Passerelle supprimée', life: 3000 }),
+            onSuccess: () => toast.add({ severity: 'success', summary: t('pages.payments.gateway_deleted'), life: 3000 }),
         }),
     });
 };
@@ -91,19 +93,19 @@ const configureGateway = (gw) => {
 };
 
 const saveConfig = () => {
-    toast.add({ severity: 'success', summary: 'Configuration sauvegardée', detail: `Paramètres pour ${selectedGateway.value?.provider} mis à jour.`, life: 3000 });
+    toast.add({ severity: 'success', summary: t('pages.payments.config_saved'), detail: t('pages.payments.params_updated', { provider: selectedGateway.value?.provider }), life: 3000 });
     displayGatewayDialog.value = false;
 };
 
 const testConnection = (gateway) => {
-    toast.add({ severity: 'info', summary: 'Test en cours', detail: 'Vérification des identifiants...', life: 2000 });
+    toast.add({ severity: 'info', summary: t('pages.payments.test_running'), detail: t('pages.payments.test_detail'), life: 2000 });
     router.post(route('system.payments.test', gateway.id), {}, {
         onSuccess: (page) => {
-            const msg = page.props.flash?.success || 'Connexion établie avec succès';
-            toast.add({ severity: 'success', summary: 'Test réussi', detail: msg, life: 3000 });
+            const msg = page.props.flash?.success || t('pages.payments.connection_ok');
+            toast.add({ severity: 'success', summary: t('pages.payments.test_success'), detail: msg, life: 3000 });
         },
         onError: () => {
-            toast.add({ severity: 'error', summary: 'Échec de connexion', detail: 'Vérifiez vos clés d\'API.', life: 4000 });
+            toast.add({ severity: 'error', summary: t('pages.payments.test_failed'), detail: t('pages.payments.check_api_keys'), life: 4000 });
         }
     });
 };
@@ -125,18 +127,18 @@ const getProviderStyle = (provider) => {
 
 <template>
     <AppLayout>
-        <Head title="Passerelles de Paiement - SubNetCongo" />
+        <Head :title="t('pages.payments.head_title')" />
 
         <div class="page-bg min-h-screen font-sans">
 
             <PageHeader
-                title="Passerelles de paiement"
-                subtitle="Configuration des passerelles et suivi des flux transactionnels"
+                :title="t('pages.payments.page_title')"
+                :subtitle="t('pages.payments.page_subtitle')"
                 icon="pi-credit-card"
                 accent="emerald"
-                badge="Système"
+                :badge="t('pages.payments.badge_system')"
                 :actions="[
-                    { label: 'Rafraîchir', icon: 'pi-refresh', variant: 'secondary', onClick: fetchGateways },
+                    { label: t('pages.payments.refresh'), icon: 'pi-refresh', variant: 'secondary', onClick: fetchGateways },
                 ]"
             />
 
@@ -145,7 +147,7 @@ const getProviderStyle = (provider) => {
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Volume Total</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_volume') }}</p>
                             <div class="text-3xl font-black text-slate-900 tracking-tight">{{ formatCurrency(stats.total_volume) }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -154,7 +156,7 @@ const getProviderStyle = (provider) => {
                     </div>
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Transactions</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_transactions') }}</p>
                             <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.total_transactions }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -163,7 +165,7 @@ const getProviderStyle = (provider) => {
                     </div>
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Taux de Succès</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_success_rate') }}</p>
                             <div class="flex items-end gap-2">
                                 <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.success_rate }}%</div>
                                 <span class="text-xs font-bold text-emerald-500 mb-1.5"><i class="pi pi-arrow-up text-[10px]"></i> 2.4%</span>
@@ -175,7 +177,7 @@ const getProviderStyle = (provider) => {
                     </div>
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Passerelles Actives</p>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_active_gateways') }}</p>
                             <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.active_gateways }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
@@ -189,18 +191,18 @@ const getProviderStyle = (provider) => {
                     
                     <!-- Table Toolbar -->
                     <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-                        <h2 class="text-lg font-bold text-slate-800 tracking-tight">Routage des Paiements</h2>
+                        <h2 class="text-lg font-bold text-slate-800 tracking-tight">{{ t('pages.payments.routing_title') }}</h2>
                         <div class="flex gap-2 w-full md:w-auto">
                             <span class="relative w-full sm:w-64">
                                 <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <InputText v-model="search" placeholder="Rechercher une passerelle..." class="w-full pl-10 !rounded-lg" @keyup.enter="fetchGateways" />
+                                <InputText v-model="search" :placeholder="t('pages.payments.search_placeholder')" class="w-full pl-10 !rounded-lg" @keyup.enter="fetchGateways" />
                             </span>
                             <Button icon="pi pi-filter" class="p-button-outlined p-button-secondary !rounded-lg" @click="fetchGateways" />
                         </div>
                     </div>
 
                     <DataTable :value="gateways.data" :paginator="true" :rows="10" :loading="loading" class="ultimate-table">
-                        <Column field="provider" header="Fournisseur" sortable style="min-width: 16rem">
+                        <Column field="provider" :header="t('pages.payments.col_provider')" sortable style="min-width: 16rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-4">
                                     <div :class="`w-10 h-10 rounded-xl bg-${getProviderStyle(data.provider).color}-50 flex items-center justify-center text-${getProviderStyle(data.provider).color}-600 border border-${getProviderStyle(data.provider).color}-100`">
@@ -214,35 +216,35 @@ const getProviderStyle = (provider) => {
                             </template>
                         </Column>
                         
-                        <Column field="sandbox" header="Environnement" style="width: 12rem">
+                        <Column field="sandbox" :header="t('pages.payments.col_environment')" style="width: 12rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <span v-if="data.sandbox" class="w-2 h-2 rounded-full bg-amber-500"></span>
                                     <span v-else class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    <span class="text-xs font-bold text-slate-600">{{ data.sandbox ? 'Sandbox (Test)' : 'Production' }}</span>
+                                    <span class="text-xs font-bold text-slate-600">{{ data.sandbox ? t('pages.payments.sandbox_test') : t('pages.payments.production') }}</span>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="enabled" header="Activation" style="width: 10rem">
+                        <Column field="enabled" :header="t('pages.payments.col_enabled')" style="width: 10rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <InputSwitch v-model="data.enabled" @change="toggleStatus(data)" />
                                     <span class="text-xs font-bold uppercase" :class="data.enabled ? 'text-emerald-600' : 'text-slate-400'">
-                                        {{ data.enabled ? 'Actif' : 'Inactif' }}
+                                        {{ data.enabled ? t('pages.payments.enabled_active') : t('pages.payments.enabled_inactive') }}
                                     </span>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column header="Actions" alignFrozen="right" frozen style="width: 16rem">
+                        <Column :header="t('pages.payments.col_actions')" alignFrozen="right" frozen style="width: 16rem">
                             <template #body="{ data }">
                                 <div class="flex gap-1 justify-end">
-                                    <Button v-tooltip.top="'Configuration API'" icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded" @click="configureGateway(data)" />
-                                    <Button v-tooltip.top="'Tester la connexion'" icon="pi pi-wifi" class="p-button-text p-button-info p-button-rounded" @click="testConnection(data)" />
-                                    <Button v-tooltip.top="'Exporter Historique'" icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded" @click="exportTransactions(data)" />
+                                    <Button v-tooltip.top="t('pages.payments.config_api_tooltip')" icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded" @click="configureGateway(data)" />
+                                    <Button v-tooltip.top="t('pages.payments.test_connection_tooltip')" icon="pi pi-wifi" class="p-button-text p-button-info p-button-rounded" @click="testConnection(data)" />
+                                    <Button v-tooltip.top="t('pages.payments.export_history_tooltip')" icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded" @click="exportTransactions(data)" />
                                     <div class="w-px h-6 bg-slate-200 my-auto mx-1"></div>
-                                    <Button v-tooltip.top="'Supprimer'" icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded" @click="deleteGateway(data)" />
+                                    <Button v-tooltip.top="t('pages.payments.delete')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded" @click="deleteGateway(data)" />
                                 </div>
                             </template>
                         </Column>
@@ -252,7 +254,7 @@ const getProviderStyle = (provider) => {
         </div>
 
         <!-- --- DIALOG: CONFIGURATION GATEWAY --- -->
-        <Dialog v-model:visible="displayGatewayDialog" modal :style="{ width: '550px' }" header="Configuration Passerelle">
+        <Dialog v-model:visible="displayGatewayDialog" modal :style="{ width: '550px' }" :header="t('pages.payments.config_gateway_header')">
             <div class="pt-2 space-y-6">
                 <!-- En-tête du modal -->
                 <div v-if="selectedGateway" class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -271,20 +273,20 @@ const getProviderStyle = (provider) => {
                 <!-- Formulaire -->
                 <div class="space-y-5">
                     <div class="field">
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Clé Publique (Public Key)</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">{{ t('pages.payments.public_key_label') }}</label>
                         <InputText v-model="gatewayConfig.api_key" class="w-full !rounded-lg font-mono text-sm" placeholder="pk_test_..." />
                     </div>
                     
                     <div class="field">
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Clé Secrète (Secret Key)</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">{{ t('pages.payments.secret_key_label') }}</label>
                         <Password v-model="gatewayConfig.secret_key" :feedback="false" toggleMask class="w-full" inputClass="w-full !rounded-lg font-mono text-sm" placeholder="sk_test_..." />
-                        <small class="text-slate-400 mt-1 block">Laissez vide si vous ne souhaitez pas la modifier.</small>
+                        <small class="text-slate-400 mt-1 block">{{ t('pages.payments.leave_empty') }}</small>
                     </div>
 
                     <div class="field">
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Webhook URL (Écouteur)</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">{{ t('pages.payments.webhook_label') }}</label>
                         <InputText v-model="gatewayConfig.webhook_url" class="w-full !rounded-lg font-mono text-sm text-blue-600 bg-slate-50" readonly />
-                        <small class="text-slate-400 mt-1 block">Copiez cette URL dans le tableau de bord de votre fournisseur.</small>
+                        <small class="text-slate-400 mt-1 block">{{ t('pages.payments.copy_webhook') }}</small>
                     </div>
                 </div>
 
@@ -293,10 +295,10 @@ const getProviderStyle = (provider) => {
                      :class="gatewayConfig.is_test_mode ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'">
                     <div>
                         <span class="text-sm font-bold" :class="gatewayConfig.is_test_mode ? 'text-amber-900' : 'text-emerald-900'">
-                            {{ gatewayConfig.is_test_mode ? 'Mode Test Activé (Sandbox)' : 'Mode Production Activé (Live)' }}
+                            {{ gatewayConfig.is_test_mode ? t('pages.payments.test_mode_on') : t('pages.payments.test_mode_off') }}
                         </span>
                         <p class="text-xs mt-0.5" :class="gatewayConfig.is_test_mode ? 'text-amber-700' : 'text-emerald-700'">
-                            {{ gatewayConfig.is_test_mode ? 'Aucun argent réel ne sera débité.' : 'Les cartes réelles seront débitées. Prudence !' }}
+                            {{ gatewayConfig.is_test_mode ? t('pages.payments.test_mode_on_desc') : t('pages.payments.test_mode_off_desc') }}
                         </p>
                     </div>
                     <InputSwitch v-model="gatewayConfig.is_test_mode" />
@@ -305,8 +307,8 @@ const getProviderStyle = (provider) => {
             
             <template #footer>
                 <div class="flex justify-between items-center w-full pt-4 mt-2">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="displayGatewayDialog = false" />
-                    <Button label="Enregistrer la configuration" icon="pi pi-check" class="bg-slate-900 hover:bg-slate-800 text-white border-none !rounded-lg font-bold shadow-md px-6" @click="saveConfig" />
+                    <Button :label="t('pages.payments.cancel')" class="p-button-text p-button-secondary font-bold" @click="displayGatewayDialog = false" />
+                    <Button :label="t('pages.payments.save_config')" icon="pi pi-check" class="bg-slate-900 hover:bg-slate-800 text-white border-none !rounded-lg font-bold shadow-md px-6" @click="saveConfig" />
                 </div>
             </template>
         </Dialog>

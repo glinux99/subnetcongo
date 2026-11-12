@@ -11,6 +11,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 // ============================================================================
 // 1. DÉFINITION DES PROPS & VALIDATION STRICTE
@@ -58,11 +60,11 @@ const isExternalUrl = (url) => {
     try { return new URL(url).origin !== window.location.origin; } catch { return true; }
 };
 
-const learningPaths = [
-    { title: 'Ingénieur Réseau Certifié', desc: 'Du CCNA au CCNP, maîtrisez le routage et la commutation.', courses_count: 5, time: '6 mois', icon: 'pi-sitemap' },
-    { title: 'Expert Cybersécurité', desc: 'Devenez un hacker éthique certifié et protégez les infrastructures.', courses_count: 7, time: '8 mois', icon: 'pi-shield' },
-    { title: 'Architecte Cloud AWS', desc: 'Concevez, déployez et gérez des applications scalables sur AWS.', courses_count: 4, time: '4 mois', icon: 'pi-cloud' }
-];
+const learningPaths = computed(() => [
+    { title: t('public.landing.path_net_title'), desc: t('public.landing.path_net_desc'), courses_count: 5, time: t('public.landing.months_6'), icon: 'pi-sitemap' },
+    { title: t('public.landing.path_sec_title'), desc: t('public.landing.path_sec_desc'), courses_count: 7, time: t('public.landing.months_8'), icon: 'pi-shield' },
+    { title: t('public.landing.path_aws_title'), desc: t('public.landing.path_aws_desc'), courses_count: 4, time: t('public.landing.months_4'), icon: 'pi-cloud' }
+]);
 
 // ============================================================================
 // 3. LOGIQUE GLOBALE & RESPONSIVE
@@ -99,12 +101,12 @@ const slides = computed(() => {
         }));
     }
     return [
-        { badge: 'Excellence & Innovation', title: 'Propulsez votre carrière IT', highlight: "aujourd'hui", description: "Formez-vous aux technologies de demain avec des experts du réseau et de la cybersécurité.", bgImage: null, mainImage: null, icon: null, cardTitle: null, cardSub: null, ctaLabel: null, ctaUrl: null }
+        { badge: t('public.landing.hero_badge'), title: t('public.landing.hero_title'), highlight: t('public.landing.hero_today'), description: t('public.landing.hero_desc'), bgImage: null, mainImage: null, icon: null, cardTitle: null, cardSub: null, ctaLabel: null, ctaUrl: null }
     ];
 });
 
 const activeSlideObj = computed(() => slides.value[activeSlide.value] || {});
-const heroPrimaryLabel = computed(() => activeSlideObj.value.ctaLabel || 'Explorer le Catalogue');
+const heroPrimaryLabel = computed(() => activeSlideObj.value.ctaLabel || t('public.landing.hero_cta'));
 const heroPrimaryUrl = computed(() => activeSlideObj.value.ctaUrl || route('academy'));
 
 const activeHeroCard = computed(() => {
@@ -250,10 +252,10 @@ const buildStats = () => {
         });
     }
     return [
-        { current: 0, target: props.stats?.students ?? 3500, suffix: '+', animated: true, ring: false, display: null, label: 'Apprenants formés', icon: 'pi-users', color: '#003399' },
+        { current: 0, target: props.stats?.students ?? 3500, suffix: '+', animated: true, ring: false, display: null, label: t('public.landing.stats_learners'), icon: 'pi-users', color: '#003399' },
         { current: 0, target: props.stats?.courses ?? 120, suffix: '+', animated: true, ring: false, display: null, label: 'Cours & Modules', icon: 'pi-book', color: '#EE1C25' },
-        { current: 0, target: props.stats?.instructors ?? 25, suffix: '+', animated: true, ring: false, display: null, label: 'Experts Certifiés', icon: 'pi-verified', color: '#10B981' },
-        { current: 0, target: props.stats?.success_rate ?? 98, suffix: '%', animated: true, ring: false, display: null, label: 'Taux de réussite (%)', icon: 'pi-chart-line', color: '#F59E0B' },
+        { current: 0, target: props.stats?.instructors ?? 25, suffix: '+', animated: true, ring: false, display: null, label: t('public.landing.stats_experts'), icon: 'pi-verified', color: '#10B981' },
+        { current: 0, target: props.stats?.success_rate ?? 98, suffix: '%', animated: true, ring: false, display: null, label: t('public.landing.stats_rate'), icon: 'pi-chart-line', color: '#F59E0B' },
     ];
 };
 
@@ -283,18 +285,18 @@ const ispServices = computed(() => {
         try { return typeof props.about.services === 'string' ? JSON.parse(props.about.services) : props.about.services; } catch (e) {}
     }
     return [
-        { title: 'Infrastructures Réseaux', desc: 'Architecture, déploiement et maintenance de réseaux LAN/WAN (Cisco, MikroTik).', icon: 'pi-sitemap' },
-        { title: 'Cybersécurité & Audit', desc: 'Tests d\'intrusion, sécurisation des endpoints et protection périmétrique.', icon: 'pi-shield' },
+        { title: t('public.landing.service_net_title'), desc: t('public.landing.service_net_desc'), icon: 'pi-sitemap' },
+        { title: t('public.landing.service_sec_title'), desc: t('public.landing.service_sec_desc'), icon: 'pi-shield' },
         { title: 'Solutions Cloud & Data', desc: 'Migration, virtualisation (VMware, Hyper-V) et services AWS/Azure.', icon: 'pi-server' },
-        { title: 'Infogérance (NOC/SOC)', desc: 'Surveillance 24/7 de vos infrastructures et réponse aux incidents.', icon: 'pi-desktop' }
+        { title: t('public.landing.service_noc_title'), desc: t('public.landing.service_noc_desc'), icon: 'pi-desktop' }
     ];
 });
 
 const faqs = ref([
-    { q: 'Les certifications délivrées sont-elles reconnues ?', a: 'Oui, nos cursus vous préparent aux examens internationaux (Cisco CCNA/CCNP, CompTIA, AWS). Vous passez l\'examen final dans un centre agréé.', open: false },
-    { q: 'Comment se déroule la formation en ligne ?', a: 'Via notre plateforme, vous accédez à des vidéos à la demande, des quiz interactifs et des laboratoires virtuels (Labs) pour la pratique.', open: false },
-    { q: 'Proposez-vous des formations pour les entreprises (B2B) ?', a: 'Absolument. Nous organisons des sessions intra-entreprise sur mesure pour monter en compétence vos équipes techniques.', open: false },
-    { q: 'Quels sont les moyens de paiement acceptés ?', a: 'Nous acceptons les paiements par carte bancaire (Visa/Mastercard), PayPal, et les solutions de Mobile Money locales.', open: false }
+    { q: t('public.landing.faq_1_q'), a: t('public.landing.faq_1_a'), open: false },
+    { q: t('public.landing.faq_2_q'), a: t('public.landing.faq_2_a'), open: false },
+    { q: t('public.landing.faq_3_q'), a: t('public.landing.faq_3_a'), open: false },
+    { q: t('public.landing.faq_4_q'), a: t('public.landing.faq_4_a'), open: false }
 ]);
 
 const toggleFaq = (index) => {
@@ -355,7 +357,7 @@ const schemaOrgData = computed(() => {
 
 <template>
     <Head :title="`Accueil - ${identity.site_name || 'SubnetCongo'}`">
-        <meta name="description" :content="identity.site_description || 'Votre partenaire en ingénierie réseau et centre de formation IT de pointe.'">
+        <meta name="description" :content="identity.site_description || t('public.landing.hero_focus')">
 
     </Head>
 
@@ -452,7 +454,7 @@ const schemaOrgData = computed(() => {
             <div class="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-32 bg-gradient-to-l from-white via-white/70 to-transparent z-10"></div>
 
             <div class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-12 flex items-center gap-4 sm:gap-8 lg:gap-12 py-4 sm:py-5">
-                <span class="sr-only">Technologies maîtrisées : {{ technologies.map(t => t.name).join(', ') }}</span>
+                <span class="sr-only">{{ t('public.about.pill_tech') }} : {{ technologies.map(x => x.name).join(', ') }}</span>
 
                 <div class="flex items-center gap-3 sm:gap-4 shrink-0 pr-4 sm:pr-8 lg:pr-12 border-r border-slate-200">
                     <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#003399] to-[#1e40af] flex items-center justify-center shadow-lg shadow-blue-900/10">
@@ -460,7 +462,7 @@ const schemaOrgData = computed(() => {
                     </div>
                     <div class="leading-tight">
                         <p class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Technologies</p>
-                        <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mt-0.5">Maîtrisées</p>
+                        <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mt-0.5">{{ t('public.landing.tech_mastered') }}</p>
                     </div>
                 </div>
 
@@ -487,7 +489,7 @@ const schemaOrgData = computed(() => {
             <div class="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="text-center mb-12 reveal-on-scroll">
                     <p class="text-xs font-black text-red-500 uppercase tracking-[0.3em] mb-3">Stack technique</p>
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter">Maîtrisez les technologies<br/>qui façonnent l'industrie</h2>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter">{{ t('public.landing.tech_title') }}</h2>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                     <div v-for="tech in technologies" :key="tech.id" class="reveal-on-scroll group bg-white p-6 rounded-xl border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300">
@@ -543,7 +545,7 @@ const schemaOrgData = computed(() => {
                     <div>
                         <div class="inline-flex items-center gap-2 mb-2">
                             <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">Académie IT</span>
+                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">{{ t('public.academy.pill_academy') }}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight">Formations & Certifications</h2>
                     </div>
@@ -621,7 +623,7 @@ const schemaOrgData = computed(() => {
                                         Suivre la session <i class="pi pi-video"></i>
                                     </div>
                                     <div v-else class="w-full bg-[#0B1221] hover:bg-slate-800 text-white text-sm font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm shadow-slate-900/10">
-                                        Détails du cours <i class="pi pi-arrow-right"></i>
+                                        {{ t('public.academy.course_details') }} <i class="pi pi-arrow-right"></i>
                                     </div>
                                 </div>
                             </div>
@@ -633,8 +635,8 @@ const schemaOrgData = computed(() => {
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                             <i class="pi pi-search text-3xl text-slate-300"></i>
                         </div>
-                        <p class="text-lg font-bold text-slate-600">Aucun cours trouvé pour "{{ searchQuery }}"</p>
-                        <button @click="searchQuery = ''; selectedCategory = 'Tous'" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">Réinitialiser les filtres</button>
+                        <p class="text-lg font-bold text-slate-600">{{ t('public.landing.empty_search') }} "{{ searchQuery }}"</p>
+                        <button @click="searchQuery = ''; selectedCategory = 'Tous'" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">{{ t('public.academy.reset') }}</button>
                     </div>
                 </div>
 
@@ -652,8 +654,8 @@ const schemaOrgData = computed(() => {
         <section class="py-20 bg-[#F4F6F9]">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="text-center max-w-3xl mx-auto mb-12 reveal-on-scroll">
-                    <h2 class="text-3xl md:text-4xl font-black text-[#0B1221] tracking-tight mb-4">Parcours Métiers</h2>
-                    <p class="text-slate-500">Des programmes structurés de A à Z pour atteindre un poste précis.</p>
+                    <h2 class="text-3xl md:text-4xl font-black text-[#0B1221] tracking-tight mb-4">{{ t('public.landing.paths_title') }}</h2>
+                    <p class="text-slate-500">{{ t('public.landing.paths_sub') }}</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -674,7 +676,7 @@ const schemaOrgData = computed(() => {
                             </div>
 
                             <Link :href="route('academy')" class="text-[#2563EB] font-bold text-sm flex items-center gap-2 hover:underline">
-                                Découvrir le parcours <i class="pi pi-arrow-right"></i>
+                                {{ t('public.landing.discover_path') }} <i class="pi pi-arrow-right"></i>
                             </Link>
                         </div>
                     </div>
@@ -692,13 +694,13 @@ const schemaOrgData = computed(() => {
                     <div class="w-full md:w-1/3 reveal-on-scroll">
                         <div class="inline-flex items-center gap-2 mb-2">
                             <span class="w-6 h-1 bg-red-600 rounded-full"></span>
-                            <span class="font-bold uppercase tracking-widest text-xs text-red-600">B2B & Ingénierie</span>
+                            <span class="font-bold uppercase tracking-widest text-xs text-red-600">{{ t('public.landing.b2b_pill') }}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight leading-tight mb-6">
                             Solutions Techniques <br/> sur-mesure
                         </h2>
                         <p class="text-slate-500 mb-8 leading-relaxed">
-                            En plus de la formation, nous accompagnons les entreprises dans le déploiement et la sécurisation de leurs infrastructures critiques.
+                            {{ t('public.landing.b2b_desc') }}
                         </p>
                         <Link :href="route('contact')" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors">
                             Demander un Audit
@@ -727,7 +729,7 @@ const schemaOrgData = computed(() => {
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[720px] h-[280px] bg-red-600/10 blur-[140px] rounded-full pointer-events-none"></div>
             <div class="relative max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="text-center mb-12 reveal-on-scroll">
-                    <h2 class="text-3xl md:text-4xl font-black tracking-tight">Questions fréquentes</h2>
+                    <h2 class="text-3xl md:text-4xl font-black tracking-tight">{{ t('public.landing.faq_title') }}</h2>
                 </div>
 
                 <div class="space-y-3">
@@ -750,11 +752,11 @@ const schemaOrgData = computed(() => {
         <section class="py-20 bg-white border-t border-slate-100 text-center relative overflow-hidden">
             <div class="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[640px] h-[320px] bg-gradient-to-t from-red-100/60 to-transparent blur-3xl rounded-full pointer-events-none"></div>
             <div class="relative max-w-[800px] mx-auto px-4 reveal-on-scroll">
-                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">Prêt à développer vos compétences ?</h2>
+                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">{{ t('public.landing.cta_ready') }}</h2>
                 <p class="text-lg text-slate-500 mb-10">Rejoignez des milliers de professionnels qui nous font confiance.</p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link :href="route('register')" class="w-full sm:w-auto px-10 py-4 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 text-base">
-                        Créer un compte gratuit
+                        {{ t('public.academy.cta_create_account') }}
                     </Link>
                     <Link :href="route('contact')" class="w-full sm:w-auto px-10 py-4 bg-[#F4F6F9] text-[#0B1221] font-bold rounded-xl hover:bg-slate-200 transition-colors text-base">
                         Nous contacter

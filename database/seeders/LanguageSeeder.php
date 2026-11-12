@@ -11,5 +11,8 @@ class LanguageSeeder extends Seeder
     {
         Language::firstOrCreate(['code' => 'fr'],['name' => 'Français', 'is_active' => true, 'is_default' => true]);
         Language::firstOrCreate(['code' => 'en'],['name' => 'English', 'is_active' => true, 'is_default' => false]);
+        Language::firstOrCreate(['code' => 'de'],['name' => 'Deutsch', 'is_active' => true, 'is_default' => false]);
+        Language::firstOrCreate(['code' => 'sw'],['name' => 'Kiswahili', 'is_active' => true, 'is_default' => false]);
+        Language::firstOrCreate(['code' => 'ln'],['name' => 'Lingála', 'is_active' => true, 'is_default' => false]);
     }
 }

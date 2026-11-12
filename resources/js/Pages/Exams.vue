@@ -56,10 +56,12 @@ import Timeline from 'primevue/timeline';
 import Message from 'primevue/message';
 import Tooltip from 'primevue/tooltip';
 import OverlayPanel from 'primevue/overlaypanel';
+import { useI18n } from 'vue-i18n';
 
 // ======================================================================================
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const loading = ref(true);
@@ -80,10 +82,10 @@ const isSaving = ref(false);
 // CONFIGURATION DU WORKSPACE (MENU ÉDITEUR)
 // ======================================================================================
 const editorMenu = ref([
-    { id: 'general', label: 'Paramètres Généraux', description: 'Titre, cours, consignes', icon: 'pi pi-id-card' },
-    { id: 'syllabus', label: 'Syllabus & Items', description: 'Constructeur de questions', icon: 'pi pi-list' },
-    { id: 'rules', label: 'Règles & Anti-triche', description: 'Chrono, seuil, proctoring', icon: 'pi pi-shield' },
-    { id: 'audit', label: 'Audit & Versioning', description: 'Historique des révisions', icon: 'pi pi-history' }
+    { id: 'general', label: t('pages.exams.menuGeneralLabel'), description: t('pages.exams.menuGeneralDesc'), icon: 'pi pi-id-card' },
+    { id: 'syllabus', label: t('pages.exams.menuSyllabusLabel'), description: t('pages.exams.menuSyllabusDesc'), icon: 'pi pi-list' },
+    { id: 'rules', label: t('pages.exams.menuRulesLabel'), description: t('pages.exams.menuRulesDesc'), icon: 'pi pi-shield' },
+    { id: 'audit', label: t('pages.exams.menuAuditLabel'), description: t('pages.exams.menuAuditDesc'), icon: 'pi pi-history' }
 ]);
 const activeEditorTab = ref('general');
 
@@ -161,21 +163,21 @@ watch(activeEditorTab, (newValue) => {
 // DICTIONNAIRES DE RÉFÉRENCE
 // ======================================================================================
 const examTypes = [
-    { label: 'Quiz (Pratique)', value: 'Quiz', icon: 'pi pi-clock' },
-    { label: 'Certification Finale', value: 'Certification', icon: 'pi pi-verified' },
-    { label: 'Test de Niveau', value: 'Placement', icon: 'pi pi-map' }
+    { label: t('pages.exams.examTypeQuiz'), value: 'Quiz', icon: 'pi pi-clock' },
+    { label: t('pages.exams.examTypeCertification'), value: 'Certification', icon: 'pi pi-verified' },
+    { label: t('pages.exams.examTypePlacement'), value: 'Placement', icon: 'pi pi-map' }
 ];
 
 const questionTypes = [
-    { label: 'Choix Multiples (QCM)', value: 'multiple_choice', icon: 'pi pi-list', color: 'text-blue-500', bg: 'bg-blue-50' },
-    { label: 'Vrai ou Faux', value: 'true_false', icon: 'pi pi-check-circle', color: 'text-red-500', bg: 'bg-red-50' },
-    { label: 'Réponse Courte', value: 'short_answer', icon: 'pi pi-pencil', color: 'text-amber-500', bg: 'bg-amber-50' }
+    { label: t('pages.exams.questionTypeMultipleChoice'), value: 'multiple_choice', icon: 'pi pi-list', color: 'text-blue-500', bg: 'bg-blue-50' },
+    { label: t('pages.exams.questionTypeTrueFalse'), value: 'true_false', icon: 'pi pi-check-circle', color: 'text-red-500', bg: 'bg-red-50' },
+    { label: t('pages.exams.questionTypeShortAnswer'), value: 'short_answer', icon: 'pi pi-pencil', color: 'text-amber-500', bg: 'bg-amber-50' }
 ];
 
 const proctoringLevels = [
-    { label: 'Standard', value: 'none', desc: 'Aucune restriction logicielle' },
-    { label: 'Modéré (Focus)', value: 'standard', desc: 'Bloque le copier/coller et la sortie d\'onglet' },
-    { label: 'Strict (Proctoring)', value: 'strict', desc: 'Lockdown browser, Webcam & IA' }
+    { label: t('pages.exams.proctoringStandardLabel'), value: 'none', desc: t('pages.exams.proctoringStandardDesc') },
+    { label: t('pages.exams.proctoringModerateLabel'), value: 'standard', desc: t('pages.exams.proctoringModerateDesc') },
+    { label: t('pages.exams.proctoringStrictLabel'), value: 'strict', desc: t('pages.exams.proctoringStrictDesc') }
 ];
 
 // ======================================================================================
@@ -285,7 +287,7 @@ const importQuestionFromBank = (q) => {
 
     examForm.questions.push(clonedQuestion);
 
-    toast.add({ severity: 'success', summary: 'Item Importé', detail: 'La question a été ajoutée à votre syllabus.', life: 2500 });
+    toast.add({ severity: 'success', summary: t('pages.exams.importSuccessSummary'), detail: t('pages.exams.importSuccessDetail'), life: 2500 });
 };
 
 /**
@@ -309,8 +311,8 @@ const saveExam = (status = 'Active') => {
     }).post(url, {
         preserveScroll: true,
         onSuccess: () => {
-            const msg = status === 'Draft' ? 'Brouillon sauvegardé avec succès' : 'Évaluation publiée en ligne';
-            toast.add({ severity: 'success', summary: isUpdate ? 'Mise à jour' : 'Création', detail: msg, life: 4000 });
+            const msg = status === 'Draft' ? t('pages.exams.saveDraftMessage') : t('pages.exams.savePublishMessage');
+            toast.add({ severity: 'success', summary: isUpdate ? t('pages.exams.saveUpdateSummary') : t('pages.exams.saveCreateSummary'), detail: msg, life: 4000 });
             lastSavedAt.value = new Date();
 
             // Ferme la modale uniquement si on publie (Garde ouvert si brouillon)
@@ -320,7 +322,7 @@ const saveExam = (status = 'Active') => {
         },
         onError: (errors) => {
             console.error("Validation Errors:", errors);
-            toast.add({ severity: 'error', summary: 'Erreur de validation', detail: 'Vérifiez les champs obligatoires.', life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.exams.validationErrorSummary'), detail: t('pages.exams.validationErrorDetail'), life: 5000 });
             // Redirection automatique vers l'onglet général si l'erreur s'y trouve
             if (errors.title || errors.course_id || errors.type || errors.description) {
                 activeEditorTab.value = 'general';
@@ -339,20 +341,20 @@ const saveExam = (status = 'Active') => {
  */
 const deleteExam = (id) => {
     confirm.require({
-        message: 'Cette action supprimera définitivement cette évaluation et tout son contenu (questions, options). Confirmer ?',
-        header: 'Suppression destructrice',
+        message: t('pages.exams.deleteConfirmMessage'),
+        header: t('pages.exams.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-        rejectLabel: 'Annuler',
-        acceptLabel: 'Oui, supprimer',
+        rejectLabel: t('pages.exams.cancelAction'),
+        acceptLabel: t('pages.exams.confirmDelete'),
         accept: () => {
             router.delete(route('exams.destroy', id), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.add({ severity: 'success', summary: 'Supprimé', detail: 'L\'évaluation a été purgée du système.', life: 3000 });
+                    toast.add({ severity: 'success', summary: t('pages.exams.deleteSuccessSummary'), detail: t('pages.exams.deleteSuccessDetail'), life: 3000 });
                 },
                 onError: () => {
-                    toast.add({ severity: 'error', summary: 'Échec', detail: 'Impossible de supprimer un examen avec des tentatives existantes.', life: 5000 });
+                    toast.add({ severity: 'error', summary: t('pages.exams.deleteFailedSummary'), detail: t('pages.exams.deleteFailedDetail'), life: 5000 });
                 }
             });
         }
@@ -365,12 +367,12 @@ const deleteExam = (id) => {
 const confirmBulkArchive = () => {
     if(selectedExams.value.length === 0) return;
     confirm.require({
-        message: `Vous êtes sur le point d'archiver ${selectedExams.value.length} évaluations. Continuer ?`,
-        header: 'Archivage en masse',
+        message: t('pages.exams.bulkArchiveMessage', { count: selectedExams.value.length }),
+        header: t('pages.exams.bulkArchiveHeader'),
         icon: 'pi pi-info-circle',
         acceptClass: 'p-button-warning',
         accept: () => {
-            toast.add({ severity: 'info', summary: 'Opération en cours', detail: 'Les éléments sélectionnés ont été archivés.', life: 3000 });
+            toast.add({ severity: 'info', summary: t('pages.exams.operationInProgressSummary'), detail: t('pages.exams.bulkArchiveDetail'), life: 3000 });
             selectedExams.value = [];
         }
     });
@@ -409,7 +411,7 @@ const duplicateQuestion = (index) => {
     clone.text = clone.text + ' (Copie)';
     examForm.questions.splice(index + 1, 0, clone);
 
-    toast.add({ severity: 'info', summary: 'Item dupliqué', detail: 'La question a été copiée.', life: 2000 });
+    toast.add({ severity: 'info', summary: t('pages.exams.duplicateSummary'), detail: t('pages.exams.duplicateDetail'), life: 2000 });
 };
 
 const removeQuestion = (index) => {
@@ -436,7 +438,7 @@ const removeOptionFromQuestion = (questionIndex, optionIndex) => {
     if(examForm.questions[questionIndex].options.length > 2) {
         examForm.questions[questionIndex].options.splice(optionIndex, 1);
     } else {
-        toast.add({ severity: 'warn', summary: 'Minimum requis', detail: 'Une question QCM doit avoir au moins 2 options.', life: 3000 });
+        toast.add({ severity: 'warn', summary: t('pages.exams.minOptionsSummary'), detail: t('pages.exams.minOptionsDetail'), life: 3000 });
     }
 };
 
@@ -460,10 +462,10 @@ const isFormValid = computed(() => {
 
 const getStatusColor = (status) => {
     const map = {
-        Active: { sev: 'success', icon: 'pi pi-check-circle', label: 'En Ligne' },
-        Draft: { sev: 'secondary', icon: 'pi pi-file-edit', label: 'Brouillon' },
-        Archived: { sev: 'danger', icon: 'pi pi-box', label: 'Archivé' },
-        Pending: { sev: 'warning', icon: 'pi pi-clock', label: 'En Attente' }
+        Active: { sev: 'success', icon: 'pi pi-check-circle', label: t('pages.exams.statusActive') },
+        Draft: { sev: 'secondary', icon: 'pi pi-file-edit', label: t('pages.exams.statusDraft') },
+        Archived: { sev: 'danger', icon: 'pi pi-box', label: t('pages.exams.statusArchived') },
+        Pending: { sev: 'warning', icon: 'pi pi-clock', label: t('pages.exams.statusPending') }
     };
     return map[status] || { sev: 'info', icon: 'pi pi-info-circle', label: status };
 };
@@ -483,7 +485,7 @@ const getAuditLogsForExam = async (examId) => {
         auditEvents.value = response.data || [];
     } catch (error) {
         console.error("Failed to fetch audit logs:", error);
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger l\'historique d\'audit.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.exams.auditLoadErrorSummary'), detail: t('pages.exams.auditLoadErrorDetail'), life: 3000 });
         auditEvents.value = [];
     }
 };
@@ -494,7 +496,7 @@ const getAuditLogsForExam = async (examId) => {
 const performanceChartData = reactive({
     labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
     datasets: [{
-        label: 'Nombre d\'Apprenants', // Ces données devraient venir du backend pour un examen spécifique
+        label: t('pages.exams.chartLeaderLabel'), // Ces données devraient venir du backend pour un examen spécifique
         // Exemple de données mockées, à remplacer par des données réelles de ExamAttempt
         // Pour un examen donné, on ferait une requête pour obtenir la distribution des scores
         // Ex: ExamAttempt::where('exam_id', $exam->id)->select(DB::raw('FLOOR(score/20)*20 as score_band'), DB::raw('count(*) as total'))->groupBy('score_band')->get();
@@ -516,7 +518,7 @@ onMounted(() => {
 
 <template>
     <AppLayout>
-        <Head title="Architecte d'Évaluation | LMS Enterprise" />
+        <Head :title="t('pages.exams.headTitle')" />
         <ConfirmDialog />
 
    <div class="page-bg min-h-screen font-sans pb-20">
@@ -536,7 +538,7 @@ onMounted(() => {
                 <div class="space-y-4 max-w-3xl">
                     <!-- Badge Certifications -->
                     <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                        Certifications
+                        {{ t('pages.exams.badgeCertifications') }}
                     </span>
 
                     <!-- Titre Principal (Italique, gras, 2 couleurs) -->
@@ -547,20 +549,20 @@ onMounted(() => {
 
                     <!-- Sous-titre -->
                     <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        Concevez des épreuves certifiantes, gérez la banque d'items et analysez la fiabilité psychométrique de vos cursus de manière centralisée.
+                        {{ t('pages.exams.heroSubtitle') }}
                     </p>
                 </div>
 
                 <!-- Partie Droite (Boutons) -->
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                     <Button 
-                        label="Audit & Imports" 
+                        :label="t('pages.exams.auditImportsButton')" 
                         icon="pi pi-database" 
                         class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
                         @click="importExportSidebar = true" 
                     />
                     <Button 
-                        label="Nouvelle Évaluation" 
+                        :label="t('pages.exams.newExamButton')" 
                         icon="pi pi-plus" 
                         class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
                         @click="openNew" 
@@ -581,7 +583,7 @@ onMounted(() => {
                     <i class="pi pi-verified text-blue-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Examens Actifs</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiActiveExams') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.total || 24 }}</p>
                 </div>
             </div>
@@ -592,7 +594,7 @@ onMounted(() => {
                     <i class="pi pi-users text-red-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tentatives (Ce mois)</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiAttemptsMonth') }}</h3>
                     <div class="flex items-center gap-2">
                         <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.attempts?.toLocaleString() }}</p>
                         <!-- Le badge 'Live' est conservé et adapté pour tenir dans ce layout -->
@@ -607,7 +609,7 @@ onMounted(() => {
                     <i class="pi pi-chart-pie text-amber-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taux de Réussite</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiPassRate') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.avg_success_rate }}<span class="text-lg text-slate-400 ml-1">%</span></p>
                 </div>
             </div>
@@ -618,7 +620,7 @@ onMounted(() => {
                     <i class="pi pi-shield text-red-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Alertes Anti-Triche</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams.kpiAntiCheat') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats_overview?.anti_cheat_alerts }}</p>
                 </div>
             </div>
@@ -635,18 +637,18 @@ onMounted(() => {
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <IconField iconPosition="left">
                     <InputIcon class="pi pi-search text-slate-400" />
-                    <InputText v-model="serverFilters.search" placeholder="Rechercher par titre..." class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
+                    <InputText v-model="serverFilters.search" :placeholder="t('pages.exams.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
                 </IconField>
 
                 <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
 
-                <Dropdown v-model="serverFilters.status" :options="['Active', 'Draft', 'Archived']" placeholder="État du flux" class="w-48 border-slate-200 font-medium bg-white" showClear />
-                <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Filtrer par cours" class="w-56 border-slate-200 font-medium bg-white" showClear filter />
+                <Dropdown v-model="serverFilters.status" :options="['Active', 'Draft', 'Archived']" :placeholder="t('pages.exams.statusFilterPlaceholder')" class="w-48 border-slate-200 font-medium bg-white" showClear />
+                <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" :placeholder="t('pages.exams.courseFilterPlaceholder')" class="w-56 border-slate-200 font-medium bg-white" showClear filter />
             </div>
 
             <div class="flex items-center gap-2">
-                <Button v-if="selectedExams.length > 0" icon="pi pi-box" :label="`Archiver (${selectedExams.length})`" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
-                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
+                <Button v-if="selectedExams.length > 0" icon="pi pi-box" :label="t('pages.exams.archiveCount', { count: selectedExams.length })" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
+                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.exams.refreshTooltip')" />
             </div>
         </div>
 
@@ -668,16 +670,16 @@ onMounted(() => {
                     <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                         <i class="pi pi-file-edit text-5xl text-slate-300"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Aucun examen trouvé</h3>
-                    <p class="text-sm text-center text-slate-500 mb-6">Il semblerait que votre base de données d'évaluations soit vide pour ces critères.</p>
-                    <Button label="Créer un examen" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('pages.exams.emptyTitle') }}</h3>
+                    <p class="text-sm text-center text-slate-500 mb-6">{{ t('pages.exams.emptyDescription') }}</p>
+                    <Button :label="t('pages.exams.emptyCreateButton')" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
                 </div>
             </template>
 
             <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
             <Column expander style="width: 3rem; background-color: #f8fafc;" />
 
-            <Column field="title" header="Épreuve & Programme" style="min-width: 25rem; background-color: #f8fafc;">
+            <Column field="title" :header="t('pages.exams.colExamProgram')" style="min-width: 25rem; background-color: #f8fafc;">
                 <template #body="{ data }">
                     <div class="flex items-center gap-4 py-2">
                         <div class="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
@@ -689,7 +691,7 @@ onMounted(() => {
                                 {{ data.title }}
                                 </span>
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
-                                <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1"><i class="pi pi-book text-[10px]"></i> {{ data.course?.title || 'Tronc Commun' }}</span>
+                                <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1"><i class="pi pi-book text-[10px]"></i> {{ data.course?.title || t('pages.exams.commonTrunk') }}</span>
                                 <span class="text-slate-400 flex items-center gap-1"><i class="pi pi-list text-[10px]"></i> {{ data.questions_count || 0 }} items</span>
                             </div>
                         </div>
@@ -697,27 +699,27 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="settings" header="Format & Règles" style="background-color: #f8fafc; min-width: 12rem;">
+            <Column field="settings" :header="t('pages.exams.colFormatRules')" style="background-color: #f8fafc; min-width: 12rem;">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
-                        <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> Durée : <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
-                        <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-red-500"></i> Validation : <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
+                        <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> {{ t('pages.exams.durationLabel') }} <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
+                        <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-red-500"></i> {{ t('pages.exams.validationLabel') }} <strong class="text-emerald-700">{{ data.pass_percentage }}%</strong></span>
                     </div>
                 </template>
             </Column>
 
-            <Column field="status" header="État de publication" style="background-color: #f8fafc;">
+            <Column field="status" :header="t('pages.exams.colPublicationStatus')" style="background-color: #f8fafc;">
                 <template #body="{ data }">
                     <Tag :severity="getStatusColor(data.status).sev" :icon="getStatusColor(data.status).icon" :value="getStatusColor(data.status).label" class="text-[10px] font-bold px-3 py-1.5 border uppercase tracking-wider" :class="`border-${getStatusColor(data.status).sev}-200 bg-${getStatusColor(data.status).sev}-50 text-${getStatusColor(data.status).sev}-700`" />
                 </template>
             </Column>
 
-            <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+            <Column :header="t('pages.exams.colActions')" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
                 <template #body="{ data }">
                     <div class="flex justify-end gap-1">
-                        <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-red-50" v-tooltip.top="'Résultats & Analytics'" @click="analyticsDialog = true" />
-                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="'Éditer le syllabus'" @click="editExam(data)" />
-                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" v-tooltip.top="'Supprimer l\'examen'" @click="deleteExam(data.id)" />
+                        <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-red-50" v-tooltip.top="t('pages.exams.tooltipAnalytics')" @click="analyticsDialog = true" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="t('pages.exams.tooltipEditSyllabus')" @click="editExam(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" v-tooltip.top="t('pages.exams.tooltipDeleteExam')" @click="deleteExam(data.id)" />
                     </div>
                 </template>
             </Column>
@@ -727,14 +729,14 @@ onMounted(() => {
                 <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                     <div class="max-w-6xl mx-auto">
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-blue-500"></i> Aperçu des Performances Cohorte</h4>
-                            <Button label="Générer Rapport Complet" icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-secondary bg-white font-bold text-xs" />
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-blue-500"></i> {{ t('pages.exams.expansionPerformance') }}</h4>
+                            <Button :label="t('pages.exams.generateReport')" icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-secondary bg-white font-bold text-xs" />
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
                                 <div>
-                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Score Moyen</div>
+                                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('pages.exams.avgScore') }}</div>
                                     <div class="text-3xl font-black text-slate-800 flex items-baseline gap-2">
                                         {{ data.avg_score }}%
                                         <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded border border-emerald-100">+2.4%</span>
@@ -744,18 +746,18 @@ onMounted(() => {
                             </div>
 
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                                <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3">Sécurité & Proctoring</div>
+                                <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-3">{{ t('pages.exams.securityProctoring') }}</div>
                                 <div class="flex items-center gap-3 text-sm font-bold text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
                                     <i class="pi pi-shield text-blue-500 text-lg"></i>
                                     <div>
-                                        <div>Niveau Actif</div>
-                                        <div class="text-[10px] text-slate-400 font-normal">Standard (Focus Mode)</div>
+                                        <div>{{ t('pages.exams.activeLevel') }}</div>
+                                        <div class="text-[10px] text-slate-400 font-normal">{{ t('pages.exams.proctoringStandardMode') }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                                <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Tentatives Récentes</div>
+                                <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">{{ t('pages.exams.recentAttempts') }}</div>
                                 <div class="flex -space-x-2 overflow-hidden mt-1" v-if="data.recent_attempts_users && data.recent_attempts_users.length > 0">
                                     <Avatar v-for="user in data.recent_attempts_users.slice(0, 5)" :key="user.id" :image="user.avatar || `https://ui-avatars.com/api/?name=${user.name}`" shape="circle" class="border-2 border-white shadow-sm" />
                                     <Avatar v-if="data.recent_attempts_users.length > 5" :label="`+${data.recent_attempts_users.length - 5}`" shape="circle" class="bg-slate-100 text-slate-600 font-bold border-2 border-white shadow-sm text-xs" />
@@ -785,13 +787,13 @@ onMounted(() => {
                     </div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
-                            {{ examForm.id ? 'Éditeur d\'Évaluation' : 'Forger une Nouvelle Évaluation' }}
+                            {{ examForm.id ? t('pages.exams.editorTitleEdit') : t('pages.exams.editorTitleNew') }}
                             <Tag v-if="examForm.status" :severity="getStatusColor(examForm.status).sev" :value="getStatusColor(examForm.status).label" class="text-[9px] uppercase tracking-wider px-2 py-0.5"></Tag>
                         </h2>
                         <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span class="truncate max-w-[200px] md:max-w-[400px]">{{ examForm.title || 'Examen sans titre' }}</span>
-                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> Enregistré à {{ formatDate(lastSavedAt) }}</span>
-                            <span v-else-if="examForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> Modifications en cours...</span>
+                            <span class="truncate max-w-[200px] md:max-w-[400px]">{{ examForm.title || t('pages.exams.untitledExam') }}</span>
+                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.exams.savedAt', { time: formatDate(lastSavedAt) }) }}</span>
+                            <span v-else-if="examForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.exams.modificationsInProgress') }}</span>
                         </div>
                     </div>
                 </div>
@@ -801,8 +803,8 @@ onMounted(() => {
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Points</span>
                         <span class="text-lg font-black text-blue-600">{{ calculateTotalPoints }} pts</span>
                     </div>
-                    <Button icon="pi pi-external-link" class="p-button-text p-button-secondary p-button-sm hidden md:flex font-bold" v-tooltip.bottom="'Prévisualiser côté apprenant'" />
-                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="examDialog = false" v-tooltip.bottom="'Fermer l\'espace'" />
+                    <Button icon="pi pi-external-link" class="p-button-text p-button-secondary p-button-sm hidden md:flex font-bold" v-tooltip.bottom="t('pages.exams.tooltipPreviewLearner')" />
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="examDialog = false" v-tooltip.bottom="t('pages.exams.tooltipCloseSpace')" />
                 </div>
             </div>
 
@@ -812,7 +814,7 @@ onMounted(() => {
                 <!-- SIDEBAR DE NAVIGATION (STEPPER / MENU) -->
                 <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
                     <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100">
-                        Phases de conception
+                        {{ t('pages.exams.designPhases') }}
                     </div>
 
                     <div class="p-4 flex-1 space-y-2">
@@ -840,9 +842,9 @@ onMounted(() => {
                                 <i :class="isFormValid ? 'pi pi-check' : 'pi pi-exclamation-triangle'" class="text-lg"></i>
                             </div>
                             <div>
-                                <div class="text-xs font-bold text-slate-800">{{ isFormValid ? 'Prêt à publier' : 'Informations requises' }}</div>
+                                <div class="text-xs font-bold text-slate-800">{{ isFormValid ? t('pages.exams.readyToPublish') : t('pages.exams.requiredInfo') }}</div>
                                 <div class="text-[10px] text-slate-500 leading-tight mt-0.5">
-                                    {{ isFormValid ? 'Critères minimaux atteints.' : 'Complétez le titre et ajoutez au moins une question.' }}
+                                    {{ isFormValid ? t('pages.exams.minimalCriteriaMet') : t('pages.exams.completeTitleAndQuestion') }}
                                 </div>
                             </div>
                         </div>
@@ -861,35 +863,35 @@ onMounted(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Identité de l'Évaluation</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Métadonnées et rattachement académique.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.exams.identitySectionTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.exams.identitySectionDesc') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="space-y-6">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Titre de l'examen <span class="text-red-500">*</span></label>
-                                        <InputText v-model="examForm.title" class="w-full p-4 text-lg font-bold bg-slate-50 border-slate-300 focus:bg-white transition-colors" placeholder="Ex: Certification Finale Cloud Computing..." :class="{'p-invalid': examForm.errors.title}" />
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.exams.examTitleLabel') }} <span class="text-red-500">*</span></label>
+                                        <InputText v-model="examForm.title" class="w-full p-4 text-lg font-bold bg-slate-50 border-slate-300 focus:bg-white transition-colors" :placeholder="t('pages.exams.examTitlePlaceholder')" :class="{'p-invalid': examForm.errors.title}" />
                                         <small v-if="examForm.errors.title" class="text-red-500 font-bold block mt-1">{{ examForm.errors.title }}</small>
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-book text-slate-400"></i> Lier à un Parcours (Cours)</label>
-                                            <Dropdown v-model="examForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Sélectionnez un cours..." class="w-full border-slate-300 font-medium bg-white" filter showClear :class="{'p-invalid': examForm.errors.course_id}" />
+                                            <label class="block text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-book text-slate-400"></i> {{ t('pages.exams.linkCourseLabel') }}</label>
+                                            <Dropdown v-model="examForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" :placeholder="t('pages.exams.selectCoursePlaceholder')" class="w-full border-slate-300 font-medium bg-white" filter showClear :class="{'p-invalid': examForm.errors.course_id}" />
                                             <small v-if="examForm.errors.course_id" class="text-red-500 font-bold">{{ examForm.errors.course_id }}</small>
                                         </div>
                                         <div class="space-y-2">
-                                            <label class="block text-sm font-bold text-slate-700">Type d'Évaluation <span class="text-red-500">*</span></label>
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.exams.examTypeLabel') }} <span class="text-red-500">*</span></label>
                                             <SelectButton v-model="examForm.type" :options="examTypes" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 text-xs font-bold py-2 bg-white' } }" />
                                             <small v-if="examForm.errors.type" class="text-red-500 font-bold">{{ examForm.errors.type }}</small>
                                         </div>
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Consignes & Instructions (S'affichent avant le début du test)</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.exams.instructionsLabel') }}</label>
                                         <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                                            <Editor ref="editorRef" v-model="examForm.description" @load="forceEditorLoad" editorStyle="height: 250px; font-family: 'Inter', sans-serif;" placeholder="Rédigez les instructions pour les candidats..." :class="{'p-invalid': examForm.errors.description}" />
+                                            <Editor ref="editorRef" v-model="examForm.description" @load="forceEditorLoad" editorStyle="height: 250px; font-family: 'Inter', sans-serif;" :placeholder="t('pages.exams.instructionsPlaceholder')" :class="{'p-invalid': examForm.errors.description}" />
                                         </div>
                                     </div>
                                 </div>
@@ -904,10 +906,10 @@ onMounted(() => {
                             <!-- Header fixe du constructeur -->
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-30">
                                 <div>
-                                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="pi pi-list text-blue-600"></i> Banque d'Items Locale ({{ examForm.questions.length }})</h3>
-                                    <p class="text-sm text-slate-500 mt-1">Structurez les questions de cette évaluation spécifique.</p>
+                                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2"><i class="pi pi-list text-blue-600"></i> {{ t('pages.exams.localBankTitle', { count: examForm.questions.length }) }}</h3>
+                                    <p class="text-sm text-slate-500 mt-1">{{ t('pages.exams.localBankDesc') }}</p>
                                 </div>
-                                <Button label="Importer de la Banque Globale" icon="pi pi-cloud-download" class="p-button-outlined p-button-secondary bg-slate-50 text-slate-700 font-bold text-sm shadow-sm" @click="questionBankDialog = true" />
+                                <Button :label="t('pages.exams.importGlobalBank')" icon="pi pi-cloud-download" class="p-button-outlined p-button-secondary bg-slate-50 text-slate-700 font-bold text-sm shadow-sm" @click="questionBankDialog = true" />
                             </div>
 
                             <!-- État Vide -->
@@ -915,10 +917,10 @@ onMounted(() => {
                                 <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
                                     <i class="pi pi-question text-4xl text-blue-400"></i>
                                 </div>
-                                <h4 class="text-2xl font-black text-slate-800 mb-3">Syllabus Vierge</h4>
-                                <p class="text-slate-500 mb-8 max-w-md text-base leading-relaxed">Commencez à structurer votre examen en ajoutant des questions depuis les types disponibles ci-dessous.</p>
+                                <h4 class="text-2xl font-black text-slate-800 mb-3">{{ t('pages.exams.syllabusEmptyTitle') }}</h4>
+                                <p class="text-slate-500 mb-8 max-w-md text-base leading-relaxed">{{ t('pages.exams.syllabusEmptyDesc') }}</p>
                                 <div class="flex flex-wrap justify-center gap-3">
-                                    <Button v-for="t in questionTypes" :key="t.value" :label="`Ajouter ${t.label}`" :icon="t.icon" class="p-button-outlined p-button-secondary font-bold bg-white shadow-sm" @click="addNewQuestion(t.value)" />
+                                    <Button v-for="qt in questionTypes" :key="qt.value" :label="t('pages.exams.addType', { label: qt.label })" :icon="qt.icon" class="p-button-outlined p-button-secondary font-bold bg-white shadow-sm" @click="addNewQuestion(qt.value)" />
                                 </div>
                             </div>
 
@@ -930,7 +932,7 @@ onMounted(() => {
                                     <!-- En-tête de la question (Controls) -->
                                     <div class="bg-slate-50/80 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                                         <div class="flex items-center gap-4">
-                                            <div class="flex flex-col gap-1 text-slate-300 hover:text-blue-500 transition-colors cursor-pointer" v-tooltip.top="'Réorganiser'">
+                                            <div class="flex flex-col gap-1 text-slate-300 hover:text-blue-500 transition-colors cursor-pointer" v-tooltip.top="t('pages.exams.reorderTooltip')">
                                                 <i class="pi pi-caret-up text-xs hover:scale-125" @click="moveQuestion(index, 'up')"></i>
                                                 <i class="pi pi-caret-down text-xs hover:scale-125" @click="moveQuestion(index, 'down')"></i>
                                             </div>
@@ -951,7 +953,7 @@ onMounted(() => {
 
                                         <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-                                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valeur:</span>
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.exams.pointsValue') }}</span>
                                                 <InputNumber v-model="q.points" :min="0.25" mode="decimal" :minFractionDigits="1" class="w-16" :pt="{ input: { class: 'p-1 text-center font-black text-sm border-none shadow-none text-blue-600' } }" />
                                                 <span class="text-[10px] font-bold text-slate-400">pts</span>
                                             </div>
@@ -959,8 +961,8 @@ onMounted(() => {
                                             <div class="w-px h-6 bg-slate-200 mx-1"></div>
 
                                             <div class="flex gap-1 opacity-60 group-hover/question:opacity-100 transition-opacity">
-                                                <Button icon="pi pi-clone" class="p-button-text p-button-info p-button-sm w-8 h-8 p-0" v-tooltip.top="'Dupliquer'" @click="duplicateQuestion(index)" />
-                                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm w-8 h-8 p-0" v-tooltip.top="'Supprimer'" @click="removeQuestion(index)" />
+                                                <Button icon="pi pi-clone" class="p-button-text p-button-info p-button-sm w-8 h-8 p-0" v-tooltip.top="t('pages.exams.duplicateTooltip')" @click="duplicateQuestion(index)" />
+                                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm w-8 h-8 p-0" v-tooltip.top="t('pages.exams.deleteTooltip')" @click="removeQuestion(index)" />
                                             </div>
                                         </div>
                                     </div>
@@ -972,21 +974,21 @@ onMounted(() => {
                                         <div class="lg:col-span-7 space-y-6">
                                             <div>
 
-                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="pi pi-pen-to-square"></i> Énoncé de la question</label>
-                                                <Textarea v-model="q.question_text" rows="3" class="w-full p-4 bg-slate-50 border-slate-300 font-semibold text-slate-800 text-lg rounded-xl focus:bg-white transition-colors" placeholder="Saisissez votre question ici..." />
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="pi pi-pen-to-square"></i> {{ t('pages.exams.questionStatementLabel') }}</label>
+                                                <Textarea v-model="q.question_text" rows="3" class="w-full p-4 bg-slate-50 border-slate-300 font-semibold text-slate-800 text-lg rounded-xl focus:bg-white transition-colors" :placeholder="t('pages.exams.questionPlaceholder')" />
                                             </div>
 
                                             <div>
-                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="pi pi-info-circle"></i> Explication de correction (Feedback)</label>
-                                                <InputText v-model="q.explanation" class="w-full bg-slate-50 border-slate-300 text-sm p-3 rounded-xl focus:bg-white" placeholder="Optionnel : Explication affichée aux apprenants après la correction..." />
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><i class="pi pi-info-circle"></i> {{ t('pages.exams.explanationLabel') }}</label>
+                                                <InputText v-model="q.explanation" class="w-full bg-slate-50 border-slate-300 text-sm p-3 rounded-xl focus:bg-white" :placeholder="t('pages.exams.explanationPlaceholder')" />
                                             </div>
                                         </div>
 
                                         <!-- Zone de configuration des réponses -->
                                         <div class="lg:col-span-5 bg-slate-50/50 p-6 rounded-2xl border border-slate-100 shadow-inner">
                                             <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-                                                <label class="text-[11px] font-black text-blue-500 uppercase tracking-widest">Logique de réponse</label>
-                                                <Badge v-if="q.type === 'multiple_choice'" :value="`${q.options.length} options`" severity="secondary" class="text-[9px]"></Badge>
+                                                <label class="text-[11px] font-black text-blue-500 uppercase tracking-widest">{{ t('pages.exams.answerLogicLabel') }}</label>
+                                                <Badge v-if="q.type === 'multiple_choice'" :value="t('pages.exams.optionsCount', { count: q.options.length })" severity="secondary" class="text-[9px]"></Badge>
                                             </div>
 
                                             <!-- QCM (Choix Multiples) -->
@@ -995,33 +997,33 @@ onMounted(() => {
                                                      class="flex items-center gap-3 bg-white p-2 rounded-xl border transition-all duration-300 hover:shadow-md group/opt"
                                                      :class="opt.is_correct ? 'border-emerald-300 shadow-[0_0_0_2px_rgba(16,185,129,0.1)]' : 'border-slate-200 hover:border-slate-300'">
 
-                                                    <div class="flex flex-col items-center justify-center pl-2" v-tooltip.top="'Marquer comme la bonne réponse'">
+                                                    <div class="flex flex-col items-center justify-center pl-2" v-tooltip.top="t('pages.exams.markCorrectTooltip')">
                                                         <RadioButton :name="'q_'+index" :value="true" v-model="opt.is_correct" @change="setExclusiveCorrectOption(index, oIdx)" />
                                                     </div>
 
-                                                    <InputText v-model="opt.option_text" class="flex-1 border-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-slate-50 text-sm font-bold text-slate-700 p-2 shadow-none transition-colors" placeholder="Saisir l'option..." />
+                                                    <InputText v-model="opt.option_text" class="flex-1 border-transparent hover:border-slate-200 focus:border-blue-400 focus:bg-slate-50 text-sm font-bold text-slate-700 p-2 shadow-none transition-colors" :placeholder="t('pages.exams.optionPlaceholder')" />
 
-                                                    <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm opacity-20 group-hover/opt:opacity-100 w-8 h-8 p-0 transition-opacity" v-tooltip.top="'Supprimer l\'option'" @click="removeOptionFromQuestion(index, oIdx)" />
+                                                    <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm opacity-20 group-hover/opt:opacity-100 w-8 h-8 p-0 transition-opacity" v-tooltip.top="t('pages.exams.deleteOptionTooltip')" @click="removeOptionFromQuestion(index, oIdx)" />
                                                 </div>
 
-                                                <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-text p-button-sm font-bold text-blue-600 w-full justify-start mt-2 hover:bg-blue-50" @click="addOptionToQuestion(index)" />
+                                                <Button :label="t('pages.exams.addOptionButton')" icon="pi pi-plus" class="p-button-text p-button-sm font-bold text-blue-600 w-full justify-start mt-2 hover:bg-blue-50" @click="addOptionToQuestion(index)" />
                                             </div>
 
                                             <!-- Vrai/Faux -->
                                              <!-- {{ q }} -->
                                             <div v-if="q.type === 'true_false'" class="flex flex-col justify-center items-center py-6 h-full">
-                                                <p class="text-xs text-slate-500 font-medium mb-4 text-center">Sélectionnez l'affirmation exacte correspondant à l'énoncé.</p>
-                                                <SelectButton v-model="q.correct" :options="[{label:'VRAI', value:true}, {label:'FAUX', value:false}]" optionLabel="label" optionValue="value" class="w-full flex shadow-sm" :pt="{ button: { class: 'flex-1 font-black py-4' } }" />
+                                                <p class="text-xs text-slate-500 font-medium mb-4 text-center">{{ t('pages.exams.trueFalsePrompt') }}</p>
+                                                <SelectButton v-model="q.correct" :options="[{label: t('pages.exams.trueOption'), value:true}, {label: t('pages.exams.falseOption'), value:false}]" optionLabel="label" optionValue="value" class="w-full flex shadow-sm" :pt="{ button: { class: 'flex-1 font-black py-4' } }" />
                                             </div>
 
                                             <!-- Réponse Courte (Texte) -->
                                             <div v-if="q.type === 'short_answer'" class="flex flex-col h-full justify-center">
                                                 <p class="text-[10px] text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100 font-bold mb-4 flex items-start gap-2">
                                                     <i class="pi pi-exclamation-triangle mt-0.5"></i>
-                                                    Le système validera la réponse de l'étudiant en ignorant la casse, mais l'orthographe doit être exacte.
+                                                    {{ t('pages.exams.shortAnswerNote') }}
                                                 </p>
-                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Mot ou phrase attendu(e) :</label>
-                                                <InputText v-model="q.correct_answer" class="w-full border-slate-300 font-mono text-sm p-4 bg-white shadow-inner" placeholder="Ex: Laravel, 1995, Paris..." />
+                                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">{{ t('pages.exams.expectedAnswerLabel') }}</label>
+                                                <InputText v-model="q.correct_answer" class="w-full border-slate-300 font-mono text-sm p-4 bg-white shadow-inner" :placeholder="t('pages.exams.shortAnswerPlaceholder')" />
                                             </div>
                                         </div>
                                     </div>
@@ -1029,9 +1031,9 @@ onMounted(() => {
 
                                 <!-- Zone d'ajout bas de page (Plus gros) -->
                                 <div class="flex flex-col items-center py-10 bg-slate-50/50 rounded-xl border-2 border-dashed border-slate-200 mt-8 hover:bg-slate-50 hover:border-blue-200 transition-colors">
-                                    <h5 class="text-sm font-bold text-slate-500 mb-6">Ajouter un nouvel item au syllabus</h5>
+                                    <h5 class="text-sm font-bold text-slate-500 mb-6">{{ t('pages.exams.addNewItemTitle') }}</h5>
                                     <div class="flex flex-wrap justify-center gap-4">
-                                        <Button v-for="t in questionTypes" :key="t.value" :label="t.label" :icon="t.icon" class="p-button-outlined p-button-secondary font-bold bg-white shadow-sm border-slate-300 hover:border-blue-400 hover:text-blue-600 px-6 py-3" @click="addNewQuestion(t.value)" />
+                                        <Button v-for="qt in questionTypes" :key="qt.value" :label="qt.label" :icon="qt.icon" class="p-button-outlined p-button-secondary font-bold bg-white shadow-sm border-slate-300 hover:border-blue-400 hover:text-blue-600 px-6 py-3" @click="addNewQuestion(qt.value)" />
                                     </div>
                                 </div>
                             </div>
@@ -1046,14 +1048,14 @@ onMounted(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-red-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-sliders-h"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Règles de passage & Limites</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Définissez les conditions d'obtention de cet examen.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.exams.rulesSectionTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.exams.rulesSectionDesc') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Durée allouée (Chronomètre)</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.exams.durationAllocatedLabel') }}</label>
                                         <div class="flex items-center gap-6 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner">
                                             <Slider v-model="examForm.duration_minutes" :min="5" :max="240" :step="5" class="flex-1" />
                                             <div class="font-black text-blue-600 text-xl w-20 text-right bg-white py-1 px-2 rounded-lg border border-blue-100 shadow-sm">{{ examForm.duration_minutes }} <span class="text-[10px] uppercase text-blue-400">min</span></div>
@@ -1062,7 +1064,7 @@ onMounted(() => {
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Seuil de validation (Pourcentage requis)</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.exams.passingThresholdLabel') }}</label>
                                         <div class="flex items-center gap-6 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-inner">
                                             <Slider v-model="examForm.passing_score" :min="0" :max="100" class="flex-1" />
                                             <div class="font-black text-emerald-600 text-xl w-20 text-right bg-white py-1 px-2 rounded-lg border border-emerald-100 shadow-sm">{{ examForm.passing_score }} <span class="text-[10px] uppercase text-emerald-400">%</span></div>
@@ -1076,8 +1078,8 @@ onMounted(() => {
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 bg-slate-50 border border-slate-100 text-slate-500 rounded-full flex items-center justify-center flex-shrink-0"><i class="pi pi-sort-alt"></i></div>
                                             <div>
-                                                <div class="font-bold text-slate-800 text-sm">Aléatoire (Questions)</div>
-                                                <div class="text-xs text-slate-500 mt-0.5 leading-tight">Mélange l'ordre des questions pour chaque candidat. Idéal contre la triche en salle.</div>
+                                                <div class="font-bold text-slate-800 text-sm">{{ t('pages.exams.shuffleQuestionsLabel') }}</div>
+                                                <div class="text-xs text-slate-500 mt-0.5 leading-tight">{{ t('pages.exams.shuffleQuestionsDesc') }}</div>
                                             </div>
                                         </div>
                                         <ToggleSwitch v-model="examForm.settings.shuffle_questions" @click.stop />
@@ -1087,8 +1089,8 @@ onMounted(() => {
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 bg-slate-50 border border-slate-100 text-blue-500 rounded-full flex items-center justify-center flex-shrink-0"><i class="pi pi-eye"></i></div>
                                             <div>
-                                                <div class="font-bold text-slate-800 text-sm">Résultats instantanés</div>
-                                                <div class="text-xs text-slate-500 mt-0.5 leading-tight">L'apprenant voit son score et ses feedbacks dès la soumission du formulaire.</div>
+                                                <div class="font-bold text-slate-800 text-sm">{{ t('pages.exams.instantResultsLabel') }}</div>
+                                                <div class="text-xs text-slate-500 mt-0.5 leading-tight">{{ t('pages.exams.instantResultsDesc') }}</div>
                                             </div>
                                         </div>
                                         <ToggleSwitch v-model="examForm.settings.show_results_instantly" @click.stop />
@@ -1100,8 +1102,8 @@ onMounted(() => {
                             <div class="bg-slate-900 p-8 rounded-2xl shadow-xl text-white relative overflow-hidden border border-slate-800 group">
                                 <i class="pi pi-shield absolute -right-4 -bottom-4 text-[150px] text-white/5 group-hover:scale-110 transition-transform duration-1000 ease-out"></i>
                                 <div class="relative z-10">
-                                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-3"><div class="w-8 h-8 rounded bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="pi pi-lock"></i></div> Sécurité Anti-Triche (Proctoring)</h3>
-                                    <p class="text-slate-400 text-sm mb-8 max-w-2xl leading-relaxed">Configurez le niveau de surveillance logicielle pour les certifications officielles. Un niveau strict requiert que l'apprenant installe notre module navigateur sécurisé.</p>
+                                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-3"><div class="w-8 h-8 rounded bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="pi pi-lock"></i></div> {{ t('pages.exams.antiCheatTitle') }}</h3>
+                                    <p class="text-slate-400 text-sm mb-8 max-w-2xl leading-relaxed">{{ t('pages.exams.antiCheatDesc') }}</p>
 
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div v-for="level in proctoringLevels" :key="level.value" @click="examForm.settings.proctoring_mode = level.value"
@@ -1125,18 +1127,18 @@ onMounted(() => {
                             <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-start gap-4 shadow-sm">
                                 <i class="pi pi-info-circle text-blue-500 text-2xl mt-1"></i>
                                 <div>
-                                    <h4 class="font-bold text-blue-900 mb-1">Traçabilité Académique (Immuable)</h4>
-                                    <p class="text-sm text-blue-700 leading-relaxed">Le système d'audit enregistre automatiquement chaque modification structurelle de l'examen. En cas de contestation d'un étudiant, vous pouvez prouver mathématiquement l'état exact des barèmes au moment précis de sa tentative.</p>
+                                    <h4 class="font-bold text-blue-900 mb-1">{{ t('pages.exams.auditInfoTitle') }}</h4>
+                                    <p class="text-sm text-blue-700 leading-relaxed">{{ t('pages.exams.auditInfoDesc') }}</p>
                                 </div>
                             </div>
 
                              <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                 <h3 class="text-lg font-bold text-slate-800 mb-8 border-b border-slate-100 pb-4">Journal des événements (Log)</h3>
+                                 <h3 class="text-lg font-bold text-slate-800 mb-8 border-b border-slate-100 pb-4">{{ t('pages.exams.auditLogTitle') }}</h3>
 
                                  <div v-if="!examForm.id" class="text-center py-16">
                                      <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto border border-slate-100"><i class="pi pi-history text-3xl text-slate-300"></i></div>
-                                     <h3 class="text-lg font-bold text-slate-800 mb-2">Aucun historique</h3>
-                                     <p class="text-slate-500 text-sm max-w-md mx-auto">L'audit track sera initialisé et disponible une fois l'examen publié pour la première fois sur le serveur.</p>
+                                      <h3 class="text-lg font-bold text-slate-800 mb-2">{{ t('pages.exams.noHistoryTitle') }}</h3>
+                                      <p class="text-slate-500 text-sm max-w-md mx-auto">{{ t('pages.exams.noHistoryDesc') }}</p>
                                  </div>
 
                                  <Timeline v-else :value="auditEvents" class="custom-timeline">
@@ -1153,7 +1155,7 @@ onMounted(() => {
                                             </div>
                                             <div class="text-xs text-slate-500 flex items-center gap-2">
                                                 <Avatar icon="pi pi-user" size="small" shape="circle" class="bg-slate-200 text-slate-500 w-5 h-5 text-[10px]" />
-                                                Effectué par : <strong>{{ slotProps.item.user }}</strong>
+                                                {{ t('pages.exams.performedBy') }} <strong>{{ slotProps.item.user }}</strong>
                                             </div>
                                         </div>
                                     </template>
@@ -1167,15 +1169,15 @@ onMounted(() => {
 
             <!-- WORKSPACE FOOTER (Actions) -->
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Abandonner" class="p-button-text p-button-secondary font-bold text-slate-500 hover:text-slate-800" @click="examDialog = false" :disabled="isSaving" />
-                <div class="flex items-center gap-3">
-                    <Button label="Enregistrer Brouillon" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 shadow-sm border-slate-300" @click="saveExam('Draft')" :loading="isSaving" />
+                 <Button :label="t('pages.exams.abandonButton')" class="p-button-text p-button-secondary font-bold text-slate-500 hover:text-slate-800" @click="examDialog = false" :disabled="isSaving" />
+                 <div class="flex items-center gap-3">
+                     <Button :label="t('pages.exams.saveDraftButton')" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 shadow-sm border-slate-300" @click="saveExam('Draft')" :loading="isSaving" />
 
-                    <div class="relative group">
-                        <Button label="Mettre en Ligne (Publier)" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8" @click="saveExam('Active')" :loading="isSaving" :disabled="!isFormValid" />
+                     <div class="relative group">
+                         <Button :label="t('pages.exams.publishButton')" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8" @click="saveExam('Active')" :loading="isSaving" :disabled="!isFormValid" />
                         <!-- Tooltip custom si bloqué -->
                         <div v-if="!isFormValid" class="absolute bottom-full right-0 mb-3 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                            Complétez le titre et ajoutez au moins une question pour activer le bouton de publication.
+                            {{ t('pages.exams.completeBeforePublish') }}
                             <div class="absolute -bottom-1 right-8 w-2 h-2 bg-slate-800 transform rotate-45"></div>
                         </div>
                     </div>
@@ -1186,14 +1188,14 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- MODAL : BANQUE D'ITEMS (IMPORTATION DE QUESTIONS)                              -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="questionBankDialog" header="Banque d'Items Globale" :modal="true" :style="{ width: '900px' }" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
+        <Dialog v-model:visible="questionBankDialog" :header="t('pages.exams.globalBankDialogTitle')" :modal="true" :style="{ width: '900px' }" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-6 border-b border-slate-200 bg-white">
                 <div class="flex items-center justify-between gap-4">
                     <IconField iconPosition="left" class="flex-1">
                         <InputIcon class="pi pi-search text-slate-400" />
-                        <InputText placeholder="Rechercher une question (mot-clé, tag)..." class="w-full bg-slate-50 border-slate-200 font-medium" />
+                        <InputText :placeholder="t('pages.exams.globalBankSearchPlaceholder')" class="w-full bg-slate-50 border-slate-200 font-medium" />
                     </IconField>
-                    <Dropdown :options="categories" optionLabel="name" optionValue="id" placeholder="Catégorie métier" class="w-48 bg-white border-slate-200 font-medium" />
+                    <Dropdown :options="categories" optionLabel="name" optionValue="id" :placeholder="t('pages.exams.businessCategoryPlaceholder')" class="w-48 bg-white border-slate-200 font-medium" />
                 </div>
             </div>
 
@@ -1202,20 +1204,20 @@ onMounted(() => {
 
                     <DataTable :value="props.global_question_bank" :paginator="true" :rows="5" class="p-datatable-custom text-sm">
                         <Column field="id" header="ID" style="width: 4rem"></Column>
-                        <Column field="text" header="Énoncé de la question">
+                        <Column field="text" :header="t('pages.exams.questionStatementLabel')">
                             <template #body="{ data }">
                                 <div class="font-medium text-slate-800" v-html="data.question_text || data.text"></div>
-                                <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">{{ data.category?.name || 'Général' }}</div>
+                                <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">{{ data.category?.name || t('pages.exams.generalCategory') }}</div>
                             </template>
                         </Column>
                         <Column field="type" header="Type" style="width: 10rem">
                             <template #body="{ data }">
-                                <span class="text-xs font-bold text-slate-600 flex items-center gap-1"><i class="pi pi-tag text-[10px]"></i> {{ data.type === 'multiple_choice' ? 'QCM' : (data.type === 'true_false' ? 'V/F' : 'Texte') }}</span>
+                                <span class="text-xs font-bold text-slate-600 flex items-center gap-1"><i class="pi pi-tag text-[10px]"></i> {{ data.type === 'multiple_choice' ? t('pages.exams.typeQCM') : (data.type === 'true_false' ? t('pages.exams.typeTrueFalseShort') : t('pages.exams.typeTextShort')) }}</span>
                             </template>
                         </Column>
-                        <Column header="Action" style="width: 6rem; text-align: center;">
+                        <Column :header="t('pages.exams.colActions')" style="width: 6rem; text-align: center;">
                             <template #body="{ data }">
-                                <Button icon="pi pi-download" class="p-button-rounded p-button-sm p-button-text p-button-info" v-tooltip.left="'Importer dans cet examen'" @click="importQuestionFromBank(data)" />
+                                <Button icon="pi pi-download" class="p-button-rounded p-button-sm p-button-text p-button-info" v-tooltip.left="t('pages.exams.importToExamTooltip')" @click="importQuestionFromBank(data)" />
                             </template>
                         </Column>
                     </DataTable>
@@ -1223,7 +1225,7 @@ onMounted(() => {
             </div>
             <template #footer>
                 <div class="border-t border-slate-200 bg-white p-4 flex justify-end">
-                    <Button label="Terminer l'importation" class="p-button-primary font-bold" @click="questionBankDialog = false" />
+                    <Button :label="t('pages.exams.finishImportButton')" class="p-button-primary font-bold" @click="questionBankDialog = false" />
                 </div>
             </template>
         </Dialog>
@@ -1231,25 +1233,25 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- MODAL : ANALYTIQUE ET PSYCHOMÉTRIE (DATA VISUALIZATION)                        -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="analyticsDialog" modal header="Intelligence Académique & Rapports" :style="{width: '1000px'}" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
+        <Dialog v-model:visible="analyticsDialog" modal :header="t('pages.exams.analyticsDialogTitle')" :style="{width: '1000px'}" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-8 space-y-8">
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity"><i class="pi pi-users text-5xl"></i></div>
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">Échantillon (Tentatives)</div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">{{ t('pages.exams.sampleAttempts') }}</div>
                         <div class="text-4xl font-black text-slate-800 relative z-10">1,245</div>
                     </div>
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity"><i class="pi pi-chart-pie text-5xl"></i></div>
-                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">Médiane Globale</div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">{{ t('pages.exams.globalMedian') }}</div>
                         <div class="text-4xl font-black text-slate-800 relative z-10">74.2%</div>
                     </div>
                     <div class="bg-blue-600 p-6 rounded-xl shadow-lg shadow-blue-500/20 text-center text-white flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-bolt text-5xl"></i></div>
-                        <div class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-2 relative z-10">Fiabilité (Alpha Cronbach)</div>
+                        <div class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-2 relative z-10">{{ t('pages.exams.reliabilityCronbach') }}</div>
                         <div class="text-4xl font-black relative z-10 flex items-baseline justify-center gap-2">
-                            0.82 <span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Excellent</span>
+                            0.82 <span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">{{ t('pages.exams.excellentReliability') }}</span>
                         </div>
                     </div>
                 </div>
@@ -1257,8 +1259,8 @@ onMounted(() => {
                 <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                     <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
                         <div>
-                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> Distribution Normale des Scores (Courbe de Gauss)</h4>
-                            <p class="text-xs text-slate-500 mt-1">Analyse de la répartition des résultats pour vérifier si l'examen n'est ni trop dur ni trop facile.</p>
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> {{ t('pages.exams.scoreDistributionTitle') }}</h4>
+                            <p class="text-xs text-slate-500 mt-1">{{ t('pages.exams.scoreDistributionDesc') }}</p>
                         </div>
                     </div>
                     <Chart type="bar" :data="performanceChartData" :options="{ plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [5,5] } }, x: { grid: { display: false } } } }" class="h-64" />
@@ -1266,26 +1268,26 @@ onMounted(() => {
 
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                        <h4 class="text-sm font-bold text-slate-800">Item Analysis (Top Questions Difficiles)</h4>
-                        <Button icon="pi pi-external-link" class="p-button-text p-button-sm p-button-secondary text-xs font-bold" label="Voir tout" />
+                        <h4 class="text-sm font-bold text-slate-800">{{ t('pages.exams.itemAnalysisTitle') }}</h4>
+                        <Button icon="pi pi-external-link" class="p-button-text p-button-sm p-button-secondary text-xs font-bold" :label="t('pages.exams.viewAllLink')" />
                     </div>
                     <div class="p-0">
                         <table class="w-full text-left text-sm">
                             <thead class="bg-slate-50/50 text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                 <tr>
-                                    <th class="px-6 py-3 font-bold">Item (Question)</th>
-                                    <th class="px-6 py-3 font-bold text-center">Taux d'Erreur</th>
-                                    <th class="px-6 py-3 font-bold text-center">Discrimination</th>
+                                    <th class="px-6 py-3 font-bold">{{ t('pages.exams.itemQuestionCol') }}</th>
+                                    <th class="px-6 py-3 font-bold text-center">{{ t('pages.exams.errorRateCol') }}</th>
+                                    <th class="px-6 py-3 font-bold text-center">{{ t('pages.exams.discriminationCol') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-medium text-slate-700 truncate max-w-xs">Le pattern Singleton autorise plusieurs instances.</td>
+                                    <td class="px-6 py-4 font-medium text-slate-700 truncate max-w-xs">{{ t('pages.exams.singletonQuestion') }}</td>
                                     <td class="px-6 py-4 text-center"><Badge value="85%" severity="danger" class="text-xs"></Badge></td>
                                     <td class="px-6 py-4 text-center text-slate-600 font-mono text-xs">0.45</td>
                                 </tr>
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-medium text-slate-700 truncate max-w-xs">Différence entre Abstract Class et Interface en PHP 8.</td>
+                                    <td class="px-6 py-4 font-medium text-slate-700 truncate max-w-xs">{{ t('pages.exams.abstractVsInterfaceQuestion') }}</td>
                                     <td class="px-6 py-4 text-center"><Badge value="72%" severity="warning" class="text-xs"></Badge></td>
                                     <td class="px-6 py-4 text-center text-slate-600 font-mono text-xs">0.62</td>
                                 </tr>
@@ -1297,8 +1299,8 @@ onMounted(() => {
             </div>
             <template #footer>
                 <div class="border-t border-slate-200 bg-white p-5 flex justify-between items-center">
-                    <span class="text-xs text-slate-400 font-medium"><i class="pi pi-info-circle mr-1"></i> Données générées en temps réel depuis le Data Warehouse.</span>
-                    <Button label="Télécharger le rapport complet (PDF)" icon="pi pi-download" class="p-button-primary font-bold shadow-md" />
+                    <span class="text-xs text-slate-400 font-medium"><i class="pi pi-info-circle mr-1"></i> {{ t('pages.exams.dataGeneratedNote') }}</span>
+                    <Button :label="t('pages.exams.downloadFullReport')" icon="pi pi-download" class="p-button-primary font-bold shadow-md" />
                 </div>
             </template>
         </Dialog>

@@ -30,12 +30,15 @@ import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
 import Checkbox from 'primevue/checkbox';
 import Badge from 'primevue/badge';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // ======================================================================================
 // PROPS & SERVICES
 // ======================================================================================
 const props = defineProps({
-    title: { type: String, default: 'Gestion des Rôles' },
+    title: { type: String, default: '' },
     filters: { type: Object, default: () => ({ search: '', field: '', order: '' }) },
     permissions: { type: Array, default: () => [] },
     roles: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
@@ -43,6 +46,7 @@ const props = defineProps({
 
 const toast = useToast();
 const page = usePage();
+const pageTitle = computed(() => props.title || t('pages.roles.page_title'));
 
 // Helper global pour les permissions (à adapter selon votre implémentation Inertia)
 const can = (permissions) => {
@@ -84,14 +88,14 @@ const stats = computed(() => ({
 }));
 
 // --- Colonnes DataTable ---
-const allColumns = [
-    { field: 'name', header: 'Nom du Rôle', sortable: true },
+const allColumns = computed(() => [
+    { field: 'name', header: t('pages.roles.col_name'), sortable: true },
     { field: 'guard_name', header: 'Guard', sortable: true },
-    { field: 'permissions', header: 'Capacités Associées', sortable: false },
-    { field: 'created_at', header: 'Date de Création', sortable: true },
-];
-const selectedColumnFields = ref(allColumns.map(col => col.field));
-const displayedColumns = computed(() => allColumns.filter(col => selectedColumnFields.value.includes(col.field)));
+    { field: 'permissions', header: t('pages.roles.col_permissions'), sortable: false },
+    { field: 'created_at', header: t('pages.roles.col_created_at'), sortable: true },
+]);
+const selectedColumnFields = ref(allColumns.value.map(col => col.field));
+const displayedColumns = computed(() => allColumns.value.filter(col => selectedColumnFields.value.includes(col.field)));
 
 // --- Recherche interne des permissions dans le modal ---
 const permissionSearch = ref('');
@@ -136,7 +140,7 @@ const submitRole = () => {
             preserveScroll: true,
             onSuccess: () => {
                 roleModalOpen.value = false;
-                toast.add({ severity: 'success', summary: 'Mise à jour', detail: 'Le rôle a été modifié avec succès.', life: 3000 });
+                toast.add({ severity: 'success', summary: t('pages.roles.toast_update_summary'), detail: t('pages.roles.toast_update_detail'), life: 3000 });
             },
         });
     } else {
@@ -145,7 +149,7 @@ const submitRole = () => {
             onSuccess: () => {
                 roleModalOpen.value = false;
                 roleForm.reset();
-                toast.add({ severity: 'success', summary: 'Création', detail: 'Nouveau rôle créé avec succès.', life: 3000 });
+                toast.add({ severity: 'success', summary: t('pages.roles.toast_create_summary'), detail: t('pages.roles.toast_create_detail'), life: 3000 });
             },
         });
     }
@@ -164,7 +168,7 @@ const executeDelete = () => {
         onSuccess: () => {
             deleteDialog.value = false;
             selectedRole.value = null;
-            toast.add({ severity: 'info', summary: 'Supprimé', detail: 'Le rôle a été retiré du système.', life: 3000 });
+            toast.add({ severity: 'info', summary: t('pages.roles.toast_delete_summary'), detail: t('pages.roles.toast_delete_detail'), life: 3000 });
         },
     });
 };
@@ -199,17 +203,17 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
 <template>
     <AppLayout>
-        <Head :title="props.title" />
+        <Head :title="pageTitle" />
 
         <div class="page-bg min-h-screen font-sans">
 
             <PageHeader
-                title="Gestion des rôles"
-                subtitle="Gouvernance & privilèges (RBAC) — définissez les rôles et leurs permissions"
+                :title="t('pages.roles.header_title')"
+                :subtitle="t('pages.roles.header_subtitle')"
                 icon="pi-shield"
                 accent="indigo"
-                badge="Système"
-                :actions="[{ label: 'Créer un rôle', icon: 'pi-plus', variant: 'primary', onClick: openCreate }]"
+                :badge="t('pages.roles.header_badge')"
+                :actions="[{ label: t('pages.roles.btn_create'), icon: 'pi-plus', variant: 'primary', onClick: openCreate }]"
             />
 
             <div class="page-container page-section">
@@ -220,7 +224,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                 <div class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-colors">
                     <div>
-                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Définis</div>
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.roles.stat_total') }}</div>
                         <div class="text-4xl font-black text-slate-800">{{ stats.total }}</div>
                     </div>
                     <div class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform"><i class="pi pi-users text-2xl text-slate-500"></i></div>
@@ -228,7 +232,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
                 <div class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
                     <div>
-                        <div class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Accès Super-Admin</div>
+                        <div class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">{{ t('pages.roles.stat_full_access') }}</div>
                         <div class="text-4xl font-black text-slate-800">{{ stats.fullAccess }}</div>
                     </div>
                     <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-transform"><i class="pi pi-verified text-2xl text-emerald-500"></i></div>
@@ -236,7 +240,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
                 <div class="p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-amber-300 transition-colors">
                     <div>
-                        <div class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Accès Limités</div>
+                        <div class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">{{ t('pages.roles.stat_limited') }}</div>
                         <div class="text-4xl font-black text-slate-800">{{ stats.customAccess }}</div>
                     </div>
                     <div class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-100 group-hover:scale-110 transition-transform"><i class="pi pi-sliders-h text-2xl text-amber-500"></i></div>
@@ -255,16 +259,16 @@ watch(() => cloneDeep(data.params), debounce(() => {
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4 bg-white border-b border-slate-100">
                             <IconField iconPosition="left" class="w-full md:w-96">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="data.params.search" placeholder="Rechercher par nom de rôle..." class="w-full rounded-xl border-slate-200 bg-slate-50 focus:bg-white text-sm font-medium" />
+                                <InputText v-model="data.params.search" :placeholder="t('pages.roles.search_placeholder')" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:bg-white text-sm font-medium" />
                             </IconField>
-                            <Button icon="pi pi-sliders-h" class="p-button-rounded p-button-secondary p-button-text bg-slate-50" @click="op.toggle($event)" v-tooltip.left="'Affichage des colonnes'" />
+                            <Button icon="pi pi-sliders-h" class="p-button-rounded p-button-secondary p-button-text bg-slate-50" @click="op.toggle($event)" v-tooltip.left="t('pages.roles.tooltip_columns')" />
                         </div>
                     </template>
 
                     <template #empty>
                         <div class="p-10 text-center text-slate-500 font-medium flex flex-col items-center">
                             <i class="pi pi-inbox text-4xl mb-4 text-slate-300"></i>
-                            <p>Aucun rôle trouvé pour cette recherche.</p>
+                            <p>{{ t('pages.roles.empty_roles') }}</p>
                         </div>
                     </template>
 
@@ -287,7 +291,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                                 <Badge v-if="rowData.permissions.length === props.permissions.length" value="FULL ACCESS" severity="success" class="text-[9px] tracking-widest font-black" />
                                 <div v-else class="flex items-center gap-2">
                                     <span class="text-xs font-black text-slate-600 group-hover:text-blue-600">{{ rowData.permissions.length }}</span>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Règles</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.roles.rules_label') }}</span>
                                 </div>
                                 <i class="pi pi-external-link text-[10px] text-slate-300 group-hover:text-blue-400"></i>
                             </div>
@@ -299,11 +303,11 @@ watch(() => cloneDeep(data.params), debounce(() => {
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" frozen style="width: 8rem" align="center">
+                    <Column :header="t('pages.roles.col_actions')" alignFrozen="right" frozen style="width: 8rem" align="center">
                         <template #body="slotProps">
                             <div class="flex items-center justify-center gap-1 whitespace-nowrap">
-                                <Button v-show="can(['update role'])" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-blue-50 hover:text-blue-600" @click="openEdit(slotProps.data)" v-tooltip.top="'Modifier'" />
-                                <Button v-show="can(['delete role'])" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger bg-red-50 hover:bg-red-100" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Supprimer'" />
+                                <Button v-show="can(['update role'])" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-blue-50 hover:text-blue-600" @click="openEdit(slotProps.data)" v-tooltip.top="t('pages.roles.tooltip_edit')" />
+                                <Button v-show="can(['delete role'])" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger bg-red-50 hover:bg-red-100" @click="confirmDelete(slotProps.data)" v-tooltip.top="t('pages.roles.tooltip_delete')" />
                             </div>
                         </template>
                     </Column>
@@ -317,8 +321,8 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <!-- ============================================================================== -->
         <SncDialog
             v-model:visible="roleModalOpen"
-            :title="isEditing ? 'Modifier le rôle' : 'Créer un nouveau rôle'"
-            subtitle="Définissez l'identité du rôle et attribuez ses privilèges de sécurité."
+            :title="isEditing ? t('pages.roles.dialog_edit_title') : t('pages.roles.dialog_create_title')"
+            :subtitle="t('pages.roles.dialog_subtitle')"
             :icon="isEditing ? 'pi-pencil' : 'pi-plus'"
             icon-class="from-blue-500 to-indigo-600"
             width="800px"
@@ -327,12 +331,12 @@ watch(() => cloneDeep(data.params), debounce(() => {
                 <!-- Infos basiques -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
                     <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Nom du rôle <span class="text-red-500">*</span></label>
-                        <InputText v-model="roleForm.name" class="w-full rounded-xl border-slate-300 font-bold p-3" placeholder="Ex: Rédacteur Web" autofocus />
+                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">{{ t('pages.roles.field_role_name') }} <span class="text-red-500">*</span></label>
+                        <InputText v-model="roleForm.name" class="w-full rounded-xl border-slate-300 font-bold p-3" :placeholder="t('pages.roles.field_role_name_placeholder')" autofocus />
                         <small v-if="roleForm.errors.name" class="text-red-500 font-bold">{{ roleForm.errors.name }}</small>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Contexte (Guard)</label>
+                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">{{ t('pages.roles.field_guard') }}</label>
                         <div class="flex bg-slate-100 p-1 rounded-xl">
                             <button v-for="g in ['web', 'api']" :key="g" @click="roleForm.guard_name = g" type="button"
                                     :class="roleForm.guard_name === g ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'"
@@ -347,16 +351,16 @@ watch(() => cloneDeep(data.params), debounce(() => {
                 <div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[400px]">
                     <div class="flex justify-between items-center mb-4">
                         <div>
-                            <h3 class="text-sm font-black text-slate-800">Matrice des Privilèges</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ roleForm.permissions.length }} sélectionné(s)</p>
+                            <h3 class="text-sm font-black text-slate-800">{{ t('pages.roles.matrix_title') }}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ t('pages.roles.matrix_count', { count: roleForm.permissions.length }) }}</p>
                         </div>
-                        <Button :label="roleForm.permissions.length === props.permissions.length ? 'Tout vider' : 'Tout cocher'"
+                        <Button :label="roleForm.permissions.length === props.permissions.length ? t('pages.roles.btn_uncheck_all') : t('pages.roles.btn_check_all')"
                                 @click="toggleAllPermissions" class="p-button-text p-button-sm font-bold text-xs" />
                     </div>
 
                     <IconField iconPosition="left" class="mb-4">
                         <InputIcon class="pi pi-search text-slate-400" />
-                        <InputText v-model="permissionSearch" placeholder="Rechercher une permission spécifique..." class="w-full rounded-xl bg-slate-50 border-transparent focus:bg-white text-sm" />
+                        <InputText v-model="permissionSearch" :placeholder="t('pages.roles.permission_search_placeholder')" class="w-full rounded-xl bg-slate-50 border-transparent focus:bg-white text-sm" />
                     </IconField>
 
                     <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 p-2 overflow-hidden">
@@ -372,7 +376,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                                 </div>
                             </div>
                             <div v-if="filteredPermissions.length === 0" class="col-span-full text-center p-8 text-slate-400 text-sm font-medium">
-                                Aucune permission ne correspond à votre recherche.
+                                {{ t('pages.roles.empty_permissions') }}
                             </div>
                         </div>
                     </div>
@@ -380,8 +384,8 @@ watch(() => cloneDeep(data.params), debounce(() => {
             </div>
 
             <template #footer>
-                <Button label="Annuler" icon="pi pi-times" text severity="secondary" @click="roleModalOpen = false" />
-                <Button :label="isEditing ? 'Mettre à jour le rôle' : 'Créer le rôle'" :icon="isEditing ? 'pi pi-save' : 'pi pi-check'"
+                <Button :label="t('pages.roles.btn_cancel')" icon="pi pi-times" text severity="secondary" @click="roleModalOpen = false" />
+                <Button :label="isEditing ? t('pages.roles.btn_update_role') : t('pages.roles.btn_create_role')" :icon="isEditing ? 'pi pi-save' : 'pi pi-check'"
                         severity="primary" class="px-8 font-black" @click="submitRole" :loading="roleForm.processing" :disabled="!roleForm.name.trim()" />
             </template>
         </SncDialog>
@@ -391,8 +395,8 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <!-- ============================================================================== -->
         <SncDialog
             v-model:visible="permissionDialog"
-            :title="selectedRole?.name ?? 'Permissions'"
-            subtitle="Aperçu des privilèges de ce rôle"
+            :title="selectedRole?.name ?? t('pages.roles.permissions_fallback_title')"
+            :subtitle="t('pages.roles.permissions_subtitle')"
             icon="pi-lock-open"
             icon-class="from-slate-500 to-slate-600"
             width="600px"
@@ -400,8 +404,8 @@ watch(() => cloneDeep(data.params), debounce(() => {
             <div class="min-h-[300px]">
                 <div v-if="selectedRole?.permissions.length === props.permissions.length" class="bg-emerald-50 border border-emerald-200 p-6 rounded-2xl text-center mb-4 flex flex-col items-center justify-center h-full">
                     <i class="pi pi-verified text-5xl text-emerald-500 mb-3"></i>
-                    <h3 class="text-lg font-black text-emerald-800">Accès Administrateur Total</h3>
-                    <p class="text-xs text-emerald-600 mt-1 font-medium">Ce rôle possède toutes les permissions disponibles dans le système.</p>
+                    <h3 class="text-lg font-black text-emerald-800">{{ t('pages.roles.full_access_title') }}</h3>
+                    <p class="text-xs text-emerald-600 mt-1 font-medium">{{ t('pages.roles.full_access_desc') }}</p>
                 </div>
 
                 <div v-else-if="selectedRole?.permissions.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
@@ -413,12 +417,12 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
                 <div v-else class="text-center p-12 text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-2xl bg-white">
                     <i class="pi pi-lock text-4xl mb-3 text-slate-300"></i>
-                    <p>Ce rôle n'a aucune permission d'action définie.</p>
+                    <p>{{ t('pages.roles.no_permissions') }}</p>
                 </div>
             </div>
 
             <template #footer>
-                <Button label="Fermer l'aperçu" icon="pi pi-times" text severity="secondary" @click="permissionDialog = false" />
+                <Button :label="t('pages.roles.btn_close_preview')" icon="pi pi-times" text severity="secondary" @click="permissionDialog = false" />
             </template>
         </SncDialog>
 
@@ -427,8 +431,8 @@ watch(() => cloneDeep(data.params), debounce(() => {
         <!-- ============================================================================== -->
         <SncDialog
             v-model:visible="deleteDialog"
-            title="Suppression définitive"
-            subtitle="Cette action est irréversible"
+            :title="t('pages.roles.delete_dialog_title')"
+            :subtitle="t('pages.roles.delete_dialog_subtitle')"
             icon="pi-exclamation-triangle"
             icon-class="from-rose-500 to-red-600"
             width="450px"
@@ -439,20 +443,20 @@ watch(() => cloneDeep(data.params), debounce(() => {
                     <i class="pi pi-exclamation-triangle text-3xl text-rose-500"></i>
                 </div>
                 <p class="text-sm text-slate-500 leading-relaxed">
-                    Êtes-vous sûr de vouloir supprimer le rôle <span class="font-black text-rose-600">"{{ selectedRole?.name }}"</span> ? Les utilisateurs associés perdront ces privilèges immédiatement.
+                    {{ t('pages.roles.delete_confirm_pre') }} <span class="font-black text-rose-600">"{{ selectedRole?.name }}"</span> {{ t('pages.roles.delete_confirm_post') }}
                 </p>
             </div>
 
             <template #footer>
-                <Button label="Annuler" icon="pi pi-times" outlined severity="secondary" class="flex-1" @click="deleteDialog = false" />
-                <Button label="Oui, supprimer" icon="pi pi-trash" severity="danger" class="flex-1" @click="executeDelete" />
+                <Button :label="t('pages.roles.btn_cancel')" icon="pi pi-times" outlined severity="secondary" class="flex-1" @click="deleteDialog = false" />
+                <Button :label="t('pages.roles.btn_confirm_delete')" icon="pi pi-trash" severity="danger" class="flex-1" @click="executeDelete" />
             </template>
         </SncDialog>
 
         <!-- OverlayPanel pour le choix des colonnes -->
         <OverlayPanel ref="op" class="p-4 rounded-2xl shadow-xl border border-slate-100">
-            <div class="font-black mb-4 text-[10px] uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">Affichage des colonnes</div>
-            <MultiSelect v-model="selectedColumnFields" :options="allColumns" optionLabel="header" optionValue="field" display="chip" class="w-full sm:w-64 rounded-xl border-slate-200" placeholder="Sélectionnez les colonnes" />
+            <div class="font-black mb-4 text-[10px] uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">{{ t('pages.roles.tooltip_columns') }}</div>
+            <MultiSelect v-model="selectedColumnFields" :options="allColumns" optionLabel="header" optionValue="field" display="chip" class="w-full sm:w-64 rounded-xl border-slate-200" :placeholder="t('pages.roles.columns_placeholder')" />
         </OverlayPanel>
 
     </AppLayout>

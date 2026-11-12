@@ -6,6 +6,9 @@ import AppLayout from '@/sakai/layout/AppLayout.vue';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // Props avec valeurs par défaut sécurisées
 const props = defineProps({
@@ -36,7 +39,7 @@ const formatDate = (iso) => {
 };
 
 // Utilitaires de présentation
-const severityLabel = (s) => ({ success: 'Succès', warn: 'Attention', error: 'Erreur', info: 'Info' }[s] || 'Info');
+const severityLabel = (s) => ({ success: t('pages.notifications.severity_success'), warn: t('pages.notifications.severity_warn'), error: t('pages.notifications.severity_error'), info: t('pages.notifications.severity_info') }[s] || t('pages.notifications.severity_info'));
 
 const getIconStyles = (severity) => {
     const styles = {
@@ -66,7 +69,7 @@ const markAll = async () => {
         await axios.post(route('notifications.read-all'));
         props.notifications?.data?.forEach(n => n.read_at = n.read_at || new Date().toISOString());
         unreadLocal.value = 0;
-        toast.add({ severity: 'success', summary: 'Fait', detail: 'Toutes les notifications sont lues.', life: 3000 });
+        toast.add({ severity: 'success', summary: t('pages.notifications.toast_done_summary'), detail: t('pages.notifications.toast_done_detail'), life: 3000 });
     } catch (e) {}
     isMarkingAll.value = false;
 };
@@ -74,7 +77,7 @@ const markAll = async () => {
 const remove = async (id) => {
     try {
         await axios.delete(route('notifications.destroy', id));
-        toast.add({ severity: 'info', summary: 'Supprimée', detail: 'Notification effacée.', life: 2000 });
+        toast.add({ severity: 'info', summary: t('pages.notifications.toast_deleted_summary'), detail: t('pages.notifications.toast_deleted_detail'), life: 2000 });
         router.reload({ only: ['notifications', 'unreadCount'] });
     } catch (e) {}
 };
@@ -82,7 +85,7 @@ const remove = async (id) => {
 
 <template>
     <AppLayout>
-        <Head title="Notifications" />
+        <Head :title="t('pages.notifications.head_title')" />
         <div class="page-bg min-h-screen font-sans pb-20">
             <!-- HEADER (Premium Dark Mode with Glow) -->
             <div class="bg-[#0f172a] pt-10 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
@@ -99,16 +102,16 @@ const remove = async (id) => {
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-1.5 flex-wrap">
-                                <h1 class="text-3xl font-black text-white tracking-tight">Notifications</h1>
-                                <Tag v-if="unreadLocal > 0" :value="`${unreadLocal} non lues`" class="!bg-red-500/20 !text-red-400 !border !border-red-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
+                                <h1 class="text-3xl font-black text-white tracking-tight">{{ t('pages.notifications.heading') }}</h1>
+                                <Tag v-if="unreadLocal > 0" :value="t('pages.notifications.unread_count', { count: unreadLocal })" class="!bg-red-500/20 !text-red-400 !border !border-red-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
                             </div>
-                            <p class="text-slate-400 font-medium text-sm">Restez informé de l'activité de votre compte.</p>
+                            <p class="text-slate-400 font-medium text-sm">{{ t('pages.notifications.subtitle') }}</p>
                         </div>
                     </div>
 
                     <Button
                         v-if="unreadLocal > 0"
-                        label="Tout marquer comme lu"
+                        :label="t('pages.notifications.mark_all_read')"
                         icon="pi pi-check-circle"
                         :loading="isMarkingAll"
                         @click="markAll"
@@ -124,7 +127,7 @@ const remove = async (id) => {
                     <!-- Segmented Control Filter -->
                     <div class="flex gap-1 mb-8 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200 w-full sm:w-fit mx-auto sm:mx-0 overflow-x-auto hide-scrollbar">
                         <button
-                            v-for="f in [{ id: 'all', label: 'Toutes' }, { id: 'unread', label: 'Non lues' }, { id: 'read', label: 'Lues' }]"
+                            v-for="f in [{ id: 'all', label: t('pages.notifications.filter_all') }, { id: 'unread', label: t('pages.notifications.filter_unread') }, { id: 'read', label: t('pages.notifications.filter_read') }]"
                             :key="f.id"
                             @click="filter = f.id"
                             class="relative flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all duration-300 z-10"
@@ -140,8 +143,8 @@ const remove = async (id) => {
                         <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100 shadow-sm">
                             <i class="pi pi-check-circle text-4xl text-emerald-400"></i>
                         </div>
-                        <h3 class="text-xl font-black text-slate-800 mb-2">Vous êtes à jour !</h3>
-                        <p class="text-slate-500 max-w-sm">Aucune notification à afficher pour ce filtre.</p>
+                        <h3 class="text-xl font-black text-slate-800 mb-2">{{ t('pages.notifications.empty_title') }}</h3>
+                        <p class="text-slate-500 max-w-sm">{{ t('pages.notifications.empty_hint') }}</p>
                     </div>
 
                     <!-- NOTIFICATIONS LIST (Animated) -->
@@ -173,14 +176,14 @@ const remove = async (id) => {
                                         </p>
                                     </div>
                                     <p v-if="n.message" class="text-sm text-slate-500 leading-relaxed">{{ n.message }}</p>
-                                    <p v-else class="text-sm text-slate-400 italic leading-relaxed">Aucun contenu textuel — voir les détails.</p>
+                                    <p v-else class="text-sm text-slate-400 italic leading-relaxed">{{ t('pages.notifications.no_content') }}</p>
                                 </div>
 
                                 <!-- Action Supprimer (Apparaît au hover) -->
                                 <button
                                     @click.stop="remove(n.id)"
                                     class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-500 transition-all focus:opacity-100"
-                                    title="Supprimer la notification"
+                                    :title="t('pages.notifications.delete_title')"
                                 >
                                     <i class="pi pi-trash text-sm"></i>
                                 </button>

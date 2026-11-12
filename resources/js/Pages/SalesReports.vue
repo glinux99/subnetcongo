@@ -26,6 +26,9 @@ import SelectButton from 'primevue/selectbutton';
 import Menu from 'primevue/menu';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     filters: Object,
@@ -65,24 +68,24 @@ const fetchReportData = async () => {
         });
         tableData.value = response.data.payload.data;
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de synchronisation des données financières.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.sales_reports.errorSummary'), detail: t('pages.sales_reports.errorDetail'), life: 3000 });
     } finally {
         loadingTable.value = false;
     }
 };
 
 const kpiStats = computed(() => [
-    { label: 'Revenu Net', val: props.summary.revenue.formatted, i: 'pi-wallet', c: 'red', g: props.summary.revenue.growth },
-    { label: 'Panier Moyen', val: props.summary.avg_order_value.formatted, i: 'pi-shopping-cart', c: 'emerald', g: props.summary.avg_order_value.growth },
-    { label: 'Volume Ventes', val: props.summary.courses_sold.formatted, i: 'pi-book', c: 'amber', g: props.summary.courses_sold.growth },
-    { label: 'Remboursements', val: props.summary.refunds_amount.formatted, i: 'pi-replay', c: 'rose', g: props.summary.refunds_amount.growth }
+    { label: t('pages.sales_reports.kpiNetRevenue'), val: props.summary.revenue.formatted, i: 'pi-wallet', c: 'red', g: props.summary.revenue.growth },
+    { label: t('pages.sales_reports.kpiAvgOrder'), val: props.summary.avg_order_value.formatted, i: 'pi-shopping-cart', c: 'emerald', g: props.summary.avg_order_value.growth },
+    { label: t('pages.sales_reports.kpiSalesVolume'), val: props.summary.courses_sold.formatted, i: 'pi-book', c: 'amber', g: props.summary.courses_sold.growth },
+    { label: t('pages.sales_reports.kpiRefunds'), val: props.summary.refunds_amount.formatted, i: 'pi-replay', c: 'rose', g: props.summary.refunds_amount.growth }
 ]);
 
 const salesTrendData = computed(() => ({
     labels: props.salesOverTime.map(item => item.date),
     datasets: [
         {
-            label: 'Revenu Net',
+            label: t('pages.sales_reports.kpiNetRevenue'),
             data: props.salesOverTime.map(item => item.net_revenue),
             borderColor: '#E11D48',
             tension: 0.4,
@@ -109,7 +112,7 @@ watch(selectedReportType, fetchReportData);
 
 <template>
     <AppLayout>
-        <Head title="Finance Intelligence Hub | SubnetCongo" />
+        <Head :title="t('pages.sales_reports.headTitle')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             
@@ -121,21 +124,21 @@ watch(selectedReportType, fetchReportData);
                 <div class="max-w-[1700px] mx-auto relative z-10 flex flex-col lg:flex-row justify-between items-center gap-8">
                     <div class="text-center lg:text-left">
                         <div class="flex items-center justify-center lg:justify-start gap-3 mb-4">
-                            <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-red-500/20">Audit & Fiscal Intelligence</span>
+                            <span class="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-red-500/20">{{ t('pages.sales_reports.badge') }}</span>
                         </div>
                         <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter italic uppercase leading-none">
-                            Financial <span class="text-red-600">Command</span> Center
+                            {{ t('pages.sales_reports.titlePart1') }} <span class="text-red-600">{{ t('pages.sales_reports.titleHighlight') }}</span> {{ t('pages.sales_reports.titlePart2') }}
                         </h1>
                         <p class="text-slate-400 mt-4 max-w-xl text-sm font-medium leading-relaxed italic">
-                            Analyse des flux de revenus, audit transactionnel et monitoring de la croissance business de l'académie en temps réel.
+                            {{ t('pages.sales_reports.subtitle') }}
                         </p>
                     </div>
 
                     <div class="flex flex-wrap items-center justify-center gap-4 bg-white/5 p-2 rounded-[1rem] border border-white/10 backdrop-blur-xl">
-                        <DatePicker v-model="dateRange" selectionMode="range" placeholder="Période fiscale" class="!bg-transparent !border-none !text-white !w-64" @date-select="applyGlobalFilters" />
+                        <DatePicker v-model="dateRange" selectionMode="range" :placeholder="t('pages.sales_reports.periodPlaceholder')" class="!bg-transparent !border-none !text-white !w-64" @date-select="applyGlobalFilters" />
                         <div class="w-[1px] h-8 bg-white/10 mx-2"></div>
-                        <Button label="Exporter" icon="pi pi-download" @click="exportMenu.toggle($event)" class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest" />
-                        <Menu ref="exportMenu" :model="[{label: 'CSV Data', icon: 'pi pi-file-excel'}, {label: 'PDF Report', icon: 'pi pi-file-pdf'}]" :popup="true" />
+                        <Button :label="t('pages.sales_reports.export')" icon="pi pi-download" @click="exportMenu.toggle($event)" class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-8 !py-3 !text-xs !font-black !uppercase !tracking-widest" />
+                        <Menu ref="exportMenu" :model="[{label: t('pages.sales_reports.exportCsv'), icon: 'pi pi-file-excel'}, {label: t('pages.sales_reports.exportPdf'), icon: 'pi pi-file-pdf'}]" :popup="true" />
                     </div>
                 </div>
             </header>
@@ -162,7 +165,7 @@ watch(selectedReportType, fetchReportData);
                     <div class="col-span-12 lg:col-span-8 bg-white p-10 rounded-[1rem] border border-slate-200/50 shadow-sm">
                         <div class="flex justify-between items-center mb-10">
                             <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em] flex items-center gap-3">
-                                <span class="w-10 h-[2px] bg-red-600"></span> Performance Transactionnelle
+                                <span class="w-10 h-[2px] bg-red-600"></span> {{ t('pages.sales_reports.transactionalPerformance') }}
                             </h3>
                             <SelectButton v-model="selectedCurrency" :options="['USD', 'EUR']" class="p-selectbutton-v40" />
                         </div>
@@ -174,19 +177,19 @@ watch(selectedReportType, fetchReportData);
                     <!-- Payment Distribution -->
                     <div class="col-span-12 lg:col-span-4 bg-[#0F172A] p-10 rounded-[1rem] text-white shadow-2xl relative overflow-hidden">
                         <div class="relative z-10 flex flex-col h-full">
-                            <h3 class="text-xs font-black uppercase tracking-[0.3em] mb-10">Gateway Volume</h3>
+                            <h3 class="text-xs font-black uppercase tracking-[0.3em] mb-10">{{ t('pages.sales_reports.gatewayVolume') }}</h3>
                             <div class="flex-1 flex flex-col justify-center items-center gap-10">
                                 <div class="relative flex items-center justify-center">
                                     <div class="absolute text-center">
-                                        <p class="text-[10px] font-bold text-slate-500 uppercase">Audit</p>
+                                        <p class="text-[10px] font-black text-slate-500 uppercase">{{ t('pages.sales_reports.auditLabel') }}</p>
                                         <p class="text-xl font-black italic">100%</p>
                                     </div>
                                     <Chart type="doughnut" :data="salesTrendData" :options="{ cutout: '80%', plugins: { legend: { display: false } } }" class="w-48 h-48" />
                                 </div>
                                 <div class="grid grid-cols-2 gap-3 w-full">
                                     <div v-for="i in 4" :key="i" class="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-                                        <p class="text-[9px] font-black text-slate-500 uppercase">Gateway {{ i }}</p>
-                                        <p class="text-xs font-bold text-red-500 tracking-tight">Vérifié</p>
+                                        <p class="text-[9px] font-black text-slate-500 uppercase">{{ t('pages.sales_reports.gatewayLabel', { n: i }) }}</p>
+                                        <p class="text-xs font-bold text-red-500 tracking-tight">{{ t('pages.sales_reports.verified') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -198,14 +201,14 @@ watch(selectedReportType, fetchReportData);
                 <section class="bg-white rounded-[1rem] border border-slate-200/60 shadow-2xl overflow-hidden">
                     <div class="p-10 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-8 bg-slate-50/30">
                         <div>
-                            <h2 class="text-2xl font-black text-slate-900 tracking-tighter italic uppercase">Rapports Détaillés</h2>
-                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">Exploration de la base de données transactionnelle</p>
+                            <h2 class="text-2xl font-black text-slate-900 tracking-tighter italic uppercase">{{ t('pages.sales_reports.detailedReports') }}</h2>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">{{ t('pages.sales_reports.reportsSubtitle') }}</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-4">
                             <Select v-model="selectedReportType" :options="reportTypesList" optionLabel="label" optionValue="value" class="!rounded-xl !bg-white !min-w-[250px] !border-slate-200 shadow-sm" />
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search" />
-                                <InputText v-model="filters['global'].value" placeholder="Rechercher..." class="!rounded-xl !bg-white border-none shadow-inner !w-64" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('pages.sales_reports.searchPlaceholder')" class="!rounded-xl !bg-white border-none shadow-inner !w-64" />
                             </IconField>
                         </div>
                     </div>
@@ -225,9 +228,9 @@ watch(selectedReportType, fetchReportData);
                                 <span v-else class="text-xs font-bold text-slate-600 uppercase">{{ data[col.field] }}</span>
                             </template>
                         </Column>
-                        <Column header="Audit" alignFrozen="right" frozen>
+                        <Column :header="t('pages.sales_reports.auditColumn')" alignFrozen="right" frozen>
                             <template #body="{ data }">
-                                <Button icon="pi pi-shield" text rounded severity="secondary" @click="viewRowDetails(data)" v-tooltip="'Détails de l\'audit'" />
+                                <Button icon="pi pi-shield" text rounded severity="secondary" @click="viewRowDetails(data)" v-tooltip="t('pages.sales_reports.auditTooltip')" />
                             </template>
                         </Column>
                     </DataTable>
@@ -236,12 +239,12 @@ watch(selectedReportType, fetchReportData);
         </div>
 
         <!-- ── TRANSACTION INSPECTOR DRAWER ── -->
-        <Drawer v-model:visible="transactionDrawer" position="right" header="Financial Audit" class="!w-[500px] !rounded-l-[3rem]">
+        <Drawer v-model:visible="transactionDrawer" position="right" :header="t('pages.sales_reports.drawerTitle')" class="!w-[500px] !rounded-l-[3rem]">
             <div v-if="selectedRow" class="space-y-8 p-4">
                 <div class="bg-[#0F172A] p-10 rounded-[1rem] text-white relative overflow-hidden shadow-2xl">
                     <div class="absolute -top-10 -right-10 w-48 h-48 bg-red-600/10 rounded-full blur-3xl"></div>
-                    <p class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mb-4">Inspection ID: #{{ selectedRow.id || 'N/A' }}</p>
-                    <h2 class="text-3xl font-black italic tracking-tighter uppercase leading-none">Détails <br/> Transactionnels</h2>
+                    <p class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mb-4">{{ t('pages.sales_reports.inspectionId', { id: selectedRow.id || 'N/A' }) }}</p>
+                    <h2 class="text-3xl font-black italic tracking-tighter uppercase leading-none">{{ t('pages.sales_reports.transactionDetails') }}</h2>
                 </div>
 
                 <div class="bg-slate-50 p-8 rounded-[1rem] border border-slate-100 space-y-4">
@@ -253,7 +256,7 @@ watch(selectedReportType, fetchReportData);
 
                 <div class="p-6 bg-red-50 rounded-xl border border-red-100 flex items-center gap-4">
                     <i class="pi pi-info-circle text-red-600"></i>
-                    <p class="text-[10px] text-red-900 font-bold leading-relaxed uppercase tracking-wider">Données certifiées par le module fiscal SubnetCongo.</p>
+                    <p class="text-[10px] text-red-900 font-bold leading-relaxed uppercase tracking-wider">{{ t('pages.sales_reports.certifiedData') }}</p>
                 </div>
             </div>
         </Drawer>

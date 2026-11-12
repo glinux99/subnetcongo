@@ -56,6 +56,28 @@
     color-scheme: dark;
 }
 
+/* ---------- Scrollbar cohérente & persistante (marque sobre, Firefox + WebKit) ---------- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--snc-text-faint) transparent;
+}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+    background: var(--snc-text-faint);
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--snc-text-muted);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.app-dark * { scrollbar-color: #334155 transparent; }
+.app-dark *::-webkit-scrollbar-thumb { background: #334155; border: 2px solid transparent; background-clip: padding-box; }
+.app-dark *::-webkit-scrollbar-thumb:hover { background: #475569; border: 2px solid transparent; background-clip: padding-box; }
+
 /* ---------- Accessibilité : focus visible & mouvement réduit ---------- */
 :focus-visible {
     outline: 2px solid var(--snc-primary);

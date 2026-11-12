@@ -5,6 +5,9 @@ import { useConfirmAction } from '@/composables/useConfirmAction';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import Textarea from 'primevue/textarea';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     message: { type: Object, required: true },
@@ -17,15 +20,21 @@ const archive = () => router.post(route('admin.messages.archive', props.message.
 const confirmAction = useConfirmAction();
 const destroyMsg = () => {
     confirmAction({
-        header: 'Supprimer le message',
-        message: 'Supprimer définitivement ce message ? Cette action est irréversible.',
-        acceptLabel: 'Supprimer',
+        header: t('pages.admin_contact_message.confirm_delete_header'),
+        message: t('pages.admin_contact_message.confirm_delete_message'),
+        acceptLabel: t('pages.admin_contact_message.btn_delete'),
         danger: true,
         accept: () => router.delete(route('admin.messages.destroy', props.message.id)),
     });
 };
 
-const statusLabel = (s) => ({ new:'Nouveau', read:'Lu', replied:'Répondu', archived:'Archivé', spam:'Spam' }[s] || s);
+const statusLabel = (s) => ({
+    new: t('pages.admin_contact_message.status_new'),
+    read: t('pages.admin_contact_message.status_read'),
+    replied: t('pages.admin_contact_message.status_replied'),
+    archived: t('pages.admin_contact_message.status_archived'),
+    spam: t('pages.admin_contact_message.status_spam'),
+}[s] || s);
 
 // Correction pour utiliser les Severities natives de PrimeVue
 const statusSeverity = (s) => ({ 
@@ -46,7 +55,7 @@ const formatDate = (iso) => {
 
 <template>
     <AppLayout>
-        <Head :title="`Message #${message.ticket_number}`" />
+        <Head :title="t('pages.admin_contact_message.head_title', { ticket: message.ticket_number })" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             
@@ -55,7 +64,7 @@ const formatDate = (iso) => {
                 <!-- Lien de retour type Breadcrumb -->
                 <div class="flex items-center text-sm px-1 mb-3">
                     <Link :href="route('admin.messages.index')" class="text-slate-500 hover:text-slate-800 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
-                        <i class="pi pi-arrow-left"></i> Retour à la boîte de réception
+                        <i class="pi pi-arrow-left"></i> {{ t('pages.admin_contact_message.back_to_inbox') }}
                     </Link>
                 </div>
 
@@ -68,18 +77,18 @@ const formatDate = (iso) => {
                         <div class="max-w-3xl">
                             <div class="flex items-center gap-3 mb-4">
                                 <span class="inline-block border border-red-900/50 text-red-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 uppercase">
-                                    Ticket #{{ message.ticket_number }}
+                                    {{ t('pages.admin_contact_message.ticket_badge', { ticket: message.ticket_number }) }}
                                 </span>
                                 <Tag :value="statusLabel(message.status)" :severity="statusSeverity(message.status)" class="!text-[9px] !font-bold !uppercase !tracking-wider px-2" />
                             </div>
 
                             <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-3 leading-none">
-                                <span class="text-white">LECTURE DU</span>
-                                <span class="text-[#EF4444]">MESSAGE</span>
+                                <span class="text-white">{{ t('pages.admin_contact_message.hero_title_1') }}</span>
+                                <span class="text-[#EF4444]">{{ t('pages.admin_contact_message.hero_title_2') }}</span>
                             </h1>
 
                             <p class="text-slate-400 text-sm md:text-base italic leading-relaxed font-bold">
-                                Sujet : <span class="text-white">{{ message.subject }}</span>
+                                {{ t('pages.admin_contact_message.subject_label') }} <span class="text-white">{{ message.subject }}</span>
                             </p>
                         </div>
                     </div>
@@ -94,7 +103,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-user text-blue-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Expéditeur</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_message.kpi_sender') }}</div>
                             <div class="text-lg font-black text-slate-800 truncate">{{ message.name }}</div>
                         </div>
                     </div>
@@ -105,7 +114,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-envelope text-blue-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Adresse E-mail</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_message.kpi_email') }}</div>
                             <a :href="`mailto:${message.email}`" class="text-lg font-black text-blue-600 hover:text-blue-800 transition-colors truncate block">{{ message.email }}</a>
                         </div>
                     </div>
@@ -116,8 +125,8 @@ const formatDate = (iso) => {
                             <i class="pi pi-phone text-red-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Téléphone</div>
-                            <div class="text-lg font-black text-slate-800 truncate">{{ message.phone || 'Non renseigné' }}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_message.kpi_phone') }}</div>
+                            <div class="text-lg font-black text-slate-800 truncate">{{ message.phone || t('pages.admin_contact_message.phone_empty') }}</div>
                         </div>
                     </div>
                 </div>
@@ -131,10 +140,10 @@ const formatDate = (iso) => {
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                         <div class="bg-slate-50 border-b border-slate-100 p-4 md:p-6 flex justify-between items-center">
                             <h3 class="text-sm font-black uppercase tracking-widest text-slate-600 flex items-center gap-2">
-                                <i class="pi pi-align-left text-blue-400"></i> Contenu du message
+                                <i class="pi pi-align-left text-blue-400"></i> {{ t('pages.admin_contact_message.content_title') }}
                             </h3>
                             <span class="text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-md border border-slate-200 shadow-sm">
-                                Reçu le {{ formatDate(message.created_at) }}
+                                {{ t('pages.admin_contact_message.received_at', { date: formatDate(message.created_at) }) }}
                             </span>
                         </div>
                         <div class="p-6 md:p-8">
@@ -143,7 +152,7 @@ const formatDate = (iso) => {
                             <!-- Méta-données discrètes -->
                             <div class="mt-8 pt-4 border-t border-slate-100 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                 <span><i class="pi pi-wifi mr-1"></i> IP : {{ message.ip_address || '—' }}</span>
-                                <span><i class="pi pi-link mr-1"></i> Source : {{ message.source || '—' }}</span>
+                                <span><i class="pi pi-link mr-1"></i> {{ t('pages.admin_contact_message.meta_source') }} {{ message.source || '—' }}</span>
                             </div>
                         </div>
                     </div>
@@ -152,10 +161,10 @@ const formatDate = (iso) => {
                     <div v-if="message.status === 'replied' && message.reply_message" class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 overflow-hidden">
                         <div class="bg-blue-100/50 border-b border-blue-200 p-4 md:p-6 flex justify-between items-center">
                             <h3 class="text-sm font-black uppercase tracking-widest text-blue-800 flex items-center gap-2">
-                                <i class="pi pi-reply text-blue-600"></i> Votre Réponse
+                                <i class="pi pi-reply text-blue-600"></i> {{ t('pages.admin_contact_message.reply_title') }}
                             </h3>
                             <span class="text-xs font-bold text-blue-600 bg-white px-3 py-1 rounded-md shadow-sm">
-                                Envoyée le {{ formatDate(message.replied_at) }}
+                                {{ t('pages.admin_contact_message.sent_at', { date: formatDate(message.replied_at) }) }}
                             </span>
                         </div>
                         <div class="p-6 md:p-8">
@@ -167,7 +176,7 @@ const formatDate = (iso) => {
                     <div v-if="message.status !== 'archived' && message.status !== 'replied'" class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-hidden">
                         <div class="bg-slate-50 border-b border-slate-100 p-4 md:p-6">
                             <h3 class="text-sm font-black uppercase tracking-widest text-slate-600 flex items-center gap-2">
-                                <i class="pi pi-send text-blue-400"></i> Répondre par e-mail
+                                <i class="pi pi-send text-blue-400"></i> {{ t('pages.admin_contact_message.reply_form_title') }}
                             </h3>
                         </div>
                         <div class="p-6 md:p-8">
@@ -176,16 +185,16 @@ const formatDate = (iso) => {
                                     v-model="replyForm.reply_message" 
                                     rows="8" 
                                     class="w-full !rounded-xl !bg-slate-50 border-slate-200 text-slate-700 text-[15px] leading-relaxed p-4" 
-                                    placeholder="Rédigez votre réponse ici. Elle sera envoyée directement à l'adresse e-mail de l'expéditeur et archivée dans le système..." 
+                                    :placeholder="t('pages.admin_contact_message.reply_placeholder')"
                                 />
                                 <p v-if="replyForm.errors.reply_message" class="text-red-500 text-xs font-bold mt-2"><i class="pi pi-exclamation-triangle"></i> {{ replyForm.errors.reply_message }}</p>
                                 
                                 <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-slate-100">
                                     <div class="flex gap-2 w-full sm:w-auto">
-                                        <Button type="button" label="Archiver" icon="pi pi-folder" outlined @click="archive" class="!rounded-xl text-slate-600 border-slate-300 hover:bg-slate-50 w-full sm:w-auto font-bold" />
-                                        <Button type="button" label="Supprimer" icon="pi pi-trash" outlined @click="destroyMsg" class="!rounded-xl text-red-500 border-red-200 hover:bg-red-50 w-full sm:w-auto font-bold" />
+                                        <Button type="button" :label="t('pages.admin_contact_message.btn_archive')" icon="pi pi-folder" outlined @click="archive" class="!rounded-xl text-slate-600 border-slate-300 hover:bg-slate-50 w-full sm:w-auto font-bold" />
+                                        <Button type="button" :label="t('pages.admin_contact_message.btn_delete')" icon="pi pi-trash" outlined @click="destroyMsg" class="!rounded-xl text-red-500 border-red-200 hover:bg-red-50 w-full sm:w-auto font-bold" />
                                     </div>
-                                    <Button type="submit" label="Envoyer la réponse" icon="pi pi-paper-plane" :loading="replyForm.processing" class="!bg-[#EF4444] hover:!bg-red-600 !border-none !rounded-xl font-bold px-8 py-3 w-full sm:w-auto shadow-md shadow-red-500/20" />
+                                    <Button type="submit" :label="t('pages.admin_contact_message.btn_send_reply')" icon="pi pi-paper-plane" :loading="replyForm.processing" class="!bg-[#EF4444] hover:!bg-red-600 !border-none !rounded-xl font-bold px-8 py-3 w-full sm:w-auto shadow-md shadow-red-500/20" />
                                 </div>
                             </form>
                         </div>
@@ -193,7 +202,7 @@ const formatDate = (iso) => {
 
                     <!-- Si archivé, juste l'option supprimer -->
                     <div v-else class="flex justify-end pt-4">
-                        <Button label="Supprimer définitivement" icon="pi pi-trash" outlined @click="destroyMsg" class="!rounded-xl text-red-500 border-red-200 hover:bg-red-50 font-bold" />
+                        <Button :label="t('pages.admin_contact_message.btn_delete_final')" icon="pi pi-trash" outlined @click="destroyMsg" class="!rounded-xl text-red-500 border-red-200 hover:bg-red-50 font-bold" />
                     </div>
 
                 </div>

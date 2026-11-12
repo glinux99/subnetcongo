@@ -77,40 +77,40 @@ const submitSettings = () => {
         preserveScroll: true,
         onSuccess: () => {
             isSubmitting.value = false;
-            toast.add({ severity: 'success', summary: 'Système mis à jour', detail: 'La configuration a été propagée avec succès.', life: 3000 });
+            toast.add({ severity: 'success', summary: t('pages.settings.system_updated'), detail: t('pages.settings.settings_propagated'), life: 3000 });
         },
         onError: () => {
             isSubmitting.value = false;
-            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Vérifiez les champs en surbrillance.', life: 4000 });
+            toast.add({ severity: 'error', summary: t('pages.settings.error'), detail: t('pages.settings.check_highlighted'), life: 4000 });
         }
     });
 };
 
 const resetToDefaults = () => {
     confirm.require({
-        message: 'Voulez-vous vraiment annuler toutes les modifications non enregistrées ?',
-        header: 'Confirmer l\'annulation',
+        message: t('pages.settings.cancel_modify_confirm'),
+        header: t('pages.settings.confirm_cancel_header'),
         icon: 'pi pi-exclamation-circle',
         accept: () => {
             form.reset();
-            toast.add({ severity: 'info', summary: 'Réinitialisé', detail: 'Modifications annulées.', life: 3000 });
+            toast.add({ severity: 'info', summary: t('pages.settings.reset'), detail: t('pages.settings.changes_cancelled'), life: 3000 });
         }
     });
 };
 
 const toggleMaintenance = (event) => {
-    const action = form.advanced.maintenance_mode ? 'désactiver' : 'activer';
+    const action = form.advanced.maintenance_mode ? t('pages.settings.maintenance_action_disable') : t('pages.settings.maintenance_action_enable');
     confirm.require({
         target: event.currentTarget,
-        message: `Voulez-vous vraiment ${action} le mode maintenance ?`,
-        header: 'Alerte de Disponibilité',
+        message: t('pages.settings.maintenance_confirm', { action }),
+        header: t('pages.settings.availability_alert'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => {
             router.post(route('settings.maintenance.toggle'), {}, {
                 onSuccess: () => {
                     form.advanced.maintenance_mode = !form.advanced.maintenance_mode;
-                    toast.add({ severity: form.advanced.maintenance_mode ? 'warn' : 'success', summary: 'Maintenance', detail: `Système ${form.advanced.maintenance_mode ? 'hors ligne' : 'en ligne'}.`, life: 3000 });
+                    toast.add({ severity: form.advanced.maintenance_mode ? 'warn' : 'success', summary: t('pages.settings.maintenance_summary'), detail: t('pages.settings.maintenance_detail', { state: form.advanced.maintenance_mode ? t('pages.settings.system_offline') : t('pages.settings.system_online') }), life: 3000 });
                 }
             });
         }
@@ -120,7 +120,7 @@ const toggleMaintenance = (event) => {
 const clearCache = () => {
     loading.value = true;
     router.post(route('settings.cache.clear'), {}, {
-        onSuccess: () => { loading.value = false; toast.add({ severity: 'success', summary: 'Cache Purgé', detail: 'Les performances sont optimales.', life: 3000 }); },
+        onSuccess: () => { loading.value = false; toast.add({ severity: 'success', summary: t('pages.settings.cache_purged'), detail: t('pages.settings.cache_purged_detail'), life: 3000 }); },
         onFinish: () => loading.value = false
     });
 };
@@ -129,15 +129,15 @@ const sendTestEmail = () => {
     if (!testEmailAddress.value) return;
     isSubmitting.value = true;
     router.post(route('system.settings.mail.test'), { email: testEmailAddress.value }, {
-        onSuccess: () => { isSubmitting.value = false; testEmailDialog.value = false; toast.add({ severity: 'success', summary: 'Email envoyé', detail: 'Vérifiez votre boîte de réception.', life: 3000 }); },
-        onError: () => { isSubmitting.value = false; toast.add({ severity: 'error', summary: 'Échec SMTP', detail: 'Vérifiez vos identifiants.', life: 4000 }); }
+        onSuccess: () => { isSubmitting.value = false; testEmailDialog.value = false; toast.add({ severity: 'success', summary: t('pages.settings.test_email_sent'), detail: t('pages.settings.check_inbox'), life: 3000 }); },
+        onError: () => { isSubmitting.value = false; toast.add({ severity: 'error', summary: t('pages.settings.smtp_failed'), detail: t('pages.settings.check_credentials'), life: 4000 }); }
     });
 };
 
 const onLogoUpload = (event) => {
     router.post(route('settings.logo.upload'), { logo: event.files[0] }, {
         forceFormData: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Upload réussi', detail: 'Le logo a été mis à jour.', life: 3000 })
+        onSuccess: () => toast.add({ severity: 'success', summary: t('pages.settings.upload_success'), detail: t('pages.settings.logo_updated'), life: 3000 })
     });
 };
 
@@ -155,35 +155,35 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
 <template>
     <AppLayout>
-        <Head title="Configuration Système" />
+        <Head :title="t('pages.settings.head_title')" />
         <ConfirmDialog />
 
         <!-- DIALOG TEST EMAIL -->
-        <Dialog v-model:visible="testEmailDialog" modal header="Test de connexion SMTP" :style="{ width: '400px' }">
+        <Dialog v-model:visible="testEmailDialog" modal :header="t('pages.settings.smtp_test_header')" :style="{ width: '400px' }">
             <div class="pt-4 space-y-4">
-                <p class="text-sm text-slate-500 leading-relaxed">Saisissez une adresse e-mail pour vérifier la délivrabilité de vos paramètres actuels.</p>
+                <p class="text-sm text-slate-500 leading-relaxed">{{ t('pages.settings.smtp_intro') }}</p>
                 <div class="field">
-                    <label class="text-sm font-semibold text-slate-700 block mb-2">Email destinataire</label>
+                    <label class="text-sm font-semibold text-slate-700 block mb-2">{{ t('pages.settings.recipient_email') }}</label>
                     <InputText v-model="testEmailAddress" placeholder="admin@domaine.com" class="w-full !rounded-lg" />
                 </div>
             </div>
             <template #footer>
-                <Button label="Annuler" class="p-button-text p-button-secondary" @click="testEmailDialog = false" />
-                <Button label="Envoyer le test" icon="pi pi-send" class="p-button-primary !rounded-lg" :loading="isSubmitting" @click="sendTestEmail" />
+                <Button :label="t('pages.settings.cancel')" class="p-button-text p-button-secondary" @click="testEmailDialog = false" />
+                <Button :label="t('pages.settings.send_test')" icon="pi pi-send" class="p-button-primary !rounded-lg" :loading="isSubmitting" @click="sendTestEmail" />
             </template>
         </Dialog>
 
         <div class="page-bg min-h-screen font-sans">
 
             <PageHeader
-                title="Paramètres globaux"
-                subtitle="Configuration du moteur LMS — identité, emails, réseau et maintenance"
+                :title="t('pages.settings.page_title')"
+                :subtitle="t('pages.settings.page_subtitle')"
                 icon="pi-cog"
                 accent="blue"
-                badge="Système"
+                :badge="t('pages.settings.badge_system')"
                 :actions="[
-                    { label: 'Réinitialiser', icon: 'pi-refresh', variant: 'secondary', onClick: resetToDefaults },
-                    { label: 'Enregistrer', icon: 'pi-check', variant: 'primary', onClick: submitSettings },
+                    { label: t('pages.settings.action_reset'), icon: 'pi-refresh', variant: 'secondary', onClick: resetToDefaults },
+                    { label: t('pages.settings.action_save'), icon: 'pi-check', variant: 'primary', onClick: submitSettings },
                 ]"
             />
 
@@ -200,35 +200,35 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
                                     <div class="col-span-1 lg:col-span-2 space-y-8">
                                         <div>
-                                            <h3 class="text-lg font-bold text-slate-900 tracking-tight">Identité de l'Organisation</h3>
-                                            <p class="text-sm text-slate-500">Ces informations seront visibles sur les factures et communications.</p>
+                                            <h3 class="text-lg font-bold text-slate-900 tracking-tight">{{ t('pages.settings.org_identity') }}</h3>
+                                            <p class="text-sm text-slate-500">{{ t('pages.settings.org_identity_desc') }}</p>
                                         </div>
 
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                             <div class="field">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Nom de l'organisation</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.org_name') }}</label>
                                                 <InputText v-model="form.general.site_name" class="w-full !rounded-lg" placeholder="Ex: SubNetCongo" />
                                             </div>
                                             <div class="field">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Slogan</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.slogan') }}</label>
                                                 <InputText v-model="form.general.site_slogan" class="w-full !rounded-lg" />
                                             </div>
                                             <div class="field">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Email de contact</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.contact_email') }}</label>
                                                 <InputGroup class="!rounded-lg overflow-hidden">
                                                     <InputGroupAddon><i class="pi pi-envelope"></i></InputGroupAddon>
                                                     <InputText v-model="form.general.contact_email" />
                                                 </InputGroup>
                                             </div>
                                             <div class="field">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Téléphone</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.phone') }}</label>
                                                 <InputGroup class="!rounded-lg overflow-hidden">
                                                     <InputGroupAddon><i class="pi pi-phone"></i></InputGroupAddon>
                                                     <InputText v-model="form.general.phone" />
                                                 </InputGroup>
                                             </div>
                                             <div class="field md:col-span-2">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Adresse du siège</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.headquarters_address') }}</label>
                                                 <Textarea v-model="form.general.address" rows="3" class="w-full !rounded-lg" />
                                             </div>
                                         </div>
@@ -237,26 +237,26 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                     <!-- UI Branding -->
                                     <div class="col-span-1 space-y-8">
                                         <div>
-                                            <h3 class="text-lg font-bold text-slate-900 tracking-tight">Thème Visuel</h3>
-                                            <p class="text-sm text-slate-500">Couleurs et logotype.</p>
+                                            <h3 class="text-lg font-bold text-slate-900 tracking-tight">{{ t('pages.settings.visual_theme') }}</h3>
+                                            <p class="text-sm text-slate-500">{{ t('pages.settings.visual_theme_desc') }}</p>
                                         </div>
 
                                         <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-sm font-semibold text-slate-700">Couleur Primaire</span>
+                                                <span class="text-sm font-semibold text-slate-700">{{ t('pages.settings.primary_color') }}</span>
                                                 <ColorPicker v-model="form.branding.primary_color" />
                                             </div>
                                             <Divider class="!my-2" />
                                             <div class="flex items-center justify-between">
-                                                <span class="text-sm font-semibold text-slate-700">Couleur Secondaire</span>
+                                                <span class="text-sm font-semibold text-slate-700">{{ t('pages.settings.secondary_color') }}</span>
                                                 <ColorPicker v-model="form.branding.secondary_color" />
                                             </div>
                                             
                                             <div class="pt-4">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-4 text-center">Logo Officiel</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-4 text-center">{{ t('pages.settings.official_logo') }}</label>
                                                 <div class="border-2 border-dashed border-slate-300 bg-slate-50 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:border-blue-400 transition-colors">
                                                     <img :src="form.branding.logo_url" class="h-12 object-contain" alt="Logo" />
-                                                    <FileUpload mode="basic" name="logo" @uploader="onLogoUpload" customUpload :auto="true" chooseLabel="Changer" class="p-button-outlined p-button-sm !rounded-lg" />
+                                                    <FileUpload mode="basic" name="logo" @uploader="onLogoUpload" customUpload :auto="true" :chooseLabel="t('pages.settings.change')" class="p-button-outlined p-button-sm !rounded-lg" />
                                                 </div>
                                             </div>
                                         </div>
@@ -267,34 +267,34 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                         <!-- --- TAB 2: MOTEUR LMS --- -->
                         <TabPanel>
-                            <template #header><i class="pi pi-graduation-cap mr-2"></i> Moteur LMS</template>
+                            <template #header><i class="pi pi-graduation-cap mr-2"></i> {{ t('pages.settings.tab_lms') }}</template>
                             <div class="p-8 lg:p-12">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                                     
                                     <!-- Automation -->
                                     <div class="space-y-6">
-                                        <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-6">Automatisation & Accès</h3>
+                                        <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-6">{{ t('pages.settings.automation_access') }}</h3>
                                         
                                         <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                             <div>
-                                                <span class="font-bold text-slate-800 block">Auto-inscription post-paiement</span>
-                                                <p class="text-xs text-slate-500 mt-1">L'élève accède au cours dès validation financière.</p>
+                                                <span class="font-bold text-slate-800 block">{{ t('pages.settings.auto_enroll') }}</span>
+                                                <p class="text-xs text-slate-500 mt-1">{{ t('pages.settings.auto_enroll_desc') }}</p>
                                             </div>
                                             <InputSwitch v-model="form.lms.auto_enroll_on_payment" />
                                         </div>
 
                                         <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                             <div>
-                                                <span class="font-bold text-slate-800 block">Mode Aperçu (Preview)</span>
-                                                <p class="text-xs text-slate-500 mt-1">Les non-inscrits peuvent voir les modules gratuits.</p>
+                                                <span class="font-bold text-slate-800 block">{{ t('pages.settings.preview_mode') }}</span>
+                                                <p class="text-xs text-slate-500 mt-1">{{ t('pages.settings.preview_desc') }}</p>
                                             </div>
                                             <InputSwitch v-model="form.lms.allow_course_preview" />
                                         </div>
 
                                         <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                             <div>
-                                                <span class="font-bold text-slate-800 block">Filigrane Vidéo (Anti-piratage)</span>
-                                                <p class="text-xs text-slate-500 mt-1">Incruste l'ID de l'élève sur le lecteur vidéo.</p>
+                                                <span class="font-bold text-slate-800 block">{{ t('pages.settings.video_watermark') }}</span>
+                                                <p class="text-xs text-slate-500 mt-1">{{ t('pages.settings.watermark_desc') }}</p>
                                             </div>
                                             <InputSwitch v-model="form.lms.video_watermark" />
                                         </div>
@@ -302,17 +302,17 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                                     <!-- Diplômes -->
                                     <div class="space-y-6">
-                                        <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-6">Certification</h3>
+                                        <h3 class="text-lg font-bold text-slate-900 tracking-tight mb-6">{{ t('pages.settings.certification') }}</h3>
                                         
                                         <div class="bg-slate-900 p-8 rounded-2xl shadow-lg border border-slate-800 text-white space-y-6">
                                             <div class="flex justify-between items-center">
-                                                <span class="font-bold block">Générateur PDF de Diplômes</span>
+                                                <span class="font-bold block">{{ t('pages.settings.pdf_generator') }}</span>
                                                 <InputSwitch v-model="form.lms.enable_certificates" />
                                             </div>
                                             <Divider class="!border-slate-700" />
                                             
                                             <div class="field">
-                                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Score de validation minimum</label>
+                                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">{{ t('pages.settings.min_pass_score') }}</label>
                                                 <div class="flex items-center gap-4">
                                                     <InputNumber v-model="form.lms.min_pass_score" suffix="%" class="w-32" inputClass="!bg-slate-800 !border-slate-700 !text-white !font-bold !rounded-lg !p-3 text-center" />
                                                     <ProgressBar :value="form.lms.min_pass_score" :showValue="false" class="h-2 flex-1 !bg-slate-800" color="#6366f1" />
@@ -320,7 +320,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                             </div>
 
                                             <div class="field">
-                                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Préfixe Matricule</label>
+                                                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">{{ t('pages.settings.certificate_prefix') }}</label>
                                                 <InputText v-model="form.lms.certificate_prefix" class="w-full !bg-slate-800 !border-slate-700 !text-white !font-mono !rounded-lg" />
                                             </div>
                                         </div>
@@ -331,42 +331,42 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                         <!-- --- TAB 4: SERVEUR MAIL --- -->
                         <TabPanel>
-                            <template #header><i class="pi pi-send mr-2"></i> Messagerie</template>
+                            <template #header><i class="pi pi-send mr-2"></i> {{ t('pages.settings.tab_mail') }}</template>
                             <div class="p-8 lg:p-12">
                                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
                                     <div class="lg:col-span-8 space-y-8">
                                         <div class="flex justify-between items-center mb-6">
                                             <div>
-                                                <h3 class="text-lg font-bold text-slate-900 tracking-tight">Configuration SMTP / API</h3>
-                                                <p class="text-sm text-slate-500">Routeur de courriels sortants.</p>
+                                                <h3 class="text-lg font-bold text-slate-900 tracking-tight">{{ t('pages.settings.smtp_config') }}</h3>
+                                                <p class="text-sm text-slate-500">{{ t('pages.settings.smtp_router') }}</p>
                                             </div>
-                                            <Button label="Tester SMTP" icon="pi pi-check-circle" class="p-button-outlined p-button-sm !rounded-lg font-bold" @click="testEmailDialog = true" />
+                                            <Button :label="t('pages.settings.test_smtp')" icon="pi pi-check-circle" class="p-button-outlined p-button-sm !rounded-lg font-bold" @click="testEmailDialog = true" />
                                         </div>
 
                                         <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-6">
                                             <div class="field">
-                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Pilote d'envoi (Driver)</label>
+                                                <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.mail_driver') }}</label>
                                                 <SelectButton v-model="form.mail.driver" :options="props.dictionaries.mailDrivers" optionLabel="label" optionValue="value" class="ultimate-select-btn" />
                                             </div>
 
                                             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                 <div class="md:col-span-3 field">
-                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Hôte (Host)</label>
+                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.host') }}</label>
                                                     <InputText v-model="form.mail.host" class="w-full !rounded-lg font-mono" />
                                                 </div>
                                                 <div class="field">
-                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Port</label>
+                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.port') }}</label>
                                                     <InputNumber v-model="form.mail.port" class="w-full" inputClass="!rounded-lg text-center" :useGrouping="false" />
                                                 </div>
                                             </div>
 
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div class="field">
-                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Utilisateur (Username)</label>
+                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.username') }}</label>
                                                     <InputText v-model="form.mail.username" class="w-full !rounded-lg" />
                                                 </div>
                                                 <div class="field">
-                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Mot de passe / Clé API</label>
+                                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">{{ t('pages.settings.password_api_key') }}</label>
                                                     <Password v-model="form.mail.password" :feedback="false" toggleMask class="w-full" inputClass="w-full !rounded-lg" />
                                                 </div>
                                             </div>
@@ -377,9 +377,9 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                         <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
                                             <div class="flex gap-3 mb-2">
                                                 <i class="pi pi-shield text-amber-600 mt-0.5"></i>
-                                                <h4 class="font-bold text-amber-900 text-sm">Chiffrement SSL/TLS</h4>
+                                                <h4 class="font-bold text-amber-900 text-sm">{{ t('pages.settings.ssl_tls') }}</h4>
                                             </div>
-                                            <p class="text-xs text-amber-800 leading-relaxed mb-4">Pour éviter le blacklistage IP, il est fortement recommandé d'utiliser une connexion chiffrée (TLS 1.2+).</p>
+                                            <p class="text-xs text-amber-800 leading-relaxed mb-4">{{ t('pages.settings.tls_recommendation') }}</p>
                                             <SelectButton v-model="form.mail.encryption" :options="['tls', 'ssl', 'none']" class="ultimate-select-btn !w-full" />
                                         </div>
                                     </div>
@@ -389,12 +389,12 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                         <!-- --- TAB 5: SÉCURITÉ --- -->
                         <TabPanel>
-                            <template #header><i class="pi pi-lock mr-2"></i> Sécurité</template>
+                            <template #header><i class="pi pi-lock mr-2"></i> {{ t('pages.settings.tab_security') }}</template>
                             <div class="p-8 lg:p-12">
                                 <div class="flex items-center justify-between mb-10 bg-slate-900 p-6 rounded-2xl text-white">
                                     <div>
-                                        <h3 class="text-lg font-bold tracking-tight">Poste de Commandement Cybersécurité</h3>
-                                        <p class="text-sm text-slate-400">Verrouillage des accès au cœur du système.</p>
+                                        <h3 class="text-lg font-bold tracking-tight">{{ t('pages.settings.cyber_command') }}</h3>
+                                        <p class="text-sm text-slate-400">{{ t('pages.settings.cyber_desc') }}</p>
                                     </div>
                                     <div class="text-right">
                                         <div class="text-xs font-bold text-slate-400 uppercase mb-1">Health Score</div>
@@ -409,24 +409,24 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
                                         <div class="flex justify-between items-center">
                                             <div>
-                                                <span class="font-bold text-slate-800 block">Forcer 2FA (Admins)</span>
-                                                <p class="text-xs text-slate-500 mt-1">Obligatoire pour les rôles à privilèges.</p>
+                                                <span class="font-bold text-slate-800 block">{{ t('pages.settings.force_2fa') }}</span>
+                                                <p class="text-xs text-slate-500 mt-1">{{ t('pages.settings.force_2fa_desc') }}</p>
                                             </div>
                                             <InputSwitch v-model="form.security.force_2fa" />
                                         </div>
                                         <Divider />
                                         <div class="flex justify-between items-center">
                                             <div>
-                                                <span class="font-bold text-slate-800 block">Protection Captcha</span>
-                                                <p class="text-xs text-slate-500 mt-1">Bouclier anti-bots sur les formulaires publics.</p>
+                                                <span class="font-bold text-slate-800 block">{{ t('pages.settings.captcha') }}</span>
+                                                <p class="text-xs text-slate-500 mt-1">{{ t('pages.settings.captcha_desc') }}</p>
                                             </div>
                                             <InputSwitch v-model="form.security.enable_captcha" />
                                         </div>
                                         <Divider />
                                         <div class="flex justify-between items-center">
                                             <div>
-                                                <span class="font-bold text-slate-800 block">Inscriptions Ouvertes</span>
-                                                <p class="text-xs text-slate-500 mt-1">Autoriser la création de comptes élèves.</p>
+                                                <span class="font-bold text-slate-800 block">{{ t('pages.settings.open_registration') }}</span>
+                                                <p class="text-xs text-slate-500 mt-1">{{ t('pages.settings.open_registration_desc') }}</p>
                                             </div>
                                             <InputSwitch v-model="form.security.enable_registration" />
                                         </div>
@@ -434,12 +434,12 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                                     <div class="space-y-6">
                                         <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                                            <label class="block text-sm font-bold text-slate-800 mb-2">Restriction IP (Liste Blanche Admin)</label>
-                                            <p class="text-xs text-slate-500 mb-4">Laissez vide pour désactiver. Séparer par des virgules.</p>
+                                            <label class="block text-sm font-bold text-slate-800 mb-2">{{ t('pages.settings.ip_whitelist') }}</label>
+                                            <p class="text-xs text-slate-500 mb-4">{{ t('pages.settings.ip_whitelist_desc') }}</p>
                                             <InputText v-model="form.security.ip_whitelist" placeholder="192.168.1.1, 10.0.0.1" class="w-full !rounded-lg font-mono text-sm" />
                                         </div>
                                         <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center gap-4">
-                                            <label class="block text-sm font-bold text-slate-800 w-1/2">Expiration de Session (min)</label>
+                                            <label class="block text-sm font-bold text-slate-800 w-1/2">{{ t('pages.settings.session_timeout') }}</label>
                                             <InputNumber v-model="form.security.session_timeout" showButtons :min="15" :step="15" class="w-1/2" inputClass="!rounded-lg text-center font-bold" />
                                         </div>
                                     </div>
@@ -449,7 +449,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
 
                         <!-- --- TAB 6: MAINTENANCE (DANGER ZONE) --- -->
                         <TabPanel>
-                            <template #header><i class="pi pi-exclamation-triangle text-red-500 mr-2"></i> Système</template>
+                            <template #header><i class="pi pi-exclamation-triangle text-red-500 mr-2"></i> {{ t('pages.settings.tab_system') }}</template>
                             <div class="p-8 lg:p-12 space-y-10">
                                 
                                 <!-- Zone Danger -->
@@ -459,14 +459,14 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                                         <div>
                                             <h3 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                                                Mode Maintenance
-                                                <Tag v-if="form.advanced.maintenance_mode" value="ACTIF" severity="danger" class="!font-bold !px-3" />
+                                                {{ t('pages.settings.maintenance_mode') }}
+                                                <Tag v-if="form.advanced.maintenance_mode" :value="t('pages.settings.maintenance_active')" severity="danger" class="!font-bold !px-3" />
                                             </h3>
                                             <p class="text-sm text-slate-600 mt-2 max-w-xl leading-relaxed">
-                                                Verrouille l'accès public au site (Erreur 503). Seuls les administrateurs connectés pourront naviguer sur la plateforme. Utilisez ce mode uniquement pour les mises à jour critiques.
+                                                {{ t('pages.settings.maintenance_desc') }}
                                             </p>
                                         </div>
-                                        <Button :label="form.advanced.maintenance_mode ? 'Désactiver la maintenance' : 'Activer le mode maintenance'"
+                                        <Button :label="form.advanced.maintenance_mode ? t('pages.settings.disable_maintenance') : t('pages.settings.enable_maintenance')"
                                                 :icon="form.advanced.maintenance_mode ? 'pi pi-unlock' : 'pi pi-lock'"
                                                 :class="form.advanced.maintenance_mode ? 'p-button-secondary' : 'p-button-danger'"
                                                 class="!font-bold !px-6 !py-3 !rounded-xl whitespace-nowrap"
@@ -478,10 +478,10 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div class="bg-slate-50 border border-slate-200 rounded-2xl p-8 flex flex-col justify-between">
                                         <div>
-                                            <h4 class="font-bold text-slate-900 mb-2"><i class="pi pi-eraser mr-2"></i> Purge du Cache Serveur</h4>
-                                            <p class="text-xs text-slate-500 leading-relaxed mb-6">Recompile les vues Blade, vide les routes en cache et nettoie le cache applicatif Redis/Fichier.</p>
+                                            <h4 class="font-bold text-slate-900 mb-2"><i class="pi pi-eraser mr-2"></i> {{ t('pages.settings.purge_cache') }}</h4>
+                                            <p class="text-xs text-slate-500 leading-relaxed mb-6">{{ t('pages.settings.purge_cache_desc') }}</p>
                                         </div>
-                                        <Button label="Nettoyer le Cache" class="p-button-outlined p-button-secondary !rounded-lg w-full font-bold" @click="clearCache" :loading="loading" />
+                                        <Button :label="t('pages.settings.clean_cache')" class="p-button-outlined p-button-secondary !rounded-lg w-full font-bold" @click="clearCache" :loading="loading" />
                                     </div>
                                 </div>
                                 
@@ -493,7 +493,7 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
             </div>
             
             <footer class="text-center mt-12 pb-6 text-xs text-slate-400 font-medium">
-                V40 Ultimate Edition — Conçu par SubNetCongo Infrastructure
+                {{ t('pages.settings.footer') }}
             </footer>
         </div>
     </AppLayout>

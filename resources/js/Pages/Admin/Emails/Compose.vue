@@ -5,7 +5,9 @@ import { useConfirmAction } from '@/composables/useConfirmAction';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirmAction = useConfirmAction();
 
@@ -25,12 +27,12 @@ const showBcc = ref(false);
 const showTemplateMenu = ref(false);
 const fileInput = ref(null);
 
-const templates = [
-    { label: 'Réponse standard', subject: 'Re: ', body: '\n\n' },
-    { label: 'Message de bienvenue', subject: 'Bienvenue sur SubnetCongo Academy', body: '\n\nBonjour,\n\nBienvenue sur SubnetCongo Academy !\n\nNous sommes ravis de vous compter parmi nos apprenants.\n\nCordialement,\nL\'équipe SubnetCongo' },
-    { label: 'Suivi inscription', subject: 'Suivi de votre inscription', body: '\n\nBonjour,\n\nConcernant votre inscription, nous avons le plaisir de vous informer que...\n\nCordialement,\nL\'équipe SubnetCongo' },
-    { label: 'Support technique', subject: 'Support technique - SubnetCongo', body: '\n\nBonjour,\n\nNous avons bien reçu votre demande de support.\n\nNotre équipe technique intervient dans les meilleurs délais.\n\nCordialement,\nL\'équipe Support SubnetCongo' },
-];
+const templates = computed(() => [
+    { label: t('pages.admin_emails_compose.tpl1_label'), subject: t('pages.admin_emails_compose.tpl1_subject'), body: t('pages.admin_emails_compose.tpl1_body') },
+    { label: t('pages.admin_emails_compose.tpl2_label'), subject: t('pages.admin_emails_compose.tpl2_subject'), body: t('pages.admin_emails_compose.tpl2_body') },
+    { label: t('pages.admin_emails_compose.tpl3_label'), subject: t('pages.admin_emails_compose.tpl3_subject'), body: t('pages.admin_emails_compose.tpl3_body') },
+    { label: t('pages.admin_emails_compose.tpl4_label'), subject: t('pages.admin_emails_compose.tpl4_subject'), body: t('pages.admin_emails_compose.tpl4_body') },
+]);
 
 const form = useForm({
     to: props.prefill.to || '',
@@ -77,16 +79,16 @@ const saveDraft = () => {
         body: form.body,
     }, {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Brouillon enregistré', life: 2500 }),
+        onSuccess: () => toast.add({ severity: 'success', summary: t('pages.admin_emails_compose.toast_draft_saved'), life: 2500 }),
     });
 };
 
 const discard = () => {
     confirmAction({
-        header: 'Abandonner le message',
-        message: 'Abandonner ce message ? Le contenu non enregistré sera perdu.',
-        acceptLabel: 'Abandonner',
-        rejectLabel: 'Continuer la rédaction',
+        header: t('pages.admin_emails_compose.confirm_discard_header'),
+        message: t('pages.admin_emails_compose.confirm_discard_message'),
+        acceptLabel: t('pages.admin_emails_compose.confirm_discard_accept'),
+        rejectLabel: t('pages.admin_emails_compose.confirm_discard_reject'),
         danger: true,
         accept: () => router.visit(route('admin.emails.index')),
     });
@@ -97,7 +99,7 @@ const isValid = computed(() => form.to && form.subject && form.body);
 
 <template>
     <AppLayout>
-        <Head title="Nouveau message" />
+        <Head :title="t('pages.admin_emails_compose.page_title')" />
         <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
             
             <!-- HEADER (Inspiré de votre image) -->
@@ -112,20 +114,20 @@ const isValid = computed(() => form.to && form.subject && form.body);
                             </span>
                         </div>
                         <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase italic flex flex-wrap items-center gap-x-3">
-                            NOUVEAU <span class="text-[#ef4444]">MESSAGE</span>
+                            {{ t('pages.admin_emails_compose.hero_title_1') }} <span class="text-[#ef4444]">{{ t('pages.admin_emails_compose.hero_title_2') }}</span>
                         </h1>
                         <p class="text-slate-400 mt-3 text-sm italic max-w-xl">
-                            Rédigez votre email. Les envois sont gérés dynamiquement et les brouillons peuvent être sauvegardés.
+                            {{ t('pages.admin_emails_compose.hero_subtitle') }}
                         </p>
                     </div>
 
                     <!-- Actions Haut Droite (Inspiré de l'image) -->
                     <div class="flex items-center gap-3">
                         <Link :href="route('admin.emails.index')" class="flex items-center gap-2 px-4 py-2.5 bg-transparent border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded-md text-sm font-medium transition duration-200">
-                            <i class="pi pi-arrow-left"></i> Retour (Boîte)
+                            <i class="pi pi-arrow-left"></i> {{ t('pages.admin_emails_compose.btn_back') }}
                         </Link>
                         <button @click="saveDraft" class="flex items-center gap-2 px-4 py-2.5 bg-[#ef4444] hover:bg-red-600 text-white rounded-md text-sm font-medium transition duration-200 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                            <i class="pi pi-save"></i> Brouillon
+                            <i class="pi pi-save"></i> {{ t('pages.admin_emails_compose.btn_draft') }}
                         </button>
                     </div>
                 </div>
@@ -137,33 +139,33 @@ const isValid = computed(() => form.to && form.subject && form.body);
                     
                     <!-- Ligne "À" avec Cc/Cci intégrés -->
                     <div class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
-                        <label class="text-slate-500 font-medium w-16 text-sm">À</label>
-                        <input v-model="form.to" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800 placeholder-slate-300" placeholder="destinataire@exemple.com">
+                        <label class="text-slate-500 font-medium w-16 text-sm">{{ t('pages.admin_emails_compose.label_to') }}</label>
+                        <input v-model="form.to" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800 placeholder-slate-300" :placeholder="t('pages.admin_emails_compose.placeholder_to')">
                         
                         <!-- Toggle Cc / Cci -->
                         <div class="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                            <button v-if="!showCc" @click="showCc = true" class="hover:text-slate-800 hover:underline">Cc</button>
-                            <button v-if="!showBcc" @click="showBcc = true" class="hover:text-slate-800 hover:underline">Cci</button>
+                            <button v-if="!showCc" @click="showCc = true" class="hover:text-slate-800 hover:underline">{{ t('pages.admin_emails_compose.label_cc') }}</button>
+                            <button v-if="!showBcc" @click="showBcc = true" class="hover:text-slate-800 hover:underline">{{ t('pages.admin_emails_compose.label_bcc') }}</button>
                         </div>
                     </div>
 
                     <!-- Ligne "Cc" -->
                     <div v-if="showCc" class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
-                        <label class="text-slate-500 font-medium w-16 text-sm">Cc</label>
-                        <input v-model="form.cc" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800" placeholder="copie@exemple.com">
+                        <label class="text-slate-500 font-medium w-16 text-sm">{{ t('pages.admin_emails_compose.label_cc') }}</label>
+                        <input v-model="form.cc" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800" :placeholder="t('pages.admin_emails_compose.placeholder_cc')">
                         <button @click="showCc = false; form.cc = ''" class="text-slate-400 hover:text-red-500"><i class="pi pi-times text-xs"></i></button>
                     </div>
 
                     <!-- Ligne "Cci" -->
                     <div v-if="showBcc" class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
-                        <label class="text-slate-500 font-medium w-16 text-sm">Cci</label>
-                        <input v-model="form.bcc" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800" placeholder="copie-cachee@exemple.com">
+                        <label class="text-slate-500 font-medium w-16 text-sm">{{ t('pages.admin_emails_compose.label_bcc') }}</label>
+                        <input v-model="form.bcc" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-0 text-slate-800" :placeholder="t('pages.admin_emails_compose.placeholder_bcc')">
                         <button @click="showBcc = false; form.bcc = ''" class="text-slate-400 hover:text-red-500"><i class="pi pi-times text-xs"></i></button>
                     </div>
 
                     <!-- Ligne "Objet" -->
                     <div class="px-6 py-2 border-b border-slate-100 flex items-center focus-within:bg-blue-50/30 transition-colors">
-                        <input v-model="form.subject" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-semibold py-1.5 px-0 text-slate-800 placeholder-slate-400" placeholder="Objet">
+                        <input v-model="form.subject" type="text" class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-semibold py-1.5 px-0 text-slate-800 placeholder-slate-400" :placeholder="t('pages.admin_emails_compose.placeholder_subject')">
                     </div>
 
                     <!-- Zone de texte principale (Body) -->
@@ -172,7 +174,7 @@ const isValid = computed(() => form.to && form.subject && form.body);
                             v-model="form.body" 
                             rows="15"
                             class="w-full h-full min-h-[350px] border-none focus:ring-0 bg-transparent p-6 text-sm text-slate-800 leading-relaxed font-sans resize-y placeholder-slate-300"
-                            placeholder="Rédigez votre message ici..."
+                            :placeholder="t('pages.admin_emails_compose.placeholder_body')"
                         ></textarea>
                     </div>
 
@@ -195,7 +197,7 @@ const isValid = computed(() => form.to && form.subject && form.body);
                         <div class="flex items-center gap-4">
                             <!-- Bouton d'envoi style Gmail (Bleu) -->
                             <Button
-                                label="Envoyer"
+                                :label="t('pages.admin_emails_compose.btn_send')"
                                 @click="submit"
                                 :loading="form.processing"
                                 :disabled="!isValid"
@@ -204,11 +206,11 @@ const isValid = computed(() => form.to && form.subject && form.body);
 
                             <!-- Menu Modèles -->
                             <div class="relative">
-                                <button @click="showTemplateMenu = !showTemplateMenu" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition" title="Insérer un modèle">
+                                <button @click="showTemplateMenu = !showTemplateMenu" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition" :title="t('pages.admin_emails_compose.title_insert_template')">
                                     <i class="pi pi-clipboard"></i>
                                 </button>
                                 <div v-if="showTemplateMenu" class="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-xl border border-slate-200 py-1 min-w-[250px] z-50">
-                                    <div class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">Modèles</div>
+                                    <div class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">{{ t('pages.admin_emails_compose.menu_templates') }}</div>
                                     <button v-for="tpl in templates" :key="tpl.label" @click="applyTemplate(tpl)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 text-slate-700 transition">
                                         {{ tpl.label }}
                                     </button>
@@ -216,7 +218,7 @@ const isValid = computed(() => form.to && form.subject && form.body);
                             </div>
 
                             <!-- Pièce jointe -->
-                            <button @click="$refs.fileInput.click()" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition" title="Joindre des fichiers">
+                            <button @click="$refs.fileInput.click()" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition" :title="t('pages.admin_emails_compose.title_attach')">
                                 <i class="pi pi-paperclip"></i>
                             </button>
                             <input type="file" ref="fileInput" class="hidden" multiple @change="handleFileUpload">
@@ -224,7 +226,7 @@ const isValid = computed(() => form.to && form.subject && form.body);
 
                         <!-- Corbeille (Abandonner) -->
                         <div>
-                            <button @click="discard" class="w-9 h-9 rounded-full hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-slate-400 transition" title="Supprimer ce brouillon">
+                            <button @click="discard" class="w-9 h-9 rounded-full hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-slate-400 transition" :title="t('pages.admin_emails_compose.title_discard')">
                                 <i class="pi pi-trash"></i>
                             </button>
                         </div>

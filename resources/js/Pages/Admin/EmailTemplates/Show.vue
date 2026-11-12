@@ -7,6 +7,9 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import InputSwitch from 'primevue/inputswitch';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     template: { type: Object, required: true },
@@ -72,14 +75,14 @@ const copyVariable = (variable) => {
 
 <template>
     <AppLayout>
-        <Head :title="`Modifier - ${template.name}`" />
+        <Head :title="t('pages.admin_email_template.head_title', { name: template.name })" />
         <div class="page-bg min-h-screen font-sans pb-20">
             <!-- Header modernisé -->
             <div class="bg-[#0f172a] pt-8 pb-20 px-6 lg:px-12 relative overflow-hidden shadow-2xl border-b border-slate-800/50">
                 <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
                 <div class="max-w-[1200px] mx-auto relative z-10">
                     <Link :href="route('admin.email-templates.index')" class="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-6 transition-colors bg-slate-800/50 px-4 py-2 rounded-full backdrop-blur-sm">
-                        <i class="pi pi-arrow-left text-xs"></i> Retour aux modèles
+                        <i class="pi pi-arrow-left text-xs"></i> {{ t('pages.admin_email_template.back_to_templates') }}
                     </Link>
 
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -94,7 +97,7 @@ const copyVariable = (variable) => {
                         </div>
                         <div class="flex items-center gap-3">
                             <Tag
-                                :value="form.is_active ? 'Modèle Actif' : 'Modèle Inactif'"
+                                :value="form.is_active ? t('pages.admin_email_template.tag_active') : t('pages.admin_email_template.tag_inactive')"
                                 :class="[
                                     '!px-4 !py-2 !rounded-full !font-bold transition-colors duration-300',
                                     form.is_active ? '!bg-blue-500/20 !text-blue-400 !border !border-blue-500/30' : '!bg-slate-700/50 !text-slate-400 !border !border-slate-600'
@@ -116,9 +119,9 @@ const copyVariable = (variable) => {
                                     <!-- Active Toggle (Design Repensé) -->
                                     <div :class="['flex items-center justify-between p-5 rounded-2xl border transition-colors', form.is_active ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-200']">
                                         <div>
-                                            <p :class="['font-bold text-base', form.is_active ? 'text-blue-900' : 'text-slate-700']">Activation automatique</p>
+                                            <p :class="['font-bold text-base', form.is_active ? 'text-blue-900' : 'text-slate-700']">{{ t('pages.admin_email_template.activation_title') }}</p>
                                             <p :class="['text-sm mt-0.5', form.is_active ? 'text-blue-600' : 'text-slate-500']">
-                                                {{ form.is_active ? 'Ce modèle sera utilisé par le système.' : 'Ce message est désactivé et ne sera pas envoyé.' }}
+                                                {{ form.is_active ? t('pages.admin_email_template.activation_on') : t('pages.admin_email_template.activation_off') }}
                                             </p>
                                         </div>
                                         <InputSwitch v-model="form.is_active" class="scale-110" />
@@ -126,31 +129,31 @@ const copyVariable = (variable) => {
 
                                     <!-- Copies BCC -->
                                     <div>
-                                        <label class="block text-sm font-black text-slate-700 mb-2">Copies cachées (BCC)</label>
+                                        <label class="block text-sm font-black text-slate-700 mb-2">{{ t('pages.admin_email_template.bcc_label') }}</label>
                                         <div class="relative">
                                             <i class="pi pi-eye-slash absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                             <InputText
                                                 v-model="form.bcc_emails"
                                                 class="!rounded-xl w-full !pl-11 !py-3 !text-slate-800 !border-slate-200 focus:!border-blue-500 font-mono"
-                                                placeholder="email1@exemple.com, email2@exemple.com"
+                                                :placeholder="t('pages.admin_email_template.bcc_placeholder')"
                                             />
                                         </div>
                                         <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
                                             <i class="pi pi-info-circle"></i>
-                                            Adresses séparées par des virgules. Chaque envoi de ce modèle leur sera copié en BCC (invisible pour le destinataire). Laissez vide pour ne faire aucune copie.
+                                            {{ t('pages.admin_email_template.bcc_help') }}
                                         </p>
                                         <p v-if="form.errors.bcc_emails" class="text-red-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.bcc_emails }}</p>
                                     </div>
 
                                     <!-- Subject -->
                                     <div>
-                                        <label class="block text-sm font-black text-slate-700 mb-2">Sujet de l'email</label>
+                                        <label class="block text-sm font-black text-slate-700 mb-2">{{ t('pages.admin_email_template.subject_label') }}</label>
                                         <div class="relative">
                                             <i class="pi pi-pencil absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                             <InputText
                                                 v-model="form.subject"
                                                 class="!rounded-xl w-full !pl-11 !py-3 !text-slate-800 !border-slate-200 focus:!border-blue-500"
-                                                placeholder="Saisissez l'objet du message..."
+                                                :placeholder="t('pages.admin_email_template.subject_placeholder')"
                                             />
                                         </div>
                                         <p v-if="form.errors.subject" class="text-red-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.subject }}</p>
@@ -159,8 +162,8 @@ const copyVariable = (variable) => {
                                     <!-- Content (Simili-éditeur de code) -->
                                     <div>
                                         <div class="flex items-center justify-between mb-2">
-                                            <label class="block text-sm font-black text-slate-700">Contenu HTML</label>
-                                            <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md font-mono">HTML Supporté</span>
+                                            <label class="block text-sm font-black text-slate-700">{{ t('pages.admin_email_template.content_label') }}</label>
+                                            <span class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md font-mono">{{ t('pages.admin_email_template.html_badge') }}</span>
                                         </div>
                                         <div class="rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] shadow-inner focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
                                             <!-- Faux header type mac/éditeur -->
@@ -175,7 +178,7 @@ const copyVariable = (variable) => {
                                                 v-model="form.content"
                                                 rows="18"
                                                 class="w-full !border-none !shadow-none !bg-transparent !text-slate-100 font-mono text-[14px] leading-relaxed p-4 focus:!ring-0 resize-y"
-                                                placeholder="<div>Entrez votre HTML ici...</div>"
+                                                :placeholder="t('pages.admin_email_template.content_placeholder')"
                                             />
                                         </div>
                                         <p v-if="form.errors.content" class="text-red-500 text-xs mt-2 flex items-center gap-1"><i class="pi pi-exclamation-circle"></i> {{ form.errors.content }}</p>
@@ -186,7 +189,7 @@ const copyVariable = (variable) => {
                                 <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-b-3xl mt-auto">
                                     <Button
                                         type="button"
-                                        :label="showTestForm ? 'Fermer le test' : 'Tester l\'envoi'"
+                                        :label="showTestForm ? t('pages.admin_email_template.test_close') : t('pages.admin_email_template.test_send')"
                                         :icon="showTestForm ? 'pi pi-times' : 'pi pi-send'"
                                         :class="['!rounded-xl transition-all', showTestForm ? '!text-slate-500 hover:!bg-slate-200' : '!text-blue-600 hover:!bg-blue-50 !border-blue-200']"
                                         outlined
@@ -194,7 +197,7 @@ const copyVariable = (variable) => {
                                     />
                                     <Button
                                         type="submit"
-                                        label="Enregistrer les modifications"
+                                        :label="t('pages.admin_email_template.btn_save')"
                                         icon="pi pi-save"
                                         :loading="form.processing"
                                         class="!rounded-xl !bg-slate-800 hover:!bg-slate-900 !border-none px-6 shadow-lg shadow-slate-200 w-full sm:w-auto"
@@ -206,7 +209,7 @@ const copyVariable = (variable) => {
                         <!-- Formulaire de Test (Rendu conditionnel doux avec Animation) -->
                         <div v-show="showTestForm" class="bg-blue-50 rounded-xl p-6 border border-blue-100 transform transition-all duration-300 animate-fadein">
                             <h3 class="text-sm font-black uppercase tracking-widest text-blue-900 mb-4 flex items-center gap-2">
-                                <i class="pi pi-paper-plane text-blue-600"></i> Envoyer un test
+                                <i class="pi pi-paper-plane text-blue-600"></i> {{ t('pages.admin_email_template.test_title') }}
                             </h3>
                             <div class="flex flex-col sm:flex-row gap-3">
                                 <div class="relative flex-1">
@@ -214,19 +217,19 @@ const copyVariable = (variable) => {
                                     <InputText
                                         v-model="testEmail"
                                         type="email"
-                                        placeholder="votre-email@domaine.com"
+                                        :placeholder="t('pages.admin_email_template.test_email_placeholder')"
                                         class="w-full !rounded-xl !pl-11 border-white"
                                         @keyup.enter="sendTest"
                                     />
                                 </div>
                                 <Button
-                                    label="Envoyer"
+                                    :label="t('pages.admin_email_template.btn_send')"
                                     @click="sendTest"
                                     :disabled="!testEmail"
                                     class="!rounded-xl !bg-blue-600 hover:!bg-blue-700 !border-none shadow-md"
                                 />
                             </div>
-                            <p class="text-xs text-blue-600/70 mt-3">L'email sera envoyé avec les données actuelles (pensez à sauvegarder avant de tester si vous avez fait des modifications).</p>
+                            <p class="text-xs text-blue-600/70 mt-3">{{ t('pages.admin_email_template.test_note') }}</p>
                         </div>
                     </div>
 
@@ -236,17 +239,17 @@ const copyVariable = (variable) => {
                         <!-- Informations de base -->
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                             <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2">
-                                <i class="pi pi-info-circle text-slate-400"></i> Métadonnées
+                                <i class="pi pi-info-circle text-slate-400"></i> {{ t('pages.admin_email_template.metadata_title') }}
                             </h3>
                             <div class="space-y-4">
                                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Déclencheur</p>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('pages.admin_email_template.trigger_label') }}</p>
                                     <p class="font-semibold text-slate-800 flex items-center gap-2">
                                         <i class="pi pi-bolt text-red-500"></i> {{ template.trigger_event }}
                                     </p>
                                 </div>
                                 <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Catégorie</p>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{{ t('pages.admin_email_template.category_label') }}</p>
                                     <p class="font-semibold text-slate-800 capitalize">{{ template.category }}</p>
                                 </div>
                             </div>
@@ -256,11 +259,11 @@ const copyVariable = (variable) => {
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                    <i class="pi pi-code text-slate-400"></i> Variables
+                                    <i class="pi pi-code text-slate-400"></i> {{ t('pages.admin_email_template.variables_title') }}
                                 </h3>
                                 <span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-bold">{{ template.variables?.length || 0 }}</span>
                             </div>
-                            <p class="text-xs text-slate-500 mb-4 leading-relaxed">Cliquez sur une variable pour la copier et collez-la dans le sujet ou le contenu.</p>
+                            <p class="text-xs text-slate-500 mb-4 leading-relaxed">{{ t('pages.admin_email_template.variables_help') }}</p>
 
                             <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 <button
@@ -287,20 +290,20 @@ const copyVariable = (variable) => {
                         <!-- Astuces HTML -->
                         <div class="bg-gradient-to-br from-blue-50 to-blue-50 border border-blue-100 rounded-xl p-6">
                             <h3 class="text-sm font-black text-blue-900 mb-3 flex items-center gap-2">
-                                💡 Astuces d'édition
+                                💡 {{ t('pages.admin_email_template.tips_title') }}
                             </h3>
                             <ul class="text-xs text-blue-800/80 space-y-2.5">
                                 <li class="flex items-start gap-2">
                                     <i class="pi pi-check-circle mt-0.5 text-blue-400"></i>
-                                    <span>Les variables sont dynamiques et se remplacent lors de l'envoi.</span>
+                                    <span>{{ t('pages.admin_email_template.tip_variables') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <i class="pi pi-check-circle mt-0.5 text-blue-400"></i>
-                                    <span>Utilisez des balises <code>&lt;br&gt;</code> pour les sauts de ligne si vous n'utilisez pas de paragraphes.</span>
+                                    <span>{{ t('pages.admin_email_template.tip_br') }} <code>&lt;br&gt;</code> {{ t('pages.admin_email_template.tip_br_suffix') }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <i class="pi pi-check-circle mt-0.5 text-blue-400"></i>
-                                    <span>Évitez le CSS complexe, privilégiez le CSS en ligne (style="...").</span>
+                                    <span>{{ t('pages.admin_email_template.tip_css') }}</span>
                                 </li>
                             </ul>
                         </div>

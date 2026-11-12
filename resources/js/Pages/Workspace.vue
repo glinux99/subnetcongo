@@ -19,6 +19,9 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
 import { debounce } from 'lodash'; // Nécessite npm install lodash
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // Layout & UI Components
 import AppLayout from '@/sakai/layout/AppLayout.vue';
@@ -119,9 +122,9 @@ watch(calculatedTotal, (newTotal) => {
 
 const getStatusInfo = (status: string) => {
     const map: Record<string, { text: string; severity: string; icon: string }> = {
-        pending: { text: 'À corriger', severity: 'warning', icon: 'pi-clock' },
-        in_progress: { text: 'En cours', severity: 'info', icon: 'pi-spinner' },
-        graded: { text: 'Publié', severity: 'success', icon: 'pi-check-circle' },
+        pending: { text: t('pages.workspace.statusPending'), severity: 'warning', icon: 'pi-clock' },
+        in_progress: { text: t('pages.workspace.statusInProgress'), severity: 'info', icon: 'pi-spinner' },
+        graded: { text: t('pages.workspace.statusGraded'), severity: 'success', icon: 'pi-check-circle' },
     };
     return map[status] || { text: status, severity: 'secondary', icon: 'pi-info-circle' };
 };
@@ -141,8 +144,8 @@ const submitGrade = (publish: boolean = false) => {
             onSuccess: () => {
                 toast.add({
                     severity: publish ? 'success' : 'info',
-                    summary: publish ? 'Note Publiée' : 'Brouillon Enregistré',
-                    detail: publish ? 'L\'étudiant a été notifié.' : 'Vos modifications sont sauvegardées.',
+                    summary: publish ? t('pages.workspace.toastPublishedSummary') : t('pages.workspace.toastDraftSummary'),
+                    detail: publish ? t('pages.workspace.toastPublishedDetail') : t('pages.workspace.toastDraftDetail'),
                     life: 3000
                 });
 
@@ -152,7 +155,7 @@ const submitGrade = (publish: boolean = false) => {
                 }
             },
             onError: (errors) => {
-                toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez vérifier les champs.', life: 5000 });
+                toast.add({ severity: 'error', summary: t('pages.workspace.toastErrorSummary'), detail: t('pages.workspace.toastErrorDetail'), life: 5000 });
                 console.error("Erreurs de validation:", errors);
             }
         });
@@ -196,7 +199,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
 
 <template>
     <AppLayout>
-        <Head :title="`Correction | ${submission.student.name}`" />
+        <Head :title="`${t('pages.workspace.title')} | ${submission.student.name}`" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="max-w-[1400px] mx-auto">
@@ -213,7 +216,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                                 <div class="flex flex-wrap items-center gap-2 mt-1 text-sm text-slate-500">
                                     <span class="font-semibold text-slate-700">{{ submission.assignment.title }}</span>
                                     <Divider layout="vertical" class="hidden md:block" />
-                                    <span>Soumis le: {{ new Date(submission.submitted_at).toLocaleDateString('fr-FR', { hour: '2-digit', minute:'2-digit' }) }}</span>
+                                    <span>{{ t('pages.workspace.submittedOn') }} {{ new Date(submission.submitted_at).toLocaleDateString('fr-FR', { hour: '2-digit', minute:'2-digit' }) }}</span>
                                     <Divider layout="vertical" class="hidden md:block" />
                                     <Tag :value="getStatusInfo(submission.status).text" :icon="`pi ${getStatusInfo(submission.status).icon}`" :severity="getStatusInfo(submission.status).severity" rounded />
                                 </div>
@@ -223,16 +226,16 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                         <!-- Actions & Navigation -->
                         <div class="flex items-center gap-3 w-full xl:w-auto justify-between xl:justify-end">
                             <div class="flex gap-2 mr-4">
-                                <Button icon="pi pi-chevron-left" class="p-button-rounded p-button-text" :disabled="!prevSubmissionId" @click="prevSubmissionId && navigateTo(prevSubmissionId)" v-tooltip.bottom="'Étudiant précédent'" />
-                                <Button icon="pi pi-chevron-right" class="p-button-rounded p-button-text" :disabled="!nextSubmissionId" @click="nextSubmissionId && navigateTo(nextSubmissionId)" v-tooltip.bottom="'Étudiant suivant'" />
+                                <Button icon="pi pi-chevron-left" class="p-button-rounded p-button-text" :disabled="!prevSubmissionId" @click="prevSubmissionId && navigateTo(prevSubmissionId)" v-tooltip.bottom="t('pages.workspace.prevStudent')" />
+                                <Button icon="pi pi-chevron-right" class="p-button-rounded p-button-text" :disabled="!nextSubmissionId" @click="nextSubmissionId && navigateTo(nextSubmissionId)" v-tooltip.bottom="t('pages.workspace.nextStudent')" />
                             </div>
 
                             <div class="flex gap-2">
                                 <span v-if="isAutoSaving" class="flex items-center text-xs text-slate-400 mr-2">
-                                    <i class="pi pi-sync pi-spin mr-1"></i> Sauvegarde...
+                                    <i class="pi pi-sync pi-spin mr-1"></i> {{ t('pages.workspace.saving') }}
                                 </span>
-                                <Button label="Brouillon" icon="pi pi-save" class="p-button-outlined p-button-secondary" @click="submitGrade(false)" :loading="gradingForm.processing" />
-                                <Button label="Publier" icon="pi pi-send" @click="submitGrade(true)" :loading="gradingForm.processing" severity="success" />
+                                <Button :label="t('pages.workspace.draft')" icon="pi pi-save" class="p-button-outlined p-button-secondary" @click="submitGrade(false)" :loading="gradingForm.processing" />
+                                <Button :label="t('pages.workspace.publish')" icon="pi pi-send" @click="submitGrade(true)" :loading="gradingForm.processing" severity="success" />
                             </div>
                         </div>
                     </div>
@@ -240,7 +243,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                     <!-- Barre de progression de la correction -->
                     <div class="mt-4">
                         <div class="flex justify-between text-xs font-bold text-slate-500 mb-1">
-                            <span>Progression de la correction</span>
+                            <span>{{ t('pages.workspace.gradingProgress') }}</span>
                             <span>{{ gradingProgress }}%</span>
                         </div>
                         <ProgressBar :value="gradingProgress" :showValue="false" style="height: 6px" color="#3b82f6"></ProgressBar>
@@ -255,8 +258,8 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
 
                         <div v-if="answers.length === 0" class="bg-white p-12 rounded-xl border border-slate-200 text-center shadow-sm">
                             <i class="pi pi-check-square text-6xl text-slate-200 mb-4"></i>
-                            <h3 class="text-xl font-bold text-slate-700">Correction 100% Automatique</h3>
-                            <p class="text-slate-500 mt-2 max-w-md mx-auto">Ce devoir ne contient que des questions à choix multiples ou auto-évaluées. Aucune action manuelle n'est requise par question.</p>
+                            <h3 class="text-xl font-bold text-slate-700">{{ t('pages.workspace.autoGraded') }}</h3>
+                            <p class="text-slate-500 mt-2 max-w-md mx-auto">{{ t('pages.workspace.autoGradedHint') }}</p>
                         </div>
 
                         <Panel v-for="(answer, index) in answers" :key="answer.id" :toggleable="true" class="shadow-sm border-none">
@@ -275,13 +278,13 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                                 <!-- Réponse de l'étudiant -->
                                 <div class="p-4 bg-slate-50/80 rounded-xl border border-slate-200">
-                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Réponse fournie</p>
-                                    <div class="text-slate-800 font-serif text-[1.05rem] leading-relaxed whitespace-pre-wrap">{{ answer.submitted_text || 'Aucune réponse fournie.' }}</div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{{ t('pages.workspace.answerProvided') }}</p>
+                                    <div class="text-slate-800 font-serif text-[1.05rem] leading-relaxed whitespace-pre-wrap">{{ answer.submitted_text || t('pages.workspace.noAnswer') }}</div>
                                 </div>
 
                                 <!-- Barème / Réponse attendue (Si disponible) -->
                                 <div class="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100" v-if="answer.question.ideal_answer">
-                                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">Réponse attendue (Barème)</p>
+                                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">{{ t('pages.workspace.expectedAnswer') }}</p>
                                     <div class="text-slate-700 text-sm leading-relaxed" v-html="answer.question.ideal_answer"></div>
                                 </div>
                             </div>
@@ -291,7 +294,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                             <!-- Zone de notation par question -->
                             <div class="flex flex-col md:flex-row gap-4 bg-white">
                                 <div class="w-full md:w-1/3">
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Note attribuée</label>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.workspace.pointsAwarded') }}</label>
                                     <div class="p-inputgroup">
                                         <InputNumber v-model="gradingForm.question_scores[answer.question.id]"
                                             mode="decimal" :maxFractionDigits="1" :min="0" :max="answer.question.points"
@@ -302,8 +305,8 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                                 </div>
 
                                 <div class="w-full md:w-2/3">
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Commentaire spécifique (Optionnel)</label>
-                                    <Textarea v-model="gradingForm.question_feedback[answer.question.id]" rows="2" class="w-full" placeholder="Justifiez votre note pour cette question..." autoResize />
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.workspace.questionComment') }}</label>
+                                    <Textarea v-model="gradingForm.question_feedback[answer.question.id]" rows="2" class="w-full" :placeholder="t('pages.workspace.questionCommentPlaceholder')" autoResize />
                                 </div>
                             </div>
                         </Panel>
@@ -314,7 +317,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                         <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 sticky top-32">
 
                             <h3 class="text-lg font-black text-slate-800 flex items-center gap-2 mb-6">
-                                <i class="pi pi-calculator text-blue-500"></i> Synthèse de Notation
+                                <i class="pi pi-calculator text-blue-500"></i> {{ t('pages.workspace.gradingSummary') }}
                             </h3>
 
                             <div class="space-y-6">
@@ -323,9 +326,9 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                                 <div class="p-5 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
                                     <div class="flex justify-between items-center mb-4">
-                                        <label for="final_grade" class="block text-sm font-bold text-slate-700">Note Globale</label>
+                                        <label for="final_grade" class="block text-sm font-bold text-slate-700">{{ t('pages.workspace.finalGrade') }}</label>
                                         <div class="flex items-center gap-2">
-                                            <span class="text-xs text-slate-500 font-medium">Auto-calcul</span>
+                                            <span class="text-xs text-slate-500 font-medium">{{ t('pages.workspace.autoCalc') }}</span>
                                             <ToggleButton v-model="autoCalculate" onIcon="pi pi-check" offIcon="pi pi-times" class="w-8 h-8 !p-0" />
                                         </div>
                                     </div>
@@ -343,9 +346,9 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                                 <!-- Feedback Général -->
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                                        <i class="pi pi-comment text-slate-400"></i> Appréciation Générale
+                                        <i class="pi pi-comment text-slate-400"></i> {{ t('pages.workspace.generalFeedback') }}
                                     </label>
-                                    <Editor v-model="gradingForm.feedback" editorStyle="height: 250px" placeholder="Félicitations, excellent travail sur la partie 2...">
+                                    <Editor v-model="gradingForm.feedback" editorStyle="height: 250px" :placeholder="t('pages.workspace.feedbackPlaceholder')">
                                         <template v-slot:toolbar>
                                             <span class="ql-formats">
                                                 <button class="ql-bold"></button>
@@ -366,7 +369,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                                 </div>
 
                                 <!-- Bouton Action Mobile (Caché sur desktop si besoin) -->
-                                <Button label="Enregistrer et Publier" icon="pi pi-check-circle" size="large" class="w-full mt-4" severity="success" @click="submitGrade(true)" :loading="gradingForm.processing" />
+                                <Button :label="t('pages.workspace.saveAndPublish')" icon="pi pi-check-circle" size="large" class="w-full mt-4" severity="success" @click="submitGrade(true)" :loading="gradingForm.processing" />
 
                             </div>
                         </div>

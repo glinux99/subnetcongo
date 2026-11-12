@@ -6,6 +6,9 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     prefill: { type: Object, default: () => ({}) },
@@ -94,20 +97,20 @@ const insertTemplate = (template) => {
 
 <template>
     <AppLayout>
-        <Head title="Nouveau message" />
+        <Head :title="t('pages.admin_emails_gmail.page_title')" />
         
         <div class="min-h-screen bg-slate-50">
             <!-- PageHeader -->
             <PageHeader
-                :title="forwardedEmail ? 'Transférer le message' : 'Nouveau message'"
-                subtitle="Composez et envoyez votre email"
-                badge="Composition"
+                :title="forwardedEmail ? t('pages.admin_emails_gmail.title_forward') : t('pages.admin_emails_gmail.title_new')"
+                :subtitle="t('pages.admin_emails_gmail.subtitle')"
+                :badge="t('pages.admin_emails_gmail.badge')"
                 icon="pi-pen-to-square"
                 accent="blue"
                 :actions="[
-                    { label: 'Retour', icon: 'pi-arrow-left', onClick: goBack, variant: 'secondary' },
-                    { label: 'Brouillon', icon: 'pi-save', onClick: saveDraft, variant: 'secondary', disabled: isSaving },
-                    { label: 'Envoyer', icon: 'pi-send', onClick: sendEmail, variant: 'primary', disabled: !canSend || isSending }
+                    { label: t('pages.admin_emails_gmail.btn_back'), icon: 'pi-arrow-left', onClick: goBack, variant: 'secondary' },
+                    { label: t('pages.admin_emails_gmail.btn_draft'), icon: 'pi-save', onClick: saveDraft, variant: 'secondary', disabled: isSaving },
+                    { label: t('pages.admin_emails_gmail.btn_send'), icon: 'pi-send', onClick: sendEmail, variant: 'primary', disabled: !canSend || isSending }
                 ]"
             />
 
@@ -116,10 +119,10 @@ const insertTemplate = (template) => {
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <!-- To field -->
                     <div class="flex items-center border-b border-slate-100 px-4 py-3">
-                        <label class="text-sm font-medium text-slate-700 w-16">À :</label>
+                        <label class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_emails_gmail.label_to') }}</label>
                         <InputText
                             v-model="to"
-                            placeholder="Destinataires (séparés par des virgules)"
+                            :placeholder="t('pages.admin_emails_gmail.placeholder_to')"
                             class="flex-1 border-0 focus:ring-0"
                         />
                         <Button
@@ -134,18 +137,18 @@ const insertTemplate = (template) => {
                     <!-- CC/BCC fields -->
                     <div v-if="showCcBcc" class="border-b border-slate-100">
                         <div class="flex items-center px-4 py-3">
-                            <label class="text-sm font-medium text-slate-700 w-16">Cc :</label>
+                            <label class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_emails_gmail.label_cc') }}</label>
                             <InputText
                                 v-model="cc"
-                                placeholder="Destinataires en copie"
+                                :placeholder="t('pages.admin_emails_gmail.placeholder_cc')"
                                 class="flex-1 border-0 focus:ring-0"
                             />
                         </div>
                         <div class="flex items-center px-4 py-3">
-                            <label class="text-sm font-medium text-slate-700 w-16">Cci :</label>
+                            <label class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_emails_gmail.label_bcc') }}</label>
                             <InputText
                                 v-model="bcc"
-                                placeholder="Destinataires en copie cachée"
+                                :placeholder="t('pages.admin_emails_gmail.placeholder_bcc')"
                                 class="flex-1 border-0 focus:ring-0"
                             />
                         </div>
@@ -153,10 +156,10 @@ const insertTemplate = (template) => {
 
                     <!-- Subject field -->
                     <div class="flex items-center border-b border-slate-100 px-4 py-3">
-                        <label class="text-sm font-medium text-slate-700 w-16">Objet :</label>
+                        <label class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_emails_gmail.label_subject') }}</label>
                         <InputText
                             v-model="subject"
-                            placeholder="Objet du message"
+                            :placeholder="t('pages.admin_emails_gmail.placeholder_subject')"
                             class="flex-1 border-0 focus:ring-0 font-medium"
                         />
                     </div>
@@ -165,7 +168,7 @@ const insertTemplate = (template) => {
                     <div class="p-4">
                         <Textarea
                             v-model="body"
-                            placeholder="Écrivez votre message..."
+                            :placeholder="t('pages.admin_emails_gmail.placeholder_body')"
                             rows="15"
                             class="w-full border-0 focus:ring-0 resize-none"
                         />
@@ -177,21 +180,21 @@ const insertTemplate = (template) => {
                             <div class="flex items-center gap-2">
                                 <Button
                                     icon="pi pi-paperclip"
-                                    label="Joindre un fichier"
+                                    :label="t('pages.admin_emails_gmail.btn_attach')"
                                     class="text-slate-600 hover:bg-slate-100"
                                     @click="showAttachments = !showAttachments"
                                     text
                                 />
                                 <div v-if="attachments.length > 0" class="flex items-center gap-2">
                                     <span class="text-sm text-slate-600">
-                                        {{ attachments.length }} fichier(s) joint(s)
+                                        {{ t('pages.admin_emails_gmail.files_count', { count: attachments.length }) }}
                                     </span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <Button
                                     icon="pi pi-eraser"
-                                    label="Effacer"
+                                    :label="t('pages.admin_emails_gmail.btn_clear')"
                                     class="text-slate-400 hover:text-slate-600 text-sm"
                                     @click="body = ''; to = ''; cc = ''; bcc = ''; subject = ''; attachments = []"
                                     text
@@ -236,7 +239,7 @@ const insertTemplate = (template) => {
                 <div class="mt-4 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <Button
-                            label="Envoyer"
+                            :label="t('pages.admin_emails_gmail.btn_send')"
                             icon="pi pi-send"
                             class="bg-blue-600 hover:bg-blue-700 text-white"
                             @click="sendEmail"
@@ -244,7 +247,7 @@ const insertTemplate = (template) => {
                             :disabled="!canSend"
                         />
                         <Button
-                            label="Brouillon"
+                            :label="t('pages.admin_emails_gmail.btn_draft')"
                             icon="pi pi-save"
                             class="text-slate-600 hover:bg-slate-100"
                             @click="saveDraft"
@@ -253,8 +256,8 @@ const insertTemplate = (template) => {
                         />
                     </div>
                     <div class="text-sm text-slate-500">
-                        <span v-if="!canSend">Remplissez tous les champs pour envoyer</span>
-                        <span v-else class="text-green-600">Prêt à envoyer</span>
+                        <span v-if="!canSend">{{ t('pages.admin_emails_gmail.hint_fill') }}</span>
+                        <span v-else class="text-green-600">{{ t('pages.admin_emails_gmail.hint_ready') }}</span>
                     </div>
                 </div>
             </div>

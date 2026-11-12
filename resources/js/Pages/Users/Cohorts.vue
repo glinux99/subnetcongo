@@ -16,6 +16,7 @@ import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
+import { useI18n } from 'vue-i18n';
 import { FilterMatchMode } from '@primevue/core/api';
 // ======================================================================================
 // PRIMEVUE COMPONENTS & DIRECTIVES (Adapté v4)
@@ -51,6 +52,7 @@ import Message from 'primevue/message'; // Remplaçant d'InlineMessage sous v4
 import Timeline from 'primevue/timeline';
 import Editor from 'primevue/editor';
 import FileUpload from 'primevue/fileupload';
+const { t } = useI18n();
 // ======================================================================================
 // PROPS INERTIA
 // ======================================================================================
@@ -158,11 +160,11 @@ watch(activeCohortFromProps, (newCohortData) => {
 // CONFIGURATION DU WORKSPACE ÉDITEUR (STEPPER)
 // ======================================================================================
 const editorMenu = ref([
-    { id: 'general', label: 'Identité de la Cohorte', description: 'Nom, Description et Statut', icon: 'pi pi-id-card' },
-    { id: 'pedagogy', label: 'Équipe Pédagogique', description: 'Instructeur principal et Tuteurs', icon: 'pi pi-users' },
-    { id: 'curriculum', label: 'Curriculum & Prérequis', description: 'Cours et conditions d\'accès', icon: 'pi pi-book' },
-    { id: 'planning', label: 'Planification', description: 'Dates de début et de fin', icon: 'pi pi-calendar' },
-    { id: 'settings', label: 'Paramètres Avancés', description: 'Capacité et inscriptions', icon: 'pi pi-cog' }
+    { id: 'general', label: t('pages.cohorts.stepIdentityLabel'), description: t('pages.cohorts.stepIdentityDesc'), icon: 'pi pi-id-card' },
+    { id: 'pedagogy', label: t('pages.cohorts.pedagogyTeam'), description: t('pages.cohorts.stepPedagogyDesc'), icon: 'pi pi-users' },
+    { id: 'curriculum', label: t('pages.cohorts.stepCurriculumLabel'), description: t('pages.cohorts.stepCurriculumDesc'), icon: 'pi pi-book' },
+    { id: 'planning', label: t('pages.cohorts.stepPlanningLabel'), description: t('pages.cohorts.stepPlanningDesc'), icon: 'pi pi-calendar' },
+    { id: 'settings', label: t('pages.cohorts.stepSettingsLabel'), description: t('pages.cohorts.stepSettingsDesc'), icon: 'pi pi-cog' }
 ]);
 const activeEditorTab = ref('general');
 const tabValidation = computed(() => ({
@@ -205,7 +207,7 @@ const editCohort = (data) => {
     activeEditorTab.value = 'general'; cohortEditorDialog.value = true;
 };
 const saveCohort = () => {
-    if (!isEntireFormValid.value) { toast.add({ severity: 'warn', summary: 'Erreur', detail: 'Formulaire incomplet.' }); return; }
+    if (!isEntireFormValid.value) { toast.add({ severity: 'warn', summary: t('pages.cohorts.toastError'), detail: t('pages.cohorts.formIncomplete') }); return; }
     const url = cohortForm.id ? route('users.cohorts.update', cohortForm.id) : route('users.cohorts.store');
     cohortForm.transform((data) => ({
         ...data,
@@ -215,7 +217,7 @@ const saveCohort = () => {
     })).post(url, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => { toast.add({ severity: 'success', summary: 'Succès', detail: `Cohorte sauvegardée.` }); cohortEditorDialog.value = false; }
+        onSuccess: () => { toast.add({ severity: 'success', summary: t('pages.cohorts.toastSuccess'), detail: t('pages.cohorts.cohortSaved') }); cohortEditorDialog.value = false; }
     });
 };
 // ======================================================================================
@@ -251,10 +253,10 @@ const updateProfileCharts = (cohort) => {
     if (!cohort) return;
     profileCharts.line = {
         labels: ['S1', 'S2', 'S3', 'S4'],
-        datasets: [{ label: 'Engagement (%)', data: [20, 45, 60, cohort.avg_completion || 80], borderColor: '#10B981', fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }]
+        datasets: [{ label: t('pages.cohorts.chartEngagement'), data: [20, 45, 60, cohort.avg_completion || 80], borderColor: '#10B981', fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' }]
     };
     profileCharts.doughnut = {
-        labels: ['Excellents', 'Moyens', 'Difficulté'],
+        labels: [t('pages.cohorts.chartExcellent'), t('pages.cohorts.chartAverage'), t('pages.cohorts.chartDifficulty')],
         datasets: [{ data: [cohort.excellent_count || 15, cohort.average_count || 25, cohort.difficult_count || 10], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }]
     };
 };
@@ -271,7 +273,7 @@ const enrollStudents = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Succès', detail: `Étudiants enrôlés.` });
+            toast.add({ severity: 'success', summary: t('pages.cohorts.toastSuccess'), detail: t('pages.cohorts.studentsEnrolled') });
             addStudentDialog.value = false;
         }
     });
@@ -281,25 +283,25 @@ const toggleStudentMenu = (event, student) => {
     studentActionMenu.value.toggle(event);
 };
 const studentMenuItems = computed(() => [
-    { label: 'Transférer de cohorte', icon: 'pi pi-arrow-right-arrow-left', command: () => openTransferDialog(selectedStudentForAction.value) },
-    { label: 'Suspendre l\'accès', icon: 'pi pi-lock', command: () => suspendStudent(selectedStudentForAction.value) },
+    { label: t('pages.cohorts.menuTransfer'), icon: 'pi pi-arrow-right-arrow-left', command: () => openTransferDialog(selectedStudentForAction.value) },
+    { label: t('pages.cohorts.menuSuspend'), icon: 'pi pi-lock', command: () => suspendStudent(selectedStudentForAction.value) },
     { separator: true },
-    { label: 'Retirer du groupe', icon: 'pi pi-trash', class: 'text-red-500', command: () => confirmRemoveStudent(selectedStudentForAction.value) }
+    { label: t('pages.cohorts.menuRemove'), icon: 'pi pi-trash', class: 'text-red-500', command: () => confirmRemoveStudent(selectedStudentForAction.value) }
 ]);
 const suspendStudent = (student) => {
     router.patch(route('users.cohorts.members.suspend', { cohort: currentCohort.value.code, student: student.id }), {}, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => toast.add({ severity: 'warn', summary: 'Suspendu', detail: 'Accès bloqué pour cet étudiant.' })
+        onSuccess: () => toast.add({ severity: 'warn', summary: t('pages.cohorts.suspended'), detail: t('pages.cohorts.accessBlocked') })
     });
 };
 const confirmRemoveStudent = (student) => {
     confirm.require({
-        message: `Retirer ${student.name} de cette cohorte ?`, header: 'Retrait', icon: 'pi pi-user-minus', acceptClass: 'p-button-danger',
+        message: t('pages.cohorts.confirmRemoveStudent', { name: student.name }), header: t('pages.cohorts.removeHeader'), icon: 'pi pi-user-minus', acceptClass: 'p-button-danger',
         accept: () => router.delete(route('users.cohorts.members.remove', { cohort: currentCohort.value.code, student: student.id }), {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => toast.add({ severity: 'success', summary: 'Retiré', detail: 'Étudiant retiré.' })
+            onSuccess: () => toast.add({ severity: 'success', summary: t('pages.cohorts.removed'), detail: t('pages.cohorts.studentRemoved') })
         })
     });
 };
@@ -315,7 +317,7 @@ const executeTransfer = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Transféré', detail: 'Déplacement réussi.' });
+            toast.add({ severity: 'success', summary: t('pages.cohorts.transferred'), detail: t('pages.cohorts.transferSuccess') });
             transferDialog.value = false;
         }
     });
@@ -331,8 +333,8 @@ const onDocumentUpload = (event) => {
         forceFormData: true,
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => toast.add({ severity: 'success', summary: 'Upload réussi', detail: 'Document ajouté.' }),
-        onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Échec de l\'upload.' })
+        onSuccess: () => toast.add({ severity: 'success', summary: t('pages.cohorts.uploadSuccessSummary'), detail: t('pages.cohorts.documentAdded') }),
+        onError: () => toast.add({ severity: 'error', summary: t('pages.cohorts.toastError'), detail: t('pages.cohorts.uploadFailed') })
     });
 };
 const downloadDocument = (doc) => {
@@ -340,12 +342,12 @@ const downloadDocument = (doc) => {
 };
 const deleteDocument = (doc) => {
     confirm.require({
-        message: `Supprimer le document "${doc.name}" ?`, header: 'Confirmation', icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
+        message: t('pages.cohorts.confirmDeleteDocument', { name: doc.name }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
         accept: () => {
             router.delete(route('users.cohorts.documents.destroy', { cohort: currentCohort.value.code, document: doc.id }), {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => toast.add({ severity: 'success', summary: 'Supprimé', detail: 'Document supprimé.' })
+                onSuccess: () => toast.add({ severity: 'success', summary: t('pages.cohorts.deleted'), detail: t('pages.cohorts.documentDeleted') })
             });
         }
     });
@@ -381,7 +383,7 @@ const openLiveSessionDialog = (session = null) => {
 };
 const saveLiveSession = () => {
     if (!liveSessionForm.title || !liveSessionForm.start_at || !liveSessionForm.course_id || !liveSessionForm.instructor_id) {
-        toast.add({ severity: 'error', summary: 'Champs requis', detail: 'Titre, Date, Cours et Instructeur sont obligatoires.' });
+        toast.add({ severity: 'error', summary: t('pages.cohorts.requiredFields'), detail: t('pages.cohorts.requiredFieldsDetail') });
         return;
     }
     const url = liveSessionForm.id
@@ -398,20 +400,20 @@ const saveLiveSession = () => {
             preserveState: true,
             onSuccess: () => {
                 liveSessionDialog.value = false;
-                toast.add({ severity: 'success', summary: liveSessionForm.id ? 'Mis à jour' : 'Planifié', detail: 'La session live a été enregistrée.' });
+                toast.add({ severity: 'success', summary: liveSessionForm.id ? t('pages.cohorts.updated') : t('pages.cohorts.scheduled'), detail: t('pages.cohorts.liveSessionSaved') });
                 liveSessionForm.reset();
             },
-            onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Vérifiez les informations.' })
+            onError: () => toast.add({ severity: 'error', summary: t('pages.cohorts.toastError'), detail: t('pages.cohorts.checkInfo') })
         });
 };
 const deleteLiveSession = (session) => {
     confirm.require({
-        message: `Supprimer la session "${session.title}" ?`, header: 'Confirmation', icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
+        message: t('pages.cohorts.confirmDeleteSession', { title: session.title }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
         accept: () => {
             router.delete(route('users.cohorts.live-sessions.destroy', { cohort: currentCohort.value.code, live_session: session.id }), {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => toast.add({ severity: 'success', summary: 'Supprimé', detail: 'Session live supprimée.' })
+                onSuccess: () => toast.add({ severity: 'success', summary: t('pages.cohorts.deleted'), detail: t('pages.cohorts.liveSessionDeleted') })
             });
         }
     });
@@ -427,7 +429,7 @@ const savePrerequisites = () => {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Mis à jour', detail: 'Prérequis enregistrés.' });
+            toast.add({ severity: 'success', summary: t('pages.cohorts.updated'), detail: t('pages.cohorts.prereqsSaved') });
             prereqEditDialog.value = false;
         }
     });
@@ -443,7 +445,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
 <template>
     <AppLayout>
-        <Head title="Architecte de Cohortes | LMS Enterprise" />
+        <Head :title="t('pages.cohorts.headTitle')" />
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
@@ -468,20 +470,20 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
                     <!-- Titre Principal (Italique, gras, 2 couleurs) -->
                     <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">Cohortes &</span>
-                        <span class="text-[#E92B2B]">Promotions</span>
+                        <span class="text-white">{{ t('pages.cohorts.titleLine1') }}</span>
+                        <span class="text-[#E92B2B]">{{ t('pages.cohorts.titleHighlight') }}</span>
                     </h1>
 
                     <!-- Sous-titre -->
                     <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        Structurez l'apprentissage par groupes. Créez des promotions, assignez des cours en masse et suivez la progression collective de vos apprenants en temps réel.
+                        {{ t('pages.cohorts.subtitle') }}
                     </p>
                 </div>
 
                 <!-- Partie Droite (Boutons) -->
                 <div class="flex flex-wrap items-center justify-end gap-3 w-full lg:w-auto">
                     <Button 
-                        label="Créer une Cohorte" 
+                        :label="t('pages.cohorts.createCohort')" 
                         icon="pi pi-plus-circle" 
                         class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
                         @click="openNewCohort" 
@@ -502,7 +504,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <i class="pi pi-objects-column text-blue-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Groupes</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiTotalGroups') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_cohorts || 0 }}</p>
                 </div>
             </div>
@@ -513,7 +515,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <i class="pi pi-users text-emerald-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Élèves Groupés</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiStudentsGrouped') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_enrolled_students || 0 }}</p>
                 </div>
             </div>
@@ -524,7 +526,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <i class="pi pi-book text-amber-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cours Assignés</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiCoursesAssigned') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.active_courses_in_cohorts || 0 }}</p>
                 </div>
             </div>
@@ -535,7 +537,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <i class="pi pi-chart-line text-red-500 text-lg"></i>
                 </div>
                 <div class="z-10 relative">
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Complétion Moyenne</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.cohorts.kpiAvgCompletion') }}</h3>
                     <div class="flex items-end gap-2">
                         <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.avg_cohort_completion || 0 }}</p>
                         <span class="text-xs font-bold text-red-500 mb-1">%</span>
@@ -553,68 +555,68 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 <div class="bg-slate-50/50 border-b border-slate-200 p-6 flex flex-wrap justify-between items-center gap-4">
                     <IconField iconPosition="left" class="w-full md:w-80">
                         <InputIcon class="pi pi-search text-slate-400" />
-                        <InputText v-model="serverFilters.search" placeholder="Rechercher une promotion..." class="w-full border-slate-200 shadow-sm" />
+                        <InputText v-model="serverFilters.search" :placeholder="t('pages.cohorts.searchPlaceholder')" class="w-full border-slate-200 shadow-sm" />
                     </IconField>
                     <div class="flex gap-3">
-                        <Dropdown v-model="serverFilters.status" :options="props.statuses" placeholder="Statut" showClear class="w-40 border-slate-200 shadow-sm" />
-                        <Button icon="pi pi-megaphone" label="Annonce Groupée" class="p-button-outlined p-button-warning shadow-sm font-bold bg-white" @click="messageDialog = true" :disabled="!selectedCohorts.length" />
+                        <Dropdown v-model="serverFilters.status" :options="props.statuses" :placeholder="t('pages.cohorts.status')" showClear class="w-40 border-slate-200 shadow-sm" />
+                        <Button icon="pi pi-megaphone" :label="t('pages.cohorts.bulkAnnounce')" class="p-button-outlined p-button-warning shadow-sm font-bold bg-white" @click="messageDialog = true" :disabled="!selectedCohorts.length" />
                     </div>
                 </div>
 
                 <DataTable v-model:selection="selectedCohorts" v-model:expandedRows="expandedRows" :value="props.cohorts.data" dataKey="id" :loading="loading" class="p-datatable-custom border-none" stripedRows rowHover>
-                    <template #empty><div class="p-20 text-center text-slate-500"><i class="pi pi-users text-5xl mb-4 text-slate-300"></i><h3 class="text-xl font-bold text-slate-800">Aucune cohorte trouvée</h3></div></template>
+                    <template #empty><div class="p-20 text-center text-slate-500"><i class="pi pi-users text-5xl mb-4 text-slate-300"></i><h3 class="text-xl font-bold text-slate-800">{{ t('pages.cohorts.emptyCohorts') }}</h3></div></template>
                     <Column selectionMode="multiple" headerStyle="width: 3rem;" />
                     <Column expander style="width: 3rem;" />
 
-                    <Column field="name" header="Identité" style="min-width: 20rem;">
+                    <Column field="name" :header="t('pages.cohorts.colIdentity')" style="min-width: 20rem;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1 py-2">
                                 <span class="font-black text-slate-800 text-lg hover:text-blue-600 cursor-pointer" @click="openProfileDialog(data)">{{ data.name }}</span>
                                 <div class="flex items-center gap-2">
                                     <Tag :value="data.status" :class="getSeverity(data.status).bg" class="text-[9px] uppercase font-bold border px-2 py-0.5" />
-                                    <span v-if="data.is_private" class="text-[10px] text-amber-500 font-bold"><i class="pi pi-lock text-[9px]"></i> Privé</span>
+                                    <span v-if="data.is_private" class="text-[10px] text-amber-500 font-bold"><i class="pi pi-lock text-[9px]"></i> {{ t('pages.cohorts.private') }}</span>
                                 </div>
                             </div>
                         </template>
                     </Column>
 
-                    <Column field="instructor" header="Équipe Pédagogique" style="min-width: 15rem;">
+                    <Column field="instructor" :header="t('pages.cohorts.pedagogyTeam')" style="min-width: 15rem;">
                         <template #body="{ data }">
                             <div v-if="data.instructor" class="flex items-center gap-3">
                                 <Avatar :image="data.instructor.avatar_path" :label="data.instructor.name.charAt(0)" shape="circle" class="bg-blue-50 text-blue-700" />
-                                <div><span class="font-bold text-slate-700 text-sm block">{{ data.instructor.name }}</span><span class="text-[9px] uppercase tracking-widest text-slate-400">Instructeur Principal</span></div>
+                                <div><span class="font-bold text-slate-700 text-sm block">{{ data.instructor.name }}</span><span class="text-[9px] uppercase tracking-widest text-slate-400">{{ t('pages.cohorts.leadInstructor') }}</span></div>
                             </div>
-                            <span v-else class="text-xs text-slate-400 italic">Non assigné</span>
+                            <span v-else class="text-xs text-slate-400 italic">{{ t('pages.cohorts.unassigned') }}</span>
                         </template>
                     </Column>
 
-                    <Column field="metrics" header="Engagement" style="min-width: 12rem;">
+                    <Column field="metrics" :header="t('pages.cohorts.colEngagement')" style="min-width: 12rem;">
                         <template #body="{ data }">
                             <div class="flex flex-col w-full gap-1">
-                                <div class="flex justify-between text-[10px] font-bold"><span class="text-slate-500">Membres: {{ data.members_count || 0 }}/{{ data.max_students }}</span><span class="text-emerald-500">Score: {{ data.avg_score || 0 }}%</span></div>
+                                <div class="flex justify-between text-[10px] font-bold"><span class="text-slate-500">{{ t('pages.cohorts.membersLabel') }} {{ data.members_count || 0 }}/{{ data.max_students }}</span><span class="text-emerald-500">{{ t('pages.cohorts.scoreLabel') }} {{ data.avg_score || 0 }}%</span></div>
                                 <ProgressBar :value="data.avg_completion || 0" :showValue="false" class="h-1.5 bg-slate-100 [&>div]:bg-blue-500" />
                             </div>
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="width: 10rem; text-align: right;">
+                    <Column :header="t('pages.cohorts.actions')" alignFrozen="right" :frozen="true" style="width: 10rem; text-align: right;">
                         <template #body="{ data }">
-                            <Button icon="pi pi-chart-pie" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600" v-tooltip="'Vue 360°'" @click="openProfileDialog(data)" />
-                            <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500" v-tooltip="'Configurer'" @click="editCohort(data)" />
+                            <Button icon="pi pi-chart-pie" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600" v-tooltip="t('pages.cohorts.tooltipView360')" @click="openProfileDialog(data)" />
+                            <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500" v-tooltip="t('pages.cohorts.tooltipConfig')" @click="editCohort(data)" />
                         </template>
                     </Column>
 
                     <!-- LIGNE EXPANSIVE (APERÇU DU CURRICULUM) -->
                     <template #expansion="{ data }">
                         <div class="p-6 bg-slate-50/80 border-y border-slate-200 shadow-inner">
-                            <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-4"><i class="pi pi-book text-blue-600"></i> Curriculum Assigné</h4>
+                            <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-4"><i class="pi pi-book text-blue-600"></i> {{ t('pages.cohorts.assignedCurriculum') }}</h4>
                             <div v-if="data.assigned_courses?.length" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div v-for="course in data.assigned_courses" :key="course.id" class="bg-white p-4 rounded-xl border border-slate-200 flex items-start gap-3 shadow-sm">
                                     <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0"><i class="pi pi-video"></i></div>
                                     <div><div class="font-bold text-sm text-slate-800 line-clamp-1">{{ course.title }}</div><div class="text-xs text-slate-500"><i class="pi pi-clock"></i> {{ course.duration || 0 }}h</div></div>
                                 </div>
                             </div>
-                            <div v-else class="text-slate-500 text-sm italic p-4 bg-white border border-dashed border-slate-300 rounded-xl text-center">Aucun cours assigné.</div>
+                            <div v-else class="text-slate-500 text-sm italic p-4 bg-white border border-dashed border-slate-300 rounded-xl text-center">{{ t('pages.cohorts.noCourseAssigned') }}</div>
                         </div>
                     </template>
                 </DataTable>
@@ -630,8 +632,8 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white"><i class="pi pi-objects-column"></i></div>
                     <div>
-                        <h2 class="text-lg font-black text-slate-800 leading-tight">{{ cohortForm.id ? 'Configuration de la Cohorte' : 'Générer une Nouvelle Cohorte' }}</h2>
-                        <div class="text-[11px] font-medium text-slate-500 mt-0.5">Étape active : {{ editorMenu.find(m => m.id === activeEditorTab)?.label }}</div>
+                        <h2 class="text-lg font-black text-slate-800 leading-tight">{{ cohortForm.id ? t('pages.cohorts.editorEditTitle') : t('pages.cohorts.editorNewTitle') }}</h2>
+                        <div class="text-[11px] font-medium text-slate-500 mt-0.5">{{ t('pages.cohorts.activeStep', { label: editorMenu.find(m => m.id === activeEditorTab)?.label }) }}</div>
                     </div>
                 </div>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="cohortEditorDialog = false" />
@@ -640,7 +642,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             <div class="flex-1 flex overflow-hidden relative">
                 <!-- SIDEBAR STEPPER -->
                 <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-sm">
-                    <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Étapes</div>
+                    <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">{{ t('pages.cohorts.steps') }}</div>
                     <div class="p-4 flex-1 space-y-2">
                         <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id" class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden" :class="activeEditorTab === item.id ? 'bg-blue-50 border border-blue-100 shadow-sm' : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'">
                             <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
@@ -656,37 +658,37 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-id-card text-blue-500"></i> Informations Générales</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-id-card text-blue-500"></i> {{ t('pages.cohorts.generalInfo') }}</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Nom de la promotion <span class="text-red-500">*</span></label><InputText v-model="cohortForm.name" class="w-full p-4 text-lg font-bold bg-slate-50" placeholder="Ex: Masterclass Dev 2026" /></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Description</label><Editor v-model="cohortForm.description" editorStyle="height: 150px" /></div>
-                                    <div class="w-full md:w-1/2"><label class="block text-sm font-bold text-slate-700 mb-2">Statut <span class="text-red-500">*</span></label><Dropdown v-model="cohortForm.status" :options="props.statuses" class="w-full font-medium bg-slate-50" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.promotionNameLabel') }} <span class="text-red-500">*</span></label><InputText v-model="cohortForm.name" class="w-full p-4 text-lg font-bold bg-slate-50" :placeholder="t('pages.cohorts.promotionNamePlaceholder')" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.description') }}</label><Editor v-model="cohortForm.description" editorStyle="height: 150px" /></div>
+                                    <div class="w-full md:w-1/2"><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.status') }} <span class="text-red-500">*</span></label><Dropdown v-model="cohortForm.status" :options="props.statuses" class="w-full font-medium bg-slate-50" /></div>
                                 </div>
                             </div>
                         </div>
 
                         <div v-show="activeEditorTab === 'pedagogy'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-users text-blue-500"></i> Équipe Pédagogique</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-users text-blue-500"></i> {{ t('pages.cohorts.pedagogyTeam') }}</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Instructeur Référent <span class="text-red-500">*</span></label><Dropdown v-model="cohortForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" filter class="w-full bg-slate-50" placeholder="Rechercher..." /></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Tuteurs / Assistants (Optionnel)</label><MultiSelect v-model="cohortForm.assistant_ids" :options="props.instructorsList" optionLabel="name" optionValue="id" filter display="chip" class="w-full bg-slate-50" placeholder="Sélectionner des assistants..." /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.leadInstructorLabel') }} <span class="text-red-500">*</span></label><Dropdown v-model="cohortForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" filter class="w-full bg-slate-50" :placeholder="t('pages.cohorts.searchPlaceholderShort')" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.tutorsLabel') }}</label><MultiSelect v-model="cohortForm.assistant_ids" :options="props.instructorsList" optionLabel="name" optionValue="id" filter display="chip" class="w-full bg-slate-50" :placeholder="t('pages.cohorts.selectAssistantsPlaceholder')" /></div>
                                 </div>
                             </div>
                         </div>
 
                         <div v-show="activeEditorTab === 'curriculum'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-book text-blue-500"></i> Curriculum & Évaluation</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-book text-blue-500"></i> {{ t('pages.cohorts.curriculumEvaluation') }}</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Cours assignés à la cohorte <span class="text-red-500">*</span></label><MultiSelect v-model="cohortForm.courses" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-slate-50" placeholder="Sélectionner les modules..." /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.assignedCoursesLabel') }} <span class="text-red-500">*</span></label><MultiSelect v-model="cohortForm.courses" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-slate-50" :placeholder="t('pages.cohorts.selectModulesPlaceholder')" /></div>
                                     <Divider />
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Score minimum de validation (%)</label><InputNumber v-model="cohortForm.pass_percentage" :min="0" :max="100" suffix=" %" showButtons class="w-40 bg-slate-50" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.minPassScore') }}</label><InputNumber v-model="cohortForm.pass_percentage" :min="0" :max="100" suffix=" %" showButtons class="w-40 bg-slate-50" /></div>
                                     <Divider />
                                     <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">Prérequis de la cohorte</label>
-                                        <p class="text-xs text-slate-500 mb-3">Sélectionnez les cours que les étudiants doivent valider avant de s'inscrire.</p>
-                                        <MultiSelect v-model="cohortForm.prerequisites" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-slate-50" placeholder="Cours exigés en prérequis..." />
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.cohortPrereqs') }}</label>
+                                        <p class="text-xs text-slate-500 mb-3">{{ t('pages.cohorts.cohortPrereqsHelp') }}</p>
+                                        <MultiSelect v-model="cohortForm.prerequisites" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-slate-50" :placeholder="t('pages.cohorts.requiredCoursesPlaceholder')" />
                                     </div>
                                 </div>
                             </div>
@@ -694,21 +696,21 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
                         <div v-show="activeEditorTab === 'planning'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-calendar text-emerald-500"></i> Calendrier</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-calendar text-emerald-500"></i> {{ t('pages.cohorts.calendar') }}</h3>
                                 <div class="grid grid-cols-2 gap-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Début officiel <span class="text-red-500">*</span></label><Calendar v-model="cohortForm.start_date" dateFormat="dd/mm/yy" showIcon class="w-full" /></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Fin (Optionnel)</label><Calendar v-model="cohortForm.end_date" dateFormat="dd/mm/yy" showIcon class="w-full" :minDate="cohortForm.start_date" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.officialStart') }} <span class="text-red-500">*</span></label><Calendar v-model="cohortForm.start_date" dateFormat="dd/mm/yy" showIcon class="w-full" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.endOptional') }}</label><Calendar v-model="cohortForm.end_date" dateFormat="dd/mm/yy" showIcon class="w-full" :minDate="cohortForm.start_date" /></div>
                                 </div>
                             </div>
                         </div>
 
                         <div v-show="activeEditorTab === 'settings'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-cog text-amber-500"></i> Paramètres & Inscriptions</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-cog text-amber-500"></i> {{ t('pages.cohorts.settingsEnrollment') }}</h3>
                                 <div class="space-y-6">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">Capacité Maximale <span class="text-red-500">*</span></label><InputNumber v-model="cohortForm.max_students" showButtons class="w-40 bg-slate-50" /></div>
-                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-blue-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-lock"></i></div><div><div class="font-bold text-slate-800 text-sm">Cohorte Privée</div><div class="text-xs text-slate-500 max-w-md">Masquer du catalogue public.</div></div></div><ToggleSwitch v-model="cohortForm.is_private" /></div>
-                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-emerald-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-sync"></i></div><div><div class="font-bold text-slate-800 text-sm">Inscription Automatique</div><div class="text-xs text-slate-500 max-w-md">Email automatique d'accès.</div></div></div><ToggleSwitch v-model="cohortForm.auto_enrollment" /></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.cohorts.maxCapacity') }} <span class="text-red-500">*</span></label><InputNumber v-model="cohortForm.max_students" showButtons class="w-40 bg-slate-50" /></div>
+                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-blue-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-lock"></i></div><div><div class="font-bold text-slate-800 text-sm">{{ t('pages.cohorts.privateCohort') }}</div><div class="text-xs text-slate-500 max-w-md">{{ t('pages.cohorts.privateCohortHelp') }}</div></div></div><ToggleSwitch v-model="cohortForm.is_private" /></div>
+                                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-200"><div class="flex gap-4"><div class="w-10 h-10 bg-white border border-slate-200 text-emerald-500 rounded-full flex items-center justify-center shadow-sm shrink-0"><i class="pi pi-sync"></i></div><div><div class="font-bold text-slate-800 text-sm">{{ t('pages.cohorts.autoEnrollment') }}</div><div class="text-xs text-slate-500 max-w-md">{{ t('pages.cohorts.autoEnrollmentHelp') }}</div></div></div><ToggleSwitch v-model="cohortForm.auto_enrollment" /></div>
                                 </div>
                             </div>
                         </div>
@@ -718,11 +720,11 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </div>
 
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <span v-if="!isEntireFormValid" class="text-xs font-bold text-amber-600 flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> Complétez la configuration.</span>
-                <span v-else class="text-xs font-bold text-emerald-500 flex items-center gap-2"><i class="pi pi-check"></i> Prêt à enregistrer.</span>
+                <span v-if="!isEntireFormValid" class="text-xs font-bold text-amber-600 flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> {{ t('pages.cohorts.completeConfig') }}</span>
+                <span v-else class="text-xs font-bold text-emerald-500 flex items-center gap-2"><i class="pi pi-check"></i> {{ t('pages.cohorts.readyToSave') }}</span>
                 <div class="flex items-center gap-3">
-                    <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="cohortEditorDialog = false" />
-                    <Button label="Enregistrer la Cohorte" icon="pi pi-save" class="p-button-primary shadow-lg font-bold px-8" @click="saveCohort" :disabled="!isEntireFormValid" :loading="cohortForm.processing" />
+                    <Button :label="t('pages.cohorts.cancel')" class="p-button-text p-button-secondary font-bold" @click="cohortEditorDialog = false" />
+                    <Button :label="t('pages.cohorts.saveCohort')" icon="pi pi-save" class="p-button-primary shadow-lg font-bold px-8" @click="saveCohort" :disabled="!isEntireFormValid" :loading="cohortForm.processing" />
                 </div>
             </div>
         </Dialog>
@@ -741,7 +743,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     </div>
                 </div>
                 <div class="flex items-center gap-3 relative z-10">
-                    <Button icon="pi pi-megaphone" label="Diffuser Annonce" class="p-button-warning p-button-outlined text-amber-400 border-amber-400 font-bold" @click="messageDialog = true; messageForm.cohort_id = currentCohort?.id" />
+                    <Button icon="pi pi-megaphone" :label="t('pages.cohorts.broadcastAnnounce')" class="p-button-warning p-button-outlined text-amber-400 border-amber-400 font-bold" @click="messageDialog = true; messageForm.cohort_id = currentCohort?.id" />
                     <Button icon="pi pi-times" class="p-button-rounded p-button-text text-white hover:bg-white/10" @click="profileDialog = false" />
                 </div>
             </div>
@@ -750,16 +752,16 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 <TabView class="h-full flex flex-col custom-tabview-enterprise w-full">
 
                     <TabPanel>
-                        <template #header><i class="pi pi-chart-pie mr-2"></i> Tableau de bord</template>
+                        <template #header><i class="pi pi-chart-pie mr-2"></i> {{ t('pages.cohorts.tabDashboard') }}</template>
                         <div class="p-8 h-[calc(98vh-160px)] overflow-y-auto custom-scrollbar">
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-users"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Effectif actuel</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.members_count || cohortMembers.length }} / {{ currentCohort.max_students }}</h3></div></div>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-check-circle"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Complétion Moy.</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.avg_completion || 0 }}%</h3></div></div>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-calendar-clock"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">Début Officiel</p><h3 class="text-xl font-black text-slate-800">{{ formatDate(currentCohort.start_date) }}</h3></div></div>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-users"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.currentHeadcount') }}</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.members_count || cohortMembers.length }} / {{ currentCohort.max_students }}</h3></div></div>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-check-circle"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.avgCompletionShort') }}</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.avg_completion || 0 }}%</h3></div></div>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-calendar-clock"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.officialStart') }}</p><h3 class="text-xl font-black text-slate-800">{{ formatDate(currentCohort.start_date) }}</h3></div></div>
                             </div>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 class="font-bold text-slate-700 mb-4">Progression dans le temps</h4><Chart type="line" :data="profileCharts.line" class="h-64" /></div>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 class="font-bold text-slate-700 mb-4">Répartition des niveaux</h4><Chart type="doughnut" :data="profileCharts.doughnut" class="h-64 flex justify-center" /></div>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 class="font-bold text-slate-700 mb-4">{{ t('pages.cohorts.progressOverTime') }}</h4><Chart type="line" :data="profileCharts.line" class="h-64" /></div>
+                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 class="font-bold text-slate-700 mb-4">{{ t('pages.cohorts.levelDistribution') }}</h4><Chart type="doughnut" :data="profileCharts.doughnut" class="h-64 flex justify-center" /></div>
                             </div>
                         </div>
                     </TabPanel>
@@ -767,7 +769,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                    <TabPanel>
     <template #header>
         <i class="pi pi-users mr-2"></i>
-        Étudiants inscrits
+        {{ t('pages.cohorts.tabEnrolledStudents') }}
     </template>
 
     <div class="p-8 h-[calc(98vh-160px)] flex flex-col">
@@ -780,13 +782,13 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 <InputIcon class="pi pi-search text-slate-400" />
                 <InputText
                     v-model="studentSearchQuery"
-                    placeholder="Rechercher un étudiant..."
+                    :placeholder="t('pages.cohorts.searchStudentPlaceholder')"
                     class="p-inputtext-sm border-slate-200 w-64"
                 />
             </IconField>
 
             <Button
-                label="Enrôler des étudiants"
+                :label="t('pages.cohorts.enrollStudentsBtn')"
                 icon="pi pi-user-plus"
                 class="p-button-primary p-button-sm font-bold shadow-md"
                 @click="openAddStudentDialog"
@@ -805,7 +807,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             class="p-datatable-sm border-x border-b border-slate-200 rounded-b-2xl shadow-sm flex-1"
         >
             <!-- Etudiant -->
-            <Column header="Étudiant" style="min-width:18rem">
+            <Column :header="t('pages.cohorts.colStudent')" style="min-width:18rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-3">
                         <Avatar
@@ -823,7 +825,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </Column>
 
             <!-- Progression -->
-            <Column header="Progression" style="width:18rem">
+            <Column :header="t('pages.cohorts.colProgress')" style="width:18rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <ProgressBar
@@ -837,7 +839,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </Column>
 
             <!-- Date -->
-            <Column field="pivot.enrolled_at" header="Inscrit le" style="width:10rem">
+            <Column field="pivot.enrolled_at" :header="t('pages.cohorts.enrolledOn')" style="width:10rem">
                 <template #body="{ data }">
                     <span class="text-xs text-slate-500">
                         <!-- {{ formatDate(data.pivot?.enrolled_at) }} -->
@@ -845,16 +847,16 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 </template>
             </Column>
 
-            <Column header="Statut" style="width:8rem">
+            <Column :header="t('pages.cohorts.status')" style="width:8rem">
                 <template #body="{ data }">
-                    <Tag v-if="data.pivot?.status === 'active'" value="Actif" severity="success" />
-                    <Tag v-else-if="data.pivot?.status === 'suspended'" value="Suspendu" severity="warning" />
+                    <Tag v-if="data.pivot?.status === 'active'" :value="t('pages.cohorts.active')" severity="success" />
+                    <Tag v-else-if="data.pivot?.status === 'suspended'" :value="t('pages.cohorts.suspended')" severity="warning" />
                     <Tag v-else :value="data.pivot?.status" severity="secondary" />
                 </template>
             </Column>
 
             <!-- Actions -->
-            <Column header="Actions" style="width:70px" alignFrozen="right" frozen>
+            <Column :header="t('pages.cohorts.actions')" style="width:70px" alignFrozen="right" frozen>
                 <template #body="{ data }">
                     <Button icon="pi pi-ellipsis-v" text rounded @click="toggleStudentMenu($event, data)" />
                 </template>
@@ -863,7 +865,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             <!-- Aucun résultat -->
             <template #empty>
                 <div class="text-center p-8 text-slate-500">
-                    Aucun étudiant ne correspond à votre recherche.
+                    {{ t('pages.cohorts.noStudentMatch') }}
                 </div>
             </template>
         </DataTable>
@@ -878,11 +880,11 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </TabPanel>
 
                     <TabPanel>
-                        <template #header><i class="pi pi-video mr-2"></i> Lives & Ressources</template>
+                        <template #header><i class="pi pi-video mr-2"></i> {{ t('pages.cohorts.tabLivesResources') }}</template>
                         <div class="p-8 h-[calc(98vh-160px)] overflow-y-auto custom-scrollbar">
                             <div class="flex justify-between items-center mb-6">
-                                <div><h3 class="text-lg font-black text-slate-800">Calendrier des Visioconférences</h3><p class="text-sm text-slate-500">Séances exclusives à la cohorte.</p></div>
-                                <Button label="Nouvelle Session" icon="pi pi-plus" class="p-button-primary shadow-md font-bold" @click="openLiveSessionDialog" />
+                                <div><h3 class="text-lg font-black text-slate-800">{{ t('pages.cohorts.meetingsCalendar') }}</h3><p class="text-sm text-slate-500">{{ t('pages.cohorts.exclusiveSessions') }}</p></div>
+                                <Button :label="t('pages.cohorts.newSession')" icon="pi pi-plus" class="p-button-primary shadow-md font-bold" @click="openLiveSessionDialog" />
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -890,15 +892,15 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                                     <div class="flex justify-between items-start mb-4"><Tag :value="session.status" :severity="session.status === 'à venir' ? 'info' : 'secondary'" class="text-[9px] uppercase font-bold" /><div class="bg-blue-50 p-1.5 rounded-lg text-blue-500 w-8 h-8 flex items-center justify-center"><i class="pi pi-desktop"></i></div></div>
                                     <h4 class="font-bold text-slate-800 text-lg mb-1">{{ session.title }}</h4>
                                     <p class="text-xs font-bold text-blue-600 mb-4 flex items-center gap-2"><i class="pi pi-calendar"></i> {{ formatDate(session.start_at) }} </p>
-                                    <Button label="Rejoindre" icon="pi pi-external-link" class="p-button-sm p-button-outlined p-button-indigo w-full font-bold" @click="window.open(session.meeting_url, '_blank')" />
+                                    <Button :label="t('pages.cohorts.join')" icon="pi pi-external-link" class="p-button-sm p-button-outlined p-button-indigo w-full font-bold" @click="window.open(session.meeting_url, '_blank')" />
                                 </div>
-                                <div v-if="cohortLiveSessions.length === 0" class="col-span-3 text-center p-8 border border-dashed border-slate-300 rounded-xl text-slate-500">Aucune session live programmée.</div>
+                                <div v-if="cohortLiveSessions.length === 0" class="col-span-3 text-center p-8 border border-dashed border-slate-300 rounded-xl text-slate-500">{{ t('pages.cohorts.noLiveScheduled') }}</div>
                             </div>
 
                             <Divider />
                             <div class="flex justify-between items-center mb-6 mt-8">
-                                <div><h3 class="text-lg font-black text-slate-800">Ressources Partagées</h3><p class="text-sm text-slate-500">Documents accessibles à tous les membres.</p></div>
-                                <FileUpload mode="basic" auto chooseLabel="Uploader un fichier" class="p-button-sm p-button-secondary p-button-outlined font-bold" @upload="onDocumentUpload" />
+                                <div><h3 class="text-lg font-black text-slate-800">{{ t('pages.cohorts.sharedResources') }}</h3><p class="text-sm text-slate-500">{{ t('pages.cohorts.resourcesHelp') }}</p></div>
+                                <FileUpload mode="basic" auto :chooseLabel="t('pages.cohorts.uploadFile')" class="p-button-sm p-button-secondary p-button-outlined font-bold" @upload="onDocumentUpload" />
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div v-for="doc in cohortDocuments" :key="doc.id" class="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-4 shadow-sm hover:bg-slate-50 cursor-pointer group" @click="downloadDocument(doc)">
@@ -911,41 +913,41 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                                     </div>
                                     <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger opacity-0 group-hover:opacity-100 transition-opacity" @click.stop="deleteDocument(doc)" />
                                 </div>
-                                <div v-if="cohortDocuments.length === 0" class="col-span-4 text-center p-8 bg-white border border-dashed border-slate-300 rounded-xl text-slate-500">Aucun document partagé.</div>
+                                <div v-if="cohortDocuments.length === 0" class="col-span-4 text-center p-8 bg-white border border-dashed border-slate-300 rounded-xl text-slate-500">{{ t('pages.cohorts.noDocShared') }}</div>
                             </div>
                         </div>
                     </TabPanel>
 
                     <TabPanel>
-                        <template #header><i class="pi pi-shield mr-2"></i> Prérequis</template>
+                        <template #header><i class="pi pi-shield mr-2"></i> {{ t('pages.cohorts.tabPrereqs') }}</template>
                         <div class="p-8 h-[calc(98vh-160px)] overflow-y-auto bg-white m-8 mt-4 rounded-2xl border border-slate-200 shadow-sm">
                             <div class="flex justify-between items-center mb-6">
-                                <div><h3 class="text-lg font-black text-slate-800">Prérequis de la cohorte</h3><p class="text-sm text-slate-500">Cours que les étudiants doivent valider avant de rejoindre.</p></div>
-                                <Button label="Modifier les prérequis" icon="pi pi-pencil" class="p-button-primary shadow-md font-bold" @click="openPrereqEditor" />
+                                <div><h3 class="text-lg font-black text-slate-800">{{ t('pages.cohorts.cohortPrereqs') }}</h3><p class="text-sm text-slate-500">{{ t('pages.cohorts.prereqsJoinHelp') }}</p></div>
+                                <Button :label="t('pages.cohorts.editPrereqs')" icon="pi pi-pencil" class="p-button-primary shadow-md font-bold" @click="openPrereqEditor" />
                             </div>
                             <div v-if="cohortPrerequisites.length > 0" class="space-y-3">
                                 <div v-for="courseId in cohortPrerequisites" :key="courseId" class="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-4 shadow-sm">
                                     <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0"><i class="pi pi-book"></i></div>
                                     <div class="flex-1">
-                                        <div class="font-bold text-slate-800">{{ props.coursesList.find(c => c.id === courseId)?.title || 'Cours inconnu' }}</div>
+                                        <div class="font-bold text-slate-800">{{ props.coursesList.find(c => c.id === courseId)?.title || t('pages.cohorts.unknownCourse') }}</div>
                                         <div class="text-xs text-slate-500">{{ props.coursesList.find(c => c.id === courseId)?.duration || '' }}h</div>
                                     </div>
-                                    <Tag value="Requis" severity="warn" />
+                                    <Tag :value="t('pages.cohorts.required')" severity="warn" />
                                 </div>
                             </div>
-                            <div v-else class="text-center p-8 border border-dashed border-slate-300 rounded-xl text-slate-500">Aucun prérequis défini.</div>
+                            <div v-else class="text-center p-8 border border-dashed border-slate-300 rounded-xl text-slate-500">{{ t('pages.cohorts.noPrereqDefined') }}</div>
                         </div>
                     </TabPanel>
 
                     <TabPanel>
-                        <template #header><i class="pi pi-history mr-2"></i> Journal d'Audit</template>
+                        <template #header><i class="pi pi-history mr-2"></i> {{ t('pages.cohorts.tabAuditLog') }}</template>
                         <div class="p-8 h-[calc(98vh-160px)] overflow-y-auto bg-white m-8 mt-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <h3 class="text-lg font-black text-slate-800 mb-8">Traçabilité des actions administratives</h3>
+                            <h3 class="text-lg font-black text-slate-800 mb-8">{{ t('pages.cohorts.auditTrailTitle') }}</h3>
                             <Timeline :value="cohortAuditLogs">
                                 <template #marker="slotProps"><span class="flex w-8 h-8 items-center justify-center text-white rounded-full shadow-sm" :style="{ backgroundColor: slotProps.item.color || '#4f46e5' }"><i :class="slotProps.item.icon" class="text-sm"></i></span></template>
-                                <template #content="slotProps"><div class="mb-6"><div class="font-bold text-slate-800">{{ slotProps.item.action }}</div><div class="text-xs text-slate-500 mt-1 flex items-center gap-2"><i class="pi pi-clock"></i> {{ slotProps.item.date }} | Par: <span class="font-bold text-slate-700">{{ slotProps.item.user }}</span></div></div></template>
+                                <template #content="slotProps"><div class="mb-6"><div class="font-bold text-slate-800">{{ slotProps.item.action }}</div><div class="text-xs text-slate-500 mt-1 flex items-center gap-2"><i class="pi pi-clock"></i> {{ slotProps.item.date }} | {{ t('pages.cohorts.by') }} <span class="font-bold text-slate-700">{{ slotProps.item.user }}</span></div></div></template>
                             </Timeline>
-                            <div v-if="cohortAuditLogs.length === 0" class="text-center p-8 text-slate-500">Aucune activité enregistrée.</div>
+                            <div v-if="cohortAuditLogs.length === 0" class="text-center p-8 text-slate-500">{{ t('pages.cohorts.noActivity') }}</div>
                         </div>
                     </TabPanel>
                 </TabView>
@@ -955,148 +957,148 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <!-- DIALOG : AJOUT D'ÉTUDIANTS -->
         <Dialog v-model:visible="addStudentDialog" modal :closable="false" :draggable="false" :style="{ width: '800px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[70vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-user-plus text-blue-600"></i> Enrôler des Étudiants</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-user-plus text-blue-600"></i> {{ t('pages.cohorts.enrollStudentsTitle') }}</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="addStudentDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <InlineMessage severity="info" class="w-full mb-8">Les étudiants sélectionnés auront immédiatement accès au curriculum de la cohorte.</InlineMessage>
+                <InlineMessage severity="info" class="w-full mb-8">{{ t('pages.cohorts.enrollInfoMessage') }}</InlineMessage>
                 <div class="field mb-8">
-                    <label class="font-bold text-slate-700 text-sm block mb-3">Rechercher dans la base globale <span class="text-red-500">*</span></label>
-                    <MultiSelect v-model="studentEnrollForm.student_ids" :options="props.allStudentsList" optionLabel="name" optionValue="id" filter display="chip" placeholder="Tapez le nom d'un étudiant..." class="w-full bg-white p-1">
+                    <label class="font-bold text-slate-700 text-sm block mb-3">{{ t('pages.cohorts.searchGlobalBase') }} <span class="text-red-500">*</span></label>
+                    <MultiSelect v-model="studentEnrollForm.student_ids" :options="props.allStudentsList" optionLabel="name" optionValue="id" filter display="chip" :placeholder="t('pages.cohorts.typeStudentName')" class="w-full bg-white p-1">
                         <template #option="slotProps"><div class="flex items-center gap-3"><Avatar :image="slotProps.option.avatar_path" shape="circle" size="small" /><div><div class="font-bold text-sm">{{ slotProps.option.name }}</div><div class="text-[10px] text-slate-500">{{ slotProps.option.email }}</div></div></div></template>
                     </MultiSelect>
                 </div>
                 <div class="flex items-center gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <ToggleSwitch v-model="studentEnrollForm.notify_students" inputId="notify" />
-                    <div><label for="notify" class="font-bold text-sm text-slate-800 cursor-pointer block">Envoyer une notification email</label><span class="text-xs text-slate-500">Avertit les étudiants de leur ajout.</span></div>
+                    <div><label for="notify" class="font-bold text-sm text-slate-800 cursor-pointer block">{{ t('pages.cohorts.sendEmailNotif') }}</label><span class="text-xs text-slate-500">{{ t('pages.cohorts.notifyByEmailHelp') }}</span></div>
                 </div>
             </div>
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-end px-6 z-30 gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="addStudentDialog = false" />
-                <Button label="Confirmer l'ajout" icon="pi pi-check" class="p-button-primary shadow-md font-bold px-6" @click="enrollStudents" :disabled="!studentEnrollForm.student_ids.length" :loading="studentEnrollForm.processing" />
+                <Button :label="t('pages.cohorts.cancel')" class="p-button-text p-button-secondary font-bold" @click="addStudentDialog = false" />
+                <Button :label="t('pages.cohorts.confirmAdd')" icon="pi pi-check" class="p-button-primary shadow-md font-bold px-6" @click="enrollStudents" :disabled="!studentEnrollForm.student_ids.length" :loading="studentEnrollForm.processing" />
             </div>
         </Dialog>
 
         <!-- DIALOG : TRANSFERT D'ÉTUDIANT -->
         <Dialog v-model:visible="transferDialog" modal :closable="false" :draggable="false" :style="{ width: '600px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[60vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-arrow-right-arrow-left text-amber-500"></i> Transférer l'Étudiant</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-arrow-right-arrow-left text-amber-500"></i> {{ t('pages.cohorts.transferStudentTitle') }}</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="transferDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <InlineMessage severity="warn" class="w-full mb-8">Attention : Cet étudiant sera retiré de la cohorte actuelle et déplacé vers la nouvelle destination.</InlineMessage>
+                <InlineMessage severity="warn" class="w-full mb-8">{{ t('pages.cohorts.transferWarnMessage') }}</InlineMessage>
                 <div class="field mb-8">
-                    <label class="font-bold text-slate-700 text-sm block mb-3">Cohorte de destination <span class="text-red-500">*</span></label>
-                    <Dropdown v-model="transferFormObject.to_cohort_id" :options="props.cohorts.data.filter(c => c.id !== currentCohort?.id)" optionLabel="name" optionValue="id" placeholder="Sélectionnez une cohorte..." class="w-full bg-white" />
+                    <label class="font-bold text-slate-700 text-sm block mb-3">{{ t('pages.cohorts.destinationCohort') }} <span class="text-red-500">*</span></label>
+                    <Dropdown v-model="transferFormObject.to_cohort_id" :options="props.cohorts.data.filter(c => c.id !== currentCohort?.id)" optionLabel="name" optionValue="id" :placeholder="t('pages.cohorts.selectCohortPlaceholder')" class="w-full bg-white" />
                 </div>
                 <div class="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
-                    <div><h4 class="font-bold text-sm text-slate-800">Conserver la progression</h4><p class="text-xs text-slate-500">Garder les scores sur les cours communs.</p></div>
+                    <div><h4 class="font-bold text-sm text-slate-800">{{ t('pages.cohorts.keepProgress') }}</h4><p class="text-xs text-slate-500">{{ t('pages.cohorts.keepProgressHelp') }}</p></div>
                     <ToggleSwitch v-model="transferFormObject.transfer_progress" />
                 </div>
             </div>
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-end px-6 z-30 gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="transferDialog = false" />
-                <Button label="Exécuter le transfert" icon="pi pi-check" class="p-button-warning shadow-md font-bold px-6" @click="executeTransfer" :disabled="!transferFormObject.to_cohort_id" :loading="transferFormObject.processing" />
+                <Button :label="t('pages.cohorts.cancel')" class="p-button-text p-button-secondary font-bold" @click="transferDialog = false" />
+                <Button :label="t('pages.cohorts.executeTransfer')" icon="pi pi-check" class="p-button-warning shadow-md font-bold px-6" @click="executeTransfer" :disabled="!transferFormObject.to_cohort_id" :loading="transferFormObject.processing" />
             </div>
         </Dialog>
 
         <!-- DIALOG : CREATION SESSION LIVE -->
         <Dialog v-model:visible="liveSessionDialog" modal :closable="false" :draggable="false" :style="{ width: '600px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[80vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-video text-blue-600"></i> Planifier un Live</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-video text-blue-600"></i> {{ t('pages.cohorts.planLiveTitle') }}</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="liveSessionDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-span-2">
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Titre de la session <span class="text-red-500">*</span></label>
-                        <InputText v-model="liveSessionForm.title" class="w-full bg-white" placeholder="Ex: Masterclass Q&A" />
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.sessionTitleLabel') }} <span class="text-red-500">*</span></label>
+                        <InputText v-model="liveSessionForm.title" class="w-full bg-white" :placeholder="t('pages.cohorts.sessionTitlePlaceholder')" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Cours <span class="text-red-500">*</span></label>
-                        <Dropdown v-model="liveSessionForm.course_id" :options="currentCohort?.assigned_courses" optionLabel="title" optionValue="id" placeholder="Choisir le cours" class="w-full bg-white" />
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.courseLabel') }} <span class="text-red-500">*</span></label>
+                        <Dropdown v-model="liveSessionForm.course_id" :options="currentCohort?.assigned_courses" optionLabel="title" optionValue="id" :placeholder="t('pages.cohorts.chooseCourse')" class="w-full bg-white" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Instructeur <span class="text-red-500">*</span></label>
-                        <Dropdown v-model="liveSessionForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" placeholder="Choisir l'expert" class="w-full bg-white" />
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.instructorLabel') }} <span class="text-red-500">*</span></label>
+                        <Dropdown v-model="liveSessionForm.instructor_id" :options="props.instructorsList" optionLabel="name" optionValue="id" :placeholder="t('pages.cohorts.chooseExpert')" class="w-full bg-white" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Date & Heure <span class="text-red-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.dateTimeLabel') }} <span class="text-red-500">*</span></label>
                         <Calendar v-model="liveSessionForm.start_at" showTime hourFormat="24" dateFormat="dd/mm/yy" class="w-full" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Durée (minutes) <span class="text-red-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.durationMinutes') }} <span class="text-red-500">*</span></label>
                         <InputNumber v-model="liveSessionForm.duration" :min="15" :max="480" showButtons class="w-full" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Fournisseur <span class="text-red-500">*</span></label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.providerLabel') }} <span class="text-red-500">*</span></label>
                         <Dropdown v-model="liveSessionForm.provider" :options="[{label: 'Zoom Video', value: 'zoom'}, {label: 'Google Meet', value: 'meet'}, {label: 'BigBlueButton', value: 'bbb'}, {label: 'Jitsi Meet', value: 'jitsi'}]" optionLabel="label" optionValue="value" class="w-full bg-white" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Max Participants</label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.maxParticipants') }}</label>
                         <InputNumber v-model="liveSessionForm.max_participants" :min="1" showButtons class="w-full" />
                     </div>
                     <div>
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Code d'accès</label>
-                        <InputText v-model="liveSessionForm.passcode" class="w-full bg-white" placeholder="Optionnel" />
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.accessCode') }}</label>
+                        <InputText v-model="liveSessionForm.passcode" class="w-full bg-white" :placeholder="t('pages.cohorts.optional')" />
                     </div>
                     <div class="col-span-2">
-                        <label class="font-bold text-slate-700 text-sm block mb-2">Lien de la réunion (URL)</label>
+                        <label class="font-bold text-slate-700 text-sm block mb-2">{{ t('pages.cohorts.meetingLinkUrl') }}</label>
                         <InputText v-model="liveSessionForm.meeting_url" class="w-full bg-white" placeholder="https://zoom.us/j/..." />
                     </div>
                     <div class="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl">
                         <ToggleSwitch v-model="liveSessionForm.is_recorded" />
-                        <span class="text-xs font-bold text-slate-700">Enregistrer automatiquement</span>
+                        <span class="text-xs font-bold text-slate-700">{{ t('pages.cohorts.autoRecord') }}</span>
                     </div>
                 </div>
                 <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-100 grid grid-cols-2 gap-4">
-                    <div class="flex items-center justify-between col-span-2 text-[10px] font-bold text-blue-700 uppercase tracking-widest border-b border-blue-100 pb-2">Réglages Salle</div>
-                    <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Host Vidéo</span> <ToggleSwitch v-model="liveSessionForm.settings.host_video" trueValue="1" falseValue="0" /></div>
-                    <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Client Vidéo</span> <ToggleSwitch v-model="liveSessionForm.settings.participant_video" trueValue="1" falseValue="0" /></div>
-                    <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Muet Entrée</span> <ToggleSwitch v-model="liveSessionForm.settings.mute_upon_entry" trueValue="1" falseValue="0" /></div>
+                    <div class="flex items-center justify-between col-span-2 text-[10px] font-bold text-blue-700 uppercase tracking-widest border-b border-blue-100 pb-2">{{ t('pages.cohorts.roomSettings') }}</div>
+                    <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>{{ t('pages.cohorts.hostVideo') }}</span> <ToggleSwitch v-model="liveSessionForm.settings.host_video" trueValue="1" falseValue="0" /></div>
+                    <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>{{ t('pages.cohorts.clientVideo') }}</span> <ToggleSwitch v-model="liveSessionForm.settings.participant_video" trueValue="1" falseValue="0" /></div>
+                    <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>{{ t('pages.cohorts.muteOnEntry') }}</span> <ToggleSwitch v-model="liveSessionForm.settings.mute_upon_entry" trueValue="1" falseValue="0" /></div>
                     <div class="flex items-center justify-between text-xs font-medium text-slate-600"><span>Waiting Room</span> <ToggleSwitch v-model="liveSessionForm.settings.waiting_room" trueValue="1" falseValue="0" /></div>
                 </div>
             </div>
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-end px-6 z-30 gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="liveSessionDialog = false" />
-                <Button label="Planifier le Live" icon="pi pi-calendar-plus" class="p-button-primary shadow-md font-bold px-6" @click="saveLiveSession" :disabled="!liveSessionForm.title || !liveSessionForm.start_at" :loading="liveSessionForm.processing" />
+                <Button :label="t('pages.cohorts.cancel')" class="p-button-text p-button-secondary font-bold" @click="liveSessionDialog = false" />
+                <Button :label="t('pages.cohorts.planLiveBtn')" icon="pi pi-calendar-plus" class="p-button-primary shadow-md font-bold px-6" @click="saveLiveSession" :disabled="!liveSessionForm.title || !liveSessionForm.start_at" :loading="liveSessionForm.processing" />
             </div>
         </Dialog>
 
         <!-- DIALOG : ANNONCE DE MASSE -->
         <Dialog v-model:visible="messageDialog" modal :closable="false" :draggable="false" :style="{ width: '700px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[80vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-megaphone text-amber-500"></i> Diffuser une Annonce</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-megaphone text-amber-500"></i> {{ t('pages.cohorts.broadcastAnnounceTitle') }}</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="messageDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-6">
-                <InlineMessage severity="warn" class="w-full mb-4">Ce message sera envoyé à tous les membres de la cohorte.</InlineMessage>
-                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">Sujet de l'annonce <span class="text-red-500">*</span></label><InputText v-model="messageForm.subject" class="w-full font-bold bg-white p-3" autofocus /></div>
-                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">Contenu détaillé <span class="text-red-500">*</span></label><Editor v-model="messageForm.body" editorStyle="height: 200px" /></div>
+                <InlineMessage severity="warn" class="w-full mb-4">{{ t('pages.cohorts.broadcastWarn') }}</InlineMessage>
+                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">{{ t('pages.cohorts.announceSubject') }} <span class="text-red-500">*</span></label><InputText v-model="messageForm.subject" class="w-full font-bold bg-white p-3" autofocus /></div>
+                <div><label class="font-bold text-slate-700 text-sm block mb-2 uppercase tracking-wide">{{ t('pages.cohorts.announceBody') }} <span class="text-red-500">*</span></label><Editor v-model="messageForm.body" editorStyle="height: 200px" /></div>
                 <div class="flex items-center gap-6 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center gap-3"><ToggleSwitch v-model="messageForm.send_email" inputId="sendMail" /><label for="sendMail" class="text-sm font-bold text-slate-700 cursor-pointer">Par Email</label></div>
-                    <div class="flex items-center gap-3"><ToggleSwitch v-model="messageForm.send_notification" inputId="sendNotif" /><label for="sendNotif" class="text-sm font-bold text-slate-700 cursor-pointer">Notification Push</label></div>
+                    <div class="flex items-center gap-3"><ToggleSwitch v-model="messageForm.send_email" inputId="sendMail" /><label for="sendMail" class="text-sm font-bold text-slate-700 cursor-pointer">{{ t('pages.cohorts.byEmail') }}</label></div>
+                    <div class="flex items-center gap-3"><ToggleSwitch v-model="messageForm.send_notification" inputId="sendNotif" /><label for="sendNotif" class="text-sm font-bold text-slate-700 cursor-pointer">{{ t('pages.cohorts.pushNotif') }}</label></div>
                 </div>
             </div>
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-end px-6 z-30 gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="messageDialog = false" />
-                <Button label="Envoyer l'Annonce" icon="pi pi-send" class="p-button-warning shadow-md font-black px-8" @click="messageDialog = false; toast.add({ severity:'success', summary:'Diffusé', detail:'L\'annonce a été envoyée.' })" :disabled="!messageForm.subject || !messageForm.body" />
+                <Button :label="t('pages.cohorts.cancel')" class="p-button-text p-button-secondary font-bold" @click="messageDialog = false" />
+                <Button :label="t('pages.cohorts.sendAnnounce')" icon="pi pi-send" class="p-button-warning shadow-md font-black px-8" @click="messageDialog = false; toast.add({ severity:'success', summary: t('pages.cohorts.broadcasted'), detail: t('pages.cohorts.announcementSent') })" :disabled="!messageForm.subject || !messageForm.body" />
             </div>
         </Dialog>
 
         <!-- DIALOG : MODIFICATION DES PRÉREQUIS (éditeur simplifié) -->
         <Dialog v-model:visible="prereqEditDialog" modal :closable="false" :draggable="false" :style="{ width: '600px' }" contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[50vh]" headerClass="hidden" class="rounded-2xl shadow-2xl border border-slate-200">
             <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm">
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-shield text-amber-500"></i> Gérer les prérequis</h2>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2"><i class="pi pi-shield text-amber-500"></i> {{ t('pages.cohorts.managePrereqs') }}</h2>
                 <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary hover:bg-slate-100" @click="prereqEditDialog = false" />
             </div>
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <p class="text-sm text-slate-500 mb-4">Sélectionnez les cours que les étudiants doivent valider avant de pouvoir s'inscrire à cette cohorte.</p>
-                <MultiSelect v-model="cohortPrerequisites" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-white" placeholder="Sélectionner des cours..." />
+                <p class="text-sm text-slate-500 mb-4">{{ t('pages.cohorts.prereqsBodyHelp') }}</p>
+                <MultiSelect v-model="cohortPrerequisites" :options="props.coursesList" optionLabel="title" optionValue="id" filter display="chip" class="w-full bg-white" :placeholder="t('pages.cohorts.selectCoursesPlaceholder')" />
             </div>
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-end px-6 z-30 gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Annuler" class="p-button-text p-button-secondary font-bold" @click="prereqEditDialog = false" />
-                <Button label="Enregistrer" icon="pi pi-check" class="p-button-primary shadow-md font-bold px-6" @click="savePrerequisites" />
+                <Button :label="t('pages.cohorts.cancel')" class="p-button-text p-button-secondary font-bold" @click="prereqEditDialog = false" />
+                <Button :label="t('pages.cohorts.save')" icon="pi pi-check" class="p-button-primary shadow-md font-bold px-6" @click="savePrerequisites" />
             </div>
         </Dialog>
 

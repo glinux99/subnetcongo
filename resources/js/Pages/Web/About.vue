@@ -9,6 +9,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -37,33 +39,33 @@ const story = computed(() =>
     props.page?.content ||
     props.about?.history ||
     props.identity.site_description ||
-    "SubnetCongo est un centre d'excellence numérique dédié à la formation et au déploiement d'infrastructures en République Démocratique du Congo."
+    t('public.about.hero_tagline_fallback')
 );
 
-const mission = computed(() => props.about?.mission || 'Informer, Former et Responsabiliser — l’apprentissage comme levier de développement.');
-const vision = computed(() => props.about?.vision || 'L’AVENIR C’EST NOUS. SubNet Congo accompagne entreprises, ONG et particuliers à devenir agiles, compétents et autonomes.');
+const mission = computed(() => props.about?.mission || t('public.about.mission_fallback'));
+const vision = computed(() => props.about?.vision || t('public.about.vision_fallback'));
 
 const values = computed(() => parseJson(props.about?.values, [
-    { title: 'Satisfaction client', desc: 'Au centre de toutes nos décisions — de la formation à la maintenance après-vente.', icon: 'pi-verified' },
-    { title: 'Agilité', desc: 'Des solutions créatives, déployées rapidement, avec une équipe dédiée à chaque client.', icon: 'pi-bolt' },
-    { title: 'Collaboration', desc: 'Fournisseurs, sous-traitants et clients sont des partenaires avec nous.', icon: 'pi-users' },
-    { title: 'Sécurité au travail', desc: 'Objectif « zéro incident » sur tous nos chantiers.', icon: 'pi-shield' },
-    { title: 'Innovation', desc: 'Amélioration et création continue dans nos formations et nos réalisations.', icon: 'pi-sparkles' },
+    { title: t('public.about.values_satisfaction'), desc: t('public.about.values_satisfaction_desc'), icon: 'pi-verified' },
+    { title: t('public.about.values_agility'), desc: t('public.about.values_agility_desc'), icon: 'pi-bolt' },
+    { title: t('public.about.values_collab'), desc: t('public.about.values_collab_desc'), icon: 'pi-users' },
+    { title: t('public.about.values_safety'), desc: t('public.about.values_safety_desc'), icon: 'pi-shield' },
+    { title: t('public.about.values_innovation'), desc: t('public.about.values_innovation_desc'), icon: 'pi-sparkles' },
 ]));
 
 const services = computed(() => parseJson(props.about?.services, [
-    { title: 'NTIC — Informatique de gestion', desc: 'Word, Excel, PowerPoint, Publisher, Outlook, développement de logiciels sur mesure.', icon: 'pi-desktop' },
-    { title: 'NTIC — Télécommunications & Réseaux', desc: 'VSAT, Starlink, fibre optique, réseau LAN/WAN, caméras de surveillance, interphonie IP.', icon: 'pi-sitemap' },
-    { title: 'Techniques Appliquées — Électricité & Énergie', desc: 'Installations électriques, parc solaire photovoltaïque, éolienne, hydroélectrique.', icon: 'pi-bolt' },
-    { title: 'Électronique & Robotique', desc: 'Systèmes embarqués, IA, systèmes robotiques et circuits imprimés.', icon: 'pi-cog' },
-    { title: 'R&D — Recherche & Formation', desc: 'Douze formations certifiées, mentors experts, supports produits internes, 6 critères qualité.', icon: 'pi-book' },
+    { title: t('public.about.services_ntic_mgmt'), desc: t('public.about.services_ntic_mgmt_desc'), icon: 'pi-desktop' },
+    { title: t('public.about.services_tic_net'), desc: t('public.about.services_tic_net_desc'), icon: 'pi-sitemap' },
+    { title: t('public.about.services_elec_energy'), desc: t('public.about.services_elec_energy_desc'), icon: 'pi-bolt' },
+    { title: t('public.about.services_elec_robo'), desc: t('public.about.services_elec_robo_desc'), icon: 'pi-cog' },
+    { title: t('public.about.services_rd'), desc: t('public.about.services_rd_desc'), icon: 'pi-book' },
 ]));
 
 const processSteps = [
-    { icon: 'pi-search', title: 'Étude & devis sur mesure', desc: 'Visite de site, analyse des besoins (m3, m2, pièces, UTJ), proposition détaillée.' },
-    { icon: 'pi-sitemap', title: 'Implémentation terrain', desc: "Équipe dédiée : ingénieurs réalisateurs, formateurs et techniciens sur site, partout en RDC." },
-    { icon: 'pi-play', title: 'Formation & suivi', desc: 'Formations internes certifiantes, suivi post-projet et hotlines dédiées.' },
-    { icon: 'pi-shield', title: 'Garantie & support', desc: 'Maintenance et garantie pièces/équipements conformes au contrat de service.' },
+    { icon: 'pi-search', title: t('public.about.process_step1_title'), desc: t('public.about.process_step1_desc') },
+    { icon: 'pi-sitemap', title: t('public.about.process_step2_title'), desc: t('public.about.process_step2_desc') },
+    { icon: 'pi-play', title: t('public.about.process_step3_title'), desc: t('public.about.process_step3_desc') },
+    { icon: 'pi-shield', title: t('public.about.process_step4_title'), desc: t('public.about.process_step4_desc') },
 ];
 
 // ============================================================================
@@ -74,10 +76,10 @@ const statsVisible = ref(false);
 const displayStats = ref([]);
 
 const buildStats = () => [
-    { current: 0, target: parseInt(props.stats?.students ?? 0, 10) || 3500, label: 'Apprenants formés', icon: 'pi-users', color: '#003399' },
-    { current: 0, target: parseInt(props.stats?.courses ?? 0, 10) || 32, label: 'Cours & Modules', icon: 'pi-book', color: '#2563EB' },
-    { current: 0, target: parseInt(props.stats?.instructors ?? 0, 10) || 7, label: 'Experts SubNet', icon: 'pi-verified', color: '#10B981' },
-    { current: 0, target: parseInt(props.stats?.countries ?? 0, 10) || 1, label: 'Pays (RDC)', icon: 'pi-globe', color: '#E1251B' },
+    { current: 0, target: parseInt(props.stats?.students ?? 0, 10) || 3500, label: t('public.about.stat_learners'), icon: 'pi-users', color: '#003399' },
+    { current: 0, target: parseInt(props.stats?.courses ?? 0, 10) || 32, label: t('public.about.stat_courses'), icon: 'pi-book', color: '#2563EB' },
+    { current: 0, target: parseInt(props.stats?.instructors ?? 0, 10) || 7, label: t('public.about.stat_experts'), icon: 'pi-verified', color: '#10B981' },
+    { current: 0, target: parseInt(props.stats?.countries ?? 0, 10) || 1, label: t('public.about.stat_countries'), icon: 'pi-globe', color: '#E1251B' },
 ];
 
 displayStats.value = buildStats();
@@ -123,8 +125,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <template>
-    <Head :title="`À propos - ${identity.site_name || 'SubnetCongo'}`">
-        <meta name="description" :content="identity.site_description || 'Découvrez SubnetCongo, centre de formation et d\'excellence numérique en RDC.'">
+    <Head :title="`${t('public.about.head_title')} - ${identity.site_name || 'SubnetCongo'}`">
+        <meta name="description" :content="identity.site_description || t('public.about.head_desc')">
     </Head>
 
     <AppLayout>
@@ -146,26 +148,26 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="max-w-3xl space-y-8">
                     <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white reveal-on-scroll">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">À propos de nous</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">{{ t('public.about.pill') }}</span>
                     </div>
 
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight reveal-on-scroll delay-100">
                         {{ page?.title || identity.site_name || 'SubnetCongo' }} <br />
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">
-                            {{ about.tagline ? about.tagline.split(' ').slice(0, 3).join(' ') : 'Centre d\'excellence' }}
+                            {{ about.tagline ? about.tagline.split(' ').slice(0, 3).join(' ') : t('public.about.hero_focus_fallback') }}
                         </span>
                     </h1>
 
                     <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5 reveal-on-scroll delay-200">
-                        {{ about.tagline || identity.site_tagline || 'Votre partenaire en ingénierie réseau et centre de formation IT de pointe.' }}
+                        {{ about.tagline || identity.site_tagline || t('public.about.hero_tag_fallback') }}
                     </p>
 
                     <div class="flex flex-wrap gap-4 pt-4 reveal-on-scroll delay-300">
                         <Link :href="route('academy')" class="bg-white hover:bg-slate-100 text-[#0B1221] px-8 py-4 rounded-xl font-bold text-base shadow-lg transition-all flex items-center gap-2">
-                            Explorer le Catalogue <i class="pi pi-arrow-right"></i>
+                            {{ t('public.about.cta_catalog') }} <i class="pi pi-arrow-right"></i>
                         </Link>
                         <Link :href="route('contact')" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-base transition-all flex items-center gap-2">
-                            Nous contacter <i class="pi pi-briefcase"></i>
+                            {{ t('public.about.cta_contact') }} <i class="pi pi-briefcase"></i>
                         </Link>
                     </div>
                 </div>
@@ -180,7 +182,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
             <div class="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-32 bg-gradient-to-l from-white via-white/70 to-transparent z-10"></div>
 
             <div class="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-12 flex items-center gap-4 sm:gap-8 lg:gap-12 py-4 sm:py-5">
-                <span class="sr-only">Technologies maîtrisées : {{ technologies.map(t => t.name).join(', ') }}</span>
+                <span class="sr-only">{{ t('public.about.pill_tech') }} : {{ technologies.map(x => x.name).join(', ') }}</span>
 
                 <div class="flex items-center gap-3 sm:gap-4 shrink-0 pr-4 sm:pr-8 lg:pr-12 border-r border-slate-200">
                     <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#003399] to-[#1e40af] flex items-center justify-center shadow-lg shadow-blue-900/10">
@@ -188,7 +190,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     </div>
                     <div class="leading-tight">
                         <p class="text-sm sm:text-base font-black text-slate-900 tracking-tight">Technologies</p>
-                        <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mt-0.5">Maîtrisées</p>
+                        <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mt-0.5">{{ t('public.about.pill_tech') }}</p>
                     </div>
                 </div>
 
@@ -214,13 +216,13 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div class="w-full md:w-1/3 reveal-on-scroll md:sticky md:top-32">
                         <div class="inline-flex items-center gap-2 mb-2">
                             <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">Qui sommes-nous</span>
+                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">{{ t('public.about.who_we_are') }}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight leading-tight mb-6">
-                            Une vision, <br/>des experts terrain
+                            {{ t('public.about.vision_headline') }}
                         </h2>
                         <Link :href="route('realizations')" class="inline-flex items-center gap-2 text-[#2563EB] font-bold hover:underline">
-                            Voir nos réalisations <i class="pi pi-arrow-right text-sm"></i>
+                            {{ t('public.about.our_achievements') }} <i class="pi pi-arrow-right text-sm"></i>
                         </Link>
                     </div>
 
@@ -235,14 +237,14 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 <div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center mb-4 text-[#2563EB]">
                                     <i class="pi pi-bullseye text-xl"></i>
                                 </div>
-                                <h4 class="text-lg font-bold text-[#0B1221] mb-2">Notre mission</h4>
+                                <h4 class="text-lg font-bold text-[#0B1221] mb-2">{{ t('public.about.our_mission') }}</h4>
                                 <p class="text-sm text-slate-500 leading-relaxed">{{ mission }}</p>
                             </div>
                             <div class="reveal-on-scroll bg-[#F4F6F9] p-8 rounded-[1.25rem] border border-slate-100">
                                 <div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center mb-4 text-red-600">
                                     <i class="pi pi-eye text-xl"></i>
                                 </div>
-                                <h4 class="text-lg font-bold text-[#0B1221] mb-2">Notre vision</h4>
+                                <h4 class="text-lg font-bold text-[#0B1221] mb-2">{{ t('public.about.our_vision') }}</h4>
                                 <p class="text-sm text-slate-500 leading-relaxed">{{ vision }}</p>
                             </div>
                         </div>
@@ -279,8 +281,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
             <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-red-100 rounded-full blur-3xl opacity-50"></div>
             <div class="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
                 <div class="text-center mb-12 reveal-on-scroll">
-                    <p class="text-xs font-black text-red-500 uppercase tracking-[0.3em] mb-3">Nos engagements</p>
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter">Les valeurs qui nous guident</h2>
+                    <p class="text-xs font-black text-red-500 uppercase tracking-[0.3em] mb-3">{{ t('public.about.section_commitments') }}</p>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter">{{ t('public.about.values_title') }}</h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <div v-for="(value, i) in values" :key="i" class="reveal-on-scroll group bg-white p-6 rounded-xl border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300" :style="{ transitionDelay: (i % 4) * 70 + 'ms' }">
@@ -302,10 +304,10 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="text-center max-w-3xl mx-auto mb-12 reveal-on-scroll">
                     <div class="inline-flex items-center gap-2 mb-2 justify-center">
                         <span class="w-6 h-1 bg-red-600 rounded-full"></span>
-                        <span class="font-bold uppercase tracking-widest text-xs text-red-600">Nos expertises</span>
+                        <span class="font-bold uppercase tracking-widest text-xs text-red-600">{{ t('public.about.expertises') }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-[#0B1221] tracking-tighter">Formation & ingénierie, main dans la main</h2>
-                    <p class="text-slate-500 mt-4">Au-delà des cours, nous déployons et sécurisons les infrastructures qui comptent.</p>
+                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-[#0B1221] tracking-tighter">{{ t('public.about.form_and_eng') }}</h2>
+                    <p class="text-slate-500 mt-4">{{ t('public.about.services_sub') }}</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -329,16 +331,16 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div class="w-full lg:w-1/3 reveal-on-scroll lg:sticky lg:top-32">
                         <div class="inline-flex items-center gap-2 mb-2">
                             <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">Notre méthode</span>
+                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">{{ t('public.about.our_method') }}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight leading-tight mb-6">
-                            Une méthode éprouvée, <br/>du besoin au résultat
+                            {{ t('public.about.method_title') }}
                         </h2>
                         <p class="text-slate-500 leading-relaxed mb-8">
-                            Chaque mission suit le même cycle : comprendre, concevoir, former, mesurer. La qualité avant tout.
+                            {{ t('public.about.method_desc') }}
                         </p>
                         <Link :href="route('academy')" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#0B1221] text-white font-bold rounded-xl hover:bg-[#2563EB] transition-colors">
-                            Voir nos parcours <i class="pi pi-arrow-right"></i>
+                            {{ t('public.about.see_paths') }} <i class="pi pi-arrow-right"></i>
                         </Link>
                     </div>
 
@@ -367,11 +369,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div>
                         <div class="inline-flex items-center gap-2 mb-2">
                             <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">Notre équipe</span>
+                            <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">{{ t('public.about.our_team') }}</span>
                         </div>
-                        <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight">Les experts derrière la formation</h2>
+                        <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight">{{ t('public.about.team_title') }}</h2>
                     </div>
-                    <p class="text-slate-500 max-w-md">Des instructeurs et ingénieurs passionnés, au service de votre montée en compétences.</p>
+                    <p class="text-slate-500 max-w-md">{{ t('public.about.team_sub') }}</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -383,8 +385,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             </div>
                         </div>
                         <h3 class="text-lg font-black text-[#0B1221] mb-1">{{ member.name }}</h3>
-                        <p class="text-xs font-bold uppercase tracking-widest text-[#2563EB] mb-3">Instructeur Expert</p>
-                        <p class="text-sm text-slate-500 leading-relaxed line-clamp-3">{{ member.bio || 'Formateur certifié, spécialiste des infrastructures et de la cybersécurité.' }}</p>
+                        <p class="text-xs font-bold uppercase tracking-widest text-[#2563EB] mb-3">{{ t('public.about.expert_instructor') }}</p>
+                        <p class="text-sm text-slate-500 leading-relaxed line-clamp-3">{{ member.bio || t('public.about.bio_fallback') }}</p>
                     </div>
                 </div>
             </div>
@@ -398,9 +400,9 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="text-center max-w-3xl mx-auto mb-12 reveal-on-scroll">
                     <div class="inline-flex items-center gap-2 mb-2 justify-center">
                         <span class="w-6 h-1 bg-red-600 rounded-full"></span>
-                        <span class="font-bold uppercase tracking-widest text-xs text-red-600">Ils nous font confiance</span>
+                        <span class="font-bold uppercase tracking-widest text-xs text-red-600">{{ t('public.about.they_trust_us') }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-[#0B1221] tracking-tighter">Ce que disent nos apprenants</h2>
+                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-[#0B1221] tracking-tighter">{{ t('public.about.voice_learners') }}</h2>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -413,7 +415,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <img :src="t.avatar || `${DEFAULT_AVATAR}${t.name || 'X'}`" class="w-11 h-11 rounded-full object-cover border-2 border-white shadow" :alt="t.name" />
                             <div>
                                 <p class="text-sm font-black text-[#0B1221]">{{ t.name }}</p>
-                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ t.role || 'Apprenant' }}</p>
+                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">{{ t.role || t('public.about.learner_fallback') }}</p>
                             </div>
                         </figcaption>
                     </figure>
@@ -426,14 +428,14 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         <!-- ================================================================== -->
         <section class="py-20 bg-white border-t border-slate-100 text-center">
             <div class="max-w-[800px] mx-auto px-4 reveal-on-scroll">
-                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">Prêt à rejoindre l'aventure ?</h2>
-                <p class="text-lg text-slate-500 mb-10">Créez votre compte et accédez dès maintenant à nos formations.</p>
+                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">{{ t('public.about.cta_ready') }}</h2>
+                <p class="text-lg text-slate-500 mb-10">{{ t('public.about.cta_ready_sub') }}</p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link :href="route('register')" class="w-full sm:w-auto px-10 py-4 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 text-base">
-                        Créer un compte gratuit
+                        {{ t('public.about.cta_create_account') }}
                     </Link>
                     <Link :href="route('academy')" class="w-full sm:w-auto px-10 py-4 bg-[#F4F6F9] text-[#0B1221] font-bold rounded-xl hover:bg-slate-200 transition-colors text-base">
-                        Voir le catalogue
+                        {{ t('public.about.cta_view_catalog') }}
                     </Link>
                 </div>
             </div>

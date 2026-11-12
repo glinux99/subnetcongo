@@ -10,6 +10,9 @@ import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // Définition des props avec des valeurs de secours sécurisées
 const props = defineProps({
@@ -59,17 +62,17 @@ const submit = () => {
         preserveScroll: true,
         forceFormData: true, // IMPORTANT : Requis pour l'envoi de fichiers (multipart/form-data)
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Succès', detail: 'Les paramètres du thème ont été mis à jour.', life: 3000 });
+            toast.add({ severity: 'success', summary: t('pages.web_theme.toastSuccessSummary'), detail: t('pages.web_theme.toastSuccessDetail'), life: 3000 });
         },
         onError: () => {
-            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez vérifier les erreurs dans le formulaire.', life: 4000 });
+            toast.add({ severity: 'error', summary: t('pages.web_theme.toastErrorSummary'), detail: t('pages.web_theme.toastErrorDetail'), life: 4000 });
         }
     });
 };
 </script>
 
 <template>
-    <Head title="Configuration du Thème" />
+    <Head :title="t('pages.web_theme.title')" />
 
     <AppLayout>
 
@@ -90,25 +93,25 @@ const submit = () => {
                         <div class="space-y-4 max-w-3xl">
                             <!-- Badge -->
                             <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                                Global Settings
+                                {{ t('pages.web_theme.badge') }}
                             </span>
 
                             <!-- Titre Principal (Italique, gras, 2 couleurs) -->
                             <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                                <span class="text-white">Identité &</span>
-                                <span class="text-[#E92B2B]">Thème Visuel</span>
+                                <span class="text-white">{{ t('pages.web_theme.heading1') }}</span>
+                                <span class="text-[#E92B2B]">{{ t('pages.web_theme.heading2') }}</span>
                             </h1>
 
                             <!-- Sous-titre -->
                             <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                                Personnalisez l'apparence globale de la plateforme. Gérez votre logo, les informations de contact et les liens de vos réseaux sociaux pour renforcer votre marque.
+                                {{ t('pages.web_theme.subtitle') }}
                             </p>
                         </div>
 
                         <!-- Partie Droite (Boutons d'action rapides si besoin) -->
                         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                             <Button 
-                                label="Voir la vitrine" 
+                                :label="t('pages.web_theme.viewSite')"
                                 icon="pi pi-external-link" 
                                 class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
                                 as="a" 
@@ -137,25 +140,25 @@ const submit = () => {
                                     <div class="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
                                         <i class="pi pi-id-card text-blue-500"></i>
                                     </div>
-                                    Informations Générales
+                                    {{ t('pages.web_theme.generalInfo') }}
                                 </h2>
                             </div>
                             <div class="p-6 space-y-5">
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Nom du site</label>
-                                    <InputText v-model="form.site_name" class="w-full bg-slate-50 border-slate-200 font-medium" placeholder="Ex: SubnetCongo" />
+                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">{{ t('pages.web_theme.siteName') }}</label>
+                                    <InputText v-model="form.site_name" class="w-full bg-slate-50 border-slate-200 font-medium" :placeholder="t('pages.web_theme.siteNamePlaceholder')" />
                                     <p v-if="form.errors.site_name" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.site_name }}</p>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Slogan (Tagline)</label>
-                                    <InputText v-model="form.site_tagline" class="w-full bg-slate-50 border-slate-200 font-medium" placeholder="Ex: Leader de la formation IT" />
+                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">{{ t('pages.web_theme.tagline') }}</label>
+                                    <InputText v-model="form.site_tagline" class="w-full bg-slate-50 border-slate-200 font-medium" :placeholder="t('pages.web_theme.taglinePlaceholder')" />
                                     <p v-if="form.errors.site_tagline" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.site_tagline }}</p>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Description (SEO)</label>
-                                    <Textarea v-model="form.site_description" rows="4" class="w-full bg-slate-50 border-slate-200 font-medium resize-none" placeholder="Décrivez votre activité pour les moteurs de recherche..."></Textarea>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">{{ t('pages.web_theme.description') }}</label>
+                                    <Textarea v-model="form.site_description" rows="4" class="w-full bg-slate-50 border-slate-200 font-medium resize-none" :placeholder="t('pages.web_theme.descriptionPlaceholder')"></Textarea>
                                     <p v-if="form.errors.site_description" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.site_description }}</p>
                                 </div>
                             </div>
@@ -168,7 +171,7 @@ const submit = () => {
                                     <div class="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
                                         <i class="pi pi-share-alt text-blue-500"></i>
                                     </div>
-                                    Réseaux Sociaux
+                                    {{ t('pages.web_theme.socialNetworks') }}
                                 </h2>
                             </div>
                             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -223,21 +226,21 @@ const submit = () => {
                                     <div class="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center">
                                         <i class="pi pi-image text-amber-500"></i>
                                     </div>
-                                    Médias
+                                    {{ t('pages.web_theme.media') }}
                                 </h2>
                             </div>
                             <div class="p-6 space-y-6">
 
                                 <!-- Logo principal -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-3">Logo Principal</label>
+                                    <label class="block text-sm font-bold text-slate-700 mb-3">{{ t('pages.web_theme.mainLogo') }}</label>
                                     <div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors relative">
                                         <img v-if="logoPreview" :src="logoPreview" class="h-24 mx-auto object-contain mb-3 drop-shadow-sm" alt="Logo preview" />
                                         <div v-else class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <i class="pi pi-image text-xl text-slate-400"></i>
                                         </div>
                                         <label class="cursor-pointer inline-block mt-2">
-                                            <span class="text-sm font-bold px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">Changer le logo</span>
+                                            <span class="text-sm font-bold px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">{{ t('pages.web_theme.changeLogo') }}</span>
                                             <input type="file" class="hidden" accept="image/*" @change="e => handleFileChange(e, 'logo')" />
                                         </label>
                                     </div>
@@ -250,7 +253,7 @@ const submit = () => {
                                     <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors relative flex flex-col items-center justify-center">
                                         <img v-if="faviconPreview" :src="faviconPreview" class="h-10 w-10 object-contain mb-3 rounded" alt="Favicon preview" />
                                         <label class="cursor-pointer">
-                                            <span class="text-xs font-bold text-blue-600 hover:text-blue-700 underline">Changer l'icône</span>
+                                            <span class="text-xs font-bold text-blue-600 hover:text-blue-700 underline">{{ t('pages.web_theme.changeIcon') }}</span>
                                             <input type="file" class="hidden" accept="image/x-icon,image/png" @change="e => handleFileChange(e, 'favicon')" />
                                         </label>
                                     </div>
@@ -266,12 +269,12 @@ const submit = () => {
                                     <div class="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
                                         <i class="pi pi-envelope text-emerald-500"></i>
                                     </div>
-                                    Coordonnées
+                                    {{ t('pages.web_theme.contactInfo') }}
                                 </h2>
                             </div>
                             <div class="p-6 space-y-5">
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Email Officiel</label>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">{{ t('pages.web_theme.officialEmail') }}</label>
                                     <IconField iconPosition="left">
                                         <InputIcon class="pi pi-at text-slate-400" />
                                         <InputText v-model="form.contact_email" type="email" placeholder="contact@domaine.com" class="w-full bg-slate-50 border-slate-200 font-medium" />
@@ -279,15 +282,15 @@ const submit = () => {
                                     <p v-if="form.errors.contact_email" class="text-red-500 text-xs font-bold mt-1">{{ form.errors.contact_email }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Téléphone</label>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1.5">{{ t('pages.web_theme.phone') }}</label>
                                     <IconField iconPosition="left">
                                         <InputIcon class="pi pi-phone text-slate-400" />
                                         <InputText v-model="form.contact_phone" type="text" placeholder="+243 000 000 000" class="w-full bg-slate-50 border-slate-200 font-medium" />
                                     </IconField>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">Adresse Physique</label>
-                                    <Textarea v-model="form.contact_address" rows="3" class="w-full bg-slate-50 border-slate-200 font-medium resize-none" placeholder="Votre adresse complète..."></Textarea>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">{{ t('pages.web_theme.physicalAddress') }}</label>
+                                    <Textarea v-model="form.contact_address" rows="3" class="w-full bg-slate-50 border-slate-200 font-medium resize-none" :placeholder="t('pages.web_theme.addressPlaceholder')"></Textarea>
                                 </div>
                             </div>
                         </div>
@@ -301,12 +304,12 @@ const submit = () => {
                 <div class="fixed bottom-0 left-0 right-0 md:left-[16rem] lg:left-[18rem] bg-white/80 backdrop-blur-md border-t border-slate-200 p-4 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] z-40 flex justify-end transition-all">
                     <div class="w-full flex items-center justify-end px-6 gap-4">
                         <span v-if="form.isDirty" class="text-amber-600 text-sm font-bold animate-pulse mr-auto flex items-center gap-2">
-                            <i class="pi pi-exclamation-circle"></i> Modifications non enregistrées
+                            <i class="pi pi-exclamation-circle"></i> {{ t('pages.web_theme.unsavedChanges') }}
                         </span>
 
                         <Button 
                             type="button" 
-                            label="Annuler" 
+                            :label="t('pages.web_theme.cancel')" 
                             @click="form.reset()" 
                             :disabled="!form.isDirty" 
                             class="p-button-text p-button-secondary font-bold text-slate-600 px-6" 
@@ -314,7 +317,7 @@ const submit = () => {
                         
                         <Button 
                             type="submit" 
-                            label="Enregistrer le thème" 
+                            :label="t('pages.web_theme.saveTheme')" 
                             :icon="form.processing ? 'pi pi-spin pi-spinner' : 'pi pi-save'" 
                             :disabled="form.processing || !form.isDirty" 
                             class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white font-bold shadow-lg shadow-red-900/50 transition-colors px-8 py-2.5" 

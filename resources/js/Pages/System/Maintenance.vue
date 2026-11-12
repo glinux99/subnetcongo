@@ -6,6 +6,9 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Tag from 'primevue/tag';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     scheduled_tasks: { type: Array, default: () => [] },
@@ -39,18 +42,18 @@ const severityMap = {
 
 <template>
     <AppLayout>
-        <Head title="Maintenance Serveur" />
+        <Head :title="t('pages.maintenance.head_title')" />
         <div class="page-bg min-h-screen font-sans">
             <PageHeader
-                title="Maintenance serveur"
+                :title="t('pages.maintenance.page_title')"
                 :subtitle="is_maintenance_mode
-                    ? 'Mode maintenance ACTIF — le site est actuellement indisponible aux visiteurs'
-                    : 'Surveillance serveur, santé système et outils de maintenance'"
+                    ? t('pages.maintenance.maintenance_on')
+                    : t('pages.maintenance.maintenance_off')"
                 icon="pi-server"
                 :accent="is_maintenance_mode ? 'red' : 'slate'"
-                badge="Système"
+                :badge="t('pages.maintenance.badge_system')"
                 :actions="[
-                    { label: 'Rafraîchir', icon: 'pi-refresh', variant: 'secondary', onClick: () => router.reload() },
+                    { label: t('pages.maintenance.refresh'), icon: 'pi-refresh', variant: 'secondary', onClick: () => router.reload() },
                 ]"
             />
             <div class="page-container page-section space-y-8">
@@ -60,7 +63,7 @@ const severityMap = {
                     <TabView v-model:activeIndex="activeTab" class="custom-tabview">
                         
                         <!-- TAB 1 : DASHBOARD -->
-                        <TabPanel header="Tableau de bord">
+                        <TabPanel :header="t('pages.maintenance.tab_dashboard')">
                             
                             <!-- 4 Cartes de métriques (Widgets) -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4 p-4">
@@ -69,7 +72,7 @@ const severityMap = {
                                 <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
-                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Espace Disque</p>
+                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.disk') }}</p>
                                             <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.disk?.percent || 0 }}%</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
@@ -79,14 +82,14 @@ const severityMap = {
                                     <div class="w-full bg-slate-100 rounded-full h-1.5 mb-2">
                                         <div class="h-1.5 rounded-full" :class="getProgressColor(system_health?.disk?.percent || 0)" :style="`width: ${system_health?.disk?.percent || 0}%`"></div>
                                     </div>
-                                    <p class="text-xs font-semibold text-slate-500">{{ system_health?.disk?.used || '0 GB' }} utilisés sur {{ system_health?.disk?.total || '0 GB' }}</p>
+                                    <p class="text-xs font-semibold text-slate-500">{{ t('pages.maintenance.used_of', { used: system_health?.disk?.used || '0 GB', total: system_health?.disk?.total || '0 GB' }) }}</p>
                                 </div>
 
                                 <!-- RAM -->
                                 <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
-                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mémoire RAM</p>
+                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.memory') }}</p>
                                             <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.memory?.percent || 0 }}%</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
@@ -96,14 +99,14 @@ const severityMap = {
                                     <div class="w-full bg-slate-100 rounded-full h-1.5 mb-2">
                                         <div class="h-1.5 rounded-full" :class="getProgressColor(system_health?.memory?.percent || 0)" :style="`width: ${system_health?.memory?.percent || 0}%`"></div>
                                     </div>
-                                    <p class="text-xs font-semibold text-slate-500">{{ system_health?.memory?.used || '0 GB' }} utilisés sur {{ system_health?.memory?.total || '0 GB' }}</p>
+                                    <p class="text-xs font-semibold text-slate-500">{{ t('pages.maintenance.used_of', { used: system_health?.memory?.used || '0 GB', total: system_health?.memory?.total || '0 GB' }) }}</p>
                                 </div>
 
                                 <!-- CPU -->
                                 <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
-                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Charge CPU</p>
+                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.cpu') }}</p>
                                             <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.cpu_load?.['1min'] || '0.00' }}</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
@@ -120,7 +123,7 @@ const severityMap = {
                                 <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
-                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Base de données</p>
+                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.database') }}</p>
                                             <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.database?.size || 'N/A' }}</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
@@ -129,7 +132,7 @@ const severityMap = {
                                     </div>
                                     <div class="mt-6 flex items-center gap-2">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <p class="text-xs font-semibold text-slate-600">Connecté ({{ system_health?.database?.connection || 'MySQL' }})</p>
+                                        <p class="text-xs font-semibold text-slate-600">{{ t('pages.maintenance.connected', { connection: system_health?.database?.connection || 'MySQL' }) }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -141,7 +144,7 @@ const severityMap = {
                                 <div class="border border-slate-200 rounded-xl overflow-hidden flex flex-col">
                                     <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                                         <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                                            <i class="pi pi-calendar text-slate-400"></i> Tâches planifiées (Cron)
+                                            <i class="pi pi-calendar text-slate-400"></i> {{ t('pages.maintenance.cron_tasks') }}
                                         </h3>
                                         <Tag :value="scheduled_tasks.length" severity="secondary" rounded />
                                     </div>
@@ -154,7 +157,7 @@ const severityMap = {
                                                     </div>
                                                     <div>
                                                         <p class="font-bold text-sm text-slate-900">{{ task.title }}</p>
-                                                        <p class="text-xs text-slate-500 font-medium mt-0.5">{{ task.type }} • Exécution : {{ task.scheduled_at }}</p>
+                                                        <p class="text-xs text-slate-500 font-medium mt-0.5">{{ task.type }} • {{ t('pages.maintenance.execution') }} : {{ task.scheduled_at }}</p>
                                                     </div>
                                                 </div>
                                                 <Tag :value="task.severity" :severity="severityMap[task.severity] || 'info'" class="text-[10px] uppercase font-bold" />
@@ -162,7 +165,7 @@ const severityMap = {
                                         </div>
                                         <div v-else class="h-full flex flex-col items-center justify-center py-10 text-slate-400">
                                             <i class="pi pi-inbox text-4xl mb-3 opacity-50"></i>
-                                            <p class="text-sm font-medium">Aucune tâche planifiée</p>
+                                            <p class="text-sm font-medium">{{ t('pages.maintenance.no_tasks') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -171,7 +174,7 @@ const severityMap = {
                                 <div class="border border-slate-200 rounded-xl overflow-hidden flex flex-col">
                                     <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
                                         <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                                            <i class="pi pi-history text-slate-400"></i> Historique Système
+                                            <i class="pi pi-history text-slate-400"></i> {{ t('pages.maintenance.system_history') }}
                                         </h3>
                                     </div>
                                     <div class="p-4 flex-1">
@@ -179,14 +182,14 @@ const severityMap = {
                                             <div v-for="item in history" :key="item.id" class="flex items-center justify-between p-4 bg-white border border-slate-100 shadow-sm rounded-lg hover:border-blue-200 transition-colors">
                                                 <div>
                                                     <p class="font-bold text-sm text-slate-900">{{ item.title }}</p>
-                                                    <p class="text-xs text-slate-500 font-medium mt-0.5">Le {{ item.created_at }}</p>
+                                                    <p class="text-xs text-slate-500 font-medium mt-0.5">{{ t('pages.maintenance.at_date', { date: item.created_at }) }}</p>
                                                 </div>
                                                 <Tag :value="item.status" severity="info" class="text-[10px] uppercase font-bold" />
                                             </div>
                                         </div>
                                         <div v-else class="h-full flex flex-col items-center justify-center py-10 text-slate-400">
                                             <i class="pi pi-clock text-4xl mb-3 opacity-50"></i>
-                                            <p class="text-sm font-medium">Aucun historique récent</p>
+                                            <p class="text-sm font-medium">{{ t('pages.maintenance.no_history') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -195,7 +198,7 @@ const severityMap = {
                         </TabPanel>
 
                         <!-- TAB 2 : LOGS -->
-                        <TabPanel header="Logs Système">
+                        <TabPanel :header="t('pages.maintenance.tab_logs')">
                             <div class="p-4">
                                 <!-- Faux Terminal Mac/Linux -->
                                 <div class="bg-[#0f172a] rounded-xl shadow-2xl overflow-hidden border border-slate-700">
@@ -213,14 +216,14 @@ const severityMap = {
                                     </div>
                                     <!-- Contenu Terminal -->
                                     <div class="p-6 overflow-y-auto max-h-[600px] custom-scrollbar">
-                                        <pre class="text-emerald-400 text-xs font-mono whitespace-pre-wrap leading-relaxed">{{ logs.length ? logs.join('\n') : 'Aucun log système trouvé. Le système fonctionne parfaitement.' }}</pre>
+                                        <pre class="text-emerald-400 text-xs font-mono whitespace-pre-wrap leading-relaxed">{{ logs.length ? logs.join('\n') : t('pages.maintenance.no_system_logs') }}</pre>
                                     </div>
                                 </div>
                             </div>
                         </TabPanel>
 
                         <!-- TAB 3 : PHP INFO -->
-                        <TabPanel header="Informations PHP">
+                        <TabPanel :header="t('pages.maintenance.tab_phpinfo')">
                             <div class="p-4">
                                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 overflow-x-auto max-h-[700px] custom-scrollbar phpinfo-wrapper" v-html="info"></div>
                             </div>

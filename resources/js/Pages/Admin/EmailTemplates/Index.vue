@@ -6,6 +6,9 @@ import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     templates: { type: Array, default: () => [] },
@@ -15,21 +18,21 @@ const props = defineProps({
 const search = ref('');
 const selectedCategory = ref('');
 
-const categories = [
-    { label: 'Tous', value: '' },
-    { label: 'Certificats', value: 'certificate' },
-    { label: 'Inscriptions', value: 'enrollment' },
-    { label: 'Cours', value: 'course' },
-    { label: 'Examens', value: 'exam' },
-    { label: 'Bienvenue', value: 'welcome' },
-    { label: 'Support', value: 'support' },
-    { label: 'Paiements', value: 'payment' },
-    { label: 'Sécurité', value: 'security' },
-    { label: 'Sessions live', value: 'live_session' },
-    { label: 'Marketing', value: 'marketing' },
-];
+const categories = computed(() => [
+    { label: t('pages.admin_email_templates.cat_all'), value: '' },
+    { label: t('pages.admin_email_templates.cat_certificate'), value: 'certificate' },
+    { label: t('pages.admin_email_templates.cat_enrollment'), value: 'enrollment' },
+    { label: t('pages.admin_email_templates.cat_course'), value: 'course' },
+    { label: t('pages.admin_email_templates.cat_exam'), value: 'exam' },
+    { label: t('pages.admin_email_templates.cat_welcome'), value: 'welcome' },
+    { label: t('pages.admin_email_templates.cat_support'), value: 'support' },
+    { label: t('pages.admin_email_templates.cat_payment'), value: 'payment' },
+    { label: t('pages.admin_email_templates.cat_security'), value: 'security' },
+    { label: t('pages.admin_email_templates.cat_live_session'), value: 'live_session' },
+    { label: t('pages.admin_email_templates.cat_marketing'), value: 'marketing' },
+]);
 
-const getCategoryLabel = (cat) => categories.find(c => c.value === cat)?.label || cat;
+const getCategoryLabel = (cat) => categories.value.find(c => c.value === cat)?.label || cat;
 
 const getCategoryIcon = (cat) => {
     const icons = {
@@ -78,37 +81,37 @@ const hasResults = computed(() => Object.keys(filteredGrouped.value).length > 0)
 
 const getEventLabel = (event) => {
     const labels = {
-        'certificate_generated': 'Certificat généré',
-        'enrollment_confirmed': 'Inscription confirmée',
-        'course_added': 'Cours ajouté',
-        'exam_passed': 'Examen réussi',
-        'exam_failed': 'Examen échoué',
-        'welcome': 'Bienvenue',
-        'password_reset': 'Réinitialisation mot de passe',
-        'password_changed': 'Mot de passe modifié',
-        'email_verification': 'Vérification email',
-        'enrollment_request_received': 'Demande d\'inscription reçue',
-        'enrollment_request_admin': 'Alerte demande d\'inscription',
-        'enrollment_rejected': 'Inscription refusée',
-        'enrollment_revoked': 'Accès révoqué',
-        'course_completed': 'Cours terminé',
-        'assignment_graded': 'Devoir corrigé',
-        'live_session_started': 'Session live démarrée',
-        'live_session_reminder': 'Rappel session live',
-        'payment_received': 'Paiement reçu',
-        'payment_failed': 'Paiement échoué',
-        'refund_issued': 'Remboursement',
-        'subscription_expiring': 'Abonnement expire',
-        'support_ticket_created': 'Ticket support créé',
-        'contact_confirmation': 'Confirmation contact',
+        'certificate_generated': t('pages.admin_email_templates.event_certificate_generated'),
+        'enrollment_confirmed': t('pages.admin_email_templates.event_enrollment_confirmed'),
+        'course_added': t('pages.admin_email_templates.event_course_added'),
+        'exam_passed': t('pages.admin_email_templates.event_exam_passed'),
+        'exam_failed': t('pages.admin_email_templates.event_exam_failed'),
+        'welcome': t('pages.admin_email_templates.event_welcome'),
+        'password_reset': t('pages.admin_email_templates.event_password_reset'),
+        'password_changed': t('pages.admin_email_templates.event_password_changed'),
+        'email_verification': t('pages.admin_email_templates.event_email_verification'),
+        'enrollment_request_received': t('pages.admin_email_templates.event_enrollment_request_received'),
+        'enrollment_request_admin': t('pages.admin_email_templates.event_enrollment_request_admin'),
+        'enrollment_rejected': t('pages.admin_email_templates.event_enrollment_rejected'),
+        'enrollment_revoked': t('pages.admin_email_templates.event_enrollment_revoked'),
+        'course_completed': t('pages.admin_email_templates.event_course_completed'),
+        'assignment_graded': t('pages.admin_email_templates.event_assignment_graded'),
+        'live_session_started': t('pages.admin_email_templates.event_live_session_started'),
+        'live_session_reminder': t('pages.admin_email_templates.event_live_session_reminder'),
+        'payment_received': t('pages.admin_email_templates.event_payment_received'),
+        'payment_failed': t('pages.admin_email_templates.event_payment_failed'),
+        'refund_issued': t('pages.admin_email_templates.event_refund_issued'),
+        'subscription_expiring': t('pages.admin_email_templates.event_subscription_expiring'),
+        'support_ticket_created': t('pages.admin_email_templates.event_support_ticket_created'),
+        'contact_confirmation': t('pages.admin_email_templates.event_contact_confirmation'),
     };
-    return labels[event] || event || 'Événement manuel';
+    return labels[event] || event || t('pages.admin_email_templates.event_manual');
 };
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Modèles d'emails" />
+        <Head :title="t('pages.admin_email_templates.page_title')" />
         <div class="min-h-screen bg-[#f1f5f9] pb-20 font-sans">
             
             <!-- HEADER (Style uniforme avec Nouveau Message) -->
@@ -119,21 +122,21 @@ const getEventLabel = (event) => {
                     <div>
                         <div class="mb-3">
                             <span class="border border-red-500/30 bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wider">
-                                SYSTÈME
+                                {{ t('pages.admin_email_templates.badge') }}
                             </span>
                         </div>
                         <h1 class="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase italic flex flex-wrap items-center gap-x-3">
-                            MODÈLES <span class="text-[#ef4444]">D'EMAILS</span>
+                            {{ t('pages.admin_email_templates.hero_title_1') }} <span class="text-[#ef4444]">{{ t('pages.admin_email_templates.hero_title_2') }}</span>
                         </h1>
                         <p class="text-slate-400 mt-3 text-sm italic max-w-xl">
-                            Configurez et gérez les messages automatiques envoyés à vos utilisateurs selon les différents événements de la plateforme.
+                            {{ t('pages.admin_email_templates.hero_subtitle') }}
                         </p>
                     </div>
 
                     <!-- Statistiques rapides (Optionnel, ajoute du cachet) -->
                     <div class="flex gap-4">
                         <div class="bg-white/5 border border-white/10 rounded-xl p-4 min-w-[120px]">
-                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Modèles</div>
+                            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">{{ t('pages.admin_email_templates.kpi_total') }}</div>
                             <div class="text-2xl font-black text-white">{{ templates?.length || 0 }}</div>
                         </div>
                     </div>
@@ -148,7 +151,7 @@ const getEventLabel = (event) => {
                         <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
                         <InputText
                             v-model="search"
-                            placeholder="Rechercher un modèle (nom, clé, sujet)..."
+                            :placeholder="t('pages.admin_email_templates.search_placeholder')"
                             class="!rounded-lg w-full !pl-11 !py-3 !border-none !bg-slate-50 focus:!bg-blue-50/50 transition-colors placeholder:text-slate-400 font-medium"
                         />
                     </div>
@@ -158,7 +161,7 @@ const getEventLabel = (event) => {
                             :options="categories"
                             optionLabel="label"
                             optionValue="value"
-                            placeholder="Toutes les catégories"
+                            :placeholder="t('pages.admin_email_templates.category_placeholder')"
                             class="w-full !rounded-lg !border-none !bg-slate-50 !py-1 font-medium shadow-none"
                         />
                     </div>
@@ -177,7 +180,7 @@ const getEventLabel = (event) => {
                                 {{ getCategoryLabel(category) }}
                             </h2>
                             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                                {{ templatesGroup.length }} modèle{{ templatesGroup.length > 1 ? 's' : '' }}
+                                {{ t('pages.admin_email_templates.templates_count', { count: templatesGroup.length }) }}
                             </p>
                         </div>
                         <div class="flex-1 h-px bg-slate-200 ml-4"></div>
@@ -206,7 +209,7 @@ const getEventLabel = (event) => {
                                     </div>
                                 </div>
                                 <Tag
-                                    :value="template.is_active ? 'Actif' : 'Inactif'"
+                                    :value="template.is_active ? t('pages.admin_email_templates.status_active') : t('pages.admin_email_templates.status_inactive')"
                                     :severity="template.is_active ? 'success' : 'secondary'"
                                     class="!text-[10px] !font-bold !px-2 !py-0.5 flex-shrink-0 !rounded-md"
                                 />
@@ -214,14 +217,14 @@ const getEventLabel = (event) => {
 
                             <div class="bg-slate-50 rounded-lg p-3 mb-5 flex-1 border border-slate-100">
                                 <p class="text-sm font-medium text-slate-700 line-clamp-2">
-                                    <span class="text-slate-400 font-normal mr-1">Sujet :</span>
-                                    {{ template.subject || '(Aucun objet défini)' }}
+                                    <span class="text-slate-400 font-normal mr-1">{{ t('pages.admin_email_templates.subject_label') }}</span>
+                                    {{ template.subject || t('pages.admin_email_templates.no_subject') }}
                                 </p>
                             </div>
 
                             <!-- Variables -->
                             <div class="mb-5">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Variables disponibles</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{{ t('pages.admin_email_templates.variables_title') }}</p>
                                 <div v-if="template.variables && template.variables.length" class="flex flex-wrap gap-1.5">
                                     <span
                                         v-for="variable in template.variables.slice(0, 3)"
@@ -238,7 +241,7 @@ const getEventLabel = (event) => {
                                         +{{ template.variables.length - 3 }}
                                     </span>
                                 </div>
-                                <div v-else class="text-xs text-slate-400 italic">Aucune variable</div>
+                                <div v-else class="text-xs text-slate-400 italic">{{ t('pages.admin_email_templates.no_variables') }}</div>
                             </div>
 
                             <!-- Footer Carte -->
@@ -249,7 +252,7 @@ const getEventLabel = (event) => {
                                 </div>
                                 
                                 <Link :href="route('admin.email-templates.show', template.id)">
-                                    <button class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-blue-600 hover:text-white transition-colors duration-200" v-tooltip.top="'Modifier le modèle'">
+                                    <button class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-blue-600 hover:text-white transition-colors duration-200" v-tooltip.top="t('pages.admin_email_templates.tooltip_edit')">
                                         <i class="pi pi-pencil text-sm"></i>
                                     </button>
                                 </Link>
@@ -263,13 +266,13 @@ const getEventLabel = (event) => {
                     <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)]">
                         <i class="pi pi-search text-3xl text-slate-300"></i>
                     </div>
-                    <h3 class="text-xl font-black text-slate-800">Aucun modèle trouvé</h3>
+                    <h3 class="text-xl font-black text-slate-800">{{ t('pages.admin_email_templates.empty_title') }}</h3>
                     <p class="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-                        Nous n'avons trouvé aucun modèle correspondant à vos critères. Essayez de modifier votre recherche ou de changer de catégorie.
+                        {{ t('pages.admin_email_templates.empty_subtitle') }}
                     </p>
                     <Button
                         v-if="search || selectedCategory"
-                        label="Réinitialiser les filtres"
+                        :label="t('pages.admin_email_templates.btn_reset_filters')"
                         icon="pi pi-refresh"
                         outlined
                         @click="search = ''; selectedCategory = ''"

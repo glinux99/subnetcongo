@@ -10,6 +10,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -97,8 +99,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <template>
-    <Head :title="`Réalisations - ${identity.site_name || 'SubnetCongo'}`">
-        <meta name="description" content="Découvrez nos réalisations : déploiements réseaux, formations et projets infrastructure en RDC.">
+    <Head :title="`${t('public.real.head_title')} - ${identity.site_name || 'SubnetCongo'}`">
+        <meta name="description" :content="t('public.real.hero_desc')">
     </Head>
 
     <AppLayout>
@@ -119,15 +121,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="max-w-3xl space-y-5 sm:space-y-6">
                     <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white reveal-on-scroll">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Nos réalisations</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">{{ t('public.real.hero_pill') }}</span>
                     </div>
 
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight reveal-on-scroll delay-100">
-                        Nos <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">réalisations</span>
+                        {{ t('public.real.hero_title') }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">{{ t('public.real.hero_pill') }}</span>
                     </h1>
 
                     <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5 reveal-on-scroll delay-200">
-                        Électricité, sécurité, réseaux et formation — chantiers livrés en République Démocratique du Congo, Goma et Provinces.
+                        {{ t('public.real.hero_desc') }}
                     </p>
 
                     <div class="flex flex-wrap gap-4 pt-2 reveal-on-scroll delay-300">
@@ -135,7 +137,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             Voir nos chantiers <i class="pi pi-arrow-down" aria-hidden="true"></i>
                         </a>
                         <Link :href="route('contact')" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-base transition-all flex items-center gap-2">
-                            Parler à un ingénieur <i class="pi pi-briefcase" aria-hidden="true"></i>
+                            {{ t('public.real.cta_engineer') }} <i class="pi pi-briefcase" aria-hidden="true"></i>
                         </Link>
                     </div>
                 </div>
@@ -154,7 +156,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <i class="pi pi-briefcase text-xl"></i>
                         </div>
                         <span class="text-3xl lg:text-4xl font-black tracking-tighter text-[#0B1221]">{{ stats.total }}</span>
-                        <p class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mt-1">Projets livrés</p>
+                        <p class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mt-1">{{ t('public.real.stat_projects') }}</p>
                     </div>
                     <div class="reveal-on-scroll bg-white p-6 lg:p-8 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center text-center">
                         <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3" style="backgroundColor: '#E1251B15', color: '#E1251B'">
@@ -168,7 +170,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <i class="pi pi-building text-xl"></i>
                         </div>
                         <span class="text-3xl lg:text-4xl font-black tracking-tighter text-[#0B1221]">{{ stats.withClient }}</span>
-                        <p class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mt-1">Clients accompagnés</p>
+                        <p class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mt-1">{{ t('public.real.stat_clients') }}</p>
                     </div>
                 </div>
             </div>
@@ -256,7 +258,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                     </span>
                                 </div>
                                 <span class="flex items-center gap-2 text-xs font-bold text-[#2563EB] group-hover:gap-3 transition-all">
-                                    Détails <i class="pi pi-arrow-right text-[10px]"></i>
+                                    {{ t('public.real.details') }} <i class="pi pi-arrow-right text-[10px]"></i>
                                 </span>
                             </div>
                         </div>
@@ -269,7 +271,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                         <i class="pi pi-folder-open text-3xl text-slate-300"></i>
                     </div>
                     <p class="text-lg font-bold text-slate-600">Aucune réalisation{{ search ? ` pour "${search}"` : '' }} pour le moment.</p>
-                    <button v-if="search || activeCategory" @click="search = ''; applyFilters('')" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">Réinitialiser les filtres</button>
+                    <button v-if="search || activeCategory" @click="search = ''; applyFilters('')" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">{{ t('public.real.reset') }}</button>
                 </div>
 
                 <!-- Pagination -->
@@ -290,7 +292,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div class="w-full md:w-1/3 reveal-on-scroll">
                         <div class="inline-flex items-center gap-2 mb-2">
                             <span class="w-6 h-1 bg-red-600 rounded-full"></span>
-                            <span class="font-bold uppercase tracking-widest text-xs text-red-600">Ingénierie & Terrain</span>
+                            <span class="font-bold uppercase tracking-widest text-xs text-red-600">{{ t('public.real.b2b_pill') }}</span>
                         </div>
                         <h2 class="text-3xl md:text-5xl font-black text-[#0B1221] tracking-tight leading-tight mb-6">
                             Des projets qui <br/>tiennent la route
@@ -299,7 +301,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             Chaque réalisation est le fruit d'une expertise terrain : audit, déploiement, formation et accompagnement long terme.
                         </p>
                         <Link :href="route('contact')" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors">
-                            Démarrer votre projet
+                            {{ t('public.real.start_project') }}
                         </Link>
                     </div>
 
@@ -309,15 +311,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center mb-4 text-[#0B1221]">
                                 <i class="pi pi-sitemap text-xl"></i>
                             </div>
-                            <h4 class="text-lg font-bold text-[#0B1221] mb-2">Infrastructures Réseaux</h4>
+                            <h4 class="text-lg font-bold text-[#0B1221] mb-2">{{ t('public.real.cat_network') }}</h4>
                             <p class="text-sm text-slate-500 leading-relaxed">Conception et déploiement de LAN/WAN d'entreprise, datacenters et points d'accès critiques.</p>
                         </div>
                         <div class="reveal-on-scroll bg-[#F4F6F9] p-8 rounded-[1.25rem] hover:bg-white hover:shadow-lg border border-transparent hover:border-slate-200 transition-all">
                             <div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center mb-4 text-[#0B1221]">
                                 <i class="pi pi-shield text-xl"></i>
                             </div>
-                            <h4 class="text-lg font-bold text-[#0B1221] mb-2">Cybersécurité</h4>
-                            <p class="text-sm text-slate-500 leading-relaxed">Audits, durcissement des infrastructures et déploiement de solutions de supervision SOC/NOC.</p>
+                            <h4 class="text-lg font-bold text-[#0B1221] mb-2">{{ t('public.real.cat_security') }}</h4>
+                            <p class="text-sm text-slate-500 leading-relaxed">{{ t('public.real.cat_security_desc') }}</p>
                         </div>
                         <div class="reveal-on-scroll bg-[#F4F6F9] p-8 rounded-[1.25rem] hover:bg-white hover:shadow-lg border border-transparent hover:border-slate-200 transition-all">
                             <div class="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center mb-4 text-[#0B1221]">
@@ -331,7 +333,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 <i class="pi pi-graduation-cap text-xl"></i>
                             </div>
                             <h4 class="text-lg font-bold text-[#0B1221] mb-2">Formation Terrain</h4>
-                            <p class="text-sm text-slate-500 leading-relaxed">Montée en compétences des équipes internes avec des parcours certifiants et des labs pratiques.</p>
+                            <p class="text-sm text-slate-500 leading-relaxed">{{ t('public.real.cat_training_desc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -343,8 +345,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         <!-- ================================================================== -->
         <section class="py-20 bg-[#F4F6F9] border-t border-slate-100 text-center">
             <div class="max-w-[800px] mx-auto px-4 reveal-on-scroll">
-                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">Votre projet pourrait être le prochain</h2>
-                <p class="text-lg text-slate-500 mb-10">Discutons de vos besoins : audit gratuit pour les premières demandes.</p>
+                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">{{ t('public.real.next_title') }}</h2>
+                <p class="text-lg text-slate-500 mb-10">{{ t('public.real.next_desc') }}</p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link :href="route('contact')" class="w-full sm:w-auto px-10 py-4 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 text-base">
                         Demander un audit
@@ -391,7 +393,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                     <p class="text-sm font-bold text-[#0B1221] flex items-center gap-1.5"><i class="pi pi-map-marker text-[#E1251B]"></i> {{ selected.location }}</p>
                                 </div>
                                 <div v-if="selected.completed_at" class="bg-[#F4F6F9] rounded-xl p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Réalisé en</p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ t('public.real.done_in') }}</p>
                                     <p class="text-sm font-bold text-[#0B1221] flex items-center gap-1.5"><i class="pi pi-calendar text-emerald-600"></i> {{ formatDate(selected.completed_at) }}</p>
                                 </div>
                                 <div class="bg-[#F4F6F9] rounded-xl p-4">
@@ -416,7 +418,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <div class="flex gap-3">
                                 <button @click="closeProject" class="px-6 py-3 bg-white border border-slate-200 text-[#0B1221] font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm">Fermer</button>
                                 <Link :href="route('contact')" class="px-6 py-3 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-blue-700 transition-colors text-sm flex items-center gap-2">
-                                    Discuter du vôtre <i class="pi pi-arrow-right text-xs"></i>
+                                    {{ t('public.real.discuss') }} <i class="pi pi-arrow-right text-xs"></i>
                                 </Link>
                             </div>
                         </div>

@@ -10,10 +10,17 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        // Mot de passe seedé : lu depuis l'environnement, jamais codé en dur dans le repo.
+        $seedPassword = env('SEED_ADMIN_PASSWORD');
+        if (!$seedPassword) {
+            $seedPassword = \Illuminate\Support\Str::random(16);
+            $this->command->warn('SEED_ADMIN_PASSWORD absent — mot de passe aléatoire généré (à copier dans .env puis à changer en prod).');
+        }
+
         // 1. Création du SuperAdmin
         $superAdmin = User::firstOrCreate(
             ['email' => 'admin@subnetcongo.net'],
-            ['name' => 'Super Admin', 'password' => Hash::make('password')]
+            ['name' => 'Super Admin', 'password' => Hash::make($seedPassword)]
         );
         $superAdmin->assignRole('superadmin');
 
@@ -35,7 +42,7 @@ class UserSeeder extends Seeder
                 ['email' => $instructorData['email']],
                 [
                     'name' => $instructorData['name'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make($seedPassword),
                 ]
             );
             $instructor->assignRole('instructor');
@@ -70,7 +77,7 @@ class UserSeeder extends Seeder
                 ['email' => $studentData['email']],
                 [
                     'name' => $studentData['name'],
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make($seedPassword),
                 ]
             );
             $student->assignRole('student');

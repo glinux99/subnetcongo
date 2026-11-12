@@ -25,7 +25,9 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Textarea from 'primevue/textarea';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirmAction = useConfirmAction();
 
@@ -73,21 +75,21 @@ const onPage = (event) => {
     }, { preserveState: true, preserveScroll: true });
 };
 
-const statusFilterOptions = [
-    { label: 'Tous', value: null },
-    { label: 'Publiés', value: 'published' },
-    { label: 'Brouillons', value: 'draft' },
-];
+const statusFilterOptions = computed(() => [
+    { label: t('pages.blog.filterAll'), value: null },
+    { label: t('pages.blog.statusPublished'), value: 'published' },
+    { label: t('pages.blog.statusDraft'), value: 'draft' },
+]);
 
 const categoryFilterOptions = computed(() => [
-    { label: 'Toutes les catégories', value: null },
+    { label: t('pages.blog.allCategories'), value: null },
     ...props.categories.map((c) => ({ label: c.name, value: c.id })),
 ]);
 
-const statusOptions = [
-    { label: 'Brouillon', value: 'draft' },
-    { label: 'Publié', value: 'published' },
-];
+const statusOptions = computed(() => [
+    { label: t('pages.blog.statusDraft'), value: 'draft' },
+    { label: t('pages.blog.statusPublished'), value: 'published' },
+]);
 
 // ============================================================
 // FORMULAIRE (création / édition)
@@ -150,7 +152,7 @@ const closeDialog = () => {
     form.clearErrors();
 };
 
-const dialogTitle = computed(() => (mode.value === 'edit' ? 'Modifier l’article' : 'Nouvel article'));
+const dialogTitle = computed(() => (mode.value === 'edit' ? t('pages.blog.dialogEditTitle') : t('pages.blog.dialogNewTitle')));
 
 const submitForm = () => {
     if (mode.value === 'edit' && editingSlug.value) {
@@ -168,9 +170,9 @@ const submitForm = () => {
 
 const confirmDelete = (item) => {
     confirmAction({
-        header: 'Supprimer l’article',
-        message: `Supprimer définitivement « ${item.title} » ? Cette action est irréversible.`,
-        acceptLabel: 'Supprimer',
+        header: t('pages.blog.deleteHeader'),
+        message: t('pages.blog.deleteMessage', { title: item.title }),
+        acceptLabel: t('pages.blog.deleteAccept'),
         danger: true,
         accept: () => router.delete(route('admin.blog.destroy', item.slug), {
             preserveScroll: true,
@@ -189,8 +191,8 @@ const togglePublish = (item) => {
 // AFFICHAGE
 // ============================================================
 const formatDate = (value) => {
-    if (!value) return 'Non publiée';
-    return new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (!value) return t('pages.blog.notPublished');
+    return new Date(value).toLocaleDateString(useI18n().locale.value, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const postList = computed(() => props.posts?.data ?? []);
@@ -199,24 +201,24 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
 <template>
     <AppLayout>
-        <Head title="Blog — SubNetCongo" />
+        <Head :title="t('pages.blog.headTitle')" />
 
         <div class="page-bg min-h-screen font-sans">
             <PageHeader
-                title="Blog"
-                subtitle="Rédigez et pilotez les articles publiés sur le site public"
+                :title="t('pages.blog.title')"
+                :subtitle="t('pages.blog.subtitle')"
                 icon="pi-book"
                 accent="violet"
-                badge="Site web"
-                :actions="[{ label: 'Nouvel article', icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
+                :badge="t('pages.blog.badge')"
+                :actions="[{ label: t('pages.blog.newPost'), icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
             />
 
             <div class="page-container page-section">
                 <!-- KPIs -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
-                    <PageKpi label="Articles au total" :value="stats.total" icon="pi-book" color="violet" />
-                    <PageKpi label="Publiés" :value="stats.published" icon="pi-check-circle" color="emerald" />
-                    <PageKpi label="Brouillons" :value="stats.drafts" icon="pi-pencil" color="amber" />
+                    <PageKpi :label="t('pages.blog.kpiTotal')" :value="stats.total" icon="pi-book" color="violet" />
+                    <PageKpi :label="t('pages.blog.kpiPublished')" :value="stats.published" icon="pi-check-circle" color="emerald" />
+                    <PageKpi :label="t('pages.blog.kpiDrafts')" :value="stats.drafts" icon="pi-pencil" color="amber" />
                 </div>
 
                 <PageCard>
@@ -226,9 +228,9 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                             <InputIcon class="pi pi-search text-slate-400" aria-hidden="true" />
                             <InputText
                                 v-model="serverFilters.search"
-                                placeholder="Rechercher un titre, un extrait, un contenu…"
+                                :placeholder="t('pages.blog.searchPlaceholder')"
                                 class="w-full h-11"
-                                aria-label="Rechercher un article"
+                                :aria-label="t('pages.blog.searchAria')"
                             />
                         </IconField>
 
@@ -237,10 +239,10 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                             :options="categoryFilterOptions"
                             optionLabel="label"
                             optionValue="value"
-                            placeholder="Toutes les catégories"
+                            :placeholder="t('pages.blog.allCategories')"
                             class="w-full md:w-56 h-11 shrink-0"
                             showClear
-                            aria-label="Filtrer par catégorie"
+                            :aria-label="t('pages.blog.filterCategoryAria')"
                         />
 
                         <SelectButton
@@ -248,13 +250,13 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                             :options="statusFilterOptions"
                             optionLabel="label"
                             optionValue="value"
-                            aria-label="Filtrer par statut"
+                            :aria-label="t('pages.blog.filterStatusAria')"
                             class="shrink-0 overflow-x-auto"
                             :pt="{ pcButton: { root: { class: 'h-11' } } }"
                         />
 
                         <Button
-                            label="Réinitialiser"
+                            :label="t('pages.blog.reset')"
                             icon="pi pi-refresh"
                             severity="secondary"
                             outlined
@@ -265,7 +267,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                     <div class="flex items-center justify-between gap-3 pt-4 pb-2">
                         <div class="flex items-center gap-2">
-                            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Articles du blog</h2>
+                            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ t('pages.blog.postsTitle') }}</h2>
                             <Badge :value="posts.total ?? 0" severity="info" />
                         </div>
                         <i v-if="searchLoading" class="pi pi-spin pi-spinner text-slate-400" aria-hidden="true"></i>
@@ -285,12 +287,12 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                         class="text-sm"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     >
-                        <Column header="Image" style="width: 6.5rem">
+                        <Column :header="t('pages.blog.colImage')" style="width: 6.5rem">
                             <template #body="{ data }">
                                 <img
                                     v-if="data.featured_image"
                                     :src="data.featured_image"
-                                    :alt="`Aperçu — ${data.title}`"
+                                    :alt="t('pages.blog.imgAlt', { title: data.title })"
                                     class="w-20 h-14 object-cover rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100"
                                     loading="lazy"
                                 />
@@ -300,44 +302,44 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                             </template>
                         </Column>
 
-                        <Column field="title" header="Titre" style="min-width: 16rem">
+                        <Column field="title" :header="t('pages.blog.colTitle')" style="min-width: 16rem">
                             <template #body="{ data }">
                                 <p class="font-semibold text-slate-800 dark:text-slate-100 line-clamp-1">{{ data.title }}</p>
                                 <p v-if="data.excerpt" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{{ data.excerpt }}</p>
                             </template>
                         </Column>
 
-                        <Column header="Catégorie" style="min-width: 10rem">
+                        <Column :header="t('pages.blog.colCategory')" style="min-width: 10rem">
                             <template #body="{ data }">
                                 <Tag v-if="data.category" :value="data.category.name" severity="info" />
                                 <span v-else class="text-slate-400">—</span>
                             </template>
                         </Column>
 
-                        <Column header="Statut" style="min-width: 8rem">
+                        <Column :header="t('pages.blog.colStatus')" style="min-width: 8rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <ToggleSwitch
                                         :modelValue="!!data.is_published"
                                         @update:modelValue="togglePublish(data)"
-                                        :aria-label="data.is_published ? 'Dépublier l’article' : 'Publier l’article'"
+                                        :aria-label="data.is_published ? t('pages.blog.unpublishAria') : t('pages.blog.publishAria')"
                                     />
-                                    <Tag :value="data.is_published ? 'Publié' : 'Brouillon'" :severity="data.is_published ? 'success' : 'secondary'" />
+                                    <Tag :value="data.is_published ? t('pages.blog.statusPublishedShort') : t('pages.blog.statusDraftShort')" :severity="data.is_published ? 'success' : 'secondary'" />
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="published_at" header="Publication" style="min-width: 8rem">
+                        <Column field="published_at" :header="t('pages.blog.colPublished')" style="min-width: 8rem">
                             <template #body="{ data }">
                                 <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.published_at) }}</span>
                             </template>
                         </Column>
 
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 9rem">
+                        <Column :header="t('pages.blog.actions')" alignFrozen="right" frozen style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1 whitespace-nowrap">
-                                    <Button icon="pi pi-pencil" text rounded severity="secondary" aria-label="Éditer" v-tooltip.top="'Éditer'" @click="openEdit(data)" />
-                                    <Button icon="pi pi-trash" text rounded severity="danger" aria-label="Supprimer" v-tooltip.top="'Supprimer'" @click="confirmDelete(data)" />
+                                    <Button icon="pi pi-pencil" text rounded severity="secondary" :aria-label="t('pages.blog.edit')" v-tooltip.top="t('pages.blog.edit')" @click="openEdit(data)" />
+                                    <Button icon="pi pi-trash" text rounded severity="danger" :aria-label="t('pages.blog.delete')" v-tooltip.top="t('pages.blog.delete')" @click="confirmDelete(data)" />
                                 </div>
                             </template>
                         </Column>
@@ -345,8 +347,8 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                         <template #empty>
                             <div class="text-center py-10 text-slate-500 dark:text-slate-400">
                                 <i class="pi pi-book text-3xl mb-3 text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
-                                <p class="font-semibold">Aucun article trouvé</p>
-                                <p class="text-sm mt-1">Modifiez vos filtres ou créez votre premier article.</p>
+                                <p class="font-semibold">{{ t('pages.blog.emptyTitle') }}</p>
+                                <p class="text-sm mt-1">{{ t('pages.blog.emptyHint') }}</p>
                             </div>
                         </template>
                     </DataTable>
@@ -358,7 +360,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
         <SncDialog
             v-model:visible="formDialog"
             :title="dialogTitle"
-            subtitle="Rédigez un article pour le blog du site public"
+            :subtitle="t('pages.blog.dialogSubtitle')"
             :icon="mode === 'edit' ? 'pi-pencil' : 'pi-book'"
             iconClass="from-violet-500 to-violet-700"
             width="760px"
@@ -368,25 +370,25 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                 <!-- Aperçu image -->
                 <div v-if="canPreview" class="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <img :src="form.featured_image" alt="Aperçu de l'image principale" class="w-full h-44 object-cover" @error="imagePreviewError = true" />
-                    <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-slate-900/70 text-white text-[10px] font-bold uppercase tracking-wider">Aperçu</span>
+                    <img :src="form.featured_image" :alt="t('pages.blog.imgPreviewAlt')" class="w-full h-44 object-cover" @error="imagePreviewError = true" />
+                    <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-slate-900/70 text-white text-[10px] font-bold uppercase tracking-wider">{{ t('pages.blog.preview') }}</span>
                 </div>
 
                 <SncSection
                     icon="pi-id-card"
-                    title="Article"
-                    subtitle="Titre, slug et extrait affichés dans les listes"
+                    :title="t('pages.blog.secArticle')"
+                    :subtitle="t('pages.blog.secArticleSub')"
                     icon-class="from-indigo-600 to-slate-800"
                 >
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12">
                             <label for="post-title" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Titre <span class="text-rose-500">*</span>
+                                {{ t('pages.blog.fieldTitle') }} <span class="text-rose-500">*</span>
                             </label>
                             <InputText
                                 id="post-title"
                                 v-model="form.title"
-                                placeholder="ex: Les 5 erreurs à éviter lors d'un déploiement fibre"
+                                :placeholder="t('pages.blog.titlePlaceholder')"
                                 class="w-full h-11"
                                 :class="{ '!border-rose-500': form.errors.title }"
                             />
@@ -395,12 +397,12 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                         <div class="col-span-12">
                             <label for="post-slug" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Slug <span class="text-slate-400 font-normal normal-case">(optionnel — généré depuis le titre)</span>
+                                {{ t('pages.blog.fieldSlug') }} <span class="text-slate-400 font-normal normal-case">{{ t('pages.blog.slugHint') }}</span>
                             </label>
                             <InputText
                                 id="post-slug"
                                 v-model="form.slug"
-                                placeholder="ex: erreurs-deploiement-fibre"
+                                :placeholder="t('pages.blog.slugPlaceholder')"
                                 class="w-full h-11 font-mono text-sm"
                                 :class="{ '!border-rose-500': form.errors.slug }"
                             />
@@ -409,14 +411,14 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                         <div class="col-span-12">
                             <label for="post-excerpt" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Extrait
+                                {{ t('pages.blog.fieldExcerpt') }}
                             </label>
                             <Textarea
                                 id="post-excerpt"
                                 v-model="form.excerpt"
                                 rows="2"
                                 autoResize
-                                placeholder="Résumé court affiché sur les cartes et dans les meta descriptions…"
+                                :placeholder="t('pages.blog.excerptPlaceholder')"
                                 class="w-full text-sm"
                                 :class="{ '!border-rose-500': form.errors.excerpt }"
                             />
@@ -425,14 +427,14 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                         <div class="col-span-12">
                             <label for="post-content" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Contenu
+                                {{ t('pages.blog.fieldContent') }}
                             </label>
                             <Textarea
                                 id="post-content"
                                 v-model="form.content"
                                 rows="6"
                                 autoResize
-                                placeholder="Corps de l'article…"
+                                :placeholder="t('pages.blog.contentPlaceholder')"
                                 class="w-full text-sm"
                                 :class="{ '!border-rose-500': form.errors.content }"
                             />
@@ -443,34 +445,34 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                 <SncSection
                     icon="pi-image"
-                    title="Média & classement"
-                    subtitle="Image principale, miniature et catégorie"
+                    :title="t('pages.blog.secMedia')"
+                    :subtitle="t('pages.blog.secMediaSub')"
                     icon-class="from-emerald-500 to-teal-700"
                 >
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12">
                             <label for="post-featured" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Image principale (featured_image)
+                                {{ t('pages.blog.fieldFeatured') }}
                             </label>
                             <InputText
                                 id="post-featured"
                                 v-model="form.featured_image"
-                                placeholder="ex: /media/blog/mon-article.jpg"
+                                :placeholder="t('pages.blog.featuredPlaceholder')"
                                 class="w-full h-11 font-mono text-sm"
                                 :class="{ '!border-rose-500': form.errors.featured_image }"
                             />
-                            <p class="text-[11px] text-slate-400 mt-1">L'upload de fichier n'est pas géré ici : utilisez un chemin public ou une URL complète.</p>
+                            <p class="text-[11px] text-slate-400 mt-1">{{ t('pages.blog.featuredHelp') }}</p>
                             <small v-if="form.errors.featured_image" class="text-xs text-rose-500 mt-1 block">{{ form.errors.featured_image }}</small>
                         </div>
 
                         <div class="col-span-12 sm:col-span-6">
                             <label for="post-thumbnail" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Miniature (thumbnail)
+                                {{ t('pages.blog.fieldThumbnail') }}
                             </label>
                             <InputText
                                 id="post-thumbnail"
                                 v-model="form.thumbnail"
-                                placeholder="ex: /media/blog/mon-article-thumb.jpg"
+                                :placeholder="t('pages.blog.thumbnailPlaceholder')"
                                 class="w-full h-11 font-mono text-sm"
                                 :class="{ '!border-rose-500': form.errors.thumbnail }"
                             />
@@ -479,7 +481,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                         <div class="col-span-12 sm:col-span-6">
                             <label for="post-category" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Catégorie
+                                {{ t('pages.blog.fieldCategory') }}
                             </label>
                             <Select
                                 id="post-category"
@@ -487,10 +489,10 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                                 :options="categories"
                                 optionLabel="name"
                                 optionValue="id"
-                                placeholder="Sélectionner une catégorie"
+                                :placeholder="t('pages.blog.categoryPlaceholder')"
                                 class="w-full h-11"
                                 showClear
-                                aria-label="Catégorie de l'article"
+                                :aria-label="t('pages.blog.categoryAria')"
                             />
                             <small v-if="form.errors.category_id" class="text-xs text-rose-500 mt-1 block">{{ form.errors.category_id }}</small>
                         </div>
@@ -499,14 +501,14 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
                 <SncSection
                     icon="pi-calendar-clock"
-                    title="Publication"
-                    subtitle="Statut, visibilité et date de publication"
+                    :title="t('pages.blog.secPublish')"
+                    :subtitle="t('pages.blog.secPublishSub')"
                     icon-class="from-amber-500 to-rose-600"
                 >
                     <div class="grid grid-cols-12 gap-4">
                         <div class="col-span-12 sm:col-span-6">
                             <label for="post-status" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Statut
+                                {{ t('pages.blog.fieldStatus') }}
                             </label>
                             <Select
                                 id="post-status"
@@ -515,14 +517,14 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                                 optionLabel="label"
                                 optionValue="value"
                                 class="w-full h-11"
-                                aria-label="Statut de l'article"
+                                :aria-label="t('pages.blog.statusAria')"
                             />
                             <small v-if="form.errors.status" class="text-xs text-rose-500 mt-1 block">{{ form.errors.status }}</small>
                         </div>
 
                         <div class="col-span-12 sm:col-span-6">
                             <label for="post-published-at" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 block">
-                                Date de publication
+                                {{ t('pages.blog.fieldPublishedAt') }}
                             </label>
                             <DatePicker
                                 id="post-published-at"
@@ -550,10 +552,10 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                                 </div>
                                 <div>
                                     <label for="post-published" class="font-bold text-sm text-slate-800 dark:text-slate-100 cursor-pointer">
-                                        {{ form.is_published ? 'Article publié' : 'Brouillon — non visible' }}
+                                        {{ form.is_published ? t('pages.blog.publishedState') : t('pages.blog.draftState') }}
                                     </label>
                                     <p class="text-xs text-slate-500 dark:text-slate-400">
-                                        {{ form.is_published ? 'L’article apparaît sur le blog public (date remplie automatiquement si vide).' : 'Activez pour publier immédiatement.' }}
+                                        {{ form.is_published ? t('pages.blog.publishedHelp') : t('pages.blog.draftHelp') }}
                                     </p>
                                 </div>
                             </div>
@@ -565,7 +567,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
 
             <template #footer>
                 <Button
-                    label="Annuler"
+                    :label="t('pages.blog.cancel')"
                     icon="pi pi-times"
                     text
                     severity="secondary"
@@ -573,7 +575,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                     @click="closeDialog"
                 />
                 <Button
-                    :label="mode === 'edit' ? 'Sauvegarder les modifications' : 'Créer l’article'"
+                    :label="mode === 'edit' ? t('pages.blog.saveChanges') : t('pages.blog.createPost')"
                     icon="pi pi-check"
                     :loading="form.processing"
                     class="!px-5 !py-2.5 !text-xs !font-bold !bg-violet-600 hover:!bg-violet-700 !border-none !shadow-lg !shadow-violet-600/30 rounded-xl"

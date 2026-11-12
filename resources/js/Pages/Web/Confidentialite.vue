@@ -2,6 +2,8 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -14,7 +16,7 @@ const page = usePage();
 const legal = computed(() => page.props.legal || null);
 const identity = computed(() => props.identity || {});
 
-const missing = 'Information non renseignée';
+const missing = t('public.conf.missing');
 
 const companyName = computed(() => legal.value?.company_name || identity.value?.site_name || 'SubnetCongo');
 
@@ -22,7 +24,7 @@ const seatAddress = computed(() => {
     const l = legal.value;
     const parts = [l?.address_line, l?.city, l?.province, l?.country].filter(Boolean);
     if (parts.length) return parts.join(', ');
-    return identity.value?.contact_address || 'Kinshasa, RDC';
+    return identity.value?.contact_address || t('public.conf.seat_fallback');
 });
 
 const legalFilled = computed(() => {
@@ -41,7 +43,7 @@ const legalUpdated = computed(() => {
 </script>
 
 <template>
-    <Head :title="`Politique de Confidentialité - ${identity.site_name || 'SubnetCongo'}`" />
+    <Head :title="`${t('public.conf.head_title')} - ${identity.site_name || 'SubnetCongo'}`" />
     <AppLayout>
         
         <!-- En-tête de la page -->
@@ -54,12 +56,12 @@ const legalUpdated = computed(() => {
             <div class="relative max-w-5xl mx-auto px-6 text-center z-10">
                 <span class="inline-flex items-center gap-2 text-red-400 mb-4">
                     <span class="w-8 h-[2px] bg-red-400"></span>
-                    <span class="font-bold uppercase tracking-[0.3em] text-xs">Vos données, notre priorité</span>
+                    <span class="font-bold uppercase tracking-[0.3em] text-xs">{{ t('public.conf.pill') }}</span>
                     <span class="w-8 h-[2px] bg-red-400"></span>
                 </span>
-                <h1 class="text-4xl md:text-6xl font-black mt-2 tracking-tight">Politique de <span class="text-[#E11D48]">Confidentialité</span></h1>
+                <h1 class="text-4xl md:text-6xl font-black mt-2 tracking-tight">{{ t('public.conf.hero_title') }}</h1>
                 <p class="text-lg text-blue-200 mt-6 max-w-3xl mx-auto font-medium">
-                    Découvrez comment {{ identity.site_name || 'SubnetCongo' }} protège vos données personnelles conformément à la législation congolaise en vigueur.
+                    {{ t('public.conf.hero_sub_1') }} {{ identity.site_name || 'SubnetCongo' }} {{ t('public.conf.hero_sub_2') }}
                 </p>
             </div>
         </section>
@@ -74,13 +76,13 @@ const legalUpdated = computed(() => {
                 <article>
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">01</span>
-                        Qui sommes-nous ?
+                        {{ t('public.conf.identity_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed space-y-4 text-justify">
-                        <p><strong>{{ companyName }}</strong> (ci-après « nous ») édite la plateforme de formation en ligne et de services technologiques accessible sur ce site.</p>
-                        <p v-if="legalFilled">La plateforme est éditée par <strong>{{ legal?.company_name || missing }}</strong><template v-if="legal?.legal_form">, {{ legal.legal_form }}</template><template v-if="legal?.rccm">, société immatriculée au RCCM <strong class="font-mono">{{ legal.rccm }}</strong></template><template v-if="legal?.ifu">, IFU <strong class="font-mono">{{ legal.ifu }}</strong></template>, dont le siège social est situé à {{ seatAddress }}.</p>
-                        <p v-else class="text-slate-500 italic">Les informations d'immatriculation de la société seront affichées ici dès qu'elles auront été renseignées depuis l'espace d'administration.</p>
-                        <p>En tant que responsable de traitement, nous nous engageons à protéger la confidentialité de vos données personnelles et à garantir un niveau de sécurité élevé conformément à la <strong>Loi n° 20/017 du 25 novembre 2020</strong> portant protection des données à caractère personnel en République Démocratique du Congo.</p>
+                        <p><strong>{{ companyName }}</strong> — {{ t('public.conf.edited_by') }}</p>
+                        <p v-if="legalFilled">{{ t('public.conf.published_by') }} <strong>{{ legal?.company_name || missing }}</strong><template v-if="legal?.legal_form">, {{ legal.legal_form }}</template><template v-if="legal?.rccm">{{ t('public.conf.registered_rccm') }} <strong class="font-mono">{{ legal.rccm }}</strong></template><template v-if="legal?.ifu">, IFU <strong class="font-mono">{{ legal.ifu }}</strong></template>{{ t('public.conf.registered_seat') }} {{ seatAddress }}.</p>
+                        <p v-else class="text-slate-500 italic">{{ t('public.conf.not_filled') }}</p>
+                        <p>{{ t('public.conf.data_commitment') }} <strong>Loi n° 20/017 du 25 novembre 2020</strong> {{ t('public.conf.data_commitment_end') }}</p>
                     </div>
                 </article>
 
@@ -88,26 +90,26 @@ const legalUpdated = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">02</span>
-                        Quelles données collectons-nous ?
+                        {{ t('public.conf.collected_title') }}
                     </h2>
-                    <p class="text-slate-600 mb-6">Nous collectons les catégories de données personnelles suivantes :</p>
+                    <p class="text-slate-600 mb-6">{{ t('public.conf.collected_intro') }}</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">Données d'identification</h4>
-                            <p class="text-sm text-slate-600">Nom, prénom, adresse email, téléphone, pays, ville, genre.</p>
+                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">{{ t('public.conf.data_id_title') }}</h4>
+                            <p class="text-sm text-slate-600">{{ t('public.conf.data_id_desc') }}</p>
                         </div>
                         <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">Navigation & Connectivité</h4>
-                            <p class="text-sm text-slate-600">Adresse IP, type de navigateur, système d'exploitation, identifiants de session.</p>
+                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">{{ t('public.conf.data_nav_title') }}</h4>
+                            <p class="text-sm text-slate-600">{{ t('public.conf.data_nav_desc') }}</p>
                         </div>
                         <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">Données pédagogiques</h4>
-                            <p class="text-sm text-slate-600">Progression dans les cours, résultats aux examens, certificats obtenus.</p>
+                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">{{ t('public.conf.data_peda_title') }}</h4>
+                            <p class="text-sm text-slate-600">{{ t('public.conf.data_peda_desc') }}</p>
                         </div>
                         <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">Paiement & Facturation</h4>
-                            <p class="text-sm text-slate-600">Historique des transactions (les données de cartes bancaires ne sont pas stockées chez nous).</p>
+                            <h4 class="font-bold text-slate-900 uppercase tracking-wider text-xs mb-2">{{ t('public.conf.data_payment_title') }}</h4>
+                            <p class="text-sm text-slate-600">{{ t('public.conf.data_payment_desc') }}</p>
                         </div>
                     </div>
                 </article>
@@ -116,20 +118,20 @@ const legalUpdated = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">03</span>
-                        Pourquoi collectons-nous vos données ?
+                        {{ t('public.conf.why_title') }}
                     </h2>
                     <ul class="space-y-4 text-slate-600">
                         <li class="flex items-start gap-3">
                             <i class="pi pi-check-circle text-[#003399] mt-1"></i>
-                            <div><strong class="text-slate-800">Exécution du contrat :</strong> Création de compte, accès aux formations ERP, délivrance de certificats.</div>
+                            <div><strong class="text-slate-800">{{ t('public.conf.purpose_1') }}</strong> {{ t('public.conf.purpose_1_desc') }}</div>
                         </li>
                         <li class="flex items-start gap-3">
                             <i class="pi pi-check-circle text-[#003399] mt-1"></i>
-                            <div><strong class="text-slate-800">Intérêt légitime :</strong> Amélioration des services, sécurité des systèmes, statistiques.</div>
+                            <div><strong class="text-slate-800">{{ t('public.conf.purpose_2') }}</strong> {{ t('public.conf.purpose_2_desc') }}</div>
                         </li>
                         <li class="flex items-start gap-3">
                             <i class="pi pi-check-circle text-[#003399] mt-1"></i>
-                            <div><strong class="text-slate-800">Obligation légale :</strong> Respect des obligations fiscales et lutte contre la fraude en RDC.</div>
+                            <div><strong class="text-slate-800">{{ t('public.conf.purpose_3') }}</strong> {{ t('public.conf.purpose_3_desc') }}</div>
                         </li>
                     </ul>
                 </article>
@@ -138,24 +140,24 @@ const legalUpdated = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">04</span>
-                        Durée de conservation
+                        {{ t('public.conf.retention_title') }}
                     </h2>
                     <div class="bg-white border border-slate-200 rounded-xl overflow-hidden text-sm">
                         <div class="flex flex-col sm:flex-row justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                            <span class="font-bold text-slate-800">Compte actif & Pédagogie</span>
-                            <span class="text-slate-500">Durée de vie du compte + 3 ans</span>
+                            <span class="font-bold text-slate-800">{{ t('public.conf.ret_account_title') }}</span>
+                            <span class="text-slate-500">{{ t('public.conf.ret_account_desc') }}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                            <span class="font-bold text-slate-800">Données de facturation</span>
-                            <span class="text-slate-500">10 ans (Obligation fiscale)</span>
+                            <span class="font-bold text-slate-800">{{ t('public.conf.ret_billing_title') }}</span>
+                            <span class="text-slate-500">{{ t('public.conf.ret_billing_desc') }}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                            <span class="font-bold text-slate-800">Cookies & Navigation</span>
-                            <span class="text-slate-500">13 mois maximum</span>
+                            <span class="font-bold text-slate-800">{{ t('public.conf.ret_cookie_title') }}</span>
+                            <span class="text-slate-500">{{ t('public.conf.ret_cookie_desc') }}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row justify-between p-4 hover:bg-slate-50 transition-colors">
-                            <span class="font-bold text-slate-800">Logs de sécurité</span>
-                            <span class="text-slate-500">12 mois</span>
+                            <span class="font-bold text-slate-800">{{ t('public.conf.ret_logs_title') }}</span>
+                            <span class="text-slate-500">{{ t('public.conf.ret_logs_desc') }}</span>
                         </div>
                     </div>
                 </article>
@@ -164,11 +166,11 @@ const legalUpdated = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">05</span>
-                        Partage et transferts des données
+                        {{ t('public.conf.share_title') }}
                     </h2>
                     <div class="text-slate-600 leading-relaxed text-justify">
-                        <p>Vos données ne sont <strong>jamais vendues</strong>. Elles sont uniquement partagées avec nos prestataires techniques (hébergement, paiements Mobile Money/Cartes, emailing) sous contrats de confidentialité stricts.</p>
-                        <p class="mt-4">Les données sont hébergées principalement en RDC et dans l'Union Européenne. Tout transfert hors de ces zones est encadré par des clauses contractuelles garantissant la sécurité de vos informations.</p>
+                        <p>{{ t('public.conf.share_p1_1') }} <strong>{{ t('public.conf.share_p1_2') }}</strong>{{ t('public.conf.share_p1_3') }}</p>
+                        <p class="mt-4">{{ t('public.conf.share_p2') }}</p>
                     </div>
                 </article>
 
@@ -176,24 +178,24 @@ const legalUpdated = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">06</span>
-                        Vos droits
+                        {{ t('public.conf.rights_title') }}
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                         <div class="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                            <h4 class="font-bold text-slate-800 mb-1">Accès & Portabilité</h4>
-                            <p class="text-xs text-slate-500">Obtenir une copie de vos données.</p>
+                            <h4 class="font-bold text-slate-800 mb-1">{{ t('public.conf.right_access_title') }}</h4>
+                            <p class="text-xs text-slate-500">{{ t('public.conf.right_access_desc') }}</p>
                         </div>
                         <div class="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                            <h4 class="font-bold text-slate-800 mb-1">Rectification</h4>
-                            <p class="text-xs text-slate-500">Mettre à jour vos informations.</p>
+                            <h4 class="font-bold text-slate-800 mb-1">{{ t('public.conf.right_rectify_title') }}</h4>
+                            <p class="text-xs text-slate-500">{{ t('public.conf.right_rectify_desc') }}</p>
                         </div>
                         <div class="p-4 bg-slate-50 rounded-lg border border-slate-100">
-                            <h4 class="font-bold text-slate-800 mb-1">Effacement</h4>
-                            <p class="text-xs text-slate-500">Demander la suppression de votre compte.</p>
+                            <h4 class="font-bold text-slate-800 mb-1">{{ t('public.conf.right_delete_title') }}</h4>
+                            <p class="text-xs text-slate-500">{{ t('public.conf.right_delete_desc') }}</p>
                         </div>
                     </div>
                     <p class="text-slate-600 text-sm">
-                        Pour exercer vos droits, contactez-nous à <a :href="`mailto:${identity.contact_email || 'contact@subnetcongo.cd'}`" class="text-[#003399] font-bold hover:underline">{{ identity.contact_email || 'contact@subnetcongo.cd' }}</a>. Nous répondrons sous 30 jours maximum.
+                        {{ t('public.conf.rights_footer_1') }} <a :href="`mailto:${identity.contact_email || 'contact@subnetcongo.cd'}`" class="text-[#003399] font-bold hover:underline">{{ identity.contact_email || 'contact@subnetcongo.cd' }}</a>. {{ t('public.conf.rights_footer_2') }}
                     </p>
                 </article>
 
@@ -201,16 +203,16 @@ const legalUpdated = computed(() => {
                 <article class="border-t border-slate-100 pt-10">
                     <h2 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
                         <span class="flex-shrink-0 w-8 h-8 rounded bg-red-50 text-[#E11D48] flex items-center justify-center text-sm font-bold">07</span>
-                        Sécurité & Cookies
+                        {{ t('public.conf.security_cookies_title') }}
                     </h2>
                     <div class="flex flex-col md:flex-row gap-8">
                         <div class="flex-1 text-slate-600 text-justify">
-                            <h4 class="font-bold text-slate-900 mb-2">Sécurité des infrastructures</h4>
-                            <p class="text-sm mb-4">Nous appliquons le chiffrement TLS/SSL de bout en bout, le hachage des mots de passe (bcrypt) et une surveillance 24/7 de nos serveurs pour empêcher toute violation de données.</p>
+                            <h4 class="font-bold text-slate-900 mb-2">{{ t('public.conf.security_infra_title') }}</h4>
+                            <p class="text-sm mb-4">{{ t('public.conf.security_infra_desc') }}</p>
                         </div>
                         <div class="flex-1 text-slate-600 text-justify">
-                            <h4 class="font-bold text-slate-900 mb-2">Utilisation des traceurs</h4>
-                            <p class="text-sm">Nous utilisons des cookies essentiels au fonctionnement de la plateforme. Les cookies analytiques ne sont activés qu'avec votre consentement préalable via notre bandeau dédié.</p>
+                            <h4 class="font-bold text-slate-900 mb-2">{{ t('public.conf.trackers_title') }}</h4>
+                            <p class="text-sm">{{ t('public.conf.trackers_desc') }}</p>
                         </div>
                     </div>
                 </article>
@@ -220,14 +222,14 @@ const legalUpdated = computed(() => {
             <!-- Footer Document Légal -->
             <div class="max-w-4xl mx-auto mt-8 text-center text-sm text-slate-500 space-y-2">
                 <p>
-                    Pour les aspects juridiques de l'entreprise, veuillez consulter nos 
-                    <Link :href="route('mentions-legales')" class="text-[#E11D48] font-bold hover:underline">Mentions Légales</Link>.
+                    {{ t('public.conf.footer_legal') }} 
+                    <Link :href="route('mentions-legales')" class="text-[#E11D48] font-bold hover:underline">{{ t('public.conf.footer_mentions') }}</Link>.
                 </p>
                 <p v-if="legalUpdated">
-                    Dernière mise à jour : <span class="font-semibold text-slate-600">{{ legalUpdated }}</span><br>
+                    {{ t('public.conf.footer_update') }} <span class="font-semibold text-slate-600">{{ legalUpdated }}</span><br>
                 </p>
                 <p>
-                    {{ companyName }} se réserve le droit de modifier cette politique pour se conformer aux évolutions légales en RDC.
+                    {{ companyName }} {{ t('public.conf.footer_reserve') }}
                 </p>
             </div>
 

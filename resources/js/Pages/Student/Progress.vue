@@ -10,16 +10,19 @@ import EmptyState from '@/Components/EmptyState.vue';
 import ProgressBar from 'primevue/progressbar';
 import Tag from 'primevue/tag';
 import Chart from 'primevue/chart';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps({ kpis: Object, perCourse: Array, activity: Array });
 const { isDarkTheme } = useLayout();
 
 const kpiCards = computed(() => [
-    { label: 'Cours suivis', value: props.kpis?.courses_total ?? 0, icon: 'pi-book', color: 'blue' },
-    { label: 'Terminés', value: props.kpis?.courses_completed ?? 0, icon: 'pi-check-circle', color: 'emerald' },
-    { label: 'Complétion', value: `${props.kpis?.completion_rate ?? 0} %`, icon: 'pi-chart-line', color: 'amber' },
-    { label: 'Temps d\'étude', value: `${props.kpis?.hours_studied ?? 0} h`, icon: 'pi-clock', color: 'sky' },
-    { label: 'Certificats', value: props.kpis?.certificates ?? 0, icon: 'pi-verified', color: 'violet' },
+    { label: t('pages.student_progress.kpiCourses'), value: props.kpis?.courses_total ?? 0, icon: 'pi-book', color: 'blue' },
+    { label: t('pages.student_progress.kpiCompleted'), value: props.kpis?.courses_completed ?? 0, icon: 'pi-check-circle', color: 'emerald' },
+    { label: t('pages.student_progress.kpiCompletion'), value: `${props.kpis?.completion_rate ?? 0} %`, icon: 'pi-chart-line', color: 'amber' },
+    { label: t('pages.student_progress.kpiStudyTime'), value: `${props.kpis?.hours_studied ?? 0} h`, icon: 'pi-clock', color: 'sky' },
+    { label: t('pages.student_progress.kpiCertificates'), value: props.kpis?.certificates ?? 0, icon: 'pi-verified', color: 'violet' },
 ]);
 
 const totalMinutes = computed(() => (props.activity ?? []).reduce((s, a) => s + (Number(a.minutes) || 0), 0));
@@ -27,7 +30,7 @@ const totalMinutes = computed(() => (props.activity ?? []).reduce((s, a) => s + 
 const activityData = computed(() => ({
     labels: (props.activity ?? []).map(a => a.label),
     datasets: [{
-        label: 'Minutes étudiées', data: (props.activity ?? []).map(a => a.minutes),
+        label: t('pages.student_progress.chartDataset'), data: (props.activity ?? []).map(a => a.minutes),
         fill: true, backgroundColor: 'rgba(37, 99, 235, 0.12)', borderColor: '#2563EB',
         tension: 0.4, pointBackgroundColor: '#2563EB', pointRadius: 2,
     }],
@@ -48,20 +51,20 @@ const chartOptions = computed(() => {
 
 const progressColor = (p) => p >= 80 ? '#10B981' : p >= 50 ? '#F59E0B' : '#2563EB';
 const statusTag = (c) => c.status === 'completed'
-    ? { value: 'Terminé', severity: 'success' }
-    : c.progress >= 50 ? { value: 'Bien avancé', severity: 'warn' } : { value: 'En cours', severity: 'info' };
+    ? { value: t('pages.student_progress.statusCompleted'), severity: 'success' }
+    : c.progress >= 50 ? { value: t('pages.student_progress.statusWellAdvanced'), severity: 'warn' } : { value: t('pages.student_progress.statusInProgress'), severity: 'info' };
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Ma progression" />
+        <Head :title="t('pages.student_progress.headTitle')" />
         <div class="page-bg min-h-screen">
             <PageHeader
-                title="Ma progression"
+                :title="t('pages.student_progress.pageTitle')"
                 icon="pi-chart-line"
-                badge="30 derniers jours"
-                subtitle="Suivez votre avancement, votre temps d'étude et vos résultats par formation."
-                :actions="[{ label: 'Mes formations', icon: 'pi-book', href: route('student.my-courses') }]"
+                :badge="t('pages.student_progress.pageBadge')"
+                :subtitle="t('pages.student_progress.pageSubtitle')"
+                :actions="[{ label: t('pages.student_progress.actionMyCourses'), icon: 'pi-book', href: route('student.my-courses') }]"
             />
 
             <div class="page-container space-y-6">
@@ -69,26 +72,26 @@ const statusTag = (c) => c.status === 'completed'
                     <PageKpi v-for="k in kpiCards" :key="k.label" :label="k.label" :value="k.value" :icon="k.icon" :color="k.color" />
                 </div>
 
-                <PageCard title="Activité" :subtitle="`${totalMinutes} minutes d'étude sur les 30 derniers jours`">
+                <PageCard :title="t('pages.student_progress.activityTitle')" :subtitle="t('pages.student_progress.activitySubtitle', { minutes: totalMinutes })">
                     <EmptyState
                         v-if="totalMinutes === 0"
                         compact
                         icon="pi-calendar"
-                        title="Pas encore d'activité ce mois-ci"
-                        description="Quelques minutes par jour suffisent pour progresser régulièrement."
+                        :title="t('pages.student_progress.emptyActivityTitle')"
+                        :description="t('pages.student_progress.emptyActivityDesc')"
                     />
                     <div v-else class="h-64">
-                        <Chart type="line" :data="activityData" :options="chartOptions" class="h-full" aria-label="Graphique des minutes étudiées par jour" />
+                        <Chart type="line" :data="activityData" :options="chartOptions" class="h-full" :aria-label="t('pages.student_progress.chartAria')" />
                     </div>
                 </PageCard>
 
-                <PageCard title="Détail par cours" :padded="false">
+                <PageCard :title="t('pages.student_progress.detailTitle')" :padded="false">
                     <EmptyState
                         v-if="(perCourse ?? []).length === 0"
                         icon="pi-inbox"
-                        title="Aucune formation en cours"
-                        description="Inscrivez-vous à une formation pour suivre votre progression ici."
-                        action-label="Explorer le catalogue"
+                        :title="t('pages.student_progress.emptyCoursesTitle')"
+                        :description="t('pages.student_progress.emptyCoursesDesc')"
+                        :action-label="t('pages.student_progress.emptyCoursesAction')"
                         :action-href="route('marketplace.index')"
                     />
                     <ul v-else class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -104,13 +107,13 @@ const statusTag = (c) => c.status === 'completed'
                                 :value="c.progress"
                                 :showValue="false"
                                 class="!h-2"
-                                :aria-label="`Progression ${c.course_title} : ${Math.round(c.progress)} %`"
+                                :aria-label="t('pages.student_progress.courseProgressAria', { title: c.course_title, percent: Math.round(c.progress) })"
                                 :style="`--p-progressbar-value-background: ${progressColor(c.progress)}`"
                             />
                             <div class="flex flex-wrap justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                <span>{{ c.lessons_done }}/{{ c.lessons_total }} leçons</span>
-                                <span v-if="c.avg_score > 0">Score moyen : {{ Math.round(c.avg_score) }} %</span>
-                                <span v-if="c.completed_at">Terminé le {{ new Date(c.completed_at).toLocaleDateString('fr-FR') }}</span>
+                                <span>{{ t('pages.student_progress.lessonsCount', { done: c.lessons_done, total: c.lessons_total }) }}</span>
+                                <span v-if="c.avg_score > 0">{{ t('pages.student_progress.avgScore', { score: Math.round(c.avg_score) }) }}</span>
+                                <span v-if="c.completed_at">{{ t('pages.student_progress.completedAt', { date: new Date(c.completed_at).toLocaleDateString(locale, { dateStyle: 'medium' }) }) }}</span>
                             </div>
                         </li>
                     </ul>

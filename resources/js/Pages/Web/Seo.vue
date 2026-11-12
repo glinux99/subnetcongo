@@ -10,6 +10,9 @@ import Textarea from 'primevue/textarea';
 import InputSwitch from 'primevue/inputswitch';
 import Chips from 'primevue/chips';
 import ProgressBar from 'primevue/progressbar';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({
@@ -40,7 +43,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
 </script>
 
 <template>
-    <Head title="Référencement (SEO)" />
+    <Head :title="t('pages.web_seo.title')" />
 
     <AppLayout>
         <div class="page-bg min-h-screen font-sans pb-32 bg-slate-50">
@@ -61,28 +64,28 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <!-- Partie Gauche -->
                         <div class="space-y-4 max-w-3xl">
                             <span class="inline-block border border-red-900/50 text-red-500 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full uppercase bg-red-950/30">
-                                Moteurs de recherche
+                                {{ t('pages.web_seo.badge') }}
                             </span>
 
                             <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                                <span class="text-white">Optimisation</span>
+                                <span class="text-white">{{ t('pages.web_seo.heading1') }}</span>
                                 <span class="text-[#E92B2B]">SEO</span>
                             </h1>
 
                             <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                                Optimisez votre visibilité sur Google et Bing. Configurez vos balises Meta, vos sitemaps et vos micro-données pour attirer plus d'étudiants.
+                                {{ t('pages.web_seo.subtitle') }}
                             </p>
                         </div>
 
                         <!-- Partie Droite -->
                         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                             <Button 
-                                label="Scanner le site" 
+                                :label="t('pages.web_seo.scanSite')" 
                                 icon="pi pi-search" 
                                 class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
                             />
                             <Button 
-                                label="Sauvegarder" 
+                                :label="t('pages.web_seo.save')" 
                                 icon="pi pi-check" 
                                 class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
                             />
@@ -102,7 +105,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <i class="pi pi-percentage text-emerald-500 text-lg"></i>
                     </div>
                     <div class="z-10 relative">
-                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Score SEO Actuel</h3>
+                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.web_seo.kpiScore') }}</h3>
                         <div class="flex items-end gap-2">
                             <p class="text-3xl font-extrabold text-slate-900">92</p>
                             <span class="text-xs font-bold text-emerald-500 mb-1">/100</span>
@@ -118,7 +121,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <i class="pi pi-sitemap text-blue-500 text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pages Indexées</h3>
+                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.web_seo.kpiIndexed') }}</h3>
                         <p class="text-3xl font-extrabold text-slate-900">145</p>
                     </div>
                 </div>
@@ -129,10 +132,10 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <i class="pi pi-exclamation-triangle text-red-500 text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Erreurs de Crawl</h3>
+                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.web_seo.kpiCrawlErrors') }}</h3>
                         <div class="flex items-center gap-2">
                             <p class="text-3xl font-extrabold text-slate-900">0</p>
-                            <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase">Parfait</span>
+                            <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase">{{ t('pages.web_seo.perfect') }}</span>
                         </div>
                     </div>
                 </div>
@@ -143,7 +146,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <i class="pi pi-stopwatch text-amber-500 text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Vitesse Serveur</h3>
+                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.web_seo.kpiServerSpeed') }}</h3>
                         <p class="text-3xl font-extrabold text-slate-900">124<span class="text-lg text-slate-400 ml-1">ms</span></p>
                     </div>
                 </div>
@@ -161,7 +164,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <!-- Configuration Meta -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                                <i class="pi pi-pencil text-blue-500"></i> Balises Meta (Page d'accueil)
+                                <i class="pi pi-pencil text-blue-500"></i> {{ t('pages.web_seo.metaTags') }}
                             </h2>
 
                             <div class="space-y-6">
@@ -170,11 +173,11 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                                     <div class="flex justify-between items-end mb-2">
                                         <label class="block text-sm font-bold text-slate-700">Meta Title</label>
                                         <span class="text-[10px] font-bold tracking-widest" :class="titleColor">
-                                            {{ titleLength }} / 60 char.
+                                            {{ t('pages.web_seo.charsCount', { count: titleLength, max: 60 }) }}
                                         </span>
                                     </div>
                                     <InputText v-model="seoForm.title" class="w-full font-medium" />
-                                    <p class="text-xs text-slate-500 mt-1">Le titre principal affiché dans les onglets du navigateur et les résultats de recherche.</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ t('pages.web_seo.metaTitleHelp') }}</p>
                                 </div>
 
                                 <!-- Meta Description -->
@@ -182,18 +185,18 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                                     <div class="flex justify-between items-end mb-2">
                                         <label class="block text-sm font-bold text-slate-700">Meta Description</label>
                                         <span class="text-[10px] font-bold tracking-widest" :class="descColor">
-                                            {{ descLength }} / 160 char.
+                                            {{ t('pages.web_seo.charsCount', { count: descLength, max: 160 }) }}
                                         </span>
                                     </div>
                                     <Textarea v-model="seoForm.description" rows="3" class="w-full font-medium" />
-                                    <p class="text-xs text-slate-500 mt-1">Un résumé attractif incitant au clic. Évitez de dépasser 160 caractères.</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ t('pages.web_seo.metaDescHelp') }}</p>
                                 </div>
 
                                 <!-- Mots-clés (Keywords) -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Mots-clés (Meta Keywords)</label>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.web_seo.keywordsLabel') }}</label>
                                     <Chips v-model="seoForm.keywords" class="w-full" :pt="{ input: { class: 'w-full' }, container: { class: 'w-full' } }" separator="," />
-                                    <p class="text-xs text-slate-500 mt-1">Appuyez sur "Entrée" ou "," pour ajouter un mot-clé. (Moins pertinent aujourd'hui pour Google, utile pour la recherche interne).</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ t('pages.web_seo.keywordsHelp') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -206,7 +209,7 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                         <!-- SERP Google Preview -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                                <i class="pi pi-google text-blue-500"></i> Aperçu Google
+                                <i class="pi pi-google text-blue-500"></i> {{ t('pages.web_seo.googlePreview') }}
                             </h2>
 
                             <!-- Simulation de la recherche Google -->
@@ -216,57 +219,57 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                                         <i class="pi pi-image text-slate-400 text-[10px]"></i>
                                     </div>
                                     <div>
-                                        <div class="text-[12px] text-slate-800">Votre Plateforme</div>
+                                        <div class="text-[12px] text-slate-800">{{ t('pages.web_seo.previewSiteName') }}</div>
                                         <div class="text-[11px] text-slate-500 leading-none">https://www.votresite.com</div>
                                     </div>
                                 </div>
                                 <div class="text-[#1a0dab] text-[18px] font-normal leading-tight mb-1 hover:underline cursor-pointer font-serif truncate">
-                                    {{ seoForm.title || 'Titre de votre page' }}
+                                    {{ seoForm.title || t('pages.web_seo.previewTitleFallback') }}
                                 </div>
                                 <div class="text-[#4d5156] text-[13px] leading-snug line-clamp-2">
-                                    {{ seoForm.description || 'La description de votre site apparaîtra ici dans les résultats de recherche.' }}
+                                    {{ seoForm.description || t('pages.web_seo.previewDescFallback') }}
                                 </div>
                             </div>
                             
                             <p class="text-[11px] text-slate-400 mt-4 text-center italic">
-                                L'aperçu ci-dessus est généré en temps réel. L'affichage final peut varier selon l'appareil.
+                                {{ t('pages.web_seo.previewNote') }}
                             </p>
                         </div>
 
                         <!-- Paramètres Techniques (Robots, Sitemap) -->
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
-                                <i class="pi pi-wrench text-blue-500"></i> Fichiers Techniques
+                                <i class="pi pi-wrench text-blue-500"></i> {{ t('pages.web_seo.techFiles') }}
                             </h2>
 
                             <div class="space-y-5">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="font-bold text-sm text-slate-700">Sitemap.xml Auto</div>
-                                        <div class="text-[11px] text-slate-500">Génère et met à jour le plan du site automatiquement.</div>
+                                        <div class="font-bold text-sm text-slate-700">{{ t('pages.web_seo.sitemapTitle') }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ t('pages.web_seo.sitemapDesc') }}</div>
                                     </div>
                                     <InputSwitch v-model="seoForm.sitemap" />
                                 </div>
 
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="font-bold text-sm text-slate-700">Fichier Robots.txt</div>
-                                        <div class="text-[11px] text-slate-500">Autorise les robots Google à crawler votre plateforme.</div>
+                                        <div class="font-bold text-sm text-slate-700">{{ t('pages.web_seo.robotsTitle') }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ t('pages.web_seo.robotsDesc') }}</div>
                                     </div>
                                     <InputSwitch v-model="seoForm.robots" />
                                 </div>
 
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="font-bold text-sm text-slate-700">Schema.org (JSON-LD)</div>
-                                        <div class="text-[11px] text-slate-500">Ajoute des micro-données pour les "Rich Snippets" de cours.</div>
+                                        <div class="font-bold text-sm text-slate-700">{{ t('pages.web_seo.schemaTitle') }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ t('pages.web_seo.schemaDesc') }}</div>
                                     </div>
                                     <InputSwitch v-model="seoForm.schemaOrg" />
                                 </div>
                             </div>
                             
                             <div class="mt-6 pt-5 border-t border-slate-100">
-                                <Button label="Regénérer le Sitemap" icon="pi pi-refresh" outlined class="w-full p-button-sm text-slate-600 border-slate-300 hover:bg-slate-50" />
+                                <Button :label="t('pages.web_seo.regenSitemap')" icon="pi pi-refresh" outlined class="w-full p-button-sm text-slate-600 border-slate-300 hover:bg-slate-50" />
                             </div>
                         </div>
 

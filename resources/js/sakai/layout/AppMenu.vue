@@ -1,9 +1,12 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, provide, readonly } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import { useLayout } from '@/sakai/layout/composables/layout';
 import AppMenuItem from './AppMenuItem.vue';
 
+const MENU_DEPTH_KEY = Symbol('menuActiveDepth');
+const { t } = useI18n();
 const { resetMenu } = useLayout();
 const page = usePage();
 
@@ -43,7 +46,6 @@ const model = computed(() => {
                     { label: 'Mon tableau de bord', icon: 'pi pi-fw pi-home', to: r('dashboard') },
                     { label: 'Mes formations', icon: 'pi pi-fw pi-list', to: r('student.my-courses') },
                     { label: 'Mes inscriptions', icon: 'pi pi-fw pi-id-card', to: r('student.my-enrollments'), badge: badges.value.enrollments_pending },
-                    // { label: 'Bibliothèque médias', icon: 'pi pi-fw pi-video', to: r('media-library.index') },
                     { label: 'Classes virtuelles', icon: 'pi pi-fw pi-desktop', to: r('live-sessions.mine') },
                     { label: 'Marketplace', icon: 'pi pi-fw pi-shopping-bag', to: r('marketplace.index') },
                     { label: 'Mon panier', icon: 'pi pi-fw pi-shopping-cart', to: r('marketplace.cart'), badge: badges.value.cart },
@@ -92,7 +94,7 @@ const model = computed(() => {
                     items: [
                         { label: 'Tous les Cours', icon: 'pi pi-fw pi-list', to: r('courses.index'), badge: badges.value.courses },
                         { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file', to: r('modules.index') },
-                        { label: 'Parcours (Paths)', icon: 'pi pi-fw pi-map', to: r('learning-paths.index') },
+                        { label: 'Parcours d\'apprentissage', icon: 'pi pi-fw pi-map', to: r('learning-paths.index') },
                         // { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-images', to: r('media-library.index') },
                     ]
                 },
@@ -113,16 +115,14 @@ const model = computed(() => {
             icon: 'pi pi-fw pi-globe',
             items: [
                 {
-                    label: 'Gestion CMS',
-                    icon: 'pi pi-fw pi-desktop',
+                    label: 'Actualités & Contenu',
+                    icon: 'pi pi-fw pi-folder',
                     items: [
                         { label: 'Pages Statiques', icon: 'pi pi-fw pi-clone', to: r('web.pages.index') },
-                        { label: 'Articles de Blog', icon: 'pi pi-fw pi-align-left', to: r('web.blog.index') },
+                        { label: 'Articles de Blog', icon: 'pi pi-fw pi-align-left', to: r('admin.blog.index') },
                         { label: 'Menus & Navigation', icon: 'pi pi-fw pi-bars', to: r('web.menus.index') },
                         { label: 'Témoignages', icon: 'pi pi-fw pi-star', to: r('web.testimonials.index') },
-                        { label: 'Réalisations', icon: 'pi pi-fw pi-trophy', to: r('realizations') },
-                        { label: 'Nos réalisations', icon: 'pi pi-fw pi-briefcase', to: r('admin.realizations.index') },
-                        { label: 'Blog', icon: 'pi pi-fw pi-book', to: r('admin.blog.index') },
+                        { label: 'Nos réalisations', icon: 'pi pi-fw pi-images', to: r('admin.realizations.index') },
                     ]
                 },
                 {
@@ -204,11 +204,10 @@ const model = computed(() => {
                         {
                             label: 'Mon Contenu',
                             icon: 'pi pi-fw pi-folder',
-                            items: [
-                                { label: 'Mes Cours', icon: 'pi pi-fw pi-list', to: r('courses.index') },
-                                { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file', to: r('modules.index') },
-                                // { label: 'Bibliothèque Médias', icon: 'pi pi-fw pi-images', to: r('media-library.index') },
-                            ]
+                        items: [
+                            { label: 'Mes Cours', icon: 'pi pi-fw pi-list', to: r('courses.index') },
+                            { label: 'Leçons & Modules', icon: 'pi pi-fw pi-file', to: r('modules.index') },
+                        ]
                         },
                         {
                             label: 'Évaluation',
@@ -241,6 +240,40 @@ const model = computed(() => {
 
     return adminMenu;
 });
+
+// --- Longest-prefix-wins : fournit à tout AppMenuItem la longueur du meilleur
+// --- match (lien le plus spécifique) pour la route actuelle. Évite que deux
+// --- entrées sœurs préfixes s'allument en même temps (ex. /system/settings/video
+// --- qui allumait à la fois "Paramètres Généraux" et "Visioconférence").
+const pathOnly = (url) => {
+    if (!url) return '';
+    try {
+        if (/^https?:\/\//i.test(url)) return new URL(url).pathname.replace(/\/+$/, '') || '/';
+    } catch (_) { /* ignore */ }
+    return String(url).split('?')[0].replace(/\/+$/, '') || '/';
+};
+
+const currentPath = computed(() => pathOnly(page.url));
+
+const collectLeafPaths = (nodes, acc = []) => {
+    for (const n of nodes) {
+        if (n.to && !n.items) acc.push(pathOnly(n.to));
+        if (n.items?.length) collectLeafPaths(n.items, acc);
+    }
+    return acc;
+};
+
+const bestMatchLength = computed(() => {
+    const cur = currentPath.value;
+    let best = 0;
+    for (const p of collectLeafPaths(model.value)) {
+        if (!p) continue;
+        if (cur === p || cur.startsWith(p + '/')) best = Math.max(best, p.length);
+    }
+    return best;
+});
+
+provide(MENU_DEPTH_KEY, readonly(bestMatchLength));
 </script>
 
 <template>
@@ -258,8 +291,8 @@ const model = computed(() => {
 
         <!-- Badge indicator: current role -->
         <li class="mt-auto p-4 hidden lg:block">
-            <div class="bg-gradient-to-br from-violet-50 to-violet-100 border border-violet-200 rounded-xl p-3">
-                <p class="text-[9px] font-black text-violet-600 uppercase tracking-widest mb-1">Connecté en tant que</p>
+            <div class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-xl p-3">
+                <p class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1">{{ t('layout.connected_as') }}</p>
                 <p class="text-xs font-black text-slate-800 capitalize truncate">
                     {{ userRoles[0] ?? 'Utilisateur' }}
                 </p>

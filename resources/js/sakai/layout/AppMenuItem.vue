@@ -1,7 +1,9 @@
-<script setup>
+﻿<script setup>
 import { useLayout } from '@/sakai/layout/composables/layout';
-import { onBeforeMount, ref, watch, computed } from 'vue';
+import { onBeforeMount, ref, watch, computed, inject } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+
+const MENU_DEPTH_KEY = Symbol('menuActiveDepth');
 
 import { useI18n } from 'vue-i18n';
 const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
@@ -51,7 +53,7 @@ const hasPermission = (permission) => {
 const isVisible = computed(() => {
     if (props.item.visible === false) return false;
 
-    // Si l'élément a des enfants, on vérifie si au moins un enfant est visible
+    // Si l'Ã©lÃ©ment a des enfants, on vÃ©rifie si au moins un enfant est visible
     if (props.item.items && props.item.items.length > 0) {
         return props.item.items.some(child => hasPermission(child.can));
     }
@@ -65,7 +67,7 @@ const handleLinkClick = () => {
     setActiveMenuItem(itemKey.value);
 };
 
-const itemClick = (event, item) => { // Cette fonction ne gère plus que les sous-menus
+const itemClick = (event, item) => { // Cette fonction ne gÃ¨re plus que les sous-menus
     if (item.disabled) {
         event.preventDefault();
         return;
@@ -75,7 +77,7 @@ const itemClick = (event, item) => { // Cette fonction ne gère plus que les sou
         item.command({ originalEvent: event, item: item });
     }
 
-    // Si c'est un sous-menu, on bascule son état actif
+    // Si c'est un sous-menu, on bascule son Ã©tat actif
     if (item.items) {
         const foundItemKey = isActiveMenu.value ? props.parentItemKey : itemKey.value;
         setActiveMenuItem(foundItemKey);
@@ -87,6 +89,10 @@ const itemClick = (event, item) => { // Cette fonction ne gère plus que les sou
 const isActiveMenu = ref(false);
 const itemKey = ref(null);
 const { t } = useI18n();
+
+// Les libellÃ©s de menu vivent dans le groupe `sidebar.*` des fichiers de
+// traduction ; fallback = libellÃ© franÃ§ais si la clÃ© est absente.
+const menuLabel = (label) => t(`sidebar.${label}`, label ?? '');
 
 // Extrait le path pur (sans host, sans query, sans trailing slash)
 const pathOnly = (url) => {
@@ -101,26 +107,36 @@ const pathOnly = (url) => {
 };
 
 const currentPath = computed(() => pathOnly(page.url));
+const injectedDepth = inject(MENU_DEPTH_KEY, null);
+const menuBestLength = computed(() => injectedDepth?.value ?? 0);
 
-// Match exact ou préfixe (les pages détail comme /admin/emails/45 ou /courses/12/edit
-// font aussi ressortir leur entrée de menu)
+// Match exact ou prÃ©fixe (les pages dÃ©tail comme /admin/emails/45 ou /courses/12/edit
+// font aussi ressortir leur entrÃ©e de menu)
 const matchesPath = (url) => {
     const p = pathOnly(url);
     if (!p) return false;
+    if (p.length !== menuBestLength.value) return false;
     return p === currentPath.value || currentPath.value.startsWith(p + '/');
 };
 
-// Détecte si l'item courant correspond à la route active (exact ou sous-chemin)
+// DÃ©tecte si l'item courant correspond Ã  la route active (exact ou sous-chemin)
 const isRouteActive = computed(() => {
     if (!props.item.to || props.item.items) return false;
     return matchesPath(props.item.to);
 });
 
-// Détecte récursivement si un sous-item correspond à la route active
+// DÃ©tecte rÃ©cursivement si un sous-item correspond Ã  la route active
+// Un parent reste highlight si un descendant est le lien actif
+const matchesChildPath = (url) => {
+    const p = pathOnly(url);
+    if (!p) return false;
+    return p === currentPath.value || currentPath.value.startsWith(p + '/');
+};
+
 const hasActiveDescendant = (item) => {
     if (!item || !item.items) return false;
     for (const child of item.items) {
-        if (child.to && matchesPath(child.to) && !child.items) return true;
+        if (child.to && matchesChildPath(child.to) && !child.items) return true;
         if (hasActiveDescendant(child)) return true;
     }
     return false;
@@ -131,7 +147,7 @@ const shouldBeActive = computed(() => isRouteActive.value || hasActiveDescendant
 onBeforeMount(() => {
     itemKey.value = props.parentItemKey ? props.parentItemKey + '-' + props.index : String(props.index);
 
-    // Si l'item (ou un enfant) correspond à la route active, on l'ouvre
+    // Si l'item (ou un enfant) correspond Ã  la route active, on l'ouvre
     if (shouldBeActive.value) {
         isActiveMenu.value = true;
         // On enregistre aussi dans le state pour rester synchro
@@ -161,7 +177,7 @@ watch(currentPath, () => {
 <template>
     <li v-if="isVisible"
         :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu, 'active-route': isRouteActive && !item.items, 'has-active-child': !isRouteActive && item.items && shouldBeActive }">
-        <div v-if="root" class="layout-menuitem-root-text">{{ t(item.label) }}</div>
+        <div v-if="root" class="layout-menuitem-root-text">{{ menuLabel(item.label) }}</div>
 
         <Link v-if="item.to && !item.items"
               @click="handleLinkClick"
@@ -170,7 +186,7 @@ watch(currentPath, () => {
               :class="[item.class, { 'active-route': isRouteActive }]"
               preserve-scroll>
             <i :class="item.icon" class="layout-menuitem-icon"></i>
-            <span class="layout-menuitem-text">{{ t(item.label) }}</span>
+            <span class="layout-menuitem-text">{{ menuLabel(item.label) }}</span>
             <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-[#E1251B] text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
                 {{ item.badge > 99 ? '99+' : item.badge }}
             </span>
@@ -183,7 +199,7 @@ watch(currentPath, () => {
            :target="item.target"
            tabindex="0">
             <i :class="item.icon" class="layout-menuitem-icon"></i>
-            <span class="layout-menuitem-text">{{ t(item.label) }}</span>
+            <span class="layout-menuitem-text">{{ menuLabel(item.label) }}</span>
             <span v-if="item.badge" class="layout-menuitem-badge ml-auto bg-[#E1251B] text-white text-[10px] font-black rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
                 {{ item.badge > 99 ? '99+' : item.badge }}
             </span>
@@ -205,7 +221,7 @@ watch(currentPath, () => {
 </template>
 
 <style lang="scss" scoped>
-/* Item parent qui contient la page active — rouge de marque SubNetCongo */
+/* Item parent qui contient la page active â€” rouge de marque SubNetCongo */
 .active-route {
     color: #E1251B !important;
     font-weight: 700;

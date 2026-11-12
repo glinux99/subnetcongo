@@ -13,7 +13,11 @@ class EnrollmentSeeder extends Seeder
 {
     public function run(): void
     {
-        $students = User::role('student')->get();
+        // Uniquement les comptes de test seeded (@subnetcongo.net) — jamais les vrais inscrits,
+        // dont la progression est une donnée réelle à préserver.
+        $students = User::role('student')
+            ->where('email', 'like', '%@subnetcongo.net')
+            ->get();
         $courses = Course::published()->get();
 
         if ($students->isEmpty() || $courses->isEmpty()) {

@@ -45,7 +45,9 @@ import InputNumber from 'primevue/inputnumber';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import ScrollPanel from 'primevue/scrollpanel';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 
@@ -82,10 +84,10 @@ const tokenForm = useForm({
     expires_at: null,
 });
 const availableAbilities = [
-    { label: 'Lecture (Read)',  value: 'read' },
-    { label: 'Écriture (Write)', value: 'write' },
-    { label: 'Suppression (Delete)', value: 'delete' },
-    { label: 'Administration (*)', value: '*' },
+    { label: t('pages.api.ability_read'),  value: 'read' },
+    { label: t('pages.api.ability_write'), value: 'write' },
+    { label: t('pages.api.ability_delete'), value: 'delete' },
+    { label: t('pages.api.ability_admin'), value: '*' },
 ];
 
 // ---- Logs ----
@@ -118,7 +120,7 @@ const errorRateColor = computed(() => {
 });
 
 const exportOptions = [
-    { label: 'Exporter Logs (CSV)',  icon: 'pi pi-file-excel', command: () => exportLogs() },
+    { label: t('pages.api.export_csv'),  icon: 'pi pi-file-excel', command: () => exportLogs() },
 ];
 
 // ======================================================================================
@@ -155,7 +157,7 @@ const initChart = () => {
     trafficChartData.value = {
         labels,
         datasets: [{
-            label: 'Requêtes API',
+            label: t('pages.api.chart_label'),
             data,
             fill: true,
             borderColor: '#6366F1',
@@ -197,7 +199,7 @@ const loadTokens = async (page = 1) => {
         users.value = data.users;
         if (!tokenForm.user_id && data.users.length) tokenForm.user_id = data.users[0].id;
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les tokens.', life: 4000 });
+        toast.add({ severity: 'error', summary: t('pages.api.error'), detail: t('pages.api.tokens_load_failed'), life: 4000 });
     } finally {
         isLoading.value.tokens = false;
     }
@@ -226,16 +228,16 @@ const generateToken = async () => {
         });
         const data = await res.json();
         if (! res.ok) {
-            toast.add({ severity: 'error', summary: 'Erreur', detail: data.message || 'Création échouée.', life: 4000 });
+            toast.add({ severity: 'error', summary: t('pages.api.error'), detail: data.message || t('pages.api.create_failed'), life: 4000 });
             return;
         }
         generatedToken.value = data.plain_token;
         tokenStep.value = 2;
-        toast.add({ severity: 'success', summary: 'Token généré', detail: 'Copiez-le maintenant, il ne sera plus jamais affiché.', life: 5000 });
+        toast.add({ severity: 'success', summary: t('pages.api.token_generated'), detail: t('pages.api.token_generated_detail'), life: 5000 });
         loadTokens();
         router.reload({ only: ['stats'] });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur réseau', detail: e.message, life: 4000 });
+        toast.add({ severity: 'error', summary: t('pages.api.error_network'), detail: e.message, life: 4000 });
     } finally {
         tokenForm.processing = false;
     }
@@ -244,34 +246,34 @@ const generateToken = async () => {
 const copyToken = async () => {
     try {
         await navigator.clipboard.writeText(generatedToken.value);
-        toast.add({ severity: 'info', summary: 'Copié', detail: 'Token copié dans le presse-papiers.', life: 2000 });
+        toast.add({ severity: 'info', summary: t('pages.api.copied'), detail: t('pages.api.copied_detail'), life: 2000 });
     } catch (e) {
-        toast.add({ severity: 'warn', summary: 'Copie manuelle', detail: 'Sélectionnez puis copiez le token manuellement.', life: 4000 });
+        toast.add({ severity: 'warn', summary: t('pages.api.copy_manual'), detail: t('pages.api.copy_manual_detail'), life: 4000 });
     }
 };
 
-const revokeToken = (t) => {
+const revokeToken = (token) => {
     confirm.require({
-        message: `Révoquer le token « ${t.name} » ? Les applications l'utilisant perdront l'accès immédiatement.`,
-        header: 'Révocation de Token',
+        message: t('pages.api.revoke_confirm', { name: token.name }),
+        header: t('pages.api.revoke_header'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: async () => {
             try {
-                const res = await fetch(`/system/api/tokens/${t.id}`, {
+                const res = await fetch(`/system/api/tokens/${token.id}`, {
                     method: 'DELETE',
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': props.csrf_token ?? document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    toast.add({ severity: 'success', summary: 'Révoqué', detail: data.message || 'Token supprimé.', life: 3000 });
+                    toast.add({ severity: 'success', summary: t('pages.api.revoked'), detail: data.message || t('pages.api.token_deleted'), life: 3000 });
                     loadTokens();
                     router.reload({ only: ['stats'] });
                 } else {
-                    toast.add({ severity: 'error', summary: 'Erreur', detail: data.message || 'Révocation échouée.', life: 4000 });
+                    toast.add({ severity: 'error', summary: t('pages.api.error'), detail: data.message || t('pages.api.revoke_failed'), life: 4000 });
                 }
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Erreur réseau', detail: e.message, life: 4000 });
+                toast.add({ severity: 'error', summary: t('pages.api.error_network'), detail: e.message, life: 4000 });
             }
         },
     });
@@ -284,11 +286,11 @@ const pruneExpiredTokens = async () => {
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': props.csrf_token ?? document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
         });
         const data = await res.json();
-        toast.add({ severity: 'success', summary: 'Nettoyage', detail: data.message || 'Tokens expirés supprimés.', life: 3000 });
+        toast.add({ severity: 'success', summary: t('pages.api.cleanup'), detail: data.message || t('pages.api.tokens_pruned'), life: 3000 });
         loadTokens();
         router.reload({ only: ['stats'] });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: e.message, life: 4000 });
+        toast.add({ severity: 'error', summary: t('pages.api.error'), detail: e.message, life: 4000 });
     }
 };
 
@@ -316,7 +318,7 @@ const loadLogs = async (page = 1) => {
         };
         if (data.methods) availableMethods.value = data.methods;
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger les logs.', life: 4000 });
+        toast.add({ severity: 'error', summary: t('pages.api.error'), detail: t('pages.api.logs_load_failed'), life: 4000 });
     } finally {
         isLoading.value.logs = false;
     }
@@ -355,13 +357,13 @@ const saveSettings = async () => {
         });
         const data = await res.json();
         if (res.ok) {
-            toast.add({ severity: 'success', summary: 'Configuration', detail: data.message || 'Paramètres enregistrés.', life: 3000 });
+            toast.add({ severity: 'success', summary: t('pages.api.settings_summary'), detail: data.message || t('pages.api.settings_saved'), life: 3000 });
             router.reload({ only: ['settings', 'stats'] });
         } else {
-            toast.add({ severity: 'error', summary: 'Erreur', detail: data.message || 'Échec de l\'enregistrement.', life: 4000 });
+            toast.add({ severity: 'error', summary: t('pages.api.error'), detail: data.message || t('pages.api.settings_save_failed'), life: 4000 });
         }
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur réseau', detail: e.message, life: 4000 });
+        toast.add({ severity: 'error', summary: t('pages.api.error_network'), detail: e.message, life: 4000 });
     } finally {
         settingsForm.processing = false;
     }
@@ -373,19 +375,19 @@ const runHealthCheck = async () => {
     const now = new Date();
     const add = (msg, type = 'info') => healthTerminalLogs.value.push({ time: now.toLocaleTimeString(), msg, type });
 
-    add('Lancement du diagnostic système…');
+    add(t('pages.api.health_start'));
     try {
         const res = await fetch('/system/api/health', { headers: { 'Accept': 'application/json' } });
         const data = await res.json();
         healthStatus.value = data;
 
-        add(`Base de données : ${data.database ? 'OK' : 'ÉCHEC'}${data.database_error ? ' (' + data.database_error + ')' : ''}`, data.database ? 'success' : 'danger');
-        add(`Cache : ${data.cache ? 'OK' : 'ÉCHEC'}${data.cache_error ? ' (' + data.cache_error + ')' : ''}`, data.cache ? 'success' : 'danger');
-        add(`Stockage : ${data.storage ? 'OK' : 'ÉCHEC'}${data.storage_error ? ' (' + data.storage_error + ')' : ''}`, data.storage ? 'success' : 'danger');
-        add(`Environnement : PHP ${data.php} / Laravel ${data.laravel}`, 'info');
-        add(`Statut global : ${data.status === 'healthy' ? 'OPÉRATIONNEL' : 'DÉGRADÉ'}`, data.status === 'healthy' ? 'success' : 'warning');
+        add(`${t('pages.api.health_db')} : ${data.database ? t('pages.api.ok') : t('pages.api.fail')}${data.database_error ? ' (' + data.database_error + ')' : ''}`, data.database ? 'success' : 'danger');
+        add(`Cache : ${data.cache ? t('pages.api.ok') : t('pages.api.fail')}${data.cache_error ? ' (' + data.cache_error + ')' : ''}`, data.cache ? 'success' : 'danger');
+        add(`${t('pages.api.health_storage')} : ${data.storage ? t('pages.api.ok') : t('pages.api.fail')}${data.storage_error ? ' (' + data.storage_error + ')' : ''}`, data.storage ? 'success' : 'danger');
+        add(t('pages.api.env_line', { php: data.php, laravel: data.laravel }), 'info');
+        add(t('pages.api.status_line', { status: data.status === 'healthy' ? t('pages.api.operational') : t('pages.api.degraded') }), data.status === 'healthy' ? 'success' : 'warning');
     } catch (e) {
-        add('Impossible de joindre /system/api/health : ' + e.message, 'danger');
+        add(t('pages.api.health_unreachable') + ' ' + e.message, 'danger');
     } finally {
         healthLoading.value = false;
     }
@@ -396,7 +398,7 @@ const exportLogs = () => {
     if (logFilters.date_from) params.set('date_from', logFilters.date_from);
     if (logFilters.date_to)   params.set('date_to',   logFilters.date_to);
     window.location.href = `/system/api/export-logs?${params}`;
-    toast.add({ severity: 'info', summary: 'Export', detail: 'Génération du fichier CSV…', life: 2000 });
+    toast.add({ severity: 'info', summary: t('pages.api.export_summary'), detail: t('pages.api.export_csv_detail'), life: 2000 });
 };
 </script>
 
@@ -421,15 +423,15 @@ const exportLogs = () => {
                         <div>
                             <div class="flex items-center gap-3 mb-1">
                                 <h1 class="text-3xl font-black text-white tracking-tight">API Gateway Control</h1>
-                                <Tag :value="healthStatus.status === 'healthy' ? 'ONLINE' : 'DÉGRADÉ'" :severity="healthStatus.status === 'healthy' ? 'success' : 'danger'" class="text-[10px] font-black uppercase tracking-widest" />
+                                <Tag :value="healthStatus.status === 'healthy' ? 'ONLINE' : t('pages.api.degraded')" :severity="healthStatus.status === 'healthy' ? 'success' : 'danger'" class="text-[10px] font-black uppercase tracking-widest" />
                             </div>
-                            <p class="text-slate-400 font-medium text-sm">Monitoring du trafic, gestion des tokens Sanctum et diagnostics temps réel.</p>
+                            <p class="text-slate-400 font-medium text-sm">{{ t('pages.api.monitoring') }}</p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <SplitButton label="Exporter" icon="pi pi-download" :model="exportOptions" class="p-button-outlined p-button-secondary bg-slate-800/50 text-white border-slate-700" />
-                        <Button label="Générer Token" icon="pi pi-key" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold" @click="openCreateTokenWizard" />
+                        <SplitButton :label="t('pages.api.export')" icon="pi pi-download" :model="exportOptions" class="p-button-outlined p-button-secondary bg-slate-800/50 text-white border-slate-700" />
+                        <Button :label="t('pages.api.generate_token')" icon="pi pi-key" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold" @click="openCreateTokenWizard" />
                     </div>
                 </div>
             </div>
@@ -441,7 +443,7 @@ const exportLogs = () => {
 
                         <!-- ════════════ TAB 1 : DASHBOARD ════════════ -->
                         <TabPanel>
-                            <template #header><i class="pi pi-desktop mr-2"></i> Vue d'ensemble</template>
+                            <template #header><i class="pi pi-desktop mr-2"></i> {{ t('pages.api.tab_overview') }}</template>
                             <div class="p-6 lg:p-8 space-y-8 bg-slate-50/30">
 
                                 <!-- KPIs -->
@@ -449,12 +451,12 @@ const exportLogs = () => {
                                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-blue-300 transition-colors">
                                         <div class="flex justify-between items-start mb-4">
                                             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-key text-xl"></i></div>
-                                            <Badge :value="`${stats.active_tokens} Actifs`" severity="success" class="text-[9px] uppercase tracking-widest" />
+                                            <Badge :value="t('pages.api.tokens_active', { n: stats.active_tokens })" severity="success" class="text-[9px] uppercase tracking-widest" />
                                         </div>
                                         <div>
-                                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Tokens Émis</h4>
+                                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.tokens_issued') }}</h4>
                                             <h2 class="text-4xl font-black text-slate-800">{{ stats.total_tokens }}</h2>
-                                            <p v-if="stats.expired_tokens" class="text-[10px] text-red-500 font-bold mt-2"><i class="pi pi-clock mr-1"></i>{{ stats.expired_tokens }} expiré(s)</p>
+                                            <p v-if="stats.expired_tokens" class="text-[10px] text-red-500 font-bold mt-2"><i class="pi pi-clock mr-1"></i>{{ t('pages.api.expired_count', { n: stats.expired_tokens }) }}</p>
                                         </div>
                                     </div>
 
@@ -464,9 +466,9 @@ const exportLogs = () => {
                                             <Tag value="Live" severity="info" class="text-[9px]" />
                                         </div>
                                         <div>
-                                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Requêtes (Total)</h4>
+                                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.requests_total') }}</h4>
                                             <h2 class="text-4xl font-black text-slate-800">{{ stats.total_requests.toLocaleString() }}</h2>
-                                            <p class="text-[10px] text-slate-500 mt-2 font-bold"><i class="pi pi-arrow-up text-emerald-500 mr-1"></i> +{{ stats.requests_today }} aujourd'hui</p>
+                                            <p class="text-[10px] text-slate-500 mt-2 font-bold"><i class="pi pi-arrow-up text-emerald-500 mr-1"></i>{{ t('pages.api.requests_today', { n: stats.requests_today }) }}</p>
                                         </div>
                                     </div>
 
@@ -476,9 +478,9 @@ const exportLogs = () => {
                                         </div>
                                         <div class="flex items-center gap-6">
                                             <div>
-                                                <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Taux d'Erreur</h4>
+                                                <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.error_rate') }}</h4>
                                                 <h2 class="text-4xl font-black text-slate-800">{{ stats.error_rate }}%</h2>
-                                                <p class="text-[10px] text-slate-500 font-bold mt-2">{{ stats.errors_count }} erreur(s) enregistrée(s)</p>
+                                                <p class="text-[10px] text-slate-500 font-bold mt-2">{{ t('pages.api.errors_logged', { n: stats.errors_count }) }}</p>
                                             </div>
                                             <Knob :modelValue="stats.error_rate" :size="60" :valueColor="errorRateColor" rangeColor="#f1f5f9" readonly :strokeWidth="8" :showValue="false" />
                                         </div>
@@ -488,7 +490,7 @@ const exportLogs = () => {
                                         <i class="pi pi-bolt absolute -right-4 -bottom-4 text-6xl text-white/5"></i>
                                         <div class="relative z-10">
                                             <div class="w-12 h-12 bg-white/10 text-amber-400 backdrop-blur-md rounded-xl flex items-center justify-center mb-4 border border-white/10"><i class="pi pi-clock text-xl"></i></div>
-                                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Dernière Activité</h4>
+                                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.last_activity') }}</h4>
                                             <h2 class="text-2xl font-black text-white mt-2">{{ stats.last_activity }}</h2>
                                         </div>
                                     </div>
@@ -499,8 +501,8 @@ const exportLogs = () => {
                                     <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                                         <div class="flex justify-between items-center mb-6">
                                             <div>
-                                                <h3 class="text-lg font-black text-slate-800">Trafic API (30 jours)</h3>
-                                                <p class="text-xs text-slate-500 font-medium">Volume de requêtes enregistré dans <code>audit_logs</code>.</p>
+                                                <h3 class="text-lg font-black text-slate-800">{{ t('pages.api.traffic_title') }}</h3>
+                                                <p class="text-xs text-slate-500 font-medium">{{ t('pages.api.traffic_desc_pre') }} <code>audit_logs</code>.</p>
                                             </div>
                                             <div v-if="methods && Object.keys(methods).length" class="flex gap-2 text-[10px]">
                                                 <span v-for="(c, m) in methods" :key="m" class="px-2 py-1 bg-slate-100 rounded font-bold"><span class="text-blue-600">{{ m }}</span> {{ c }}</span>
@@ -513,11 +515,11 @@ const exportLogs = () => {
 
                                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                                         <div class="mb-6">
-                                            <h3 class="text-lg font-black text-slate-800">Top Consommateurs</h3>
-                                            <p class="text-xs text-slate-500 font-medium">30 derniers jours, par volume de requêtes.</p>
+                                            <h3 class="text-lg font-black text-slate-800">{{ t('pages.api.top_consumers') }}</h3>
+                                            <p class="text-xs text-slate-500 font-medium">{{ t('pages.api.top_consumers_desc') }}</p>
                                         </div>
                                         <ScrollPanel class="flex-1 pr-2" style="height: 280px">
-                                            <div v-if="top_users.length === 0" class="text-center text-slate-400 italic py-12 text-sm">Aucun utilisateur actif sur les 30 derniers jours.</div>
+                                            <div v-if="top_users.length === 0" class="text-center text-slate-400 italic py-12 text-sm">{{ t('pages.api.no_active_users') }}</div>
                                             <div v-for="(row, idx) in top_users" :key="idx" class="flex items-center justify-between p-3 mb-2 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
                                                 <div class="flex items-center gap-3 min-w-0">
                                                     <Avatar :label="(row.user?.name || '?').charAt(0).toUpperCase()" shape="circle" class="bg-blue-100 text-blue-600 font-bold" />
@@ -539,29 +541,29 @@ const exportLogs = () => {
 
                         <!-- ════════════ TAB 2 : TOKENS ════════════ -->
                         <TabPanel>
-                            <template #header><i class="pi pi-key mr-2"></i> Tokens ({{ stats.total_tokens }})</template>
+                            <template #header><i class="pi pi-key mr-2"></i> {{ t('pages.api.tab_tokens', { n: stats.total_tokens }) }}</template>
                             <div class="p-6 h-full flex flex-col">
 
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                                     <div>
                                         <h2 class="text-xl font-black text-slate-800">Personal Access Tokens</h2>
-                                        <p class="text-sm text-slate-500 font-medium mt-1">Clés d'API Sanctum permettant l'accès programmatique à la plateforme.</p>
+                                        <p class="text-sm text-slate-500 font-medium mt-1">{{ t('pages.api.sanctum_keys') }}</p>
                                     </div>
                                     <div class="flex gap-2 w-full md:w-auto">
                                         <IconField iconPosition="left" class="flex-1 md:w-64">
                                             <InputIcon class="pi pi-search text-slate-400" />
-                                            <InputText v-model="dtTokensFilters['global'].value" placeholder="Rechercher un token..." class="w-full bg-slate-50 border-slate-200 rounded-xl focus:bg-white" @keyup.enter="loadTokens()" />
+                                            <InputText v-model="dtTokensFilters['global'].value" :placeholder="t('pages.api.search_token')" class="w-full bg-slate-50 border-slate-200 rounded-xl focus:bg-white" @keyup.enter="loadTokens()" />
                                         </IconField>
-                                        <Button icon="pi pi-filter-slash" class="p-button-rounded p-button-secondary p-button-outlined" v-tooltip.top="'Nettoyer expirés'" @click="pruneExpiredTokens" />
-                                        <Button icon="pi pi-refresh" class="p-button-rounded p-button-secondary p-button-outlined" v-tooltip.top="'Recharger'" @click="loadTokens()" />
+                                        <Button icon="pi pi-filter-slash" class="p-button-rounded p-button-secondary p-button-outlined" v-tooltip.top="t('pages.api.clean_expired')" @click="pruneExpiredTokens" />
+                                        <Button icon="pi pi-refresh" class="p-button-rounded p-button-secondary p-button-outlined" v-tooltip.top="t('pages.api.reload')" @click="loadTokens()" />
                                     </div>
                                 </div>
 
                                 <div class="flex-1 border border-slate-200 rounded-xl overflow-hidden bg-white">
                                     <DataTable :value="tokens" :paginator="true" :rows="tokensPagination.per_page" :totalRecords="tokensPagination.total" :first="(tokensPagination.current_page - 1) * tokensPagination.per_page" :lazy="true" @page="(e) => loadTokens(e.page + 1)" dataKey="id" :filters="dtTokensFilters" class="custom-datatable p-datatable-lg h-full" :loading="isLoading.tokens" responsiveLayout="scroll">
-                                        <template #empty><div class="p-10 text-center text-slate-500 font-medium">Aucun token.</div></template>
+                                        <template #empty><div class="p-10 text-center text-slate-500 font-medium">{{ t('pages.api.no_tokens') }}</div></template>
 
-                                        <Column field="name" header="NOM DU TOKEN" sortable style="min-width: 18rem">
+                                        <Column field="name" :header="t('pages.api.col_token_name')" sortable style="min-width: 18rem">
                                             <template #body="{data}">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200"><i class="pi pi-code text-xs"></i></div>
@@ -573,7 +575,7 @@ const exportLogs = () => {
                                             </template>
                                         </Column>
 
-                                        <Column header="HABILITATIONS">
+                                        <Column :header="t('pages.api.col_abilities')">
                                             <template #body="{data}">
                                                 <div class="flex flex-wrap gap-1">
                                                     <Tag v-for="ab in data.abilities" :key="ab" :value="ab" class="bg-blue-50 text-blue-700 border border-blue-100 text-[9px] uppercase font-black" />
@@ -581,29 +583,29 @@ const exportLogs = () => {
                                             </template>
                                         </Column>
 
-                                        <Column field="last_used_at" header="DERNIÈRE UTILISATION" sortable>
+                                        <Column field="last_used_at" :header="t('pages.api.col_last_used')" sortable>
                                             <template #body="{data}">
                                                 <span v-if="data.last_used_at" class="text-xs font-bold text-slate-600 flex items-center gap-2"><i class="pi pi-clock text-slate-400"></i> {{ new Date(data.last_used_at).toLocaleString('fr-FR') }}</span>
-                                                <span v-else class="text-xs text-slate-400 italic">Jamais utilisé</span>
+                                                <span v-else class="text-xs text-slate-400 italic">{{ t('pages.api.never_used') }}</span>
                                             </template>
                                         </Column>
 
-                                        <Column field="expires_at" header="STATUT" sortable align="center">
+                                        <Column field="expires_at" :header="t('pages.api.col_status')" sortable align="center">
                                             <template #body="{data}">
                                                 <div v-if="!data.expires_at" class="flex flex-col items-center">
-                                                    <Badge value="ACTIF" severity="success" class="text-[9px] tracking-widest" />
-                                                    <span class="text-[9px] text-slate-400 mt-1">N'expire jamais</span>
+                                                    <Badge :value="t('pages.api.active')" severity="success" class="text-[9px] tracking-widest" />
+                                                    <span class="text-[9px] text-slate-400 mt-1">{{ t('pages.api.never_expires') }}</span>
                                                 </div>
                                                 <div v-else class="flex flex-col items-center">
-                                                    <Badge :value="data.is_expired ? 'EXPIRÉ' : 'ACTIF'" :severity="data.is_expired ? 'danger' : 'info'" class="text-[9px] tracking-widest" />
-                                                    <span class="text-[9px] text-slate-500 mt-1">Exp: {{ new Date(data.expires_at).toLocaleDateString('fr-FR') }}</span>
+                                                    <Badge :value="data.is_expired ? t('pages.api.expired') : t('pages.api.active')" :severity="data.is_expired ? 'danger' : 'info'" class="text-[9px] tracking-widest" />
+                                                    <span class="text-[9px] text-slate-500 mt-1">{{ t('pages.api.expiry_line', { date: new Date(data.expires_at).toLocaleDateString('fr-FR') }) }}</span>
                                                 </div>
                                             </template>
                                         </Column>
 
-                                        <Column header="ACTIONS" alignFrozen="right" frozen style="width: 5rem" align="center">
+                                        <Column :header="t('pages.api.col_actions')" alignFrozen="right" frozen style="width: 5rem" align="center">
                                             <template #body="{data}">
-                                                <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger hover:bg-red-50" v-tooltip.left="'Révoquer'" @click="revokeToken(data)" />
+                                                <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger hover:bg-red-50" v-tooltip.left="t('pages.api.revoke')" @click="revokeToken(data)" />
                                             </template>
                                         </Column>
                                     </DataTable>
@@ -613,34 +615,34 @@ const exportLogs = () => {
 
                         <!-- ════════════ TAB 3 : LOGS ════════════ -->
                         <TabPanel>
-                            <template #header><i class="pi pi-list mr-2"></i> Journal d'Audit</template>
+                            <template #header><i class="pi pi-list mr-2"></i> {{ t('pages.api.tab_logs') }}</template>
                             <div class="p-6 h-full flex flex-col bg-slate-50/50">
 
                                 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-6 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
                                     <IconField iconPosition="left" class="md:col-span-4">
                                         <InputIcon class="pi pi-search text-slate-400" />
-                                        <InputText v-model="logFilters.search" placeholder="Recherche (IP, URL, event, description)..." class="w-full bg-slate-50 border-none focus:ring-0 text-sm" @keyup.enter="loadLogs()" />
+                                        <InputText v-model="logFilters.search" :placeholder="t('pages.api.search_audit')" class="w-full bg-slate-50 border-none focus:ring-0 text-sm" @keyup.enter="loadLogs()" />
                                     </IconField>
-                                    <Dropdown v-model="logFilters.method" :options="availableMethods" placeholder="Méthode HTTP" class="md:col-span-2" showClear @change="loadLogs()" />
-                                    <Dropdown v-model="logFilters.level" :options="availableLevels" placeholder="Niveau" class="md:col-span-2" showClear @change="loadLogs()" />
-                                    <Calendar v-model="logFilters.date_from" placeholder="Depuis" class="md:col-span-2" dateFormat="yy-mm-dd" showIcon @date-select="loadLogs()" />
-                                    <Calendar v-model="logFilters.date_to"   placeholder="Jusqu'à" class="md:col-span-1" dateFormat="yy-mm-dd" showIcon @date-select="loadLogs()" />
-                                    <Button icon="pi pi-filter-slash" class="p-button-secondary p-button-outlined md:col-span-1" v-tooltip.top="'Réinitialiser'" @click="resetLogFilters" />
+                                    <Dropdown v-model="logFilters.method" :options="availableMethods" :placeholder="t('pages.api.http_method')" class="md:col-span-2" showClear @change="loadLogs()" />
+                                    <Dropdown v-model="logFilters.level" :options="availableLevels" :placeholder="t('pages.api.level')" class="md:col-span-2" showClear @change="loadLogs()" />
+                                    <Calendar v-model="logFilters.date_from" :placeholder="t('pages.api.from_date')" class="md:col-span-2" dateFormat="yy-mm-dd" showIcon @date-select="loadLogs()" />
+                                    <Calendar v-model="logFilters.date_to"   :placeholder="t('pages.api.to_date')" class="md:col-span-1" dateFormat="yy-mm-dd" showIcon @date-select="loadLogs()" />
+                                    <Button icon="pi pi-filter-slash" class="p-button-secondary p-button-outlined md:col-span-1" v-tooltip.top="t('pages.api.reset')" @click="resetLogFilters" />
                                 </div>
 
                                 <div class="flex-1 bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                                     <DataTable :value="logs" :paginator="true" :rows="logsPagination.per_page" :totalRecords="logsPagination.total" :first="(logsPagination.current_page - 1) * logsPagination.per_page" :lazy="true" @page="(e) => loadLogs(e.page + 1)" class="custom-datatable p-datatable-sm" stripedRows :loading="isLoading.logs">
-                                        <template #empty><div class="p-10 text-center text-slate-500 font-medium">Aucun log API trouvé.</div></template>
+                                        <template #empty><div class="p-10 text-center text-slate-500 font-medium">{{ t('pages.api.no_logs') }}</div></template>
 
-                                        <Column field="created_at" header="HORODATAGE" sortable style="width: 11rem">
+                                        <Column field="created_at" :header="t('pages.api.col_timestamp')" sortable style="width: 11rem">
                                             <template #body="{data}"><span class="text-[11px] font-mono font-bold text-slate-500">{{ new Date(data.created_at).toLocaleString('fr-FR') }}</span></template>
                                         </Column>
 
-                                        <Column field="method" header="MÉTHODE" style="width: 6rem">
+                                        <Column field="method" :header="t('pages.api.col_method')" style="width: 6rem">
                                             <template #body="{data}"><Tag v-if="data.method" :value="data.method" :severity="getMethodColor(data.method)" class="text-[9px] font-black" /></template>
                                         </Column>
 
-                                        <Column field="event" header="ÉVÈNEMENT" sortable style="min-width: 14rem">
+                                        <Column field="event" :header="t('pages.api.col_event')" sortable style="min-width: 14rem">
                                             <template #body="{data}">
                                                 <div class="flex flex-col">
                                                     <span class="text-xs font-bold text-slate-700">{{ data.event }}</span>
@@ -649,11 +651,11 @@ const exportLogs = () => {
                                             </template>
                                         </Column>
 
-                                        <Column field="level" header="NIVEAU" style="width: 6rem">
+                                        <Column field="level" :header="t('pages.api.col_level')" style="width: 6rem">
                                             <template #body="{data}"><Tag :value="data.level || 'info'" :severity="getLogSeverity(data.level)" class="text-[9px] uppercase font-black" /></template>
                                         </Column>
 
-                                        <Column field="url" header="ENDPOINT" style="max-width: 18rem">
+                                        <Column field="url" :header="t('pages.api.col_endpoint')" style="max-width: 18rem">
                                             <template #body="{data}"><span class="text-xs text-slate-700 font-mono truncate block" v-tooltip.top="data.url">{{ data.url || '—' }}</span></template>
                                         </Column>
 
@@ -661,16 +663,16 @@ const exportLogs = () => {
                                             <template #body="{data}"><span v-if="data.ip_address" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ data.ip_address }}</span></template>
                                         </Column>
 
-                                        <Column field="user" header="IDENTITÉ" style="min-width: 12rem">
+                                        <Column field="user" :header="t('pages.api.col_identity')" style="min-width: 12rem">
                                             <template #body="{data}">
                                                 <span v-if="data.user" class="text-xs font-bold text-blue-600"><i class="pi pi-user text-[10px] mr-1"></i> {{ data.user.name }}</span>
-                                                <span v-else class="text-[10px] text-slate-400 italic">Système</span>
+                                                <span v-else class="text-[10px] text-slate-400 italic">{{ t('pages.api.system') }}</span>
                                             </template>
                                         </Column>
 
                                         <Column align="center" style="width: 4rem">
                                             <template #body="{data}">
-                                                <Button icon="pi pi-code" class="p-button-rounded p-button-text p-button-secondary h-8 w-8" @click="viewLogDetails(data)" v-tooltip.left="'Détails JSON'" />
+                                                <Button icon="pi pi-code" class="p-button-rounded p-button-text p-button-secondary h-8 w-8" @click="viewLogDetails(data)" v-tooltip.left="t('pages.api.details_json')" />
                                             </template>
                                         </Column>
                                     </DataTable>
@@ -680,7 +682,7 @@ const exportLogs = () => {
 
                         <!-- ════════════ TAB 4 : SETTINGS & HEALTH ════════════ -->
                         <TabPanel>
-                            <template #header><i class="pi pi-cog mr-2"></i> Configuration & Santé</template>
+                            <template #header><i class="pi pi-cog mr-2"></i> {{ t('pages.api.tab_settings') }}</template>
                             <div class="p-6">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
@@ -689,45 +691,45 @@ const exportLogs = () => {
                                         <div class="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
                                             <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="pi pi-sliders-h text-xl"></i></div>
                                             <div>
-                                                <h3 class="text-lg font-black text-slate-800">Paramètres Globaux</h3>
-                                                <p class="text-xs text-slate-500 font-medium">Persistés dans <code>web_settings</code> (group=api).</p>
+                                                <h3 class="text-lg font-black text-slate-800">{{ t('pages.api.global_settings') }}</h3>
+                                                <p class="text-xs text-slate-500 font-medium">{{ t('pages.api.persisted_in') }} <code>web_settings</code> {{ t('pages.api.persisted_after') }}</p>
                                             </div>
                                         </div>
 
                                         <div class="space-y-6">
                                             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                                 <div>
-                                                    <h4 class="font-bold text-slate-700 text-sm">Activer l'API REST</h4>
-                                                    <p class="text-[10px] text-slate-500">Permettre aux applications tierces de se connecter.</p>
+                                                    <h4 class="font-bold text-slate-700 text-sm">{{ t('pages.api.enable_api') }}</h4>
+                                                    <p class="text-[10px] text-slate-500">{{ t('pages.api.enable_api_desc') }}</p>
                                                 </div>
                                                 <InputSwitch v-model="settingsForm.api_enabled" />
                                             </div>
 
                                             <div class="space-y-2">
-                                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Rate Limit (Requêtes / Minute)</label>
+                                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">{{ t('pages.api.rate_limit') }}</label>
                                                 <InputNumber v-model="settingsForm.default_rate_limit" :min="1" :max="10000" :minFractionDigits="0" showButtons buttonLayout="horizontal" inputClass="text-center font-black" class="w-full" />
-                                                <small class="text-[10px] text-slate-400">Protection contre les attaques DDoS (Throttling).</small>
+                                                <small class="text-[10px] text-slate-400">{{ t('pages.api.ddos_protection') }}</small>
                                             </div>
 
                                             <div class="space-y-2">
-                                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Durée de vie par défaut des Tokens</label>
-                                                <InputNumber v-model="settingsForm.token_expiration_days" :min="0" :max="3650" suffix=" jours" showButtons buttonLayout="horizontal" inputClass="text-center font-black" class="w-full" />
+                                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">{{ t('pages.api.token_ttl') }}</label>
+                                                <InputNumber v-model="settingsForm.token_expiration_days" :min="0" :max="3650" :suffix="t('pages.api.days_suffix')" showButtons buttonLayout="horizontal" inputClass="text-center font-black" class="w-full" />
                                             </div>
 
                                             <div class="space-y-2">
-                                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">Origines CORS autorisées</label>
+                                                <label class="text-xs font-black text-slate-500 uppercase tracking-widest">{{ t('pages.api.cors_origins') }}</label>
                                                 <InputText v-model="settingsForm.cors_allowed_origins" placeholder="*, https://app.example.com" class="w-full !rounded-xl" />
                                             </div>
 
                                             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                                 <div>
-                                                    <h4 class="font-bold text-slate-700 text-sm">Journalisation (Audit Logging)</h4>
-                                                    <p class="text-[10px] text-slate-500">Enregistrer toutes les requêtes en base de données.</p>
+                                                    <h4 class="font-bold text-slate-700 text-sm">{{ t('pages.api.audit_logging') }}</h4>
+                                                    <p class="text-[10px] text-slate-500">{{ t('pages.api.audit_logging_desc') }}</p>
                                                 </div>
                                                 <InputSwitch v-model="settingsForm.logging_enabled" />
                                             </div>
 
-                                            <Button label="Enregistrer les modifications" icon="pi pi-save" class="p-button-primary w-full font-black rounded-xl py-3 shadow-md" @click="saveSettings" :loading="settingsForm.processing" />
+                                            <Button :label="t('pages.api.save_changes')" icon="pi pi-save" class="p-button-primary w-full font-black rounded-xl py-3 shadow-md" @click="saveSettings" :loading="settingsForm.processing" />
                                         </div>
                                     </div>
 
@@ -740,7 +742,7 @@ const exportLogs = () => {
                                                 <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
                                                 <span class="ml-3 font-mono text-xs text-slate-400">diagnostic.sh</span>
                                             </div>
-                                            <Button icon="pi pi-refresh" class="p-button-rounded p-button-text p-button-secondary text-slate-400 h-8 w-8" @click="runHealthCheck" :loading="healthLoading" v-tooltip.top="'Re-diagnostiquer'" />
+                                            <Button icon="pi pi-refresh" class="p-button-rounded p-button-text p-button-secondary text-slate-400 h-8 w-8" @click="runHealthCheck" :loading="healthLoading" v-tooltip.top="t('pages.api.re_diagnose')" />
                                         </div>
 
                                         <div class="flex-1 p-6 font-mono text-xs leading-relaxed overflow-y-auto bg-black/30 min-h-[300px]">
@@ -751,7 +753,7 @@ const exportLogs = () => {
                                                     {{ log.msg }}
                                                 </span>
                                             </div>
-                                            <div v-if="healthTerminalLogs.length === 0" class="text-slate-500 italic">Cliquez sur l'icône ↻ pour lancer un diagnostic.</div>
+                                            <div v-if="healthTerminalLogs.length === 0" class="text-slate-500 italic">{{ t('pages.api.click_to_diagnose') }}</div>
                                         </div>
 
                                         <div class="bg-slate-800 p-4 grid grid-cols-4 divide-x divide-slate-700 text-center">
@@ -768,11 +770,11 @@ const exportLogs = () => {
                                             <div class="flex flex-col items-center">
                                                 <i class="pi pi-folder mb-1 text-slate-400"></i>
                                                 <i :class="healthStatus.storage ? 'pi pi-check-circle text-emerald-400' : 'pi pi-times-circle text-red-400'" class="text-sm"></i>
-                                                <span class="text-[9px] text-slate-500 mt-1 font-bold uppercase tracking-widest">Stockage</span>
+                                                <span class="text-[9px] text-slate-500 mt-1 font-bold uppercase tracking-widest">{{ t('pages.api.health_storage') }}</span>
                                             </div>
                                             <div class="flex flex-col items-center">
                                                 <i class="pi pi-server mb-1 text-slate-400"></i>
-                                                <Badge :value="healthStatus.status === 'healthy' ? 'ONLINE' : 'DÉGRADÉ'" :severity="healthStatus.status === 'healthy' ? 'success' : 'danger'" class="text-[8px]" />
+                                                <Badge :value="healthStatus.status === 'healthy' ? 'ONLINE' : t('pages.api.degraded')" :severity="healthStatus.status === 'healthy' ? 'success' : 'danger'" class="text-[8px]" />
                                                 <span class="text-[9px] text-slate-500 mt-1 font-bold uppercase tracking-widest">Gateway</span>
                                             </div>
                                         </div>
@@ -788,38 +790,38 @@ const exportLogs = () => {
         </div>
 
         <!-- WIZARD : CREATE TOKEN -->
-        <Dialog v-model:visible="createTokenDialog" modal :style="{ width: '650px' }" header="Générateur de Clé API" class="p-fluid rounded-xl custom-dialog bg-slate-50">
+        <Dialog v-model:visible="createTokenDialog" modal :style="{ width: '650px' }" :header="t('pages.api.wizard_header')" class="p-fluid rounded-xl custom-dialog bg-slate-50">
             <div class="pt-4 px-2">
-                <Steps :model="[{label: 'Informations'}, {label: 'Habilitations'}, {label: 'Clé secrète'}]" :readonly="true" :activeIndex="tokenStep" class="mb-8 custom-steps hidden md:block" />
+                <Steps :model="[{label: t('pages.api.step_information')}, {label: t('pages.api.step_abilities')}, {label: t('pages.api.step_secret')}]" :readonly="true" :activeIndex="tokenStep" class="mb-8 custom-steps hidden md:block" />
 
                 <!-- Step 1 -->
                 <div v-if="tokenStep === 0" class="space-y-6 animate-fade-in p-2">
                     <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex gap-4">
                         <i class="pi pi-shield text-2xl text-blue-500"></i>
-                        <p class="text-xs text-blue-800 leading-relaxed font-medium">Un Personal Access Token permet à des scripts externes de s'authentifier au nom d'un utilisateur. Gardez-le en sécurité.</p>
+                        <p class="text-xs text-blue-800 leading-relaxed font-medium">{{ t('pages.api.token_info_notice') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-xs font-black text-slate-700 uppercase tracking-widest">Utilisateur *</label>
-                        <Dropdown v-model="tokenForm.user_id" :options="users" optionLabel="name" optionValue="id" placeholder="Choisir un utilisateur" class="w-full" filter />
+                        <label class="text-xs font-black text-slate-700 uppercase tracking-widest">{{ t('pages.api.user_label') }}</label>
+                        <Dropdown v-model="tokenForm.user_id" :options="users" optionLabel="name" optionValue="id" :placeholder="t('pages.api.choose_user')" class="w-full" filter />
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-xs font-black text-slate-700 uppercase tracking-widest">Nom de l'application / Usage *</label>
-                        <InputText v-model="tokenForm.name" placeholder="Ex: Script de synchronisation ERP" class="w-full rounded-xl p-3 font-bold border-slate-300" autofocus />
+                        <label class="text-xs font-black text-slate-700 uppercase tracking-widest">{{ t('pages.api.app_name') }}</label>
+                        <InputText v-model="tokenForm.name" :placeholder="t('pages.api.app_name_placeholder')" class="w-full rounded-xl p-3 font-bold border-slate-300" autofocus />
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-xs font-black text-slate-700 uppercase tracking-widest">Date d'expiration (Optionnel)</label>
-                        <Calendar v-model="tokenForm.expires_at" placeholder="N'expire jamais par défaut" class="w-full rounded-xl" showIcon dateFormat="yy-mm-dd" />
+                        <label class="text-xs font-black text-slate-700 uppercase tracking-widest">{{ t('pages.api.expiry_optional') }}</label>
+                        <Calendar v-model="tokenForm.expires_at" :placeholder="t('pages.api.never_expires_default')" class="w-full rounded-xl" showIcon dateFormat="yy-mm-dd" />
                     </div>
                 </div>
 
                 <!-- Step 2 -->
                 <div v-else-if="tokenStep === 1" class="space-y-6 animate-fade-in p-2">
                     <div class="space-y-2 mb-4">
-                        <h4 class="text-sm font-black text-slate-800">Périmètre d'autorisation (Scopes)</h4>
-                        <p class="text-xs text-slate-500">Sélectionnez les actions que ce token est autorisé à effectuer.</p>
+                        <h4 class="text-sm font-black text-slate-800">{{ t('pages.api.scopes_title') }}</h4>
+                        <p class="text-xs text-slate-500">{{ t('pages.api.scopes_desc') }}</p>
                     </div>
 
                     <div class="grid grid-cols-1 gap-3">
@@ -836,23 +838,23 @@ const exportLogs = () => {
                 <!-- Step 3 -->
                 <div v-else class="py-8 flex flex-col items-center justify-center text-center animate-fade-in">
                     <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm border border-emerald-100"><i class="pi pi-check"></i></div>
-                    <h3 class="text-xl font-black text-slate-800 mb-2">Token Généré avec Succès</h3>
-                    <p class="text-sm text-slate-500 mb-8 max-w-sm">Veuillez copier cette clé secrète maintenant. <strong>Elle ne sera plus jamais affichée</strong>.</p>
+                    <h3 class="text-xl font-black text-slate-800 mb-2">{{ t('pages.api.token_created') }}</h3>
+                    <p class="text-sm text-slate-500 mb-8 max-w-sm">{{ t('pages.api.token_created_desc_pre') }}<strong>{{ t('pages.api.token_created_desc_strong') }}</strong>.</p>
 
                     <div class="w-full bg-slate-900 p-4 rounded-2xl flex items-center gap-3 border border-slate-800 shadow-inner">
                         <code class="flex-1 font-mono text-xs text-emerald-400 break-all select-all text-left">{{ generatedToken }}</code>
-                        <Button icon="pi pi-copy" class="p-button-rounded p-button-secondary bg-slate-700 border-none text-white flex-shrink-0" @click="copyToken" v-tooltip.top="'Copier'" />
+                        <Button icon="pi pi-copy" class="p-button-rounded p-button-secondary bg-slate-700 border-none text-white flex-shrink-0" @click="copyToken" v-tooltip.top="t('pages.api.copy')" />
                     </div>
                 </div>
             </div>
 
             <template #footer>
                 <div class="flex justify-between items-center bg-slate-100 p-4 -m-4 mt-2 rounded-b-3xl border-t border-slate-200">
-                    <Button v-if="tokenStep < 2" label="Annuler" class="p-button-text p-button-secondary font-bold" @click="createTokenDialog = false" />
+                    <Button v-if="tokenStep < 2" :label="t('pages.api.cancel')" class="p-button-text p-button-secondary font-bold" @click="createTokenDialog = false" />
                     <div v-else></div>
-                    <Button v-if="tokenStep === 0" label="Suivant" icon="pi pi-arrow-right" iconPos="right" class="p-button-primary font-black rounded-xl px-6" @click="tokenStep++" :disabled="!tokenForm.name.trim() || !tokenForm.user_id" />
-                    <Button v-else-if="tokenStep === 1" label="Générer la clé" icon="pi pi-key" class="p-button-success font-black rounded-xl px-8 shadow-lg shadow-emerald-500/30" @click="generateToken" :loading="tokenForm.processing" :disabled="tokenForm.abilities.length === 0" />
-                    <Button v-else label="J'ai copié le token. Fermer." icon="pi pi-check" class="p-button-secondary font-black rounded-xl px-6" @click="createTokenDialog = false" />
+                    <Button v-if="tokenStep === 0" :label="t('pages.api.next')" icon="pi pi-arrow-right" iconPos="right" class="p-button-primary font-black rounded-xl px-6" @click="tokenStep++" :disabled="!tokenForm.name.trim() || !tokenForm.user_id" />
+                    <Button v-else-if="tokenStep === 1" :label="t('pages.api.generate_key')" icon="pi pi-key" class="p-button-success font-black rounded-xl px-8 shadow-lg shadow-emerald-500/30" @click="generateToken" :loading="tokenForm.processing" :disabled="tokenForm.abilities.length === 0" />
+                    <Button v-else :label="t('pages.api.copied_close')" icon="pi pi-check" class="p-button-secondary font-black rounded-xl px-6" @click="createTokenDialog = false" />
                 </div>
             </template>
         </Dialog>
@@ -862,22 +864,22 @@ const exportLogs = () => {
             <template #header>
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-slate-200 text-slate-600 rounded-lg flex items-center justify-center"><i class="pi pi-code"></i></div>
-                    <h2 class="text-base font-black text-slate-800">Détail du log #{{ selectedLog?.id }}</h2>
+                    <h2 class="text-base font-black text-slate-800">{{ t('pages.api.log_detail', { id: selectedLog?.id }) }}</h2>
                 </div>
             </template>
 
             <div v-if="selectedLog" class="p-4 space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-white p-3 rounded-xl border border-slate-200">
-                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Date</p>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ t('pages.api.label_date') }}</p>
                         <p class="text-xs font-bold text-slate-700 mt-1">{{ new Date(selectedLog.created_at).toLocaleString('fr-FR') }}</p>
                     </div>
                     <div class="bg-white p-3 rounded-xl border border-slate-200">
-                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Méthode</p>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ t('pages.api.label_method') }}</p>
                         <Tag v-if="selectedLog.method" :value="selectedLog.method" :severity="getMethodColor(selectedLog.method)" class="text-[9px] font-black mt-1" />
                     </div>
                     <div class="bg-white p-3 rounded-xl border border-slate-200">
-                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Niveau</p>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ t('pages.api.label_level') }}</p>
                         <Tag :value="selectedLog.level || 'info'" :severity="getLogSeverity(selectedLog.level)" class="text-[9px] uppercase font-black mt-1" />
                     </div>
                     <div class="bg-white p-3 rounded-xl border border-slate-200">
@@ -887,7 +889,7 @@ const exportLogs = () => {
                 </div>
 
                 <div class="bg-white p-4 rounded-xl border border-slate-200">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Événement</p>
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ t('pages.api.label_event') }}</p>
                     <p class="text-sm font-mono font-bold text-slate-800">{{ selectedLog.event }}</p>
                     <p v-if="selectedLog.event_name" class="text-[10px] text-slate-500 font-mono">{{ selectedLog.event_name }}</p>
                 </div>
@@ -898,7 +900,7 @@ const exportLogs = () => {
                 </div>
 
                 <div v-if="selectedLog.description" class="bg-white p-4 rounded-xl border border-slate-200">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Description</p>
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ t('pages.api.label_description') }}</p>
                     <p class="text-xs text-slate-700">{{ selectedLog.description }}</p>
                 </div>
 

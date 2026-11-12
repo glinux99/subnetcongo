@@ -19,6 +19,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick, s
 import { Head, useForm, router } from '@inertiajs/vue3'; // <-- Ajout de route
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
+import { useI18n } from 'vue-i18n';
 import { useEventListener, useFullscreen, useBattery, useNetwork } from '@vueuse/core';
 
 // --- PRIMEVUE COMPONENTS ---
@@ -55,6 +56,7 @@ import SplitterPanel from 'primevue/splitterpanel';
 // ======================================================================================
 // PROPS & INITIALISATION SÉCURISÉE
 // ======================================================================================
+const { t } = useI18n();
 const props = defineProps({
     exam: { type: Object, required: true },
     attempt: { type: Object, required: true, default: () => ({ uuid: null, answers: {} }) },
@@ -180,7 +182,7 @@ const handleCalculatorInput = (input) => {
             case '*': result = calculatorMemory.value * currentValue; break;
             case '/':
                 if (currentValue === 0) {
-                    calculatorDisplay.value = 'Erreur';
+                    calculatorDisplay.value = t('pages.exams-responses.calculatorError');
                     return;
                 }
                 result = calculatorMemory.value / currentValue;
@@ -348,8 +350,8 @@ const logProctoringEvent = (event, severity = 'medium') => {
     // Notification visuelle discrète pour l'utilisateur
     toast.add({
         severity: severity === 'high' ? 'error' : 'warn',
-        summary: 'Sécurité Exam',
-        detail: `Incident détecté : ${event}`,
+        summary: t('pages.exams-responses.securityExamSummary'),
+        detail: t('pages.exams-responses.incidentDetected', { event }),
         life: 3000
     });
 
@@ -428,7 +430,7 @@ const initTimer = () => {
 const handleAutoSubmit = () => {
     clearInterval(timerInterval.value);
     timerInterval.value = null;
-    toast.add({ severity: 'error', summary: 'Temps Épuisé', detail: 'Soumission automatique en cours...', life: 5000 });
+    toast.add({ severity: 'error', summary: t('pages.exams-responses.timeUpSummary'), detail: t('pages.exams-responses.autoSubmitDetail'), life: 5000 });
     forceSubmit();
 };
 
@@ -453,13 +455,13 @@ const confirmSubmission = () => {
     const unanswered = props.questions.length - Object.keys(answers.value).filter(k => isAnswered(k)).length;
 
     confirm.require({
-        header: 'Soumission Finale',
+        header: t('pages.exams-responses.finalSubmissionHeader'),
         message: unanswered > 0
-            ? `Attention : Il vous reste ${unanswered} question(s) sans réponse. Voulez-vous vraiment terminer ?`
-            : 'Confirmez-vous la fin de votre épreuve ? Toute modification sera impossible.',
+            ? t('pages.exams-responses.unansweredWarning', { count: unanswered })
+            : t('pages.exams-responses.confirmSubmitMessage'),
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Oui, Envoyer ma copie',
-        rejectLabel: 'Continuer l\'examen',
+        acceptLabel: t('pages.exams-responses.confirmSubmitAccept'),
+        rejectLabel: t('pages.exams-responses.confirmSubmitReject'),
         acceptClass: 'p-button-danger',
         accept: () => forceSubmit()
     });
@@ -474,7 +476,7 @@ const setupProctoringListeners = () => {
     useEventListener(document, 'visibilitychange', () => {
         if (document.hidden) {
             tabSwitchCount.value++;
-            logProctoringEvent(`Sortie d'écran #${tabSwitchCount.value}`, tabSwitchCount.value > 2 ? 'high' : 'medium');
+            logProctoringEvent(t('pages.exams-responses.tabSwitchEvent', { n: tabSwitchCount.value }), tabSwitchCount.value > 2 ? 'high' : 'medium');
         }
     });
 
@@ -484,7 +486,7 @@ const setupProctoringListeners = () => {
         if (forbidden.includes(e.key) || (e.ctrlKey && ['c', 'v', 'p', 's'].includes(e.key.toLowerCase()))) {
             e.preventDefault();
             keyboardAnomalies.value++;
-            logProctoringEvent(`Raccourci interdit : ${e.key}`, 'medium');
+            logProctoringEvent(t('pages.exams-responses.shortcutBlocked', { key: e.key }), 'medium');
         }
     });
 
@@ -501,8 +503,8 @@ const initWebcam = async () => {
             isCameraActive.value = true;
         }
     } catch (err) {
-        logProctoringEvent("Échec démarrage webcam", "high");
-        toast.add({ severity: 'error', summary: 'Erreur Caméra', detail: 'La webcam est obligatoire pour cet examen.' });
+        logProctoringEvent(t('pages.exams-responses.webcamStartFailed'), "high");
+        toast.add({ severity: 'error', summary: t('pages.exams-responses.cameraErrorSummary'), detail: t('pages.exams-responses.cameraErrorDetail') });
     }
 };
 
@@ -550,7 +552,7 @@ onMounted(() => {
                 const data = JSON.parse(backup);
                 if (Date.now() - data.timestamp < 3600000) { // < 1h
                     answers.value = data.answers;
-                    toast.add({ severity: 'info', summary: 'Restauration', detail: 'Vos réponses ont été récupérées après l\'interruption.' });
+                    toast.add({ severity: 'info', summary: t('pages.exams-responses.restoreSummary'), detail: t('pages.exams-responses.restoreDetail') });
                 }
             } catch (e) {
                 console.warn("Backup corrompu", e);
@@ -562,7 +564,7 @@ onMounted(() => {
     history.pushState(null, null, location.href);
     window.onpopstate = () => {
         history.go(1);
-        toast.add({ severity: 'warn', summary: 'Navigation Interdite', detail: 'Utilisez les boutons de l\'interface.' });
+        toast.add({ severity: 'warn', summary: t('pages.exams-responses.navBlockedSummary'), detail: t('pages.exams-responses.navBlockedDetail') });
     };
 });
 
@@ -578,7 +580,7 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="page-bg min-h-screen font-sans pb-20">
-        <Head :title="`Certification - ${exam.title}`" />
+        <Head :title="t('pages.exams-responses.headTitle', { title: exam.title })" />
         <ConfirmDialog />
 
         <!-- ========================================================================== -->
@@ -595,7 +597,7 @@ onBeforeUnmount(() => {
                     <div class="flex items-center gap-3">
                         <Tag :value="`ID: ${attempt?.uuid?.substring(0, 8) || 'NON-SYNC'}`" severity="secondary" class="text-[9px] font-mono" />
                         <span class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                            <i class="pi pi-shield text-[9px]"></i> Proctoring Actif
+                            <i class="pi pi-shield text-[9px]"></i> {{ t('pages.exams-responses.proctoringActive') }}
                         </span>
                     </div>
                 </div>
@@ -618,15 +620,15 @@ onBeforeUnmount(() => {
             <div class="flex items-center gap-2">
                 <div class="hidden lg:flex items-center gap-4 mr-4">
                     <div class="text-right">
-                        <p class="text-[9px] font-black text-slate-400 uppercase leading-none">Complétion</p>
+                        <p class="text-[9px] font-black text-slate-400 uppercase leading-none">{{ t('pages.exams-responses.completionLabel') }}</p>
                         <p class="text-sm font-black text-slate-700">{{ globalCompletion }}%</p>
                     </div>
                     <Knob v-model="globalCompletion" :size="40" :strokeWidth="12" valueColor="#6366f1" rangeColor="#f1f5f9" readonly />
                 </div>
 
-                <Button icon="pi pi-calculator" @click="calculatorVisible = true" rounded text severity="secondary" v-tooltip.bottom="'Calculatrice'" />
-                <Button icon="pi pi-file-edit" @click="showNotepad = true" rounded text severity="secondary" v-tooltip.bottom="'Brouillon'" />
-                <Button label="Terminer" severity="danger" class="font-black px-6 shadow-lg shadow-red-100" @click="confirmSubmission" v-if="currentStep === 'testing'" />
+                <Button icon="pi pi-calculator" @click="calculatorVisible = true" rounded text severity="secondary" v-tooltip.bottom="t('pages.exams-responses.calculatorTooltip')" />
+                <Button icon="pi pi-file-edit" @click="showNotepad = true" rounded text severity="secondary" v-tooltip.bottom="t('pages.exams-responses.notepadTooltip')" />
+                <Button :label="t('pages.exams-responses.finishButton')" severity="danger" class="font-black px-6 shadow-lg shadow-red-100" @click="confirmSubmission" v-if="currentStep === 'testing'" />
             </div>
         </nav>
 
@@ -639,7 +641,7 @@ onBeforeUnmount(() => {
                         <div class="h-48 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 flex flex-col items-center justify-center text-white relative overflow-hidden">
                             <div class="absolute inset-0 opacity-10 pattern-dots scale-150"></div>
                             <i class="pi pi-verified text-6xl mb-4 opacity-50"></i>
-                            <h2 class="text-4xl font-black tracking-tighter">Prêt pour l'évaluation ?</h2>
+                            <h2 class="text-4xl font-black tracking-tighter">{{ t('pages.exams-responses.introTitle') }}</h2>
                         </div>
                     </template>
                     <template #content>
@@ -649,28 +651,28 @@ onBeforeUnmount(() => {
                                     <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-list text-xl"></i>
                                     </div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Items</p>
-                                    <p class="text-2xl font-black text-slate-800">{{ questions.length }} Questions</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams-responses.itemsLabel') }}</p>
+                                    <p class="text-2xl font-black text-slate-800">{{ t('pages.exams-responses.questionsCount', { count: questions.length }) }}</p>
                                 </div>
                                 <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
                                     <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-stopwatch text-xl"></i>
                                     </div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Durée</p>
-                                    <p class="text-2xl font-black text-slate-800">{{ exam.duration_minutes }} Minutes</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams-responses.durationLabel') }}</p>
+                                    <p class="text-2xl font-black text-slate-800">{{ t('pages.exams-responses.minutesCount', { count: exam.duration_minutes }) }}</p>
                                 </div>
                                 <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
                                     <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-shield-check text-xl"></i>
                                     </div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Seuil</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams-responses.passThresholdLabel') }}</p>
                                     <p class="text-2xl font-black text-slate-800">{{ exam.pass_percentage }}%</p>
                                 </div>
                             </div>
 
                             <div class="bg-blue-50/50 p-8 rounded-xl border border-blue-100/50 mb-10 prose prose-slate max-w-none">
                                 <h3 class="text-blue-900 font-black mb-4 flex items-center gap-2">
-                                    <i class="pi pi-info-circle"></i> Instructions de l'examinateur
+                                    <i class="pi pi-info-circle"></i> {{ t('pages.exams-responses.examinerInstructionsLabel') }}
                                 </h3>
                                 <div v-html="exam.description" class="text-slate-600 leading-relaxed"></div>
                             </div>
@@ -679,22 +681,22 @@ onBeforeUnmount(() => {
                                 <div class="flex items-start gap-4 p-4 rounded-2xl bg-white border border-slate-200">
                                     <i class="pi pi-camera text-slate-400 mt-1"></i>
                                     <div>
-                                        <h5 class="font-bold text-sm text-slate-800">Webcam Requise</h5>
-                                        <p class="text-xs text-slate-500">Votre visage doit rester visible dans le cadre durant toute la session.</p>
+                                        <h5 class="font-bold text-sm text-slate-800">{{ t('pages.exams-responses.webcamRequiredLabel') }}</h5>
+                                        <p class="text-xs text-slate-500">{{ t('pages.exams-responses.webcamRequiredDesc') }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start gap-4 p-4 rounded-2xl bg-white border border-slate-200">
                                     <i class="pi pi-window-maximize text-slate-400 mt-1"></i>
                                     <div>
-                                        <h5 class="font-bold text-sm text-slate-800">Mode Plein Écran</h5>
-                                        <p class="text-xs text-slate-500">Le quitter sera enregistré comme une tentative de fraude.</p>
+                                        <h5 class="font-bold text-sm text-slate-800">{{ t('pages.exams-responses.fullscreenRequiredLabel') }}</h5>
+                                        <p class="text-xs text-slate-500">{{ t('pages.exams-responses.fullscreenRequiredDesc') }}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- UN SEUL BOUTON : avec gestion du chargement -->
-                            <Button label="Lancer l'Évaluation" icon="pi pi-bolt" size="large" class="w-full py-6 text-2xl font-black rounded-[1rem] shadow-2xl shadow-blue-200" @click="handleStartClick" :loading="isStarting" />
-                            <p class="text-center text-[11px] text-slate-400 mt-8 font-bold uppercase tracking-widest">Code de conduite Subnet Congo v12.4 s'applique</p>
+                            <Button :label="t('pages.exams-responses.launchExamButton')" icon="pi pi-bolt" size="large" class="w-full py-6 text-2xl font-black rounded-[1rem] shadow-2xl shadow-blue-200" @click="handleStartClick" :loading="isStarting" />
+                            <p class="text-center text-[11px] text-slate-400 mt-8 font-bold uppercase tracking-widest">{{ t('pages.exams-responses.conductCodeNote') }}</p>
                         </div>
                     </template>
                 </Card>
@@ -717,7 +719,7 @@ onBeforeUnmount(() => {
                             <Tag value="REC" severity="danger" class="font-black text-[10px]" />
                         </div>
                         <div class="absolute bottom-4 left-4 right-4 bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/10">
-                            <p class="text-[9px] text-white/70 font-black uppercase tracking-tighter">Analyse Biométrique IA</p>
+                            <p class="text-[9px] text-white/70 font-black uppercase tracking-tighter">{{ t('pages.exams-responses.biometricAnalysisLabel') }}</p>
                             <div class="flex items-center gap-2 mt-1">
                                 <div class="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                                     <div class="h-full bg-emerald-400" :style="{width: proctoringScore + '%'}"></div>
@@ -730,7 +732,7 @@ onBeforeUnmount(() => {
                     <!-- Sélecteur de Question -->
                     <div class="bg-white rounded-[1rem] p-8 border border-slate-200 shadow-sm sticky top-24">
                         <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex justify-between">
-                            Sélecteur <span>{{ currentIndex + 1 }}/{{ questions.length }}</span>
+                            {{ t('pages.exams-responses.selectorLabel') }} <span>{{ currentIndex + 1 }}/{{ questions.length }}</span>
                         </h3>
 
                         <div class="grid grid-cols-5 gap-3">
@@ -750,26 +752,26 @@ onBeforeUnmount(() => {
 
                         <div class="space-y-3">
                             <div class="flex items-center justify-between text-xs font-bold text-slate-500">
-                                <span class="flex items-center gap-2"><i class="pi pi-check-circle text-emerald-500"></i> Répondu</span>
+                                <span class="flex items-center gap-2"><i class="pi pi-check-circle text-emerald-500"></i> {{ t('pages.exams-responses.answeredLabel') }}</span>
                                 <span class="text-slate-900">{{ questions.filter(q => isAnswered(q.id)).length }}</span>
                             </div>
                             <div class="flex items-center justify-between text-xs font-bold text-slate-500">
-                                <span class="flex items-center gap-2"><i class="pi pi-circle text-slate-200"></i> Restant</span>
+                                <span class="flex items-center gap-2"><i class="pi pi-circle text-slate-200"></i> {{ t('pages.exams-responses.remainingLabel') }}</span>
                                 <span class="text-slate-900">{{ questions.length - questions.filter(q => isAnswered(q.id)).length }}</span>
                             </div>
                             <div class="flex items-center justify-between text-xs font-bold text-slate-500">
-                                <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-amber-500"></i> Révision</span>
+                                <span class="flex items-center gap-2"><i class="pi pi-flag-fill text-amber-500"></i> {{ t('pages.exams-responses.reviewLabel') }}</span>
                                 <span class="text-slate-900">{{ flaggedQuestions.length }}</span>
                             </div>
                         </div>
 
                         <div v-if="isSyncing" class="mt-8 p-4 bg-blue-50 rounded-2xl flex items-center gap-3">
                             <i class="pi pi-spin pi-spinner text-blue-600 text-sm"></i>
-                            <span class="text-[10px] font-black text-blue-700 uppercase">Synchronisation...</span>
+                            <span class="text-[10px] font-black text-blue-700 uppercase">{{ t('pages.exams-responses.syncingLabel') }}</span>
                         </div>
                         <div v-else-if="lastSaved" class="mt-8 text-center">
                             <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                Sauvegardé à {{ lastSaved.toLocaleTimeString() }}
+                                {{ t('pages.exams-responses.savedAtLabel', { time: lastSaved.toLocaleTimeString() }) }}
                             </span>
                         </div>
                     </div>
@@ -803,17 +805,17 @@ onBeforeUnmount(() => {
                                         </Tag>
                                         <Tag :value="`${currentQuestion?.points} points`" severity="secondary" class="uppercase text-[10px] font-black px-3" />
                                     </div>
-                                    <h4 class="text-slate-400 font-bold text-[11px] uppercase tracking-widest">Évaluation en cours de traitement</h4>
+                                    <h4 class="text-slate-400 font-bold text-[11px] uppercase tracking-widest">{{ t('pages.exams-responses.assessmentInProgressLabel') }}</h4>
                                 </div>
                             </div>
 
                             <!-- Action de Révision -->
                             <div class="flex gap-2">
-                                <Button :icon="flaggedQuestions.includes(currentQuestion?.id) ? 'pi pi-flag-fill' : 'pi pi-flag'"
-                                        :label="flaggedQuestions.includes(currentQuestion?.id) ? 'Marquée pour révision' : 'Réviser plus tard'"
-                                        :severity="flaggedQuestions.includes(currentQuestion?.id) ? 'warning' : 'secondary'"
-                                        text class="font-black text-xs px-4 py-3 rounded-xl transition-all"
-                                        @click="toggleFlag(currentQuestion?.id)" />
+                                        <Button :icon="flaggedQuestions.includes(currentQuestion?.id) ? 'pi pi-flag-fill' : 'pi pi-flag'"
+                                                :label="flaggedQuestions.includes(currentQuestion?.id) ? t('pages.exams-responses.markedForReview') : t('pages.exams-responses.reviewLater')"
+                                                :severity="flaggedQuestions.includes(currentQuestion?.id) ? 'warning' : 'secondary'"
+                                                text class="font-black text-xs px-4 py-3 rounded-xl transition-all"
+                                                @click="toggleFlag(currentQuestion?.id)" />
                             </div>
                         </div>
 
@@ -828,7 +830,7 @@ onBeforeUnmount(() => {
                                     {{ currentQuestion?.question_text }}
                                 </h2>
                                 <div v-if="currentQuestion?.attachment" class="rounded-xl overflow-hidden border border-slate-200 mb-8 max-w-2xl">
-                                    <img :src="currentQuestion.attachment" class="w-full h-auto object-cover" alt="Illustration question" />
+                                    <img :src="currentQuestion.attachment" class="w-full h-auto object-cover" :alt="t('pages.exams-responses.questionIllustrationAlt')" />
                                 </div>
                             </div>
 
@@ -850,7 +852,7 @@ onBeforeUnmount(() => {
                                             <i :class="option ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
                                         </div>
                                         <span :class="['text-2xl font-black uppercase tracking-tighter', answers[currentQuestion.id] === option ? (option ? 'text-emerald-700' : 'text-red-700') : 'text-slate-600']">
-                                            {{ option ? 'Vrai / Correct' : 'Faux / Incorrect' }}
+                                            {{ option ? t('pages.exams-responses.trueCorrect') : t('pages.exams-responses.falseIncorrect') }}
                                         </span>
                                         <!-- Tick de sélection -->
                                         <div v-if="answers[currentQuestion.id] === option" class="absolute top-4 right-4">
@@ -881,7 +883,7 @@ onBeforeUnmount(() => {
                                 <div v-if="currentQuestion?.type === 'multiple_choice_multiple'" class="grid grid-cols-1 gap-4 max-w-5xl">
                                     <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100 mb-4 flex items-center gap-3">
                                         <i class="pi pi-info-circle text-amber-600"></i>
-                                        <span class="text-xs font-bold text-amber-800">Plusieurs réponses possibles pour cette question.</span>
+                                        <span class="text-xs font-bold text-amber-800">{{ t('pages.exams-responses.multipleAnswersNote') }}</span>
                                     </div>
                                     <div v-for="opt in currentQuestion.options" :key="opt.id"
                                          @click="() => {
@@ -907,14 +909,14 @@ onBeforeUnmount(() => {
                                 <!-- 4. TYPE: SHORT ANSWER (Saisie texte) -->
                                 <div v-if="currentQuestion?.type === 'short_answer'" class="max-w-2xl">
                                     <div class="space-y-4">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Votre Réponse</label>
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">{{ t('pages.exams-responses.yourAnswerLabel') }}</label>
                                         <InputText
                                             v-model="answers[currentQuestion.id]"
                                             class="w-full p-6 text-xl font-medium border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white transition-all shadow-sm placeholder-slate-400"
-                                            placeholder="Saisissez votre réponse ici..."
+                                            :placeholder="t('pages.exams-responses.yourAnswerPlaceholder')"
                                             @input="handleAnswerInput(currentQuestion.id, $event.target.value)"
                                         />
-                                        <p class="text-xs text-slate-400 italic px-4">Attention à l'orthographe et à la casse (Majuscules/Minuscules) si spécifié.</p>
+                                        <p class="text-xs text-slate-400 italic px-4">{{ t('pages.exams-responses.spellingNote') }}</p>
                                     </div>
                                 </div>
 
@@ -941,7 +943,7 @@ onBeforeUnmount(() => {
                                                     :options="currentQuestion.pairs.right"
                                                     optionLabel="text"
                                                     optionValue="id"
-                                                    placeholder="Associer à..."
+                                                    :placeholder="t('pages.exams-responses.matchDropdownPlaceholder')"
                                                     class="w-full rounded-2xl p-4 border-2 border-slate-100 hover:border-blue-200 transition-all"
                                                     @change="saveToLocalBackup"
                                                 />
@@ -954,7 +956,7 @@ onBeforeUnmount(() => {
                                 <div v-if="currentQuestion?.type === 'ordering'" class="space-y-6 max-w-2xl mx-auto text-center">
                                     <div class="bg-blue-50 p-4 rounded-2xl mb-6 inline-flex items-center gap-2">
                                         <i class="pi pi-sort-alt text-blue-600"></i>
-                                        <span class="text-xs font-black text-blue-700 uppercase">Faites glisser les éléments pour les ordonner</span>
+                                        <span class="text-xs font-black text-blue-700 uppercase">{{ t('pages.exams-responses.dragToOrderHint') }}</span>
                                     </div>
 
                                     <OrderList v-model="answers[currentQuestion.id]" listStyle="height:auto" @reorder="saveToLocalBackup" class="custom-order-list">
@@ -972,19 +974,19 @@ onBeforeUnmount(() => {
                                 <!-- 7. TYPE: ESSAY (RÉDACTION) -->
                                 <div v-if="currentQuestion?.type === 'essay'" class="space-y-4">
                                     <div class="flex justify-between items-center px-2">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Zone de rédaction libre</label>
-                                        <Tag :value="`${answers[currentQuestion.id]?.split(/\s+/).filter(Boolean).length || 0} mots`" severity="info" />
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('pages.exams-responses.essayLabel') }}</label>
+                                        <Tag :value="t('pages.exams-responses.wordsCount', { count: answers[currentQuestion.id]?.split(/\s+/).filter(Boolean).length || 0 })" severity="info" />
                                     </div>
                                     <Textarea
                                         v-model="answers[currentQuestion.id]"
                                         rows="12"
                                         class="w-full p-10 text-xl font-medium border-2 border-slate-100 rounded-[1rem] focus:border-blue-500 transition-all bg-slate-50/50 shadow-inner"
-                                        placeholder="Rédigez votre réponse de manière détaillée ici..."
+                                        :placeholder="t('pages.exams-responses.essayPlaceholder')"
                                         @input="handleAnswerInput(currentQuestion.id, $event.target.value)"
                                     />
                                     <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex items-center gap-3">
                                         <i class="pi pi-cloud-upload text-blue-500"></i>
-                                        <span class="text-[10px] font-bold text-blue-700 uppercase">Sauvegarde en temps réel activée sur le cloud Subnet</span>
+                                        <span class="text-[10px] font-bold text-blue-700 uppercase">{{ t('pages.exams-responses.realtimeSaveNote') }}</span>
                                     </div>
                                 </div>
 
@@ -995,7 +997,7 @@ onBeforeUnmount(() => {
                         <!-- PIED DE PAGE : NAVIGATION                  -->
                         <!-- ========================================== -->
                         <div class="px-10 py-10 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                            <Button label="Question Précédente" icon="pi pi-arrow-left" text size="large"
+                            <Button :label="t('pages.exams-responses.previousQuestionButton')" icon="pi pi-arrow-left" text size="large"
                                     class="font-black text-slate-500 hover:text-blue-600 p-4 rounded-2xl"
                                     @click="prevQuestion" :disabled="currentIndex === 0" />
 
@@ -1004,11 +1006,11 @@ onBeforeUnmount(() => {
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Status Sync</span>
                                     <div class="flex items-center gap-2">
                                         <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                        <span class="text-[10px] font-bold text-slate-600">Copie Sécurisée</span>
+                                        <span class="text-[10px] font-bold text-slate-600">{{ t('pages.exams-responses.secureCopyLabel') }}</span>
                                     </div>
                                 </div>
 
-                                <Button :label="currentIndex === questions.length - 1 ? 'Récapitulatif Final' : 'Continuer'"
+                                <Button :label="currentIndex === questions.length - 1 ? t('pages.exams-responses.finalReviewLabel') : t('pages.exams-responses.continueButton')"
                                         :icon="currentIndex === questions.length - 1 ? 'pi pi-verified' : 'pi pi-arrow-right'"
                                         iconPos="right" size="large"
                                         :severity="currentIndex === questions.length - 1 ? 'success' : 'primary'"
@@ -1022,9 +1024,9 @@ onBeforeUnmount(() => {
                     <div v-if="proctoringLogs.length > 0" class="bg-white rounded-[1rem] p-8 border-2 border-red-100 shadow-lg animate-fade-in">
                         <div class="flex items-center justify-between mb-6">
                             <h5 class="text-[10px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2">
-                                <i class="pi pi-shield"></i> Surveillance Intégrité Académique
+                                <i class="pi pi-shield"></i> {{ t('pages.exams-responses.integrityMonitoringLabel') }}
                             </h5>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">Événements récents</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">{{ t('pages.exams-responses.recentEventsLabel') }}</span>
                         </div>
                         <div class="space-y-3">
                             <div v-for="(log, i) in proctoringLogs.slice(0, 2)" :key="i"
@@ -1045,12 +1047,12 @@ onBeforeUnmount(() => {
                 <div class="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200">
                     <div class="p-12 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/50">
                         <div>
-                            <h2 class="text-4xl font-black text-slate-900 tracking-tighter">Révision finale</h2>
-                            <p class="text-slate-500 font-medium">Parcourez vos réponses avant la clôture définitive de la session.</p>
+                            <h2 class="text-4xl font-black text-slate-900 tracking-tighter">{{ t('pages.exams-responses.finalReviewTitle') }}</h2>
+                            <p class="text-slate-500 font-medium">{{ t('pages.exams-responses.finalReviewDesc') }}</p>
                         </div>
                         <div class="flex gap-4">
-                            <Button label="Retour au Test" icon="pi pi-pencil" text class="font-black" @click="currentStep = 'testing'" />
-                            <Button label="Soumettre ma copie" icon="pi pi-send" severity="success" class="font-black px-8 py-4 rounded-2xl shadow-lg shadow-emerald-100" @click="confirmSubmission" />
+                            <Button :label="t('pages.exams-responses.backToTestButton')" icon="pi pi-pencil" text class="font-black" @click="currentStep = 'testing'" />
+                            <Button :label="t('pages.exams-responses.submitCopyButton')" icon="pi pi-send" severity="success" class="font-black px-8 py-4 rounded-2xl shadow-lg shadow-emerald-100" @click="confirmSubmission" />
                         </div>
                     </div>
 
@@ -1075,7 +1077,7 @@ onBeforeUnmount(() => {
                                     {{ q.question_text }}
                                 </p>
                                 <div class="text-[10px] font-black uppercase text-slate-400">
-                                    {{ isAnswered(q.id) ? 'Réponse enregistrée' : 'Non répondu' }}
+                                    {{ isAnswered(q.id) ? t('pages.exams-responses.answerSaved') : t('pages.exams-responses.notAnswered') }}
                                 </div>
                             </div>
                         </div>
@@ -1083,13 +1085,12 @@ onBeforeUnmount(() => {
                         <div class="mt-20 p-12 bg-slate-900 rounded-[3rem] text-white flex flex-col md:flex-row items-center gap-12 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                             <div class="flex-1 text-center md:text-left relative z-10">
-                                <h3 class="text-3xl font-black mb-4 tracking-tight">Prêt pour la certification ?</h3>
+                                <h3 class="text-3xl font-black mb-4 tracking-tight">{{ t('pages.exams-responses.readyForCertificationTitle') }}</h3>
                                 <p class="text-slate-400 leading-relaxed max-w-xl">
-                                    Une fois validée, votre copie sera instantanément analysée par le module académique Subnet.
-                                    Le processus est irréversible.
+                                    {{ t('pages.exams-responses.finalCertificationDesc') }}
                                 </p>
                             </div>
-                            <Button label="Envoyer maintenant" icon="pi pi-check-circle" size="large" severity="success" class="px-12 py-6 text-2xl font-black rounded-xl shadow-2xl relative z-10" @click="confirmSubmission" />
+                            <Button :label="t('pages.exams-responses.sendNowButton')" icon="pi pi-check-circle" size="large" severity="success" class="px-12 py-6 text-2xl font-black rounded-xl shadow-2xl relative z-10" @click="confirmSubmission" />
                         </div>
                     </div>
                 </div>
@@ -1104,7 +1105,7 @@ onBeforeUnmount(() => {
         <!-- Sidebar Mobile -->
         <Sidebar v-model:visible="sidebarVisible" position="right" class="w-full sm:w-[450px]">
             <template #header>
-                <div class="font-black text-2xl tracking-tighter uppercase">Plan d'épreuve</div>
+                <div class="font-black text-2xl tracking-tighter uppercase">{{ t('pages.exams-responses.examPlanHeader') }}</div>
             </template>
             <div class="grid grid-cols-4 gap-3 p-4">
                 <button v-for="(q, idx) in questions" :key="q.id" @click="jumpToQuestion(idx)"
@@ -1115,17 +1116,17 @@ onBeforeUnmount(() => {
         </Sidebar>
 
         <!-- Brouillon / Notepad -->
-        <Dialog v-model:visible="showNotepad" header="Brouillon Personnel (Non noté)" :style="{width: '600px'}" modal class="rounded-xl overflow-hidden shadow-2xl">
+        <Dialog v-model:visible="showNotepad" :header="t('pages.exams-responses.notepadDialogTitle')" :style="{width: '600px'}" modal class="rounded-xl overflow-hidden shadow-2xl">
             <div class="p-2">
-                <Textarea v-model="notepadContent" rows="15" class="w-full font-mono text-sm p-6 bg-slate-50 border-none focus:ring-0 rounded-2xl" placeholder="Notez vos idées ici..." />
+                <Textarea v-model="notepadContent" rows="15" class="w-full font-mono text-sm p-6 bg-slate-50 border-none focus:ring-0 rounded-2xl" :placeholder="t('pages.exams-responses.notepadPlaceholder')" />
                 <div class="mt-4 flex justify-end">
-                    <Button label="Fermer" icon="pi pi-times" text class="font-bold" @click="showNotepad = false" />
+                    <Button :label="t('pages.exams-responses.closeButton')" icon="pi pi-times" text class="font-bold" @click="showNotepad = false" />
                 </div>
             </div>
         </Dialog>
 
         <!-- Calculatrice (Simplifiée) -->
-        <Dialog v-model:visible="calculatorVisible" header="Calculatrice Scientifique" :style="{width: '320px'}" modal class="rounded-xl overflow-hidden shadow-2xl" position="topright">
+        <Dialog v-model:visible="calculatorVisible" :header="t('pages.exams-responses.calculatorDialogTitle')" :style="{width: '320px'}" modal class="rounded-xl overflow-hidden shadow-2xl" position="topright">
              <div class="p-4 bg-slate-900 rounded-2xl">
                  <div class="h-20 bg-slate-800 rounded-xl mb-4 flex items-center justify-end px-6 text-white text-3xl font-mono overflow-hidden">
                      {{ calculatorDisplay }}
@@ -1136,7 +1137,7 @@ onBeforeUnmount(() => {
                              class="h-12 rounded-lg bg-slate-700 text-white font-bold hover:bg-blue-500 transition-colors">
                          {{ n }}
                      </button>
-                     <button @click="clearCalculator" class="col-span-4 h-12 rounded-lg bg-red-500 text-white font-bold uppercase text-xs">Effacer</button>
+                      <button @click="clearCalculator" class="col-span-4 h-12 rounded-lg bg-red-500 text-white font-bold uppercase text-xs">{{ t('pages.exams-responses.clearCalculatorButton') }}</button>
                  </div>
              </div>
         </Dialog>

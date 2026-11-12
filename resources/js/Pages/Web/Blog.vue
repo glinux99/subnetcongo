@@ -10,6 +10,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -36,7 +38,7 @@ const applyFilters = (cat) => {
 };
 
 const postImage = (p) => p.featured_image || p.thumbnail || DEFAULT_IMAGE;
-const postCategory = (p) => p.category?.name || 'Actualités';
+const postCategory = (p) => p.category?.name || t('public.blog.category_fallback');
 const postCategorySlug = (p) => p.category?.slug || '';
 
 const formatDate = (date) => {
@@ -125,8 +127,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <template>
-    <Head :title="`Blog - ${identity.site_name || 'SubnetCongo'}`">
-        <meta name="description" content="Actualités, tutoriels et analyses sur les réseaux, la cybersécurité et le cloud.">
+    <Head :title="`${t('public.blog.head_title')} - ${identity.site_name || 'SubnetCongo'}`">
+        <meta name="description" :content="t('public.blog.head_desc')">
     </Head>
 
     <AppLayout>
@@ -148,15 +150,15 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="max-w-3xl space-y-6">
                     <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white reveal-on-scroll">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Magazine SubnetCongo</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">{{ t('public.blog.pill_magazine') }}</span>
                     </div>
 
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight reveal-on-scroll delay-100">
-                        Le blog <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">tech</span>
+                        {{ t('public.blog.hero_title_1') }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">{{ t('public.blog.hero_title_2') }}</span>
                     </h1>
 
                     <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5 reveal-on-scroll delay-200">
-                        Tutoriels, décryptages et retours d'expérience de nos instructeurs et ingénieurs terrain.
+                        {{ t('public.blog.hero_sub') }}
                     </p>
                 </div>
             </div>
@@ -170,9 +172,9 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="flex items-center justify-between mb-10 reveal-on-scroll">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">À la une</span>
+                        <span class="font-bold uppercase tracking-widest text-xs text-[#2563EB]">{{ t('public.blog.featured') }}</span>
                     </div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ posts.total }} articles</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ posts.total }} {{ t('public.blog.articles_count') }}</span>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -192,8 +194,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <div class="flex items-center gap-3">
                                 <img :src="`${DEFAULT_AVATAR}${featuredMain.author?.name || 'A'}`" class="w-10 h-10 rounded-full border-2 border-white/30" :alt="featuredMain.author?.name" />
                                 <div>
-                                    <p class="text-white text-sm font-bold">{{ featuredMain.author?.name || 'Rédaction' }}</p>
-                                    <p class="text-white/50 text-xs">{{ readTime(featuredMain) }} min de lecture</p>
+                                    <p class="text-white text-sm font-bold">{{ featuredMain.author?.name || t('public.blog.redaction') }}</p>
+                                    <p class="text-white/50 text-xs">{{ readTime(featuredMain) }} {{ t('public.blog.read_time') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -213,7 +215,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 <h3 class="text-lg lg:text-xl font-black text-[#0B1221] leading-snug mb-2 line-clamp-2 group-hover:text-[#2563EB] transition-colors">{{ post.title }}</h3>
                                 <p class="text-sm text-slate-500 line-clamp-2 mb-3">{{ post.excerpt }}</p>
                                 <p class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-                                    <i class="pi pi-clock text-[10px]"></i> {{ readTime(post) }} min de lecture
+                                    <i class="pi pi-clock text-[10px]"></i> {{ readTime(post) }} {{ t('public.blog.read_time') }}
                                 </p>
                             </div>
                         </article>
@@ -231,7 +233,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <!-- Recherche -->
                     <div class="relative w-full lg:w-80">
                         <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input v-model="search" @keyup.enter="applyFilters()" type="search" placeholder="Rechercher un article..."
+                        <input v-model="search" @keyup.enter="applyFilters()" type="search" :placeholder="t('public.blog.search_placeholder')"
                             class="w-full pl-11 pr-4 py-3 bg-[#F4F6F9] border-none rounded-xl text-sm font-medium text-[#0B1221] focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" />
                     </div>
 
@@ -240,7 +242,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                         <button @click="applyFilters('')"
                             class="relative px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-300"
                             :class="!activeCategory ? 'text-white' : 'text-slate-600 hover:text-slate-900 bg-[#F4F6F9]'">
-                            <span class="relative z-10">Tous</span>
+                            <span class="relative z-10">{{ t('public.blog.all') }}</span>
                             <div v-if="!activeCategory" class="absolute inset-0 bg-[#0B1221] rounded-lg shadow z-0"></div>
                         </button>
                         <button v-for="cat in blogCategories" :key="cat.id" @click="applyFilters(cat.slug)"
@@ -289,7 +291,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             </h3>
 
                             <!-- Extrait -->
-                            <p class="text-sm text-slate-500 leading-relaxed line-clamp-3 mb-5">{{ post.excerpt || 'Découvrez cet article...' }}</p>
+                            <p class="text-sm text-slate-500 leading-relaxed line-clamp-3 mb-5">{{ post.excerpt || t('public.blog.excerpt_fallback') }}</p>
 
                             <div class="flex-1"></div>
 
@@ -297,10 +299,10 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <div class="flex items-center justify-between pt-5 border-t border-slate-100">
                                 <div class="flex items-center gap-2.5">
                                     <img :src="`${DEFAULT_AVATAR}${post.author?.name || 'A'}`" class="w-8 h-8 rounded-full object-cover border border-slate-200" :alt="post.author?.name" />
-                                    <span class="text-xs text-slate-600 font-bold">{{ post.author?.name || 'Rédaction' }}</span>
+                                    <span class="text-xs text-slate-600 font-bold">{{ post.author?.name || t('public.blog.redaction') }}</span>
                                 </div>
                                 <span class="flex items-center gap-1.5 text-xs font-bold text-[#2563EB] group-hover:gap-3 transition-all">
-                                    Lire <i class="pi pi-arrow-right text-[10px]"></i>
+                                    {{ t('public.blog.read') }} <i class="pi pi-arrow-right text-[10px]"></i>
                                 </span>
                             </div>
                         </div>
@@ -312,8 +314,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div class="w-20 h-20 bg-[#F4F6F9] rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="pi pi-book text-3xl text-slate-300"></i>
                     </div>
-                    <p class="text-lg font-bold text-slate-600">Aucun article{{ search ? ` pour "${search}"` : '' }} pour le moment.</p>
-                    <button v-if="search || activeCategory" @click="search = ''; applyFilters('')" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">Réinitialiser les filtres</button>
+                    <p class="text-lg font-bold text-slate-600">{{ t('public.blog.no_articles') }}{{ search ? ` ("${search}")` : '' }} {{ t('public.blog.empty_title') }}</p>
+                    <button v-if="search || activeCategory" @click="search = ''; applyFilters('')" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">{{ t('public.blog.reset_filters') }}</button>
                 </div>
 
                 <!-- Pagination -->
@@ -333,19 +335,19 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
             <div class="relative max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-12 text-center reveal-on-scroll">
                 <div class="inline-flex items-center gap-2 mb-4">
                     <i class="pi pi-send text-[#2563EB]"></i>
-                    <span class="font-bold uppercase tracking-widest text-xs text-blue-300">Newsletter</span>
+                    <span class="font-bold uppercase tracking-widest text-xs text-blue-300">{{ t('public.blog.newsletter_pill') }}</span>
                 </div>
-                <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4">Restez informé de nos publications</h2>
-                <p class="text-slate-400 text-lg mb-10 max-w-xl mx-auto">Un email par mois : tutoriels, actualités réglementaires et offres de formation.</p>
+                <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4">{{ t('public.blog.newsletter_title') }}</h2>
+                <p class="text-slate-400 text-lg mb-10 max-w-xl mx-auto">{{ t('public.blog.newsletter_desc') }}</p>
 
                 <div v-if="newsletterSent" class="inline-flex items-center gap-3 px-6 py-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl">
-                    <i class="pi pi-check-circle"></i> Merci ! Vous êtes bien inscrit à la newsletter.
+                    <i class="pi pi-check-circle"></i> {{ t('public.blog.newsletter_thanks') }}
                 </div>
                 <form v-else @submit.prevent="subscribe" class="flex flex-col sm:flex-row items-center gap-3 max-w-lg mx-auto">
-                    <input v-model="newsletter.email" type="email" required placeholder="votre@email.com"
+                    <input v-model="newsletter.email" type="email" required :placeholder="t('public.blog.newsletter_email')"
                         class="flex-1 w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 font-medium focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" />
                     <button type="submit" class="w-full sm:w-auto px-8 py-4 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20">
-                        S'abonner
+                        {{ t('public.blog.newsletter_button') }}
                     </button>
                 </form>
             </div>
@@ -379,10 +381,10 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <div class="flex flex-wrap items-center gap-4 pb-6 mb-6 border-b border-slate-100">
                                 <img :src="`${DEFAULT_AVATAR}${selectedPost.author?.name || 'A'}`" class="w-12 h-12 rounded-full object-cover border-2 border-slate-100" :alt="selectedPost.author?.name" />
                                 <div class="flex-1">
-                                    <p class="text-sm font-black text-[#0B1221]">{{ selectedPost.author?.name || 'Rédaction SubnetCongo' }}</p>
+                                    <p class="text-sm font-black text-[#0B1221]">{{ selectedPost.author?.name || t('public.blog.redaction_subnetcongo') }}</p>
                                     <p class="text-xs text-slate-400 font-bold flex items-center gap-3 mt-0.5">
                                         <span class="flex items-center gap-1"><i class="pi pi-calendar text-[10px]"></i> {{ formatDate(selectedPost.published_at) }}</span>
-                                        <span class="flex items-center gap-1"><i class="pi pi-clock text-[10px]"></i> {{ articleReadTime(selectedPost) }} min de lecture</span>
+                                        <span class="flex items-center gap-1"><i class="pi pi-clock text-[10px]"></i> {{ articleReadTime(selectedPost) }} {{ t('public.blog.read_time') }}</span>
                                     </p>
                                 </div>
                             </div>
@@ -394,13 +396,13 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
                         <!-- Footer partage -->
                         <div class="shrink-0 px-6 sm:px-8 py-5 bg-[#F4F6F9] border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <p class="text-xs text-slate-400 font-medium">Partagez cet article :</p>
+                            <p class="text-xs text-slate-400 font-medium">{{ t('public.blog.share_article') }}</p>
                             <div class="flex items-center gap-2">
-                                <button @click="copyLink" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#2563EB] hover:border-[#2563EB] transition-colors" :title="linkCopied ? 'Lien copié !' : 'Copier le lien'">
+                                <button @click="copyLink" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#2563EB] hover:border-[#2563EB] transition-colors" :title="linkCopied ? t('public.blog.link_copied') : t('public.blog.copy_link')">
                                     <i :class="['pi', linkCopied ? 'pi-check text-emerald-500' : 'pi-link']"></i>
                                 </button>
                                 <a v-for="s in shareTargets" :key="s.label" :href="s.href" target="_blank" rel="noopener"
-                                   class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:bg-[#0B1221] transition-colors" :title="`Partager sur ${s.label}`">
+                                   class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:bg-[#0B1221] transition-colors" :title="`${t('public.blog.share_on')} ${s.label}`">
                                     <i :class="['pi', s.icon]"></i>
                                 </a>
                             </div>

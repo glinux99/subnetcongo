@@ -8,6 +8,9 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Select from 'primevue/select';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 const props = defineProps({
     tickets:    { type: Object, default: () => ({ data: [], links: [] }) },
@@ -27,8 +30,8 @@ const apply = () => router.get(route('student.support.index'), {
 }, { preserveState: true, replace: true });
 
 const statusLabel = (s) => ({
-    open: 'Ouvert', new: 'Nouveau', pending: 'En attente', in_progress: 'En cours',
-    resolved: 'Résolu', closed: 'Fermé',
+    open: t('pages.support_tickets.stOpenLabel'), new: t('pages.support_tickets.stNew'), pending: t('pages.support_tickets.stPendingLabel'), in_progress: t('pages.support_tickets.stInProgressLabel'),
+    resolved: t('pages.support_tickets.stResolvedLabel'), closed: t('pages.support_tickets.stClosedLabel'),
 }[s] || s);
 
 const statusSeverity = (s) => ({
@@ -36,21 +39,32 @@ const statusSeverity = (s) => ({
     resolved: 'success', closed: 'secondary',
 }[s] || 'secondary');
 
-const priorityLabel = (p) => ({ low: 'Basse', medium: 'Moyenne', high: 'Haute', urgent: 'Urgente' }[p] || p);
+const priorityLabel = (p) => ({ low: t('pages.support_tickets.prioLow'), medium: t('pages.support_tickets.prioMedium'), high: t('pages.support_tickets.prioHigh'), urgent: t('pages.support_tickets.prioUrgent') }[p] || p);
 
 // Adapté pour les severities natives de PrimeVue (danger, warning, info, success)
 const prioritySeverity = (p) => ({ urgent: 'danger', high: 'warn', medium: 'info', low: 'success' }[p] || 'secondary');
 
+const statusOptions = computed(() => [
+    { label: t('pages.support_tickets.optAllStatuses'), value: '' },
+    { label: t('pages.support_tickets.optOpen'), value: 'open' },
+    { label: t('pages.support_tickets.optPending'), value: 'pending' },
+    { label: t('pages.support_tickets.optInProgress'), value: 'in_progress' },
+    { label: t('pages.support_tickets.optResolved'), value: 'resolved' },
+    { label: t('pages.support_tickets.optClosed'), value: 'closed' },
+]);
+
+const categoryOptions = computed(() => [{ label: t('pages.support_tickets.optAllCategories'), value: '' }, ...(props.categories?.map(c => ({ label: c.name, value: c.id })) || [])]);
+
 const formatDate = (iso) => {
     if (!iso) return '';
-    try { return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    try { return new Date(iso).toLocaleString(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
     catch (_) { return iso; }
 };
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Mes tickets support" />
+        <Head :title="t('pages.support_tickets.headTitle')" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             
@@ -69,26 +83,26 @@ const formatDate = (iso) => {
                             </span>
 
                             <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">TICKETS</span>
-                                <span class="text-[#FF3B3B]">SUPPORT</span>
+                                <span class="text-white">{{ t('pages.support_tickets.titlePart1') }}</span>
+                                <span class="text-[#FF3B3B]">{{ t('pages.support_tickets.titlePart2') }}</span>
                             </h1>
 
                             <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                Suivez vos demandes d'assistance, échangez avec l'équipe technique ou pédagogique et trouvez des solutions rapides à vos problèmes.
+                                {{ t('pages.support_tickets.pageSubtitle') }}
                             </p>
                         </div>
 
                         <!-- Partie Droite (Boutons) -->
                         <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
                             <Button 
-                                label="Actualiser" 
+                                :label="t('pages.support_tickets.refresh')" 
                                 icon="pi pi-sync" 
                                 @click="apply"
                                 class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
                             />
                             <Link :href="route('student.support.create')" class="w-full sm:w-auto">
                                 <Button 
-                                    label="Nouveau ticket" 
+                                    :label="t('pages.support_tickets.newTicket')" 
                                     icon="pi pi-plus" 
                                     class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
                                 />
@@ -106,7 +120,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-list text-blue-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Demandes</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiTotal') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.total ?? 0 }}</div>
                         </div>
                     </div>
@@ -117,7 +131,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-envelope-open text-sky-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tickets Ouverts</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiOpen') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.open ?? 0 }}</div>
                         </div>
                     </div>
@@ -128,7 +142,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-clock text-amber-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">En attente de réponse</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiPending') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.pending ?? 0 }}</div>
                         </div>
                     </div>
@@ -139,7 +153,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-check-circle text-emerald-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tickets Résolus</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.support_tickets.kpiResolved') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.resolved ?? 0 }}</div>
                         </div>
                     </div>
@@ -154,21 +168,14 @@ const formatDate = (iso) => {
                     <div class="flex flex-wrap items-center gap-3 mb-6">
                         <IconField iconPosition="left" class="flex-1 min-w-[250px]">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="search" @keyup.enter="apply" placeholder="Rechercher (sujet, n° ticket...)" class="w-full" />
+                            <InputText v-model="search" @keyup.enter="apply" :placeholder="t('pages.support_tickets.searchPlaceholder')" class="w-full" />
                         </IconField>
                         
-                        <Select v-model="status" :options="[
-                            { label:'Tous statuts', value:'' },
-                            { label:'Ouverts', value:'open' },
-                            { label:'En attente', value:'pending' },
-                            { label:'En cours', value:'in_progress' },
-                            { label:'Résolus', value:'resolved' },
-                            { label:'Fermés', value:'closed' },
-                        ]" optionLabel="label" optionValue="value" @change="apply" class="!rounded-xl border-slate-200 min-w-[150px]" />
+                        <Select v-model="status" :options="statusOptions" optionLabel="label" optionValue="value" @change="apply" class="!rounded-xl border-slate-200 min-w-[150px]" />
                         
-                        <Select v-model="category" :options="[{ label:'Toutes catégories', value:'' }, ...(categories?.map(c => ({ label:c.name, value:c.id })) || [])]" optionLabel="label" optionValue="value" @change="apply" class="!rounded-xl border-slate-200 min-w-[180px]" />
+                        <Select v-model="category" :options="categoryOptions" optionLabel="label" optionValue="value" @change="apply" class="!rounded-xl border-slate-200 min-w-[180px]" />
                         
-                        <Button label="Filtrer" icon="pi pi-filter" @click="apply" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
+                        <Button :label="t('pages.support_tickets.filterBtn')" icon="pi pi-filter" @click="apply" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
                     </div>
 
                     <!-- Tableau natif re-stylisé façon "PrimeVue B2B" -->
@@ -176,13 +183,13 @@ const formatDate = (iso) => {
                         <table class="w-full text-sm">
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr class="text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                                    <th class="py-4 px-4 whitespace-nowrap">N° ticket</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Sujet</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Catégorie</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Priorité</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Statut</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Mise à jour</th>
-                                    <th class="py-4 px-4 text-right whitespace-nowrap">Action</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.support_tickets.thTicket') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.support_tickets.thSubject') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.support_tickets.thCategory') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.support_tickets.thPriority') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.support_tickets.thStatus') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.support_tickets.thUpdated') }}</th>
+                                    <th class="py-4 px-4 text-right whitespace-nowrap">{{ t('pages.support_tickets.thAction') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -212,7 +219,7 @@ const formatDate = (iso) => {
                                     
                                     <td class="py-4 px-4 text-right whitespace-nowrap">
                                         <Link :href="route('student.support.show', t.ticket_number)">
-                                            <Button label="Ouvrir" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-blue-50 !text-blue-600 !border-none hover:!bg-blue-100 transition-colors" />
+                                            <Button :label="t('pages.support_tickets.openBtn')" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-blue-50 !text-blue-600 !border-none hover:!bg-blue-100 transition-colors" />
                                         </Link>
                                     </td>
                                 </tr>
@@ -225,10 +232,10 @@ const formatDate = (iso) => {
                         <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-4 shadow-sm">
                             <i class="pi pi-inbox text-2xl text-slate-300"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-slate-700 mb-1">Aucun ticket trouvé</h3>
-                        <p class="text-sm text-slate-500 mb-6">Vous n'avez pas encore de demande d'assistance correspondant à ces critères.</p>
+                        <h3 class="text-lg font-bold text-slate-700 mb-1">{{ t('pages.support_tickets.emptyTitle') }}</h3>
+                        <p class="text-sm text-slate-500 mb-6">{{ t('pages.support_tickets.emptyDesc') }}</p>
                         <Link :href="route('student.support.create')">
-                            <Button label="Créer mon premier ticket" icon="pi pi-plus" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
+                            <Button :label="t('pages.support_tickets.emptyAction')" icon="pi pi-plus" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
                         </Link>
                     </div>
 

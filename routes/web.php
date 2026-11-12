@@ -216,6 +216,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('widgets',[App\Http\Controllers\Web\WidgetController::class, 'index'])->name('widgets');
         Route::get('seo',[App\Http\Controllers\Web\SeoController::class, 'index'])->name('seo');
         Route::get('assets',[App\Http\Controllers\Web\AssetController::class, 'index'])->name('assets');
+        Route::post('assets/upload',[App\Http\Controllers\Web\AssetController::class, 'upload'])->name('assets.upload');
+        Route::post('assets/rename',[App\Http\Controllers\Web\AssetController::class, 'rename'])->name('assets.rename');
+        Route::post('assets/usage',[App\Http\Controllers\Web\AssetController::class, 'usage'])->name('assets.usage');
+        Route::post('assets/delete',[App\Http\Controllers\Web\AssetController::class, 'delete'])->name('assets.delete');
     });
 
     // Réalisations & Blog (gestion admin)

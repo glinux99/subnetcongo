@@ -8,6 +8,9 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Select from 'primevue/select';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     messages: { type: Object, default: () => ({ data: [] }) },
@@ -23,7 +26,13 @@ const apply = () => router.get(route('admin.messages.index'), {
     status: status.value || undefined,
 }, { preserveState: true, replace: true });
 
-const statusLabel = (s) => ({ new:'Nouveau', read:'Lu', replied:'Répondu', archived:'Archivé', spam:'Spam' }[s] || s);
+const statusLabel = (s) => ({
+    new: t('pages.admin_contact_messages.status_new'),
+    read: t('pages.admin_contact_messages.status_read'),
+    replied: t('pages.admin_contact_messages.status_replied'),
+    archived: t('pages.admin_contact_messages.status_archived'),
+    spam: t('pages.admin_contact_messages.status_spam'),
+}[s] || s);
 
 // Adapté pour les severities natives de PrimeVue
 const statusSeverity = (s) => ({ 
@@ -44,7 +53,7 @@ const formatDate = (iso) => {
 
 <template>
     <AppLayout>
-        <Head title="Messages du site web" />
+        <Head :title="t('pages.admin_contact_messages.page_title')" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             
@@ -59,23 +68,23 @@ const formatDate = (iso) => {
                         <!-- Partie Gauche (Titres) -->
                         <div class="max-w-3xl">
                             <span class="inline-block border border-red-900/50 text-red-400 text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-red-950/30 mb-4 uppercase">
-                                Contact & Leads
+                                {{ t('pages.admin_contact_messages.badge') }}
                             </span>
 
                             <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">MESSAGES</span>
-                                <span class="text-[#EF4444]">PUBLICS</span>
+                                <span class="text-white">{{ t('pages.admin_contact_messages.hero_title_1') }}</span>
+                                <span class="text-[#EF4444]">{{ t('pages.admin_contact_messages.hero_title_2') }}</span>
                             </h1>
 
                             <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                Gérez les demandes entrantes envoyées via le formulaire de contact de votre site vitrine. Répondez aux prospects et archivez les échanges.
+                                {{ t('pages.admin_contact_messages.hero_subtitle') }}
                             </p>
                         </div>
 
                         <!-- Partie Droite (Boutons) -->
                         <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
                             <Button 
-                                label="Actualiser" 
+                                :label="t('pages.admin_contact_messages.btn_refresh')" 
                                 icon="pi pi-sync" 
                                 @click="apply"
                                 class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
@@ -93,7 +102,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-inbox text-blue-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Reçus</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_total') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.total ?? 0 }}</div>
                         </div>
                     </div>
@@ -104,7 +113,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-bell text-red-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nouveaux</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_new') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.new ?? 0 }}</div>
                         </div>
                     </div>
@@ -115,7 +124,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-reply text-blue-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Répondus</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_replied') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.replied ?? 0 }}</div>
                         </div>
                     </div>
@@ -126,7 +135,7 @@ const formatDate = (iso) => {
                             <i class="pi pi-folder text-slate-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Archivés</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.admin_contact_messages.kpi_archived') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ stats?.archived ?? 0 }}</div>
                         </div>
                     </div>
@@ -141,16 +150,16 @@ const formatDate = (iso) => {
                     <div class="flex flex-wrap items-center gap-3 mb-6">
                         <IconField iconPosition="left" class="flex-1 min-w-[250px]">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="search" @keyup.enter="apply" placeholder="Rechercher (nom, email, sujet...)" class="w-full" />
+                            <InputText v-model="search" @keyup.enter="apply" :placeholder="t('pages.admin_contact_messages.search_placeholder')" class="w-full" />
                         </IconField>
                         
                         <Select v-model="status" :options="[
-                            { label:'Nouveaux', value:'new' },
-                            { label:'Lus', value:'read' },
-                            { label:'Répondus', value:'replied' },
-                            { label:'Archivés', value:'archived' },
-                            { label:'Spam', value:'spam' },
-                        ]" optionLabel="label" optionValue="value" placeholder="Tous les statuts" showClear @change="apply" class="min-w-[180px]" />
+                            { label: t('pages.admin_contact_messages.status_new_plural'), value:'new' },
+                            { label: t('pages.admin_contact_messages.status_read_plural'), value:'read' },
+                            { label: t('pages.admin_contact_messages.status_replied_plural'), value:'replied' },
+                            { label: t('pages.admin_contact_messages.status_archived_plural'), value:'archived' },
+                            { label: t('pages.admin_contact_messages.status_spam'), value:'spam' },
+                        ]" optionLabel="label" optionValue="value" :placeholder="t('pages.admin_contact_messages.filter_all_statuses')" showClear @change="apply" class="min-w-[180px]" />
                     </div>
 
                     <!-- Tableau natif re-stylisé façon SaaS -->
@@ -158,12 +167,12 @@ const formatDate = (iso) => {
                         <table class="w-full text-sm">
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr class="text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                                    <th class="py-4 px-4 whitespace-nowrap">Réf.</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Expéditeur</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Sujet du message</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Statut</th>
-                                    <th class="py-4 px-4 whitespace-nowrap">Reçu le</th>
-                                    <th class="py-4 px-4 text-right whitespace-nowrap">Action</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.admin_contact_messages.col_ref') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.admin_contact_messages.col_sender') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.admin_contact_messages.col_subject') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.admin_contact_messages.col_status') }}</th>
+                                    <th class="py-4 px-4 whitespace-nowrap">{{ t('pages.admin_contact_messages.col_received') }}</th>
+                                    <th class="py-4 px-4 text-right whitespace-nowrap">{{ t('pages.admin_contact_messages.col_action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -200,7 +209,7 @@ const formatDate = (iso) => {
                                     
                                     <td class="py-4 px-4 text-right whitespace-nowrap">
                                         <Link :href="route('admin.messages.show', m.id)">
-                                            <Button label="Ouvrir" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-blue-50 !text-blue-600 !border-none hover:!bg-blue-100 transition-colors" />
+                                            <Button :label="t('pages.admin_contact_messages.btn_open')" icon="pi pi-arrow-right" size="small" class="!rounded-xl !text-[10px] !font-bold !uppercase !tracking-widest !py-2 !bg-blue-50 !text-blue-600 !border-none hover:!bg-blue-100 transition-colors" />
                                         </Link>
                                     </td>
                                 </tr>
@@ -213,8 +222,8 @@ const formatDate = (iso) => {
                         <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-4 shadow-sm">
                             <i class="pi pi-inbox text-2xl text-slate-300"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-slate-700 mb-1">Aucun message</h3>
-                        <p class="text-sm text-slate-500">Votre boîte de réception est vide pour les filtres sélectionnés.</p>
+                        <h3 class="text-lg font-bold text-slate-700 mb-1">{{ t('pages.admin_contact_messages.empty_title') }}</h3>
+                        <p class="text-sm text-slate-500">{{ t('pages.admin_contact_messages.empty_subtitle') }}</p>
                     </div>
 
                     <!-- Pagination -->

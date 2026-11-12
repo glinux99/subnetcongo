@@ -23,6 +23,7 @@ import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
+import { useI18n } from 'vue-i18n';
 
 // ======================================================================================
 // PRIMEVUE COMPONENTS (Importation exhaustive pour Enterprise UI)
@@ -57,6 +58,7 @@ import Slider from 'primevue/slider';
 import Rating from 'primevue/rating';
 import MultiSelect from 'primevue/multiselect';
 import Chart from 'primevue/chart';
+const { t } = useI18n();
 
 // ======================================================================================
 // PROPS INERTIA (Données strictes provenant du backend/DB)
@@ -104,21 +106,21 @@ const lastSavedAt = ref(null);
 // Menu contextuel actions groupées
 const menu = ref();
 const bulkActionsMenu = [
-    { label: 'Envoyer une communication', icon: 'pi pi-envelope', command: () => notify('Module de messagerie en cours d\'intégration.') },
-    { label: 'Générer rapport de paie global', icon: 'pi pi-dollar', command: () => notify('Génération du fichier de paie (CSV) en cours...') },
+    { label: t('pages.instructors.bulkMessage'), icon: 'pi pi-envelope', command: () => notify(t('pages.instructors.bulkMessagePending')) },
+    { label: t('pages.instructors.bulkPayroll'), icon: 'pi pi-dollar', command: () => notify(t('pages.instructors.bulkPayrollPending')) },
     { separator: true },
-    { label: 'Suspendre les contrats', icon: 'pi pi-lock', command: () => confirmBulkSuspend() }
+    { label: t('pages.instructors.bulkSuspend'), icon: 'pi pi-lock', command: () => confirmBulkSuspend() }
 ];
 
 // ======================================================================================
 // CONFIGURATION DU WORKSPACE ÉDITEUR (STEPPER)
 // ======================================================================================
 const editorMenu = ref([
-    { id: 'general', label: 'Identité & Contact', description: 'Informations personnelles', icon: 'pi pi-id-card' },
-    { id: 'expertise', label: 'Expertise & Bio', description: 'Compétences et présentation', icon: 'pi pi-briefcase' },
-    { id: 'media', label: 'Identité Visuelle', description: 'Photo de profil officielle', icon: 'pi pi-image' },
-    { id: 'finance', label: 'Contrat & Finance', description: 'Commissions et statut RH', icon: 'pi pi-percentage' },
-    { id: 'security', label: 'Accès & Sécurité', description: 'Contrôle d\'accès au LMS', icon: 'pi pi-shield' }
+    { id: 'general', label: t('pages.instructors.stepGeneralLabel'), description: t('pages.instructors.stepGeneralDesc'), icon: 'pi pi-id-card' },
+    { id: 'expertise', label: t('pages.instructors.stepExpertiseLabel'), description: t('pages.instructors.stepExpertiseDesc'), icon: 'pi pi-briefcase' },
+    { id: 'media', label: t('pages.instructors.stepMediaLabel'), description: t('pages.instructors.stepMediaDesc'), icon: 'pi pi-image' },
+    { id: 'finance', label: t('pages.instructors.stepFinanceLabel'), description: t('pages.instructors.stepFinanceDesc'), icon: 'pi pi-percentage' },
+    { id: 'security', label: t('pages.instructors.stepSecurityLabel'), description: t('pages.instructors.stepSecurityDesc'), icon: 'pi pi-shield' }
 ]);
 const activeEditorTab = ref('general');
 
@@ -227,7 +229,7 @@ const viewProfile = (data) => {
 
 const saveInstructor = () => {
     if (!isEntireFormValid.value) {
-        toast.add({ severity: 'warn', summary: 'Formulaire incomplet', detail: 'Veuillez remplir les champs obligatoires (Nom, Email, Spécialités, Commission).', life: 5000 });
+        toast.add({ severity: 'warn', summary: t('pages.instructors.formIncomplete'), detail: t('pages.instructors.formIncompleteDetail'), life: 5000 });
         if (!tabValidation.value.general) activeEditorTab.value = 'general';
         else if (!tabValidation.value.expertise) activeEditorTab.value = 'expertise';
         else if (!tabValidation.value.finance) activeEditorTab.value = 'finance';
@@ -250,28 +252,28 @@ const saveInstructor = () => {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Opération réussie', detail: `Dossier formateur ${instructorForm.id ? 'mis à jour' : 'créé'}.`, life: 3000 });
+            toast.add({ severity: 'success', summary: t('pages.instructors.operationSuccess'), detail: instructorForm.id ? t('pages.instructors.dossierUpdated') : t('pages.instructors.dossierCreated'), life: 3000 });
             lastSavedAt.value = new Date();
             instructorDialog.value = false;
         },
         onError: (errors) => {
-            toast.add({ severity: 'error', summary: 'Erreur Serveur', detail: 'La validation a échoué. Vérifiez vos saisies.', life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.instructors.serverError'), detail: t('pages.instructors.serverErrorDetail'), life: 5000 });
         }
     });
 };
 
 const confirmDeleteInstructor = (instructor) => {
     confirm.require({
-        message: `La suppression de ${instructor.name} est-elle définitive ? Si cet expert a des cours actifs, il est recommandé de le suspendre plutôt.`,
-        header: 'Suppression du dossier RH',
+        message: t('pages.instructors.confirmDeleteMessage', { name: instructor.name }),
+        header: t('pages.instructors.deleteHrDossierHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-        acceptLabel: 'Oui, purger',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.instructors.yesPurge'),
+        rejectLabel: t('pages.instructors.cancel'),
         accept: () => {
             router.delete(route('users.instructors.destroy', instructor.id), {
                 preserveScroll: true,
-                onSuccess: () => toast.add({ severity: 'info', summary: 'Archivé', detail: 'Dossier formateur supprimé avec succès.', life: 3000 })
+                onSuccess: () => toast.add({ severity: 'info', summary: t('pages.instructors.archived'), detail: t('pages.instructors.dossierDeleted'), life: 3000 })
             });
         }
     });
@@ -280,19 +282,19 @@ const confirmDeleteInstructor = (instructor) => {
 const confirmBulkDelete = () => {
     if (!selectedInstructors.value.length) return;
     confirm.require({
-        message: `Vous allez supprimer DÉFINITIVEMENT les ${selectedInstructors.value.length} instructeurs sélectionnés. Confirmer ?`,
-        header: 'Purge en masse',
+        message: t('pages.instructors.bulkDeleteMessage', { count: selectedInstructors.value.length }),
+        header: t('pages.instructors.bulkPurgeHeader'),
         icon: 'pi pi-ban',
         acceptClass: 'p-button-danger',
-        acceptLabel: 'Confirmer la purge',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.instructors.confirmPurge'),
+        rejectLabel: t('pages.instructors.cancel'),
         accept: () => {
             const ids = selectedInstructors.value.map(i => i.id);
             router.delete(route('users.instructors.bulk-destroy'), {
                 data: { ids },
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.add({ severity: 'success', summary: 'Succès', detail: 'Les dossiers sélectionnés ont été effacés.', life: 3000 });
+                    toast.add({ severity: 'success', summary: t('pages.instructors.toastSuccess'), detail: t('pages.instructors.selectedDeleted'), life: 3000 });
                     selectedInstructors.value = [];
                 }
             });
@@ -306,7 +308,7 @@ const confirmBulkSuspend = () => {
     router.post(route('users.instructors.bulk-suspend'), { ids }, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.add({ severity: 'warn', summary: 'Contrats Suspendus', detail: `${ids.length} formateurs ont été suspendus.`, life: 3000 });
+            toast.add({ severity: 'warn', summary: t('pages.instructors.contractsSuspended'), detail: t('pages.instructors.instructorsSuspended', { count: ids.length }), life: 3000 });
             selectedInstructors.value = [];
         }
     });
@@ -354,7 +356,7 @@ const onPageChange = (event) => {
     router.get(route('users.instructors.index'), { ...serverFilters, page: event.page + 1, per_page: event.rows }, { preserveState: true, preserveScroll: true });
 };
 
-const notify = (msg) => toast.add({ severity: 'info', summary: 'Action requise', detail: msg, life: 3000 });
+const notify = (msg) => toast.add({ severity: 'info', summary: t('pages.instructors.actionRequired'), detail: msg, life: 3000 });
 
 // Upload Visuel Avatar
 const uploadMockProgress = ref(0);
@@ -365,7 +367,7 @@ const onAvatarSelect = (event) => {
         uploadMockProgress.value += 15;
         if (uploadMockProgress.value >= 100) {
             clearInterval(interval);
-            toast.add({ severity: 'success', summary: 'Média chargé', detail: 'La photo est prête pour la sauvegarde.', life: 2000 });
+            toast.add({ severity: 'success', summary: t('pages.instructors.mediaLoaded'), detail: t('pages.instructors.photoReady'), life: 2000 });
         }
     }, 100);
 };
@@ -388,9 +390,9 @@ const chartOptions = {
     tension: 0.4
 };
 const revenueChartData = ref({
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+    labels: [t('pages.instructors.monthJan'), t('pages.instructors.monthFeb'), t('pages.instructors.monthMar'), t('pages.instructors.monthApr'), t('pages.instructors.monthMay'), t('pages.instructors.monthJun')],
     datasets: [{
-        label: 'Revenus générés ($)',
+        label: t('pages.instructors.revenueGenerated'),
         data: [1200, 1800, 1650, 2400, 3100, 4200],
         borderColor: '#4f46e5',
         backgroundColor: 'rgba(79, 70, 229, 0.1)',
@@ -412,7 +414,7 @@ onMounted(() => {
 
 <template>
     <AppLayout>
-        <Head title="Corps Enseignant | Enterprise HR" />
+        <Head :title="t('pages.instructors.headTitle')" />
         <Toast position="top-right" group="tc" />
         <ConfirmDialog />
 
@@ -441,25 +443,25 @@ onMounted(() => {
 
                     <!-- Titre Principal (Italique, gras, 2 couleurs) -->
                     <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">Corps</span>
-                        <span class="text-[#E92B2B]">Enseignant</span>
+                        <span class="text-white">{{ t('pages.instructors.titleLine1') }}</span>
+                        <span class="text-[#E92B2B]">{{ t('pages.instructors.titleHighlight') }}</span>
                     </h1>
 
                     <!-- Sous-titre -->
                     <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        Supervisez l'équipe pédagogique. Pilotez les assignations de cours, analysez les indicateurs de qualité (avis, engagement) et gérez la politique de rémunération (commissions).
+                        {{ t('pages.instructors.subtitle') }}
                     </p>
                 </div>
 
                 <!-- Partie Droite (Boutons) -->
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                     <Button 
-                        label="Rapports Financiers" 
+                        :label="t('pages.instructors.financialReports')" 
                         icon="pi pi-file-excel" 
                         class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
                     />
                     <Button 
-                        label="Recruter un Expert" 
+                        :label="t('pages.instructors.recruitExpert')" 
                         icon="pi pi-user-plus" 
                         class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
                         @click="openNew" 
@@ -480,7 +482,7 @@ onMounted(() => {
                     <i class="pi pi-briefcase text-blue-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Experts</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiTotalExperts') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.total_instructors || 0 }}</p>
                 </div>
             </div>
@@ -491,7 +493,7 @@ onMounted(() => {
                     <i class="pi pi-book text-emerald-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Formations Actives</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiActiveCourses') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.active_courses || 0 }}</p>
                 </div>
             </div>
@@ -502,7 +504,7 @@ onMounted(() => {
                     <i class="pi pi-star-fill text-amber-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Note de Qualité</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiQualityRating') }}</h3>
                     <div class="flex items-center gap-2">
                         <p class="text-3xl font-extrabold text-slate-900">{{ props.stats.avg_rating || '0.0' }}</p>
                         <!-- Petit badge propre pour indiquer que c'est sur 5, remplaçant les étoiles pour garder le design minimaliste -->
@@ -517,7 +519,7 @@ onMounted(() => {
                     <i class="pi pi-wallet text-red-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Commissions</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.kpiTotalCommissions') }}</h3>
                     <!-- Application de votre fonction formatCurrency -->
                     <p class="text-3xl font-extrabold text-slate-900 truncate" :title="formatCurrency(props.stats.total_commissions)">
                         {{ formatCurrency(props.stats.total_commissions) }}
@@ -538,29 +540,29 @@ onMounted(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-auto">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" placeholder="Rechercher (Nom, Email)..." class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.instructors.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
 
-                        <Dropdown v-model="serverFilters.status" :options="props.statuses" placeholder="Statut Contrat" class="w-full sm:w-48 border-slate-200 shadow-sm" showClear>
+                        <Dropdown v-model="serverFilters.status" :options="props.statuses" :placeholder="t('pages.instructors.contractStatus')" class="w-full sm:w-48 border-slate-200 shadow-sm" showClear>
                             <template #value="slotProps">
                                 <div v-if="slotProps.value" class="flex items-center gap-2 font-medium text-slate-700">
                                     <i :class="getStatusIcon(slotProps.value)" class="text-slate-400"></i>
                                     <span>{{ slotProps.value }}</span>
                                 </div>
-                                <span v-else class="text-slate-500">Filtrer par statut</span>
+                                <span v-else class="text-slate-500">{{ t('pages.instructors.filterByStatus') }}</span>
                             </template>
                         </Dropdown>
 
-                        <Dropdown v-model="serverFilters.specialty" :options="props.specialtiesList" optionLabel="label" optionValue="value" placeholder="Domaine d'expertise" class="w-full sm:w-56 border-slate-200 shadow-sm" showClear />
+                        <Dropdown v-model="serverFilters.specialty" :options="props.specialtiesList" optionLabel="label" optionValue="value" :placeholder="t('pages.instructors.expertiseDomain')" class="w-full sm:w-56 border-slate-200 shadow-sm" showClear />
                     </div>
 
                     <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
-                        <Button v-if="selectedInstructors.length > 0" icon="pi pi-trash" :label="`Purger (${selectedInstructors.length})`" class="p-button-danger p-button-outlined shadow-sm" @click="confirmBulkDelete" />
-                        <Button icon="pi pi-ellipsis-v" class="p-button-secondary p-button-text p-button-rounded bg-slate-50 border border-slate-200" @click="menu.toggle($event)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip.top="'Actions Groupées'" />
+                        <Button v-if="selectedInstructors.length > 0" icon="pi pi-trash" :label="t('pages.instructors.purgeCount', { count: selectedInstructors.length })" class="p-button-danger p-button-outlined shadow-sm" @click="confirmBulkDelete" />
+                        <Button icon="pi pi-ellipsis-v" class="p-button-secondary p-button-text p-button-rounded bg-slate-50 border border-slate-200" @click="menu.toggle($event)" aria-haspopup="true" aria-controls="overlay_menu" v-tooltip.top="t('pages.instructors.bulkActions')" />
                         <Menu ref="menu" id="overlay_menu" :model="bulkActionsMenu" :popup="true" />
-                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser la base'" />
+                        <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.instructors.refreshBase')" />
                     </div>
                 </div>
 
@@ -588,11 +590,11 @@ onMounted(() => {
                             <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                                 <i class="pi pi-briefcase text-5xl text-slate-300"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-2">Aucun instructeur trouvé</h3>
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('pages.instructors.emptyTitle') }}</h3>
                             <p class="text-sm max-w-md text-center text-slate-500 leading-relaxed mb-6">
-                                La base de données ne renvoie aucun expert pour ces filtres. Modifiez votre recherche ou recrutez un nouveau formateur.
+                                {{ t('pages.instructors.emptyDescription') }}
                             </p>
-                            <Button label="Ajouter un Expert" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
+                            <Button :label="t('pages.instructors.addExpert')" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
                         </div>
                     </template>
 
@@ -600,7 +602,7 @@ onMounted(() => {
                     <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
                     <Column expander style="width: 3rem; background-color: #f8fafc;" />
 
-                    <Column field="name" header="Identité Formateur" style="min-width: 22rem; background-color: #f8fafc;">
+                    <Column field="name" :header="t('pages.instructors.colTrainerIdentity')" style="min-width: 22rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex items-center gap-4 py-2">
                                 <div class="relative cursor-pointer group" @click="viewProfile(data)">
@@ -627,7 +629,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="status" header="Statut Contrat" style="min-width: 10rem; background-color: #f8fafc;">
+                    <Column field="status" :header="t('pages.instructors.contractStatus')" style="min-width: 10rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <Tag
                                 :value="data.status"
@@ -638,42 +640,42 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="metrics" header="Engagement & KPI" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="metrics" :header="t('pages.instructors.colEngagementKpi')" style="min-width: 12rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
-                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-book text-slate-400"></i> Cours affectés</span>
+                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-book text-slate-400"></i> {{ t('pages.instructors.assignedCourses') }}</span>
                                     <span class="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{{ data.assigned_courses_count || 0 }}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs w-36">
-                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-users text-slate-400"></i> Total Élèves</span>
+                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-users text-slate-400"></i> {{ t('pages.instructors.totalLearners') }}</span>
                                     <span class="font-bold text-slate-700">{{ data.total_students || 0 }}</span>
                                 </div>
                             </div>
                         </template>
                     </Column>
 
-                    <Column field="finance" header="Finance & Avis" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="finance" :header="t('pages.instructors.colFinanceRating')" style="min-width: 12rem; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
-                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-dollar text-slate-400"></i> CA Généré</span>
+                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-dollar text-slate-400"></i> {{ t('pages.instructors.revenueGeneratedShort') }}</span>
                                     <span class="font-bold text-emerald-600">{{ formatCurrency(data.generated_revenue || 0) }}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs w-36">
-                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-star-fill text-amber-400"></i> Avis Global</span>
+                                    <span class="text-slate-500 flex items-center gap-1.5"><i class="pi pi-star-fill text-amber-400"></i> {{ t('pages.instructors.overallRating') }}</span>
                                     <span class="font-bold text-slate-800">{{ data.average_rating || 'N/A' }}</span>
                                 </div>
                             </div>
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
+                    <Column :header="t('pages.instructors.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
-                                <Button icon="pi pi-chart-line" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Profil Complet 360°'" @click="viewProfile(data)" />
-                                <Button icon="pi pi-user-edit" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Modifier le dossier RH'" @click="editInstructor(data)" />
-                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="'Archiver le contrat'" @click="confirmDeleteInstructor(data)" />
+                                <Button icon="pi pi-chart-line" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.instructors.fullProfile360')" @click="viewProfile(data)" />
+                                <Button icon="pi pi-user-edit" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.instructors.editHrDossier')" @click="editInstructor(data)" />
+                                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.instructors.archiveContract')" @click="confirmDeleteInstructor(data)" />
                             </div>
                         </template>
                     </Column>
@@ -685,10 +687,10 @@ onMounted(() => {
                                 <div class="flex items-center justify-between mb-6">
                                     <h4 class="font-bold text-slate-800 text-lg flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-book"></i></div>
-                                        Portfolio Pédagogique Actif
+                                        {{ t('pages.instructors.activeTeachingPortfolio') }}
                                     </h4>
                                     <div class="flex gap-2">
-                                        <Badge :value="`Taux de Commission : ${data.commission_rate || 70}%`" severity="info" class="bg-blue-50 text-blue-700 border border-blue-200"></Badge>
+                                        <Badge :value="t('pages.instructors.commissionRateBadge', { rate: data.commission_rate || 70 })" severity="info" class="bg-blue-50 text-blue-700 border border-blue-200"></Badge>
                                     </div>
                                 </div>
 
@@ -705,7 +707,7 @@ onMounted(() => {
                                                 <h5 class="font-bold text-sm text-slate-800 truncate" :title="course.title">{{ course.title }}</h5>
                                                 <div class="flex items-center gap-2 mt-1">
                                                     <Tag :value="course.status" severity="success" class="text-[8px] uppercase tracking-widest px-1.5 py-0" />
-                                                    <span class="text-[10px] text-slate-500">{{ course.level || 'Général' }}</span>
+                                                    <span class="text-[10px] text-slate-500">{{ course.level || t('pages.instructors.general') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -713,15 +715,15 @@ onMounted(() => {
                                         <!-- Stats Rapides -->
                                         <div class="grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
                                             <div class="text-center">
-                                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Élèves</p>
+                                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ t('pages.instructors.learners') }}</p>
                                                 <p class="text-sm font-black text-slate-700">{{ course.students_count || 0 }}</p>
                                             </div>
                                             <div class="text-center border-x border-slate-100">
-                                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Avis</p>
+                                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ t('pages.instructors.reviews') }}</p>
                                                 <p class="text-sm font-black text-amber-500 flex items-center justify-center gap-1"><i class="pi pi-star-fill text-[10px]"></i> {{ course.rating || 'N/A' }}</p>
                                             </div>
                                             <div class="text-center">
-                                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Revenu</p>
+                                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ t('pages.instructors.revenue') }}</p>
                                                 <p class="text-sm font-black text-emerald-600">{{ formatCurrency(course.revenue || 0) }}</p>
                                             </div>
                                         </div>
@@ -730,8 +732,8 @@ onMounted(() => {
                                 <div v-else class="text-slate-500 p-8 bg-white rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-3 hover:bg-slate-50 transition-colors">
                                     <i class="pi pi-inbox text-4xl text-slate-300"></i>
                                     <div class="text-center">
-                                        <p class="font-bold text-slate-700 text-lg">Aucune formation assignée</p>
-                                        <p class="text-sm max-w-sm mt-1">Cet expert n'a pas encore créé de contenu pédagogique sur la plateforme.</p>
+                                        <p class="font-bold text-slate-700 text-lg">{{ t('pages.instructors.noCourseAssigned') }}</p>
+                                        <p class="text-sm max-w-sm mt-1">{{ t('pages.instructors.noCourseAssignedHelp') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -766,19 +768,19 @@ onMounted(() => {
                     </div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
-                            {{ instructorForm.id ? 'Dossier Instructeur' : 'Intégration RH (Expert)' }}
+                            {{ instructorForm.id ? t('pages.instructors.dossierTitle') : t('pages.instructors.integrationTitle') }}
                             <Tag v-if="instructorForm.status" :value="instructorForm.status" :class="getSeverity(instructorForm.status).bg" class="text-[9px] uppercase tracking-wider px-2 py-0.5 border" />
                         </h2>
                         <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span class="truncate max-w-[200px]">{{ instructorForm.name || 'Nouveau Profil' }}</span>
-                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> Enregistré à {{ formatDate(lastSavedAt) }}</span>
-                            <span v-else-if="instructorForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> Modifications en cours...</span>
+                            <span class="truncate max-w-[200px]">{{ instructorForm.name || t('pages.instructors.newProfile') }}</span>
+                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.instructors.savedAt', { date: formatDate(lastSavedAt) }) }}</span>
+                            <span v-else-if="instructorForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.instructors.unsavedChanges') }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="instructorDialog = false" v-tooltip.bottom="'Fermer le dossier sans sauvegarder'" />
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="instructorDialog = false" v-tooltip.bottom="t('pages.instructors.closeDossierNoSave')" />
                 </div>
             </div>
 
@@ -788,7 +790,7 @@ onMounted(() => {
                 <!-- SIDEBAR DE NAVIGATION (STEPPER) -->
                 <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
                     <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100">
-                        Sections du Dossier
+                        {{ t('pages.instructors.dossierSections') }}
                     </div>
 
                     <div class="p-4 flex-1 space-y-2">
@@ -825,9 +827,9 @@ onMounted(() => {
                                 <i :class="isEntireFormValid ? 'pi pi-check' : 'pi pi-exclamation-triangle'" class="text-lg"></i>
                             </div>
                             <div>
-                                <div class="text-xs font-bold text-slate-800">{{ isEntireFormValid ? 'Dossier Conforme' : 'Données Requises' }}</div>
+                                <div class="text-xs font-bold text-slate-800">{{ isEntireFormValid ? t('pages.instructors.dossierCompliant') : t('pages.instructors.requiredData') }}</div>
                                 <div class="text-[10px] text-slate-500 leading-tight mt-0.5">
-                                    {{ isEntireFormValid ? 'Toutes les infos obligatoires sont remplies.' : 'Vérifiez les sections avec avertissement.' }}
+                                    {{ isEntireFormValid ? t('pages.instructors.allRequiredFilled') : t('pages.instructors.checkWarnedSections') }}
                                 </div>
                             </div>
                         </div>
@@ -844,28 +846,28 @@ onMounted(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">État Civil & Coordonnées</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Identité légale et moyens de contact.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.instructors.civilStatusTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.instructors.civilStatusSubtitle') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     <div class="col-span-1 md:col-span-2 space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Nom Complet de l'Expert <span class="text-red-500">*</span></label>
-                                        <InputText v-model="instructorForm.name" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50 focus:bg-white transition-colors" placeholder="Ex: Alphonse Kabongo" :class="{'p-invalid': instructorForm.errors?.name || (!instructorForm.name && instructorForm.isDirty)}" />
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.expertFullName') }} <span class="text-red-500">*</span></label>
+                                        <InputText v-model="instructorForm.name" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50 focus:bg-white transition-colors" :placeholder="t('pages.instructors.expertFullNamePlaceholder')" :class="{'p-invalid': instructorForm.errors?.name || (!instructorForm.name && instructorForm.isDirty)}" />
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Adresse Email Professionnelle <span class="text-red-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.professionalEmail') }} <span class="text-red-500">*</span></label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-envelope text-slate-400" />
                                             <InputText v-model="instructorForm.email" type="email" class="w-full bg-slate-50 focus:bg-white" placeholder="alphonse.k@subnet.cd" :class="{'p-invalid': instructorForm.errors?.email}" />
                                         </IconField>
-                                        <small class="text-slate-500 text-[11px]">Sert d'identifiant de connexion pour le tableau de bord Formateur.</small>
+                                        <small class="text-slate-500 text-[11px]">{{ t('pages.instructors.trainerLoginHint') }}</small>
                                     </div>
 
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Téléphone Mobile</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.mobilePhone') }}</label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-phone text-slate-400" />
                                             <InputText v-model="instructorForm.numero" class="w-full bg-slate-50 focus:bg-white" placeholder="+243 ..." />
@@ -873,10 +875,10 @@ onMounted(() => {
                                     </div>
 
                                     <div class="col-span-1 md:col-span-2 space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Adresse / Bureau</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.addressOffice') }}</label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-map-marker text-slate-400" />
-                                            <InputText v-model="instructorForm.address" class="w-full bg-slate-50 focus:bg-white" placeholder="Ville, Commune, Numéro..." />
+                                            <InputText v-model="instructorForm.address" class="w-full bg-slate-50 focus:bg-white" :placeholder="t('pages.instructors.addressPlaceholder')" />
                                         </IconField>
                                     </div>
                                 </div>
@@ -889,35 +891,35 @@ onMounted(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-briefcase"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Profil Académique & Bio</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Ces informations seront visibles par les étudiants sur les pages de cours.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.instructors.academicProfileTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.instructors.academicProfileSubtitle') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 gap-6">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Domaines de Spécialité <span class="text-red-500">*</span></label>
-                                        <MultiSelect v-model="instructorForm.specialties" :options="props.specialtiesList" optionLabel="label" optionValue="value" placeholder="Sélectionnez les compétences clés..." display="chip" class="w-full bg-slate-50" :class="{'p-invalid': !instructorForm.specialties.length}" filter />
-                                        <small class="text-slate-500 text-[11px]">Sert à classifier l'instructeur dans l'annuaire public.</small>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.specialtiesLabel') }} <span class="text-red-500">*</span></label>
+                                        <MultiSelect v-model="instructorForm.specialties" :options="props.specialtiesList" optionLabel="label" optionValue="value" :placeholder="t('pages.instructors.selectKeySkills')" display="chip" class="w-full bg-slate-50" :class="{'p-invalid': !instructorForm.specialties.length}" filter />
+                                        <small class="text-slate-500 text-[11px]">{{ t('pages.instructors.classifyInstructorHint') }}</small>
                                     </div>
 
                                     <div class="space-y-2 mt-2">
-                                        <label class="block text-sm font-bold text-slate-700">Biographie Professionnelle (Présentation)</label>
-                                        <Textarea v-model="instructorForm.bio" rows="6" class="w-full p-4 bg-slate-50 border-slate-300 focus:bg-white leading-relaxed" placeholder="Décrivez le parcours, les diplômes et l'expérience de l'expert en quelques paragraphes. C'est son argumentaire de vente..." />
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.bioPresentationLabel') }}</label>
+                                        <Textarea v-model="instructorForm.bio" rows="6" class="w-full p-4 bg-slate-50 border-slate-300 focus:bg-white leading-relaxed" :placeholder="t('pages.instructors.bioPlaceholder')" />
                                     </div>
 
                                     <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4 mt-2">
-                                        <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-link text-slate-400"></i> Présence Digitale</h4>
+                                        <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-link text-slate-400"></i> {{ t('pages.instructors.digitalPresence') }}</h4>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div class="space-y-1">
-                                                <label class="text-[11px] font-bold text-slate-500 uppercase">Profil LinkedIn</label>
+                                                <label class="text-[11px] font-bold text-slate-500 uppercase">{{ t('pages.instructors.linkedinProfile') }}</label>
                                                 <IconField iconPosition="left">
                                                     <InputIcon class="pi pi-linkedin text-blue-500" />
                                                     <InputText v-model="instructorForm.social.linkedin" placeholder="https://linkedin.com/in/..." class="w-full bg-white" />
                                                 </IconField>
                                             </div>
                                             <div class="space-y-1">
-                                                <label class="text-[11px] font-bold text-slate-500 uppercase">Site Web / Portfolio</label>
+                                                <label class="text-[11px] font-bold text-slate-500 uppercase">{{ t('pages.instructors.websitePortfolio') }}</label>
                                                 <IconField iconPosition="left">
                                                     <InputIcon class="pi pi-globe text-slate-400" />
                                                     <InputText v-model="instructorForm.social.website" placeholder="https://..." class="w-full bg-white" />
@@ -932,7 +934,7 @@ onMounted(() => {
                         <!-- TAB 3 : MÉDIAS (AVATAR) -->
                         <div v-show="activeEditorTab === 'media'" class="space-y-8 animate-fade-in" role="tabpanel">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Photo de Profil Officielle</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.instructors.officialProfilePhoto') }}</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
                                     <div class="flex flex-col items-center justify-center p-8 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl relative group hover:bg-blue-50/50 hover:border-blue-300 transition-colors">
@@ -942,18 +944,18 @@ onMounted(() => {
                                             <i class="pi pi-camera text-6xl"></i>
                                         </div>
 
-                                        <FileUpload mode="basic" accept="image/*" :maxFileSize="2000000" customUpload @select="onAvatarSelect" chooseLabel="Sélectionner une photo PRO" class="p-button-outlined p-button-sm font-bold rounded-full px-6 bg-white" auto />
+                                        <FileUpload mode="basic" accept="image/*" :maxFileSize="2000000" customUpload @select="onAvatarSelect" :chooseLabel="t('pages.instructors.selectProPhoto')" class="p-button-outlined p-button-sm font-bold rounded-full px-6 bg-white" auto />
 
                                         <ProgressBar v-if="uploadMockProgress > 0 && uploadMockProgress < 100" :value="uploadMockProgress" class="absolute bottom-0 left-4 right-4 h-1 rounded-t-none" :showValue="false" />
                                     </div>
 
                                     <div class="space-y-4">
-                                        <h4 class="font-bold text-slate-800 text-sm">Standards Qualité SubNetCongo</h4>
-                                        <p class="text-sm text-slate-500 leading-relaxed mb-4">La photo de l'instructeur est un gage de confiance. Les cours dont les formateurs ont une photo professionnelle ont <strong>40% de conversion en plus</strong>.</p>
+                                        <h4 class="font-bold text-slate-800 text-sm">{{ t('pages.instructors.subnetcongoQualityStandards') }}</h4>
+                                        <p class="text-sm text-slate-500 leading-relaxed mb-4">{{ t('pages.instructors.photoTrustParagraphPrefix') }} <strong>{{ t('pages.instructors.photoTrustParagraphBold') }}</strong>.</p>
                                         <ul class="space-y-3 text-sm text-slate-600 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                                            <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> Portrait centré, visage dégagé, fond uni.</li>
-                                            <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>Format recommandé :</strong> 800x800px (Carré).</li>
-                                            <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> Poids inférieur à 2 Mo (.PNG ou .JPG).</li>
+                                            <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> {{ t('pages.instructors.centeredPortrait') }}</li>
+                                            <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> <strong>{{ t('pages.instructors.recommendedFormat') }} :</strong> {{ t('pages.instructors.recommendedFormatDetail') }}</li>
+                                            <li class="flex items-center gap-3"><i class="pi pi-check-circle text-emerald-500"></i> {{ t('pages.instructors.weightBelow2mb') }}</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -966,14 +968,14 @@ onMounted(() => {
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-percentage"></i></div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800 leading-none">Modèle Économique & Statut RH</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Définissez la part de revenu reversée sur chaque vente de cours.</p>
+                                        <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.instructors.economicModelTitle') }}</h3>
+                                        <p class="text-xs text-slate-500 mt-1">{{ t('pages.instructors.economicModelSubtitle') }}</p>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 gap-8">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Statut du Contrat <span class="text-red-500">*</span></label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.contractStatusLabel') }} <span class="text-red-500">*</span></label>
                                         <Dropdown v-model="instructorForm.status" :options="props.statuses" class="w-full md:w-1/2 font-medium bg-slate-50">
                                             <template #value="slotProps">
                                                 <div class="flex items-center gap-2">
@@ -982,18 +984,18 @@ onMounted(() => {
                                                 </div>
                                             </template>
                                         </Dropdown>
-                                        <small class="text-slate-500 text-[11px] block mt-1">Seuls les statuts "Actif" permettent de recevoir des paiements automatiques.</small>
+                                        <small class="text-slate-500 text-[11px] block mt-1">{{ t('pages.instructors.activePaymentHint') }}</small>
                                     </div>
 
                                     <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 space-y-6 mt-4">
                                         <div class="flex justify-between items-center">
                                             <div>
-                                                <label class="block text-sm font-bold text-slate-700">Taux de Commission Formateur (%)</label>
-                                                <p class="text-[11px] text-slate-500">Pourcentage reversé à l'expert sur le prix net du cours.</p>
+                                                <label class="block text-sm font-bold text-slate-700">{{ t('pages.instructors.commissionRateLabel') }}</label>
+                                                <p class="text-[11px] text-slate-500">{{ t('pages.instructors.commissionRateHelp') }}</p>
                                             </div>
                                             <div class="flex flex-col items-end">
                                                 <span class="font-black text-emerald-600 text-2xl">{{ instructorForm.commission_rate }} %</span>
-                                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Plateforme: {{ 100 - instructorForm.commission_rate }}%</span>
+                                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400">{{ t('pages.instructors.platformPercent', { percent: 100 - instructorForm.commission_rate }) }}</span>
                                             </div>
                                         </div>
 
@@ -1014,7 +1016,7 @@ onMounted(() => {
                         <!-- TAB 5 : SÉCURITÉ -->
                         <div v-show="activeEditorTab === 'security'" class="space-y-8 animate-fade-in" role="tabpanel">
                             <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-rose-500">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-shield text-slate-400"></i> Accès au Panel Formateur</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-shield text-slate-400"></i> {{ t('pages.instructors.trainerPanelAccess') }}</h3>
 
                                 <div class="space-y-4">
                                     <!-- Blocage Compte -->
@@ -1022,8 +1024,8 @@ onMounted(() => {
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-lock"></i></div>
                                             <div>
-                                                <div class="font-bold text-slate-800 text-sm">Bannir / Suspendre l'accès</div>
-                                                <div class="text-xs text-slate-500 mt-1 leading-tight max-w-md">L'instructeur ne pourra plus accéder à son tableau de bord, ni modifier ses cours. Ses cours actuels resteront en ligne sauf intervention.</div>
+                                                <div class="font-bold text-slate-800 text-sm">{{ t('pages.instructors.banSuspendAccess') }}</div>
+                                                <div class="text-xs text-slate-500 mt-1 leading-tight max-w-md">{{ t('pages.instructors.banSuspendAccessHelp') }}</div>
                                             </div>
                                         </div>
                                         <ToggleSwitch v-model="instructorForm.is_suspended" />
@@ -1034,8 +1036,8 @@ onMounted(() => {
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 bg-white border border-slate-200 text-amber-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"><i class="pi pi-key"></i></div>
                                             <div>
-                                                <div class="font-bold text-slate-800 text-sm">Forcer la réinitialisation du mot de passe</div>
-                                                <div class="text-xs text-slate-500 mt-1 leading-tight max-w-md">Un lien sécurisé de changement de mot de passe sera envoyé à son adresse email lors de la sauvegarde.</div>
+                                                <div class="font-bold text-slate-800 text-sm">{{ t('pages.instructors.forcePasswordReset') }}</div>
+                                                <div class="text-xs text-slate-500 mt-1 leading-tight max-w-md">{{ t('pages.instructors.forcePasswordResetHelp') }}</div>
                                             </div>
                                         </div>
                                         <ToggleSwitch v-model="instructorForm.requires_password_reset" />
@@ -1051,14 +1053,14 @@ onMounted(() => {
             <!-- WORKSPACE FOOTER (ACTIONS) -->
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
                 <div class="text-xs text-slate-500">
-                    <span v-if="!isEntireFormValid" class="text-amber-600 font-bold flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> Remplissez toutes les sections pour valider le contrat.</span>
+                    <span v-if="!isEntireFormValid" class="text-amber-600 font-bold flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> {{ t('pages.instructors.completeAllSections') }}</span>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <Button label="Fermer" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50" @click="instructorDialog = false" />
+                    <Button :label="t('pages.instructors.close')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50" @click="instructorDialog = false" />
 
                     <div class="relative group">
-                        <Button label="Enregistrer le Profil" icon="pi pi-check-circle" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveInstructor" :loading="instructorForm.processing" :disabled="!isEntireFormValid" />
+                        <Button :label="t('pages.instructors.saveProfile')" icon="pi pi-check-circle" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveInstructor" :loading="instructorForm.processing" :disabled="!isEntireFormValid" />
                     </div>
                 </div>
             </div>
@@ -1084,8 +1086,8 @@ onMounted(() => {
                         <i class="pi pi-id-card text-xl"></i>
                     </div>
                     <div class="flex-1">
-                        <h2 class="font-black text-xl text-slate-800 leading-tight">Profil Expert</h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Dossier RH & Performance</p>
+                        <h2 class="font-black text-xl text-slate-800 leading-tight">{{ t('pages.instructors.expertProfileTitle') }}</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ t('pages.instructors.hrDossierSubtitle') }}</p>
                     </div>
                 </div>
             </template>
@@ -1103,20 +1105,20 @@ onMounted(() => {
                         <h2 class="text-2xl font-black mb-1">{{ currentInstructor.name }}</h2>
                         <div class="flex items-center justify-center gap-2 mb-4">
                             <Tag :value="currentInstructor.status" class="bg-white/20 text-white border border-white/30 px-3 py-1 text-xs" />
-                            <span class="text-blue-200 text-xs font-mono bg-black/20 px-2 py-1 rounded">Comm: {{ currentInstructor.commission_rate || 70 }}%</span>
+                            <span class="text-blue-200 text-xs font-mono bg-black/20 px-2 py-1 rounded">{{ t('pages.instructors.commissionBadge', { rate: currentInstructor.commission_rate || 70 }) }}</span>
                         </div>
 
                         <div class="grid grid-cols-3 w-full mt-4 gap-3">
                             <div class="bg-black/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10 shadow-inner">
-                                <p class="text-[9px] text-blue-200 uppercase font-bold tracking-widest mb-1">Ventes (Élèves)</p>
+                                <p class="text-[9px] text-blue-200 uppercase font-bold tracking-widest mb-1">{{ t('pages.instructors.salesLearners') }}</p>
                                 <p class="text-xl font-black">{{ currentInstructor.total_students || 0 }}</p>
                             </div>
                             <div class="bg-black/10 backdrop-blur-sm rounded-2xl p-3 border border-white/10 shadow-inner">
-                                <p class="text-[9px] text-blue-200 uppercase font-bold tracking-widest mb-1">Cours Actifs</p>
+                                <p class="text-[9px] text-blue-200 uppercase font-bold tracking-widest mb-1">{{ t('pages.instructors.activeCourses') }}</p>
                                 <p class="text-xl font-black">{{ currentInstructor.assigned_courses_count || 0 }}</p>
                             </div>
                             <div class="bg-black/10 backdrop-blur-sm rounded-2xl p-3 border border-emerald-500/30 shadow-inner text-emerald-300">
-                                <p class="text-[9px] text-emerald-200 uppercase font-bold tracking-widest mb-1">Gains ($)</p>
+                                <p class="text-[9px] text-emerald-200 uppercase font-bold tracking-widest mb-1">{{ t('pages.instructors.earnings') }}</p>
                                 <p class="text-xl font-black">{{ formatCurrency(currentInstructor.generated_revenue || 0) }}</p>
                             </div>
                         </div>
@@ -1128,10 +1130,10 @@ onMounted(() => {
                     <TabView class="custom-tabview">
 
                         <!-- TAB: APERÇU -->
-                        <TabPanel header="Identité & Bio">
+                        <TabPanel :header="t('pages.instructors.tabIdentityBio')">
                             <div class="space-y-6 pt-4">
                                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-map-marker"></i> Coordonnées & Web</h4>
+                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-map-marker"></i> {{ t('pages.instructors.contactAndWeb') }}</h4>
                                     <div class="space-y-4">
                                         <div class="flex items-center gap-4 text-slate-600">
                                             <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-400"><i class="pi pi-envelope"></i></div>
@@ -1139,7 +1141,7 @@ onMounted(() => {
                                         </div>
                                         <div class="flex items-center gap-4 text-slate-600">
                                             <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-400"><i class="pi pi-phone"></i></div>
-                                            <span class="text-sm font-medium">{{ currentInstructor.numero || 'Non renseigné' }}</span>
+                                            <span class="text-sm font-medium">{{ currentInstructor.numero || t('pages.instructors.notProvided') }}</span>
                                         </div>
 
                                         <Divider />
@@ -1156,30 +1158,30 @@ onMounted(() => {
                                 </div>
 
                                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-tags"></i> Spécialités</h4>
+                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-tags"></i> {{ t('pages.instructors.specialties') }}</h4>
                                     <div class="flex flex-wrap gap-2">
                                         <Tag v-for="spec in parseJSON(currentInstructor.specialties)" :key="spec" :value="spec.name || spec" class="bg-blue-50 text-blue-700 border border-blue-100 font-bold px-3 py-1" />
-                                        <span v-if="!parseJSON(currentInstructor.specialties).length" class="text-sm text-slate-400 italic">Aucune spécialité renseignée.</span>
+                                        <span v-if="!parseJSON(currentInstructor.specialties).length" class="text-sm text-slate-400 italic">{{ t('pages.instructors.noSpecialtyProvided') }}</span>
                                     </div>
                                 </div>
 
                                 <div v-if="currentInstructor.bio" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Biographie</h4>
+                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{{ t('pages.instructors.biography') }}</h4>
                                     <p class="text-sm text-slate-600 leading-relaxed italic bg-slate-50 p-4 rounded-xl">"{{ currentInstructor.bio }}"</p>
                                 </div>
                             </div>
                         </TabPanel>
 
                         <!-- TAB: ANALYSE & FINANCE -->
-                        <TabPanel header="Analyse Financière">
+                        <TabPanel :header="t('pages.instructors.tabFinancialAnalysis')">
                             <div class="pt-4 space-y-6">
                                 <!-- Graphe de revenus (Mockup pour illustration UI B2B) -->
                                 <div>
-                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-chart-bar"></i> Évolution des commissions (6 mois)</h4>
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-chart-bar"></i> {{ t('pages.instructors.commissionsEvolution') }}</h4>
                                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                         <div class="flex items-baseline gap-2 mb-4">
                                             <span class="text-2xl font-black text-slate-800">{{ formatCurrency(currentInstructor.generated_revenue || 0) }}</span>
-                                            <span class="text-xs text-emerald-500 font-bold bg-emerald-50 px-2 py-1 rounded-md"><i class="pi pi-arrow-up text-[10px]"></i> Tendance globale</span>
+                                            <span class="text-xs text-emerald-500 font-bold bg-emerald-50 px-2 py-1 rounded-md"><i class="pi pi-arrow-up text-[10px]"></i> {{ t('pages.instructors.overallTrend') }}</span>
                                         </div>
                                         <Chart type="line" :data="revenueChartData" :options="chartOptions" class="h-48 w-full" />
                                     </div>
@@ -1188,8 +1190,8 @@ onMounted(() => {
                                 <!-- Avis Global -->
                                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
-                                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Qualité Pédagogique</h4>
-                                        <p class="text-sm text-slate-600">Note moyenne basée sur l'ensemble du catalogue.</p>
+                                        <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.instructors.pedagogicalQuality') }}</h4>
+                                        <p class="text-sm text-slate-600">{{ t('pages.instructors.averageRatingHint') }}</p>
                                     </div>
                                     <div class="flex flex-col items-end">
                                         <div class="text-3xl font-black text-amber-500 flex items-center gap-2">
@@ -1207,8 +1209,8 @@ onMounted(() => {
 
             <template #footer>
                 <div class="flex justify-between items-center w-full px-2 mt-1">
-                    <Button label="Fermer" class="p-button-text p-button-secondary font-bold" @click="profileSidebar = false" />
-                    <Button label="Modifier Profil" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-blue-500/30 rounded-xl" @click="editInstructor(currentInstructor); profileSidebar = false" />
+                    <Button :label="t('pages.instructors.close')" class="p-button-text p-button-secondary font-bold" @click="profileSidebar = false" />
+                    <Button :label="t('pages.instructors.editProfile')" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-blue-500/30 rounded-xl" @click="editInstructor(currentInstructor); profileSidebar = false" />
                 </div>
             </template>
         </Dialog>

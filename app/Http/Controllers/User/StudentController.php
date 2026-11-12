@@ -42,7 +42,7 @@ class StudentController extends Controller
 
         // 1. Construction de la requête principale avec Eager Loading
         $query = User::role('student')
-            ->with(['profile', 'courses', 'learningPaths'])
+            ->with(['profile', 'enrolledCourses', 'learningPaths'])
             ->when($request->input('search'), function ($q, $search) {
                 $q->where(function ($subQ) use ($search) {
                     $subQ->where('name', 'like', "%{$search}%")
@@ -86,14 +86,14 @@ class StudentController extends Controller
                 'certificates'       => $user->profile->certificates ?? 0,
                 'average_attendance' => $user->profile->average_attendance ?? 0,
                 // Cours Inscrits (Formatage Pivot)
-                'enrolled_courses'   => $user->courses->map(function ($course) {
+                'enrolled_courses'   => $user->enrolledCourses->map(function ($course) {
                     return [
                         'id'             => $course->id,
                         'title'          => $course->title,
                         'thumbnail_path' => $course->thumbnail_path ? asset('storage/' . $course->thumbnail_path) : null,
                         'pivot' => [
-                            'progress'    => $course->pivot->progress ?? 0,
-                            'enrolled_at' => $course->pivot->enrolled_at ?? $course->pivot->created_at,
+                            'progress'    => $course->pivot?->progress_percent ?? 0,
+                            'enrolled_at' => $course->pivot?->enrolled_at,
                         ]
                     ];
                 }),
@@ -103,8 +103,8 @@ class StudentController extends Controller
                         'id'   => $lp->id,
                         'name' => $lp->name,
                         'pivot' => [
-                            'progress'    => $lp->pivot->progress ?? 0,
-                            'enrolled_at' => $lp->pivot->enrolled_at ?? $lp->pivot->created_at,
+                            'progress'    => $lp->pivot?->progress ?? 0,
+                            'enrolled_at' => $lp->pivot?->enrolled_at,
                         ]
                     ];
                 }),
@@ -403,7 +403,7 @@ class StudentController extends Controller
         ]);
 
         $user = User::findOrFail($id);
-        $user->courses()->syncWithoutDetaching([$request->course_id => [
+        $user->enrolledCourses()->syncWithoutDetaching([$request->course_id => [
             'enrolled_at' => now(),
         ]]);
 

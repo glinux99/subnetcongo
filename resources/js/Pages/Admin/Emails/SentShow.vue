@@ -3,7 +3,10 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
-import { ref } from 'vue';
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     email: { type: Object, default: () => ({}) },
@@ -36,9 +39,9 @@ const getStatusBadge = (status) => {
 
 const getStatusLabel = (status) => {
     const labels = {
-        'sent': 'Envoyé',
-        'failed': 'Échoué',
-        'draft': 'Brouillon',
+        'sent': t('pages.admin_email_sent_show.status_sent'),
+        'failed': t('pages.admin_email_sent_show.status_failed'),
+        'draft': t('pages.admin_email_sent_show.status_draft'),
     };
     return labels[status] || status;
 };
@@ -58,24 +61,27 @@ const resendEmail = () => {
     });
 };
 
-const headerActions = [
-    { label: 'Retour', icon: 'pi-arrow-left', onClick: goBack, variant: 'secondary' },
-];
-if (props.email?.status === 'failed') {
-    headerActions.push({ label: 'Renvoyer', icon: 'pi-refresh', onClick: resendEmail, variant: 'primary' });
-}
+const headerActions = computed(() => {
+    const actions = [
+        { label: t('pages.admin_email_sent_show.btn_back'), icon: 'pi-arrow-left', onClick: goBack, variant: 'secondary' },
+    ];
+    if (props.email?.status === 'failed') {
+        actions.push({ label: t('pages.admin_email_sent_show.btn_resend'), icon: 'pi-refresh', onClick: resendEmail, variant: 'primary' });
+    }
+    return actions;
+});
 </script>
 
 <template>
     <AppLayout>
-        <Head title="Email envoyé" />
+        <Head :title="t('pages.admin_email_sent_show.page_title')" />
         
         <div class="min-h-screen bg-slate-50">
             <!-- PageHeader -->
             <PageHeader
-                :title="email.subject || '(Sans objet)'"
-                :subtitle="`À: ${email.to.join(', ')} - ${formatDate(email.sent_at || email.created_at)}`"
-                badge="Email envoyé"
+                :title="email.subject || t('pages.admin_email_sent_show.no_subject')"
+                :subtitle="t('pages.admin_email_sent_show.subtitle', { to: email.to.join(', '), date: formatDate(email.sent_at || email.created_at) })"
+                :badge="t('pages.admin_email_sent_show.badge')"
                 icon="pi-send"
                 accent="blue"
                 :actions="headerActions"
@@ -97,21 +103,21 @@ if (props.email?.status === 'failed') {
                                     </span>
                                     <span v-if="email.sender_name || email.sender_photo" class="flex items-center gap-1.5 text-sm text-slate-500">
                                         <img v-if="email.sender_photo" :src="email.sender_photo" :alt="email.sender_name" class="w-6 h-6 rounded-full object-cover" />
-                                        <template v-if="email.sender_name">par {{ email.sender_name }}</template>
+                                        <template v-if="email.sender_name">{{ t('pages.admin_email_sent_show.by_sender', { name: email.sender_name }) }}</template>
                                     </span>
                                 </div>
                                 
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-slate-700 w-16">À :</span>
+                                        <span class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_email_sent_show.label_to') }}</span>
                                         <span class="text-sm text-slate-900">{{ email.to.join(', ') }}</span>
                                     </div>
                                     <div v-if="email.cc && email.cc.length" class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-slate-700 w-16">Cc :</span>
+                                        <span class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_email_sent_show.label_cc') }}</span>
                                         <span class="text-sm text-slate-900">{{ email.cc.join(', ') }}</span>
                                     </div>
                                     <div v-if="email.bcc && email.bcc.length" class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-slate-700 w-16">Cci :</span>
+                                        <span class="text-sm font-medium text-slate-700 w-16">{{ t('pages.admin_email_sent_show.label_bcc') }}</span>
                                         <span class="text-sm text-slate-900">{{ email.bcc.join(', ') }}</span>
                                     </div>
                                 </div>
@@ -126,7 +132,7 @@ if (props.email?.status === 'failed') {
 
                     <!-- Attachments -->
                     <div v-if="email.attachments && email.attachments.length" class="p-6 border-t border-slate-100">
-                        <h3 class="text-sm font-medium text-slate-700 mb-3">Pièces jointes ({{ email.attachments.length }})</h3>
+                        <h3 class="text-sm font-medium text-slate-700 mb-3">{{ t('pages.admin_email_sent_show.attachments_title', { count: email.attachments.length }) }}</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div
                                 v-for="(attachment, index) in email.attachments"
@@ -147,7 +153,7 @@ if (props.email?.status === 'failed') {
                         <div class="flex items-start gap-3">
                             <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
                             <div>
-                                <h4 class="font-medium text-red-800">Erreur d'envoi</h4>
+                                <h4 class="font-medium text-red-800">{{ t('pages.admin_email_sent_show.send_error_title') }}</h4>
                                 <p class="text-sm text-red-700 mt-1">{{ email.error_message }}</p>
                             </div>
                         </div>

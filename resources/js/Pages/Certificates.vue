@@ -42,6 +42,9 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     certificates: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
@@ -439,7 +442,7 @@ const clearFile = (type) => {
 
 const saveTemplate = () => {
     if (!templateForm.name.trim()) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Le nom est obligatoire.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.certificates.errorSummary'), detail: t('pages.certificates.nameRequired'), life: 3000 });
         return;
     }
     isSaving.value = true;
@@ -457,8 +460,8 @@ const saveTemplate = () => {
 
     router.post(url, payload, {
         preserveScroll: true, forceFormData: true,
-        onSuccess: () => { toast.add({ severity: 'success', summary: 'Succès', detail: 'Modèle sauvegardé avec succès.' }); designerDialog.value = false; },
-        onError: () => toast.add({ severity: 'error', summary: 'Erreur', detail: 'Vérifiez les données saisies.' }),
+        onSuccess: () => { toast.add({ severity: 'success', summary: t('pages.certificates.successSummary'), detail: t('pages.certificates.templateSaved') }); designerDialog.value = false; },
+        onError: () => toast.add({ severity: 'error', summary: t('pages.certificates.errorSummary'), detail: t('pages.certificates.checkData'), }),
         onFinish: () => isSaving.value = false
     });
 };
@@ -471,7 +474,7 @@ const duplicateTemplate = (template) => {
 
 const deleteTemplate = (id) => {
     confirm.require({
-        message: 'Voulez-vous vraiment supprimer ce modèle ?', header: 'Suppression', icon: 'pi pi-trash', acceptClass: 'p-button-danger',
+        message: t('pages.certificates.deleteTemplateMessage'), header: t('pages.certificates.deleteTemplateHeader'), icon: 'pi pi-trash', acceptClass: 'p-button-danger',
         accept: () => router.delete(route('certificates.templates.destroy', { template: id }))
     });
 };
@@ -486,7 +489,7 @@ const submitBulkIssuance = () => {
     if (!bulkIssueForm.course_id || !bulkIssueForm.template_id) return;
     isSaving.value = true;
     bulkIssueForm.post(route('certificates.bulkIssue'), {
-        onSuccess: () => { toast.add({ severity: 'success', summary: 'Génération lancée' }); bulkIssuanceDialog.value = false; },
+        onSuccess: () => { toast.add({ severity: 'success', summary: t('pages.certificates.generationStarted') }); bulkIssuanceDialog.value = false; },
         onFinish: () => isSaving.value = false
     });
 };
@@ -494,7 +497,7 @@ const submitBulkIssuance = () => {
 const handleRevocation = (cert) => { revocationForm.reset(); revocationForm.id = cert.id; revocationDialog.value = true; };
 const submitRevocation = () => {
     if (!revocationForm.reason || !revocationForm.confirm_action) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez fournir une raison et confirmer l\'action.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.certificates.errorSummary'), detail: t('pages.certificates.revocationIncomplete'), life: 3000 });
         return;
     }
     router.put(route('certificates.update', { certificate: revocationForm.id }), {
@@ -502,7 +505,7 @@ const submitRevocation = () => {
         revocation_reason: revocationForm.reason,
     }, {
         onSuccess: () => {
-            toast.add({ severity: 'warn', summary: 'Révoqué', detail: 'Le certificat a été révoqué avec succès.' });
+            toast.add({ severity: 'warn', summary: t('pages.certificates.revokedSummary'), detail: t('pages.certificates.revokedDetail') });
             revocationDialog.value = false;
         },
         onError: (errors) => {
@@ -514,7 +517,7 @@ const submitRevocation = () => {
             } else if (Object.keys(errors).length > 0) {
                 detail = Object.values(errors).join(' ');
             }
-            toast.add({ severity: 'error', summary: 'Erreur', detail: detail, life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.certificates.errorSummary'), detail: detail, life: 5000 });
         }
     });
 };
@@ -532,17 +535,17 @@ const submitExpiration = () => {
     const today = new Date().setHours(0,0,0,0);
     expirationForm.status =expirationDate <= today ? 'Expired' : "Active";
     if (!expirationForm.id || !expirationForm.expires_at) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Veuillez sélectionner une date.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.certificates.errorSummary'), detail: t('pages.certificates.selectDateRequired'), life: 3000 });
         return;
     }
     router.put(route('certificates.update', { certificate: expirationForm.id }), expirationForm, {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Succès', detail: 'Date d\'expiration définie.' });
+            toast.add({ severity: 'success', summary: t('pages.certificates.successSummary'), detail: t('pages.certificates.expirationSet') });
             expirationDialog.value = false;
         },
         onError: (errors) => {
             const errorDetail = Object.values(errors).flat().join(' ; ') || 'Une erreur est survenue.';
-            toast.add({ severity: 'error', summary: 'Erreur', detail: errorDetail, life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.certificates.errorSummary'), detail: errorDetail, life: 5000 });
         }
     });
 };
@@ -550,7 +553,7 @@ const submitExpiration = () => {
 const downloadPdf = (id) => window.open(route('certificates.download', { certificate: id }), '_blank');
 const openVerificationLink = (hash) => window.open(route('certificates.verify.public', { hash: hash }), '_blank');
 const selectedElement = computed(() => templateForm.elements.find(e => e.id === selectedElementId.value) || null);
-const getStatusSeverity = (status) => ({ Active: { sev: 'success', label: 'Valide', icon: 'pi-verified' }, Revoked: { sev: 'danger', label: 'Révoqué', icon: 'pi-shield-slash' }, Expired: { sev: 'warning', label: 'Expiré', icon: 'pi-clock' } })[status] || { sev: 'info', label: status, icon: 'pi-info-circle' };
+const getStatusSeverity = (status) => ({ Active: { sev: 'success', label: t('pages.certificates.statusValid'), icon: 'pi-verified' }, Revoked: { sev: 'danger', label: t('pages.certificates.statusRevoked'), icon: 'pi-shield-slash' }, Expired: { sev: 'warning', label: t('pages.certificates.statusExpired'), icon: 'pi-clock' } })[status] || { sev: 'info', label: status, icon: 'pi-info-circle' };
 
 onMounted(() => setTimeout(() => loading.value = false, 800));
 </script>
@@ -580,25 +583,25 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                         <!-- Titre Principal (Italique, très gras, espacement réduit) -->
                         <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                            <span class="text-white">TRUST</span>
-                            <span class="text-[#FF3B3B]">CENTER</span>
+                            <span class="text-white">{{ t('pages.certificates.titlePart1') }}</span>
+                            <span class="text-[#FF3B3B]">{{ t('pages.certificates.titlePart2') }}</span>
                         </h1>
 
                         <!-- Sous-titre -->
                         <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                            Pilotez la valeur académique de votre institution. Le Quantum Engine vous permet de concevoir des diplômes HD avec un placement libre des variables, QR Codes et Signatures.
+                            {{ t('pages.certificates.subtitle') }}
                         </p>
                     </div>
 
                     <!-- Partie Droite (Boutons) -->
                     <div class="flex flex-wrap items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
                         <Button 
-                            label="Audit Log" 
+                            :label="t('pages.certificates.auditLog')" 
                             icon="pi pi-history" 
                             class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
                         />
                         <Button 
-                            label="Délivrer en masse" 
+                            :label="t('pages.certificates.bulkIssue')" 
                             icon="pi pi-send" 
                             @click="openBulkIssuance"
                             class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
@@ -617,7 +620,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <i class="pi pi-copy text-red-500 text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Délivrés</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiTotalIssued') }}</div>
                         <div class="flex items-end gap-2">
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.total_issued || '2,450' }}</div>
                             <span class="text-[10px] font-bold text-emerald-500 mb-0.5 flex items-center"><i class="pi pi-arrow-up text-[8px] mr-1"></i>12%</span>
@@ -631,7 +634,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <i class="pi pi-chart-pie text-emerald-500 text-sm"></i>
                     </div>
                     <div class="relative z-10">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taux de Réussite</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiSuccessRate') }}</div>
                         <div class="flex items-end gap-1">
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.success_rate || 78 }}</div>
                             <span class="text-sm text-slate-400 font-bold mb-0.5">%</span>
@@ -647,10 +650,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <i class="pi pi-globe text-blue-500 text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Vérifications Web</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiWebChecks') }}</div>
                         <div class="flex items-end gap-2">
                             <div class="text-2xl font-black text-slate-800 leading-none">14.2k</div>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded">Vues</span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded">{{ t('pages.certificates.viewsAbbr') }}</span>
                         </div>
                     </div>
                 </div>
@@ -661,7 +664,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <i class="pi pi-shield-slash text-red-500 text-sm"></i>
                     </div>
                     <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Titres Révoqués</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.certificates.kpiRevoked') }}</div>
                         <div class="text-2xl font-black text-slate-800 leading-none">{{ props.stats?.revocation_rate || 14 }}</div>
                     </div>
                 </div>
@@ -676,10 +679,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-10">
                 <div class="flex border-b border-slate-100 bg-slate-50/80 px-6 pt-4 gap-2">
                     <button @click="activeMainTab = 'log'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'log' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
-                        <i class="pi pi-list"></i> Registre des Émissions
+                        <i class="pi pi-list"></i> {{ t('pages.certificates.tabLog') }}
                     </button>
                     <button @click="activeMainTab = 'templates'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'templates' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
-                        <i class="pi pi-palette"></i> Studio de Création (Modèles)
+                        <i class="pi pi-palette"></i> {{ t('pages.certificates.tabStudio') }}
                     </button>
                 </div>
 
@@ -691,9 +694,9 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="serverFilters.search" placeholder="Rechercher un apprenant, un Hash..." class="w-full sm:w-80 border-slate-200 font-medium bg-slate-50 rounded-xl" />
+                                <InputText v-model="serverFilters.search" :placeholder="t('pages.certificates.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium bg-slate-50 rounded-xl" />
                             </IconField>
-                            <Dropdown v-model="serverFilters.status" :options="['Active', 'Revoked', 'Expired']" placeholder="État du certificat" class="w-56 border-slate-200 font-medium bg-slate-50 rounded-xl" showClear>
+                            <Dropdown v-model="serverFilters.status" :options="['Active', 'Revoked', 'Expired']" :placeholder="t('pages.certificates.statusPlaceholder')" class="w-56 border-slate-200 font-medium bg-slate-50 rounded-xl" showClear>
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-2 font-bold">
                                         <i :class="`pi ${getStatusSeverity(slotProps.option).icon} text-${getStatusSeverity(slotProps.option).sev}-500`"></i>
@@ -703,8 +706,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             </Dropdown>
                         </div>
                         <div class="flex items-center gap-2">
-                            <Button icon="pi pi-file-excel" label="Export XLS" class="p-button-secondary p-button-outlined bg-white shadow-sm font-bold rounded-xl" />
-                            <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
+                            <Button icon="pi pi-file-excel" :label="t('pages.certificates.exportXls')" class="p-button-secondary p-button-outlined bg-white shadow-sm font-bold rounded-xl" />
+                            <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.certificates.refresh')" />
                         </div>
                     </div>
 
@@ -714,12 +717,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
                                     <i class="pi pi-verified text-6xl text-slate-300"></i>
                                 </div>
-                                <h3 class="text-2xl font-black text-slate-800 mb-2">Aucun diplôme délivré</h3>
-                                <p class="text-base text-center text-slate-500">Les certificats générés pour vos apprenants s'afficheront ici avec leur empreinte cryptographique.</p>
+                                <h3 class="text-2xl font-black text-slate-800 mb-2">{{ t('pages.certificates.emptyTitle') }}</h3>
+                                <p class="text-base text-center text-slate-500">{{ t('pages.certificates.emptyHint') }}</p>
                             </div>
                         </template>
 
-                        <Column field="certificate_code" header="Identifiant Trust">
+                        <Column field="certificate_code" :header="t('pages.certificates.colTrustId')">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-1 py-3">
                                     <span class="font-mono text-sm font-black text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-100 w-fit tracking-wider">{{ data.certificate_code }}</span>
@@ -729,7 +732,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </div>
                             </template>
                         </Column>
-                        <Column field="user.name" header="Récipiendaire">
+                        <Column field="user.name" :header="t('pages.certificates.colRecipient')">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-4">
                                     <Avatar :image="data.user.avatar" shape="circle" size="xlarge" class="shadow-sm border-2 border-white ring-1 ring-slate-200" />
@@ -740,7 +743,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </div>
                             </template>
                         </Column>
-                        <Column field="course.title" header="Formation & Délivrance">
+                        <Column field="course.title" :header="t('pages.certificates.colCourse')">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-2">
                                     <span class="font-bold text-slate-700 text-sm line-clamp-1">{{ data.course.title }}</span>
@@ -751,18 +754,18 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </div>
                             </template>
                         </Column>
-                        <Column field="status" header="Statut">
+                        <Column field="status" :header="t('pages.certificates.colStatus')">
                             <template #body="{ data }">
                                 <Tag :severity="getStatusSeverity(data.status).sev" :icon="getStatusSeverity(data.status).icon" :value="getStatusSeverity(data.status).label" class="text-[10px] font-black px-3 py-1.5 uppercase tracking-widest border rounded-lg" :class="`border-${getStatusSeverity(data.status).sev}-200 bg-${getStatusSeverity(data.status).sev}-50 text-${getStatusSeverity(data.status).sev}-700`" />
                             </template>
                         </Column>
-                        <Column header="Actions" alignFrozen="right" style="text-align: right; min-width: 12rem;">
+                        <Column :header="t('pages.certificates.colActions')" alignFrozen="right" style="text-align: right; min-width: 12rem;">
                             <template #body="{ data }">
-                                <div class="flex justify-end gap-2">
-                                    <Button icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100 w-10 h-10" v-tooltip.top="'Télécharger PDF HD'" @click="downloadPdf(data.id)" />
-                                    <Button icon="pi pi-share-alt" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600 w-10 h-10" v-tooltip.top="'Lien Public / Partage'" @click="openVerificationLink(data.verification_hash)" />
-                                    <Button v-if="data.status === 'Active'" icon="pi pi-calendar-times" class="p-button-text p-button-warning p-button-rounded hover:bg-amber-50 hover:text-amber-600 w-10 h-10" v-tooltip.top="'Définir une date d\'expiration'" @click="openExpirationDialog(data)" />
-                                    <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50 hover:text-red-600 w-10 h-10" v-tooltip.top="'Révoquer le diplôme'" @click="handleRevocation(data)" />
+                                <div class="flex justify-end gap-1 whitespace-nowrap">
+                                    <Button icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100 w-10 h-10" v-tooltip.top="t('pages.certificates.downloadPdf')" @click="downloadPdf(data.id)" />
+                                    <Button icon="pi pi-share-alt" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600 w-10 h-10" v-tooltip.top="t('pages.certificates.shareLink')" @click="openVerificationLink(data.verification_hash)" />
+                                    <Button v-if="data.status === 'Active'" icon="pi pi-calendar-times" class="p-button-text p-button-warning p-button-rounded hover:bg-amber-50 hover:text-amber-600 w-10 h-10" v-tooltip.top="t('pages.certificates.setExpiration')" @click="openExpirationDialog(data)" />
+                                    <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50 hover:text-red-600 w-10 h-10" v-tooltip.top="t('pages.certificates.revokeDiploma')" @click="handleRevocation(data)" />
                                 </div>
                             </template>
                         </Column>
@@ -775,10 +778,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 <div v-show="activeMainTab === 'templates'" class="p-8 bg-slate-50/50">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
-                            <h3 class="text-2xl font-black text-slate-800">Galerie de Modèles</h3>
-                            <p class="text-sm text-slate-500 mt-1">Gérez l'identité visuelle de vos diplômes.</p>
+                            <h3 class="text-2xl font-black text-slate-800">{{ t('pages.certificates.galleryTitle') }}</h3>
+                            <p class="text-sm text-slate-500 mt-1">{{ t('pages.certificates.gallerySubtitle') }}</p>
                         </div>
-                        <Button label="Forger un Nouveau Modèle" icon="pi pi-sparkles" class="bg-red-600 hover:bg-red-700 border-none font-bold text-white shadow-lg shadow-red-500/30 px-6 py-3 rounded-xl transition-transform hover:-translate-y-1" @click="openDesigner(null)" />
+                        <Button :label="t('pages.certificates.forgeButton')" icon="pi pi-sparkles" class="bg-red-600 hover:bg-red-700 border-none font-bold text-white shadow-lg shadow-red-500/30 px-6 py-3 rounded-xl transition-transform hover:-translate-y-1" @click="openDesigner(null)" />
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
@@ -788,8 +791,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-slate-200 group-hover:text-red-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                                 <i class="pi pi-plus text-3xl"></i>
                             </div>
-                            <h4 class="font-black text-lg text-slate-700 group-hover:text-red-700 text-center">Création depuis Zéro</h4>
-                            <p class="text-xs text-slate-500 mt-3 text-center px-4 leading-relaxed font-medium">Lancez le Quantum Engine pour un design pixel-perfect avec variables dynamiques.</p>
+                            <h4 class="font-black text-lg text-slate-700 group-hover:text-red-700 text-center">{{ t('pages.certificates.createFromScratch') }}</h4>
+                            <p class="text-xs text-slate-500 mt-3 text-center px-4 leading-relaxed font-medium">{{ t('pages.certificates.createFromScratchHint') }}</p>
                         </div>
 
                         <!-- BOUCLE DES TEMPLATES EXISTANTS -->
@@ -813,19 +816,19 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div>
                                     <div class="flex justify-between items-start mb-3">
                                         <h4 class="font-black text-lg text-slate-800 line-clamp-1 pr-2" :title="template.name">{{ template.name }}</h4>
-                                        <Badge v-if="template.is_default" value="Défaut" severity="success" class="text-[9px] px-2" />
+                                        <Badge v-if="template.is_default" :value="t('pages.certificates.defaultBadge')" severity="success" class="text-[9px] px-2" />
                                     </div>
                                     <div class="flex flex-wrap gap-2 text-xs text-slate-500 font-bold mb-4">
                                         <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 uppercase tracking-widest text-[9px] flex items-center gap-1"><i :class="template.orientation === 'landscape' ? 'pi pi-image' : 'pi pi-file'"></i> {{ template.orientation }}</span>
-                                        <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 text-[10px]">{{ template.elements?.length || 0 }} calques</span>
+                                        <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 text-[10px]">{{ template.elements?.length || 0 }} {{ t('pages.certificates.layersAbbr') }}</span>
                                     </div>
                                 </div>
 
                                 <div class="flex justify-between items-center pt-5 border-t border-slate-100">
-                                    <Button label="Éditer le design" icon="pi pi-pencil" class="p-button-outlined text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400 font-bold w-full mr-2 rounded-xl" @click="openDesigner(template)" />
+                                    <Button :label="t('pages.certificates.editDesign')" icon="pi pi-pencil" class="p-button-outlined text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400 font-bold w-full mr-2 rounded-xl" @click="openDesigner(template)" />
                                     <div class="flex gap-1">
-                                        <Button icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded w-10 h-10 hover:bg-slate-100 text-slate-400 hover:text-slate-700" v-tooltip.top="'Dupliquer ce modèle'" @click="duplicateTemplate(template)" />
-                                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded w-10 h-10 hover:bg-red-50 text-slate-300 hover:text-red-500" v-tooltip.top="'Supprimer définitivement'" @click="deleteTemplate(template.id)" />
+                                        <Button icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded w-10 h-10 hover:bg-slate-100 text-slate-400 hover:text-slate-700" v-tooltip.top="t('pages.certificates.duplicateTemplate')" @click="duplicateTemplate(template)" />
+                                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded w-10 h-10 hover:bg-red-50 text-slate-300 hover:text-red-500" v-tooltip.top="t('pages.certificates.deletePermanently')" @click="deleteTemplate(template.id)" />
                                     </div>
                                 </div>
                             </div>
@@ -847,13 +850,13 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                 <!-- Left: Branding & Meta -->
                 <div class="flex items-center gap-6 w-1/3">
-                    <button @click="designerDialog = false" class="w-11 h-11 rounded-xl bg-white/5 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all duration-300 border border-white/5 hover:border-red-500 group" v-tooltip.bottom="'Quitter le studio'">
+                    <button @click="designerDialog = false" class="w-11 h-11 rounded-xl bg-white/5 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all duration-300 border border-white/5 hover:border-red-500 group" v-tooltip.bottom="t('pages.certificates.quitStudio')">
                         <i class="pi pi-arrow-left text-white/50 group-hover:text-white"></i>
                     </button>
                     <div class="h-8 w-px bg-white/10"></div>
                     <div class="flex flex-col">
                         <div class="flex items-center gap-2 group cursor-text">
-                            <InputText v-model="templateForm.name" class="bg-transparent border-none text-white font-black text-lg p-0 focus:ring-0 w-64 placeholder:text-white/20 transition-colors hover:text-red-100" placeholder="Nom du modèle..." />
+                            <InputText v-model="templateForm.name" class="bg-transparent border-none text-white font-black text-lg p-0 focus:ring-0 w-64 placeholder:text-white/20 transition-colors hover:text-red-100" :placeholder="t('pages.certificates.templateNamePlaceholder')" />
                             <i class="pi pi-pencil text-white/20 text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
                         </div>
                         <div class="flex items-center gap-2 mt-0.5">
@@ -873,14 +876,14 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <div class="w-14 text-center">
                             <span class="text-xs font-mono font-bold text-red-400">{{ canvasZoom }}%</span>
                         </div>
-                        <Button icon="pi pi-expand" class="p-button-text p-button-rounded text-white/40 hover:text-white hover:bg-white/5 w-8 h-8 p-0 ml-1" @click="canvasZoom = 60" v-tooltip.bottom="'Ajuster à l\'écran'" />
+                        <Button icon="pi pi-expand" class="p-button-text p-button-rounded text-white/40 hover:text-white hover:bg-white/5 w-8 h-8 p-0 ml-1" @click="canvasZoom = 60" v-tooltip.bottom="t('pages.certificates.fitScreen')" />
                     </div>
                 </div>
 
                 <!-- Right: Actions -->
                 <div class="flex items-center justify-end gap-4 w-1/3">
-                    <Button label="Aperçu HD" icon="pi pi-eye" class="p-button-text text-white/70 hover:text-white hover:bg-white/5 font-bold px-4 rounded-xl" />
-                    <Button label="Sauvegarder le Modèle" icon="pi pi-cloud-upload" class="bg-red-600 hover:bg-red-500 border-none font-bold px-8 py-3 rounded-xl text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-0.5" @click="saveTemplate" :loading="isSaving" />
+                    <Button :label="t('pages.certificates.previewHd')" icon="pi pi-eye" class="p-button-text text-white/70 hover:text-white hover:bg-white/5 font-bold px-4 rounded-xl" />
+                    <Button :label="t('pages.certificates.saveTemplate')" icon="pi pi-cloud-upload" class="bg-red-600 hover:bg-red-500 border-none font-bold px-8 py-3 rounded-xl text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-0.5" @click="saveTemplate" :loading="isSaving" />
                 </div>
             </nav>
 
@@ -894,7 +897,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                         <!-- TAB 1 : INSERTION & VARIABLES -->
                         <TabPanel>
-                            <template #header><div class="flex flex-col items-center gap-1 w-full py-1"><i class="pi pi-box text-lg"></i><span class="text-[9px] uppercase tracking-widest">Outils</span></div></template>
+                            <template #header><div class="flex flex-col items-center gap-1 w-full py-1"><i class="pi pi-box text-lg"></i><span class="text-[9px] uppercase tracking-widest">{{ t('pages.certificates.tabTools') }}</span></div></template>
 
                             <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar h-[calc(100vh-140px)] pb-32">
 
@@ -902,7 +905,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div class="space-y-3">
                                     <div class="flex items-center gap-2 mb-4">
                                         <div class="h-px bg-white/10 flex-1"></div>
-                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Typographie</span>
+                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">{{ t('pages.certificates.typography') }}</span>
                                         <div class="h-px bg-white/10 flex-1"></div>
                                     </div>
                                     <button @click="addElement('text', 'h1')" class="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#1a1a1f] hover:bg-red-600/10 border border-white/5 hover:border-red-500/30 transition-all group text-left shadow-sm">
@@ -910,8 +913,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                             <i class="pi pi-heading text-xl text-white/50 group-hover:text-red-400"></i>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-white">Gros Titre</div>
-                                            <div class="text-[10px] text-white/40 mt-0.5">Pour le nom du diplôme</div>
+                                            <div class="text-sm font-bold text-white">{{ t('pages.certificates.bigTitle') }}</div>
+                                            <div class="text-[10px] text-white/40 mt-0.5">{{ t('pages.certificates.bigTitleHint') }}</div>
                                         </div>
                                     </button>
                                     <button @click="addElement('text', 'body')" class="w-full flex items-center gap-4 p-4 rounded-2xl bg-[#1a1a1f] hover:bg-white/5 border border-white/5 transition-all group text-left shadow-sm">
@@ -919,8 +922,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                             <i class="pi pi-align-left text-xl text-white/50"></i>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-white">Corps de texte</div>
-                                            <div class="text-[10px] text-white/40 mt-0.5">Paragraphes et mentions</div>
+                                            <div class="text-sm font-bold text-white">{{ t('pages.certificates.bodyText') }}</div>
+                                            <div class="text-[10px] text-white/40 mt-0.5">{{ t('pages.certificates.bodyTextHint') }}</div>
                                         </div>
                                     </button>
                                 </div>
@@ -929,17 +932,17 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div class="space-y-4">
                                     <div class="flex items-center gap-2 mb-4">
                                         <div class="h-px bg-white/10 flex-1"></div>
-                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-1"><i class="pi pi-database text-[8px]"></i> Variables Auto</span>
+                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-1"><i class="pi pi-database text-[8px]"></i> {{ t('pages.certificates.autoVariables') }}</span>
                                         <div class="h-px bg-white/10 flex-1"></div>
                                     </div>
                                     <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4 shadow-inner">
-                                        <p class="text-[10px] text-white/60 mb-4 leading-relaxed font-medium">Glissez ou tapez ces tags dans vos textes. Le système les remplacera lors de l'émission.</p>
+                                        <p class="text-[10px] text-white/60 mb-4 leading-relaxed font-medium">{{ t('pages.certificates.variablesHint') }}</p>
                                         <div class="flex flex-wrap gap-2">
-                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{NOM_APPRENANT}" }}</span>
-                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{NOM_FORMATION}" }}</span>
-                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{DATE}" }}</span>
-                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{CERTIFICATE_ID}" }}</span>
-                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="'Copier'">{{ "{MENTION}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="t('pages.certificates.copyTooltip')">{{ "{NOM_APPRENANT}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="t('pages.certificates.copyTooltip')">{{ "{NOM_FORMATION}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="t('pages.certificates.copyTooltip')">{{ "{DATE}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="t('pages.certificates.copyTooltip')">{{ "{CERTIFICATE_ID}" }}</span>
+                                            <span class="px-3 py-1.5 bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold rounded-lg border border-blue-500/30 cursor-copy hover:bg-blue-500/40 transition-colors" v-tooltip.top="t('pages.certificates.copyTooltip')">{{ "{MENTION}" }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -948,7 +951,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div class="space-y-3">
                                     <div class="flex items-center gap-2 mb-4">
                                         <div class="h-px bg-white/10 flex-1"></div>
-                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Médias</span>
+                                        <span class="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">{{ t('pages.certificates.mediaTab') }}</span>
                                         <div class="h-px bg-white/10 flex-1"></div>
                                     </div>
                                     <button @click="addElement('image')" class="w-full flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-[#1a1a1f] hover:bg-white/5 border border-dashed border-white/20 transition-all text-center">
@@ -956,8 +959,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                             <i class="pi pi-image text-2xl text-white/40"></i>
                                         </div>
                                         <div>
-                                            <div class="text-xs font-bold text-white mb-1">Image Personnalisée</div>
-                                            <div class="text-[9px] text-white/40">Ajouter tampons, logos partenaires...</div>
+                                            <div class="text-xs font-bold text-white mb-1">{{ t('pages.certificates.customImage') }}</div>
+                                            <div class="text-[9px] text-white/40">{{ t('pages.certificates.customImageHint') }}</div>
                                         </div>
                                     </button>
                                 </div>
@@ -966,11 +969,11 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                         <!-- TAB 2 : GESTION DES CALQUES -->
                         <TabPanel>
-                            <template #header><div class="flex flex-col items-center gap-1 w-full py-1"><i class="pi pi-clone text-lg"></i><span class="text-[9px] uppercase tracking-widest">Calques</span></div></template>
+                            <template #header><div class="flex flex-col items-center gap-1 w-full py-1"><i class="pi pi-clone text-lg"></i><span class="text-[9px] uppercase tracking-widest">{{ t('pages.certificates.layersTab') }}</span></div></template>
 
                             <div class="p-4 space-y-1 overflow-y-auto custom-scrollbar h-[calc(100vh-140px)]">
                                 <div class="flex justify-between items-center px-2 mb-4 mt-2">
-                                    <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Ordre d'affichage (Z-Index)</span>
+                                    <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">{{ t('pages.certificates.zIndexOrder') }}</span>
                                     <Badge :value="templateForm.elements.length" class="bg-white/10 text-white/60 border-none text-[9px]" />
                                 </div>
 
@@ -999,19 +1002,19 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                                     <!-- Actions Rapides Calque -->
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button v-if="el.type !== 'qr' && el.type !== 'logo' && el.type !== 'signature'" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors" @click.stop="duplicateElement(el)" v-tooltip.top="'Dupliquer'">
+                                        <button v-if="el.type !== 'qr' && el.type !== 'logo' && el.type !== 'signature'" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors" @click.stop="duplicateElement(el)" v-tooltip.top="t('pages.certificates.duplicateTooltip')">
                                             <i class="pi pi-copy text-[10px]"></i>
                                         </button>
-                                        <button v-if="el.type !== 'qr' && el.type !== 'logo' && el.type !== 'signature'" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400/50 hover:text-red-400 transition-colors" @click.stop="removeElement(el.id)" v-tooltip.top="'Supprimer'">
+                                        <button v-if="el.type !== 'qr' && el.type !== 'logo' && el.type !== 'signature'" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/20 text-red-400/50 hover:text-red-400 transition-colors" @click.stop="removeElement(el.id)" v-tooltip.top="t('pages.certificates.deleteTooltip')">
                                             <i class="pi pi-trash text-[10px]"></i>
                                         </button>
-                                        <i v-else class="pi pi-lock text-[10px] text-white/20 px-2" v-tooltip.top="'Géré via paramètres globaux'"></i>
+                                        <i v-else class="pi pi-lock text-[10px] text-white/20 px-2" v-tooltip.top="t('pages.certificates.managedGlobally')"></i>
                                     </div>
                                 </div>
 
                                 <div v-if="templateForm.elements.length === 0" class="flex flex-col items-center justify-center p-10 text-center">
                                     <i class="pi pi-inbox text-3xl text-white/10 mb-3"></i>
-                                    <p class="text-xs text-white/30">Aucun élément sur le canevas.</p>
+                                    <p class="text-xs text-white/30">{{ t('pages.certificates.emptyCanvas') }}</p>
                                 </div>
                             </div>
                         </TabPanel>
@@ -1069,13 +1072,13 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <div class="w-full h-full relative overflow-visible flex items-center justify-center">
 
                                 <!-- Render: TEXT -->
-                                <div v-if="el.type === 'text'" class="w-full h-full outline-none whitespace-pre-wrap select-text break-words" contenteditable="true" @blur="handleTextEdit($event, el)" :style="quantumTextStyle(el)" spellcheck="false" title="Double-cliquez pour éditer" v-html="el.content"></div>
+                                <div v-if="el.type === 'text'" class="w-full h-full outline-none whitespace-pre-wrap select-text break-words" contenteditable="true" @blur="handleTextEdit($event, el)" :style="quantumTextStyle(el)" spellcheck="false" :title="t('pages.certificates.doubleClickEdit')" v-html="el.content"></div>
 
                                 <!-- Render: LOGO -->
                                 <div v-if="el.type === 'logo'" class="w-full h-full pointer-events-none flex items-center justify-center">
                                     <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
                                     <div v-else class="w-full h-full bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 rounded-xl">
-                                        <i class="pi pi-shield text-4xl mb-2"></i><span class="text-xs font-bold uppercase tracking-widest text-center px-2">Espace<br>Logo Officiel</span>
+                                        <i class="pi pi-shield text-4xl mb-2"></i><span class="text-xs font-bold uppercase tracking-widest text-center px-2">{{ t('pages.certificates.logoSpace') }}</span>
                                     </div>
                                 </div>
 
@@ -1083,7 +1086,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div v-if="el.type === 'signature'" class="w-full h-full pointer-events-none flex items-center justify-center">
                                     <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
                                     <div v-else class="w-full h-full bg-slate-100/50 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 rounded-xl">
-                                        <i class="pi pi-pencil text-3xl mb-2"></i><span class="text-[10px] font-bold uppercase tracking-widest">Espace Signature</span>
+                                        <i class="pi pi-pencil text-3xl mb-2"></i><span class="text-[10px] font-bold uppercase tracking-widest">{{ t('pages.certificates.signatureSpace') }}</span>
                                     </div>
                                 </div>
 
@@ -1096,7 +1099,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <div v-if="el.type === 'image'" class="w-full h-full pointer-events-none flex items-center justify-center">
                                     <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
                                     <div v-else class="w-full h-full bg-blue-50 border border-blue-100 flex flex-col items-center justify-center text-blue-300">
-                                        <i class="pi pi-image text-3xl mb-1"></i><span class="text-[8px] font-bold uppercase">Image Libre</span>
+                                        <i class="pi pi-image text-3xl mb-1"></i><span class="text-[8px] font-bold uppercase">{{ t('pages.certificates.freeImage') }}</span>
                                     </div>
                                 </div>
 
@@ -1117,10 +1120,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 <i class="pi pi-sliders-h text-red-400 text-sm"></i>
                             </div>
                             <span class="text-xs font-black text-white uppercase tracking-widest">
-                                {{ selectedElementId ? 'Propriétés Élément' : 'Document Master' }}
+                                {{ selectedElementId ? t('pages.certificates.elementProps') : t('pages.certificates.masterDoc') }}
                             </span>
                         </div>
-                        <button v-if="selectedElementId" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors" @click="selectedElementId = null" v-tooltip.left="'Désélectionner'">
+                        <button v-if="selectedElementId" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors" @click="selectedElementId = null" v-tooltip.left="t('pages.certificates.deselect')">
                             <i class="pi pi-times"></i>
                         </button>
                     </div>
@@ -1137,20 +1140,20 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <section>
                                 <div class="flex items-center gap-3 mb-5">
                                     <i class="pi pi-file text-white/30 text-sm"></i>
-                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Géométrie</h4>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">{{ t('pages.certificates.geometry') }}</h4>
                                 </div>
                                 <div class="space-y-4 bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
                                     <div class="flex flex-col gap-2">
-                                        <label class="text-[10px] text-white/60 font-bold">Orientation du Canevas</label>
-                                        <SelectButton v-model="templateForm.orientation" :options="[{l:'Paysage (A4)', v:'landscape'}, {l:'Portrait (A4)', v:'portrait'}]" optionLabel="l" optionValue="v" class="w-full q-select-btn" />
+                                        <label class="text-[10px] text-white/60 font-bold">{{ t('pages.certificates.canvasOrientation') }}</label>
+                                        <SelectButton v-model="templateForm.orientation" :options="[{l:t('pages.certificates.landscapeA4'), v:'landscape'}, {l:t('pages.certificates.portraitA4'), v:'portrait'}]" optionLabel="l" optionValue="v" class="w-full q-select-btn" />
                                     </div>
                                     <div class="grid grid-cols-2 gap-4 pt-2">
                                         <div class="flex flex-col gap-1">
-                                            <span class="text-[9px] text-white/40 uppercase">Largeur (px)</span>
+                                            <span class="text-[9px] text-white/40 uppercase">{{ t('pages.certificates.widthPx') }}</span>
                                             <div class="px-3 py-2 bg-black/20 rounded-lg text-white/60 font-mono text-xs border border-white/5">{{ templateForm.orientation === 'landscape' ? 1120 : 792 }}</div>
                                         </div>
                                         <div class="flex flex-col gap-1">
-                                            <span class="text-[9px] text-white/40 uppercase">Hauteur (px)</span>
+                                            <span class="text-[9px] text-white/40 uppercase">{{ t('pages.certificates.heightPx') }}</span>
                                             <div class="px-3 py-2 bg-black/20 rounded-lg text-white/60 font-mono text-xs border border-white/5">{{ templateForm.orientation === 'landscape' ? 792 : 1120 }}</div>
                                         </div>
                                     </div>
@@ -1163,15 +1166,15 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <section>
                                 <div class="flex items-center gap-3 mb-5">
                                     <i class="pi pi-palette text-white/30 text-sm"></i>
-                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Apparence Générale</h4>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">{{ t('pages.certificates.generalAppearance') }}</h4>
                                 </div>
                                 <div class="space-y-4">
 
                                     <!-- Bordure -->
                                     <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-4">
-                                        <h5 class="text-[10px] text-white font-bold uppercase tracking-widest border-b border-white/10 pb-2 mb-4">Cadre & Bordure</h5>
+                                        <h5 class="text-[10px] text-white font-bold uppercase tracking-widest border-b border-white/10 pb-2 mb-4">{{ t('pages.certificates.frameBorder') }}</h5>
                                         <div class="flex items-center justify-between">
-                                            <span class="text-xs text-white/70 font-medium">Couleur Master</span>
+                                            <span class="text-xs text-white/70 font-medium">{{ t('pages.certificates.masterColor') }}</span>
                                             <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
                                                 <ColorPicker v-model="templateForm.border_color" />
                                                 <span class="text-[10px] font-mono text-white/50 w-16 uppercase">{{ templateForm.border_color }}</span>
@@ -1179,7 +1182,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                         </div>
                                         <div class="space-y-2 pt-2">
                                             <div class="flex justify-between items-center text-[10px]">
-                                                <span class="text-white/70">Épaisseur</span>
+                                                <span class="text-white/70">{{ t('pages.certificates.thickness') }}</span>
                                                 <span class="text-red-400 font-mono font-bold bg-red-500/10 px-2 py-0.5 rounded">{{ templateForm.border_width }} px</span>
                                             </div>
                                             <Slider v-model="templateForm.border_width" :min="0" :max="150" class="red-slider" />
@@ -1188,9 +1191,9 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                                     <!-- Fond (Couleur & Image) -->
                                     <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-4">
-                                        <h5 class="text-[10px] text-white font-bold uppercase tracking-widest border-b border-white/10 pb-2 mb-4">Arrière-plan</h5>
+                                        <h5 class="text-[10px] text-white font-bold uppercase tracking-widest border-b border-white/10 pb-2 mb-4">{{ t('pages.certificates.background') }}</h5>
                                         <div class="flex items-center justify-between mb-4">
-                                            <span class="text-xs text-white/70 font-medium">Teinte de Base</span>
+                                            <span class="text-xs text-white/70 font-medium">{{ t('pages.certificates.baseTint') }}</span>
                                             <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
                                                 <ColorPicker v-model="templateForm.background_color" />
                                                 <span class="text-[10px] font-mono text-white/50 w-16 uppercase">{{ templateForm.background_color }}</span>
@@ -1198,24 +1201,24 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                         </div>
 
                                         <div class="space-y-2">
-                                            <span class="text-[10px] text-white/50 block">Texture / Image HD</span>
+                                            <span class="text-[10px] text-white/50 block">{{ t('pages.certificates.textureImage') }}</span>
                                             <input type="file" ref="bgUploader" hidden @change="(e) => handleFileUpload(e, 'bg')" accept="image/*" />
 
                                             <div v-if="backgroundPreview || templateForm.background_url" class="relative w-full h-24 rounded-xl overflow-hidden border border-white/10 group">
                                                 <img :src="backgroundPreview || templateForm.background_url" class="w-full h-full object-cover" />
                                                 <div class="absolute inset-0 bg-black/60 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                                                    <button class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors" @click="$refs.bgUploader.click()" v-tooltip.top="'Remplacer'"><i class="pi pi-sync"></i></button>
-                                                    <button class="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500 text-white flex items-center justify-center transition-colors" @click="clearFile('bg')" v-tooltip.top="'Supprimer'"><i class="pi pi-trash"></i></button>
+                                                    <button class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors" @click="$refs.bgUploader.click()" v-tooltip.top="t('pages.certificates.replaceTooltip')"><i class="pi pi-sync"></i></button>
+                                                    <button class="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500 text-white flex items-center justify-center transition-colors" @click="clearFile('bg')" v-tooltip.top="t('pages.certificates.deleteTooltip')"><i class="pi pi-trash"></i></button>
                                                 </div>
                                             </div>
                                             <button v-else @click="$refs.bgUploader.click()" class="w-full py-4 rounded-xl border border-dashed border-white/20 text-xs text-white/50 hover:text-white hover:border-white/50 hover:bg-white/5 transition-all flex flex-col items-center gap-2">
-                                                <i class="pi pi-cloud-upload text-xl"></i> Uploader un Pattern
+                                                <i class="pi pi-cloud-upload text-xl"></i> {{ t('pages.certificates.uploadPattern') }}
                                             </button>
                                         </div>
 
                                         <div class="space-y-2 pt-2" v-if="backgroundPreview || templateForm.background_url">
                                             <div class="flex justify-between items-center text-[10px]">
-                                                <span class="text-white/70">Opacité de l'image</span>
+                                                <span class="text-white/70">{{ t('pages.certificates.imageOpacity') }}</span>
                                                 <span class="text-white font-mono">{{ templateForm.bg_opacity }}%</span>
                                             </div>
                                             <Slider v-model="templateForm.bg_opacity" :min="0" :max="100" class="red-slider" />
@@ -1230,25 +1233,25 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <section>
                                 <div class="flex items-center gap-3 mb-5">
                                     <i class="pi pi-language text-white/30 text-sm"></i>
-                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Charte Typographique</h4>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">{{ t('pages.certificates.typographyCharter') }}</h4>
                                 </div>
                                 <div class="space-y-4 bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
                                     <div class="space-y-2">
-                                        <label class="text-[10px] text-white/60 font-bold">Police Principale (Corps)</label>
-                                        <Dropdown v-model="templateForm.primary_font" :options="props.meta.fonts" class="w-full q-dropdown" placeholder="Sélectionner une police">
+                                        <label class="text-[10px] text-white/60 font-bold">{{ t('pages.certificates.mainFont') }}</label>
+                                        <Dropdown v-model="templateForm.primary_font" :options="props.meta.fonts" class="w-full q-dropdown" :placeholder="t('pages.certificates.selectFont')">
                                             <template #value="slotProps"><span :style="{fontFamily: slotProps.value}">{{slotProps.value}}</span></template>
                                             <template #option="slotProps"><span :style="{fontFamily: slotProps.option}">{{slotProps.option}}</span></template>
                                         </Dropdown>
                                     </div>
                                     <div class="space-y-2">
-                                        <label class="text-[10px] text-white/60 font-bold">Police Secondaire (Titres)</label>
-                                        <Dropdown v-model="templateForm.accent_font" :options="props.meta.fonts" class="w-full q-dropdown" placeholder="Sélectionner une police">
+                                        <label class="text-[10px] text-white/60 font-bold">{{ t('pages.certificates.secondaryFont') }}</label>
+                                        <Dropdown v-model="templateForm.accent_font" :options="props.meta.fonts" class="w-full q-dropdown" :placeholder="t('pages.certificates.selectFont')">
                                             <template #value="slotProps"><span :style="{fontFamily: slotProps.value}">{{slotProps.value}}</span></template>
                                             <template #option="slotProps"><span :style="{fontFamily: slotProps.option}">{{slotProps.option}}</span></template>
                                         </Dropdown>
                                     </div>
                                     <div class="flex items-center justify-between pt-3 border-t border-white/5">
-                                        <span class="text-xs text-white/70 font-medium">Couleur Texte Défaut</span>
+                                        <span class="text-xs text-white/70 font-medium">{{ t('pages.certificates.defaultTextColor') }}</span>
                                         <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10">
                                             <ColorPicker v-model="templateForm.text_color" />
                                             <span class="text-[10px] font-mono text-white/50 w-16 uppercase">{{ templateForm.text_color }}</span>
@@ -1263,7 +1266,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <section>
                                 <div class="flex items-center gap-3 mb-5">
                                     <i class="pi pi-verified text-white/30 text-sm"></i>
-                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Identité & Sceaux</h4>
+                                    <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">{{ t('pages.certificates.identitySeals') }}</h4>
                                 </div>
                                 <div class="space-y-4">
 
@@ -1274,11 +1277,11 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                     <!-- Logo Institution -->
                                     <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
                                         <div class="flex justify-between items-center mb-4">
-                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest">Logo Principal</h5>
-                                            <Badge v-if="logoPreview || templateForm.logo_url" value="Inclus" severity="success" class="text-[8px] bg-emerald-500/20 text-emerald-400 border-none" />
+                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest">{{ t('pages.certificates.mainLogo') }}</h5>
+                                            <Badge v-if="logoPreview || templateForm.logo_url" :value="t('pages.certificates.includedBadge')" severity="success" class="text-[8px] bg-emerald-500/20 text-emerald-400 border-none" />
                                         </div>
                                         <div v-if="!(logoPreview || templateForm.logo_url) || templateForm.delete_logo" class="flex flex-col items-center gap-3">
-                                            <button @click="$refs.logoUploader.click()" class="w-full py-4 rounded-xl border border-dashed border-white/20 text-xs text-white/50 hover:text-white hover:bg-white/5 transition-all"><i class="pi pi-upload mr-2"></i> Sélectionner le fichier</button>
+                                            <button @click="$refs.logoUploader.click()" class="w-full py-4 rounded-xl border border-dashed border-white/20 text-xs text-white/50 hover:text-white hover:bg-white/5 transition-all"><i class="pi pi-upload mr-2"></i> {{ t('pages.certificates.selectFile') }}</button>
                                         </div>
                                         <div v-else class="flex flex-col gap-3">
                                             <div class="h-20 w-full bg-white/5 rounded-xl border border-white/10 p-2 flex items-center justify-center relative group">
@@ -1293,12 +1296,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                     <!-- Signature Autorité -->
                                     <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5">
                                         <div class="flex justify-between items-center mb-4">
-                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest">Signature Master</h5>
+                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest">{{ t('pages.certificates.masterSignature') }}</h5>
                                             <InputSwitch v-model="templateForm.show_signature" class="scale-75" />
                                         </div>
                                         <div v-if="templateForm.show_signature">
                                             <div v-if="!(signaturePreview || templateForm.signature_url) || templateForm.delete_signature" class="flex flex-col items-center gap-3 mt-3">
-                                                <button @click="$refs.sigUploader.click()" class="w-full py-3 rounded-xl border border-dashed border-white/20 text-[10px] text-white/50 hover:text-white hover:bg-white/5 transition-all"><i class="pi pi-upload mr-2"></i> Fichier Signature (PNG/Transparent)</button>
+                                                <button @click="$refs.sigUploader.click()" class="w-full py-3 rounded-xl border border-dashed border-white/20 text-[10px] text-white/50 hover:text-white hover:bg-white/5 transition-all"><i class="pi pi-upload mr-2"></i> {{ t('pages.certificates.signatureFile') }}</button>
                                             </div>
                                             <div v-else class="mt-3 h-16 w-full bg-white/5 rounded-xl border border-white/10 p-2 flex items-center justify-center relative group">
                                                 <img :src="signaturePreview || templateForm.signature_url" class="h-full object-contain filter invert opacity-80" />
@@ -1312,8 +1315,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                     <!-- QR Code System -->
                                     <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 flex items-center justify-between">
                                         <div>
-                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest mb-1">Blockchain QR Seal</h5>
-                                            <p class="text-[9px] text-white/40 leading-tight">Génère un lien de vérification unique sur le diplôme.</p>
+                                            <h5 class="text-[10px] text-white font-bold uppercase tracking-widest mb-1">{{ t('pages.certificates.qrSeal') }}</h5>
+                                            <p class="text-[9px] text-white/40 leading-tight">{{ t('pages.certificates.qrSealHint') }}</p>
                                         </div>
                                         <InputSwitch v-model="templateForm.show_qr" />
                                     </div>
@@ -1341,31 +1344,31 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </div>
                                 <div class="flex flex-col w-full">
                                     <span class="text-[8px] text-red-300 font-black uppercase tracking-widest mb-0.5 opacity-80">Calque / {{ selectedElement.type }}</span>
-                                    <InputText v-model="selectedElement.name" class="bg-transparent border-none text-white font-bold text-sm p-0 focus:ring-0 w-full placeholder:text-white/20" placeholder="Nom du calque..." />
+                                    <InputText v-model="selectedElement.name" class="bg-transparent border-none text-white font-bold text-sm p-0 focus:ring-0 w-full placeholder:text-white/20" :placeholder="t('pages.certificates.layerNamePlaceholder')" />
                                 </div>
                                 <i class="pi pi-cog absolute -right-4 -bottom-4 text-[60px] text-red-500/5"></i>
                             </div>
 
                             <!-- BLOCK: Transformation & Géométrie -->
                             <section class="space-y-4">
-                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">Transformations</h4>
+                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-4">{{ t('pages.certificates.transformations') }}</h4>
                                 <div class="grid grid-cols-2 gap-3 bg-[#1a1a1f] p-4 rounded-2xl border border-white/5">
                                     <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Axe X</label>
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">{{ t('pages.certificates.axisX') }}</label>
                                         <InputNumber v-model="selectedElement.x" class="q-input-number" suffix=" px" :useGrouping="false" />
                                     </div>
                                     <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Axe Y</label>
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">{{ t('pages.certificates.axisY') }}</label>
                                         <InputNumber v-model="selectedElement.y" class="q-input-number" suffix=" px" :useGrouping="false" />
                                     </div>
                                     <div class="flex flex-col gap-1.5 mt-2">
-                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Largeur</label>
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">{{ t('pages.certificates.widthLabel') }}</label>
                                         <InputNumber v-model="selectedElement.width" class="q-input-number" suffix=" px" :useGrouping="false" />
                                     </div>
                                     <div class="flex flex-col gap-1.5 mt-2">
-                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Hauteur</label>
+                                        <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">{{ t('pages.certificates.heightLabel') }}</label>
                                         <InputNumber v-if="selectedElement.type !== 'text'" v-model="selectedElement.height" class="q-input-number" suffix=" px" :useGrouping="false" />
-                                        <div v-else class="h-[38px] bg-black/10 rounded-lg flex items-center px-3 border border-white/5 text-white/30 text-[10px] cursor-not-allowed">Auto (Texte)</div>
+                                        <div v-else class="h-[38px] bg-black/10 rounded-lg flex items-center px-3 border border-white/5 text-white/30 text-[10px] cursor-not-allowed">{{ t('pages.certificates.autoText') }}</div>
                                     </div>
                                 </div>
                             </section>
@@ -1374,13 +1377,13 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                             <!-- BLOCK: Spécifique TEXTE -->
                             <section v-if="selectedElement.type === 'text'" class="space-y-6">
-                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Stylisation Typographique</h4>
+                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">{{ t('pages.certificates.typographyStyling') }}</h4>
 
                                 <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-5">
 
                                     <!-- Famille de police -->
                                     <div class="space-y-2">
-                                        <label class="text-[10px] text-white/60 font-bold">Police de caractères</label>
+                                        <label class="text-[10px] text-white/60 font-bold">{{ t('pages.certificates.fontFamily') }}</label>
                                         <Dropdown v-model="selectedElement.style.fontFamily" :options="props.meta.fonts" class="w-full q-dropdown">
                                             <template #value="slotProps"><span :style="{fontFamily: slotProps.value}">{{slotProps.value}}</span></template>
                                             <template #option="slotProps"><span :style="{fontFamily: slotProps.option}">{{slotProps.option}}</span></template>
@@ -1390,18 +1393,18 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                     <!-- Tailles -->
                                     <div class="grid grid-cols-2 gap-4">
                                         <div class="flex flex-col gap-1.5">
-                                            <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Taille (Size)</label>
+                                            <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">{{ t('pages.certificates.sizeLabel') }}</label>
                                             <InputNumber v-model="selectedElement.style.fontSize" class="q-input-number" suffix=" px" />
                                         </div>
                                         <div class="flex flex-col gap-1.5">
-                                            <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">Espacement</label>
+                                            <label class="text-[9px] text-white/40 uppercase tracking-wider pl-1">{{ t('pages.certificates.spacing') }}</label>
                                             <InputNumber v-model="selectedElement.style.letterSpacing" class="q-input-number" suffix=" px" />
                                         </div>
                                     </div>
 
                                     <!-- Couleur -->
                                     <div class="flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/5">
-                                        <span class="text-xs text-white/70 font-medium">Couleur Remplissage</span>
+                                        <span class="text-xs text-white/70 font-medium">{{ t('pages.certificates.fillColor') }}</span>
                                         <div class="flex items-center gap-2">
                                             <span class="text-[10px] font-mono text-white/50 uppercase">{{ selectedElement.style.color }}</span>
                                             <ColorPicker v-model="selectedElement.style.color" />
@@ -1410,7 +1413,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                                     <!-- Alignement & Formatage Avancé -->
                                     <div class="space-y-3 pt-2">
-                                        <label class="text-[10px] text-white/60 font-bold">Formatage</label>
+                                        <label class="text-[10px] text-white/60 font-bold">{{ t('pages.certificates.formatting') }}</label>
 
                                         <!-- Alignement -->
                                         <div class="flex bg-black/20 rounded-xl overflow-hidden border border-white/10 p-1 gap-1">
@@ -1430,7 +1433,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                             <!-- BLOCK: Spécifique IMAGE / LOGO / SIG -->
                             <section v-if="['image', 'logo', 'signature'].includes(selectedElement.type)" class="space-y-6">
-                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Traitements d'Image</h4>
+                                <h4 class="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">{{ t('pages.certificates.imageTreatments') }}</h4>
 
                                 <div class="bg-[#1a1a1f] p-5 rounded-2xl border border-white/5 space-y-5">
                                     <div v-if="selectedElement.type === 'image'" class="space-y-2">
@@ -1441,23 +1444,23 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                             reader.onload = (ev) => selectedElement.content = ev.target.result;
                                             reader.readAsDataURL(file);
                                         }" accept="image/*" />
-                                        <button @click="$refs.customImgUploader.click()" class="w-full py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white transition-all"><i class="pi pi-sync mr-2"></i> Remplacer l'image</button>
+                                        <button @click="$refs.customImgUploader.click()" class="w-full py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white transition-all"><i class="pi pi-sync mr-2"></i> {{ t('pages.certificates.replaceImage') }}</button>
                                     </div>
 
                                     <!-- Filtres CSS -->
                                     <div class="space-y-4 pt-2">
-                                        <label class="text-[10px] text-white/60 font-bold border-b border-white/10 pb-2 block">Matrice de filtres</label>
+                                        <label class="text-[10px] text-white/60 font-bold border-b border-white/10 pb-2 block">{{ t('pages.certificates.filterMatrix') }}</label>
 
                                         <div class="space-y-2">
-                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">Luminosité</span><span class="font-mono text-red-400">{{ selectedElement.filters.brightness }}%</span></div>
+                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">{{ t('pages.certificates.brightness') }}</span><span class="font-mono text-red-400">{{ selectedElement.filters.brightness }}%</span></div>
                                             <Slider v-model="selectedElement.filters.brightness" :min="0" :max="200" class="red-slider h-1" />
                                         </div>
                                         <div class="space-y-2 pt-2">
-                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">Contraste</span><span class="font-mono text-red-400">{{ selectedElement.filters.contrast }}%</span></div>
+                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">{{ t('pages.certificates.contrast') }}</span><span class="font-mono text-red-400">{{ selectedElement.filters.contrast }}%</span></div>
                                             <Slider v-model="selectedElement.filters.contrast" :min="0" :max="200" class="red-slider h-1" />
                                         </div>
                                         <div class="space-y-2 pt-2">
-                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">Niveaux de gris</span><span class="font-mono text-red-400">{{ selectedElement.filters.grayscale }}%</span></div>
+                                            <div class="flex justify-between text-[9px] text-white/50"><span class="uppercase">{{ t('pages.certificates.grayscale') }}</span><span class="font-mono text-red-400">{{ selectedElement.filters.grayscale }}%</span></div>
                                             <Slider v-model="selectedElement.filters.grayscale" :min="0" :max="100" class="red-slider h-1" />
                                         </div>
                                     </div>
@@ -1468,12 +1471,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                             <section v-if="!['logo', 'signature', 'qr'].includes(selectedElement.type)">
                                 <Divider class="border-white/5" />
                                 <div class="grid grid-cols-2 gap-3">
-                                    <Button label="Dupliquer" icon="pi pi-copy" class="p-button-outlined p-button-secondary text-white/70 border-white/20 hover:bg-white/10 rounded-xl" @click="duplicateElement(selectedElement)" />
-                                    <Button label="Supprimer" icon="pi pi-trash" class="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl" @click="removeElement(selectedElement.id)" />
+                                    <Button :label="t('pages.certificates.duplicate')" icon="pi pi-copy" class="p-button-outlined p-button-secondary text-white/70 border-white/20 hover:bg-white/10 rounded-xl" @click="duplicateElement(selectedElement)" />
+                                    <Button :label="t('pages.certificates.deleteTooltip')" icon="pi pi-trash" class="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl" @click="removeElement(selectedElement.id)" />
                                 </div>
                             </section>
                             <section v-else>
-                                <Message severity="info" :closable="false" class="bg-blue-500/10 border-blue-500/20 text-blue-300 text-xs">Cet élément est natif au modèle. Vous pouvez le désactiver depuis les paramètres globaux du document.</Message>
+                                <Message severity="info" :closable="false" class="bg-blue-500/10 border-blue-500/20 text-blue-300 text-xs">{{ t('pages.certificates.nativeElementMsg') }}</Message>
                             </section>
 
                         </div>
@@ -1485,21 +1488,21 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- DIALOGUES SECONDAIRES (Émission Massive & Révocation)                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="bulkIssuanceDialog" modal header="Moteur d'Émission Massive" :style="{width: '650px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <Dialog v-model:visible="bulkIssuanceDialog" modal :header="t('pages.certificates.bulkTitle')" :style="{width: '650px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
             <div class="p-8 space-y-8">
 
                 <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex gap-4 items-start">
                     <i class="pi pi-info-circle text-blue-500 text-xl mt-0.5"></i>
                     <div>
-                        <h4 class="text-sm font-bold text-blue-900 mb-1">Processus Automatisé</h4>
-                        <p class="text-xs text-blue-700/80 leading-relaxed">Sélectionnez un programme. Le système générera les PDF HD, insérera les variables, hachera les documents sur la blockchain et notifiera les étudiants éligibles en un seul clic.</p>
+                        <h4 class="text-sm font-bold text-blue-900 mb-1">{{ t('pages.certificates.automatedProcess') }}</h4>
+                        <p class="text-xs text-blue-700/80 leading-relaxed">{{ t('pages.certificates.automatedProcessHint') }}</p>
                     </div>
                 </div>
 
                 <div class="space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <div class="space-y-3">
-                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Programme de Formation <span class="text-red-500">*</span></label>
-                        <Dropdown v-model="bulkIssueForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" placeholder="Rechercher une formation finalisée..." class="w-full bg-slate-50 border-slate-200 rounded-xl" filter>
+                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">{{ t('pages.certificates.programLabel') }} <span class="text-red-500">*</span></label>
+                        <Dropdown v-model="bulkIssueForm.course_id" :options="props.courses" optionLabel="title" optionValue="id" :placeholder="t('pages.certificates.programPlaceholder')" class="w-full bg-slate-50 border-slate-200 rounded-xl" filter>
                             <template #option="slotProps">
                                 <div class="flex items-center gap-3 py-1">
                                     <div class="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center"><i class="pi pi-book text-xs"></i></div>
@@ -1510,13 +1513,13 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
 
                     <div class="space-y-3">
-                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Date d'expiration (Optionnel)</label>
-                        <Calendar v-model="bulkIssueForm.expires_at" dateFormat="dd/mm/yy" showIcon class="w-full" inputClass="rounded-xl bg-slate-50 border-slate-200" placeholder="Laissez vide pour aucune expiration" />
+                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">{{ t('pages.certificates.expiryOptional') }}</label>
+                        <Calendar v-model="bulkIssueForm.expires_at" dateFormat="dd/mm/yy" showIcon class="w-full" inputClass="rounded-xl bg-slate-50 border-slate-200" :placeholder="t('pages.certificates.expiryPlaceholder')" />
                     </div>
 
                     <div class="space-y-3">
-                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">Matrice Visuelle (Modèle) <span class="text-red-500">*</span></label>
-                        <Dropdown v-model="bulkIssueForm.template_id" :options="templates" optionLabel="name" optionValue="id" placeholder="Sélectionner le design du diplôme..." class="w-full bg-slate-50 border-slate-200 rounded-xl">
+                        <label class="text-xs font-black text-slate-800 uppercase tracking-widest">{{ t('pages.certificates.visualMatrix') }} <span class="text-red-500">*</span></label>
+                        <Dropdown v-model="bulkIssueForm.template_id" :options="templates" optionLabel="name" optionValue="id" :placeholder="t('pages.certificates.matrixPlaceholder')" class="w-full bg-slate-50 border-slate-200 rounded-xl">
                             <template #option="slotProps">
                                 <div class="flex items-center gap-3 py-1">
                                     <div class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center" :style="{ backgroundColor: `#${slotProps.option.background_color?.replace('#','')}` }">
@@ -1533,8 +1536,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <div class="flex gap-4 items-center">
                         <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center"><i class="pi pi-envelope text-lg"></i></div>
                         <div>
-                            <div class="text-sm font-black text-slate-800">Notification Push & Email</div>
-                            <div class="text-xs text-slate-500 mt-0.5">Envoyer instantanément le diplôme aux étudiants.</div>
+                            <div class="text-sm font-black text-slate-800">{{ t('pages.certificates.notifyTitle') }}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">{{ t('pages.certificates.notifyHint') }}</div>
                         </div>
                     </div>
                     <InputSwitch v-model="bulkIssueForm.notify_users" @click.stop />
@@ -1542,68 +1545,68 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             </div>
             <template #footer>
                 <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
-                    <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="bulkIssuanceDialog = false" />
-                    <Button label="Lancer l'Ingénierie" icon="pi pi-bolt" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20" @click="submitBulkIssuance" :loading="isSaving" />
+                    <Button :label="t('pages.certificates.cancel')" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="bulkIssuanceDialog = false" />
+                    <Button :label="t('pages.certificates.launchEngineering')" icon="pi pi-bolt" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20" @click="submitBulkIssuance" :loading="isSaving" />
                 </div>
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="expirationDialog" modal header="Définir une Date d'Expiration" :style="{width: '450px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <Dialog v-model:visible="expirationDialog" modal :header="t('pages.certificates.expirationTitle')" :style="{width: '450px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
             <div class="p-8 space-y-6">
                 <div class="flex items-start gap-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
                     <i class="pi pi-exclamation-triangle text-amber-500 text-xl mt-1"></i>
                     <div>
-                        <h4 class="font-bold text-amber-900 text-sm mb-1">Impact de l'action</h4>
+                        <h4 class="font-bold text-amber-900 text-sm mb-1">{{ t('pages.certificates.actionImpact') }}</h4>
                         <p class="text-xs text-amber-800 leading-relaxed">
-                            Une fois la date d'expiration passée, le certificat sera marqué comme "Expiré" sur le vérificateur public. Cette action est réversible en supprimant la date.
+                            {{ t('pages.certificates.actionImpactHint') }}
                         </p>
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label for="expiration-date" class="text-xs font-black text-slate-800 uppercase tracking-widest">Date d'expiration</label>
+                    <label for="expiration-date" class="text-xs font-black text-slate-800 uppercase tracking-widest">{{ t('pages.certificates.expirationDate') }}</label>
                     <Calendar id="expiration-date" v-model="expirationForm.expires_at" dateFormat="dd/mm/yy" showIcon class="w-full" inputClass="rounded-xl bg-white border-slate-200" />
                 </div>
             </div>
             <template #footer>
                 <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
-                    <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="expirationDialog = false" />
-                    <Button label="Confirmer l'Expiration" icon="pi pi-check" class="bg-amber-500 hover:bg-amber-600 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-amber-500/20" @click="submitExpiration" :loading="expirationForm.processing" />
+                    <Button :label="t('pages.certificates.cancel')" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="expirationDialog = false" />
+                    <Button :label="t('pages.certificates.confirmExpiration')" icon="pi pi-check" class="bg-amber-500 hover:bg-amber-600 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-amber-500/20" @click="submitExpiration" :loading="expirationForm.processing" />
                 </div>
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="revocationDialog" modal header="Protocole de Révocation" :style="{width: '550px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <Dialog v-model:visible="revocationDialog" modal :header="t('pages.certificates.revocationTitle')" :style="{width: '550px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
             <div class="p-8 text-center flex flex-col items-center">
                 <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-red-100 relative">
                     <div class="absolute inset-0 rounded-full border-2 border-red-500 border-dashed animate-[spin_10s_linear_infinite] opacity-20"></div>
                     <i class="pi pi-shield-slash text-4xl relative z-10"></i>
                 </div>
 
-                <h3 class="text-2xl font-black text-slate-900 mb-3 tracking-tight">Révocation Irréversible</h3>
+                <h3 class="text-2xl font-black text-slate-900 mb-3 tracking-tight">{{ t('pages.certificates.irreversibleRevocation') }}</h3>
                 <p class="text-slate-500 text-sm mb-8 px-4 leading-relaxed">
-                    Cette action détruira la validité de ce certificat sur le vérificateur public de la blockchain. Le fichier PDF restera en possession de l'étudiant mais sera marqué comme <strong>frauduleux ou annulé</strong> lors d'un scan.
+                    {{ t('pages.certificates.revocationWarn1') }} <strong>{{ t('pages.certificates.revocationWarn2') }}</strong>{{ t('pages.certificates.revocationWarn3') }}
                 </p>
 
                 <div class="w-full text-left space-y-3 mb-8 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <label class="block text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                        <i class="pi pi-align-left text-red-400"></i> Motif Officiel de Révocation <span class="text-red-500">*</span>
+                        <i class="pi pi-align-left text-red-400"></i> {{ t('pages.certificates.revocationReason') }} <span class="text-red-500">*</span>
                     </label>
-                    <Textarea v-model="revocationForm.reason" rows="3" placeholder="Ex: Fraude lors de l'examen final, erreur administrative..." class="w-full rounded-xl p-3 border-slate-200 bg-slate-50 focus:bg-white transition-colors text-sm" />
+                    <Textarea v-model="revocationForm.reason" rows="3" :placeholder="t('pages.certificates.revocationReasonPlaceholder')" class="w-full rounded-xl p-3 border-slate-200 bg-slate-50 focus:bg-white transition-colors text-sm" />
                 </div>
 
                 <div class="w-full flex items-center justify-between p-5 rounded-2xl border transition-colors cursor-pointer" :class="revocationForm.confirm_action ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'" @click="revocationForm.confirm_action = !revocationForm.confirm_action">
                     <div class="flex items-center gap-3">
                         <div class="w-2 h-2 rounded-full" :class="revocationForm.confirm_action ? 'bg-red-500 animate-pulse' : 'bg-slate-300'"></div>
-                        <span class="text-sm font-bold transition-colors" :class="revocationForm.confirm_action ? 'text-red-700' : 'text-slate-600'">Je confirme l'invalidation définitive</span>
+                        <span class="text-sm font-bold transition-colors" :class="revocationForm.confirm_action ? 'text-red-700' : 'text-slate-600'">{{ t('pages.certificates.confirmInvalidation') }}</span>
                     </div>
                     <InputSwitch v-model="revocationForm.confirm_action" @click.stop />
                 </div>
             </div>
             <template #footer>
                 <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
-                    <Button label="Annuler" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="revocationDialog = false" />
-                    <Button label="Confirmer la Révocation" icon="pi pi-exclamation-triangle" :disabled="!revocationForm.confirm_action" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50 disabled:hover:bg-red-600" @click="submitRevocation" />
+                    <Button :label="t('pages.certificates.cancel')" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="revocationDialog = false" />
+                    <Button :label="t('pages.certificates.confirmRevocation')" icon="pi pi-exclamation-triangle" :disabled="!revocationForm.confirm_action" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50 disabled:hover:bg-red-600" @click="submitRevocation" />
                 </div>
             </template>
         </Dialog>

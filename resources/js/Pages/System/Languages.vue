@@ -14,6 +14,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import debounce from 'lodash/debounce';
+import { useI18n } from 'vue-i18n';
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -38,6 +39,7 @@ const props = defineProps({
     editor:    { type: Object, default: null },
 });
 
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 
@@ -45,11 +47,11 @@ const isEditor = computed(() => !!props.editor);
 
 const headerActions = computed(() => isEditor.value
     ? [
-        { label: 'Retour à la liste', icon: 'pi-arrow-left', variant: 'secondary', onClick: () => router.get(route('system.languages.index')) },
+        { label: t('pages.languages.back_to_list'), icon: 'pi-arrow-left', variant: 'secondary', onClick: () => router.get(route('system.languages.index')) },
       ]
     : [
-        { label: 'Importer', icon: 'pi-upload', variant: 'secondary', onClick: () => { importCode.value = null; displayImportDialog.value = true; } },
-        { label: 'Nouvelle langue', icon: 'pi-plus', variant: 'primary', onClick: () => displayLangDialog.value = true },
+        { label: t('pages.languages.import'), icon: 'pi-upload', variant: 'secondary', onClick: () => { importCode.value = null; displayImportDialog.value = true; } },
+        { label: t('pages.languages.new_language'), icon: 'pi-plus', variant: 'primary', onClick: () => displayLangDialog.value = true },
       ]
 );
 
@@ -62,11 +64,11 @@ const toggleActive = (lang) => {
 const makeDefault = (lang) => {
     confirm.require({
         group: 'app',
-        message: `Définir « ${lang.name} » comme langue par défaut du site ?`,
-        header: 'Langue par défaut',
+        message: t('pages.languages.default_lang_confirm', { name: lang.name }),
+        header: t('pages.languages.default_lang_header'),
         icon: 'pi pi-star',
-        acceptLabel: 'Définir par défaut',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.languages.set_as_default'),
+        rejectLabel: t('pages.languages.cancel'),
         accept: () => router.post(route('system.languages.set-default'), { id: lang.id }, { preserveScroll: true }),
     });
 };
@@ -74,12 +76,12 @@ const makeDefault = (lang) => {
 const removeLanguage = (lang) => {
     confirm.require({
         group: 'app',
-        message: `Supprimer « ${lang.name} » de la liste des langues ? Le fichier de traduction sera conservé.`,
-        header: 'Supprimer la langue',
+        message: t('pages.languages.delete_lang_confirm', { name: lang.name }),
+        header: t('pages.languages.delete_lang_header'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-        acceptLabel: 'Supprimer',
-        rejectLabel: 'Annuler',
+        acceptLabel: t('pages.languages.delete'),
+        rejectLabel: t('pages.languages.cancel'),
         accept: () => router.delete(route('system.languages.destroy', lang.id), { preserveScroll: true }),
     });
 };
@@ -145,7 +147,7 @@ const newLang = ref({ name: '', code: '' });
 
 const saveLanguage = () => {
     if (!newLang.value.name.trim() || !newLang.value.code.trim()) {
-        toast.add({ severity: 'warn', summary: 'Champs requis', detail: 'Nom et code ISO obligatoires.', life: 3000 });
+        toast.add({ severity: 'warn', summary: t('pages.languages.required_fields'), detail: t('pages.languages.required_fields_detail'), life: 3000 });
         return;
     }
     router.post(route('system.languages.store'), {
@@ -173,7 +175,7 @@ const onImportSelect = (e) => {
 
 const submitImport = () => {
     if (!importCode.value || !importFile.value) {
-        toast.add({ severity: 'warn', summary: 'Sélection incomplète', detail: 'Choisissez une langue et un fichier JSON.', life: 3000 });
+        toast.add({ severity: 'warn', summary: t('pages.languages.incomplete_selection'), detail: t('pages.languages.incomplete_selection_detail'), life: 3000 });
         return;
     }
     const form = new FormData();
@@ -208,27 +210,27 @@ const coverageOptions = {
 };
 
 const kpis = computed(() => [
-    { label: 'Clés de référence (FR)', value: props.stats.total_keys ?? 0, icon: 'pi-key', color: 'blue' },
-    { label: 'Langues actives', value: `${props.stats.active ?? 0} / ${props.stats.installed ?? 0}`, icon: 'pi-flag', color: 'emerald' },
-    { label: 'Complétion moyenne', value: `${props.stats.completion ?? 0} %`, icon: 'pi-chart-line', color: 'amber' },
-    { label: 'Langue par défaut', value: props.stats.default || '—', icon: 'pi-star', color: 'rose' },
+    { label: t('pages.languages.kpi_reference'), value: props.stats.total_keys ?? 0, icon: 'pi-key', color: 'blue' },
+    { label: t('pages.languages.kpi_active'), value: `${props.stats.active ?? 0} / ${props.stats.installed ?? 0}`, icon: 'pi-flag', color: 'emerald' },
+    { label: t('pages.languages.kpi_completion'), value: `${props.stats.completion ?? 0} %`, icon: 'pi-chart-line', color: 'amber' },
+    { label: t('pages.languages.kpi_default'), value: props.stats.default || '—', icon: 'pi-star', color: 'rose' },
 ]);
 </script>
 
 <template>
     <AppLayout>
-        <Head :title="isEditor ? `Traductions — ${editor.language.name}` : 'Internationalisation - SubNetCongo'" />
+        <Head :title="isEditor ? t('pages.languages.head_title_editor', { name: editor.language.name }) : t('pages.languages.head_title')" />
 
         <div class="page-bg min-h-screen font-sans">
 
             <PageHeader
-                :title="isEditor ? `Traductions ${editor.language.flag} ${editor.language.name}` : 'Internationalisation'"
+                :title="isEditor ? t('pages.languages.editor_title', { flag: editor.language.flag, name: editor.language.name }) : t('pages.languages.page_title')"
                 :subtitle="isEditor
-                    ? 'Consultez et corrigez les clés de traduction. La colonne FR sert de référence ; les clés manquantes sont signalées.'
-                    : 'Gérez le multilinguisme du site — langues installées, complétion réelle et fichiers de traduction.'"
+                    ? t('pages.languages.page_subtitle_editor')
+                    : t('pages.languages.page_subtitle_list')"
                 icon="pi-globe"
                 accent="blue"
-                badge="Système"
+                :badge="t('pages.languages.badge_system')"
                 :actions="headerActions"
             />
 
@@ -244,28 +246,28 @@ const kpis = computed(() => [
                                     <span class="font-mono text-xs text-slate-400 ml-1">{{ editor.language.code }}</span>
                                 </h2>
                                 <p class="text-xs text-slate-500 mt-0.5">
-                                    {{ editor.total }} clés — <span class="font-bold text-red-500">{{ editor.missing }} manquante(s)</span> vs FR
+                                    {{ t('pages.languages.keys_count', { n: editor.total }) }} — <span class="font-bold text-red-500">{{ t('pages.languages.missing_count', { n: editor.missing }) }}</span> vs FR
                                 </p>
                             </div>
                             <IconField iconPosition="left" class="w-full sm:w-72">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="search" placeholder="Chercher une clé ou une valeur..." class="w-full" />
+                                <InputText v-model="search" :placeholder="t('pages.languages.search_placeholder')" class="w-full" />
                             </IconField>
                         </div>
 
                         <Message severity="info" class="m-4 !rounded-xl text-xs">
-                            Les modifications écrivent directement dans <code class="font-mono">resources/js/locales/{{ editor.language.code }}.json</code>.
-                            Lancez <code class="font-mono font-bold">npm run build</code> pour les rendre visibles côté front.
+                            {{ t('pages.languages.editor_notice_1') }} <code class="font-mono">resources/js/locales/{{ editor.language.code }}.json</code>.
+                            {{ t('pages.languages.editor_notice_2') }} <code class="font-mono font-bold">npm run build</code> {{ t('pages.languages.editor_notice_3') }}
                         </Message>
 
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-slate-50 border-b border-slate-200">
                                     <tr class="text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
-                                        <th class="py-3 px-4 w-1/3">Clé</th>
-                                        <th class="py-3 px-4">Référence (FR)</th>
+                                        <th class="py-3 px-4 w-1/3">{{ t('pages.languages.col_key') }}</th>
+                                        <th class="py-3 px-4">{{ t('pages.languages.col_reference') }}</th>
                                         <th class="py-3 px-4">{{ editor.language.name }}</th>
-                                        <th class="py-3 px-4 text-right w-24">Action</th>
+                                        <th class="py-3 px-4 text-right w-24">{{ t('pages.languages.col_action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -278,7 +280,7 @@ const kpis = computed(() => [
                                             <InputText
                                                 v-model="editValues[row.key]"
                                                 :class="['w-full !text-xs', row.missing && !editValues[row.key] ? '!border-red-300' : '']"
-                                                :placeholder="row.missing ? 'Non traduit' : ''"
+                                                :placeholder="row.missing ? t('pages.languages.not_translated') : ''"
                                             />
                                         </td>
                                         <td class="py-2.5 px-4 text-right">
@@ -288,7 +290,7 @@ const kpis = computed(() => [
                                                 :disabled="!dirty(row) || savingKeys[row.key]"
                                                 :loading="savingKeys[row.key]"
                                                 @click="saveKey(row)"
-                                                v-tooltip.bottom="'Enregistrer cette clé'"
+                                                v-tooltip.bottom="t('pages.languages.save_key')"
                                             />
                                         </td>
                                     </tr>
@@ -328,20 +330,20 @@ const kpis = computed(() => [
                         <!-- Liste des langues -->
                         <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-                                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Langues installées</h2>
-                                <p class="text-xs text-slate-500 mt-0.5">Synchronisées avec <code class="font-mono">resources/js/locales/*.json</code> et la table <code class="font-mono">languages</code>.</p>
+                                <h2 class="text-lg font-bold text-slate-800 tracking-tight">{{ t('pages.languages.installed_languages') }}</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ t('pages.languages.synced_pre') }} <code class="font-mono">resources/js/locales/*.json</code> {{ t('pages.languages.synced_mid') }} <code class="font-mono">languages</code>.</p>
                             </div>
 
                             <DataTable :value="languages" dataKey="id" stripedRows>
-                                <Column header="Langue" style="min-width: 14rem">
+                                <Column :header="t('pages.languages.col_language')" style="min-width: 14rem">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-3">
                                             <span class="text-3xl">{{ data.flag }}</span>
                                             <div>
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-bold text-slate-900">{{ data.name }}</span>
-                                                    <Badge v-if="data.is_default" value="Défaut" severity="danger" class="!text-[9px] uppercase tracking-wider" />
-                                                    <Tag v-if="data.code === current" value="Active" severity="info" class="!text-[9px] uppercase" />
+                                                    <Badge v-if="data.is_default" :value="t('pages.languages.default_badge')" severity="danger" class="!text-[9px] uppercase tracking-wider" />
+                                                    <Tag v-if="data.code === current" :value="t('pages.languages.active_tag')" severity="info" class="!text-[9px] uppercase" />
                                                 </div>
                                                 <span class="text-xs font-mono text-slate-400">{{ data.code }}</span>
                                             </div>
@@ -349,32 +351,32 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column header="Complétion" style="min-width: 12rem">
+                                <Column :header="t('pages.languages.col_completion')" style="min-width: 12rem">
                                     <template #body="{ data }">
                                         <div class="flex flex-col gap-1.5 pr-6">
                                             <div class="flex justify-between text-xs font-semibold">
-                                                <span class="text-slate-600">{{ data.progress }} % traduit</span>
-                                                <span class="text-slate-400">{{ data.keys }} clés</span>
+                                                <span class="text-slate-600">{{ t('pages.languages.percent_translated', { p: data.progress }) }}</span>
+                                                <span class="text-slate-400">{{ t('pages.languages.keys_count', { n: data.keys }) }}</span>
                                             </div>
                                             <ProgressBar :value="data.progress" :showValue="false" style="height: 6px" :color="progressColor(data.progress)" />
-                                            <span v-if="!data.has_file" class="text-[10px] text-amber-600 font-bold">Aucun fichier de traduction</span>
+                                            <span v-if="!data.has_file" class="text-[10px] text-amber-600 font-bold">{{ t('pages.languages.no_translation_file') }}</span>
                                         </div>
                                     </template>
                                 </Column>
 
-                                <Column header="Visible" style="width: 7rem">
+                                <Column :header="t('pages.languages.col_visible')" style="width: 7rem">
                                     <template #body="{ data }">
                                         <ToggleSwitch :modelValue="data.is_active" :disabled="data.is_default" @update:modelValue="toggleActive(data)" />
                                     </template>
                                 </Column>
 
-                                <Column header="Actions" style="width: 14rem">
+                                <Column :header="t('pages.languages.col_actions')" style="width: 14rem">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-1">
-                                            <Button icon="pi pi-pencil" text rounded severity="primary" @click="openEditor(data)" v-tooltip.bottom="'Éditer les traductions'" />
-                                            <Button icon="pi pi-download" text rounded severity="secondary" @click="exportLanguage(data)" :disabled="!data.has_file" v-tooltip.bottom="'Exporter le JSON'" />
-                                            <Button v-if="!data.is_default" icon="pi pi-star" text rounded severity="warning" @click="makeDefault(data)" v-tooltip.bottom="'Définir par défaut'" />
-                                            <Button v-if="!data.is_default" icon="pi pi-trash" text rounded severity="danger" @click="removeLanguage(data)" v-tooltip.bottom="'Supprimer'" />
+                                            <Button icon="pi pi-pencil" text rounded severity="primary" @click="openEditor(data)" v-tooltip.bottom="t('pages.languages.edit_translations')" />
+                                            <Button icon="pi pi-download" text rounded severity="secondary" @click="exportLanguage(data)" :disabled="!data.has_file" v-tooltip.bottom="t('pages.languages.export_json')" />
+                                            <Button v-if="!data.is_default" icon="pi pi-star" text rounded severity="warning" @click="makeDefault(data)" v-tooltip.bottom="t('pages.languages.set_default_tooltip')" />
+                                            <Button v-if="!data.is_default" icon="pi pi-trash" text rounded severity="danger" @click="removeLanguage(data)" v-tooltip.bottom="t('pages.languages.delete_tooltip')" />
                                         </div>
                                     </template>
                                 </Column>
@@ -382,7 +384,7 @@ const kpis = computed(() => [
                                 <template #empty>
                                     <div class="text-center py-12 text-slate-400">
                                         <i class="pi pi-globe text-4xl mb-3"></i>
-                                        <p class="font-semibold">Aucune langue enregistrée.</p>
+                                        <p class="font-semibold">{{ t('pages.languages.no_languages') }}</p>
                                     </div>
                                 </template>
                             </DataTable>
@@ -391,18 +393,18 @@ const kpis = computed(() => [
                         <!-- Couverture + import -->
                         <div class="lg:col-span-4 space-y-6">
                             <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                                <h3 class="text-sm font-bold text-slate-900 mb-4 tracking-tight">Couverture réelle par langue</h3>
+                                <h3 class="text-sm font-bold text-slate-900 mb-4 tracking-tight">{{ t('pages.languages.coverage_title') }}</h3>
                                 <div class="h-44">
                                     <Chart type="bar" :data="coverageData" :options="coverageOptions" class="h-full" />
                                 </div>
                                 <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
-                                    Pourcentage de clés traduites par rapport au fichier de référence <code class="font-mono">fr.json</code>.
+                                    {{ t('pages.languages.coverage_desc') }} <code class="font-mono">fr.json</code>.
                                 </p>
                             </div>
 
                             <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-                                <h3 class="text-sm font-bold text-slate-900 mb-2 tracking-tight px-2">Importer des traductions</h3>
-                                <Button label="Importer un fichier JSON" icon="pi pi-upload" outlined severity="secondary" class="w-full !rounded-xl font-bold" @click="displayImportDialog = true" />
+                                <h3 class="text-sm font-bold text-slate-900 mb-2 tracking-tight px-2">{{ t('pages.languages.import_title') }}</h3>
+                                <Button :label="t('pages.languages.import_button')" icon="pi pi-upload" outlined severity="secondary" class="w-full !rounded-xl font-bold" @click="displayImportDialog = true" />
                             </div>
                         </div>
                     </div>
@@ -410,38 +412,38 @@ const kpis = computed(() => [
             </div>
 
             <!-- ═══ DIALOGUE : NOUVELLE LANGUE ═══ -->
-            <Dialog v-model:visible="displayLangDialog" modal header="Ajouter une langue" :style="{ width: '450px' }">
+            <Dialog v-model:visible="displayLangDialog" modal :header="t('pages.languages.dialog_add_header')" :style="{ width: '450px' }">
                 <div class="pt-2 space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Nom de la langue</label>
-                        <InputText v-model="newLang.name" placeholder="ex : Portugais" class="w-full" />
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">{{ t('pages.languages.lang_name_label') }}</label>
+                        <InputText v-model="newLang.name" :placeholder="t('pages.languages.lang_name_placeholder')" class="w-full" />
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Code ISO</label>
-                        <InputText v-model="newLang.code" placeholder="ex : pt" maxlength="8" class="w-full font-mono" />
-                        <p class="text-[11px] text-slate-500 mt-1">Un fichier <code class="font-mono">js/locales/&lt;code&gt;.json</code> vide sera créé.</p>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">{{ t('pages.languages.iso_code_label') }}</label>
+                        <InputText v-model="newLang.code" :placeholder="t('pages.languages.iso_placeholder')" maxlength="8" class="w-full font-mono" />
+                        <p class="text-[11px] text-slate-500 mt-1">{{ t('pages.languages.file_notice_pre') }} <code class="font-mono">js/locales/&lt;code&gt;.json</code> {{ t('pages.languages.file_notice_post') }}</p>
                     </div>
-                    <Message severity="info" class="!rounded-xl text-xs">La langue sera active après <code class="font-mono font-bold">npm run build</code> (chargement front).</Message>
+                    <Message severity="info" class="!rounded-xl text-xs">{{ t('pages.languages.active_after_build_pre') }} <code class="font-mono font-bold">npm run build</code> {{ t('pages.languages.active_after_build_post') }}</Message>
                 </div>
                 <template #footer>
-                    <Button label="Annuler" text severity="secondary" @click="displayLangDialog = false" />
-                    <Button label="Ajouter la langue" icon="pi pi-plus" @click="saveLanguage" />
+                    <Button :label="t('pages.languages.cancel')" text severity="secondary" @click="displayLangDialog = false" />
+                    <Button :label="t('pages.languages.add_language')" icon="pi pi-plus" @click="saveLanguage" />
                 </template>
             </Dialog>
 
             <!-- ═══ DIALOGUE : IMPORT JSON ═══ -->
-            <Dialog v-model:visible="displayImportDialog" modal header="Importer des traductions (JSON)" :style="{ width: '500px' }">
+            <Dialog v-model:visible="displayImportDialog" modal :header="t('pages.languages.dialog_import_header')" :style="{ width: '500px' }">
                 <div class="pt-2 space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">Langue cible</label>
-                        <Select v-model="importCode" :options="languageOptions" optionLabel="label" optionValue="value" placeholder="Choisir une langue" class="w-full" />
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2 tracking-wide">{{ t('pages.languages.target_language') }}</label>
+                        <Select v-model="importCode" :options="languageOptions" optionLabel="label" optionValue="value" :placeholder="t('pages.languages.choose_language')" class="w-full" />
                     </div>
-                    <FileUpload mode="basic" accept=".json,application/json" :maxFileSize="2097152" chooseLabel="Choisir le fichier JSON" class="w-full" customUpload @select="onImportSelect" />
-                    <Message severity="warn" class="!rounded-xl text-xs">Le fichier existant de cette langue sera remplacé par le contenu du fichier importé.</Message>
+                    <FileUpload mode="basic" accept=".json,application/json" :maxFileSize="2097152" :chooseLabel="t('pages.languages.choose_json_file')" class="w-full" customUpload @select="onImportSelect" />
+                    <Message severity="warn" class="!rounded-xl text-xs">{{ t('pages.languages.replace_warning') }}</Message>
                 </div>
                 <template #footer>
-                    <Button label="Annuler" text severity="secondary" @click="displayImportDialog = false" />
-                    <Button label="Importer" icon="pi pi-upload" :disabled="!importCode || !importFile" @click="submitImport" />
+                    <Button :label="t('pages.languages.cancel')" text severity="secondary" @click="displayImportDialog = false" />
+                    <Button :label="t('pages.languages.import_action')" icon="pi pi-upload" :disabled="!importCode || !importFile" @click="submitImport" />
                 </template>
             </Dialog>
         </div>

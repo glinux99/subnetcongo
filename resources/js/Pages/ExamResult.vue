@@ -12,6 +12,9 @@ import AccordionTab from 'primevue/accordiontab';
 import Card from 'primevue/card';
 import RadioButton from 'primevue/radiobutton';
 import Checkbox from 'primevue/checkbox';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     result: { type: Object, required: true },
@@ -34,11 +37,11 @@ const grade = computed(() => {
     return 'F';
 });
 
-const events = [
-    { label: 'Tentative démarrée', time: props.attempt?.started_at, icon: 'pi pi-play' },
-    { label: 'Tentative complétée', time: props.attempt?.completed_at, icon: 'pi pi-check' },
-    { label: 'Résultat publié', time: props.result?.passed_at, icon: 'pi pi-verified' },
-];
+const events = computed(() => [
+    { label: t('pages.exam_result.event_started'), time: props.attempt?.started_at, icon: 'pi pi-play' },
+    { label: t('pages.exam_result.event_completed'), time: props.attempt?.completed_at, icon: 'pi pi-check' },
+    { label: t('pages.exam_result.event_published'), time: props.result?.passed_at, icon: 'pi pi-verified' },
+]);
 
 const activeIndex = ref(0);
 
@@ -59,7 +62,7 @@ const getCorrectOptionTexts = (options) => {
 
 <template>
     <AppLayout>
-        <Head :title="`Résultat — ${result?.exam?.title ?? 'Examen'}`" />
+        <Head :title="`${t('pages.exam_result.head_prefix')} — ${result?.exam?.title ?? t('pages.exam_result.exam_fallback')}`" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="page-header">
@@ -73,11 +76,11 @@ const getCorrectOptionTexts = (options) => {
                     </div>
                     <div>
                         <div class="flex items-center gap-3 mb-1 flex-wrap">
-                            <h1 class="text-3xl font-black text-white tracking-tight">{{ passed ? 'Félicitations !' : 'Vous n\'avez pas réussi' }}</h1>
-                            <Tag :value="passed ? 'Réussi' : 'Échoué'" :severity="passed ? 'success' : 'danger'"
+                            <h1 class="text-3xl font-black text-white tracking-tight">{{ passed ? t('pages.exam_result.congrats') : t('pages.exam_result.failed_title') }}</h1>
+                            <Tag :value="passed ? t('pages.exam_result.status_passed') : t('pages.exam_result.status_failed')" :severity="passed ? 'success' : 'danger'"
                                  class="!text-[10px] !font-black !uppercase !tracking-widest" />
                         </div>
-                        <p class="text-slate-400 font-medium text-sm">{{ result?.exam?.title ?? 'Résultat' }}</p>
+                        <p class="text-slate-400 font-medium text-sm">{{ result?.exam?.title ?? t('pages.exam_result.result_fallback') }}</p>
                     </div>
                 </div>
             </div>
@@ -88,23 +91,23 @@ const getCorrectOptionTexts = (options) => {
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
                             <Knob v-model="score" :size="140" :strokeWidth="10" :readonly="true"
                                   :valueColor="passed ? '#059669' : '#DC2626'" rangeColor="#F1F5F9" />
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">Score final</p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">{{ t('pages.exam_result.final_score') }}</p>
                         </div>
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Note</p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exam_result.grade') }}</p>
                             <p class="text-5xl font-black text-slate-800 font-mono">{{ grade }}</p>
                             <p class="text-sm text-slate-500 mt-2">{{ result?.feedback }}</p>
                         </div>
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Points</p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exam_result.points') }}</p>
                             <p class="text-5xl font-black text-slate-800 font-mono">{{ result?.total_points ?? 0 }}</p>
-                            <p class="text-sm text-slate-500 mt-2">Temps passé : {{ attempt?.formatted_time_spent ?? '—' }}</p>
+                            <p class="text-sm text-slate-500 mt-2">{{ t('pages.exam_result.time_spent') }} : {{ attempt?.formatted_time_spent ?? '—' }}</p>
                         </div>
                     </div>
 
                     <Divider />
 
-                    <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-4">Historique</h2>
+                    <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-4">{{ t('pages.exam_result.history') }}</h2>
                     <Timeline :value="events" align="left">
                         <template #marker="slotProps">
                             <span class="flex w-10 h-10 items-center justify-center text-white bg-blue-500 rounded-2xl shadow-md shadow-blue-500/30">
@@ -123,7 +126,7 @@ const getCorrectOptionTexts = (options) => {
                     <div v-if="questions.length > 0" class="space-y-4">
                         <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <i class="pi pi-list-check text-red-600"></i>
-                            Revue détaillée ({{ questions.length }} questions)
+                            {{ t('pages.exam_result.review_title', { count: questions.length }) }}
                         </h2>
                         <Accordion :multiple="true" v-model:activeIndex="activeIndex">
                             <AccordionTab v-for="(q, idx) in questions" :key="q.id">
@@ -132,7 +135,7 @@ const getCorrectOptionTexts = (options) => {
                                         <div class="flex items-center gap-3 min-w-0 flex-1">
                                             <span class="text-xs font-black px-2 py-1 rounded-lg border"
                                                   :class="q.is_correct ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'">
-                                                {{ q.is_correct ? '✓ Correct' : '✗ Incorrect' }}
+                                                {{ q.is_correct ? `✓ ${t('pages.exam_result.correct')}` : `✗ ${t('pages.exam_result.incorrect')}` }}
                                             </span>
                                             <span class="text-sm font-bold text-slate-800 truncate">Q{{ idx + 1 }} : {{ q.text }}</span>
                                         </div>
@@ -147,17 +150,17 @@ const getCorrectOptionTexts = (options) => {
                                         <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <i class="pi pi-user text-slate-500"></i>
-                                                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Votre réponse</span>
-                                                <span v-if="!q.is_correct" class="text-[9px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded">Incorrect</span>
-                                                <span v-else-if="q.user_answer !== null && q.user_answer !== ''" class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Correct</span>
-                                                <span v-else class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Non répondue</span>
+                                                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ t('pages.exam_result.your_answer') }}</span>
+                                                <span v-if="!q.is_correct" class="text-[9px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded">{{ t('pages.exam_result.incorrect') }}</span>
+                                                <span v-else-if="q.user_answer !== null && q.user_answer !== ''" class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{{ t('pages.exam_result.correct') }}</span>
+                                                <span v-else class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{{ t('pages.exam_result.unanswered') }}</span>
                                             </div>
                                             <div class="text-sm text-slate-700 font-mono pl-6">
                                                 <template v-if="q.type === 'multiple_choice' || q.type === 'true_false'">
                                                     {{ getOptionText(q.options, q.user_answer) }}
                                                 </template>
                                                 <template v-else-if="q.type === 'multiple_choice_multiple' && Array.isArray(q.user_answer)">
-                                                    {{ q.user_answer.length === 0 ? 'Aucune sélection' : getOptionText(q.options, q.user_answer) }}
+                                                    {{ q.user_answer.length === 0 ? t('pages.exam_result.no_selection') : getOptionText(q.options, q.user_answer) }}
                                                 </template>
                                                 <template v-else-if="q.type === 'short_answer' || q.type === 'essay'">
                                                     {{ q.user_answer || '—' }}
@@ -185,7 +188,7 @@ const getCorrectOptionTexts = (options) => {
                                         <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <i class="pi pi-check-circle text-emerald-600"></i>
-                                                <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Bonne réponse</span>
+                                                <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">{{ t('pages.exam_result.correct_answer') }}</span>
                                             </div>
                                             <div class="text-sm text-slate-700 font-mono pl-6">
                                                 <template v-if="q.type === 'multiple_choice' || q.type === 'true_false'">
@@ -195,7 +198,7 @@ const getCorrectOptionTexts = (options) => {
                                                     {{ getCorrectOptionTexts(q.options) }}
                                                 </template>
                                                 <template v-else-if="q.type === 'short_answer' || q.type === 'essay'">
-                                                    {{ q.correct_answer || 'Réponse libre' }}
+                                                    {{ q.correct_answer || t('pages.exam_result.free_answer') }}
                                                 </template>
                                                 <template v-else-if="q.type === 'ordering'">
                                                     {{ q.options.filter(o => o.order !== undefined).sort((a,b) => a.order - b.order).map((o, i) => `${i + 1}. ${o.option_text}`).join(' → ') }}
@@ -231,7 +234,7 @@ const getCorrectOptionTexts = (options) => {
                                                           :modelValue="Array.isArray(q.user_answer) ? q.user_answer.map(String) : []" 
                                                           class="text-red-600" />
                                                 <span class="text-sm text-slate-700 flex-1">{{ opt.option_text }}</span>
-                                                <span v-if="opt.is_correct" class="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">Correct</span>
+                                                <span v-if="opt.is_correct" class="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">{{ t('pages.exam_result.correct') }}</span>
                                             </label>
                                         </div>
                                     </div>
@@ -242,17 +245,17 @@ const getCorrectOptionTexts = (options) => {
 
                     <div v-else class="text-center py-8 text-slate-400">
                         <i class="pi pi-info-circle text-3xl mb-2 block"></i>
-                        <p>Le détail des réponses n'est pas disponible pour cet examen.</p>
+                        <p>{{ t('pages.exam_result.no_detail') }}</p>
                     </div>
 
                     <Divider />
 
                     <div class="flex gap-3">
                         <Link :href="route('student.my-courses')">
-                            <Button label="Mes formations" icon="pi pi-book" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />
+                            <Button :label="t('pages.exam_result.btn_my_courses')" icon="pi pi-book" class="!bg-blue-600 hover:!bg-blue-500 !border-none !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />
                         </Link>
                         <Link :href="route('exams.learner.index')">
-                            <Button label="Tous mes examens" icon="pi pi-list" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />
+                            <Button :label="t('pages.exam_result.btn_all_exams')" icon="pi pi-list" outlined class="!border-slate-200 !text-slate-700 !rounded-xl !font-black !uppercase !tracking-widest !text-[10px] !py-3" />
                         </Link>
                     </div>
                 </div>

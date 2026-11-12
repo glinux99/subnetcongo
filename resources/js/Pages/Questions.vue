@@ -49,6 +49,9 @@ import InputIcon from 'primevue/inputicon';
 import Avatar from 'primevue/avatar';
 import Tooltip from 'primevue/tooltip';
 import Timeline from 'primevue/timeline';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // ======================================================================================
 // PROPS DEPUIS LE CONTROLLER (LARAVEL/INERTIA)
@@ -80,10 +83,10 @@ const isSaving = ref(false);
 // ======================================================================================
 // CONFIGURATION DU WORKSPACE (MENU ÉDITEUR)
 // ======================================================================================
-const editorMenu = ref([
-    { id: 'general', label: 'Énoncé & Métadonnées', description: 'Format, texte, points', icon: 'pi pi-pencil' },
-    { id: 'logic', label: 'Logique de Réponse', description: 'Options, feedback, règles', icon: 'pi pi-check-square' },
-    { id: 'audit', label: 'Audit & Versions', description: 'Historique de l\'item', icon: 'pi pi-history' }
+const editorMenu = computed(() => [
+    { id: 'general', label: t('pages.questions.menuGeneral'), description: t('pages.questions.menuGeneralDesc'), icon: 'pi pi-pencil' },
+    { id: 'logic', label: t('pages.questions.menuLogic'), description: t('pages.questions.menuLogicDesc'), icon: 'pi pi-check-square' },
+    { id: 'audit', label: t('pages.questions.menuAudit'), description: t('pages.questions.menuAuditDesc'), icon: 'pi pi-history' }
 ]);
 const activeEditorTab = ref('general');
 
@@ -209,12 +212,12 @@ const saveQuestion = () => {
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Item Sauvegardé', detail: 'La banque a été mise à jour avec succès.', life: 3000 });
+            toast.add({ severity: 'success', summary: t('pages.questions.savedSummary'), detail: t('pages.questions.savedDetail'), life: 3000 });
             lastSavedAt.value = new Date();
             questionDialog.value = false;
         },
         onError: (errors) => {
-            toast.add({ severity: 'error', summary: 'Erreur', detail: 'Vérifiez les informations saisies.', life: 5000 });
+            toast.add({ severity: 'error', summary: t('pages.questions.errorSummary'), detail: t('pages.questions.errorDetail'), life: 5000 });
             if (errors.question_text || errors.type) activeEditorTab.value = 'general';
             else activeEditorTab.value = 'logic';
         },
@@ -224,14 +227,14 @@ const saveQuestion = () => {
 
 const confirmDelete = (id) => {
     confirm.require({
-        message: 'Êtes-vous sûr de vouloir archiver cet item ? Il ne sera plus disponible pour les nouveaux examens.',
-        header: 'Archivage de l\'item',
+        message: t('pages.questions.archiveMessage'),
+        header: t('pages.questions.archiveHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => {
             router.delete(route('squestions.destroy', id), {
                 preserveScroll: true,
-                onSuccess: () => toast.add({ severity: 'warn', summary: 'Archivé', detail: 'L\'item a été archivé.', life: 3000 })
+                onSuccess: () => toast.add({ severity: 'warn', summary: t('pages.questions.archivedSummary'), detail: t('pages.questions.archivedDetail'), life: 3000 })
             });
         }
     });
@@ -240,7 +243,7 @@ const confirmDelete = (id) => {
 const duplicateQuestion = (id) => {
     router.post(route('squestions.duplicate', id), {}, {
         preserveScroll: true,
-        onSuccess: () => toast.add({ severity: 'info', summary: 'Clonage', detail: 'Copie de l\'item générée.', life: 3000 })
+        onSuccess: () => toast.add({ severity: 'info', summary: t('pages.questions.cloneSummary'), detail: t('pages.questions.cloneDetail'), life: 3000 })
     });
 };
 
@@ -290,9 +293,9 @@ const onPage = (event) => {
 // DATA VISUALIZATION (CHARTS)
 // ======================================================================================
 const chartData = computed(() => ({
-    labels: ['Facile', 'Intermédiaire', 'Avancé', 'Expert'],
+    labels: [t('pages.questions.diffEasy'), t('pages.questions.diffIntermediate'), t('pages.questions.diffAdvanced'), t('pages.questions.diffExpert')],
     datasets: [{
-        label: 'Répartition de la banque',
+        label: t('pages.questions.chartLabel'),
         data: props.statistics?.difficulty_distribution || [0, 0, 0, 0],
         backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#6366F1'],
         borderRadius: 4
@@ -308,7 +311,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
 <template>
     <AppLayout>
-        <Head title="Banque d'Items Atomiques | LMS Enterprise" />
+        <Head :title="t('pages.questions.headTitle')" />
         <ConfirmDialog />
 
   <div class="page-bg min-h-screen font-sans pb-20">
@@ -333,26 +336,26 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                     <!-- Titre Principal (Italique, gras, 2 couleurs) -->
                     <h1 class="text-3xl md:text-5xl font-black italic tracking-tighter flex flex-wrap gap-2 uppercase">
-                        <span class="text-white">Banque de</span>
-                        <span class="text-[#E92B2B]">Questions Centrale</span>
+                        <span class="text-white">{{ t('pages.questions.titlePart1') }}</span>
+                        <span class="text-[#E92B2B]">{{ t('pages.questions.titlePart2') }}</span>
                     </h1>
 
                     <!-- Sous-titre -->
                     <p class="text-slate-400 text-sm md:text-sm italic leading-relaxed">
-                        Gérez votre patrimoine d'évaluation. Ces items atomiques peuvent être réutilisés dynamiquement dans n'importe quel examen ou certification.
+                        {{ t('pages.questions.subtitle') }}
                     </p>
                 </div>
 
                 <!-- Partie Droite (Boutons) -->
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                     <Button 
-                        label="Importer (GIFT/CSV)" 
+                        :label="t('pages.questions.importButton')" 
                         icon="pi pi-upload" 
                         class="!bg-white/5 hover:!bg-white/10 !border !border-white/10 !text-white w-full sm:w-auto font-medium transition-colors shadow-none" 
                         @click="importDialog = true" 
                     />
                     <Button 
-                        label="Créer un Item" 
+                        :label="t('pages.questions.createButton')" 
                         icon="pi pi-plus" 
                         class="!bg-[#E92B2B] hover:!bg-red-700 !border-none !text-white w-full sm:w-auto font-bold shadow-lg shadow-red-900/50 transition-colors px-6" 
                         @click="openNew" 
@@ -373,7 +376,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <i class="pi pi-list text-blue-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Items</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiTotal') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.total_items || 1245 }}</p>
                 </div>
             </div>
@@ -384,7 +387,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <i class="pi pi-check-circle text-emerald-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Items Actifs</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiActive') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.active_items || 980 }}</p>
                 </div>
             </div>
@@ -395,7 +398,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <i class="pi pi-star text-amber-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Barème Moyen</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiAvgPoints') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.avg_difficulty || 1.5 }}<span class="text-lg text-slate-400 ml-1">pts</span></p>
                 </div>
             </div>
@@ -406,7 +409,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <i class="pi pi-exclamation-triangle text-red-500 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">À Réviser</h3>
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.questions.kpiReview') }}</h3>
                     <p class="text-3xl font-extrabold text-slate-900">{{ props.statistics?.needs_review || 14 }}</p>
                 </div>
             </div>
@@ -423,18 +426,18 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <IconField iconPosition="left">
                     <InputIcon class="pi pi-search text-slate-400" />
-                    <InputText v-model="serverFilters.search" placeholder="Rechercher dans l'énoncé..." class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
+                    <InputText v-model="serverFilters.search" :placeholder="t('pages.questions.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
                 </IconField>
 
                 <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
 
-                <Dropdown v-model="serverFilters.type" :options="Object.entries(props.meta.questionTypes || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" placeholder="Format" class="w-40 border-slate-200 font-medium bg-white" showClear />
-                <Dropdown v-model="serverFilters.difficulty" :options="Object.entries(props.meta.difficulties || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" placeholder="Niveau" class="w-40 border-slate-200 font-medium bg-white" showClear />
+                <Dropdown v-model="serverFilters.type" :options="Object.entries(props.meta.questionTypes || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" :placeholder="t('pages.questions.filterFormat')" class="w-40 border-slate-200 font-medium bg-white" showClear />
+                <Dropdown v-model="serverFilters.difficulty" :options="Object.entries(props.meta.difficulties || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" :placeholder="t('pages.questions.filterLevel')" class="w-40 border-slate-200 font-medium bg-white" showClear />
             </div>
 
             <div class="flex items-center gap-2">
-                <Button v-if="selectedQuestions.length > 0" icon="pi pi-trash" :label="`Archiver (${selectedQuestions.length})`" class="p-button-danger p-button-outlined shadow-sm bg-white" />
-                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="'Actualiser'" />
+                <Button v-if="selectedQuestions.length > 0" icon="pi pi-trash" :label="t('pages.questions.archiveCount', { count: selectedQuestions.length })" class="p-button-danger p-button-outlined shadow-sm bg-white" />
+                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.questions.refresh')" />
             </div>
         </div>
 
@@ -458,15 +461,15 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                         <i class="pi pi-database text-5xl text-slate-300"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Banque vide</h3>
-                    <p class="text-sm text-center text-slate-500 mb-6">Aucun item ne correspond à vos filtres actuels.</p>
-                    <Button label="Créer un item" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('pages.questions.emptyTitle') }}</h3>
+                    <p class="text-sm text-center text-slate-500 mb-6">{{ t('pages.questions.emptyHint') }}</p>
+                    <Button :label="t('pages.questions.createButton')" icon="pi pi-plus" class="p-button-primary font-bold shadow-md" @click="openNew" />
                 </div>
             </template>
 
             <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
 
-            <Column field="type" header="Format" style="width: 5rem; background-color: #f8fafc;">
+            <Column field="type" :header="t('pages.questions.colFormat')" style="width: 5rem; background-color: #f8fafc;">
                 <template #body="{ data }">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" :class="getTypeColor(data.type)" v-tooltip.top="getTypeLabel(data.type)">
                         <i :class="['text-lg', getTypeIcon(data.type)]"></i>
@@ -474,10 +477,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column field="question_text" header="Énoncé de l'Item" style="min-width: 25rem; background-color: #f8fafc;">
+            <Column field="question_text" :header="t('pages.questions.colStatement')" style="min-width: 25rem; background-color: #f8fafc;">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1 py-2">
-                        <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || 'Énoncé non défini'"></div>
+                        <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || t('pages.questions.undefinedStatement')"></div>
 
                         <!-- Aperçu des options / réponses en ligne -->
                         <div v-if="data.options && data.options.length" class="flex flex-wrap gap-1 mt-1">
@@ -492,30 +495,30 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         </div>
                         <div v-else-if="data.correct_answer" class="text-[9px] font-bold text-emerald-600 mt-1 uppercase flex items-center gap-1">
                             <i class="pi pi-key text-[10px]"></i>
-                            Réponse: {{ data.correct_answer === 'true' ? 'VRAI' : (data.correct_answer === 'false' ? 'FAUX' : data.correct_answer) }}
+                            {{ t('pages.questions.answerLabel') }} {{ data.correct_answer === 'true' ? t('pages.questions.trueLabel') : (data.correct_answer === 'false' ? t('pages.questions.falseLabel') : data.correct_answer) }}
                         </div>
 
                         <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ data.category?.name || 'Général' }}</span>
-                            <span v-if="data.attempts_count"><i class="pi pi-chart-bar mr-1"></i>{{ data.attempts_count }} pass.</span>
+                            <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ data.category?.name || t('pages.questions.generalCategory') }}</span>
+                            <span v-if="data.attempts_count"><i class="pi pi-chart-bar mr-1"></i>{{ data.attempts_count }} {{ t('pages.questions.attemptsAbbr') }}</span>
                         </div>
                     </div>
                 </template>
             </Column>
 
-            <Column field="difficulty" header="Niveau" style="background-color: #f8fafc; min-width: 8rem;">
+            <Column field="difficulty" :header="t('pages.questions.colLevel')" style="background-color: #f8fafc; min-width: 8rem;">
                 <template #body="{ data }">
                     <Tag :value="data.difficulty" :severity="getDifficultySeverity(data.difficulty)" class="text-[10px] font-bold px-2 py-1 uppercase tracking-wider" />
                 </template>
             </Column>
 
-            <Column field="points" header="Pts" style="background-color: #f8fafc; width: 6rem; text-align: center;">
+            <Column field="points" :header="t('pages.questions.colPoints')" style="background-color: #f8fafc; width: 6rem; text-align: center;">
                 <template #body="{ data }">
                     <Badge :value="data.points" severity="secondary" class="font-bold bg-slate-100 text-slate-600 border border-slate-200" />
                 </template>
             </Column>
 
-            <Column field="status" header="État" style="background-color: #f8fafc;">
+            <Column field="status" :header="t('pages.questions.colStatus')" style="background-color: #f8fafc;">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <div :class="['w-2 h-2 rounded-full', data.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300']"></div>
@@ -524,11 +527,11 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column header="Actions" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+            <Column :header="t('pages.questions.actions')" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
                 <template #body="{ data }">
                     <div class="flex justify-end gap-1">
-                        <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="'Analyse psychométrique'" @click="analyticsDialog = true" />
-                        <Button icon="pi pi-copy" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50" v-tooltip.top="'Cloner'" @click="duplicateQuestion(data.id)" />
+                        <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="t('pages.questions.tooltipAnalytics')" @click="analyticsDialog = true" />
+                        <Button icon="pi pi-copy" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50" v-tooltip.top="t('pages.questions.tooltipClone')" @click="duplicateQuestion(data.id)" />
                         <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" @click="editQuestion(data)" />
                         <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" @click="confirmDelete(data.id)" />
                     </div>
@@ -542,18 +545,18 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
     <!-- ============================================================================== -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
         <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> Répartition par Difficulté</h3>
+            <h3 class="text-base font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="pi pi-chart-bar text-blue-500"></i> {{ t('pages.questions.difficultyChartTitle') }}</h3>
             <Chart type="bar" :data="chartData" :options="chartOptions" class="h-48" />
         </div>
         <div class="bg-blue-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden border border-blue-800 flex flex-col justify-between">
             <i class="pi pi-bolt absolute -right-6 -bottom-6 text-9xl text-white/5 rotate-12"></i>
             <div class="relative z-10">
-                <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-blue-100"><i class="pi pi-sparkles text-amber-400"></i> Conseil IA Pédagogique</h3>
+                <h3 class="text-base font-bold mb-3 flex items-center gap-2 text-blue-100"><i class="pi pi-sparkles text-amber-400"></i> {{ t('pages.questions.aiTitle') }}</h3>
                 <p class="text-blue-200 text-sm leading-relaxed">
-                    Votre banque manque de questions de type "Expert" (Seulement 15%). Pour vos certifications finales, nous recommandons d'équilibrer la base avec plus d'items d'analyse complexe (ex: Format Rédaction).
+                    {{ t('pages.questions.aiText') }}
                 </p>
             </div>
-            <Button label="Générer avec l'IA" class="p-button-sm p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold mt-6 w-full hover:bg-blue-50" />
+            <Button :label="t('pages.questions.aiButton')" class="p-button-sm p-button-outlined p-button-secondary bg-white text-blue-900 border-none font-bold mt-6 w-full hover:bg-blue-50" />
         </div>
     </div>
 </div>
@@ -573,12 +576,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight">
-                            {{ form.id ? 'Éditer l\'Item #'+form.id : 'Nouvel Item Atomique' }}
+                            {{ form.id ? t('pages.questions.editTitle', { id: form.id }) : t('pages.questions.newTitle') }}
                             <Tag :value="form.status" class="text-[9px] uppercase tracking-wider px-2 py-0.5 ml-2 bg-slate-100 text-slate-600 border border-slate-200"></Tag>
                         </h2>
                         <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span>Conception de la banque</span>
-                            <span v-if="lastSavedAt" class="text-emerald-600 flex items-center gap-1"><i class="pi pi-check-circle"></i> Enregistré</span>
+                            <span>{{ t('pages.questions.bankDesign') }}</span>
+                            <span v-if="lastSavedAt" class="text-emerald-600 flex items-center gap-1"><i class="pi pi-check-circle"></i> {{ t('pages.questions.savedTag') }}</span>
                         </div>
                     </div>
                 </div>
@@ -591,7 +594,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                 <!-- SIDEBAR MENU -->
                 <div class="w-72 flex-none bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 custom-scrollbar shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
-                    <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100">Sections</div>
+                    <div class="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100">{{ t('pages.questions.sections') }}</div>
                     <div class="p-4 flex-1 space-y-2">
                         <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id"
                                 class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
@@ -614,36 +617,36 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <!-- TAB 1: ÉNONCÉ & MÉTA -->
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Classification & Énoncé</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.questions.classificationTitle') }}</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Format de question</label>
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.questions.questionFormat') }}</label>
                                         <Dropdown v-model="form.type" :options="Object.entries(props.meta.questionTypes || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" class="w-full border-slate-300" />
                                     </div>
                                     <div class="space-y-2">
-                                        <label class="block text-sm font-bold text-slate-700">Catégorie Métier</label>
-                                        <Dropdown v-model="form.category_id" :options="props.meta.categories" optionLabel="name" optionValue="id" placeholder="Sélectionnez..." class="w-full border-slate-300" />
+                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.questions.businessCategory') }}</label>
+                                        <Dropdown v-model="form.category_id" :options="props.meta.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.questions.selectEllipsis')" class="w-full border-slate-300" />
                                     </div>
                                 </div>
 
                                 <div class="space-y-2 mb-6">
-                                    <label class="block text-sm font-bold text-slate-700">Énoncé principal (Stem) <span class="text-red-500">*</span></label>
-                                    <Editor ref="editorRef" v-model="form.question_text" editorStyle="height: 200px" placeholder="Rédigez la question ici..." @load="forceEditorLoad" />
+                                    <label class="block text-sm font-bold text-slate-700">{{ t('pages.questions.stemLabel') }} <span class="text-red-500">*</span></label>
+                                    <Editor ref="editorRef" v-model="form.question_text" editorStyle="height: 200px" :placeholder="t('pages.questions.stemPlaceholder')" @load="forceEditorLoad" />
                                     <small class="text-red-500 font-bold" v-if="form.errors.question_text">{{ form.errors.question_text }}</small>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
                                     <div class="space-y-2">
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Barème (Points)</label>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.questions.pointsLabel') }}</label>
                                         <InputNumber v-model="form.points" mode="decimal" :minFractionDigits="1" class="w-full" :pt="{ input: { class: 'text-center font-bold text-blue-600' } }" />
                                     </div>
                                     <div class="space-y-2">
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Difficulté</label>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.questions.difficultyLabel') }}</label>
                                         <Dropdown v-model="form.difficulty" :options="Object.entries(props.meta.difficulties || {}).map(([k,v]) => ({label:v, value:k}))" optionLabel="label" optionValue="value" class="w-full" />
                                     </div>
                                     <div class="space-y-2">
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Statut</label>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.questions.statusLabel') }}</label>
                                         <Dropdown v-model="form.status" :options="['draft', 'published', 'under_review', 'archived']" class="w-full" />
                                     </div>
                                 </div>
@@ -654,7 +657,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <div v-show="activeEditorTab === 'logic'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                                 <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                                    <h3 class="text-lg font-bold text-slate-800">Paramétrage de la Réponse</h3>
+                                    <h3 class="text-lg font-bold text-slate-800">{{ t('pages.questions.responseSettings') }}</h3>
                                     <Tag :value="getTypeLabel(form.type)" class="bg-blue-50 text-blue-600 border border-blue-100" />
                                 </div>
 
@@ -666,50 +669,50 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                                         <div class="pt-2 flex flex-col items-center">
                                             <RadioButton :name="'opt'" :value="true" :modelValue="!!(opt.is_correct == true || opt.is_correct == 1 || opt.is_correct == '1')" @update:modelValue="toggleExclusiveCorrect(idx)" />
-                                            <span class="text-[9px] font-bold mt-1 uppercase" :class="!!(opt.is_correct == true || opt.is_correct == 1 || opt.is_correct == '1') ? 'text-emerald-500' : 'text-slate-400'">Juste</span>
+                                            <span class="text-[9px] font-bold mt-1 uppercase" :class="!!(opt.is_correct == true || opt.is_correct == 1 || opt.is_correct == '1') ? 'text-emerald-500' : 'text-slate-400'">{{ t('pages.questions.correctShort') }}</span>
                                         </div>
 
                                         <div class="flex-1 space-y-2">
-                                            <InputText v-model="opt.option_text" placeholder="Texte de l'option..." class="w-full font-bold text-slate-700 bg-white" />
-                                            <InputText v-model="opt.feedback" placeholder="Feedback spécifique si sélectionnée (Optionnel)" class="w-full text-xs text-slate-500 bg-transparent border-transparent focus:bg-white focus:border-slate-300 shadow-none" />
+                                            <InputText v-model="opt.option_text" :placeholder="t('pages.questions.optionPlaceholder')" class="w-full font-bold text-slate-700 bg-white" />
+                                            <InputText v-model="opt.feedback" :placeholder="t('pages.questions.feedbackPlaceholder')" class="w-full text-xs text-slate-500 bg-transparent border-transparent focus:bg-white focus:border-slate-300 shadow-none" />
                                         </div>
 
                                         <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded mt-1" @click="removeOption(idx)" />
                                     </div>
-                                    <Button label="Ajouter une option" icon="pi pi-plus" class="p-button-outlined p-button-secondary bg-white text-blue-600 font-bold mt-2 w-full" @click="addOption" />
+                                    <Button :label="t('pages.questions.addOption')" icon="pi pi-plus" class="p-button-outlined p-button-secondary bg-white text-blue-600 font-bold mt-2 w-full" @click="addOption" />
                                 </div>
 
                                 <!-- Vrai/Faux -->
                                 <div v-else-if="form.type === 'true_false'" class="flex justify-center py-10 bg-slate-50 rounded-xl border border-slate-200">
                                     <div class="text-center w-full max-w-sm">
-                                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">L'affirmation est-elle vraie ou fausse ?</p>
-                                        <SelectButton v-model="form.correct_answer" :options="[{label:'VRAI', value:'true'}, {label:'FAUX', value:'false'}]" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 font-black py-4 bg-white' } }" />
+                                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">{{ t('pages.questions.trueFalsePrompt') }}</p>
+                                        <SelectButton v-model="form.correct_answer" :options="[{label:t('pages.questions.trueLabel'), value:'true'}, {label:t('pages.questions.falseLabel'), value:'false'}]" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 font-black py-4 bg-white' } }" />
                                     </div>
                                 </div>
 
                                 <!-- Réponse Courte -->
                                 <div v-else-if="form.type === 'short_answer'" class="bg-amber-50 p-6 rounded-xl border border-amber-100">
-                                    <label class="block text-sm font-bold text-amber-900 mb-2 flex items-center gap-2"><i class="pi pi-pencil"></i> Réponse exacte attendue</label>
-                                    <InputText v-model="form.correct_answer" class="w-full p-4 font-mono text-sm bg-white border-amber-200 shadow-sm" placeholder="Mot-clé exact ou expression..." />
-                                    <p class="text-[10px] text-amber-700 mt-2 font-bold uppercase tracking-widest">La validation ignore la casse (Majuscules/Minuscules).</p>
+                                    <label class="block text-sm font-bold text-amber-900 mb-2 flex items-center gap-2"><i class="pi pi-pencil"></i> {{ t('pages.questions.shortAnswerLabel') }}</label>
+                                    <InputText v-model="form.correct_answer" class="w-full p-4 font-mono text-sm bg-white border-amber-200 shadow-sm" :placeholder="t('pages.questions.shortAnswerPlaceholder')" />
+                                    <p class="text-[10px] text-amber-700 mt-2 font-bold uppercase tracking-widest">{{ t('pages.questions.caseInsensitive') }}</p>
                                 </div>
 
                                 <!-- Matching -->
                                 <div v-else-if="form.type === 'matching'" class="space-y-4">
                                     <div v-for="(pair, pidx) in form.pairs" :key="pidx" class="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                        <InputText v-model="pair.key" placeholder="Élément A" class="flex-1" />
+                                        <InputText v-model="pair.key" :placeholder="t('pages.questions.elementA')" class="flex-1" />
                                         <i class="pi pi-arrows-h text-slate-400"></i>
-                                        <InputText v-model="pair.value" placeholder="Élément B correspondant" class="flex-1" />
+                                        <InputText v-model="pair.value" :placeholder="t('pages.questions.elementB')" class="flex-1" />
                                         <Button icon="pi pi-times" class="p-button-text p-button-danger p-button-sm" @click="removePair(pidx)" />
                                     </div>
-                                    <Button label="Ajouter une paire" icon="pi pi-plus" class="p-button-text font-bold text-blue-600" @click="addPair" />
+                                    <Button :label="t('pages.questions.addPair')" icon="pi pi-plus" class="p-button-text font-bold text-blue-600" @click="addPair" />
                                 </div>
 
                                 <Divider class="my-8" />
 
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-bold text-slate-700">Explication globale (Feedback après examen)</label>
-                                    <Textarea v-model="form.explanation" rows="4" class="w-full bg-slate-50 border-slate-300" placeholder="Expliquez pourquoi est-ce la bonne réponse..." />
+                                    <label class="block text-sm font-bold text-slate-700">{{ t('pages.questions.explanationLabel') }}</label>
+                                    <Textarea v-model="form.explanation" rows="4" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.questions.explanationPlaceholder')" />
                                 </div>
                             </div>
                         </div>
@@ -717,16 +720,16 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         <!-- TAB 3: AUDIT -->
                         <div v-show="activeEditorTab === 'audit'" class="space-y-8 animate-fade-in">
                             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Version & Journal</h3>
+                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.questions.versionTitle') }}</h3>
 
                                 <div class="mb-8">
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Note de mise à jour (Optionnel)</label>
-                                    <InputText v-model="form.change_summary" class="w-full bg-slate-50 border-slate-300" placeholder="Ex: Correction d'une faute d'orthographe dans l'option A..." />
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">{{ t('pages.questions.changeNote') }}</label>
+                                    <InputText v-model="form.change_summary" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.questions.changeNotePlaceholder')" />
                                 </div>
 
                                 <div v-if="!form.id" class="text-center py-10 bg-slate-50 rounded-xl border border-slate-100">
                                     <i class="pi pi-history text-3xl text-slate-300 mb-3"></i>
-                                    <p class="text-sm font-bold text-slate-500">L'historique sera disponible après la création.</p>
+                                    <p class="text-sm font-bold text-slate-500">{{ t('pages.questions.historyAfterCreate') }}</p>
                                 </div>
 
                                 <Timeline v-else :value="auditEvents" class="custom-timeline">
@@ -757,32 +760,32 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
             <!-- WORKSPACE FOOTER -->
             <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <Button label="Fermer" class="p-button-text p-button-secondary font-bold" @click="questionDialog = false" :disabled="isSaving" />
-                <Button label="Enregistrer l'Item" icon="pi pi-check" class="p-button-primary shadow-lg font-bold px-8" @click="saveQuestion" :loading="isSaving" :disabled="!isFormValid" />
+                <Button :label="t('pages.questions.close')" class="p-button-text p-button-secondary font-bold" @click="questionDialog = false" :disabled="isSaving" />
+                <Button :label="t('pages.questions.saveItem')" icon="pi pi-check" class="p-button-primary shadow-lg font-bold px-8" @click="saveQuestion" :loading="isSaving" :disabled="!isFormValid" />
             </div>
         </Dialog>
 
         <!-- ============================================================================== -->
         <!-- MODAL : ANALYSE D'ITEM (STATISTIQUES)                                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="analyticsDialog" modal header="Analyse Statistique de l'Item" class="w-full md:w-[700px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
+        <Dialog v-model:visible="analyticsDialog" modal :header="t('pages.questions.analyticsTitle')" class="w-full md:w-[700px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-6 space-y-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-blue-600 text-white p-6 rounded-xl shadow-md text-center">
-                        <div class="text-[10px] font-bold uppercase tracking-widest text-blue-200 mb-1">Indice de Difficulté (p)</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-blue-200 mb-1">{{ t('pages.questions.difficultyIndex') }}</div>
                         <div class="text-3xl font-black">0.42</div>
                     </div>
                     <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-sm text-center">
-                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Discrimination (D)</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ t('pages.questions.discriminationIndex') }}</div>
                         <div class="text-3xl font-black text-slate-800">0.74</div>
                     </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h4 class="text-sm font-bold text-slate-800 mb-4">Analyse des Distracteurs (QCM)</h4>
+                    <h4 class="text-sm font-bold text-slate-800 mb-4">{{ t('pages.questions.distractorTitle') }}</h4>
                     <div class="space-y-4">
                         <div v-for="d in 4" :key="d" class="flex items-center gap-4">
-                            <span class="w-16 text-xs font-bold text-slate-500">Option {{ ['A','B','C','D'][d-1] }}</span>
+                            <span class="w-16 text-xs font-bold text-slate-500">{{ t('pages.questions.optionLabel', { letter: ['A','B','C','D'][d-1] }) }}</span>
                             <div class="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
                                 <div :class="d === 2 ? 'bg-emerald-500' : 'bg-slate-400'" class="h-full" :style="{ width: (d === 2 ? 65 : d * 10) + '%' }"></div>
                             </div>
@@ -796,21 +799,21 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- MODAL : IMPORTATION                                                            -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="importDialog" modal header="Importer des Items (GIFT / CSV)" class="w-full md:w-[600px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
+        <Dialog v-model:visible="importDialog" modal :header="t('pages.questions.importTitle')" class="w-full md:w-[600px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
             <div class="p-8 text-center space-y-6">
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mx-auto border border-blue-100">
                     <i class="pi pi-upload text-2xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Upload de fichier</h3>
-                    <p class="text-sm text-slate-500">Glissez-déposez votre fichier format Moodle GIFT ou CSV Standard.</p>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">{{ t('pages.questions.uploadTitle') }}</h3>
+                    <p class="text-sm text-slate-500">{{ t('pages.questions.uploadDesc') }}</p>
                 </div>
 
-                <FileUpload mode="basic" name="bank_file" accept=".txt,.gift,.csv" :maxFileSize="2000000" chooseLabel="Parcourir l'ordinateur" class="p-button-outlined p-button-secondary bg-white w-full border-dashed border-2 py-4 font-bold" />
+                <FileUpload mode="basic" name="bank_file" accept=".txt,.gift,.csv" :maxFileSize="2000000" :chooseLabel="t('pages.questions.browseLabel')" class="p-button-outlined p-button-secondary bg-white w-full border-dashed border-2 py-4 font-bold" />
 
                 <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-left flex items-start gap-3">
                     <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5"></i>
-                    <p class="text-xs text-amber-800 leading-relaxed">Assurez-vous que l'encodage du fichier est en <strong>UTF-8</strong> pour préserver les accents et caractères spéciaux de vos énoncés.</p>
+                    <p class="text-xs text-amber-800 leading-relaxed" v-html="t('pages.questions.encodingWarning')"></p>
                 </div>
             </div>
         </Dialog>

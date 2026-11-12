@@ -337,6 +337,7 @@ class StudentReportController extends Controller
         $certifications = Certificate::count(); // Valeur d'exemple en attendant votre modèle
 
         return [
+            'total_students'       => (clone $baseQuery)->count(),
             'avg_score'            => $avgScore ? round($avgScore, 1) : null,
             'active_now'           => $activeNow,
             'total_certifications' => $certifications,

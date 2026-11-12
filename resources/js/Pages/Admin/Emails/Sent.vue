@@ -7,6 +7,9 @@ import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     emails: { type: Array, default: () => [] },
@@ -18,12 +21,12 @@ const props = defineProps({
 const statusFilter = ref(props.filters.status || 'all');
 const isLoading = ref(false);
 
-const statusOptions = [
-    { label: 'Tous', value: 'all' },
-    { label: 'Envoyés', value: 'sent' },
-    { label: 'Échoués', value: 'failed' },
-    { label: 'Brouillons', value: 'draft' },
-];
+const statusOptions = computed(() => [
+    { label: t('pages.admin_emails_sent.filter_all'), value: 'all' },
+    { label: t('pages.admin_emails_sent.status_sent_plural'), value: 'sent' },
+    { label: t('pages.admin_emails_sent.status_failed_plural'), value: 'failed' },
+    { label: t('pages.admin_emails_sent.status_draft_plural'), value: 'draft' },
+]);
 
 const applyFilters = () => {
     isLoading.value = true;
@@ -76,9 +79,9 @@ const getStatusBadge = (status) => {
 
 const getStatusLabel = (status) => {
     const labels = {
-        'sent': 'Envoyé',
-        'failed': 'Échoué',
-        'draft': 'Brouillon',
+        'sent': t('pages.admin_emails_sent.status_sent'),
+        'failed': t('pages.admin_emails_sent.status_failed'),
+        'draft': t('pages.admin_emails_sent.status_draft'),
     };
     return labels[status] || status;
 };
@@ -91,8 +94,8 @@ const getRecipients = (to) => {
 const confirmAction = useConfirmAction();
 const deleteEmail = (id) => {
     confirmAction({
-        message: 'Supprimer cet email ?',
-        acceptLabel: 'Supprimer',
+        message: t('pages.admin_emails_sent.confirm_delete_message'),
+        acceptLabel: t('pages.admin_emails_sent.btn_delete'),
         danger: true,
         accept: () => router.delete(route('admin.emails.sent.delete', id), {
             preserveScroll: true,
@@ -123,19 +126,19 @@ const resendEmail = (email) => {
 
 <template>
     <AppLayout>
-        <Head title="Emails envoyés" />
+        <Head :title="t('pages.admin_emails_sent.page_title')" />
         
         <div class="min-h-screen bg-slate-50 font-sans pb-20">
             <!-- PageHeader -->
             <PageHeader
-                title="Emails envoyés"
-                subtitle="Historique de vos envois d'emails"
-                badge="Envoyés"
+                :title="t('pages.admin_emails_sent.page_title')"
+                :subtitle="t('pages.admin_emails_sent.subtitle')"
+                :badge="t('pages.admin_emails_sent.badge')"
                 icon="pi-send"
                 accent="blue"
                 :actions="[
-                    { label: 'Retour', icon: 'pi-arrow-left', href: route('admin.emails.index'), variant: 'secondary' },
-                    { label: 'Actualiser', icon: 'pi-refresh', onClick: applyFilters, variant: 'secondary' }
+                    { label: t('pages.admin_emails_sent.btn_back'), icon: 'pi-arrow-left', href: route('admin.emails.index'), variant: 'secondary' },
+                    { label: t('pages.admin_emails_sent.btn_refresh'), icon: 'pi-refresh', onClick: applyFilters, variant: 'secondary' }
                 ]"
             />
 
@@ -143,25 +146,25 @@ const resendEmail = (email) => {
                 <!-- Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <PageKpi
-                        label="Total"
+                        :label="t('pages.admin_emails_sent.kpi_total')"
                         :value="stats.total ?? 0"
                         icon="pi-envelope"
                         color="blue"
                     />
                     <PageKpi
-                        label="Envoyés"
+                        :label="t('pages.admin_emails_sent.kpi_sent')"
                         :value="stats.sent ?? 0"
                         icon="pi-check-circle"
                         color="emerald"
                     />
                     <PageKpi
-                        label="Échoués"
+                        :label="t('pages.admin_emails_sent.kpi_failed')"
                         :value="stats.failed ?? 0"
                         icon="pi-times-circle"
                         color="red"
                     />
                     <PageKpi
-                        label="Brouillons"
+                        :label="t('pages.admin_emails_sent.kpi_drafts')"
                         :value="stats.drafts ?? 0"
                         icon="pi-file"
                         color="amber"
@@ -178,7 +181,7 @@ const resendEmail = (email) => {
                             optionValue="value"
                             @change="applyFilters"
                             class="!rounded-xl min-w-[200px] border-slate-200"
-                            placeholder="Filtrer par statut"
+                            :placeholder="t('pages.admin_emails_sent.filter_placeholder')"
                         />
                     </div>
                 </div>
@@ -218,7 +221,7 @@ const resendEmail = (email) => {
                                     
                                     <div class="flex items-center gap-2">
                                         <p class="text-sm text-slate-700 truncate font-medium">
-                                            {{ email.subject || '(Sans objet)' }}
+                                            {{ email.subject || t('pages.admin_emails_sent.no_subject') }}
                                         </p>
                                         <span 
                                             :class="getStatusBadge(email.status)"
@@ -229,7 +232,7 @@ const resendEmail = (email) => {
                                         <span v-if="email.sender_name || email.sender_photo" class="text-xs text-slate-400 truncate flex items-center gap-1">
                                             ·
                                             <img v-if="email.sender_photo" :src="email.sender_photo" :alt="email.sender_name" class="w-4 h-4 rounded-full object-cover" />
-                                            <template v-if="email.sender_name">par {{ email.sender_name }}</template>
+                                            <template v-if="email.sender_name">{{ t('pages.admin_emails_sent.by_sender', { name: email.sender_name }) }}</template>
                                         </span>
                                         <span v-if="email.imap" class="text-xs text-slate-400">
                                             · IMAP
@@ -244,7 +247,7 @@ const resendEmail = (email) => {
                                         icon="pi pi-refresh"
                                         class="p-1 text-slate-400 hover:text-blue-600"
                                         @click="resendEmail(email)"
-                                        title="Renvoyer"
+                                        :title="t('pages.admin_emails_sent.title_resend')"
                                         text
                                         rounded
                                     />
@@ -253,7 +256,7 @@ const resendEmail = (email) => {
                                         icon="pi pi-trash"
                                         class="p-1 text-slate-400 hover:text-red-600"
                                         @click="deleteEmail(email.id)"
-                                        title="Supprimer"
+                                        :title="t('pages.admin_emails_sent.title_delete')"
                                         text
                                         rounded
                                     />
@@ -265,8 +268,8 @@ const resendEmail = (email) => {
                     <!-- Empty state -->
                     <div v-else class="flex flex-col items-center justify-center h-64 text-slate-500">
                         <i class="pi pi-send text-6xl mb-4"></i>
-                        <p class="text-lg font-medium">Aucun email envoyé</p>
-                        <p class="text-sm">Vos emails envoyés apparaîtront ici</p>
+                        <p class="text-lg font-medium">{{ t('pages.admin_emails_sent.empty_title') }}</p>
+                        <p class="text-sm">{{ t('pages.admin_emails_sent.empty_subtitle') }}</p>
                     </div>
                 </div>
 
@@ -274,7 +277,7 @@ const resendEmail = (email) => {
                 <div class="mt-4 bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-slate-600">
-                            Page {{ pagination.page }} sur {{ pagination.total_pages }}
+                            {{ t('pages.admin_emails_sent.page_of', { page: pagination.page, total: pagination.total_pages }) }}
                         </div>
                         <div class="flex items-center gap-2">
                             <Button

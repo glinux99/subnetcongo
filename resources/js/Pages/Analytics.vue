@@ -39,6 +39,9 @@ import Knob from 'primevue/knob';
 import ScrollPanel from 'primevue/scrollpanel';
 import InputSwitch from 'primevue/inputswitch';
 import Slider from 'primevue/slider';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const toast = useToast();
 const loading = ref(true);
@@ -47,10 +50,10 @@ const dateRange = ref([new Date(new Date().setDate(new Date().getDate() - 30)), 
 
 // --- OPTIONS DE FILTRES ---
 const categories = ref([
-    { name: 'Développement Web', code: 'web' },
-    { name: 'Data Science', code: 'data' },
-    { name: 'Design UI/UX', code: 'design' },
-    { name: 'Business & Marketing', code: 'biz' }
+    { name: t('pages.analytics.catWeb'), code: 'web' },
+    { name: t('pages.analytics.catData'), code: 'data' },
+    { name: t('pages.analytics.catDesign'), code: 'design' },
+    { name: t('pages.analytics.catBiz'), code: 'biz' }
 ]);
 
 const selectedCategories = ref([]);
@@ -60,10 +63,10 @@ const reportType = ref('revenue');
 // Simulation d'une réponse API complexe pour peupler les graphiques
 
 const financialData = reactive({
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+    labels: [t('pages.analytics.m_jan'), t('pages.analytics.m_fev'), t('pages.analytics.m_mar'), t('pages.analytics.m_avr'), t('pages.analytics.m_mai'), t('pages.analytics.m_jun'), t('pages.analytics.m_jul'), t('pages.analytics.m_aou'), t('pages.analytics.m_sep'), t('pages.analytics.m_oct'), t('pages.analytics.m_nov'), t('pages.analytics.m_dec')],
     datasets: [
         {
-            label: 'Revenus 2025 ($)',
+            label: t('pages.analytics.ds_revenue'),
             data: [12500, 15800, 14200, 19500, 22000, 21000, 24500, 28900, 31000, 29500, 35000, 42000],
             fill: true,
             borderColor: '#6366F1',
@@ -71,7 +74,7 @@ const financialData = reactive({
             tension: 0.4
         },
         {
-            label: 'Objectif ($)',
+            label: t('pages.analytics.ds_goal'),
             data: [10000, 12000, 15000, 18000, 20000, 22000, 25000, 28000, 30000, 32000, 35000, 40000],
             borderColor: '#94A3B8',
             borderDash: [5, 5],
@@ -82,10 +85,10 @@ const financialData = reactive({
 });
 
 const engagementData = reactive({
-    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+    labels: [t('pages.analytics.d_lun'), t('pages.analytics.d_mar'), t('pages.analytics.d_mer'), t('pages.analytics.d_jeu'), t('pages.analytics.d_ven'), t('pages.analytics.d_sam'), t('pages.analytics.d_dim')],
     datasets: [
         {
-            label: 'Apprenants Actifs',
+            label: t('pages.analytics.ds_learners'),
             data: [450, 580, 620, 590, 410, 220, 180],
             backgroundColor: '#818CF8'
         }
@@ -93,17 +96,17 @@ const engagementData = reactive({
 });
 
 const categoryPerformance = reactive({
-    labels: ['Développement', 'Design', 'Marketing', 'Soft Skills', 'Langues', 'Gestion'],
+    labels: [t('pages.analytics.catPerf1'), t('pages.analytics.catPerf2'), t('pages.analytics.catPerf3'), t('pages.analytics.catPerf4'), t('pages.analytics.catPerf5'), t('pages.analytics.catPerf6')],
     datasets: [
         {
-            label: 'Taux de Complétion',
+            label: t('pages.analytics.ds_completion'),
             backgroundColor: 'rgba(16, 185, 129, 0.2)',
             borderColor: '#10B981',
             pointBackgroundColor: '#10B981',
             data: [85, 72, 60, 90, 55, 78]
         },
         {
-            label: 'Volume d\'inscriptions',
+            label: t('pages.analytics.ds_enrollments'),
             backgroundColor: 'rgba(99, 102, 241, 0.2)',
             borderColor: '#6366F1',
             pointBackgroundColor: '#6366F1',
@@ -113,11 +116,11 @@ const categoryPerformance = reactive({
 });
 
 const courseLeaderboard = ref([
-    { id: 1, title: 'Maîtriser Laravel 11', students: 1250, revenue: 15400, growth: 12.5, rating: 4.9, status: 'Top Seller' },
-    { id: 2, title: 'UI/UX Design Masterclass', students: 980, revenue: 12200, growth: -2.1, rating: 4.7, status: 'Stable' },
-    { id: 3, title: 'Data Analysis avec Python', students: 850, revenue: 10500, growth: 25.4, rating: 4.8, status: 'Trending' },
-    { id: 4, title: 'English for Business', students: 720, revenue: 6500, growth: 5.2, rating: 4.5, status: 'Normal' },
-    { id: 5, title: 'Vendre sur WhatsApp en RDC', students: 2400, revenue: 4500, growth: 45.8, rating: 4.9, status: 'Viral' }
+    { id: 1, title: t('pages.analytics.lt1'), students: 1250, revenue: 15400, growth: 12.5, rating: 4.9, status: 'Top Seller' },
+    { id: 2, title: t('pages.analytics.lt2'), students: 980, revenue: 12200, growth: -2.1, rating: 4.7, status: 'Stable' },
+    { id: 3, title: t('pages.analytics.lt3'), students: 850, revenue: 10500, growth: 25.4, rating: 4.8, status: 'Trending' },
+    { id: 4, title: t('pages.analytics.lt4'), students: 720, revenue: 6500, growth: 5.2, rating: 4.5, status: 'Normal' },
+    { id: 5, title: t('pages.analytics.lt5'), students: 2400, revenue: 4500, growth: 45.8, rating: 4.9, status: 'Viral' }
 ]);
 
 const demographicData = ref({
@@ -161,8 +164,19 @@ const runGlobalAudit = () => {
     loading.value = true;
     setTimeout(() => {
         loading.value = false;
-        toast.add({ severity: 'success', summary: 'Rapport Actualisé', detail: 'Données synchronisées avec le serveur de Kinshasa.', life: 3000 });
+        toast.add({ severity: 'success', summary: t('pages.analytics.toastAuditSummary'), detail: t('pages.analytics.toastAuditDetail'), life: 3000 });
     }, 1500);
+};
+
+const statusLabel = (status) => {
+    const map = {
+        'Viral': t('pages.analytics.statusViral'),
+        'Trending': t('pages.analytics.statusTrending'),
+        'Top Seller': t('pages.analytics.statusTopSeller'),
+        'Stable': t('pages.analytics.statusStable'),
+        'Normal': t('pages.analytics.statusNormal'),
+    };
+    return map[status] || status;
 };
 
 const getStatusSeverity = (status) => {
@@ -176,14 +190,31 @@ const getStatusSeverity = (status) => {
 };
 
 const exportData = (type) => {
-    toast.add({ severity: 'info', summary: 'Génération du fichier', detail: `Le rapport ${type.toUpperCase()} est en préparation...`, life: 2000 });
+    toast.add({ severity: 'info', summary: t('pages.analytics.toastExportSummary'), detail: t('pages.analytics.toastExportDetail', { type: type.toUpperCase() }), life: 2000 });
 };
 
-const exportItems = [
-    { label: 'Excel (.xlsx)', icon: 'pi pi-file-excel', command: () => exportData('excel') },
-    { label: 'PDF Report', icon: 'pi pi-file-pdf', command: () => exportData('pdf') },
-    { label: 'JSON Data', icon: 'pi pi-code', command: () => exportData('json') }
-];
+const exportItems = computed(() => [
+    { label: t('pages.analytics.exportExcel'), icon: 'pi pi-file-excel', command: () => exportData('excel') },
+    { label: t('pages.analytics.exportPdf'), icon: 'pi pi-file-pdf', command: () => exportData('pdf') },
+    { label: t('pages.analytics.exportJson'), icon: 'pi pi-code', command: () => exportData('json') }
+]);
+
+const reportTypeOptions = computed(() => [
+    { label: t('pages.analytics.reportRevenue'), value: 'revenue' },
+    { label: t('pages.analytics.reportProfit'), value: 'profit' },
+    { label: t('pages.analytics.reportEnrollments'), value: 'enrollments' }
+]);
+
+const kpis = computed(() => [
+    { label: t('pages.analytics.kpiMrr'), val: '$42,000', trend: '+18.5%', color: 'indigo', icon: 'pi-dollar' },
+    { label: t('pages.analytics.kpiActiveLearners'), val: '8,420', trend: '+5.2%', color: 'emerald', icon: 'pi-users' },
+    { label: t('pages.analytics.kpiCompletion'), val: '74.8%', trend: '+2.1%', color: 'amber', icon: 'pi-verified' },
+    { label: t('pages.analytics.kpiNewSignups'), val: '1,250', trend: '+22.4%', color: 'rose', icon: 'pi-user-plus' }
+]);
+
+const provincesList = computed(() => [
+    t('pages.analytics.provKinshasa'), t('pages.analytics.provLshi'), t('pages.analytics.provGoma'), t('pages.analytics.provOthers')
+]);
 
 onMounted(() => {
     runGlobalAudit();
@@ -192,7 +223,7 @@ onMounted(() => {
 
 <template>
     <AppLayout>
-        <Head title="Analytique Stratégique | SubnetCongo" />
+        <Head :title="t('pages.analytics.title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -209,28 +240,23 @@ onMounted(() => {
                         </div>
                         <div>
                             <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">LMS Business Intelligence</h1>
-                            <p class="text-slate-500 font-medium">Pilotage de la performance éducative en temps réel.</p>
+                            <p class="text-slate-500 font-medium">{{ t('pages.analytics.subtitle') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap gap-3 p-3 bg-white rounded-[1rem] shadow-sm border border-slate-100">
-                    <Calendar v-model="dateRange" selectionMode="range" :showIcon="true" class="w-64" placeholder="Période d'analyse" />
+                    <Calendar v-model="dateRange" selectionMode="range" :showIcon="true" class="w-64" :placeholder="t('pages.analytics.periodPlaceholder')" />
                     <Divider layout="vertical" />
-                    <Button label="Exporter" icon="pi pi-upload" class="p-button-outlined p-button-secondary rounded-xl" @click="exportMenu.toggle($event)" />
+                    <Button :label="t('pages.analytics.export')" icon="pi pi-upload" class="p-button-outlined p-button-secondary rounded-xl" @click="exportMenu.toggle($event)" />
                     <Menu ref="exportMenu" :model="exportItems" :popup="true" />
-                    <Button label="Rafraîchir" icon="pi pi-sync" class="p-button-primary shadow-xl shadow-blue-200 px-6 rounded-xl font-bold" @click="runGlobalAudit" :loading="loading" />
+                    <Button :label="t('pages.analytics.refresh')" icon="pi pi-sync" class="p-button-primary shadow-xl shadow-blue-200 px-6 rounded-xl font-bold" @click="runGlobalAudit" :loading="loading" />
                 </div>
             </header>
 
             <!-- --- SECTION 1: GLOBAL KPIs (SKELETON READY) --- -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-                <div v-for="kpi in [
-                    { label: 'Revenu Mensuel (MRR)', val: '$42,000', trend: '+18.5%', color: 'indigo', icon: 'pi-dollar' },
-                    { label: 'Apprenants Actifs', val: '8,420', trend: '+5.2%', color: 'emerald', icon: 'pi-users' },
-                    { label: 'Taux de Complétion', val: '74.8%', trend: '+2.1%', color: 'amber', icon: 'pi-verified' },
-                    { label: 'Nouveaux Inscrits', val: '1,250', trend: '+22.4%', color: 'rose', icon: 'pi-user-plus' }
-                ]" :key="kpi.label" class="bg-white p-8 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
+                <div v-for="kpi in kpis" :key="kpi.label" class="bg-white p-8 rounded-[1rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
                     <div v-if="loading"><Skeleton width="100%" height="100px" /></div>
                     <div v-else>
                         <div class="flex justify-between items-start mb-6">
@@ -245,7 +271,7 @@ onMounted(() => {
                             <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
                                 <div :class="`bg-${kpi.color}-500 h-full w-[70%]` "></div>
                             </div>
-                            <span class="text-[10px] font-bold text-slate-400 italic">vs mois dernier</span>
+                            <span class="text-[10px] font-bold text-slate-400 italic">{{ t('pages.analytics.vsLastMonth') }}</span>
                         </div>
                     </div>
                     <!-- Background Decoration -->
@@ -263,10 +289,10 @@ onMounted(() => {
                     <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 h-[500px] flex flex-col">
                         <div class="flex justify-between items-start mb-10">
                             <div>
-                                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Analyse de Croissance Financière</h2>
-                                <p class="text-sm text-slate-400 font-medium">Comparaison des revenus réels face aux objectifs fixés.</p>
+                                <h2 class="text-2xl font-black text-slate-800 tracking-tight">{{ t('pages.analytics.financialGrowth') }}</h2>
+                                <p class="text-sm text-slate-400 font-medium">{{ t('pages.analytics.financialGrowthSub') }}</p>
                             </div>
-                            <SelectButton v-model="reportType" :options="['revenue', 'profit', 'enrollments']" class="text-xs" />
+                            <SelectButton v-model="reportType" :options="reportTypeOptions" optionLabel="label" optionValue="value" class="text-xs" />
                         </div>
                         <div class="flex-1">
                             <Chart type="line" :data="financialData" :options="lineChartOptions" class="h-full" />
@@ -278,13 +304,13 @@ onMounted(() => {
                 <div class="col-span-12 lg:col-span-4">
                     <div class="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl h-[500px] flex flex-col relative overflow-hidden">
                         <div class="relative z-10 flex flex-col h-full">
-                            <h2 class="text-2xl font-black italic mb-2 tracking-tight">Répartition Géographique</h2>
-                            <p class="text-slate-400 text-xs mb-8 uppercase font-bold tracking-widest">Top Provinces (RDC)</p>
+                            <h2 class="text-2xl font-black italic mb-2 tracking-tight">{{ t('pages.analytics.geoDist') }}</h2>
+                            <p class="text-slate-400 text-xs mb-8 uppercase font-bold tracking-widest">{{ t('pages.analytics.topProvinces') }}</p>
 
                             <div class="flex-1 flex flex-col justify-center items-center">
                                 <Chart type="doughnut" :data="demographicData" :options="{ cutout: '70%', plugins: { legend: { display: false } } }" class="w-full max-w-[200px]" />
                                 <div class="mt-8 grid grid-cols-2 gap-4 w-full">
-                                    <div v-for="(prov, idx) in ['Kinshasa', 'L’shi', 'Goma', 'Autres']" :key="idx" class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                    <div v-for="(prov, idx) in provincesList" :key="idx" class="bg-white/5 p-3 rounded-xl border border-white/10">
                                         <p class="text-[10px] font-black text-slate-500 uppercase">{{ prov }}</p>
                                         <p class="text-lg font-bold">{{ [45, 20, 12, 23][idx] }}%</p>
                                     </div>
@@ -301,8 +327,8 @@ onMounted(() => {
 
                 <!-- Radar: Success Matrix -->
                 <div class="col-span-12 lg:col-span-4 bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 h-[500px]">
-                    <h2 class="text-xl font-black text-slate-800 mb-2">Matrice de Succès</h2>
-                    <p class="text-xs text-slate-400 font-bold uppercase mb-8">Performance par Catégorie</p>
+                    <h2 class="text-xl font-black text-slate-800 mb-2">{{ t('pages.analytics.successMatrix') }}</h2>
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-8">{{ t('pages.analytics.successMatrixSub') }}</p>
                     <div class="h-[320px]">
                         <Chart type="radar" :data="categoryPerformance" :options="radarOptions" class="h-full" />
                     </div>
@@ -312,14 +338,14 @@ onMounted(() => {
                 <div class="col-span-12 lg:col-span-8 bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 h-[500px]">
                     <div class="flex justify-between items-center mb-8">
                         <div>
-                            <h2 class="text-xl font-black text-slate-800">Top 5 des Formations</h2>
-                            <p class="text-xs text-slate-400">Basé sur les revenus et la satisfaction étudiant.</p>
+                            <h2 class="text-xl font-black text-slate-800">{{ t('pages.analytics.topCourses') }}</h2>
+                            <p class="text-xs text-slate-400">{{ t('pages.analytics.topCoursesSub') }}</p>
                         </div>
-                        <Button label="Voir tout" class="p-button-text p-button-sm font-bold" />
+                        <Button :label="t('pages.analytics.viewAll')" class="p-button-text p-button-sm font-bold" />
                     </div>
 
                     <DataTable :value="courseLeaderboard" class="p-datatable-sm">
-                        <Column field="title" header="Titre du Cours">
+                        <Column field="title" :header="t('pages.analytics.colCourseTitle')">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <div class="w-2 h-2 rounded-full bg-blue-500"></div>
@@ -327,7 +353,7 @@ onMounted(() => {
                                 </div>
                             </template>
                         </Column>
-                        <Column field="students" header="Élèves" sortable>
+                        <Column field="students" :header="t('pages.analytics.colStudents')" sortable>
                             <template #body="{ data }">
                                 <span class="font-mono font-bold">{{ data.students.toLocaleString() }}</span>
                             </template>
@@ -337,7 +363,7 @@ onMounted(() => {
                                 <span class="text-slate-900 font-black">${{ data.revenue.toLocaleString() }}</span>
                             </template>
                         </Column>
-                        <Column field="growth" header="Tendance">
+                        <Column field="growth" :header="t('pages.analytics.colTrend')">
                             <template #body="{ data }">
                                 <span :class="data.growth >= 0 ? 'text-red-500' : 'text-red-500'" class="font-bold">
                                     <i :class="data.growth >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="text-[10px] mr-1"></i>
@@ -345,9 +371,9 @@ onMounted(() => {
                                 </span>
                             </template>
                         </Column>
-                        <Column field="status" header="Badge">
+                        <Column field="status" :header="t('pages.analytics.colStatus')">
                             <template #body="{ data }">
-                                <Tag :value="data.status" :severity="getStatusSeverity(data.status)" class="text-[9px] uppercase font-black" />
+                                <Tag :value="statusLabel(data.status)" :severity="getStatusSeverity(data.status)" class="text-[9px] uppercase font-black" />
                             </template>
                         </Column>
                     </DataTable>
@@ -363,7 +389,7 @@ onMounted(() => {
                         <template #header>
                             <div class="flex items-center gap-2 py-2 px-4">
                                 <i class="pi pi-heart-fill text-red-400"></i>
-                                <span class="font-bold text-sm">Satisfaction & NPS</span>
+                                <span class="font-bold text-sm">{{ t('pages.analytics.tabSatisfaction') }}</span>
                             </div>
                         </template>
 
@@ -371,32 +397,32 @@ onMounted(() => {
                             <div class="lg:col-span-4 flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-[1rem] border border-slate-100">
                                 <h4 class="text-slate-400 font-black uppercase text-xs tracking-[0.2em] mb-6">Net Promoter Score</h4>
                                 <Knob v-model="value" :readonly="true" :size="150" valueTemplate="{value}%" valueColor="#6366F1" rangeColor="#E2E8F0" />
-                                <p class="mt-6 text-sm text-slate-600 font-medium">92% des apprenants de SubnetCongo recommanderaient la plateforme à leurs proches.</p>
+                                <p class="mt-6 text-sm text-slate-600 font-medium">{{ t('pages.analytics.npsText') }}</p>
                                 <Divider />
                                 <div class="flex gap-4">
                                     <div class="text-center">
                                         <p class="text-2xl font-black text-red-500">85</p>
-                                        <p class="text-[9px] uppercase font-bold text-slate-400">Promoteurs</p>
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">{{ t('pages.analytics.promoters') }}</p>
                                     </div>
                                     <div class="text-center border-x border-slate-200 px-4">
                                         <p class="text-2xl font-black text-amber-500">12</p>
-                                        <p class="text-[9px] uppercase font-bold text-slate-400">Passifs</p>
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">{{ t('pages.analytics.passives') }}</p>
                                     </div>
                                     <div class="text-center">
                                         <p class="text-2xl font-black text-red-500">3</p>
-                                        <p class="text-[9px] uppercase font-bold text-slate-400">Détracteurs</p>
+                                        <p class="text-[9px] uppercase font-bold text-slate-400">{{ t('pages.analytics.detractors') }}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="lg:col-span-8">
-                                <h3 class="text-xl font-black text-slate-800 mb-6">Engagement Hebdomadaire (Heatmap)</h3>
+                                <h3 class="text-xl font-black text-slate-800 mb-6">{{ t('pages.analytics.weeklyEngagement') }}</h3>
                                 <div class="h-[300px]">
                                     <Chart type="bar" :data="engagementData" :options="lineChartOptions" class="h-full" />
                                 </div>
                                 <div class="mt-8 flex gap-4">
-                                    <InlineMessage severity="info" class="flex-1">Pointe d'activité détectée le Mercredi entre 18h et 21h.</InlineMessage>
-                                    <InlineMessage severity="warn" class="flex-1">Baisse d'engagement le Dimanche après-midi.</InlineMessage>
+                                    <InlineMessage severity="info" class="flex-1">{{ t('pages.analytics.peakActivity') }}</InlineMessage>
+                                    <InlineMessage severity="warn" class="flex-1">{{ t('pages.analytics.engagementDrop') }}</InlineMessage>
                                 </div>
                             </div>
                         </div>
@@ -407,26 +433,26 @@ onMounted(() => {
                         <template #header>
                             <div class="flex items-center gap-2 py-2 px-4">
                                 <i class="pi pi-verified text-blue-400"></i>
-                                <span class="font-bold text-sm">Qualité Académique</span>
+                                <span class="font-bold text-sm">{{ t('pages.analytics.tabAcademic') }}</span>
                             </div>
                         </template>
                         <div class="p-10">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                                 <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
-                                    <p class="text-xs font-bold text-blue-400 uppercase mb-2">Taux de Réussite global</p>
+                                    <p class="text-xs font-bold text-blue-400 uppercase mb-2">{{ t('pages.analytics.successRate') }}</p>
                                     <h4 class="text-3xl font-black text-blue-900">88.4%</h4>
                                 </div>
                                 <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100">
-                                    <p class="text-xs font-bold text-emerald-400 uppercase mb-2">Diplômes émis (30j)</p>
+                                    <p class="text-xs font-bold text-emerald-400 uppercase mb-2">{{ t('pages.analytics.diplomasIssued') }}</p>
                                     <h4 class="text-3xl font-black text-emerald-900">142</h4>
                                 </div>
                                 <div class="p-6 bg-amber-50 rounded-xl border border-amber-100">
-                                    <p class="text-xs font-bold text-amber-400 uppercase mb-2">Temps de correction moy.</p>
+                                    <p class="text-xs font-bold text-amber-400 uppercase mb-2">{{ t('pages.analytics.avgCorrectionTime') }}</p>
                                     <h4 class="text-3xl font-black text-amber-900">4.2h</h4>
                                 </div>
                             </div>
                             <div class="bg-slate-50 p-8 rounded-[1rem] border border-slate-100">
-                                <h4 class="font-bold text-slate-800 mb-4">Distribution des scores (Examens finaux)</h4>
+                                <h4 class="font-bold text-slate-800 mb-4">{{ t('pages.analytics.scoreDistribution') }}</h4>
                                 <div class="flex items-center gap-4">
                                     <span class="text-xs font-bold text-slate-400 w-20">0-50%</span>
                                     <ProgressBar :value="5" class="flex-1" :showValue="false" />
@@ -454,15 +480,15 @@ onMounted(() => {
                 <div class="col-span-12 lg:col-span-4 bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100">
                     <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
                         <i class="pi pi-history text-blue-500"></i>
-                        Flux d'activité
+                        {{ t('pages.analytics.activityFeed') }}
                     </h2>
                     <ScrollPanel style="height: 350px">
                         <div class="space-y-6">
                             <div v-for="i in 6" :key="i" class="flex gap-4 p-4 hover:bg-slate-50 rounded-xl transition-all cursor-pointer group">
                                 <Avatar image="https://i.pravatar.cc/150?u=a" shape="circle" class="ring-2 ring-blue-50 group-hover:ring-blue-200 transition-all" />
                                 <div>
-                                    <p class="text-sm font-bold text-slate-800">Jean-Pierre K. <span class="font-normal text-slate-500">s'est inscrit à</span> UX Design</p>
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Il y a 2 minutes • Kinshasa</p>
+                                    <p class="text-sm font-bold text-slate-800">Jean-Pierre K. <span class="font-normal text-slate-500">{{ t('pages.analytics.feedEnrolledIn') }}</span> UX Design</p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">{{ t('pages.analytics.feedTimeAgo', { time: t('pages.analytics.twoMinutes'), place: 'Kinshasa' }) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -472,11 +498,11 @@ onMounted(() => {
                 <div class="col-span-12 lg:col-span-8 bg-blue-900 rounded-[3rem] p-10 text-white flex flex-col md:flex-row items-center gap-10 shadow-2xl relative overflow-hidden">
                     <div class="absolute -left-20 -top-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
                     <div class="relative z-10 space-y-4 max-w-lg">
-                        <h2 class="text-3xl font-black italic tracking-tight">Besoin d'un rapport personnalisé ?</h2>
-                        <p class="text-blue-200 text-sm leading-relaxed font-medium">L'outil d'exportation avancée vous permet de générer des rapports PDF complets incluant les revenus, le churn et les performances par province pour présentation en conseil d'administration.</p>
+                        <h2 class="text-3xl font-black italic tracking-tight">{{ t('pages.analytics.customReportTitle') }}</h2>
+                        <p class="text-blue-200 text-sm leading-relaxed font-medium">{{ t('pages.analytics.customReportText') }}</p>
                         <div class="flex gap-4 pt-4">
-                            <Button label="Générer Rapport Annuel" icon="pi pi-file-pdf" class="p-button-white p-button-raised rounded-xl px-6" />
-                            <Button label="Assistance Data" icon="pi pi-question-circle" class="p-button-text p-button-plain text-white font-bold" />
+                            <Button :label="t('pages.analytics.genAnnualReport')" icon="pi pi-file-pdf" class="p-button-white p-button-raised rounded-xl px-6" />
+                            <Button :label="t('pages.analytics.dataAssistance')" icon="pi pi-question-circle" class="p-button-text p-button-plain text-white font-bold" />
                         </div>
                     </div>
                     <div class="relative z-10 flex-1 hidden md:flex items-center justify-center">

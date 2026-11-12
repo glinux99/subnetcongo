@@ -40,16 +40,16 @@
         <!-- Actions de Navigation -->
         <div class="flex items-center gap-3">
           <div class="hidden xl:flex flex-col items-end mr-4 text-right">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Besoin d'aide ?</span>
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{{ t('layout.help_question') }}</span>
             <span :class="['text-sm font-black leading-none transition-colors', scrolled ? 'text-[#003399]' : 'text-white']">+243 997 185 989</span>
           </div>
 
           <button @click="goToClient" class="hidden md:flex items-center gap-2 px-5 py-3 text-sm font-black text-[#003399] bg-white/90 hover:bg-white rounded-lg transition-all shadow-sm">
-            <i class="pi pi-user-circle"></i> Espace Client
+            <i class="pi pi-user-circle"></i> {{ t('layout.client_area') }}
           </button>
 
           <button @click="goToLogin" class="relative group overflow-hidden bg-[#EE1C25] text-white px-8 py-4 rounded-lg font-black shadow-xl transition-all hover:scale-105 active:scale-95">
-            <span class="relative z-10 flex items-center gap-2">Académie <i class="pi pi-arrow-right"></i></span>
+            <span class="relative z-10 flex items-center gap-2">{{ t('layout.academy_btn') }} <i class="pi pi-arrow-right"></i></span>
             <div class="absolute inset-0 bg-[#003399] translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
           </button>
         </div>
@@ -114,16 +114,16 @@
         <div class="mb-6 sm:mb-16 p-4 sm:p-8 lg:p-12 rounded-xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-transparent flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
             <div class="max-w-2xl text-center sm:text-left">
                 <h2 class="text-base sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-4 leading-tight tracking-tight whitespace-nowrap sm:whitespace-normal">
-                    Restez à la pointe de la <span class="text-[#E11D48] italic">Tech en RDC.</span>
+                    {{ t('layout.footer_newsletter_title') }}
                 </h2>
                 <p class="text-slate-400 text-[10px] sm:text-lg leading-snug whitespace-nowrap sm:whitespace-normal">
-                    Rejoignez-nous : alertes Starlink &amp; bourses d'études.
+                    {{ t('layout.footer_newsletter_desc') }}
                 </p>
             </div>
             <form @submit.prevent="() => {}" class="w-full sm:w-auto flex items-center bg-[#0A0F1C] border border-white/10 rounded-xl p-1 focus-within:border-red-500/50 transition-all">
-                <input type="email" placeholder="votre@email.com" required class="bg-transparent border-none outline-none px-3 py-2 text-white w-3/4 sm:w-64 placeholder:text-slate-400 text-[11px] sm:text-sm focus:sm:w-72 transition-all duration-300" />
+                <input type="email" :placeholder="t('layout.footer_newsletter_placeholder')" required class="bg-transparent border-none outline-none px-3 py-2 text-white w-3/4 sm:w-64 placeholder:text-slate-400 text-[11px] sm:text-sm focus:sm:w-72 transition-all duration-300" />
                 <button type="submit" class="bg-[#E11D48] hover:bg-[#BE123C] text-white font-bold px-2 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all active:scale-95 whitespace-nowrap text-[11px] sm:text-sm w-1/4 sm:w-auto text-center min-h-[40px] flex items-center justify-center">
-                    S'abonner
+                    {{ t('layout.footer_subscribe') }}
                 </button>
             </form>
         </div>
@@ -137,10 +137,10 @@
                     <h1 class="text-lg sm:text-xl font-black text-white italic tracking-tighter">
                         SubNet<span class="text-[#E11D48]">Congo</span>
                     </h1>
-                    <span class="text-[8px] sm:text-[10px] text-slate-400 uppercase tracking-[0.3em]">Technologie du futur</span>
+                    <span class="text-[8px] sm:text-[10px] text-slate-400 uppercase tracking-[0.3em]">{{ t('layout.footer_technology') }}</span>
                 </div>
                 <p class="text-xs sm:text-sm leading-relaxed max-w-xs italic font-medium hidden sm:block">
-                    {{ identity.site_tagline || "Propulser l'excellence numérique au cœur de la RDC." }}
+                    {{ identity.site_tagline || t('layout.footer_default_tagline') }}
                 </p>
                 <div class="flex gap-2 sm:gap-3 mt-3 sm:mt-8">
                     <a v-for="soc in [
@@ -159,22 +159,22 @@
             <!-- Col 2: Solutions -->
             <div class="col-span-1 lg:col-span-2">
                 <h4 class="text-xs sm:text-xs font-bold uppercase tracking-[0.2em] text-white mb-2 sm:mb-8 relative inline-block">
-                    Solutions
+                    {{ t('layout.footer_solutions') }}
                     <span class="absolute -bottom-1 sm:-bottom-2 left-0 w-5 sm:w-6 h-[2px] bg-[#E11D48]"></span>
                 </h4>
                 <ul class="space-y-2.5 sm:space-y-4 text-xs sm:text-sm font-medium text-slate-300">
-                    <li v-for="item in ['Internet Satellite','Starlink Business','Fibre Optique','Audit Réseau']" :key="item" class="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:text-white transition-all duration-200 hover:translate-x-1">{{ item }}</li>
+                    <li v-for="item in solutionsList" :key="item" class="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:text-white transition-all duration-200 hover:translate-x-1">{{ item }}</li>
                 </ul>
             </div>
 
             <!-- Col 3: Académie -->
             <div class="col-span-1 lg:col-span-2">
                 <h4 class="text-xs sm:text-xs font-bold uppercase tracking-[0.2em] text-white mb-2 sm:mb-8 relative inline-block">
-                    Académie
+                    {{ t('layout.footer_academy') }}
                     <span class="absolute -bottom-1 sm:-bottom-2 left-0 w-5 sm:w-6 h-[2px] bg-[#E11D48]"></span>
                 </h4>
                 <ul class="space-y-2.5 sm:space-y-4 text-xs sm:text-sm font-medium text-slate-300">
-                    <li v-for="item in ['Catalogue Cours','Espace Étudiant','Certifications','Recrutement']" :key="item" class="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:text-white transition-all duration-200 hover:translate-x-1">{{ item }}</li>
+                    <li v-for="item in academyList" :key="item" class="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:text-white transition-all duration-200 hover:translate-x-1">{{ item }}</li>
                 </ul>
             </div>
 
@@ -203,10 +203,10 @@
 
         <!-- SECTION 3: Bottom Bar (stack on mobile) -->
         <div class="pt-4 sm:pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 px-1 text-center sm:text-left">
-            <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-slate-400 flex items-center gap-2"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {{ identity.footer_text || `© ${year} ${identity.site_name}. ALL SYSTEMS OPERATIONAL.` }} DESIGN BY LINUX99</p>
+            <p class="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-slate-400 flex items-center gap-2"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {{ identity.footer_text || `© ${year} ${identity.site_name}. ${t('layout.footer_all_systems')}` }} {{ t('layout.footer_design_by') }}</p>
             <div class="flex gap-4 sm:gap-8 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.2em] text-slate-400">
-                <Link :href="route('confidentialite')" class="hover:text-white transition-colors">Confidentialité</Link>
-                <Link :href="route('mentions-legales')" class="hover:text-white transition-colors">Mentions Légales</Link>
+                <Link :href="route('confidentialite')" class="hover:text-white transition-colors">{{ t('layout.footer_privacy') }}</Link>
+                <Link :href="route('mentions-legales')" class="hover:text-white transition-colors">{{ t('layout.footer_legal') }}</Link>
             </div>
         </div>
     </div>
@@ -218,6 +218,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 // Données globales partagées par HandleInertiaRequests (toujours présentes,
 // mais on protège contre un premier rendu où usePage() pourrait être vide).
@@ -232,19 +234,17 @@ const scrolled = ref(false);
 const isMenuOpen = ref(false);
 
 // Navigation
-const navLinks = [
-    { name: 'Accueil', href: route('landing'), icon: 'pi-home' },
-    { name: 'À Propos', href: route('about'), icon: 'pi-info-circle' },
-    { name: 'Réalisations', href: route('realizations'), icon: 'pi-info-circle' },
-    { name: 'Academy', href: route('academy'), icon: 'pi-graduation-cap' },
-    { name: 'Blog', href: route('blog'), icon: 'pi-book' },
-    { name: 'Contact', href: route('contact'), icon: 'pi-envelope' }
-];
+const navLinks = computed(() => [
+    { name: t('layout.nav_home'), href: route('landing'), icon: 'pi-home' },
+    { name: t('layout.nav_about'), href: route('about'), icon: 'pi-info-circle' },
+    { name: t('layout.nav_realizations'), href: route('realizations'), icon: 'pi-info-circle' },
+    { name: t('layout.nav_academy'), href: route('academy'), icon: 'pi-graduation-cap' },
+    { name: t('layout.nav_blog'), href: route('blog'), icon: 'pi-book' },
+    { name: t('layout.nav_contact'), href: route('contact'), icon: 'pi-envelope' }
+]);
 
-const footerLinks = [
-    { title: "Solutions", links: ["Internet Satellite", "Starlink Business", "Fibre Optique", "Audit Réseau"] },
-    { title: "Académie", links: ["Catalogue Cours", "Espace Étudiant", "Certifications", "Recrutement"] }
-];
+const solutionsList = computed(() => [t('layout.solutions_sat'), t('layout.solutions_starlink'), t('layout.solutions_fiber'), t('layout.solutions_audit')]);
+const academyList = computed(() => [t('layout.academy_catalog'), t('layout.academy_student'), t('layout.academy_certifications'), t('layout.academy_recruitment')]);
 
 // Logique
 const handleScroll = () => { scrolled.value = window.scrollY > 50; };

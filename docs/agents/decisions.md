@@ -121,3 +121,16 @@ merci de les ajouter au dÃ©pÃ´t (ex. `.devin/skills/<nom>/SKILL.md`) pour qu'ils
 
 Voir la section Â« Checklist Â» de la PR (build Vite, `php -l`, Pest comparÃ© Ã  `main`, recherche
 `alert(`/`confirm(`, vÃ©rification des routes Ziggy utilisÃ©es).
+
+## 2026-11-11 — Vérification email obligatoire + BCC global + Accès examens conditionnels
+
+**Demandes** (Daniel) : ? confirmation par email lors de l''inscription ; ? tout email envoyé par la plateforme copie genesiskikimba@gmail.com ET joackimmuholu@gmail.com (Katya) ; ? un inscrit qui n''a pas suivi le cours ne peut pas prendre l''examen (sinon « 28 examens en attente » pour un nouveau compte).
+
+**Décisions**
+- **Vérif email = MustVerifyEmail Laravel standard** (URI signée, throttle 6/min, `verified` middleware). Les 24 comptes prod existants sont backfillés via migration unique (`email_verified_at = now()`). Nouveaux comptes : aucun accès app tant que le lien n''est pas cliqué. Override de `User::sendEmailVerificationNotification()` ? envoi via EmailTemplateService + template `email_verification` (déjà seedé) — charte SubnetCongo.
+- **BCC global = listener `MessageSending`** (event Laravel 10) qui ajoute `config('mail.default_bcc')` (2 adresses codées en clair dans config/mail.php — pas de secret, déjà publiées comme emails de contact publiquement). Toute voie d''envoi (Mailable direct, EmailTemplateService, Verifyable) passe par là ; les BCC explicites par template (EmailTemplate::bcc_emails) sont préservés.
+- **Accès examens conditionné par progression cours = 100 %** : scope `Exam::eligibleFor($user)` ; utilisé pour : page Mes examens (learner.index), show/start/submit, badge `exams_pending` du menu sidebar. Pas d''accès avant la fin du cours = seuls les cours terminés (progress_percent = 100) débloquent leurs examens.
+
+**Conséquences**
+- Les 24 comptes prod gardent l''accès (backfill), les nouveaux doivent confirmer.
+- Suppression logique de la liste « 28 examens en attente » fictive ; un compte sans cours terminé voit 0 examen + message d''aide.

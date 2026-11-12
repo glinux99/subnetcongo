@@ -13,6 +13,9 @@ import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     sessions: Object,
@@ -103,9 +106,9 @@ const copyShareLink = async (id) => {
     try {
         const { data } = await window.axios.post(route('live-sessions.share-link', id));
         await navigator.clipboard.writeText(data.url);
-        toast.add({ severity: 'success', summary: 'Lien sécurisé copié', detail: data.url, life: 3000 });
+        toast.add({ severity: 'success', summary: t('pages.live_sessions.link_copied'), detail: data.url, life: 3000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de générer le lien de partage.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('pages.live_sessions.error'), detail: t('pages.live_sessions.link_error'), life: 3000 });
     }
 };
 
@@ -149,19 +152,19 @@ const startSession = async (id) => {
 const confirmAction = useConfirmAction();
 const cancelSession = (id) => {
     confirmAction({
-        header: 'Annuler la session',
-        message: 'Annuler cette session en direct ? Les participants inscrits ne pourront plus la rejoindre.',
-        acceptLabel: 'Annuler la session',
-        rejectLabel: 'Conserver',
+        header: t('pages.live_sessions.cancel_header'),
+        message: t('pages.live_sessions.cancel_message'),
+        acceptLabel: t('pages.live_sessions.cancel_accept'),
+        rejectLabel: t('pages.live_sessions.keep'),
         danger: true,
         accept: () => router.post(route('live-sessions.cancel', id)),
     });
 };
 const destroySession = (id) => {
     confirmAction({
-        header: 'Supprimer la session',
-        message: 'Supprimer définitivement cette session ? Cette action est irréversible.',
-        acceptLabel: 'Supprimer',
+        header: t('pages.live_sessions.delete_header'),
+        message: t('pages.live_sessions.delete_message'),
+        acceptLabel: t('pages.live_sessions.delete_accept'),
         danger: true,
         accept: () => router.delete(route('live-sessions.destroy', id)),
     });
@@ -171,7 +174,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
 
 <template>
     <AppLayout>
-        <Head title="Sessions en direct" />
+        <Head :title="t('pages.live_sessions.head_title')" />
         
         <div class="page-bg min-h-screen font-sans pb-20 bg-slate-50">
             
@@ -190,25 +193,25 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             </span>
 
                             <h1 class="text-4xl md:text-5xl font-black italic tracking-tighter uppercase flex flex-wrap gap-1 md:gap-2 mb-2 leading-none">
-                                <span class="text-white">SESSIONS</span>
-                                <span class="text-[#FF3B3B]">EN DIRECT</span>
+                                <span class="text-white">{{ t('pages.live_sessions.title_part1') }}</span>
+                                <span class="text-[#FF3B3B]">{{ t('pages.live_sessions.title_part2') }}</span>
                             </h1>
 
                             <p class="text-slate-400 text-xs md:text-sm italic leading-relaxed">
-                                Planifiez et gérez vos classes virtuelles Zoom, Meet, BBB ou Jitsi. Diffusez vos cours en temps réel et centralisez l'ensemble de vos replays.
+                                {{ t('pages.live_sessions.subtitle') }}
                             </p>
                         </div>
 
                         <!-- Partie Droite (Boutons) -->
                         <div class="flex items-center gap-3 shrink-0 mt-4 lg:mt-0 w-full lg:w-auto">
                             <Button 
-                                label="Actualiser" 
+                                :label="t('pages.live_sessions.btn_refresh')" 
                                 icon="pi pi-sync" 
                                 @click="search_"
                                 class="!bg-transparent hover:!bg-white/10 !border !border-slate-600 !text-white w-full sm:w-auto text-sm font-medium transition-colors" 
                             />
                             <Button 
-                                label="Planifier une session" 
+                                :label="t('pages.live_sessions.btn_schedule')" 
                                 icon="pi pi-plus" 
                                 @click="showCreate = true"
                                 class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white w-full sm:w-auto text-sm font-bold shadow-lg shadow-red-900/50 transition-colors" 
@@ -226,7 +229,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             <i class="pi pi-bolt text-red-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">En direct</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_live') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.live_now ?? 0 }}</div>
                         </div>
                     </div>
@@ -237,7 +240,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             <i class="pi pi-calendar text-blue-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Planifiées aujourd'hui</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_scheduled_today') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.scheduled_today ?? 0 }}</div>
                         </div>
                     </div>
@@ -248,7 +251,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             <i class="pi pi-users text-emerald-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Audience Moyenne</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_avg_attendance') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.avg_attendance ?? 0 }}</div>
                         </div>
                     </div>
@@ -259,7 +262,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             <i class="pi pi-server text-amber-500 text-sm"></i>
                         </div>
                         <div>
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Stockage Replays</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.live_sessions.kpi_storage') }}</div>
                             <div class="text-2xl font-black text-slate-800 leading-none">{{ kpis?.storage_used ?? '0 B' }}</div>
                         </div>
                     </div>
@@ -274,16 +277,16 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     <div class="flex flex-wrap items-center gap-3 mb-6">
                         <IconField iconPosition="left" class="flex-1 min-w-[200px]">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="search" placeholder="Rechercher une session..." class="w-full" @keyup.enter="search_" />
+                            <InputText v-model="search" :placeholder="t('pages.live_sessions.search_placeholder')" class="w-full" @keyup.enter="search_" />
                         </IconField>
-                        <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" placeholder="Fournisseur" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
-                        <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" placeholder="Statut" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
-                        <Button label="Filtrer" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
+                        <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" :placeholder="t('pages.live_sessions.filter_provider')" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
+                        <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" :placeholder="t('pages.live_sessions.filter_status')" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
+                        <Button :label="t('pages.live_sessions.btn_filter')" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
                     </div>
 
                     <!-- DataTable -->
                     <DataTable :value="sessions?.data ?? []" stripedRows paginator :rows="15" :totalRecords="sessions?.total ?? 0" :lazy="true" responsiveLayout="scroll" class="text-sm p-datatable-custom border-t border-slate-100 pt-4">
-                        <Column field="title" header="Titre" sortable>
+                        <Column field="title" :header="t('pages.live_sessions.col_title')" sortable>
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <div :class="['w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm shadow-sm', providerColor(data.provider)]">
@@ -299,59 +302,59 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                                 </div>
                             </template>
                         </Column>
-                        <Column field="course.title" header="Cours lié">
+                        <Column field="course.title" :header="t('pages.live_sessions.col_course')">
                             <template #body="{ data }">
                                 <span class="font-medium text-slate-600">{{ data.course?.title ?? '—' }}</span>
                             </template>
                         </Column>
-                        <Column field="instructor.name" header="Instructeur">
+                        <Column field="instructor.name" :header="t('pages.live_sessions.col_instructor')">
                             <template #body="{ data }">
                                 <span class="font-bold text-slate-700">{{ data.instructor?.name ?? '—' }}</span>
                             </template>
                         </Column>
-                        <Column field="start_at" header="Démarrage" sortable>
+                        <Column field="start_at" :header="t('pages.live_sessions.col_start')" sortable>
                             <template #body="{ data }">
                                 <span class="text-slate-500 font-medium">{{ formatDate(data.start_at) }}</span>
                             </template>
                         </Column>
-                        <Column field="duration" header="Durée">
+                        <Column field="duration" :header="t('pages.live_sessions.col_duration')">
                             <template #body="{ data }">
                                 <span class="font-mono text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded">{{ data.duration ?? '—' }} min</span>
                             </template>
                         </Column>
-                        <Column header="Participants">
+                        <Column :header="t('pages.live_sessions.col_participants')">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-1">
-                                    <span class="text-xs font-bold text-slate-700"><i class="pi pi-users text-[10px] mr-1"></i>{{ data.attendances_count ?? 0 }} présent(s)</span>
-                                    <span class="text-[10px] text-slate-400">{{ data.invited_count ?? 0 }} invité(s)</span>
-                                    <Tag v-if="data.pending_requests" :value="data.pending_requests + ' demande(s)'" severity="warn" class="text-[9px] w-fit" />
+                                    <span class="text-xs font-bold text-slate-700"><i class="pi pi-users text-[10px] mr-1"></i>{{ t('pages.live_sessions.attendees_count', { count: data.attendances_count ?? 0 }) }}</span>
+                                    <span class="text-[10px] text-slate-400">{{ t('pages.live_sessions.guests_count', { count: data.invited_count ?? 0 }) }}</span>
+                                    <Tag v-if="data.pending_requests" :value="t('pages.live_sessions.requests_count', { count: data.pending_requests })" severity="warn" class="text-[9px] w-fit" />
                                 </div>
                             </template>
                         </Column>
-                        <Column field="status" header="Statut">
+                        <Column field="status" :header="t('pages.live_sessions.col_status')">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-1">
                                     <Tag :value="data.status" :severity="statusSeverity(data.status)" class="text-[10px] font-bold uppercase tracking-wider px-2" />
-                                    <Tag v-if="data.is_public_session" value="Publique" severity="info" class="text-[9px] w-fit" />
+                                    <Tag v-if="data.is_public_session" :value="t('pages.live_sessions.tag_public')" severity="info" class="text-[9px] w-fit" />
                                 </div>
                             </template>
                         </Column>
-                        <Column header="Actions" :exportable="false" alignFrozen="right">
+                        <Column :header="t('pages.live_sessions.col_actions')" :exportable="false" alignFrozen="right">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1 justify-end">
-                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-play" rounded text severity="success" @click="startSession(data.id)" v-tooltip.top="'Démarrer la session'" />
+                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-play" rounded text severity="success" @click="startSession(data.id)" v-tooltip.top="t('pages.live_sessions.tip_start')" />
                                     <Link v-if="data.status !== 'Ended' && data.status !== 'Cancelled'" :href="route('live-sessions.join', data.uuid)">
-                                        <Button icon="pi pi-video" rounded text severity="danger" v-tooltip.top="'Rejoindre la salle'" />
+                                        <Button icon="pi pi-video" rounded text severity="danger" v-tooltip.top="t('pages.live_sessions.tip_join')" />
                                     </Link>
-                                    <Button icon="pi pi-envelope" rounded text severity="help" @click="openInvite(data)" v-tooltip.top="'Inviter / visibilité'" />
-                                    <Button v-if="data.pending_requests" icon="pi pi-user-plus" rounded text severity="warn" @click="openRequests(data)" v-tooltip.top="'Demandes d\'accès'" />
-                                    <Button icon="pi pi-link" rounded text severity="secondary" @click="copyShareLink(data.id)" v-tooltip.top="'Copier le lien de partage'" />
-                                    <Button icon="pi pi-sync" rounded text severity="info" @click="syncRecordings(data.id)" v-tooltip.top="'Sync replays'" />
+                                    <Button icon="pi pi-envelope" rounded text severity="help" @click="openInvite(data)" v-tooltip.top="t('pages.live_sessions.tip_invite')" />
+                                    <Button v-if="data.pending_requests" icon="pi pi-user-plus" rounded text severity="warn" @click="openRequests(data)" v-tooltip.top="t('pages.live_sessions.tip_requests')" />
+                                    <Button icon="pi pi-link" rounded text severity="secondary" @click="copyShareLink(data.id)" v-tooltip.top="t('pages.live_sessions.tip_copy_link')" />
+                                    <Button icon="pi pi-sync" rounded text severity="info" @click="syncRecordings(data.id)" v-tooltip.top="t('pages.live_sessions.tip_sync')" />
                                     <Link :href="route('live-sessions.report', data.uuid)">
-                                        <Button icon="pi pi-chart-bar" rounded text severity="secondary" v-tooltip.top="'Rapport de présence'" />
+                                        <Button icon="pi pi-chart-bar" rounded text severity="secondary" v-tooltip.top="t('pages.live_sessions.tip_report')" />
                                     </Link>
-                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-times" rounded text severity="warn" @click="cancelSession(data.id)" v-tooltip.top="'Annuler'" />
-                                    <Button icon="pi pi-trash" rounded text severity="danger" @click="destroySession(data.id)" v-tooltip.top="'Supprimer'" />
+                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-times" rounded text severity="warn" @click="cancelSession(data.id)" v-tooltip.top="t('pages.live_sessions.tip_cancel')" />
+                                    <Button icon="pi pi-trash" rounded text severity="danger" @click="destroySession(data.id)" v-tooltip.top="t('pages.live_sessions.tip_delete')" />
                                 </div>
                             </template>
                         </Column>
@@ -360,8 +363,8 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                                 <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 mb-4 shadow-inner">
                                     <i class="pi pi-video text-2xl text-slate-300"></i>
                                 </div>
-                                <h3 class="text-lg font-bold text-slate-700 mb-1">Aucune session planifiée</h3>
-                                <p class="text-sm text-slate-500">Cliquez sur "Planifier une session" en haut à droite pour commencer.</p>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">{{ t('pages.live_sessions.empty_title') }}</h3>
+                                <p class="text-sm text-slate-500">{{ t('pages.live_sessions.empty_hint') }}</p>
                             </div>
                         </template>
                     </DataTable>
@@ -372,69 +375,69 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
         <!-- ============================================================================== -->
         <!-- MODAL : PLANIFIER UNE SESSION                                                  -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="showCreate" modal header="Planifier une classe virtuelle" :style="{ width: '600px' }" class="!rounded-2xl" :pt="{ header: { class: 'border-b border-slate-100 pb-4' }, content: { class: 'pt-4' } }">
+        <Dialog v-model:visible="showCreate" modal :header="t('pages.live_sessions.modal_create_title')" :style="{ width: '600px' }" class="!rounded-2xl" :pt="{ header: { class: 'border-b border-slate-100 pb-4' }, content: { class: 'pt-4' } }">
             
             <div class="space-y-5">
                 <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Titre de la session <span class="text-red-500">*</span></label>
-                    <InputText v-model="form.title" class="w-full !rounded-xl border-slate-300" placeholder="Ex: Masterclass Cybersécurité - Semaine 4" />
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_title') }} <span class="text-red-500">*</span></label>
+                    <InputText v-model="form.title" class="w-full !rounded-xl border-slate-300" :placeholder="t('pages.live_sessions.field_title_placeholder')" />
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Cours rattaché</label>
-                        <Select v-model="form.course_id" :options="courses" optionLabel="title" optionValue="id" placeholder="Sélectionner..." class="w-full !rounded-xl border-slate-300" />
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_course') }}</label>
+                        <Select v-model="form.course_id" :options="courses" optionLabel="title" optionValue="id" :placeholder="t('pages.live_sessions.select_placeholder')" class="w-full !rounded-xl border-slate-300" />
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Instructeur</label>
-                        <Select v-model="form.instructor_id" :options="instructors" optionLabel="name" optionValue="id" placeholder="Sélectionner..." class="w-full !rounded-xl border-slate-300" />
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_instructor') }}</label>
+                        <Select v-model="form.instructor_id" :options="instructors" optionLabel="name" optionValue="id" :placeholder="t('pages.live_sessions.select_placeholder')" class="w-full !rounded-xl border-slate-300" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Date et Heure de début <span class="text-red-500">*</span></label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_start') }} <span class="text-red-500">*</span></label>
                         <!-- Utilisation de input HTML5 natif stylisé Tailwind pour le datetime -->
                         <input v-model="form.start_at" type="datetime-local" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-shadow" />
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Durée prévue (min)</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_duration') }}</label>
                         <InputText v-model="form.duration" type="number" class="w-full !rounded-xl border-slate-300" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Plateforme Visio</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_provider') }}</label>
                         <Select v-model="form.provider" :options="providers" optionLabel="label" optionValue="value" class="w-full !rounded-xl border-slate-300 bg-white" :optionDisabled="p => !isProviderConfigured(p.value)">
                             <template #option="slotProps">
                                 <div class="flex items-center justify-between gap-2 w-full">
                                     <span :class="{'text-slate-400': !isProviderConfigured(slotProps.option.value)}" class="font-bold">{{ slotProps.option.label }}</span>
-                                    <Tag v-if="!isProviderConfigured(slotProps.option.value)" value="Inactif" severity="warning" class="!text-[8px] !py-0 !px-1 uppercase" />
+                                    <Tag v-if="!isProviderConfigured(slotProps.option.value)" :value="t('pages.live_sessions.provider_inactive')" severity="warning" class="!text-[8px] !py-0 !px-1 uppercase" />
                                 </div>
                             </template>
                         </Select>
-                        <p v-if="!configuredProviders.length" class="text-[10px] text-red-500 mt-1.5 font-bold">Aucun fournisseur vidéo n'est configuré.</p>
+                        <p v-if="!configuredProviders.length" class="text-[10px] text-red-500 mt-1.5 font-bold">{{ t('pages.live_sessions.no_provider') }}</p>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Max Participants</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_max_participants') }}</label>
                         <InputText v-model="form.max_participants" type="number" class="w-full !rounded-xl border-slate-300 bg-white" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Code d'accès (Optionnel)</label>
-                    <InputText v-model="form.passcode" class="w-full !rounded-xl border-slate-300" placeholder="Laissez vide pour générer automatiquement" />
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_passcode') }}</label>
+                    <InputText v-model="form.passcode" class="w-full !rounded-xl border-slate-300" :placeholder="t('pages.live_sessions.field_passcode_placeholder')" />
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Visibilité</label>
-                        <Select v-model="form.visibility" :options="[{ label: 'Privée (cours)', value: 'private' }, { label: 'Publique (webinaire)', value: 'public' }]"
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_visibility') }}</label>
+                        <Select v-model="form.visibility" :options="[{ label: t('pages.live_sessions.vis_private'), value: 'private' }, { label: t('pages.live_sessions.vis_public'), value: 'public' }]"
                                 optionLabel="label" optionValue="value" class="w-full" />
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">E-mails invités (optionnel)</label>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_invited_emails') }}</label>
                         <InputText v-model="form.invited_emails" class="w-full !rounded-xl border-slate-300" placeholder="a@b.com, c@d.com" />
                     </div>
                 </div>
@@ -442,38 +445,38 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
 
             <template #footer>
                 <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 w-full">
-                    <Button label="Annuler" text @click="showCreate = false" class="!text-slate-500 font-bold" />
-                    <Button :label="submitting ? 'Création en cours...' : 'Générer la session'" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
+                    <Button :label="t('pages.live_sessions.btn_cancel')" text @click="showCreate = false" class="!text-slate-500 font-bold" />
+                    <Button :label="submitting ? t('pages.live_sessions.btn_creating') : t('pages.live_sessions.btn_create')" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
                 </div>
             </template>
         </Dialog>
 
         <!-- MODAL : INVITER / VISIBILITÉ -->
-        <Dialog v-model:visible="showInvite" modal header="Inviter & visibilité" :style="{ width: '520px', maxWidth: '95vw' }" class="!rounded-2xl">
+        <Dialog v-model:visible="showInvite" modal :header="t('pages.live_sessions.modal_invite_title')" :style="{ width: '520px', maxWidth: '95vw' }" class="!rounded-2xl">
             <div class="space-y-4 pt-2">
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Visibilité de la session</label>
-                    <Select v-model="inviteVisibility" :options="[{ label: 'Privée (cours / sur autorisation)', value: 'private' }, { label: 'Publique (webinaire)', value: 'public' }]"
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ t('pages.live_sessions.field_visibility') }}</label>
+                    <Select v-model="inviteVisibility" :options="[{ label: t('pages.live_sessions.vis_private_long'), value: 'private' }, { label: t('pages.live_sessions.vis_public'), value: 'public' }]"
                             optionLabel="label" optionValue="value" class="w-full" />
-                    <p class="text-[11px] text-slate-500 mt-1">Une session publique apparaît sur /sessions-en-direct et peut être rejointe après connexion.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">{{ t('pages.live_sessions.vis_public_hint') }}</p>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">E-mails invités</label>
-                    <textarea v-model="inviteEmails" rows="4" placeholder="email1@exemple.com, email2@exemple.com"
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ t('pages.live_sessions.field_invited_emails') }}</label>
+                    <textarea v-model="inviteEmails" rows="4" :placeholder="t('pages.live_sessions.invite_placeholder')"
                               class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700"></textarea>
-                    <p class="text-[11px] text-slate-500 mt-1">Les personnes dont l'e-mail est listé peuvent rejoindre sans validation.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">{{ t('pages.live_sessions.invite_hint') }}</p>
                 </div>
             </div>
             <template #footer>
                 <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 w-full">
-                    <Button label="Annuler" text @click="showInvite = false" />
-                    <Button label="Enregistrer" icon="pi pi-check" :loading="inviteSubmitting" @click="submitInvite" />
+                    <Button :label="t('pages.live_sessions.btn_cancel')" text @click="showInvite = false" />
+                    <Button :label="t('pages.live_sessions.btn_save')" icon="pi pi-check" :loading="inviteSubmitting" @click="submitInvite" />
                 </div>
             </template>
         </Dialog>
 
         <!-- MODAL : DEMANDES D'ACCÈS -->
-        <Dialog v-model:visible="showRequests" modal header="Demandes d'accès" :style="{ width: '560px', maxWidth: '95vw' }" class="!rounded-2xl">
+        <Dialog v-model:visible="showRequests" modal :header="t('pages.live_sessions.modal_requests_title')" :style="{ width: '560px', maxWidth: '95vw' }" class="!rounded-2xl">
             <div class="pt-2">
                 <p class="text-sm text-slate-600 mb-3">{{ requestsTarget?.title }}</p>
                 <div v-if="(requestsTarget?.join_requests ?? []).length" class="space-y-2 max-h-[360px] overflow-auto">
@@ -485,16 +488,16 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                             <p class="text-sm font-bold text-slate-800 truncate">{{ r.name }}</p>
                             <p class="text-[11px] text-slate-500 truncate">{{ r.email }}</p>
                         </div>
-                        <Tag v-if="r.status === 'pending'" value="En attente" severity="warn" class="text-[9px]" />
-                        <Tag v-else-if="r.status === 'approved'" value="Approuvée" severity="success" class="text-[9px]" />
-                        <Tag v-else value="Refusée" severity="danger" class="text-[9px]" />
+                        <Tag v-if="r.status === 'pending'" :value="t('pages.live_sessions.req_pending')" severity="warn" class="text-[9px]" />
+                        <Tag v-else-if="r.status === 'approved'" :value="t('pages.live_sessions.req_approved')" severity="success" class="text-[9px]" />
+                        <Tag v-else :value="t('pages.live_sessions.req_rejected')" severity="danger" class="text-[9px]" />
                         <div v-if="r.status === 'pending'" class="flex gap-1">
-                            <Button icon="pi pi-check" rounded text severity="success" v-tooltip.top="'Approuver'" @click="decideRequest(requestsTarget, r.user_id, 'approve')" />
-                            <Button icon="pi pi-times" rounded text severity="danger" v-tooltip.top="'Refuser'" @click="decideRequest(requestsTarget, r.user_id, 'reject')" />
+                            <Button icon="pi pi-check" rounded text severity="success" v-tooltip.top="t('pages.live_sessions.tip_approve')" @click="decideRequest(requestsTarget, r.user_id, 'approve')" />
+                            <Button icon="pi pi-times" rounded text severity="danger" v-tooltip.top="t('pages.live_sessions.tip_reject')" @click="decideRequest(requestsTarget, r.user_id, 'reject')" />
                         </div>
                     </div>
                 </div>
-                <p v-else class="text-sm text-slate-400 text-center py-8">Aucune demande d'accès.</p>
+                <p v-else class="text-sm text-slate-400 text-center py-8">{{ t('pages.live_sessions.no_requests') }}</p>
             </div>
         </Dialog>
     </AppLayout>

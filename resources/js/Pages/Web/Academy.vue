@@ -9,6 +9,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -29,10 +31,10 @@ const sort = ref(props.filters.sort || 'newest');
 const isFiltering = ref(false);
 
 const sortOptions = [
-    { label: 'Plus récents', value: 'newest' },
-    { label: 'Prix croissant', value: 'price_asc' },
-    { label: 'Prix décroissant', value: 'price_desc' },
-    { label: 'Titre A → Z', value: 'title' },
+    { label: t('public.academy.sort_newest'), value: 'newest' },
+    { label: t('public.academy.sort_price_asc'), value: 'price_asc' },
+    { label: t('public.academy.sort_price_desc'), value: 'price_desc' },
+    { label: t('public.academy.sort_title'), value: 'title' },
 ];
 
 const applyFilters = () => {
@@ -70,7 +72,7 @@ const courseDuration = (course) => {
     const m = mins % 60;
     return h ? `${h}h${m ? ` ${m}min` : ''}` : `${m}min`;
 };
-const levelLabel = (course) => props.levels?.[course.level] || course.level || 'Tous niveaux';
+const levelLabel = (course) => props.levels?.[course.level] || course.level || t('public.academy.all_levels_fallback');
 const totalCourses = computed(() => props.courses?.total ?? props.courses?.data?.length ?? 0);
 
 // Pills catégories rapides (mêmes valeurs que le select)
@@ -82,18 +84,18 @@ const pickCategory = (slug) => {
 
 // Stats de la page
 const academyStats = computed(() => [
-    { value: totalCourses.value, label: 'Formations publiées', icon: 'pi-book', color: '#2563EB' },
-    { value: (props.categories || []).length, label: 'Domaines couverts', icon: 'pi-tags', color: '#E1251B' },
-    { value: Object.keys(props.levels || {}).filter(k => k !== 'all').length, label: 'Niveaux de progression', icon: 'pi-signal', color: '#10B981' },
-    { value: '100%', label: 'Accès depuis partout', icon: 'pi-globe', color: '#F59E0B' },
+    { value: totalCourses.value, label: t('public.academy.stat_courses'), icon: 'pi-book', color: '#2563EB' },
+    { value: (props.categories || []).length, label: t('public.academy.stat_domains'), icon: 'pi-tags', color: '#E1251B' },
+    { value: Object.keys(props.levels || {}).filter(k => k !== 'all').length, label: t('public.academy.stat_levels'), icon: 'pi-signal', color: '#10B981' },
+    { value: '100%', label: t('public.academy.stat_anywhere'), icon: 'pi-globe', color: '#F59E0B' },
 ]);
 
 // Section "Pourquoi nous choisir"
 const whyUs = [
-    { icon: 'pi-verified', title: 'Certifications reconnues', desc: 'Des cursus alignés sur les standards internationaux : Cisco, AWS, CompTIA et plus.' },
-    { icon: 'pi-desktop', title: 'Labs pratiques inclus', desc: 'Chaque formation alterne théorie et exercices réels sur des environnements simulés.' },
-    { icon: 'pi-clock', title: 'Rythme flexible', desc: 'Accédez aux contenus 24/7, avancez à votre rythme avec un suivi de progression détaillé.' },
-    { icon: 'pi-users', title: 'Communauté d\'experts', desc: 'Des instructeurs certifiés et un support réactif pour répondre à vos questions.' },
+    { icon: 'pi-verified', title: t('public.academy.why_certified'), desc: t('public.academy.why_certified_desc') },
+    { icon: 'pi-desktop', title: t('public.academy.why_labs'), desc: t('public.academy.why_labs_desc') },
+    { icon: 'pi-clock', title: t('public.academy.why_flexible'), desc: t('public.academy.why_flexible_desc') },
+    { icon: 'pi-users', title: t('public.academy.why_community'), desc: t('public.academy.why_community_desc') },
 ];
 
 // ============================================================================
@@ -117,8 +119,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 </script>
 
 <template>
-    <Head :title="`Académie - ${identity.site_name || 'SubnetCongo'}`">
-        <meta name="description" content="Catalogue complet des formations SubnetCongo : réseaux, cybersécurité, cloud et systèmes.">
+    <Head :title="`${t('public.academy.head_title')} - ${identity.site_name || 'SubnetCongo'}`">
+        <meta name="description" :content="t('public.academy.head_desc')">
     </Head>
 
     <AppLayout>
@@ -140,18 +142,18 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="max-w-3xl space-y-6">
                     <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white reveal-on-scroll">
                         <span class="w-6 h-1 bg-[#2563EB] rounded-full"></span>
-                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">Académie IT</span>
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-200">{{ t('public.academy.pill_academy') }}</span>
                     </div>
 
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight reveal-on-scroll delay-100">
-                        Catalogue des <br />
+                        {{ t('public.academy.hero_title_1') }} <br />
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-400 italic">
-                            formations
+                            {{ t('public.academy.hero_title_2') }}
                         </span>
                     </h1>
 
                     <p class="text-lg sm:text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-red-500 pl-5 reveal-on-scroll delay-200">
-                        {{ totalCourses }} cours publiés par nos experts — du CCNA à l'architecture cloud.
+                        {{ t('public.academy.hero_subtitle', { count: totalCourses }) }}
                     </p>
                 </div>
             </div>
@@ -184,7 +186,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                         <!-- Recherche -->
                         <div class="md:col-span-5 relative">
                             <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input v-model="search" @keyup.enter="applyFilters" type="search" placeholder="Rechercher un cours, un sujet..."
+                            <input v-model="search" @keyup.enter="applyFilters" type="search" :placeholder="t('public.academy.search_placeholder')"
                                 class="w-full pl-11 pr-4 py-3.5 bg-[#F4F6F9] border-none rounded-xl text-sm font-medium text-[#0B1221] focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" />
                         </div>
 
@@ -193,7 +195,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <i class="pi pi-folder absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             <select v-model="category" @change="applyFilters"
                                 class="w-full pl-11 pr-4 py-3.5 bg-[#F4F6F9] border-none rounded-xl text-sm font-bold text-[#0B1221] focus:ring-2 focus:ring-[#2563EB] outline-none transition-all appearance-none cursor-pointer">
-                                <option value="">Toutes les catégories</option>
+                                <option value="">{{ t('public.academy.all_categories') }}</option>
                                 <option v-for="c in categories" :key="c.id" :value="c.slug">{{ c.name }}</option>
                             </select>
                         </div>
@@ -204,11 +206,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                                 <i class="pi pi-signal absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                 <select v-model="level" @change="applyFilters"
                                     class="w-full pl-11 pr-4 py-3.5 bg-[#F4F6F9] border-none rounded-xl text-sm font-bold text-[#0B1221] focus:ring-2 focus:ring-[#2563EB] outline-none transition-all appearance-none cursor-pointer">
-                                    <option value="">Tous niveaux</option>
+                                    <option value="">{{ t('public.academy.all_levels') }}</option>
                                     <option v-for="(label, value) in levels" :key="value" :value="value">{{ label }}</option>
                                 </select>
                             </div>
-                            <button @click="resetFilters" class="px-5 py-3.5 bg-[#0B1221] hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-colors flex items-center gap-2" title="Réinitialiser">
+                            <button @click="resetFilters" class="px-5 py-3.5 bg-[#0B1221] hover:bg-slate-800 text-white rounded-xl font-bold text-sm transition-colors flex items-center gap-2" :title="t('public.academy.reset')">
                                 <i class="pi pi-filter-slash"></i>
                             </button>
                         </div>
@@ -217,11 +219,11 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <!-- Compteur + tri -->
                     <div class="mt-5 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <p class="text-xs font-bold uppercase tracking-widest text-slate-400">
-                            <span class="text-[#2563EB]">{{ totalCourses }}</span> formation{{ totalCourses > 1 ? 's' : '' }} trouvée{{ totalCourses > 1 ? 's' : '' }}
+                            <span class="text-[#2563EB]">{{ totalCourses }}</span> {{ t('public.academy.found') }}
                         </p>
                         <div class="flex items-center gap-3">
                             <label class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                <i class="pi pi-sort-alt text-[#2563EB]"></i> Trier par
+                                <i class="pi pi-sort-alt text-[#2563EB]"></i> {{ t('public.academy.sort_by') }}
                             </label>
                             <select v-model="sort" @change="applyFilters"
                                 class="px-4 py-2.5 bg-[#F4F6F9] border-none rounded-xl text-sm font-bold text-[#0B1221] focus:ring-2 focus:ring-[#2563EB] outline-none transition-all appearance-none cursor-pointer">
@@ -235,7 +237,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                         <button @click="pickCategory('')"
                             class="relative px-4 py-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-300"
                             :class="!category ? 'text-white' : 'text-slate-600 hover:text-slate-900 bg-[#F4F6F9]'">
-                            <span class="relative z-10">Tous</span>
+                            <span class="relative z-10">{{ t('public.academy.all_levels_short') }}</span>
                             <div v-if="!category" class="absolute inset-0 bg-[#0B1221] rounded-lg shadow z-0"></div>
                         </button>
                         <button v-for="c in quickCategories" :key="c.id" @click="pickCategory(c.slug)"
@@ -268,12 +270,12 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
                             <!-- Badge "Nouveau" (haut gauche) -->
                             <div v-if="isNew(course)" class="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-amber-500 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
-                                <i class="pi pi-bolt text-[10px]"></i> Nouveau
+                                <i class="pi pi-bolt text-[10px]"></i> {{ t('public.academy.badge_new') }}
                             </div>
 
                             <!-- Badge prix (haut droite) -->
                             <div v-if="isFree(course)" class="absolute top-4 right-4 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
-                                <i class="pi pi-gift text-[10px]"></i> Gratuit
+                                <i class="pi pi-gift text-[10px]"></i> {{ t('public.academy.badge_free') }}
                             </div>
                             <div v-else class="absolute top-4 right-4 bg-[#0B1221]/90 backdrop-blur text-white text-[11px] font-black px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
                                 <template v-if="hasPromo(course)">
@@ -285,7 +287,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
                             <!-- Badge catégorie (bas gauche) -->
                             <div class="absolute bottom-4 left-4 bg-[#2563EB] text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-md shadow-md">
-                                {{ course.category?.name || 'FORMATION' }}
+                                {{ course.category?.name || t('public.academy.badge_course') }}
                             </div>
                         </div>
 
@@ -294,7 +296,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <!-- Auteur -->
                             <div class="flex items-center gap-2.5 mb-3">
                                 <img :src="`${DEFAULT_AVATAR}${course.instructor?.name || 'Expert'}`" class="w-6 h-6 rounded-full object-cover border border-slate-200" :alt="course.instructor?.name" />
-                                <span class="text-xs text-slate-500 font-bold uppercase">Par {{ course.instructor?.name || 'Expert IT' }}</span>
+                                <span class="text-xs text-slate-500 font-bold uppercase">{{ t('public.academy.by_author') }} {{ course.instructor?.name || t('public.academy.author_fallback') }}</span>
                             </div>
 
                             <!-- Titre -->
@@ -317,7 +319,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             <!-- Action Button -->
                             <div class="w-full mt-auto">
                                 <div class="w-full bg-[#0B1221] group-hover:bg-[#2563EB] text-white text-sm font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm shadow-slate-900/10">
-                                    Détails du cours <i class="pi pi-arrow-right"></i>
+                                    {{ t('public.academy.course_details') }} <i class="pi pi-arrow-right"></i>
                                 </div>
                             </div>
                         </div>
@@ -329,8 +331,8 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                     <div class="w-20 h-20 bg-[#F4F6F9] rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="pi pi-search text-3xl text-slate-300"></i>
                     </div>
-                    <p class="text-lg font-bold text-slate-600">Aucun cours trouvé{{ search ? ` pour "${search}"` : '' }}</p>
-                    <button @click="resetFilters" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">Réinitialiser les filtres</button>
+                    <p class="text-lg font-bold text-slate-600">{{ t('public.academy.empty_found') }}{{ search ? ` ("${search}")` : '' }}</p>
+                    <button @click="resetFilters" class="mt-4 text-[#2563EB] font-bold hover:underline text-sm">{{ t('public.academy.empty_reset') }}</button>
                 </div>
 
                 <!-- Pagination -->
@@ -350,9 +352,9 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                 <div class="text-center max-w-3xl mx-auto mb-12 reveal-on-scroll">
                     <div class="inline-flex items-center gap-2 mb-2 justify-center">
                         <span class="w-6 h-1 bg-red-600 rounded-full"></span>
-                        <span class="font-bold uppercase tracking-widest text-xs text-red-600">La différence SubnetCongo</span>
+                        <span class="font-bold uppercase tracking-widest text-xs text-red-600">{{ t('public.academy.why_title') }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-[#0B1221] tracking-tighter">Pourquoi apprendre avec nous ?</h2>
+                    <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-[#0B1221] tracking-tighter">{{ t('public.academy.why_sub') }}</h2>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -372,14 +374,14 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         <!-- ================================================================== -->
         <section class="py-20 bg-white border-t border-slate-100 text-center">
             <div class="max-w-[800px] mx-auto px-4 reveal-on-scroll">
-                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">Vous ne trouvez pas votre formation ?</h2>
-                <p class="text-lg text-slate-500 mb-10">Contactez-nous : nous créons des parcours sur mesure pour les entreprises.</p>
+                <h2 class="text-4xl md:text-5xl font-black text-[#0B1221] tracking-tight mb-6">{{ t('public.academy.cta_missing') }}</h2>
+                <p class="text-lg text-slate-500 mb-10">{{ t('public.academy.cta_missing_sub') }}</p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link :href="route('contact')" class="w-full sm:w-auto px-10 py-4 bg-[#2563EB] text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 text-base">
-                        Demander un devis
+                        {{ t('public.academy.cta_quote') }}
                     </Link>
                     <Link :href="route('about')" class="w-full sm:w-auto px-10 py-4 bg-[#F4F6F9] text-[#0B1221] font-bold rounded-xl hover:bg-slate-200 transition-colors text-base">
-                        Découvrir SubnetCongo
+                        {{ t('public.academy.cta_discover') }}
                     </Link>
                 </div>
             </div>
