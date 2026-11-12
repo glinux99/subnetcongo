@@ -1,6 +1,14 @@
 <script setup>
+/**
+ * Role/Create — Dialogue de création de rôle (design system SubnetCongo).
+ * Conservé pour compatibilité ; la gestion CRUD principale se fait dans Role/Index.vue.
+ */
 import { useForm } from "@inertiajs/vue3";
-import { watchEffect, reactive } from "vue";
+import { watchEffect, computed } from "vue";
+import SncDialog from '@/Components/SncDialog.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     show: Boolean,
@@ -9,10 +17,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close"]);
-
-const data = reactive({
-    multipleSelect: false,
-});
 
 const form = useForm({
     name: "",
@@ -38,63 +42,66 @@ watchEffect(() => {
     }
 });
 
-const selectAll = (event) => {
-    if (event.target.checked === false) {
-        form.permissions = [];
-    } else {
-        form.permissions = [];
-        props.permissions.forEach((permission) => {
-            form.permissions.push(permission.id);
-        });
-    }
-};
-const select = () => {
-    if (props.permissions.length == form.permissions.length) {
-        data.multipleSelect = true;
-    } else {
-        data.multipleSelect = false;
-    }
+const allSelected = computed(() =>
+    props.permissions.length > 0 && form.permissions.length === props.permissions.length
+);
+
+const toggleAll = () => {
+    form.permissions = allSelected.value ? [] : props.permissions.map(p => p.id);
 };
 
+const onDialogUpdate = (value) => {
+    if (!value) emit("close");
+};
 </script>
 
 <template>
-    <Dialog v-model:visible="props.show" position="center" modal :header="'Add ' + props.title" :style="{ width: '50rem' }" :closable="false">
-        <form @submit.prevent="create">
-            <div class="flex flex-col gap-4">
-                <div class="flex flex-col gap-2">
-                    <label for="name">Name</label>
-                    <InputText id="name" v-model="form.name" class="flex-auto" autocomplete="off" placeholder="Name" />    
-                    <small v-if="form.errors.name" class="text-red-500">{{ form.errors.name }}</small>  
+    <SncDialog
+        :visible="props.show"
+        :title="t('pages.roles.dialog_create_title')"
+        :subtitle="t('pages.roles.dialog_subtitle')"
+        icon="pi-plus"
+        icon-class="from-blue-500 to-indigo-600"
+        width="760px"
+        @update:visible="onDialogUpdate"
+    >
+        <form id="role-create-form" @submit.prevent="create">
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label for="name" class="text-[10px] font-black uppercase text-slate-500 tracking-widest">{{ t('pages.roles.field_role_name') }}</label>
+                    <InputText id="name" v-model="form.name" class="w-full rounded-xl border-slate-300 font-bold p-3" :placeholder="t('pages.roles.field_role_name_placeholder')" autocomplete="off" autofocus />
+                    <small v-if="form.errors.name" class="text-red-500 font-bold">{{ form.errors.name }}</small>
                 </div>
-                <div class="flex flex-col">
-                    <label for="permissions">Permissions</label>
 
-                    <div class="flex justify-start items-center space-x-2 mt-2">
-                        
-                        <Checkbox v-model="data.multipleSelect" @change="selectAll" inputId="check_all" :binary="true"  />
-                        <label for="check_all" class="ml-2"> Check All </label>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest">{{ t('pages.roles.field_permissions') }}</label>
+                        <Button :label="allSelected ? t('pages.roles.btn_uncheck_all') : t('pages.roles.btn_check_all')" icon="pi pi-check-square" text severity="secondary" size="small" class="!text-[10px] !font-black !uppercase !tracking-widest" @click="toggleAll" />
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-                        <div
-                            class="flex items-center justify-start space-x-2"
-                            v-for="(permission, index) in props.permissions"
-                            :key="index"
-                        >
-                            <Checkbox v-model="form.permissions" @change="select" :inputId="'permission_' + permission.id" :value="permission.id"   />
-                            <label :for="'permission_' + permission.id" class="ml-2"> {{ permission.name }} </label>
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 max-h-[320px] overflow-y-auto custom-scrollbar">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div
+                                v-for="permission in props.permissions"
+                                :key="permission.id"
+                                class="flex items-center gap-2 p-2 rounded-xl border transition-all cursor-pointer select-none"
+                                :class="form.permissions.includes(permission.id) ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200 hover:border-slate-300'"
+                                @click="form.permissions.includes(permission.id) ? form.permissions = form.permissions.filter(id => id !== permission.id) : form.permissions.push(permission.id)"
+                            >
+                                <Checkbox v-model="form.permissions" :inputId="'permission_' + permission.id" :value="permission.id" @click.stop />
+                                <label :for="'permission_' + permission.id" class="text-xs font-bold text-slate-700 cursor-pointer">{{ permission.name }}</label>
+                            </div>
                         </div>
                     </div>
 
-                    <small v-if="form.errors.permissions" class="text-red-500">{{ form.errors.permissions }}</small>  
-
+                    <small v-if="form.errors.permissions" class="text-red-500 font-bold">{{ form.errors.permissions }}</small>
                 </div>
-                <div class="flex justify-end gap-2">
-                    <Button type="button" label="Cancel" severity="secondary" @click="emit('close')"></Button>
-                    <Button type="submit" label="Save"></Button>
-                </div> 
             </div>
         </form>
-    </Dialog>
+
+        <template #footer>
+            <Button :label="t('pages.roles.btn_cancel')" icon="pi pi-times" text severity="secondary" @click="emit('close')" />
+            <Button type="submit" form="role-create-form" :label="t('pages.roles.btn_create_role')" icon="pi pi-check" severity="primary" class="px-8 font-black" :loading="form.processing" />
+        </template>
+    </SncDialog>
 </template>

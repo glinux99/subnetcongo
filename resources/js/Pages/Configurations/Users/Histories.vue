@@ -15,7 +15,7 @@ import { useToast } from "primevue/usetoast";
 import { FilterMatchMode } from '@primevue/core/api';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     logins: Object,
@@ -44,7 +44,7 @@ const getDeviceType = (isMobile, isTablet, isDesktop) => {
 };
 
 const formatDate = (value) => {
-    return new Date(value).toLocaleString('fr-FR', {
+    return new Date(value).toLocaleString(locale.value, {
         day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
     });

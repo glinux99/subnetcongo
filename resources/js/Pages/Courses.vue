@@ -19,10 +19,11 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount, nextTick } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 
@@ -43,7 +44,6 @@ import SelectButton from 'primevue/selectbutton';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import Editor from 'primevue/editor';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -60,7 +60,7 @@ import Tooltip from 'primevue/tooltip';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // ======================================================================================
 // PROPS INERTIA
@@ -87,7 +87,7 @@ const props = defineProps({
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const selectedCourses = ref([]);
 
@@ -446,12 +446,11 @@ const saveCourse = (action = 'save') => {
 
 // Actions de masse et suppressions
 const confirmArchive = (id) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.archiveCourseMessage'),
         header: t('pages.courses.archiveCourseHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
-        rejectClass: 'p-button-secondary p-button-text',
+        danger: true,
         acceptLabel: t('pages.courses.archiveAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -464,11 +463,10 @@ const confirmArchive = (id) => {
 };
 
 const confirmBulkArchive = () => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.bulkArchiveMessage', { n: selectedCourses.value.length }),
         header: t('pages.courses.bulkArchiveHeader'),
         icon: 'pi pi-box',
-        acceptClass: 'p-button-warning',
         acceptLabel: t('pages.courses.archiveAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -487,11 +485,10 @@ const confirmBulkArchive = () => {
 };
 
 const confirmBulkRestore = () => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.bulkRestoreMessage', { n: selectedCourses.value.length }),
         header: t('pages.courses.bulkRestoreHeader'),
         icon: 'pi pi-undo',
-        acceptClass: 'p-button-success',
         acceptLabel: t('pages.courses.restoreAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -510,11 +507,10 @@ const confirmBulkRestore = () => {
 };
 
 const cloneCourse = (course) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.cloneMessage', { title: course.title }),
         header: t('pages.courses.cloneHeader'),
         icon: 'pi pi-copy',
-        acceptClass: 'p-button-info',
         acceptLabel: t('pages.courses.cloneAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -528,11 +524,10 @@ const cloneCourse = (course) => {
 };
 
 const restoreCourse = (courseId) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.restoreCourseMessage'),
         header: t('pages.courses.restoreCourseHeader'),
         icon: 'pi pi-undo',
-        acceptClass: 'p-button-success',
         acceptLabel: t('pages.courses.restoreAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -545,11 +540,11 @@ const restoreCourse = (courseId) => {
 };
 
 const confirmPurge = (course) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.purgeMessage', { title: course.title }),
         header: t('pages.courses.purgeHeader'),
         icon: 'pi pi-ban',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.courses.purgeAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -565,11 +560,11 @@ const confirmPurge = (course) => {
 };
 
 const confirmBulkPurge = () => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.bulkPurgeMessage', { n: selectedCourses.value.length }),
         header: t('pages.courses.bulkPurgeHeader'),
         icon: 'pi pi-ban',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.courses.bulkPurgeAcceptLabel'),
         rejectLabel: t('pages.courses.cancel'),
         accept: () => {
@@ -676,11 +671,11 @@ const onDocumentSelect = (event, sectionIndex, blockIndex) => {
 };
 
 const removeSection = (index) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.removeModuleMessage'),
         header: t('pages.courses.removeModuleHeader'),
         icon: 'pi pi-trash',
-        acceptClass: 'p-button-danger',
+        danger: true,
         accept: () => courseForm.sections.splice(index, 1)
     });
 };
@@ -771,7 +766,7 @@ const formatCurrency = (value) => {
 
 const formatDate = (date) => {
     if (!date) return '';
-    return new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(date));
+    return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(date));
 };
 
 const getStatusBadgeDef = (status) => {
@@ -912,11 +907,11 @@ const replaceFile = (index) => {
 const confirmRemoveResource = (index) => {
     const res = courseForm.resources[index];
     
-    confirm.require({
+    confirmAction({
         message: t('pages.courses.resourceDeleteMessage', { title: res.title || t('pages.courses.resourceUntitled') }),
         header: t('pages.courses.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         accept: () => {
             removeResource(index);
             toast.add({ severity: 'info', summary: t('pages.courses.deletedSummary'), detail: t('pages.courses.resourceRemovedDetail'), life: 3000 });
@@ -980,7 +975,6 @@ onBeforeUnmount(() => {
     <AppLayout>
         <Head :title="t('pages.courses.headTitle')" />
         <Toast position="top-right" group="tc" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -2303,8 +2297,8 @@ onBeforeUnmount(() => {
         <!-- ============================================================================== -->
         <!-- DIALOG CRÉATION DE CATÉGORIE (TAXONOMIE)                                       -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="categoryDialog" :header="t('pages.courses.createCategoryHeader')" :modal="true" :style="{ width: '500px' }" :draggable="false" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="bg-slate-50 p-0" headerClass="bg-white border-b border-slate-100 px-6 py-4">
-            <div class="p-6 space-y-6">
+        <SncDialog v-model:visible="categoryDialog" :title="t('pages.courses.createCategoryHeader')" icon="pi-tags" width="500px">
+            <div class="space-y-6">
                 <!-- Message info -->
                 <Message severity="info" :closable="false" class="m-0 border border-blue-100 bg-blue-50 text-blue-800">
                     {{ t('pages.courses.categoryInfoMessage') }}
@@ -2342,25 +2336,17 @@ onBeforeUnmount(() => {
             </div>
 
             <template #footer>
-                <div class="flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
-                    <Button :label="t('pages.courses.cancel')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
-                    <Button :label="t('pages.courses.createCategoryButton')" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
-                </div>
+                <Button :label="t('pages.courses.cancel')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
+                <Button :label="t('pages.courses.createCategoryButton')" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- ============================================================================== -->
         <!-- DIALOG ANALYTICS (INSIGHTS)                                                    -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="analyticsDialog" modal :style="{ width: '90vw', maxWidth: '600px' }" class="rounded-2xl overflow-hidden" contentClass="p-0 bg-slate-50">
-            <template #header>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 shadow-sm border border-blue-200"><i class="pi pi-chart-line text-lg"></i></div>
-                    <span class="font-black text-xl text-slate-800">{{ t('pages.courses.analyticsTitle') }}</span>
-                </div>
-            </template>
+        <SncDialog v-model:visible="analyticsDialog" :title="t('pages.courses.analyticsTitle')" icon="pi-chart-line" width="600px">
 
-            <div class="p-6 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div class="space-y-8">
 
                 <!-- Graphe de revenus -->
                 <div>
@@ -2413,11 +2399,9 @@ onBeforeUnmount(() => {
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-end p-4 bg-white border-t border-slate-100">
-                    <Button :label="t('pages.courses.closeButton')" class="p-button-secondary p-button-text font-bold" @click="analyticsDialog = false" />
-                </div>
+                <Button :label="t('pages.courses.closeButton')" class="p-button-secondary p-button-text font-bold" @click="analyticsDialog = false" />
             </template>
-        </Dialog>
+        </SncDialog>
 
     </AppLayout>
 </template>

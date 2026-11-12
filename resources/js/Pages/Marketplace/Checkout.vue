@@ -2,7 +2,11 @@
 import { ref, computed, watch } from 'vue';
 import { router, Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
@@ -55,9 +59,9 @@ const selectedCountry = computed(() => props.countries?.find(c => c.value === fo
 const formatLocal = (amount) => {
     const currency = props.currency ?? 'USD';
     try {
-        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
+        return new Intl.NumberFormat(locale.value, { style: 'currency', currency }).format(amount);
     } catch (_) {
-        return `${props.symbol ?? '$'} ${Number(amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `${props.symbol ?? '$'} ${Number(amount).toLocaleString(locale.value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 };
 
@@ -108,29 +112,19 @@ const requestAdminValidation = () => {
 
 <template>
     <AppLayout>
-        <Head title="Paiement" />
+        <Head :title="t('marketplace.checkout')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px]"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[80px]"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[1100px] mx-auto relative z-10 flex items-center gap-5">
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 border border-white/10">
-                        <i class="pi pi-credit-card text-white text-3xl"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3 mb-1 flex-wrap">
-                            <h1 class="text-3xl font-black text-white tracking-tight">Finaliser la commande</h1>
-                            <Tag value="SSL" class="!bg-emerald-500/20 !text-emerald-300 !border !border-emerald-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
-                        </div>
-                        <p class="text-slate-400 font-medium text-sm">Choisissez votre mode de paiement préféré.</p>
-                    </div>
-                </div>
-            </div>
+            <PageHeader
+                :title="t('marketplace.checkout.title')"
+                :subtitle="t('marketplace.checkout.subtitle')"
+                :badge="t('marketplace.checkout.badge')"
+                icon="pi-credit-card"
+                accent="emerald"
+            />
 
-            <div class="max-w-[1100px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
+            <div class="page-container page-section">
                 <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
                     <div v-if="formError" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-bold flex items-center gap-2">
                         <i class="pi pi-exclamation-triangle"></i>{{ formError }}

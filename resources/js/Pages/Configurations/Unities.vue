@@ -2,6 +2,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from "@/sakai/layout/AppLayout.vue";
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from 'vue-i18n';
@@ -132,31 +134,19 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
         <Head :title="t('unities.title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                 <div class="flex items-center gap-4">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-[1rem] bg-primary-600 shadow-xl shadow-primary-200">
-                        <i class="pi pi-box text-2xl text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ t('unities.title') }}</h1>
-                    <p class="text-slate-500 font-medium">{{ t('unities.subtitle') }}</p>
-                    </div>
-                </div>
-                <Button :label="t('unities.actions.add')" icon="pi pi-plus"  raised @click="openNew" class="rounded-xl px-6 h-14 font-black" />
-            </div>
+            <PageHeader
+                :title="t('unities.title')"
+                :subtitle="t('unities.subtitle')"
+                icon="pi-box"
+                accent="emerald"
+                :badge="t('unities.header_badge')"
+                :actions="[{ label: t('unities.actions.add'), icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
+            />
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <div class="flex flex-col gap-2">
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t('common.total', { item: 'Unités' }) }}</span>
-                        <div class="flex items-center justify-between">
-                            <span class="text-3xl font-black text-slate-800">{{ stats.total }}</span>
-                            <div class="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                                <i class="pi pi-database text-slate-400"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="page-container page-section">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <PageKpi :label="t('common.total', { item: 'Unités' })" :value="stats.total" icon="pi-database" color="slate" />
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
@@ -209,6 +199,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
                         </template>
                     </Column>
                 </DataTable>
+            </div>
             </div>
         </div>
 

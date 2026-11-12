@@ -6,6 +6,9 @@ import { ref, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import debounce from 'lodash/debounce';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 // PrimeVue
 import Card from 'primevue/card';
@@ -44,25 +47,25 @@ const confirm = useConfirm();
 const isDetail = computed(() => props.view === 'detail' && props.ticket);
 
 // ─── STATUTS & PRIORITÉS ───
-const statuses = [
-    { label: 'Nouveau',        value: 'new',         severity: 'info' },
-    { label: 'Ouvert',         value: 'open',        severity: 'warning' },
-    { label: 'En cours',       value: 'in_progress', severity: 'help' },
-    { label: 'En attente',     value: 'pending',     severity: 'secondary' },
-    { label: 'Résolu',         value: 'resolved',    severity: 'success' },
-    { label: 'Fermé',          value: 'closed',      severity: 'secondary' },
-];
+const statuses = computed(() => [
+    { label: t('pages.support.status_new'),        value: 'new',         severity: 'info' },
+    { label: t('pages.support.status_open'),       value: 'open',        severity: 'warning' },
+    { label: t('pages.support.status_in_progress'), value: 'in_progress', severity: 'help' },
+    { label: t('pages.support.status_pending'),    value: 'pending',     severity: 'secondary' },
+    { label: t('pages.support.status_resolved'),   value: 'resolved',    severity: 'success' },
+    { label: t('pages.support.status_closed'),     value: 'closed',      severity: 'secondary' },
+]);
 
-const priorities = [
-    { label: 'Urgente', value: 'urgent', color: 'rose' },
-    { label: 'Haute',   value: 'high',   color: 'orange' },
-    { label: 'Moyenne', value: 'medium', color: 'amber' },
-    { label: 'Basse',   value: 'low',    color: 'emerald' },
-];
+const priorities = computed(() => [
+    { label: t('pages.support.priority_urgent'), value: 'urgent', color: 'rose' },
+    { label: t('pages.support.priority_high'),   value: 'high',   color: 'orange' },
+    { label: t('pages.support.priority_medium'), value: 'medium', color: 'amber' },
+    { label: t('pages.support.priority_low'),    value: 'low',    color: 'emerald' },
+]);
 
-const statusLabel = (v) => statuses.find(s => s.value === v)?.label || v;
-const statusSeverity = (v) => statuses.find(s => s.value === v)?.severity || 'info';
-const priorityLabel = (v) => priorities.find(p => p.value === v)?.label || v;
+const statusLabel = (v) => statuses.value.find(s => s.value === v)?.label || v;
+const statusSeverity = (v) => statuses.value.find(s => s.value === v)?.severity || 'info';
+const priorityLabel = (v) => priorities.value.find(p => p.value === v)?.label || v;
 const prioritySeverity = (v) => ({ urgent: 'danger', high: 'warning', medium: 'info', low: 'success' }[v] || 'secondary');
 const categoryColor = (slug) => props.categories.find(c => c.slug === slug)?.color || '#64748b';
 
@@ -70,10 +73,10 @@ const timeAgo = (date) => {
     if (!date) return '';
     const d = new Date(date);
     const diff = (Date.now() - d.getTime()) / 1000;
-    if (diff < 60) return 'à l\'instant';
-    if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
-    if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
-    return `il y a ${Math.floor(diff / 86400)} j`;
+    if (diff < 60) return t('pages.support.time_now');
+    if (diff < 3600) return t('pages.support.time_minutes', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('pages.support.time_hours', { count: Math.floor(diff / 3600) });
+    return t('pages.support.time_days', { count: Math.floor(diff / 86400) });
 };
 
 // ─── FILTRES (serveur) ───
@@ -151,8 +154,8 @@ const submitStatus = () => {
 
 const deleteTicket = () => {
     confirm.require({
-        message: `Supprimer définitivement le ticket ${props.ticket.ticket_number} ?`,
-        header: 'Suppression',
+        message: t('pages.support.delete_confirm_message', { number: props.ticket.ticket_number }),
+        header: t('pages.support.delete_confirm_header'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => router.delete(route('social.support.destroy', props.ticket.ticket_number)),
@@ -161,8 +164,8 @@ const deleteTicket = () => {
 
 const categoryOptions = computed(() => props.categories.map(c => ({ label: c.name, value: c.id })));
 const agentOptions = computed(() => props.agents.map(a => ({ label: a.name, value: a.id })));
-const priorityOptions = computed(() => priorities.map(p => ({ label: p.label, value: p.value })));
-const statusOptions = computed(() => statuses.map(s => ({ label: s.label, value: s.value })));
+const priorityOptions = computed(() => priorities.value.map(p => ({ label: p.label, value: p.value })));
+const statusOptions = computed(() => statuses.value.map(s => ({ label: s.label, value: s.value })));
 
 const ticketStatus = ref(props.ticket?.status || '');
 const ticketAssignee = ref(props.ticket?.assigned_to_user_id || null);
@@ -187,17 +190,17 @@ const saveConfig = () => {
 };
 
 const kpis = computed(() => [
-    { label: 'Total tickets', value: props.stats.total ?? 0, icon: 'pi-ticket', color: 'blue' },
-    { label: 'En cours', value: props.stats.open ?? 0, icon: 'pi-envelope', color: 'amber' },
-    { label: 'En attente', value: props.stats.pending ?? 0, icon: 'pi-clock', color: 'slate' },
-    { label: 'Résolus', value: props.stats.resolved ?? 0, icon: 'pi-check-circle', color: 'emerald' },
-    { label: 'Non assignés', value: props.stats.unassigned ?? 0, icon: 'pi-user-plus', color: 'red' },
+    { label: t('pages.support.kpi_total'), value: props.stats.total ?? 0, icon: 'pi-ticket', color: 'blue' },
+    { label: t('pages.support.kpi_open'), value: props.stats.open ?? 0, icon: 'pi-envelope', color: 'amber' },
+    { label: t('pages.support.kpi_pending'), value: props.stats.pending ?? 0, icon: 'pi-clock', color: 'slate' },
+    { label: t('pages.support.kpi_resolved'), value: props.stats.resolved ?? 0, icon: 'pi-check-circle', color: 'emerald' },
+    { label: t('pages.support.kpi_unassigned'), value: props.stats.unassigned ?? 0, icon: 'pi-user-plus', color: 'red' },
 ]);
 </script>
 
 <template>
     <AppLayout>
-        <Head :title="isDetail ? `Ticket ${ticket.ticket_number}` : 'Centre de Support'" />
+        <Head :title="isDetail ? t('pages.support.ticket_title', { number: ticket.ticket_number }) : t('pages.support.center_title')" />
         <ConfirmDialog />
 
         <div class="page-bg min-h-screen pb-20">
@@ -205,14 +208,14 @@ const kpis = computed(() => [
             <!-- ═══ VUE DÉTAIL D'UN TICKET ═══ -->
             <template v-if="isDetail">
                 <PageHeader
-                    :title="`Ticket ${ticket.ticket_number}`"
+                    :title="t('pages.support.ticket_title', { number: ticket.ticket_number })"
                     :subtitle="ticket.subject"
                     icon="pi-ticket"
                     :badge="statusLabel(ticket.status)"
                     accent="blue"
                     :actions="[
-                        { label: 'Retour à la liste', icon: 'pi-arrow-left', onClick: () => router.get(route('social.support.index')), variant: 'secondary' },
-                        ...(canManage ? [{ label: 'Supprimer', icon: 'pi-trash', onClick: deleteTicket, variant: 'primary' }] : []),
+                        { label: t('pages.support.back_to_list'), icon: 'pi-arrow-left', onClick: () => router.get(route('social.support.index')), variant: 'secondary' },
+                        ...(canManage ? [{ label: t('pages.support.btn_delete'), icon: 'pi-trash', onClick: deleteTicket, variant: 'primary' }] : []),
                     ]"
                 />
 
@@ -239,19 +242,19 @@ const kpis = computed(() => [
                                 <Divider />
                                 <div class="space-y-3 text-sm">
                                     <div class="flex justify-between">
-                                        <span class="text-slate-400 font-bold text-xs uppercase">Catégorie</span>
+                                        <span class="text-slate-400 font-bold text-xs uppercase">{{ t('pages.support.col_category') }}</span>
                                         <span class="font-semibold text-slate-700">{{ ticket.category?.name || '—' }}</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-slate-400 font-bold text-xs uppercase">Créé le</span>
-                                        <span class="font-semibold text-slate-700">{{ ticket.created_at ? new Date(ticket.created_at).toLocaleString('fr-FR') : '—' }}</span>
+                                        <span class="text-slate-400 font-bold text-xs uppercase">{{ t('pages.support.col_created') }}</span>
+                                        <span class="font-semibold text-slate-700">{{ ticket.created_at ? new Date(ticket.created_at).toLocaleString(locale) : '—' }}</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-slate-400 font-bold text-xs uppercase">Assigné à</span>
-                                        <span class="font-semibold text-slate-700">{{ ticket.assigned_agent?.name || 'Non assigné' }}</span>
+                                        <span class="text-slate-400 font-bold text-xs uppercase">{{ t('pages.support.col_assigned_to') }}</span>
+                                        <span class="font-semibold text-slate-700">{{ ticket.assigned_agent?.name || t('pages.support.unassigned') }}</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-slate-400 font-bold text-xs uppercase">Messages</span>
+                                        <span class="text-slate-400 font-bold text-xs uppercase">{{ t('pages.support.col_messages') }}</span>
                                         <span class="font-semibold text-slate-700">{{ messages?.total ?? 0 }}</span>
                                     </div>
                                 </div>
@@ -259,7 +262,7 @@ const kpis = computed(() => [
                                 <!-- Description initiale -->
                                 <Divider />
                                 <div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description initiale</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{{ t('pages.support.initial_description') }}</p>
                                     <p class="text-sm text-slate-600 whitespace-pre-line bg-slate-50 rounded-xl p-4 border border-slate-100">{{ ticket.description }}</p>
                                 </div>
                             </template>
@@ -267,19 +270,19 @@ const kpis = computed(() => [
 
                         <!-- Configuration (staff) -->
                         <Card v-if="canManage" class="border-none shadow-sm rounded-xl">
-                            <template #title><span class="text-sm font-black text-slate-700 px-1">Configuration</span></template>
+                            <template #title><span class="text-sm font-black text-slate-700 px-1">{{ t('pages.support.configuration') }}</span></template>
                             <template #content>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="text-xs font-bold text-slate-500 block mb-1">Statut</label>
+                                        <label class="text-xs font-bold text-slate-500 block mb-1">{{ t('pages.support.field_status') }}</label>
                                         <Select v-model="ticketStatus" :options="statusOptions" optionLabel="label" optionValue="value" class="w-full" @change="saveConfig" />
                                     </div>
                                     <div>
-                                        <label class="text-xs font-bold text-slate-500 block mb-1">Assigner à</label>
-                                        <Select v-model="ticketAssignee" :options="agentOptions" optionLabel="label" optionValue="value" class="w-full" placeholder="Choisir un agent" @change="saveConfig" />
+                                        <label class="text-xs font-bold text-slate-500 block mb-1">{{ t('pages.support.field_assign_to') }}</label>
+                                        <Select v-model="ticketAssignee" :options="agentOptions" optionLabel="label" optionValue="value" class="w-full" :placeholder="t('pages.support.choose_agent')" @change="saveConfig" />
                                     </div>
                                     <div>
-                                        <label class="text-xs font-bold text-slate-500 block mb-1">Priorité</label>
+                                        <label class="text-xs font-bold text-slate-500 block mb-1">{{ t('pages.support.field_priority') }}</label>
                                         <Select
                                             v-model="ticket.priority"
                                             :options="priorityOptions" optionLabel="label" optionValue="value"
@@ -303,14 +306,14 @@ const kpis = computed(() => [
                         <Card class="border-none shadow-sm rounded-xl h-full">
                             <template #title>
                                 <div class="flex items-center justify-between px-1">
-                                    <span class="text-sm font-black text-slate-700">Conversation</span>
-                                    <span class="text-xs text-slate-400">{{ messages?.total ?? 0 }} message(s)</span>
+                                    <span class="text-sm font-black text-slate-700">{{ t('pages.support.conversation') }}</span>
+                                    <span class="text-xs text-slate-400">{{ t('pages.support.messages_count', { count: messages?.total ?? 0 }) }}</span>
                                 </div>
                             </template>
                             <template #content>
                                 <div class="space-y-4 max-h-[55vh] overflow-y-auto pr-2 mb-4">
                                     <div v-if="!messages?.data?.length" class="text-center py-10 text-slate-400 text-sm">
-                                        Aucun message pour le moment.
+                                        {{ t('pages.support.no_messages') }}
                                     </div>
                                     <div
                                         v-for="msg in messages?.data || []"
@@ -326,14 +329,14 @@ const kpis = computed(() => [
                                                     : 'bg-slate-100 text-slate-700 rounded-tl-sm'
                                         ]">
                                             <div v-if="msg.is_internal" class="flex items-center gap-1 text-[10px] font-black uppercase mb-1">
-                                                <i class="pi pi-lock"></i> Note interne
+                                                <i class="pi pi-lock"></i> {{ t('pages.support.internal_note') }}
                                             </div>
                                             <p class="whitespace-pre-line">{{ msg.message }}</p>
                                         </div>
                                         <span class="text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-tight">
-                                            {{ msg.user?.name || 'Utilisateur' }}
-                                            <span v-if="msg.user?.id === ticket.user_id">(auteur)</span>
-                                            • {{ msg.created_at ? new Date(msg.created_at).toLocaleString('fr-FR') : '' }}
+                                            {{ msg.user?.name || t('pages.support.default_user') }}
+                                            <span v-if="msg.user?.id === ticket.user_id">{{ t('pages.support.author_suffix') }}</span>
+                                            • {{ msg.created_at ? new Date(msg.created_at).toLocaleString(locale) : '' }}
                                         </span>
                                     </div>
                                 </div>
@@ -344,17 +347,17 @@ const kpis = computed(() => [
                                     <Textarea
                                         v-model="replyForm.message"
                                         rows="3" autoResize
-                                        placeholder="Écrire une réponse..."
+                                        :placeholder="t('pages.support.reply_placeholder')"
                                         class="w-full !rounded-xl"
                                     />
                                     <div v-if="canManage" class="flex items-center gap-2">
                                         <InputSwitch v-model="replyForm.is_internal" />
-                                        <label class="text-xs font-bold text-slate-500">Note interne (invisible par l'utilisateur)</label>
+                                        <label class="text-xs font-bold text-slate-500">{{ t('pages.support.internal_note_hint') }}</label>
                                     </div>
                                     <div class="flex justify-end">
                                         <Button
                                             type="submit"
-                                            label="Envoyer"
+                                            :label="t('pages.support.btn_send')"
                                             icon="pi pi-send"
                                             :loading="replyForm.processing"
                                             :disabled="!replyForm.message?.trim()"
@@ -371,14 +374,14 @@ const kpis = computed(() => [
             <!-- ═══ VUE LISTE ═══ -->
             <template v-else>
                 <PageHeader
-                    title="Centre de Support"
-                    subtitle="Gérez les demandes d'assistance de vos utilisateurs"
+                    :title="t('pages.support.center_title')"
+                    :subtitle="t('pages.support.center_subtitle')"
                     icon="pi-headphones"
-                    :badge="`${stats.total ?? 0} tickets`"
+                    :badge="t('pages.support.tickets_badge', { count: stats.total ?? 0 })"
                     accent="blue"
                     :actions="[
-                        ...(canManage ? [{ label: 'Exporter CSV', icon: 'pi-download', onClick: exportCsv, variant: 'secondary' }] : []),
-                        { label: 'Nouveau ticket', icon: 'pi-plus', onClick: () => showCreateDialog = true, variant: 'primary' },
+                        ...(canManage ? [{ label: t('pages.support.btn_export_csv'), icon: 'pi-download', onClick: exportCsv, variant: 'secondary' }] : []),
+                        { label: t('pages.support.btn_new_ticket'), icon: 'pi-plus', onClick: () => showCreateDialog = true, variant: 'primary' },
                     ]"
                 />
 
@@ -402,12 +405,12 @@ const kpis = computed(() => [
                             <div class="flex flex-col md:flex-row gap-3 items-center">
                                 <IconField iconPosition="left" class="flex-1 w-full">
                                     <InputIcon class="pi pi-search text-slate-400" />
-                                    <InputText v-model="filterState.search" placeholder="Rechercher par sujet, n° ticket, nom ou email..." class="w-full" />
+                                    <InputText v-model="filterState.search" :placeholder="t('pages.support.search_placeholder')" class="w-full" />
                                 </IconField>
-                                <Select v-model="filterState.status" :options="statuses" optionLabel="label" optionValue="value" placeholder="Statut" class="w-full md:w-44" showClear />
-                                <Select v-model="filterState.priority" :options="priorities" optionLabel="label" optionValue="value" placeholder="Priorité" class="w-full md:w-40" showClear />
-                                <Select v-model="filterState.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" placeholder="Catégorie" class="w-full md:w-52" showClear />
-                                <Select v-model="filterState.assigned_to_user_id" :options="[{label:'Non assignés',value:'unassigned'}, ...agentOptions]" optionLabel="label" optionValue="value" placeholder="Assignation" class="w-full md:w-48" showClear />
+                                <Select v-model="filterState.status" :options="statuses" optionLabel="label" optionValue="value" :placeholder="t('pages.support.filter_status')" class="w-full md:w-44" showClear />
+                                <Select v-model="filterState.priority" :options="priorities" optionLabel="label" optionValue="value" :placeholder="t('pages.support.filter_priority')" class="w-full md:w-40" showClear />
+                                <Select v-model="filterState.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="t('pages.support.filter_category')" class="w-full md:w-52" showClear />
+                                <Select v-model="filterState.assigned_to_user_id" :options="[{label:t('pages.support.unassigned_plural'),value:'unassigned'}, ...agentOptions]" optionLabel="label" optionValue="value" :placeholder="t('pages.support.filter_assignment')" class="w-full md:w-48" showClear />
                             </div>
                         </template>
                     </Card>
@@ -430,13 +433,13 @@ const kpis = computed(() => [
                                 stripedRows
                                 class="p-datatable-lg"
                             >
-                                <Column field="ticket_number" header="N°" style="width: 8rem">
+                                <Column field="ticket_number" :header="t('pages.support.col_number')" style="width: 8rem">
                                     <template #body="{ data }">
                                         <span class="font-mono font-bold text-slate-500 text-xs">{{ data.ticket_number }}</span>
                                     </template>
                                 </Column>
 
-                                <Column header="DEMANDEUR" style="min-width: 14rem">
+                                <Column :header="t('pages.support.col_requester')" style="min-width: 14rem">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-3">
                                             <Avatar :image="data.user?.profile_photo_url" :label="(data.user?.name || '?').charAt(0)" shape="circle" size="normal" />
@@ -448,7 +451,7 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column field="subject" header="SUJET" style="min-width: 18rem">
+                                <Column field="subject" :header="t('pages.support.col_subject')" style="min-width: 18rem">
                                     <template #body="{ data }">
                                         <div class="flex flex-col gap-1">
                                             <button class="font-black text-slate-700 text-sm text-left hover:text-blue-600 transition-colors" @click="openTicket(data)">
@@ -465,22 +468,22 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column field="priority" header="PRIORITÉ" style="width: 7rem">
+                                <Column field="priority" :header="t('pages.support.col_priority')" style="width: 7rem">
                                     <template #body="{ data }">
                                         <Tag :value="priorityLabel(data.priority)" :severity="prioritySeverity(data.priority)" class="!text-[9px] !font-black uppercase" />
                                     </template>
                                 </Column>
 
-                                <Column field="status" header="STATUT" style="width: 9rem">
+                                <Column field="status" :header="t('pages.support.col_status')" style="width: 9rem">
                                     <template #body="{ data }">
                                         <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" class="!text-[9px] !font-black uppercase" />
                                     </template>
                                 </Column>
 
-                                <Column header="AGENT" style="min-width: 10rem">
+                                <Column :header="t('pages.support.col_agent')" style="min-width: 10rem">
                                     <template #body="{ data }">
                                         <span class="text-sm font-semibold" :class="data.assigned_agent ? 'text-slate-700' : 'text-slate-300 italic'">
-                                            {{ data.assigned_agent?.name || 'Non assigné' }}
+                                            {{ data.assigned_agent?.name || t('pages.support.unassigned') }}
                                         </span>
                                     </template>
                                 </Column>
@@ -494,7 +497,7 @@ const kpis = computed(() => [
                                 <template #empty>
                                     <div class="text-center py-16">
                                         <i class="pi pi-inbox text-4xl text-slate-300 mb-3"></i>
-                                        <p class="text-slate-500 font-semibold">Aucun ticket ne correspond à vos critères.</p>
+                                        <p class="text-slate-500 font-semibold">{{ t('pages.support.empty_tickets') }}</p>
                                     </div>
                                 </template>
                             </DataTable>
@@ -504,32 +507,32 @@ const kpis = computed(() => [
             </template>
 
             <!-- ═══ DIALOGUE : NOUVEAU TICKET ═══ -->
-            <Dialog v-model:visible="showCreateDialog" modal header="Nouveau ticket de support" :style="{ width: '560px' }" class="p-fluid">
+            <Dialog v-model:visible="showCreateDialog" modal :header="t('pages.support.dialog_title')" :style="{ width: '560px' }" class="p-fluid">
                 <form @submit.prevent="submitTicket" class="space-y-5 pt-2">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Sujet *</label>
-                        <InputText v-model="createForm.subject" class="w-full" placeholder="Décrivez brièvement votre problème" />
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">{{ t('pages.support.field_subject') }}</label>
+                        <InputText v-model="createForm.subject" class="w-full" :placeholder="t('pages.support.subject_placeholder')" />
                         <p v-if="createForm.errors.subject" class="text-red-500 text-xs mt-1">{{ createForm.errors.subject }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1.5">Catégorie *</label>
-                            <Select v-model="createForm.ticket_category_id" :options="categoryOptions" optionLabel="label" optionValue="value" placeholder="Choisir..." class="w-full" />
+                            <label class="block text-xs font-bold text-slate-600 mb-1.5">{{ t('pages.support.field_category') }}</label>
+                            <Select v-model="createForm.ticket_category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="t('pages.support.choose_placeholder')" class="w-full" />
                             <p v-if="createForm.errors.ticket_category_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.ticket_category_id }}</p>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 mb-1.5">Priorité *</label>
+                            <label class="block text-xs font-bold text-slate-600 mb-1.5">{{ t('pages.support.field_priority') }}</label>
                             <Select v-model="createForm.priority" :options="priorityOptions" optionLabel="label" optionValue="value" class="w-full" />
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Description détaillée *</label>
-                        <Textarea v-model="createForm.description" rows="6" class="w-full" placeholder="Expliquez votre problème en détail (messages d'erreur, étapes pour reproduire, etc.)" />
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">{{ t('pages.support.field_description') }}</label>
+                        <Textarea v-model="createForm.description" rows="6" class="w-full" :placeholder="t('pages.support.description_placeholder')" />
                         <p v-if="createForm.errors.description" class="text-red-500 text-xs mt-1">{{ createForm.errors.description }}</p>
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
-                        <Button type="button" label="Annuler" text severity="secondary" @click="showCreateDialog = false" />
-                        <Button type="submit" label="Créer le ticket" icon="pi pi-send" :loading="createForm.processing" />
+                        <Button type="button" :label="t('pages.support.btn_cancel')" text severity="secondary" @click="showCreateDialog = false" />
+                        <Button type="submit" :label="t('pages.support.btn_create_ticket')" icon="pi pi-send" :loading="createForm.processing" />
                     </div>
                 </form>
             </Dialog>

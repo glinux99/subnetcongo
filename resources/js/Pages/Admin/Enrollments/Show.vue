@@ -8,7 +8,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import Textarea from 'primevue/textarea';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({ enrollment: Object });
@@ -168,8 +168,8 @@ const destroy = () => {
             </div>
         </div>
 
-        <Dialog v-model:visible="showApprove" modal :style="{ width: '500px' }" header="Approuver l'inscription" class="!rounded-xl">
-            <div class="p-2 space-y-3">
+        <SncDialog v-model:visible="showApprove" title="Approuver l'inscription" icon="pi-check-circle" icon-class="from-blue-500 to-blue-600" width="500px">
+            <div class="space-y-3">
                 <p class="text-sm text-slate-600">L'étudiant aura immédiatement accès au cours et sera notifié.</p>
                 <div>
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Note (optionnel)</label>
@@ -177,13 +177,15 @@ const destroy = () => {
                 </div>
             </div>
             <template #footer>
-                <Button label="Annuler" outlined @click="showApprove = false" class="!rounded-xl" />
-                <Button :label="submitting ? '...' : 'Approuver'" icon="pi pi-check" :loading="submitting" @click="submit('approve')" class="!bg-blue-500 hover:!bg-blue-600 !border-none !rounded-xl" />
+                <div class="flex justify-end gap-2 w-full">
+                    <Button label="Annuler" outlined @click="showApprove = false" class="!rounded-xl" />
+                    <Button :label="submitting ? '...' : 'Approuver'" icon="pi pi-check" :loading="submitting" @click="submit('approve')" class="!bg-blue-500 hover:!bg-blue-600 !border-none !rounded-xl" />
+                </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
-        <Dialog v-model:visible="showReject" modal :style="{ width: '500px' }" header="Refuser l'inscription" class="!rounded-xl">
-            <div class="p-2 space-y-3">
+        <SncDialog v-model:visible="showReject" title="Refuser l'inscription" icon="pi-times-circle" icon-class="from-red-500 to-red-600" width="500px">
+            <div class="space-y-3">
                 <p class="text-sm text-slate-600">L'étudiant sera notifié du refus avec le motif ci-dessous.</p>
                 <div>
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Motif (obligatoire)</label>
@@ -191,13 +193,15 @@ const destroy = () => {
                 </div>
             </div>
             <template #footer>
-                <Button label="Annuler" outlined @click="showReject = false" class="!rounded-xl" />
-                <Button :label="submitting ? '...' : 'Refuser'" icon="pi pi-times" severity="danger" :loading="submitting" @click="submit('reject')" class="!rounded-xl" />
+                <div class="flex justify-end gap-2 w-full">
+                    <Button label="Annuler" outlined @click="showReject = false" class="!rounded-xl" />
+                    <Button :label="submitting ? '...' : 'Refuser'" icon="pi pi-times" severity="danger" :loading="submitting" @click="submit('reject')" class="!rounded-xl" />
+                </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
-        <Dialog v-model:visible="showRevoke" modal :style="{ width: '500px' }" header="Révoquer l'accès" class="!rounded-xl">
-            <div class="p-2 space-y-3">
+        <SncDialog v-model:visible="showRevoke" title="Révoquer l'accès" icon="pi-ban" icon-class="from-red-500 to-red-600" width="500px">
+            <div class="space-y-3">
                 <p class="text-sm text-red-600 font-bold">⚠ L'étudiant perdra immédiatement l'accès au cours.</p>
                 <div>
                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 block">Motif (obligatoire)</label>
@@ -205,9 +209,11 @@ const destroy = () => {
                 </div>
             </div>
             <template #footer>
-                <Button label="Annuler" outlined @click="showRevoke = false" class="!rounded-xl" />
-                <Button :label="submitting ? '...' : 'Révoquer'" icon="pi pi-ban" severity="danger" :loading="submitting" @click="submit('revoke')" class="!rounded-xl" />
+                <div class="flex justify-end gap-2 w-full">
+                    <Button label="Annuler" outlined @click="showRevoke = false" class="!rounded-xl" />
+                    <Button :label="submitting ? '...' : 'Révoquer'" icon="pi pi-ban" severity="danger" :loading="submitting" @click="submit('revoke')" class="!rounded-xl" />
+                </div>
             </template>
-        </Dialog>
+        </SncDialog>
     </AppLayout>
 </template>

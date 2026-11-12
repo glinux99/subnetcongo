@@ -9,7 +9,7 @@ import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Props avec valeurs par défaut sécurisées
 const props = defineProps({
@@ -35,7 +35,7 @@ const formatDate = (iso) => {
     if (!iso) return '';
     try {
         const d = new Date(iso);
-        return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleString(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch (_) { return iso; }
 };
 

@@ -41,10 +41,11 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from 'vue-i18n';
 import debounce from 'lodash/debounce';
 
@@ -57,11 +58,9 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
-import Dialog from 'primevue/dialog';
 import Sidebar from 'primevue/sidebar';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Paginator from 'primevue/paginator';
@@ -103,7 +102,7 @@ const props = defineProps({
 // ÉTATS GLOBAUX, SERVICES & UI CONTROLLERS
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const { t } = useI18n();
 const loading = ref(true);
 
@@ -209,12 +208,11 @@ const reloadLearningData = () => {
  * Gère l'archivage avec confirmation
  */
 const confirmArchive = (pathData) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.learning_paths.archiveConfirmMessage', { name: pathData.name }),
         header: t('pages.learning_paths.archiveConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
-        rejectClass: 'p-button-secondary p-button-text',
+        danger: true,
         acceptLabel: t('pages.learning_paths.archiveAccept'),
         rejectLabel: t('pages.learning_paths.archiveReject'),
         accept: () => {
@@ -318,7 +316,6 @@ onMounted(() => {
 
         <!-- Notifications globales -->
         <Toast position="top-right" group="tc" />
-        <ConfirmDialog />
 
    <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -569,8 +566,8 @@ onMounted(() => {
         </Sidebar>
 
 
-        <Dialog v-model:visible="categoryDialog" :header="t('pages.learning_paths.createCategoryHeader')" :modal="true" :style="{ width: '500px' }" :draggable="false" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="bg-slate-50 p-0" headerClass="bg-white border-b border-slate-100 px-6 py-4">
-            <div class="p-6 space-y-6">
+        <SncDialog v-model:visible="categoryDialog" :title="t('pages.learning_paths.createCategoryHeader')" icon="pi-tags" width="500px">
+            <div class="space-y-6">
                 <!-- Message info -->
                 <Message severity="info" :closable="false" class="m-0 border border-blue-100 bg-blue-50 text-blue-800">
                     {{ t('pages.learning_paths.categoryInfo') }}
@@ -608,12 +605,10 @@ onMounted(() => {
             </div>
 
             <template #footer>
-                <div class="flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
-                    <Button :label="t('pages.learning_paths.btnCancel')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
-                    <Button :label="t('pages.learning_paths.btnCreateCategory')" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
-                </div>
+                <Button :label="t('pages.learning_paths.btnCancel')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-100" @click="categoryDialog = false" />
+                <Button :label="t('pages.learning_paths.btnCreateCategory')" icon="pi pi-check" class="p-button-primary font-bold shadow-md px-6" @click="saveCategory" :loading="savingCategory" />
             </template>
-        </Dialog>
+        </SncDialog>
 
     </AppLayout>
 </template>

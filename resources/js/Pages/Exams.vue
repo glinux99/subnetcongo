@@ -18,10 +18,11 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
@@ -42,7 +43,6 @@ import Sidebar from 'primevue/sidebar';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
-import ConfirmDialog from 'primevue/confirmdialog';
 import ToggleSwitch from 'primevue/toggleswitch';
 import SelectButton from 'primevue/selectbutton';
 import RadioButton from 'primevue/radiobutton';
@@ -63,9 +63,9 @@ import { useI18n } from 'vue-i18n';
 // ======================================================================================
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const examDialog = ref(false);
 const analyticsDialog = ref(false);
@@ -342,11 +342,11 @@ const saveExam = (status = 'Active') => {
  * Gère la suppression via Inertia router
  */
 const deleteExam = (id) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.exams.deleteConfirmMessage'),
         header: t('pages.exams.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         rejectLabel: t('pages.exams.cancelAction'),
         acceptLabel: t('pages.exams.confirmDelete'),
         accept: () => {
@@ -368,11 +368,10 @@ const deleteExam = (id) => {
  */
 const confirmBulkArchive = () => {
     if(selectedExams.value.length === 0) return;
-    confirm.require({
+    confirmAction({
         message: t('pages.exams.bulkArchiveMessage', { count: selectedExams.value.length }),
         header: t('pages.exams.bulkArchiveHeader'),
         icon: 'pi pi-info-circle',
-        acceptClass: 'p-button-warning',
         accept: () => {
             toast.add({ severity: 'info', summary: t('pages.exams.operationInProgressSummary'), detail: t('pages.exams.bulkArchiveDetail'), life: 3000 });
             selectedExams.value = [];
@@ -474,7 +473,7 @@ const getStatusColor = (status) => {
 
 const formatDate = (dateString) => {
     if(!dateString) return '';
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateString));
+    return new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateString));
 };
 
 const getAuditLogsForExam = async (examId) => {
@@ -521,7 +520,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head :title="t('pages.exams.headTitle')" />
-        <ConfirmDialog />
 
    <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -1127,8 +1125,8 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- MODAL : BANQUE D'ITEMS (IMPORTATION DE QUESTIONS)                              -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="questionBankDialog" :header="t('pages.exams.globalBankDialogTitle')" :modal="true" :style="{ width: '900px' }" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
-            <div class="p-6 border-b border-slate-200 bg-white">
+        <SncDialog v-model:visible="questionBankDialog" :title="t('pages.exams.globalBankDialogTitle')" icon="pi-database" width="900px">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-5">
                 <div class="flex items-center justify-between gap-4">
                     <IconField iconPosition="left" class="flex-1">
                         <InputIcon class="pi pi-search text-slate-400" />
@@ -1138,7 +1136,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="p-6">
+            <div>
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
                     <DataTable :value="props.global_question_bank" :paginator="true" :rows="5" class="p-datatable-custom text-sm">
@@ -1163,17 +1161,15 @@ onMounted(() => {
                 </div>
             </div>
             <template #footer>
-                <div class="border-t border-slate-200 bg-white p-4 flex justify-end">
-                    <Button :label="t('pages.exams.finishImportButton')" class="p-button-primary font-bold" @click="questionBankDialog = false" />
-                </div>
+                <Button :label="t('pages.exams.finishImportButton')" class="p-button-primary font-bold" @click="questionBankDialog = false" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- ============================================================================== -->
         <!-- MODAL : ANALYTIQUE ET PSYCHOMÉTRIE (DATA VISUALIZATION)                        -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="analyticsDialog" modal :header="t('pages.exams.analyticsDialogTitle')" :style="{width: '1000px'}" class="rounded-2xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
-            <div class="p-8 space-y-8">
+        <SncDialog v-model:visible="analyticsDialog" :title="t('pages.exams.analyticsDialogTitle')" icon="pi-chart-bar" width="1000px">
+            <div class="space-y-8">
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
@@ -1237,12 +1233,12 @@ onMounted(() => {
 
             </div>
             <template #footer>
-                <div class="border-t border-slate-200 bg-white p-5 flex justify-between items-center">
+                <div class="flex items-center justify-between w-full">
                     <span class="text-xs text-slate-400 font-medium"><i class="pi pi-info-circle mr-1"></i> {{ t('pages.exams.dataGeneratedNote') }}</span>
                     <Button :label="t('pages.exams.downloadFullReport')" icon="pi pi-download" class="p-button-primary font-bold shadow-md" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
     </AppLayout>
 </template>

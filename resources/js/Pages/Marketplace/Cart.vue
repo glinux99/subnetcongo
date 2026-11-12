@@ -2,7 +2,11 @@
 import { computed } from 'vue';
 import { router, Link, Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
@@ -23,9 +27,9 @@ const formatLocal = (amount) => {
     const symbol = props.cart?.symbol ?? '$';
     const currency = props.cart?.currency ?? 'USD';
     try {
-        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
+        return new Intl.NumberFormat(locale.value, { style: 'currency', currency }).format(amount);
     } catch (_) {
-        return `${symbol} ${Number(amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `${symbol} ${Number(amount).toLocaleString(locale.value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 };
 
@@ -73,56 +77,45 @@ const changeCountry = (code) => {
 
 <template>
     <AppLayout>
-        <Head title="Mon Panier" />
+        <Head :title="t('marketplace.my_cart')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
-            <!-- HEADER -->
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px]"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px]"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-                <div class="max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row md:items-center gap-5 justify-between">
-                    <div class="flex items-center gap-5">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 border border-white/10">
-                            <i class="pi pi-shopping-cart text-white text-3xl"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                <h1 class="text-3xl font-black text-white tracking-tight">Mon Panier</h1>
-                                <Tag :value="`${cart?.count ?? 0} article(s)`" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest" />
-                            </div>
-                            <p class="text-slate-400 font-medium text-sm">Cours gratuits = inscription immÃ©diate Â· Cours payants = paiement ou validation admin.</p>
-                        </div>
-                    </div>
-
-                    <!-- SÃ©lecteur de pays/devise -->
+            <PageHeader
+                :title="t('marketplace.my_cart')"
+                :subtitle="t('marketplace.cart.subtitle')"
+                :badge="t('marketplace.cart.items_badge', { count: cart?.count ?? 0 })"
+                icon="pi-shopping-cart"
+                accent="blue"
+            >
+                <template #actions>
+                    <!-- Sélecteur de pays/devise -->
                     <div class="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-2xl px-3 py-2">
                         <i class="pi pi-globe text-slate-300"></i>
                         <div class="flex flex-col">
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pays & devise</p>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ t('marketplace.cart.country_label') }}</p>
                             <Dropdown
                                 :modelValue="country?.code"
                                 :options="countries"
                                 optionLabel="label"
                                 optionValue="value"
-                                placeholder="Choisir un pays"
+                                :placeholder="t('marketplace.cart.country_placeholder')"
                                 class="!bg-transparent !border-none !text-white"
                                 @change="(e) => changeCountry(e.value)"
                             >
                                 <template #value="slotProps">
                                     <span v-if="slotProps.value" class="text-white text-xs font-black">
-                                        {{ country?.flag }} {{ country?.name }} Â· {{ country?.currency }}
+                                        {{ country?.flag }} {{ country?.name }} · {{ country?.currency }}
                                     </span>
                                 </template>
                             </Dropdown>
                         </div>
                     </div>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
             <!-- MAIN -->
-            <div class="max-w-[1100px] mx-auto px-4 lg:px-6 -mt-8 relative z-20">
+            <div class="page-container page-section">
                 <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px]">
 
                     <div v-if="!hasItems" class="text-center py-16">

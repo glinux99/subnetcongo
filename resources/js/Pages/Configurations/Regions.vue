@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from "@/sakai/layout/AppLayout.vue";
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from 'vue-i18n';
@@ -30,7 +32,7 @@ import MultiSelect from 'primevue/multiselect';
 import Slider from 'primevue/slider';
 import OverlayPanel from 'primevue/overlaypanel';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const props = defineProps({
     regions: Object, // Modifié de Array à Object pour la pagination
     filters: Object,
@@ -129,7 +131,7 @@ const stats = computed(() => {
     const totalMWValue = data.reduce((acc, curr) => acc + (parseFloat(curr.puissance_centrale) || 0), 0);
     return {
         total: props.regions.total || 0, // Utiliser le total de la pagination
-        totalMW: totalMWValue.toLocaleString('fr-FR', { minimumFractionDigits: 2 }), // Le calcul reste sur les données visibles
+        totalMW: totalMWValue.toLocaleString(locale.value, { minimumFractionDigits: 2 }), // Le calcul reste sur les données visibles
         avgPower: data.length > 0 ? (totalMWValue / data.length).toFixed(1) : 0,
         highPerf: data.filter(r => r.puissance_centrale > 500).length
     };
@@ -238,37 +240,25 @@ const onFilter = (event) => {
         <Head :title="t('regions.title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div class="flex items-center gap-4">
- <div class="flex h-16 w-16 items-center justify-center rounded-[1rem] bg-primary-600 shadow-xl shadow-primary-200">
- <i class="pi pi-bolt text-2xl text-white"></i>
- <i class="pi pi-sun text-2xl text-white -ml-2"></i>
-                    </div>
-                <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ t('regions.headTitle') }}
-                         <span class="text-primary-600">{{ t('regions.headTitle2') }}</span>
-                    </h1>
-                    <p class="text-slate-500 font-medium">{{ t('regions.subtitle') }}</p>
-                </div>
-                </div>
-                <div class="flex gap-3">
-                    <Button :label="t('regions.actions.resetFilters')" icon="pi pi-filter-slash" outlined severity="secondary" @click="initFilters" class="rounded-xl" />
-                    <Button :label="t('regions.actions.add')" icon="pi pi-plus"  raised @click="openNew" class="rounded-xl px-6" />
-                </div>
-            </div>
+            <PageHeader
+                :title="`${t('regions.headTitle')} ${t('regions.headTitle2')}`"
+                :subtitle="t('regions.subtitle')"
+                icon="pi-bolt"
+                accent="amber"
+                :badge="t('regions.header_badge')"
+                :actions="[
+                    { label: t('regions.actions.resetFilters'), icon: 'pi-filter-slash', variant: 'secondary', onClick: initFilters },
+                    { label: t('regions.actions.add'), icon: 'pi-plus', variant: 'primary', onClick: openNew },
+                ]"
+            />
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div v-for="(val, key) in stats" :key="key" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="flex flex-column gap-2">
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ statLabels[key] }}</span>
-                        <div class="flex items-center justify-between">
-                            <span class="text-3xl font-black text-slate-800">{{ val }}</span>
-                            <div class="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                                <i :class="key === 'totalMW' ? 'pi pi-bolt' : 'pi pi-database'" class="text-slate-400"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="page-container page-section">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <PageKpi :label="statLabels.total" :value="stats.total" icon="pi-database" color="slate" />
+                <PageKpi :label="statLabels.totalMW" :value="stats.totalMW" icon="pi-bolt" color="amber" />
+                <PageKpi :label="statLabels.avgPower" :value="stats.avgPower" icon="pi-chart-line" color="blue" />
+                <PageKpi :label="statLabels.highPerf" :value="stats.highPerf" icon="pi-star" color="violet" />
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
@@ -380,6 +370,7 @@ const onFilter = (event) => {
                         </template>
                     </Column>
                 </DataTable>
+            </div>
             </div>
 
             <OverlayPanel ref="op" appendTo="body" id="column_op" class="p-4">

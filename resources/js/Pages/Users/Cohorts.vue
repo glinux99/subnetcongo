@@ -12,10 +12,10 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 import { useI18n } from 'vue-i18n';
@@ -37,7 +37,6 @@ import SelectButton from 'primevue/selectbutton';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import ProgressBar from 'primevue/progressbar';
@@ -54,7 +53,7 @@ import Message from 'primevue/message'; // Remplaçant d'InlineMessage sous v4
 import Timeline from 'primevue/timeline';
 import Editor from 'primevue/editor';
 import FileUpload from 'primevue/fileupload';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 // ======================================================================================
 // PROPS INERTIA
 // ======================================================================================
@@ -71,7 +70,7 @@ const props = defineProps({
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const selectedCohorts = ref([]);
 const expandedRows = ref([]);
@@ -298,8 +297,8 @@ const suspendStudent = (student) => {
     });
 };
 const confirmRemoveStudent = (student) => {
-    confirm.require({
-        message: t('pages.cohorts.confirmRemoveStudent', { name: student.name }), header: t('pages.cohorts.removeHeader'), icon: 'pi pi-user-minus', acceptClass: 'p-button-danger',
+    confirmAction({
+        message: t('pages.cohorts.confirmRemoveStudent', { name: student.name }), header: t('pages.cohorts.removeHeader'), icon: 'pi pi-user-minus', danger: true,
         accept: () => router.delete(route('users.cohorts.members.remove', { cohort: currentCohort.value.code, student: student.id }), {
             preserveScroll: true,
             preserveState: true,
@@ -343,8 +342,8 @@ const downloadDocument = (doc) => {
     window.open(route('users.cohorts.documents.download', doc.id), '_blank');
 };
 const deleteDocument = (doc) => {
-    confirm.require({
-        message: t('pages.cohorts.confirmDeleteDocument', { name: doc.name }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
+    confirmAction({
+        message: t('pages.cohorts.confirmDeleteDocument', { name: doc.name }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', danger: true,
         accept: () => {
             router.delete(route('users.cohorts.documents.destroy', { cohort: currentCohort.value.code, document: doc.id }), {
                 preserveScroll: true,
@@ -409,8 +408,8 @@ const saveLiveSession = () => {
         });
 };
 const deleteLiveSession = (session) => {
-    confirm.require({
-        message: t('pages.cohorts.confirmDeleteSession', { title: session.title }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
+    confirmAction({
+        message: t('pages.cohorts.confirmDeleteSession', { title: session.title }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', danger: true,
         accept: () => {
             router.delete(route('users.cohorts.live-sessions.destroy', { cohort: currentCohort.value.code, live_session: session.id }), {
                 preserveScroll: true,
@@ -440,7 +439,7 @@ const savePrerequisites = () => {
 // UTILITAIRES
 // ======================================================================================
 const getSeverity = (s) => ({ 'Actif': { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'pi-check-circle' }, 'Programmé': { bg: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'pi-calendar' }, 'Terminé': { bg: 'bg-slate-50 text-slate-700 border-slate-200', icon: 'pi-flag-fill' }, 'Suspendu': { bg: 'bg-red-50 text-red-700 border-red-200', icon: 'pi-lock' } }[s] || { bg: 'bg-slate-50 text-slate-700', icon: 'pi-info' });
-const formatDate = (date) => date ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date)) : '-';
+const formatDate = (date) => date ? new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date)) : '-';
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
 onMounted(() => { setTimeout(() => loading.value = false, 400); });
 </script>
@@ -449,7 +448,6 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
     <AppLayout>
         <Head :title="t('pages.cohorts.headTitle')" />
         <Toast position="top-right" group="tc" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
     <!-- ============================================================================== -->

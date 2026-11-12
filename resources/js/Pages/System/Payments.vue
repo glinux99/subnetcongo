@@ -25,7 +25,7 @@ import InputSwitch from 'primevue/inputswitch';
 import Password from 'primevue/password';
 import Badge from 'primevue/badge';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 
 const props = defineProps({
@@ -49,7 +49,7 @@ const search = ref(props.filters.search || '');
 const statusFilter = ref(props.filters.status || '');
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(amount || 0);
+    return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(amount || 0);
 };
 
 const fetchGateways = () => {

@@ -11,7 +11,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     identity: { type: Object, default: () => ({}) },
@@ -44,7 +44,7 @@ const postCategorySlug = (p) => p.category?.slug || '';
 const formatDate = (date) => {
     if (!date) return '';
     try {
-        return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        return new Date(date).toLocaleDateString(locale.value, { day: 'numeric', month: 'long', year: 'numeric' });
     } catch (e) { return date; }
 };
 

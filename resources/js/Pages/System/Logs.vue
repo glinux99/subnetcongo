@@ -20,7 +20,7 @@ import Avatar from 'primevue/avatar';
 import ToggleSwitch from 'primevue/toggleswitch';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 const confirmAction = useConfirmAction();
 
@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
 
 const formatDate = (date) => {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleString('fr-FR');
+    return new Date(date).toLocaleString(locale.value);
 };
 </script>
 

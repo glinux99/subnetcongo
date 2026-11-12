@@ -20,7 +20,7 @@ import InputIcon from 'primevue/inputicon';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import Calendar from 'primevue/calendar';
 import MultiSelect from 'primevue/multiselect';
 import ProgressBar from 'primevue/progressbar';
@@ -33,7 +33,7 @@ import OverlayPanel from 'primevue/overlaypanel';
 import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 
 // --- STATE MANAGEMENT ---
@@ -186,7 +186,7 @@ const getStatusSeverity = (status) => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(value);
+    return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(value);
 };
 
 const exportCSV = () => {
@@ -424,7 +424,7 @@ onMounted(() => {
             </Card>
 
             <!-- TRANSACTION DETAIL MODAL -->
-            <Dialog v-model:visible="displayDetailDialog" :modal="true" :style="{ width: '750px' }" header="Détails de la Transaction" class="p-fluid sales-detail-modal" v-if="currentTransaction">
+            <SncDialog v-model:visible="displayDetailDialog" title="Détails de la Transaction" icon="pi-receipt" width="750px" v-if="currentTransaction">
                 <div class="pt-6">
                     <!-- Invoice Summary Top -->
                     <div class="flex justify-between items-center bg-slate-50 p-6 rounded-xl border border-slate-100 mb-8">
@@ -521,7 +521,7 @@ onMounted(() => {
                 </div>
 
                 <template #footer>
-                    <div class="flex justify-between w-full border-t border-slate-50 pt-4 px-2">
+                    <div class="flex justify-between w-full">
                         <Button label="Effectuer un Remboursement" icon="pi pi-refresh" class="p-button-danger p-button-text font-bold" />
                         <div class="flex gap-2">
                             <Button label="Télécharger PDF" icon="pi pi-file-pdf" class="p-button-outlined p-button-secondary font-bold" @click="triggerPrint" />
@@ -529,7 +529,7 @@ onMounted(() => {
                         </div>
                     </div>
                 </template>
-            </Dialog>
+            </SncDialog>
 
             <!-- FOOTER INFO -->
             <footer class="mt-16 text-center text-slate-400 text-sm pb-10 font-medium">

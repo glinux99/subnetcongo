@@ -13,7 +13,7 @@ import Column from 'primevue/column';
 import Divider from 'primevue/divider';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     exam: { type: Object, required: true },
@@ -22,7 +22,7 @@ const props = defineProps({
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleString('fr-FR', {
+    return new Date(dateStr).toLocaleString(locale.value, {
         day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
     });

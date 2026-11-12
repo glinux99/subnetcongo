@@ -5,8 +5,11 @@ import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import cloneDeep from 'lodash/cloneDeep';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 
 // Composants Externes
 import ForumSection from './ForumSection.vue';
@@ -30,7 +33,6 @@ import Divider from 'primevue/divider';
 import Editor from 'primevue/editor';
 import FileUpload from 'primevue/fileupload';
 import ProgressBar from 'primevue/progressbar';
-import ConfirmDialog from 'primevue/confirmdialog';
 import PickList from 'primevue/picklist';
 import Timeline from 'primevue/timeline';
 import Calendar from 'primevue/calendar';
@@ -48,7 +50,7 @@ import Message from 'primevue/message';
 const vTooltip = Tooltip;
 
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 
 // ======================================================================================
 // PROPS INERTIA (Data-Driven)
@@ -136,7 +138,7 @@ const selectChatSession = (entity, type = 'contact') => {
         onSuccess: () => { isAppLoading.value = false; scrollToBottom(); },
         onError: () => {
             isAppLoading.value = false;
-            toast.add({ severity: 'error', summary: 'Erreur Réseau', detail: 'Impossible de charger l\'historique.', life: 4000 });
+            toast.add({ severity: 'error', summary: t('pages.forums.toast_network_error_summary'), detail: t('pages.forums.toast_network_error_detail'), life: 4000 });
         }
     });
 };
@@ -168,7 +170,7 @@ const submitGroupChat = () => {
     groupChatForm.members = pickListContacts.value[1].map(c => c.id);
     groupChatForm.post(route('social.groups.store'), {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Groupe créé', detail: 'Votre espace collaboratif est prêt.' });
+            toast.add({ severity: 'success', summary: t('pages.forums.toast_group_created_summary'), detail: t('pages.forums.toast_group_created_detail') });
             createGroupDialog.value = false;
         }
     });
@@ -189,7 +191,7 @@ const onAssignmentSelect = (event) => { assignmentSubmitForm.submitted_file = ev
 const submitStudentAssignment = () => {
     assignmentSubmitForm.post(route('assignments.submit'), {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Travail remis', detail: 'Votre devoir a été envoyé au professeur.' });
+            toast.add({ severity: 'success', summary: t('pages.forums.toast_assignment_submitted_summary'), detail: t('pages.forums.toast_assignment_submitted_detail') });
             submitAssignmentDialog.value = false;
         }
     });
@@ -200,7 +202,7 @@ const openCreateAssignment = () => { assignmentCreateForm.reset(); createAssignm
 const saveInstructorAssignment = () => {
     assignmentCreateForm.post(route('instructor.assignments.store'), {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Publié', detail: 'Le devoir est disponible pour les étudiants.' });
+            toast.add({ severity: 'success', summary: t('pages.forums.toast_published_summary'), detail: t('pages.forums.toast_published_detail') });
             createAssignmentDialog.value = false;
         }
     });
@@ -221,8 +223,8 @@ const addQuizQuestion = () => {
 };
 
 const removeQuizQuestion = (index) => {
-    confirm.require({
-        message: 'Supprimer cette question ?', header: 'Confirmation', icon: 'pi pi-exclamation-triangle', acceptClass: 'p-button-danger',
+    confirmAction({
+        message: t('pages.forums.confirm_delete_question_message'), header: t('pages.forums.confirm_delete_question_header'), icon: 'pi pi-exclamation-triangle', danger: true,
         accept: () => quizCreateForm.questions.splice(index, 1)
     });
 };
@@ -235,12 +237,12 @@ const setCorrectOption = (qIndex, optIndex) => {
 
 const saveInstructorQuiz = () => {
     if (quizCreateForm.questions.some(q => !q.text.trim() || q.options.some(o => !o.text.trim()))) {
-        toast.add({ severity: 'error', summary: 'Formulaire invalide', detail: 'Veuillez remplir tous les champs de questions et options.' });
+        toast.add({ severity: 'error', summary: t('pages.forums.toast_form_invalid_summary'), detail: t('pages.forums.toast_form_invalid_detail') });
         return;
     }
     quizCreateForm.post(route('instructor.quizzes.store'), {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Quiz Généré', detail: 'L\'interrogation a été créée.' });
+            toast.add({ severity: 'success', summary: t('pages.forums.toast_quiz_created_summary'), detail: t('pages.forums.toast_quiz_created_detail') });
             createQuizDialog.value = false;
         }
     });
@@ -256,7 +258,7 @@ const openGradeDialog = (submission) => {
 const submitGrade = () => {
     gradeForm.post(route('instructor.grade.store'), {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Corrigé', detail: 'La note a été attribuée avec succès.' });
+            toast.add({ severity: 'success', summary: t('pages.forums.toast_graded_summary'), detail: t('pages.forums.toast_graded_detail') });
             gradeSubmissionDialog.value = false;
         }
     });
@@ -279,13 +281,13 @@ const openTakeQuiz = (assignment) => {
 const submitStudentQuiz = () => {
     const allAnswered = Object.values(quizSubmissionForm.answers).every(ans => ans !== null);
     if (!allAnswered) {
-        toast.add({ severity: 'warn', summary: 'Incomplet', detail: 'Veuillez répondre à toutes les questions avant de soumettre.', life: 4000 });
+        toast.add({ severity: 'warn', summary: t('pages.forums.toast_quiz_incomplete_summary'), detail: t('pages.forums.toast_quiz_incomplete_detail'), life: 4000 });
         return;
     }
 
     quizSubmissionForm.post(route('assignments.quiz.submit'), {
         onSuccess: () => {
-            toast.add({ severity: 'success', summary: 'Quiz Soumis', detail: 'Vos réponses ont été enregistrées et seront notées.' });
+            toast.add({ severity: 'success', summary: t('pages.forums.toast_quiz_submitted_summary'), detail: t('pages.forums.toast_quiz_submitted_detail') });
             takeQuizDialog.value = false;
             router.reload({ only: ['assignments'] });
         }
@@ -297,7 +299,7 @@ const submitStudentQuiz = () => {
 // ======================================================================================
 const formatDate = (dateString) => {
     if (!dateString) return '';
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(dateString));
+    return new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(dateString));
 };
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
 const isImageAttachment = (fileName) => {
@@ -323,14 +325,13 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 
 <template>
     <AppLayout>
-        <Head title="Hub Social & Académique" />
-        <ConfirmDialog />
+        <Head :title="t('pages.forums.head_title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <PageHeader
-                title="Communauté"
-                :subtitle="isInstructor ? 'Espace Professeur : Gérez vos évaluations, animez vos groupes et interagissez avec les étudiants.' : 'Espace Étudiant : Discutez, collaborez sur le forum et remettez vos devoirs.'"
+                :title="t('pages.forums.page_title')"
+                :subtitle="isInstructor ? t('pages.forums.subtitle_instructor') : t('pages.forums.subtitle_student')"
                 icon="pi-globe"
                 accent="blue"
             />
@@ -340,10 +341,10 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                 <!-- KPI raccourcis -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
                     <div @click="activeHubSection = 'chat'" class="cursor-pointer">
-                        <PageKpi label="Messages" :value="props.stats.unread_messages" icon="pi-envelope" color="red" />
+                        <PageKpi :label="t('pages.forums.kpi_messages')" :value="props.stats.unread_messages" icon="pi-envelope" color="red" />
                     </div>
                     <div v-if="!isInstructor" @click="activeHubSection = 'assignments'" class="cursor-pointer">
-                        <PageKpi label="Devoirs Dûs" :value="props.stats.pending_assignments" icon="pi-file-edit" color="amber" />
+                        <PageKpi :label="t('pages.forums.kpi_assignments_due')" :value="props.stats.pending_assignments" icon="pi-file-edit" color="amber" />
                     </div>
                 </div>
 
@@ -356,31 +357,31 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <Avatar :image="currentUser?.avatar" :label="!currentUser?.avatar ? getInitials(currentUser?.name) : ''" shape="circle" size="large" class="bg-blue-600 text-white font-black shadow-md border-2 border-white" />
                             <div class="flex flex-col overflow-hidden">
                                 <span class="font-black text-slate-800 text-sm truncate">{{ currentUser?.name }}</span>
-                                <Tag :value="isInstructor ? 'INSTRUCTEUR' : 'APPRENANT'" :severity="isInstructor ? 'info' : 'success'" class="text-[9px] font-black tracking-widest mt-1 w-max px-2 py-0.5 shadow-sm" />
+                                <Tag :value="isInstructor ? t('pages.forums.role_instructor') : t('pages.forums.role_student')" :severity="isInstructor ? 'info' : 'success'" class="text-[9px] font-black tracking-widest mt-1 w-max px-2 py-0.5 shadow-sm" />
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <button @click="activeHubSection = 'forum'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'forum' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-comments text-lg" :class="activeHubSection === 'forum' ? 'text-blue-200' : 'text-slate-400'"></i> Espace Forum</div>
+                                <div class="flex items-center gap-3"><i class="pi pi-comments text-lg" :class="activeHubSection === 'forum' ? 'text-blue-200' : 'text-slate-400'"></i> {{ t('pages.forums.nav_forum') }}</div>
                             </button>
                             <button @click="activeHubSection = 'chat'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'chat' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-send text-lg" :class="activeHubSection === 'chat' ? 'text-blue-200' : 'text-slate-400'"></i> Messagerie</div>
+                                <div class="flex items-center gap-3"><i class="pi pi-send text-lg" :class="activeHubSection === 'chat' ? 'text-blue-200' : 'text-slate-400'"></i> {{ t('pages.forums.nav_messaging') }}</div>
                                 <Badge v-if="props.stats.unread_messages > 0" :value="props.stats.unread_messages" severity="danger" />
                             </button>
                             <button @click="activeHubSection = 'assignments'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'assignments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-file-edit text-lg" :class="activeHubSection === 'assignments' ? 'text-blue-200' : 'text-slate-400'"></i> {{ isInstructor ? 'Évaluations' : 'Mes Devoirs' }}</div>
+                                <div class="flex items-center gap-3"><i class="pi pi-file-edit text-lg" :class="activeHubSection === 'assignments' ? 'text-blue-200' : 'text-slate-400'"></i> {{ isInstructor ? t('pages.forums.nav_evaluations') : t('pages.forums.nav_my_assignments') }}</div>
                             </button>
                             <button v-if="!isInstructor" @click="activeHubSection = 'courses'" :class="['w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 font-bold text-sm', activeHubSection === 'courses' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-[1.02]' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900']">
-                                <div class="flex items-center gap-3"><i class="pi pi-video text-lg" :class="activeHubSection === 'courses' ? 'text-blue-200' : 'text-slate-400'"></i> Mes Cours</div>
+                                <div class="flex items-center gap-3"><i class="pi pi-video text-lg" :class="activeHubSection === 'courses' ? 'text-blue-200' : 'text-slate-400'"></i> {{ t('pages.forums.nav_my_courses') }}</div>
                             </button>
                         </div>
 
                         <div class="mt-8 border-t border-slate-100 pt-6">
-                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">Filtres Forum</h3>
+                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4 mb-3">{{ t('pages.forums.filters_title') }}</h3>
                             <div class="flex flex-col gap-1 px-1">
                                 <button @click="handleCategoryFilter(null)" :class="['flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200', !props.filters.category ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800']">
-                                    <span class="flex items-center gap-3"><i class="pi pi-objects-column"></i> Toutes les catégories</span>
+                                    <span class="flex items-center gap-3"><i class="pi pi-objects-column"></i> {{ t('pages.forums.all_categories') }}</span>
                                 </button>
                                 <button v-for="cat in categories" :key="cat.id" @click="handleCategoryFilter(cat.id)" :class="['flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200', props.filters.category === cat.id ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800']">
                                     <span class="flex items-center gap-3">
@@ -405,25 +406,25 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                         <div v-if="isAppLoading" class="absolute inset-0 bg-white/70 backdrop-blur-md z-30 flex items-center justify-center">
                             <div class="bg-white p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4 border border-slate-100">
                                 <i class="pi pi-spin pi-spinner text-4xl text-blue-600"></i>
-                                <span class="font-black text-slate-700 text-sm">Synchronisation...</span>
+                                <span class="font-black text-slate-700 text-sm">{{ t('pages.forums.syncing') }}</span>
                             </div>
                         </div>
 
                         <div class="w-full md:w-96 border-r border-slate-100 flex flex-col bg-slate-50/50 h-1/2 md:h-full flex-shrink-0">
                             <div class="p-5 md:p-6 bg-white border-b border-slate-100 shadow-sm z-10">
                                 <div class="flex justify-between items-center mb-5">
-                                    <h2 class="text-xl font-black text-slate-800">Messagerie</h2>
-                                    <Button icon="pi pi-users" class="p-button-rounded p-button-secondary p-button-text bg-slate-50 hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="'Créer un groupe'" @click="openCreateGroupDialog" />
+                                    <h2 class="text-xl font-black text-slate-800">{{ t('pages.forums.messaging_title') }}</h2>
+                                    <Button icon="pi pi-users" class="p-button-rounded p-button-secondary p-button-text bg-slate-50 hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="t('pages.forums.create_group_tooltip')" @click="openCreateGroupDialog" />
                                 </div>
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search text-slate-400" />
-                                    <InputText v-model="chatSearchQuery" placeholder="Rechercher un contact..." class="w-full rounded-2xl bg-slate-50 border-slate-200 focus:border-blue-500 transition-colors font-medium" />
+                                    <InputText v-model="chatSearchQuery" :placeholder="t('pages.forums.search_contact_placeholder')" class="w-full rounded-2xl bg-slate-50 border-slate-200 focus:border-blue-500 transition-colors font-medium" />
                                 </IconField>
                             </div>
 
                             <div class="flex border-b border-slate-200 bg-white">
-                                <button @click="activeChatTab = 'contacts'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'contacts' ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">Contacts</button>
-                                <button @click="activeChatTab = 'groups'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'groups' ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">Groupes</button>
+                                <button @click="activeChatTab = 'contacts'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'contacts' ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">{{ t('pages.forums.tab_contacts') }}</button>
+                                <button @click="activeChatTab = 'groups'" class="flex-1 py-4 text-xs font-black uppercase tracking-widest transition-colors" :class="activeChatTab === 'groups' ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50/50' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'">{{ t('pages.forums.tab_groups') }}</button>
                             </div>
 
                             <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
@@ -444,7 +445,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                         <Avatar icon="pi pi-users" shape="circle" size="large" class="shadow-sm shrink-0" :class="currentChatSession?.id === group.id ? 'bg-white/20 text-white border border-white/30' : 'bg-slate-100 text-slate-500 border border-slate-200'" />
                                         <div class="flex-1 min-w-0">
                                             <h4 class="font-bold text-sm truncate" :class="currentChatSession?.id === group.id ? 'text-white' : 'text-slate-800'">{{ group.name }}</h4>
-                                            <p class="text-[10px] uppercase font-bold tracking-widest mt-1" :class="currentChatSession?.id === group.id ? 'text-blue-200' : 'text-slate-400'">{{ group.members_count }} membres</p>
+                                            <p class="text-[10px] uppercase font-bold tracking-widest mt-1" :class="currentChatSession?.id === group.id ? 'text-blue-200' : 'text-slate-400'">{{ t('pages.forums.members_count', { count: group.members_count }) }}</p>
                                         </div>
                                     </div>
                                 </template>
@@ -461,7 +462,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                             <div class="flex items-center gap-2 mt-1">
                                                 <span v-if="currentChatSession.sessionType === 'contact'" class="w-2 h-2 rounded-full shadow-sm" :class="currentChatSession.is_online ? 'bg-emerald-500' : 'bg-slate-300'"></span>
                                                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                                    {{ currentChatSession.sessionType === 'group' ? 'Groupe de discussion' : (currentChatSession.is_online ? 'En Ligne' : 'Hors Ligne') }}
+                                                    {{ currentChatSession.sessionType === 'group' ? t('pages.forums.status_group') : (currentChatSession.is_online ? t('pages.forums.status_online') : t('pages.forums.status_offline')) }}
                                                 </p>
                                             </div>
                                         </div>
@@ -476,7 +477,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                                 <p v-if="msg.content" class="text-[15px] leading-relaxed whitespace-pre-line font-medium">{{ msg.content }}</p>
 
                                                 <a v-if="msg.attachment_path" :href="msg.attachment_path" target="_blank" class="block rounded-xl overflow-hidden transition-transform hover:scale-[1.02] shadow-sm" :class="{'mt-4': msg.content}">
-                                                    <img v-if="isImageAttachment(msg.attachment_name)" :src="msg.attachment_path" class="w-full h-auto max-h-72 object-cover border border-black/5 rounded-xl" alt="Pièce jointe">
+                                                    <img v-if="isImageAttachment(msg.attachment_name)" :src="msg.attachment_path" class="w-full h-auto max-h-72 object-cover border border-black/5 rounded-xl" :alt="t('pages.forums.attachment_alt')">
                                                     <div v-else class="p-3.5 flex items-center gap-3 rounded-xl border" :class="msg.sender_id === currentUser.id ? 'bg-blue-700/50 border-blue-500/50' : 'bg-slate-50 border-slate-200'">
                                                         <i :class="getAttachmentIcon(msg.attachment_name)" class="text-2xl drop-shadow-sm"></i>
                                                         <div class="flex-1 min-w-0">
@@ -503,8 +504,8 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     </div>
 
                                     <div class="flex items-end gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:bg-white transition-all shadow-sm">
-                                        <FileUpload mode="basic" auto customUpload @select="handleChatFileUpload" chooseIcon="pi pi-paperclip" class="p-button-rounded p-button-text text-slate-500 hover:text-blue-600 hover:bg-slate-100 w-12 h-12 flex-shrink-0" v-tooltip.top="'Joindre un fichier'" />
-                                        <Textarea v-model="chatForm.message" autoResize rows="1" placeholder="Écrivez votre message..." class="flex-1 bg-transparent border-none shadow-none focus:ring-0 py-3.5 px-3 text-slate-700 font-medium resize-none max-h-32 custom-scrollbar text-[15px]" @keyup.enter.prevent="sendChatMessage" />
+                                        <FileUpload mode="basic" auto customUpload @select="handleChatFileUpload" chooseIcon="pi pi-paperclip" class="p-button-rounded p-button-text text-slate-500 hover:text-blue-600 hover:bg-slate-100 w-12 h-12 flex-shrink-0" v-tooltip.top="t('pages.forums.attach_file_tooltip')" />
+                                        <Textarea v-model="chatForm.message" autoResize rows="1" :placeholder="t('pages.forums.message_placeholder')" class="flex-1 bg-transparent border-none shadow-none focus:ring-0 py-3.5 px-3 text-slate-700 font-medium resize-none max-h-32 custom-scrollbar text-[15px]" @keyup.enter.prevent="sendChatMessage" />
                                         <Button icon="pi pi-send" rounded class="p-button-primary shadow-lg shadow-blue-200 w-12 h-12 flex-shrink-0" @click="sendChatMessage" :loading="chatForm.processing" :disabled="!chatForm.message.trim() && !chatForm.attachment" />
                                     </div>
                                 </div>
@@ -515,8 +516,8 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-6 shadow-sm">
                                         <i class="pi pi-comments text-5xl text-blue-200 transform -scale-x-100"></i>
                                     </div>
-                                    <h3 class="text-2xl font-black text-slate-700">Vos Conversations</h3>
-                                    <p class="text-sm max-w-sm mt-3 text-slate-500 font-medium leading-relaxed">Sélectionnez un contact ou un groupe dans le menu de gauche pour commencer à discuter en temps réel.</p>
+                                    <h3 class="text-2xl font-black text-slate-700">{{ t('pages.forums.empty_conversations_title') }}</h3>
+                                    <p class="text-sm max-w-sm mt-3 text-slate-500 font-medium leading-relaxed">{{ t('pages.forums.empty_conversations_text') }}</p>
                                 </div>
                             </template>
                         </div>
@@ -530,8 +531,8 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <div class="w-28 h-28 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border-8 border-emerald-100/50">
                                         <i class="pi pi-check text-5xl text-emerald-500"></i>
                                     </div>
-                                    <h3 class="text-2xl font-black text-slate-800">Tout est en ordre !</h3>
-                                    <p class="text-slate-500 mt-2 font-medium">Vous n'avez aucun devoir en attente pour le moment.</p>
+                                    <h3 class="text-2xl font-black text-slate-800">{{ t('pages.forums.assignments_empty_title') }}</h3>
+                                    <p class="text-slate-500 mt-2 font-medium">{{ t('pages.forums.assignments_empty_text') }}</p>
                                 </div>
 
                                 <div v-for="assignment in assignments" :key="assignment.id" class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col relative overflow-hidden group">
@@ -550,15 +551,15 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
 
                                     <div class="flex items-center justify-between mt-auto pt-5 border-t border-slate-100">
                                         <div class="flex flex-col">
-                                            <span class="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Échéance</span>
+                                            <span class="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">{{ t('pages.forums.due_label') }}</span>
                                             <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5"><i class="pi pi-calendar text-blue-500"></i> {{ formatDate(assignment.due_date) }}</span>
                                         </div>
 
-                                        <Button v-if="assignment.status === 'pending'" :label="assignment.type === 'quiz' ? 'Passer' : 'Remettre'" :icon="assignment.type === 'quiz' ? 'pi pi-play' : 'pi pi-upload'" class="p-button-primary font-black rounded-xl px-6 shadow-md shadow-blue-200" @click="assignment.type === 'quiz' ? openTakeQuiz(assignment) : openAssignmentSubmission(assignment)" />
+                                        <Button v-if="assignment.status === 'pending'" :label="assignment.type === 'quiz' ? t('pages.forums.btn_take_quiz') : t('pages.forums.btn_submit')" :icon="assignment.type === 'quiz' ? 'pi pi-play' : 'pi pi-upload'" class="p-button-primary font-black rounded-xl px-6 shadow-md shadow-blue-200" @click="assignment.type === 'quiz' ? openTakeQuiz(assignment) : openAssignmentSubmission(assignment)" />
                                         <div v-else-if="assignment.status === 'graded'" class="bg-emerald-50 text-emerald-700 rounded-xl px-5 py-2.5 font-black border border-emerald-200 flex items-center gap-2 shadow-sm">
                                             <i class="pi pi-check-circle"></i> {{ assignment.score }}/100
                                         </div>
-                                        <Tag v-else value="En correction" severity="info" class="rounded-xl px-4 py-2 text-xs font-black shadow-sm" />
+                                        <Tag v-else :value="t('pages.forums.status_grading')" severity="info" class="rounded-xl px-4 py-2 text-xs font-black shadow-sm" />
                                     </div>
                                 </div>
                             </div>
@@ -568,12 +569,12 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                             <div class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-200/80 overflow-hidden">
                                 <div class="p-6 md:p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center bg-white gap-4">
                                     <div>
-                                        <h3 class="text-2xl font-black text-slate-800">Centre d'Évaluations</h3>
-                                        <p class="text-sm text-slate-500 mt-1 font-medium">Créez des devoirs, concevez des quiz et notez les copies soumises.</p>
+                                        <h3 class="text-2xl font-black text-slate-800">{{ t('pages.forums.eval_center_title') }}</h3>
+                                        <p class="text-sm text-slate-500 mt-1 font-medium">{{ t('pages.forums.eval_center_subtitle') }}</p>
                                     </div>
                                     <div class="flex flex-wrap gap-3">
-                                        <Button label="Nouveau Devoir" icon="pi pi-plus" class="p-button-primary font-black rounded-xl shadow-md shadow-blue-200 px-6" @click="openCreateAssignment" />
-                                        <Button label="Nouveau Quiz" icon="pi pi-bolt" class="p-button-warning bg-amber-500 border-amber-500 hover:bg-amber-600 font-black rounded-xl shadow-md shadow-amber-200 px-6" @click="openCreateQuiz" />
+                                        <Button :label="t('pages.forums.btn_new_assignment')" icon="pi pi-plus" class="p-button-primary font-black rounded-xl shadow-md shadow-blue-200 px-6" @click="openCreateAssignment" />
+                                        <Button :label="t('pages.forums.btn_new_quiz')" icon="pi pi-bolt" class="p-button-warning bg-amber-500 border-amber-500 hover:bg-amber-600 font-black rounded-xl shadow-md shadow-amber-200 px-6" @click="openCreateQuiz" />
                                     </div>
                                 </div>
 
@@ -581,11 +582,11 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                     <template #empty>
                                         <div class="p-20 text-center text-slate-500 flex flex-col items-center">
                                             <i class="pi pi-folder-open text-6xl text-slate-200 mb-6"></i>
-                                            <span class="font-black text-xl text-slate-700">Aucune évaluation configurée</span>
-                                            <p class="text-sm font-medium mt-2 max-w-sm">Commencez par créer un devoir ou un quiz pour vos étudiants.</p>
+                                            <span class="font-black text-xl text-slate-700">{{ t('pages.forums.eval_empty_title') }}</span>
+                                            <p class="text-sm font-medium mt-2 max-w-sm">{{ t('pages.forums.eval_empty_text') }}</p>
                                         </div>
                                     </template>
-                                    <Column field="title" header="Évaluation" style="min-width: 25rem">
+                                    <Column field="title" :header="t('pages.forums.col_evaluation')" style="min-width: 25rem">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-5 py-3">
                                                 <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100" :class="data.type === 'quiz' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'">
@@ -598,7 +599,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column header="Échéance" style="min-width: 14rem">
+                                    <Column :header="t('pages.forums.col_due')" style="min-width: 14rem">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-2 text-[13px] font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-max border border-slate-100">
                                                 <i class="pi pi-calendar text-blue-400"></i>
@@ -606,14 +607,14 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column header="Copies en attente" align="center" style="min-width: 12rem">
+                                    <Column :header="t('pages.forums.col_pending_copies')" align="center" style="min-width: 12rem">
                                         <template #body="{ data }">
                                             <Badge :value="data.needs_grading_count" size="large" :severity="data.needs_grading_count > 0 ? 'danger' : 'secondary'" class="font-black shadow-sm text-sm px-3" />
                                         </template>
                                     </Column>
-                                    <Column header="Actions" alignFrozen="right" :frozen="true">
+                                    <Column :header="t('pages.forums.col_actions')" alignFrozen="right" :frozen="true">
                                         <template #body="{ data }">
-                                            <Button label="Corriger" icon="pi pi-check-square" class="p-button-outlined p-button-primary font-black rounded-xl px-5" @click="openGradeDialog(data)" :disabled="data.needs_grading_count === 0" />
+                                            <Button :label="t('pages.forums.btn_grade')" icon="pi pi-check-square" class="p-button-outlined p-button-primary font-black rounded-xl px-5" @click="openGradeDialog(data)" :disabled="data.needs_grading_count === 0" />
                                         </template>
                                     </Column>
                                 </DataTable>
@@ -625,20 +626,20 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
             </div>
         </div>
 
-        <Drawer v-model:visible="submitAssignmentDialog" position="right" class="w-full md:w-[500px] !bg-slate-50" header="Remise de Travail">
+        <Drawer v-model:visible="submitAssignmentDialog" position="right" class="w-full md:w-[500px] !bg-slate-50" :header="t('pages.forums.drawer_submit_title')">
             <div v-if="currentAssignment" class="flex flex-col h-full space-y-6 pt-4">
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
                     <h3 class="font-black text-slate-800 text-xl">{{ currentAssignment.title }}</h3>
-                    <p class="text-[13px] font-bold text-slate-500 flex items-center gap-2 mt-3 bg-slate-50 w-max px-3 py-1.5 rounded-lg"><i class="pi pi-clock text-blue-500"></i> Limite : {{ formatDate(currentAssignment.due_date) }}</p>
+                    <p class="text-[13px] font-bold text-slate-500 flex items-center gap-2 mt-3 bg-slate-50 w-max px-3 py-1.5 rounded-lg"><i class="pi pi-clock text-blue-500"></i> {{ t('pages.forums.limit_label', { date: formatDate(currentAssignment.due_date) }) }}</p>
                 </div>
 
                 <div class="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl p-12 text-center relative hover:bg-blue-50 transition-colors shadow-inner group">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm group-hover:scale-110 transition-transform">
                         <i class="pi pi-cloud-upload text-4xl text-blue-500"></i>
                     </div>
-                    <p class="font-black text-blue-900 text-lg mb-1">Uploader votre document</p>
-                    <p class="text-sm font-medium text-blue-600/70">Glissez-déposez ou cliquez pour parcourir</p>
+                    <p class="font-black text-blue-900 text-lg mb-1">{{ t('pages.forums.upload_title') }}</p>
+                    <p class="text-sm font-medium text-blue-600/70">{{ t('pages.forums.upload_subtitle') }}</p>
 
                     <FileUpload mode="basic" auto customUpload @select="onAssignmentSelect" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
 
@@ -652,17 +653,17 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                 </div>
 
                 <div class="space-y-3">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Commentaire pour le professeur (Optionnel)</label>
-                    <Textarea v-model="assignmentSubmitForm.student_comment" rows="5" placeholder="Ajouter une note ou des précisions..." class="w-full rounded-xl border-slate-200 bg-white p-5 font-medium focus:border-blue-500 shadow-sm" />
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">{{ t('pages.forums.comment_label') }}</label>
+                    <Textarea v-model="assignmentSubmitForm.student_comment" rows="5" :placeholder="t('pages.forums.comment_placeholder')" class="w-full rounded-xl border-slate-200 bg-white p-5 font-medium focus:border-blue-500 shadow-sm" />
                 </div>
 
                 <div class="mt-auto pt-6 border-t border-slate-200">
-                    <Button label="Confirmer l'envoi du devoir" icon="pi pi-send" class="w-full p-button-primary shadow-lg shadow-blue-200 font-black rounded-2xl py-4 text-lg" @click="submitStudentAssignment" :loading="assignmentSubmitForm.processing" :disabled="!assignmentSubmitForm.submitted_file" />
+                    <Button :label="t('pages.forums.btn_confirm_submit')" icon="pi pi-send" class="w-full p-button-primary shadow-lg shadow-blue-200 font-black rounded-2xl py-4 text-lg" @click="submitStudentAssignment" :loading="assignmentSubmitForm.processing" :disabled="!assignmentSubmitForm.submitted_file" />
                 </div>
             </div>
         </Drawer>
 
-        <Dialog v-model:visible="takeQuizDialog" modal maximized header="Passer l'Interrogation" class="bg-slate-50" :pt="{ header: { class: 'bg-white border-b border-slate-200 shadow-sm z-10 py-5' }, title: {class: 'font-black text-xl text-slate-800'} }">
+        <Dialog v-model:visible="takeQuizDialog" modal maximized :header="t('pages.forums.quiz_dialog_title')" class="bg-slate-50" :pt="{ header: { class: 'bg-white border-b border-slate-200 shadow-sm z-10 py-5' }, title: {class: 'font-black text-xl text-slate-800'} }">
             <div v-if="currentQuizToTake" class="max-w-[1000px] mx-auto py-10 space-y-8 pb-36">
                 <div class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400"></div>
@@ -670,7 +671,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                     <p class="text-slate-600 font-medium mb-6">{{ currentQuizToTake.instructions }}</p>
                     <div class="flex items-center gap-6 text-sm">
                         <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-book text-blue-500"></i> {{ currentQuizToTake.course?.title }}</div>
-                        <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-clock text-red-500"></i> Limite : {{ formatDate(currentQuizToTake.due_date) }}</div>
+                        <div class="flex items-center gap-2 font-bold text-slate-700"><i class="pi pi-clock text-red-500"></i> {{ t('pages.forums.limit_label', { date: formatDate(currentQuizToTake.due_date) }) }}</div>
                     </div>
                 </div>
 
@@ -691,9 +692,9 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
             </div>
             <template #footer>
                 <div class="flex justify-between items-center bg-white/95 backdrop-blur-xl border-t border-slate-200 p-6 md:px-10 absolute bottom-0 left-0 w-full shadow-[0_-20px_40px_rgba(0,0,0,0.06)] z-20">
-                    <Button label="Annuler" text class="font-black text-slate-500 px-6 rounded-xl hover:bg-slate-50" @click="takeQuizDialog = false" />
+                    <Button :label="t('pages.forums.btn_cancel')" text class="font-black text-slate-500 px-6 rounded-xl hover:bg-slate-50" @click="takeQuizDialog = false" />
                     <Button
-                        label="Soumettre mes réponses"
+                        :label="t('pages.forums.btn_submit_answers')"
                         icon="pi pi-check-circle"
                         class="p-button-primary shadow-lg shadow-blue-200/50 font-black rounded-xl px-10 py-4 text-white text-lg"
                         @click="submitStudentQuiz"
@@ -702,51 +703,51 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="createQuizDialog" modal maximized header="⚡ Constructeur d'Interrogation" class="bg-slate-50" :pt="{ header: { class: 'bg-white border-b border-slate-200 shadow-sm z-10 py-5' }, title: {class: 'font-black text-xl text-slate-800'} }">
+        <Dialog v-model:visible="createQuizDialog" modal maximized :header="t('pages.forums.quiz_builder_title')" class="bg-slate-50" :pt="{ header: { class: 'bg-white border-b border-slate-200 shadow-sm z-10 py-5' }, title: {class: 'font-black text-xl text-slate-800'} }">
             <div class="max-w-[1000px] mx-auto py-10 space-y-8 pb-36">
 
                 <div class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] grid grid-cols-1 md:grid-cols-2 gap-8 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-400"></div>
                     <div class="col-span-1 md:col-span-2 space-y-3">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Titre de l'évaluation</label>
-                        <InputText v-model="quizCreateForm.title" placeholder="Ex: Évaluation finale - Semestre 1" class="w-full font-black text-xl p-5 rounded-2xl bg-slate-50 border-slate-200 focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 transition-all shadow-sm" />
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{{ t('pages.forums.quiz_title_label') }}</label>
+                        <InputText v-model="quizCreateForm.title" :placeholder="t('pages.forums.quiz_title_placeholder')" class="w-full font-black text-xl p-5 rounded-2xl bg-slate-50 border-slate-200 focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 transition-all shadow-sm" />
                     </div>
                     <div class="space-y-3">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Temps alloué (Minutes)</label>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{{ t('pages.forums.quiz_time_label') }}</label>
                         <InputNumber v-model="quizCreateForm.time_limit_minutes" showButtons class="w-full" :pt="{ input: { class: 'font-black bg-slate-50 p-4 text-lg' } }" />
                     </div>
                     <div class="space-y-3">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Score minimum requis (%)</label>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{{ t('pages.forums.quiz_passing_label') }}</label>
                         <InputNumber v-model="quizCreateForm.passing_score" showButtons :min="0" :max="100" suffix=" %" class="w-full" :pt="{ input: { class: 'font-black bg-slate-50 p-4 text-lg' } }" />
                     </div>
                 </div>
 
                 <div v-for="(question, qIndex) in quizCreateForm.questions" :key="question.id" class="bg-white p-8 md:p-10 rounded-xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative group animate-fade-in">
                     <div class="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button icon="pi pi-trash" text rounded severity="danger" class="bg-red-50 w-10 h-10" v-tooltip.top="'Supprimer cette question'" @click="removeQuizQuestion(qIndex)" />
+                        <Button icon="pi pi-trash" text rounded severity="danger" class="bg-red-50 w-10 h-10" v-tooltip.top="t('pages.forums.delete_question_tooltip')" @click="removeQuizQuestion(qIndex)" />
                     </div>
 
                     <div class="space-y-4 w-full md:pr-16">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center font-black">{{ qIndex + 1 }}</div>
-                            <span class="text-xs font-black uppercase tracking-widest text-slate-400">Question</span>
+                            <span class="text-xs font-black uppercase tracking-widest text-slate-400">{{ t('pages.forums.question_label') }}</span>
                         </div>
-                        <Textarea v-model="question.text" autoResize rows="2" placeholder="Saisissez l'intitulé complet de la question..." class="w-full font-black text-xl text-slate-800 bg-transparent border-b-2 border-slate-200 focus:border-amber-400 rounded-none px-0 py-3 shadow-none focus:ring-0 transition-colors" :class="{'border-red-400 placeholder-rose-300': !question.text}" />
+                        <Textarea v-model="question.text" autoResize rows="2" :placeholder="t('pages.forums.question_placeholder')" class="w-full font-black text-xl text-slate-800 bg-transparent border-b-2 border-slate-200 focus:border-amber-400 rounded-none px-0 py-3 shadow-none focus:ring-0 transition-colors" :class="{'border-red-400 placeholder-rose-300': !question.text}" />
                     </div>
 
                     <div class="mt-10 space-y-4 pl-4 md:pl-11 border-l-2 border-slate-100">
                         <div v-for="(option, optIndex) in question.options" :key="optIndex" class="flex items-center gap-4">
-                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all shadow-sm shrink-0 hover:scale-110" :class="option.is_correct ? 'border-emerald-500 bg-emerald-500 text-white shadow-emerald-200' : 'border-slate-300 bg-white hover:border-emerald-400'" @click="setCorrectOption(qIndex, optIndex)" v-tooltip.left="'Cocher pour définir comme bonne réponse'">
+                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all shadow-sm shrink-0 hover:scale-110" :class="option.is_correct ? 'border-emerald-500 bg-emerald-500 text-white shadow-emerald-200' : 'border-slate-300 bg-white hover:border-emerald-400'" @click="setCorrectOption(qIndex, optIndex)" v-tooltip.left="t('pages.forums.correct_option_tooltip')">
                                 <i class="pi pi-check text-sm" v-show="option.is_correct"></i>
                             </div>
-                            <InputText v-model="option.text" placeholder="Proposition de réponse..." class="flex-1 rounded-2xl bg-slate-50 border-slate-200 p-4 focus:border-emerald-400 font-bold text-slate-700" :class="{'border-red-300': !option.text}" />
+                            <InputText v-model="option.text" :placeholder="t('pages.forums.option_placeholder')" class="flex-1 rounded-2xl bg-slate-50 border-slate-200 p-4 focus:border-emerald-400 font-bold text-slate-700" :class="{'border-red-300': !option.text}" />
                             <Button icon="pi pi-times" text rounded severity="secondary" class="hover:bg-slate-100 shrink-0 w-10 h-10 text-slate-400" @click="removeQuestionOption(qIndex, optIndex)" :disabled="question.options.length <= 2" />
                         </div>
-                        <Button label="Ajouter une proposition" icon="pi pi-plus" text class="font-black text-blue-600 mt-4 px-4 py-3 rounded-xl hover:bg-blue-50" @click="addQuestionOption(qIndex)" />
+                        <Button :label="t('pages.forums.btn_add_option')" icon="pi pi-plus" text class="font-black text-blue-600 mt-4 px-4 py-3 rounded-xl hover:bg-blue-50" @click="addQuestionOption(qIndex)" />
                     </div>
                 </div>
 
-                <Button label="Ajouter une nouvelle question" icon="pi pi-plus-circle" class="w-full p-button-outlined p-button-secondary border-dashed border-2 bg-white hover:bg-slate-50 py-8 font-black text-slate-600 rounded-xl text-lg transition-all shadow-sm" @click="addQuizQuestion" />
+                <Button :label="t('pages.forums.btn_add_question')" icon="pi pi-plus-circle" class="w-full p-button-outlined p-button-secondary border-dashed border-2 bg-white hover:bg-slate-50 py-8 font-black text-slate-600 rounded-xl text-lg transition-all shadow-sm" @click="addQuizQuestion" />
             </div>
 
             <template #footer>
@@ -754,13 +755,13 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xl text-slate-700">{{ quizCreateForm.questions.length }}</div>
                         <div class="flex flex-col">
-                            <span class="font-black text-slate-800">Questions configurées</span>
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Prêt pour la publication</span>
+                            <span class="font-black text-slate-800">{{ t('pages.forums.questions_configured') }}</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.forums.ready_publish') }}</span>
                         </div>
                     </div>
                     <div class="flex gap-4">
-                        <Button label="Annuler" text class="font-black text-slate-500 px-6 rounded-xl hover:bg-slate-50" @click="createQuizDialog = false" />
-                        <Button label="Publier le Quiz" icon="pi pi-check-circle" class="p-button-warning bg-amber-500 border-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-200/50 font-black rounded-xl px-10 py-4 text-white text-lg" @click="saveInstructorQuiz" :loading="quizCreateForm.processing" />
+                        <Button :label="t('pages.forums.btn_cancel')" text class="font-black text-slate-500 px-6 rounded-xl hover:bg-slate-50" @click="createQuizDialog = false" />
+                        <Button :label="t('pages.forums.btn_publish_quiz')" icon="pi pi-check-circle" class="p-button-warning bg-amber-500 border-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-200/50 font-black rounded-xl px-10 py-4 text-white text-lg" @click="saveInstructorQuiz" :loading="quizCreateForm.processing" />
                     </div>
                 </div>
             </template>

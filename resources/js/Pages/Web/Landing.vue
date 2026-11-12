@@ -12,7 +12,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // ============================================================================
 // 1. DÉFINITION DES PROPS & VALIDATION STRICTE
@@ -193,7 +193,7 @@ const displayStats = ref([]);
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 26;
 const toStatNumber = (raw) => parseFloat(String(raw).replace(',', '.')) || 0;
-const formatStatValue = (n) => Math.round(n).toLocaleString('fr-FR');
+const formatStatValue = (n) => Math.round(n).toLocaleString(locale.value);
 
 const parseStatValue = (value) => {
     const trimmed = String(value ?? '').trim();

@@ -2,6 +2,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from "@/sakai/layout/AppLayout.vue";
+import PageHeader from '@/Components/PageHeader.vue';
+import PageKpi from '@/Components/PageKpi.vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from 'vue-i18n';
@@ -230,28 +232,20 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
         <Head :title="t('labels.title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-[1rem] bg-primary-600 shadow-xl shadow-primary-200">
-                        <i class="pi pi-tags text-2xl text-white"></i>
-                    </div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Configuration des <span class="text-primary-600">Labels</span></h1>
-                </div>
-                <Button :label="t('labels.actions.add')" icon="pi pi-plus" raised @click="openNew" class="rounded-xl px-6" />
-            </div>
+            <PageHeader
+                :title="t('labels.title')"
+                :subtitle="t('labels.header_subtitle')"
+                icon="pi-tags"
+                accent="indigo"
+                :badge="t('labels.header_badge')"
+                :actions="[{ label: t('labels.actions.add'), icon: 'pi-plus', variant: 'primary', onClick: openNew }]"
+            />
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div v-for="(val, key) in stats" :key="key" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="flex flex-column gap-2">
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t(`labels.stats.${key}`) }}</span>
-                        <div class="flex items-center justify-between">
-                            <span class="text-3xl font-black text-slate-800">{{ val }}</span>
-                            <div class="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                                <i :class="key === 'total' ? 'pi pi-tags' : 'pi pi-sitemap'" class="text-slate-400"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="page-container page-section">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <PageKpi :label="t('labels.stats.total')" :value="stats.total" icon="pi-tags" color="slate" />
+                <PageKpi :label="t('labels.stats.withChars')" :value="stats.withChars" icon="pi-sitemap" color="indigo" />
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
@@ -333,6 +327,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                         </template>
                     </Column>
                 </DataTable>
+            </div>
             </div>
         </div>
 

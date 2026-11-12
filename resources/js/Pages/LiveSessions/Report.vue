@@ -11,7 +11,7 @@ import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     session: Object,
@@ -86,13 +86,13 @@ const engagementRate = computed(() => {
                             </template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_joined_at')">
-                            <template #body="{ data }">{{ data.joined_at ? new Date(data.joined_at).toLocaleTimeString('fr-FR') : '—' }}</template>
+                            <template #body="{ data }">{{ data.joined_at ? new Date(data.joined_at).toLocaleTimeString(locale) : '—' }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_time_spent')">
                             <template #body="{ data }">{{ formatTime(data.seconds_spent ?? 0) }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_last_ping')">
-                            <template #body="{ data }">{{ data.last_ping_at ? new Date(data.last_ping_at).toLocaleTimeString('fr-FR') : '—' }}</template>
+                            <template #body="{ data }">{{ data.last_ping_at ? new Date(data.last_ping_at).toLocaleTimeString(locale) : '—' }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_status')">
                             <template #body="{ data }">

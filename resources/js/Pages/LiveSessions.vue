@@ -12,12 +12,12 @@ import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import Select from 'primevue/select';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     sessions: Object,
@@ -127,7 +127,7 @@ const providerColor = (p) => ({
     zoom: 'bg-blue-500', meet: 'bg-emerald-500', bbb: 'bg-blue-600', jitsi: 'bg-slate-700', livekit: 'bg-red-500'
 }[p] ?? 'bg-slate-500');
 
-const formatDate = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+const formatDate = (d) => d ? new Date(d).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 const search_ = () => {
     router.get(route('live-sessions.index'), {
@@ -320,7 +320,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
         <!-- ============================================================================== -->
         <!-- MODAL : PLANIFIER UNE SESSION                                                  -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="showCreate" modal :header="t('pages.live_sessions.modal_create_title')" :style="{ width: '600px' }" class="!rounded-2xl" :pt="{ header: { class: 'border-b border-slate-100 pb-4' }, content: { class: 'pt-4' } }">
+        <SncDialog v-model:visible="showCreate" :title="t('pages.live_sessions.modal_create_title')" icon="pi-video" icon-class="from-red-500 to-red-600" width="600px">
             
             <div class="space-y-5">
                 <div>
@@ -389,15 +389,15 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
             </div>
 
             <template #footer>
-                <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 w-full">
+                <div class="flex justify-end gap-2 w-full">
                     <Button :label="t('pages.live_sessions.btn_cancel')" text @click="showCreate = false" class="!text-slate-500 font-bold" />
                     <Button :label="submitting ? t('pages.live_sessions.btn_creating') : t('pages.live_sessions.btn_create')" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- MODAL : INVITER / VISIBILITÉ -->
-        <Dialog v-model:visible="showInvite" modal :header="t('pages.live_sessions.modal_invite_title')" :style="{ width: '520px', maxWidth: '95vw' }" class="!rounded-2xl">
+        <SncDialog v-model:visible="showInvite" :title="t('pages.live_sessions.modal_invite_title')" icon="pi-envelope" width="520px">
             <div class="space-y-4 pt-2">
                 <div>
                     <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{{ t('pages.live_sessions.field_visibility') }}</label>
@@ -413,15 +413,15 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                 </div>
             </div>
             <template #footer>
-                <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 w-full">
+                <div class="flex justify-end gap-2 w-full">
                     <Button :label="t('pages.live_sessions.btn_cancel')" text @click="showInvite = false" />
                     <Button :label="t('pages.live_sessions.btn_save')" icon="pi pi-check" :loading="inviteSubmitting" @click="submitInvite" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- MODAL : DEMANDES D'ACCÈS -->
-        <Dialog v-model:visible="showRequests" modal :header="t('pages.live_sessions.modal_requests_title')" :style="{ width: '560px', maxWidth: '95vw' }" class="!rounded-2xl">
+        <SncDialog v-model:visible="showRequests" :title="t('pages.live_sessions.modal_requests_title')" icon="pi-user-plus" width="560px">
             <div class="pt-2">
                 <p class="text-sm text-slate-600 mb-3">{{ requestsTarget?.title }}</p>
                 <div v-if="(requestsTarget?.join_requests ?? []).length" class="space-y-2 max-h-[360px] overflow-auto">
@@ -444,7 +444,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                 </div>
                 <p v-else class="text-sm text-slate-400 text-center py-8">{{ t('pages.live_sessions.no_requests') }}</p>
             </div>
-        </Dialog>
+        </SncDialog>
     </AppLayout>
 </template>
 

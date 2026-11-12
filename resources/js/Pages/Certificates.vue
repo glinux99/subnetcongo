@@ -13,7 +13,7 @@ import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 
@@ -33,7 +33,7 @@ import Divider from 'primevue/divider';
 import ProgressBar from 'primevue/progressbar';
 import Badge from 'primevue/badge';
 import Avatar from 'primevue/avatar';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import Chart from 'primevue/chart';
 import Message from 'primevue/message';
 import IconField from 'primevue/iconfield';
@@ -61,7 +61,7 @@ const props = defineProps({
 });
 
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const searchLoading = ref(false);
 
@@ -475,8 +475,8 @@ const duplicateTemplate = (template) => {
 };
 
 const deleteTemplate = (id) => {
-    confirm.require({
-        message: t('pages.certificates.deleteTemplateMessage'), header: t('pages.certificates.deleteTemplateHeader'), icon: 'pi pi-trash', acceptClass: 'p-button-danger',
+    confirmAction({
+        message: t('pages.certificates.deleteTemplateMessage'), header: t('pages.certificates.deleteTemplateHeader'), icon: 'pi pi-trash', danger: true,
         accept: () => router.delete(route('certificates.templates.destroy', { template: id }))
     });
 };
@@ -562,8 +562,6 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 <template>
     <AppLayout>
         <Head title="Ingénierie de Certification | SubnetCongo LMS" />
-        <ConfirmDialog />
-
         <!-- ============================================================================== -->
         <!-- TABLEAU DE BORD PRINCIPAL (HORS ÉDITEUR)                                       -->
         <!-- ============================================================================== -->
@@ -1447,7 +1445,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- DIALOGUES SECONDAIRES (Émission Massive & Révocation)                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="bulkIssuanceDialog" modal :header="t('pages.certificates.bulkTitle')" :style="{width: '650px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <SncDialog v-model:visible="bulkIssuanceDialog" :title="t('pages.certificates.bulkTitle')" icon="pi-send" width="650px">
             <div class="p-8 space-y-8">
 
                 <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex gap-4 items-start">
@@ -1503,14 +1501,14 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
+                <div class="flex justify-between items-center w-full">
                     <Button :label="t('pages.certificates.cancel')" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="bulkIssuanceDialog = false" />
                     <Button :label="t('pages.certificates.launchEngineering')" icon="pi pi-bolt" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20" @click="submitBulkIssuance" :loading="isSaving" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
-        <Dialog v-model:visible="expirationDialog" modal :header="t('pages.certificates.expirationTitle')" :style="{width: '450px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <SncDialog v-model:visible="expirationDialog" :title="t('pages.certificates.expirationTitle')" icon="pi-calendar-times" icon-class="from-amber-500 to-amber-600" width="450px">
             <div class="p-8 space-y-6">
                 <div class="flex items-start gap-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
                     <i class="pi pi-exclamation-triangle text-amber-500 text-xl mt-1"></i>
@@ -1528,14 +1526,14 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
+                <div class="flex justify-between items-center w-full">
                     <Button :label="t('pages.certificates.cancel')" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="expirationDialog = false" />
                     <Button :label="t('pages.certificates.confirmExpiration')" icon="pi pi-check" class="bg-amber-500 hover:bg-amber-600 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-amber-500/20" @click="submitExpiration" :loading="expirationForm.processing" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
-        <Dialog v-model:visible="revocationDialog" modal :header="t('pages.certificates.revocationTitle')" :style="{width: '550px'}" class="rounded-xl shadow-2xl" contentClass="p-0 bg-slate-50 border-t border-slate-100" headerClass="bg-white border-b border-slate-100 p-6">
+        <SncDialog v-model:visible="revocationDialog" :title="t('pages.certificates.revocationTitle')" icon="pi-shield-slash" icon-class="from-red-500 to-red-600" width="550px">
             <div class="p-8 text-center flex flex-col items-center">
                 <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-inner border border-red-100 relative">
                     <div class="absolute inset-0 rounded-full border-2 border-red-500 border-dashed animate-[spin_10s_linear_infinite] opacity-20"></div>
@@ -1563,12 +1561,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-between items-center p-6 bg-white border-t border-slate-100 rounded-b-3xl">
+                <div class="flex justify-between items-center w-full">
                     <Button :label="t('pages.certificates.cancel')" class="p-button-text text-slate-500 font-bold hover:bg-slate-50 px-6 rounded-xl" @click="revocationDialog = false" />
                     <Button :label="t('pages.certificates.confirmRevocation')" icon="pi pi-exclamation-triangle" :disabled="!revocationForm.confirm_action" class="bg-red-600 hover:bg-red-700 border-none text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-red-500/20 transition-all disabled:opacity-50 disabled:hover:bg-red-600" @click="submitRevocation" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
     </AppLayout>
 </template>

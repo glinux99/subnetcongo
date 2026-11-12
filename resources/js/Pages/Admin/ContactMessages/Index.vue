@@ -12,7 +12,7 @@ import Select from 'primevue/select';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     messages: { type: Object, default: () => ({ data: [] }) },
@@ -48,7 +48,7 @@ const statusSeverity = (s) => ({
 const formatDate = (iso) => { 
     if(!iso) return ''; 
     try { 
-        return new Date(iso).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); 
+        return new Date(iso).toLocaleString(locale.value, { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); 
     } catch(_) { return iso; } 
 };
 </script>

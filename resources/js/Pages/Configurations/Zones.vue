@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from "@/sakai/layout/AppLayout.vue";
+import PageHeader from '@/Components/PageHeader.vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from 'vue-i18n';
@@ -217,27 +218,22 @@ const deleteSelectedZones = () => {
 
 <template>
     <AppLayout>
-        <Head title="Gestion des Zones" />
+        <Head :title="t('zones.title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div class="flex items-center gap-4">
- <div class="flex h-16 w-16 items-center justify-center rounded-[1rem] bg-primary-600 shadow-xl shadow-primary-200">
- <i class="pi pi-map-marker text-2xl text-white"></i>
-                    </div>
-                <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Gestion des
-                         <span class="text-primary-600">Zones</span>
-                    </h1>
-                    <p class="text-slate-500 font-medium">Organisation des localisations géographiques</p>
-                </div>
-                </div>
-                <div class="flex gap-3">
-                    <Button :label="t('regions.actions.resetFilters')" icon="pi pi-filter-slash" outlined severity="secondary" @click="initFilters" class="rounded-xl" />
-                    <Button :label="t('regions.actions.add')" icon="pi pi-plus"  raised @click="openNew" class="rounded-xl px-6" />
-                </div>
-            </div>
+            <PageHeader
+                :title="t('zones.title')"
+                :subtitle="t('zones.subtitle')"
+                icon="pi-map-marker"
+                accent="emerald"
+                :badge="t('zones.header_badge')"
+                :actions="[
+                    { label: t('zones.actions.resetFilters'), icon: 'pi-filter-slash', variant: 'secondary', onClick: initFilters },
+                    { label: t('zones.actions.add'), icon: 'pi-plus', variant: 'primary', onClick: openNew },
+                ]"
+            />
 
+            <div class="page-container page-section">
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
                 <DataTable
                     ref="dt"
@@ -266,10 +262,10 @@ const deleteSelectedZones = () => {
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="filters['global'].value" placeholder="Rechercher une zone..." class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('zones.toolbar.searchPlaceholder')" class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
                             </IconField>
                             <div class="flex items-center gap-2">
-                                <label for="rowsPerPage" class="text-sm font-medium text-slate-600">Lignes par page:</label>
+                                <label for="rowsPerPage" class="text-sm font-medium text-slate-600">{{ t('zones.rows_per_page') }}</label>
                                 <Dropdown v-model="lazyParams.rows" :options="rowsPerPageOptions"
                                           class="p-dropdown-sm rounded-xl border-slate-200"
                                           id="rowsPerPage" />
@@ -343,6 +339,7 @@ const deleteSelectedZones = () => {
                     display="chip"
                     :placeholder="t('common.columnSelector.placeholder')" class="w-full max-w-xs" />
             </OverlayPanel>
+            </div>
         </div>
 
         <Dialog

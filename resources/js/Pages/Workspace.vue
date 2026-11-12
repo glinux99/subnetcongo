@@ -21,7 +21,7 @@ import { useToast } from "primevue/usetoast";
 import { debounce } from 'lodash'; // Nécessite npm install lodash
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Layout & UI Components
 import AppLayout from '@/sakai/layout/AppLayout.vue';
@@ -216,7 +216,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', handleBeforeUnloa
                                 <div class="flex flex-wrap items-center gap-2 mt-1 text-sm text-slate-500">
                                     <span class="font-semibold text-slate-700">{{ submission.assignment.title }}</span>
                                     <Divider layout="vertical" class="hidden md:block" />
-                                    <span>{{ t('pages.workspace.submittedOn') }} {{ new Date(submission.submitted_at).toLocaleDateString('fr-FR', { hour: '2-digit', minute:'2-digit' }) }}</span>
+                                    <span>{{ t('pages.workspace.submittedOn') }} {{ new Date(submission.submitted_at).toLocaleDateString(locale, { hour: '2-digit', minute:'2-digit' }) }}</span>
                                     <Divider layout="vertical" class="hidden md:block" />
                                     <Tag :value="getStatusInfo(submission.status).text" :icon="`pi ${getStatusInfo(submission.status).icon}`" :severity="getStatusInfo(submission.status).severity" rounded />
                                 </div>

@@ -8,7 +8,7 @@ import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({ sessions: Array, courses: Array });
 
@@ -24,7 +24,7 @@ const isJoinable = (s) => {
 };
 
 const formatDate = (value) => value
-    ? new Date(value).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    ? new Date(value).toLocaleString(locale.value, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : t('pages.live_session_student.date_tbc');
 
 const statusSeverity = (s) => (s === 'Live' ? 'danger' : 'info');

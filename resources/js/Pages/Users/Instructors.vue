@@ -19,10 +19,10 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 import { useI18n } from 'vue-i18n';
@@ -44,7 +44,6 @@ import SelectButton from 'primevue/selectbutton';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Sidebar from 'primevue/sidebar';
@@ -60,7 +59,7 @@ import Slider from 'primevue/slider';
 import Rating from 'primevue/rating';
 import MultiSelect from 'primevue/multiselect';
 import Chart from 'primevue/chart';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // ======================================================================================
 // PROPS INERTIA (Données strictes provenant du backend/DB)
@@ -92,7 +91,7 @@ const props = defineProps({
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const selectedInstructors = ref([]);
 const expandedRows = ref([]);
@@ -265,11 +264,11 @@ const saveInstructor = () => {
 };
 
 const confirmDeleteInstructor = (instructor) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.instructors.confirmDeleteMessage', { name: instructor.name }),
         header: t('pages.instructors.deleteHrDossierHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.instructors.yesPurge'),
         rejectLabel: t('pages.instructors.cancel'),
         accept: () => {
@@ -283,11 +282,11 @@ const confirmDeleteInstructor = (instructor) => {
 
 const confirmBulkDelete = () => {
     if (!selectedInstructors.value.length) return;
-    confirm.require({
+    confirmAction({
         message: t('pages.instructors.bulkDeleteMessage', { count: selectedInstructors.value.length }),
         header: t('pages.instructors.bulkPurgeHeader'),
         icon: 'pi pi-ban',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.instructors.confirmPurge'),
         rejectLabel: t('pages.instructors.cancel'),
         accept: () => {
@@ -345,7 +344,7 @@ const formatCurrency = (value) => {
 
 const formatDate = (date) => {
     if (!date) return '';
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date));
+    return new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date));
 };
 
 const parseJSON = (data) => {
@@ -418,7 +417,6 @@ onMounted(() => {
     <AppLayout>
         <Head :title="t('pages.instructors.headTitle')" />
         <Toast position="top-right" group="tc" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

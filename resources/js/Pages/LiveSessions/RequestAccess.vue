@@ -5,7 +5,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({ session: Object, requested: Boolean });
 
@@ -29,7 +29,7 @@ const ask = () => form.post(route('live-sessions.request-access', props.session.
                 <div class="p-6 space-y-4">
                     <div class="flex flex-wrap gap-3 text-sm text-slate-600">
                         <span><i class="pi pi-user text-xs mr-1"></i> {{ session?.instructor?.name || t('pages.live_session_request_access.instructor_fallback') }}</span>
-                        <span><i class="pi pi-calendar text-xs mr-1"></i> {{ session?.start_at ? new Date(session.start_at).toLocaleString('fr-FR') : t('pages.live_session_request_access.tbc') }}</span>
+                        <span><i class="pi pi-calendar text-xs mr-1"></i> {{ session?.start_at ? new Date(session.start_at).toLocaleString(locale) : t('pages.live_session_request_access.tbc') }}</span>
                         <Tag :value="session?.status === 'Live' ? t('pages.live_session_request_access.tag_live') : t('pages.live_session_request_access.tag_scheduled')" :severity="session?.status === 'Live' ? 'danger' : 'info'" />
                     </div>
 

@@ -15,8 +15,8 @@
  */
 
 import AppLayout from '@/sakai/layout/AppLayout.vue';
-import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick, shallowRef } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3'; // <-- Ajout de route
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { Head, router } from '@inertiajs/vue3'; // <-- Ajout de route
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import { useI18n } from 'vue-i18n';
@@ -24,34 +24,20 @@ import { useEventListener, useFullscreen, useBattery, useNetwork } from '@vueuse
 
 // --- PRIMEVUE COMPONENTS ---
 import Button from 'primevue/button';
-import RadioButton from 'primevue/radiobutton';
 import Checkbox from 'primevue/checkbox';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import ProgressBar from 'primevue/progressbar';
 import Card from 'primevue/card';
 import Divider from 'primevue/divider';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
-import ScrollPanel from 'primevue/scrollpanel';
+import Dropdown from 'primevue/dropdown';
 import Avatar from 'primevue/avatar';
 import Badge from 'primevue/badge';
-import Message from 'primevue/message';
 import Sidebar from 'primevue/sidebar';
 import Knob from 'primevue/knob';
 import ConfirmDialog from 'primevue/confirmdialog';
-import Skeleton from 'primevue/skeleton';
-import OverlayPanel from 'primevue/overlaypanel';
-import Timeline from 'primevue/timeline';
-import Dropdown from 'primevue/dropdown';
-import PickList from 'primevue/picklist';
 import OrderList from 'primevue/orderlist';
-import Inplace from 'primevue/inplace';
-import Chip from 'primevue/chip';
-import Panel from 'primevue/panel';
-import Stepper from 'primevue/stepper'; // PrimeVue 4 style (simulé ici via v-if)
-import Splitter from 'primevue/splitter';
-import SplitterPanel from 'primevue/splitterpanel';
 
 // ======================================================================================
 // PROPS & INITIALISATION SÉCURISÉE

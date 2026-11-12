@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import { useToast } from 'primevue/usetoast';
 import { useLayout } from '@/sakai/layout/composables/layout';
 import { useI18n } from 'vue-i18n';
@@ -210,57 +211,47 @@ const exportAsPdf = () => {
 
         <div v-else class="page-bg min-h-screen font-sans pb-20">
 
-           <div class="relative w-full h-80 bg-slate-900 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-primary-700/50 via-slate-900 to-black z-0"></div>
+           <PageHeader
+                :title="user.name"
+                :subtitle="user.fonction || t('profile.headTitle')"
+                :badge="user.status || 'Actif'"
+                icon="pi-user"
+                accent="indigo"
+           />
 
-                <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none select-none z-10">
-                    <h2 class="text-[7vw] font-black uppercase tracking-tighter text-transparent"
-                        style="-webkit-text-stroke: 2px white;">
-                        SUBNETCONGO
-                    </h2>
-                </div>
+            <div class="page-container page-section">
 
-                <div class="absolute -top-24 -left-24 w-96 h-96 bg-primary-500/10 rounded-full blur-[100px] z-10"></div>
-                <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] z-10"></div>
-
-                <div class="max-w-7xl mx-auto h-full relative px-6 flex flex-col justify-center items-center md:items-start z-20">
-                    <div class="flex flex-col md:flex-row items-center gap-8 mt-12">
-
-                        <div class="relative group">
-                            <div class="p-2 bg-white/10 backdrop-blur-md rounded-full shadow-2xl ring-1 ring-white/20">
-                                <Avatar
-                                    :image="photoPreview || user.profile_photo_url"
-                                    :label="!user.profile_photo_url && !photoPreview ? user.name.charAt(0) : null"
-                                    size="xlarge"
-                                    shape="circle"
-                                    class="w-40 h-40 !border-4 !border-white/20 text-4xl font-black bg-primary-600 text-white"
-                                />
-                            </div>
-                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                <FileUpload mode="basic" auto customUpload @select="onPhotoSelect" chooseIcon="pi pi-camera"
-                                    class="p-button-rounded p-button-lg !bg-white !text-slate-900 shadow-xl" />
-                            </div>
+                <!-- Carte profil : avatar + photo -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-center gap-6">
+                    <div class="relative group flex-shrink-0">
+                        <div class="p-2 bg-slate-50 rounded-full shadow-lg ring-1 ring-slate-200">
+                            <Avatar
+                                :image="photoPreview || user.profile_photo_url"
+                                :label="!user.profile_photo_url && !photoPreview ? user.name.charAt(0) : null"
+                                size="xlarge"
+                                shape="circle"
+                                class="w-28 h-28 !border-4 !border-white text-3xl font-black bg-indigo-600 text-white"
+                            />
                         </div>
-
-                        <div class="text-center md:text-left text-white space-y-2">
-                            <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-white  drop-shadow-lg">
-                                {{ user.name }}
-                            </h1>
-                            <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                                <Tag :severity="user.status === 'ACTIVE' ? 'success' : 'warning'" class="border border-white/30 px-3 py-1">
-                                    <i class="pi pi-verified mr-2"></i> {{ user.status || 'Actif' }}
-                                </Tag>
-                                <Tag severity="info" class="!bg-white/10 !text-white border border-white/20 px-3 py-1 uppercase text-[10px] font-bold tracking-widest">
-                                    {{ user.fonction || 'Membre' }}
-                                </Tag>
-                            </div>
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <FileUpload mode="basic" auto customUpload @select="onPhotoSelect" chooseIcon="pi pi-camera"
+                                class="p-button-rounded p-button-lg !bg-white !text-slate-900 shadow-xl" />
                         </div>
-
+                    </div>
+                    <div class="text-center sm:text-left space-y-2">
+                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">{{ user.name }}</h2>
+                        <div class="flex flex-wrap gap-2 justify-center sm:justify-start">
+                            <Tag :severity="user.status === 'ACTIVE' ? 'success' : 'warning'">
+                                <i class="pi pi-verified mr-2"></i> {{ user.status || 'Actif' }}
+                            </Tag>
+                            <Tag severity="info" class="uppercase text-[10px] font-bold tracking-widest">
+                                {{ user.fonction || 'Membre' }}
+                            </Tag>
+                        </div>
+                        <p class="text-xs text-slate-400 font-medium">{{ user.email }}</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="max-w-7xl mx-auto px-4 md:px-6 -mt-12 relative z-20">
                 <div class="bg-white rounded-xl shadow-2xl border border-slate-200/50 overflow-hidden">
 
                     <TabView v-model:activeIndex="activeTab" class="custom-tabs">

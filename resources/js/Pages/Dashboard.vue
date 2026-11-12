@@ -15,14 +15,13 @@ import debounce from 'lodash/debounce';
 
 // Composants PrimeVue nécessaires
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import Chart from 'primevue/chart';
 import Tag from 'primevue/tag';
 import Knob from 'primevue/knob';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import ConfirmDialog from 'primevue/confirmdialog';
 import Timeline from 'primevue/timeline';
 import ScrollPanel from 'primevue/scrollpanel';
 import Badge from 'primevue/badge';
@@ -37,7 +36,7 @@ import SncSkeleton from '@/Components/SncSkeleton.vue';
 import SncAlert from '@/Components/SncAlert.vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // ======================================================================================
 // PROPS
@@ -58,7 +57,7 @@ const props = defineProps({
 // ÉTAT RÉACTIF
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const isLoading = ref(true);
 
 const activeFilters = reactive({
@@ -110,10 +109,11 @@ const applyFilters = debounce(() => {
 }, 400);
 
 const purgeCache = () => {
-    confirm.require({
+    confirmAction({
         message: t('pages.dashboard.purgeMessage'),
         header: t('pages.dashboard.purgeHeader'),
         icon: 'pi pi-exclamation-triangle',
+        danger: true,
         accept: () => {
             router.post(route('admin.analytics.purge'), {}, {
                 onSuccess: () => toast.add({ severity: 'warn', summary: t('pages.dashboard.cachePurged'), detail: t('pages.dashboard.cachePurgedDetail') })
@@ -148,8 +148,8 @@ const radarOptions = computed(() => ({
 }));
 
 // Helpers
-const formatCurrency = (val) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(val);
-const formatNumber = (val) => new Intl.NumberFormat('fr-FR').format(val);
+const formatCurrency = (val) => new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(val);
+const formatNumber = (val) => new Intl.NumberFormat(locale.value).format(val);
 
 onMounted(() => {
     setTimeout(() => isLoading.value = false, 500);
@@ -164,7 +164,6 @@ onBeforeUnmount(() => {
 <template>
     <AppLayout>
         <Head :title="t('pages.dashboard.headTitle')" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen">
 

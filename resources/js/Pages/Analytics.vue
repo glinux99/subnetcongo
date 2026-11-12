@@ -32,7 +32,6 @@ import AvatarGroup from 'primevue/avatargroup';
 import Divider from 'primevue/divider';
 import Chip from 'primevue/chip';
 import Sidebar from 'primevue/sidebar';
-import Dialog from 'primevue/dialog';
 import Menu from 'primevue/menu';
 import OverlayPanel from 'primevue/overlaypanel';
 import Knob from 'primevue/knob';

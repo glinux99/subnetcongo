@@ -19,6 +19,8 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
@@ -38,8 +40,6 @@ import Dialog from 'primevue/dialog';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
-import ConfirmDialog from 'primevue/confirmdialog';
 import SelectButton from 'primevue/selectbutton';
 import Editor from 'primevue/editor';
 import RadioButton from 'primevue/radiobutton';
@@ -69,7 +69,7 @@ const props = defineProps({
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const searchLoading = ref(false);
 
@@ -228,11 +228,11 @@ const saveQuestion = () => {
 };
 
 const confirmDelete = (id) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.questions.archiveMessage'),
         header: t('pages.questions.archiveHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         accept: () => {
             router.delete(route('squestions.destroy', id), {
                 preserveScroll: true,
@@ -314,7 +314,6 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 <template>
     <AppLayout>
         <Head :title="t('pages.questions.headTitle')" />
-        <ConfirmDialog />
 
   <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -709,8 +708,8 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <!-- MODAL : ANALYSE D'ITEM (STATISTIQUES)                                          -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="analyticsDialog" modal :header="t('pages.questions.analyticsTitle')" class="w-full md:w-[700px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
-            <div class="p-6 space-y-6">
+        <SncDialog v-model:visible="analyticsDialog" :title="t('pages.questions.analyticsTitle')" icon="pi-chart-pie" width="700px">
+            <div class="space-y-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-blue-600 text-white p-6 rounded-xl shadow-md text-center">
                         <div class="text-[10px] font-bold uppercase tracking-widest text-blue-200 mb-1">{{ t('pages.questions.difficultyIndex') }}</div>
@@ -735,13 +734,16 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
                 </div>
             </div>
-        </Dialog>
+            <template #footer>
+                <Button :label="t('pages.questions.close')" class="p-button-secondary p-button-text font-bold" @click="analyticsDialog = false" />
+            </template>
+        </SncDialog>
 
         <!-- ============================================================================== -->
         <!-- MODAL : IMPORTATION                                                            -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="importDialog" modal :header="t('pages.questions.importTitle')" class="w-full md:w-[600px] rounded-xl shadow-2xl border border-slate-200" contentClass="p-0 bg-slate-50">
-            <div class="p-8 text-center space-y-6">
+        <SncDialog v-model:visible="importDialog" :title="t('pages.questions.importTitle')" icon="pi-upload" width="600px">
+            <div class="text-center space-y-6">
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mx-auto border border-blue-100">
                     <i class="pi pi-upload text-2xl"></i>
                 </div>
@@ -757,7 +759,10 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     <p class="text-xs text-amber-800 leading-relaxed" v-html="t('pages.questions.encodingWarning')"></p>
                 </div>
             </div>
-        </Dialog>
+            <template #footer>
+                <Button :label="t('common.cancel')" class="p-button-text p-button-secondary font-bold text-slate-600" @click="importDialog = false" />
+            </template>
+        </SncDialog>
 
     </AppLayout>
 </template>

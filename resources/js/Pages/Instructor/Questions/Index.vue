@@ -16,7 +16,7 @@ import Tooltip from 'primevue/tooltip';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const vTooltip = Tooltip;
 
@@ -52,7 +52,7 @@ const statusSeverity = (s) => ({
     open: 'warn', answered: 'info', resolved: 'success', closed: 'secondary'
 }[s] ?? 'info');
 
-const formatDate = (d) => d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+const formatDate = (d) => d ? new Date(d).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 const applyFilter = () => {
     router.get(route('instructor.questions.index'), { status: statusFilter.value }, { preserveState: true });

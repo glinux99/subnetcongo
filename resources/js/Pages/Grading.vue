@@ -15,7 +15,7 @@ import PageKpi from '@/Components/PageKpi.vue';
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { useI18n } from 'vue-i18n';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
@@ -49,7 +49,6 @@ import OverlayPanel from 'primevue/overlaypanel';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Message from 'primevue/message';
-import ConfirmDialog from 'primevue/confirmdialog';
 import Tooltip from 'primevue/tooltip';
 import Skeleton from 'primevue/skeleton';
 import SplitButton from 'primevue/splitbutton';
@@ -65,7 +64,7 @@ const props = defineProps({
 });
 
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const searchLoading = ref(false);
 
@@ -282,11 +281,11 @@ const saveGrade = (status = 'graded') => {
         return;
     }
 
-    confirm.require({
+    confirmAction({
         message: confirmMsg,
         header: confirmHeader,
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: status === 'graded' ? 'p-button-primary' : 'p-button-warning',
+        danger: status === 'graded',
         acceptLabel: t('pages.grading.confirmAction'),
         rejectLabel: t('pages.grading.cancelAction'),
         accept: () => processSave(status)
@@ -342,11 +341,10 @@ const processSave = (status) => {
 const confirmBulkPublish = () => {
     if(selectedSubmissions.value.length === 0) return;
 
-    confirm.require({
+    confirmAction({
         message: t('pages.grading.bulkPublishMessage', { count: selectedSubmissions.value.length }),
         header: t('pages.grading.bulkPublishHeader'),
         icon: 'pi pi-send',
-        acceptClass: 'p-button-primary',
         acceptLabel: t('pages.grading.publishAction'),
         accept: () => {
             router.post(route('gradings.bulkPublish'), {
@@ -494,7 +492,6 @@ onMounted(() => {
 <template>
     <AppLayout>
         <Head :title="t('pages.grading.headTitle')" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

@@ -19,10 +19,11 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 import { useI18n } from 'vue-i18n';
@@ -44,7 +45,6 @@ import SelectButton from 'primevue/selectbutton';
 import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Sidebar from 'primevue/sidebar';
@@ -58,7 +58,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
 import Slider from 'primevue/slider';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // ======================================================================================
 // PROPS INERTIA (Données strictes provenant du backend/DB)
@@ -85,7 +85,7 @@ const props = defineProps({
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 const selectedStudents = ref([]);
 const expandedRows = ref([]);
@@ -270,11 +270,11 @@ const saveStudent = () => {
 };
 
 const confirmDeleteStudent = (student) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.students.confirmDeleteMessage', { name: student.name }),
         header: t('pages.students.destructiveDeleteHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.students.yesDelete'),
         rejectLabel: t('pages.students.cancel'),
         accept: () => {
@@ -288,11 +288,11 @@ const confirmDeleteStudent = (student) => {
 
 const confirmBulkDelete = () => {
     if (!selectedStudents.value.length) return;
-    confirm.require({
+    confirmAction({
         message: t('pages.students.bulkDeleteMessage', { count: selectedStudents.value.length }),
         header: t('pages.students.bulkPurgeHeader'),
         icon: 'pi pi-ban',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.students.confirmPurge'),
         rejectLabel: t('pages.students.cancel'),
         accept: () => {
@@ -363,7 +363,7 @@ const getStatusIcon = (status) => {
 
 const formatDate = (date) => {
     if (!date || isNaN(new Date(date).getTime())) return date;
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date));
+    return new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date));
 };
 
 const onPageChange = (event) => {
@@ -427,7 +427,6 @@ onBeforeUnmount(() => {
     <AppLayout>
         <Head :title="t('pages.students.headTitle')" />
         <Toast position="top-right" group="tc" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
     <!-- ============================================================================== -->
@@ -1034,8 +1033,8 @@ onBeforeUnmount(() => {
         </Dialog>
 
         <!-- DIALOG INSCRIPTION CURSUS -->
-        <Dialog v-model:visible="enrollmentDialog" modal :header="t('pages.students.enrollInProgram')" :style="{ width: '450px' }" class="p-fluid rounded-2xl">
-            <div class="space-y-6 pt-4">
+        <SncDialog v-model:visible="enrollmentDialog" :title="t('pages.students.enrollInProgram')" icon="pi-book" width="450px">
+            <div class="space-y-6">
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-4">
                     <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm">
                         <i class="pi pi-book text-xl"></i>
@@ -1047,7 +1046,6 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="field">
-
                     <label class="font-bold text-slate-700 mb-2 block">{{ t('pages.students.chooseLearningPath') }}</label>
                     <Dropdown v-model="enrollmentForm.learning_path_id" :options="props.learningPaths" optionLabel="name" optionValue="id" :placeholder="t('pages.students.selectPathPlaceholder')" class="w-full border-slate-200" filter />
                 </div>
@@ -1056,7 +1054,7 @@ onBeforeUnmount(() => {
                 <Button :label="t('pages.students.cancel')" class="p-button-text p-button-secondary font-bold" @click="enrollmentDialog = false" />
                 <Button :label="t('pages.students.confirmEnrollment')" icon="pi pi-check" class="p-button-primary font-bold shadow-md" @click="submitEnrollment" :loading="enrollmentForm.processing" :disabled="!enrollmentForm.learning_path_id" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- ============================================================================== -->
         <!-- SIDEBAR PROFIL COMPLET (ANALYTICS & DETAILS)                                   -->

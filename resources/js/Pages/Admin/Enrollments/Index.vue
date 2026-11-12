@@ -11,7 +11,7 @@ import Select from 'primevue/select';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Avatar from 'primevue/avatar';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import Textarea from 'primevue/textarea';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -247,8 +247,8 @@ const quickReject = (id) => {
         </div>
 
         <!-- MODAL BULK V30 -->
-        <Dialog v-model:visible="showBulkDialog" modal :header="`Action Groupée : ${bulkAction}`" :style="{ width: '450px' }" class="!rounded-[1rem]">
-            <div class="p-6 text-center space-y-6">
+        <SncDialog v-model:visible="showBulkDialog" :title="`Action Groupée : ${bulkAction}`" :icon="bulkAction === 'approve' ? 'pi-check-circle' : 'pi-exclamation-triangle'" :icon-class="bulkAction === 'approve' ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-red-600'" width="450px">
+            <div class="text-center space-y-6">
                 <div class="w-16 h-16 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mx-auto shadow-inner">
                     <i :class="bulkAction === 'approve' ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'" class="text-2xl"></i>
                 </div>
@@ -259,14 +259,16 @@ const quickReject = (id) => {
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 block">Motif du refus collectif</label>
                     <Textarea v-model="bulkNotes" rows="3" class="w-full !rounded-xl !bg-slate-50 border-none" placeholder="Ex: Paiement non reçu..." />
                 </div>
-                <div class="flex gap-3 pt-4">
+            </div>
+            <template #footer>
+                <div class="flex gap-3 w-full">
                     <Button label="Annuler" text @click="showBulkDialog = false" class="flex-1 !font-bold !text-slate-500" />
                     <Button :label="bulkAction === 'reject' ? 'Refuser Tout' : 'Confirmer'" 
                             :severity="bulkAction === 'reject' ? 'danger' : 'success'" 
                             @click="submitBulk" class="flex-1 !rounded-xl !py-3 !font-black !uppercase !tracking-widest" />
                 </div>
-            </div>
-        </Dialog>
+            </template>
+        </SncDialog>
     </AppLayout>
 </template>
 

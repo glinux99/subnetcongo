@@ -11,7 +11,7 @@
 import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirmAction } from "@/composables/useConfirmAction";
 import { useI18n } from 'vue-i18n';
 import cloneDeep from 'lodash/cloneDeep';
 
@@ -48,7 +48,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'saved']);
 
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const { t } = useI18n();
 
 // Proxy v-model:visible (conserve le nom `cohortDialog` utilisé dans le template)
@@ -146,11 +146,11 @@ const stageUserForEnrollment = (user) => {
  * Action UI : Retire un étudiant de la cohorte (Demande confirmation)
  */
 const stageUserForRemoval = (user) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.learning_paths.removeStudentMessage', { name: user.name }),
         header: t('pages.learning_paths.removeStudentHeader'),
         icon: 'pi pi-user-minus',
-        acceptClass: 'p-button-danger',
+        danger: true,
         acceptLabel: t('pages.learning_paths.removeStudentAccept'),
         rejectLabel: t('pages.learning_paths.removeStudentReject'),
         accept: () => {

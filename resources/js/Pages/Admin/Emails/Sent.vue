@@ -9,7 +9,7 @@ import Select from 'primevue/select';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const props = defineProps({
     emails: { type: Array, default: () => [] },
@@ -56,7 +56,7 @@ const formatDate = (iso) => {
     if (!iso) return '';
     try {
         const date = new Date(iso);
-        return date.toLocaleString('fr-FR', {
+        return date.toLocaleString(locale.value, {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',

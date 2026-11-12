@@ -2,7 +2,11 @@
 import { computed, ref } from 'vue';
 import { router, Link, usePage, Head } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
+import { useI18n } from 'vue-i18n';
+
+const { t, locale } = useI18n();
 import Tag from 'primevue/tag';
 import Rating from 'primevue/rating';
 import Avatar from 'primevue/avatar';
@@ -39,7 +43,7 @@ const isFree = computed(() => Number(props.course?.effective_price ?? props.cour
 
 const formatPrice = (price) => {
     if (!price) return 'Gratuit';
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(price);
+    return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(price);
 };
 
 const addToCart = () => {
@@ -113,44 +117,36 @@ const handleImageError = (event) => { event.target.src = '/media/lms/thumbnails/
             </div>
 
             <!-- HEADER GLOBAL -->
-            <div class="page-header">
-                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
-                <div class="absolute bottom-0 left-20 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-
-                <div class="max-w-[1600px] mx-auto relative z-10">
-                    <div class="flex items-center gap-2 mb-4 text-xs">
-                        <Link :href="route('marketplace.index')" class="text-slate-400 hover:text-white">Marketplace</Link>
-                        <i class="pi pi-angle-right text-[10px] text-slate-500"></i>
-                        <span class="text-slate-300">{{ course.category?.name }}</span>
-                    </div>
-                    <div class="flex items-center gap-3 mb-3 flex-wrap">
-                        <h1 class="text-3xl font-black text-white tracking-tight">{{ course.title }}</h1>
-                        <Tag :value="course.level || 'Tous niveaux'" class="!bg-blue-500/20 !text-blue-300 !border !border-blue-500/30 !text-[10px] !font-black !uppercase !tracking-widest capitalize" />
-                    </div>
-                    <p class="text-slate-300 text-base leading-relaxed mb-6 max-w-3xl">{{ course.short_info || course.short_description || course.title }}</p>
-                    <div class="flex items-center gap-6 text-sm flex-wrap">
+            <PageHeader
+                :title="course.title"
+                :subtitle="course.short_info || course.short_description || course.title"
+                :badge="course.level || t('marketplace.show.all_levels')"
+                icon="pi-book"
+                accent="blue"
+            >
+                <template #meta>
+                    <div class="flex items-center gap-6 text-sm flex-wrap mt-3">
                         <div v-if="averageRating != null" class="flex items-center gap-2">
                             <Rating :modelValue="averageRating" readonly :stars="5" />
                             <span class="font-black text-white">{{ averageRating }}</span>
-                            <span class="text-slate-400">({{ reviewsCount }} avis)</span>
+                            <span class="text-slate-400">({{ reviewsCount }} {{ t('marketplace.show.reviews_suffix') }})</span>
                         </div>
-                        <span v-else class="text-slate-400 italic">Pas encore noté</span>
+                        <span v-else class="text-slate-400 italic">{{ t('marketplace.show.not_rated') }}</span>
                         <span class="text-slate-400">·</span>
-                        <span class="text-slate-300 font-medium">{{ studentsCount }} apprenant{{ studentsCount > 1 ? 's' : '' }}</span>
+                        <span class="text-slate-300 font-medium">{{ studentsCount }} {{ t('marketplace.show.students_suffix', { count: studentsCount }) }}</span>
                     </div>
-                    <div class="flex items-center gap-3 mt-6">
+                    <div class="flex items-center gap-3 mt-4">
                         <Avatar :label="course.instructor?.name?.[0]" :image="course.instructor?.avatar" shape="circle" class="!bg-blue-500 !text-white !w-10 !h-10" />
                         <div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instructeur</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('marketplace.show.instructor') }}</p>
                             <p class="font-black text-white text-sm">{{ course.instructor?.name }}</p>
                         </div>
                     </div>
-                </div>
-            </div>
+                </template>
+            </PageHeader>
 
             <!-- MAIN -->
-            <div class="max-w-[1600px] mx-auto px-4 lg:px-6 -mt-10 relative z-20">
+            <div class="page-container page-section">
                 <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[600px]">
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

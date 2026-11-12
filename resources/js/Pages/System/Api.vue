@@ -17,7 +17,7 @@ import PageHeader from '@/Components/PageHeader.vue';
 import { ref, reactive, computed, onMounted } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { FilterMatchMode } from '@primevue/core/api';
 
 import Card from 'primevue/card';
@@ -29,11 +29,10 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
-import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Avatar from 'primevue/avatar';
-import ConfirmDialog from 'primevue/confirmdialog';
 import InputSwitch from 'primevue/inputswitch';
 import Calendar from 'primevue/calendar';
 import Sidebar from 'primevue/sidebar';
@@ -48,9 +47,9 @@ import InputIcon from 'primevue/inputicon';
 import ScrollPanel from 'primevue/scrollpanel';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 
 // ======================================================================================
 // PROPS INERTIA (100% backend)
@@ -254,11 +253,11 @@ const copyToken = async () => {
 };
 
 const revokeToken = (token) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.api.revoke_confirm', { name: token.name }),
         header: t('pages.api.revoke_header'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         accept: async () => {
             try {
                 const res = await fetch(`/system/api/tokens/${token.id}`, {
@@ -406,7 +405,6 @@ const exportLogs = () => {
 <template>
     <AppLayout>
         <Head title="API Gateway Management" />
-        <ConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -575,7 +573,7 @@ const exportLogs = () => {
 
                                         <Column field="last_used_at" :header="t('pages.api.col_last_used')" sortable>
                                             <template #body="{data}">
-                                                <span v-if="data.last_used_at" class="text-xs font-bold text-slate-600 flex items-center gap-2"><i class="pi pi-clock text-slate-400"></i> {{ new Date(data.last_used_at).toLocaleString('fr-FR') }}</span>
+                                                <span v-if="data.last_used_at" class="text-xs font-bold text-slate-600 flex items-center gap-2"><i class="pi pi-clock text-slate-400"></i> {{ new Date(data.last_used_at).toLocaleString(locale) }}</span>
                                                 <span v-else class="text-xs text-slate-400 italic">{{ t('pages.api.never_used') }}</span>
                                             </template>
                                         </Column>
@@ -588,7 +586,7 @@ const exportLogs = () => {
                                                 </div>
                                                 <div v-else class="flex flex-col items-center">
                                                     <Badge :value="data.is_expired ? t('pages.api.expired') : t('pages.api.active')" :severity="data.is_expired ? 'danger' : 'info'" class="text-[9px] tracking-widest" />
-                                                    <span class="text-[9px] text-slate-500 mt-1">{{ t('pages.api.expiry_line', { date: new Date(data.expires_at).toLocaleDateString('fr-FR') }) }}</span>
+                                                    <span class="text-[9px] text-slate-500 mt-1">{{ t('pages.api.expiry_line', { date: new Date(data.expires_at).toLocaleDateString(locale) }) }}</span>
                                                 </div>
                                             </template>
                                         </Column>
@@ -625,7 +623,7 @@ const exportLogs = () => {
                                         <template #empty><div class="p-10 text-center text-slate-500 font-medium">{{ t('pages.api.no_logs') }}</div></template>
 
                                         <Column field="created_at" :header="t('pages.api.col_timestamp')" sortable style="width: 11rem">
-                                            <template #body="{data}"><span class="text-[11px] font-mono font-bold text-slate-500">{{ new Date(data.created_at).toLocaleString('fr-FR') }}</span></template>
+                                            <template #body="{data}"><span class="text-[11px] font-mono font-bold text-slate-500">{{ new Date(data.created_at).toLocaleString(locale) }}</span></template>
                                         </Column>
 
                                         <Column field="method" :header="t('pages.api.col_method')" style="width: 6rem">
@@ -780,8 +778,8 @@ const exportLogs = () => {
         </div>
 
         <!-- WIZARD : CREATE TOKEN -->
-        <Dialog v-model:visible="createTokenDialog" modal :style="{ width: '650px' }" :header="t('pages.api.wizard_header')" class="p-fluid rounded-xl custom-dialog bg-slate-50">
-            <div class="pt-4 px-2">
+        <SncDialog v-model:visible="createTokenDialog" :title="t('pages.api.wizard_header')" icon="pi-key" icon-class="from-emerald-500 to-emerald-600" width="650px">
+            <div>
                 <Steps :model="[{label: t('pages.api.step_information')}, {label: t('pages.api.step_abilities')}, {label: t('pages.api.step_secret')}]" :readonly="true" :activeIndex="tokenStep" class="mb-8 custom-steps hidden md:block" />
 
                 <!-- Step 1 -->
@@ -839,7 +837,7 @@ const exportLogs = () => {
             </div>
 
             <template #footer>
-                <div class="flex justify-between items-center bg-slate-100 p-4 -m-4 mt-2 rounded-b-3xl border-t border-slate-200">
+                <div class="flex justify-between items-center w-full">
                     <Button v-if="tokenStep < 2" :label="t('pages.api.cancel')" class="p-button-text p-button-secondary font-bold" @click="createTokenDialog = false" />
                     <div v-else></div>
                     <Button v-if="tokenStep === 0" :label="t('pages.api.next')" icon="pi pi-arrow-right" iconPos="right" class="p-button-primary font-black rounded-xl px-6" @click="tokenStep++" :disabled="!tokenForm.name.trim() || !tokenForm.user_id" />
@@ -847,7 +845,7 @@ const exportLogs = () => {
                     <Button v-else :label="t('pages.api.copied_close')" icon="pi pi-check" class="p-button-secondary font-black rounded-xl px-6" @click="createTokenDialog = false" />
                 </div>
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- SIDEBAR : LOG DETAILS -->
         <Sidebar v-model:visible="logSidebarVisible" position="right" class="w-full md:w-[500px] bg-slate-50">
@@ -862,7 +860,7 @@ const exportLogs = () => {
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-white p-3 rounded-xl border border-slate-200">
                         <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ t('pages.api.label_date') }}</p>
-                        <p class="text-xs font-bold text-slate-700 mt-1">{{ new Date(selectedLog.created_at).toLocaleString('fr-FR') }}</p>
+                        <p class="text-xs font-bold text-slate-700 mt-1">{{ new Date(selectedLog.created_at).toLocaleString(locale) }}</p>
                     </div>
                     <div class="bg-white p-3 rounded-xl border border-slate-200">
                         <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">{{ t('pages.api.label_method') }}</p>

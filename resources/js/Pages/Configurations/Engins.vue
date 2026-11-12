@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AppLayout from "@/sakai/layout/AppLayout.vue";
+import PageHeader from '@/Components/PageHeader.vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from "primevue/useconfirm";
 import { v4 as uuidv4 } from 'uuid';
@@ -25,7 +26,7 @@ import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import MultiSelect from 'primevue/multiselect';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const props = defineProps({
     engins: Array,
     filters: Object,
@@ -146,6 +147,8 @@ const deleteEngin = (engin) => {
     });
 };
 
+const exportCsv = () => { dt.value?.exportCSV?.(); };
+
 onMounted(() => loadEnginTypes());
 </script>
 
@@ -154,23 +157,19 @@ onMounted(() => loadEnginTypes());
         <Head :title="t('engins.title')" />
 
         <div class="page-bg min-h-screen font-sans pb-20">
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-100 rotate-3">
-                        <i class="pi pi-truck text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-[900] text-slate-900 tracking-tight">{{ t('engins.title') }}</h1>
-                        <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">{{ t('engins.subtitle', { count: engins?.length || 0 }) }}</p>
-                    </div>
-                </div>
-                <div class="flex gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-                    <Button :label="t('engins.toolbar.resetFilters')" icon="pi pi-filter-slash" outlined severity="secondary" @click="initFilters" class="rounded-xl" />
-                    <Button icon="pi pi-download" text severity="secondary" @click="dt.exportCSV()" :aria-label="t('engins.toolbar.export')" />
-                    <Button :label="t('engins.toolbar.addEngin')" icon="pi pi-plus"  raised @click="openNew" class="rounded-xl px-6" />
-                </div>
-            </div>
+            <PageHeader
+                :title="t('engins.title')"
+                :subtitle="t('engins.subtitle', { count: engins?.length || 0 })"
+                icon="pi-truck"
+                accent="blue"
+                :actions="[
+                    { label: t('engins.toolbar.resetFilters'), icon: 'pi-filter-slash', variant: 'secondary', onClick: initFilters },
+                    { label: t('engins.toolbar.export'), icon: 'pi-download', variant: 'secondary', onClick: exportCsv, ariaLabel: t('engins.toolbar.export') },
+                    { label: t('engins.toolbar.addEngin'), icon: 'pi-plus', variant: 'primary', onClick: openNew },
+                ]"
+            />
 
+            <div class="page-container page-section">
             <div class="bg-white rounded-[1rem] shadow-xl shadow-slate-200/50 border border-slate-200/60 overflow-hidden">
                 <DataTable
                     ref="dt" :value="engins" v-model:filters="filters"
@@ -230,7 +229,7 @@ onMounted(() => loadEnginTypes());
                     <Column field="date_mise_en_service" :header="t('engins.form.dateAcquisition')" sortable filterField="date_mise_en_service" dataType="date">
                         <template #body="{ data }">
                             <span class="text-xs font-medium text-slate-500">
-                                {{ data.date_mise_en_service ? new Date(data.date_mise_en_service).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '--' }}
+                                {{ data.date_mise_en_service ? new Date(data.date_mise_en_service).toLocaleDateString(locale, { month: 'long', year: 'numeric' }) : '--' }}
                             </span>
                         </template>
                         <template #filter="{ filterModel }">
@@ -247,6 +246,7 @@ onMounted(() => loadEnginTypes());
                         </template>
                     </Column>
                 </DataTable>
+            </div>
             </div>
         </div>
 

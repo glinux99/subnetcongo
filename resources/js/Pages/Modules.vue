@@ -20,10 +20,11 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
+import SncDialog from '@/Components/SncDialog.vue';
+import { useConfirmAction } from '@/composables/useConfirmAction';
 import { ref, reactive, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 import draggable from 'vuedraggable';
@@ -44,7 +45,6 @@ import FileUpload from 'primevue/fileupload';
 import SelectButton from 'primevue/selectbutton';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import Editor from 'primevue/editor';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -74,7 +74,7 @@ const props = defineProps({
 // SERVICES & ÉTATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
-const confirm = useConfirm();
+const confirmAction = useConfirmAction();
 const loading = ref(true);
 
 const selectedModules = ref([]);
@@ -293,11 +293,11 @@ const saveModule = () => {
 };
 
 const confirmDeleteModule = (module) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.modules.deleteModuleMessage', { title: module.title, count: module.lessons?.length || 0 }),
         header: t('pages.modules.deleteModuleHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        danger: true,
         accept: () => {
             router.delete(route('curriculum.modules.destroy', module.slug), {
                 preserveScroll: true,
@@ -407,11 +407,11 @@ const saveLesson = () => {
 };
 
 const confirmDeleteLesson = (lesson) => {
-    confirm.require({
+    confirmAction({
         message: t('pages.modules.deleteLessonMessage', { title: lesson.title }),
         header: t('pages.modules.deleteLessonHeader'),
         icon: 'pi pi-trash',
-        acceptClass: 'p-button-danger',
+        danger: true,
         accept: () => {
             router.delete(route('curriculum.lessons.destroy', lesson.slug), { preserveScroll: true });
         }
@@ -522,7 +522,6 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
     <AppLayout>
         <Head :title="t('pages.modules.headTitle')" />
         <Toast position="top-right" group="tc" />
-        <ConfirmDialog />
 
   <div class="page-bg min-h-screen font-sans pb-20">
 
@@ -1111,8 +1110,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
         <!-- ============================================================================== -->
         <!-- DIALOG : TRANSFERT DE MODULE (CHANGER DE COURS)                                -->
         <!-- ============================================================================== -->
-        <Dialog v-model:visible="transferDialog" :header="t('pages.modules.transferTitle')" :modal="true" :style="{ width: '450px' }" class="rounded-2xl shadow-2xl">
-            <div class="pt-4">
+        <SncDialog v-model:visible="transferDialog" :title="t('pages.modules.transferTitle')" icon="pi-arrow-right-arrow-left" width="450px">
+            <div>
                 <Message severity="warn" :closable="false" class="mb-6 text-sm">
                     {{ t('pages.modules.transferWarn') }}
                 </Message>
@@ -1122,12 +1121,10 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-end gap-2 pt-4">
-                    <Button :label="t('pages.modules.cancel')" class="p-button-text text-slate-500" @click="transferDialog = false" />
-                    <Button :label="t('pages.modules.confirmTransfer')" icon="pi pi-arrow-right-arrow-left" class="p-button-info" @click="executeTransfer" :disabled="!transferForm.target_course_id" :loading="transferForm.processing" />
-                </div>
+                <Button :label="t('pages.modules.cancel')" class="p-button-text text-slate-500" @click="transferDialog = false" />
+                <Button :label="t('pages.modules.confirmTransfer')" icon="pi pi-arrow-right-arrow-left" class="p-button-info" @click="executeTransfer" :disabled="!transferForm.target_course_id" :loading="transferForm.processing" />
             </template>
-        </Dialog>
+        </SncDialog>
 
     </AppLayout>
 </template>
