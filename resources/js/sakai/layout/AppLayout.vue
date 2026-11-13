@@ -10,7 +10,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
@@ -158,7 +158,7 @@ watch(dateRange, (newDates) => {
         <div class="layout-mask animate-fadein"></div>
     </div>
     <Toast />
-    <ConfirmDialog group="app" />
+    <SncConfirmDialog group="app" />
     <CommandPalette />
 </template>
 

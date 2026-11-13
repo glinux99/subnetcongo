@@ -1,0 +1,74 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1305 >>
+stream
+BT 0.1 g /F2 18 Tf 50 752 Td (Table de subnetting \(CIDR\)) Tj ET
+BT 0.35 g /F1 10 Tf 50 724 Td (A imprimer et garder sur le bureau) Tj ET
+BT 0.05 g /F2 11 Tf 50 705 Td (PREFIXE      MASQUE            PAS   HOTES/SOUS-RESEAU \(d'un /24\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 689.5 Td (/25          255.255.255.128   128   126) Tj ET
+BT 0.15 g /F1 10 Tf 50 674 Td (/26          255.255.255.192   64    62) Tj ET
+BT 0.15 g /F1 10 Tf 50 658.5 Td (/27          255.255.255.224   32    30) Tj ET
+BT 0.15 g /F1 10 Tf 50 643 Td (/28          255.255.255.240   16    14) Tj ET
+BT 0.15 g /F1 10 Tf 50 627.5 Td (/29          255.255.255.248   8     6) Tj ET
+BT 0.15 g /F1 10 Tf 50 612 Td (/30          255.255.255.252   4     2 \(liens point a point\)) Tj ET
+BT 0.05 g /F2 11 Tf 50 577 Td (BESOINS D'HOTES -> MASQUE MINIMAL) Tj ET
+BT 0.15 g /F1 10 Tf 50 561.5 Td (2 -> /30     6 -> /29      14 -> /28) Tj ET
+BT 0.15 g /F1 10 Tf 50 546 Td (30 -> /27    62 -> /26     126 -> /25) Tj ET
+BT 0.15 g /F1 10 Tf 50 530.5 Td (254 -> /24   510 -> /23    1022 -> /22) Tj ET
+BT 0.05 g /F2 11 Tf 50 495.5 Td (EXEMPLE COMPLET : 192.168.1.100 DANS 192.168.1.0/26) Tj ET
+BT 0.15 g /F1 10 Tf 50 480 Td (Reseau                 : 192.168.1.64) Tj ET
+BT 0.5 g /F1 8 Tf 50 468 Td (Page 1/2  -  SubNetCongo e-Learning - usage pedagogique) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1075 >>
+stream
+BT 0.15 g /F1 10 Tf 50 764.5 Td (Premiere adresse       : 192.168.1.65) Tj ET
+BT 0.15 g /F1 10 Tf 50 749 Td (Derniere adresse       : 192.168.1.126) Tj ET
+BT 0.15 g /F1 10 Tf 50 733.5 Td (Broadcast              : 192.168.1.127) Tj ET
+BT 0.15 g /F1 10 Tf 50 718 Td (Hotes utilisables      : 62) Tj ET
+BT 0.05 g /F2 11 Tf 50 683 Td (METHODE EN 4 COUPS) Tj ET
+BT 0.15 g /F1 10 Tf 50 667.5 Td (1. Masque en binaire -> nombre de bits reseau.) Tj ET
+BT 0.15 g /F1 10 Tf 50 652 Td (2. Pas = 256 - dernier octet du masque.) Tj ET
+BT 0.15 g /F1 10 Tf 50 636.5 Td (3. Frontieres : multiples du pas depuis 0.) Tj ET
+BT 0.15 g /F1 10 Tf 50 621 Td (4. Plage : reseau+1 a broadcast-1 ; broadcast = frontiere - 1.) Tj ET
+BT 0.05 g /F2 11 Tf 50 586 Td (RAPPELS CLASSES \(HISTORIQUE\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 570.5 Td (A : 0.0.0.0/8 - 10.x.x.x prive.   B : 128-191, 172.16/12 prive.) Tj ET
+BT 0.15 g /F1 10 Tf 50 555 Td (C : 192-223, 192.168/16 prive.    D : multicast. E : experimental.) Tj ET
+BT 0.5 g /F1 8 Tf 50 543 Td (Page 2/2  -  SubNetCongo e-Learning - usage pedagogique) Tj ET
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000000402 00000 n 
+0000001759 00000 n 
+0000001895 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+3022
+%%EOF

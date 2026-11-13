@@ -21,6 +21,159 @@
 7. **Déploiement build = miroir sur les DEUX dossiers** : `web/build/` ET `web/elearning/public/build/` (laisser vérifier : md5sum identical après extract).
 8. En cas de doute sur une action serveur non-liée au déploiement : demander à l'utilisateur AVANT d'agir.
 
+## 🐛 Correctifs mockups SERP/aperçu (12/11/2026, soir)
+- **Demande Daniel** : dans le dialog de cours et les aperçus visuels, corriger les « liens morts ».
+- Fake domain `lms.subnetcongo.com` → `https://subnetcongo.net` (help url slug, SERP mockup Google, vignette Social OpenGraph dans `Courses.vue`) ; `www.votresite.com` → `https://subnetcongo.net` dans `Web/Seo.vue`. La barre Google/mockup n'est plus cliquable (retrait `hover:underline`/`cursor-pointer`, `select-none`). Build OK. Local uniquement.
+- ⚠️ Les boutons « Aperçu visuel » sans handler restent en l'état (Courses.vue:1337, Exams.vue:743, LearningPaths.vue:515, Certificates.vue:842) — non demandés à ce stade.
+
+## 🖥️ Système — Paramètres globaux (12/11/2026, soir)
+- **Uniformisation DB** : lecture/écriture unifiée dans `web_settings` (au lieu de ma table `settings` separate) ; `SystemSettings::all()` sert de source unique avec cache 5 min ; `SystemSettings::apply()` injecte au boot toutes les variables dans `config()` (app, mail, session) + `lms.*`, et expose `maintenance_mode` via `config('settings.maintenance_mode')`.
+- **Settings fonctionnels** (en direct) :
+  - Branding : site_name / slogan / logo / couleur primaire — changent réellement le rendu public (identity Inertia shared → `AppLayout.vue`).
+  - Mail : SMTP (host/port/enc/user/pass/from) — utilisé par les mails sortants via `config('mail.*')`.
+  - Session : `session_timeout` → `config('session.lifetime')` appliqué au boot.
+  - LMS : `min_pass_score`, `auto_enroll_on_payment`, `allow_course_preview`, `video_watermark` — lus via `config('lms.*')` ; `certificate_prefix` appliqué aux nouveaux certificats (voir CertificateController).
+  - Maintenance : `toggleMaintenance` → `php artisan down/up` (Laravel natif, bypass secret possible) + flag en `web_settings`.
+- **Front /system/settings rebindé** : `route('settings.update')` → `SettingController@update` (POST `system/settings`) au lieu du vieux `ApiController@updateSettings` (qui était en réalité le settings API Gateway).
+- **New routes** : `POST system/settings/clear-cache`, `POST system/settings/logo-upload`, `POST system/settings/maintenance-toggle`, `POST system/settings/artisan-command` — vues Inertia correspondantes pour chacun.
+- **Artisan runner** (menu sur la page, groupé sous le Tab Système) : commandes pré-définies + allowlist (`cache:clear,config:clear,route:clear,view:clear,live-sessions:sweep,schedule:run,down,up,key:generate,migrate:status,storage:link`), output affichée dans le terminal noir (dernier 8000 chars), audit log à chaque run.
+- **Valeurs seedées** (via script `seed_settings.php`) : SubnetCongo / Goma RDC / academy@subnetcongo.net / logo `/media/lms/logo-subnetcongo.png` / couleurs marque / SMTP actuel (host, user, pass).
+- **Filtrage** : `CheckSystemMaintenance` middleware bloque les visiteurs non-admins pendant `php artisan down`.
+
+## 🖥️ Déploiement PROD — préparation cron (12/11/2026, soir)
+- **Cron à ajouter sur le serveur** (Plesk ou SSH crontab -e en tant que l'user web) :
+  ```cron
+  * * * * * /usr/local/bin/php8.3 /chemin/vers/web/elearning/artisan schedule:run >> /dev/null 2>&1
+  ```
+- `live-sessions:sweep` est déjà enregistrée dans `app/Console/Kernel.php::schedule()` avec `everyMinute()->withoutOverlapping()` → se déclenche automatiquement dès que la cron tourne.
+- Aujourd'hui le fichier est en local (`/home/subnetcongo_dan_subnet/artisan` probablement sur le serveur). **`php8.3` obligatoire** (CLI par défaut = PHP 8.1).
+- Commande d'urgence directe (si la cron casse) : `php8.3 artisan live-sessions:sweep` — testable via `/system/settings?tab=artisan` → bouton `live-sessions:sweep`.
+
+## 🖥️ Système — Paramètres globaux (12/11/2026, soir)
+- **Uniformisation DB** : lecture/écriture unifiée dans `web_settings` (au lieu de ma table `settings` separate) ; `SystemSettings::all()` sert de source unique avec cache 5 min ; `SystemSettings::apply()` injecte au boot toutes les variables dans `config()` (app, mail, session) + `lms.*`, et expose `maintenance_mode` via `config('settings.maintenance_mode')`.
+- **Settings fonctionnels** (en direct) :
+  - Branding : site_name / slogan / logo / couleur primaire — changent réellement le rendu public (identity Inertia shared → `AppLayout.vue`).
+  - Mail : SMTP (host/port/enc/user/pass/from) — utilisé par les mails sortants via `config('mail.*')`.
+  - Session : `session_timeout` → `config('session.lifetime')` appliqué au boot.
+  - LMS : `min_pass_score`, `auto_enroll_on_payment`, `allow_course_preview`, `video_watermark` — lus via `config('lms.*')` ; `certificate_prefix` appliqué aux nouveaux certificats (voir CertificateController).
+  - Maintenance : `toggleMaintenance` → `php artisan down/up` (Laravel natif, bypass secret possible) + flag en `web_settings`.
+- **Front /system/settings rebindé** : `route('settings.update')` → `SettingController@update` (POST `system/settings`) au lieu du vieux `ApiController@updateSettings` (qui était en réalité le settings API Gateway).
+- **New routes** : `POST system/settings/clear-cache`, `POST system/settings/logo-upload`, `POST system/settings/maintenance-toggle`, `POST system/settings/artisan-command` — vues Inertia correspondantes pour chacun.
+- **Artisan runner** (menu sur la page, groupé sous le Tab Système) : commandes pré-définies + allowlist (`cache:clear,config:clear,route:clear,view:clear,live-sessions:sweep,schedule:run,down,up,key:generate,migrate:status,storage:link`), output affichée dans le terminal noir (dernier 8000 chars), audit log à chaque run.
+- **Valeurs seedées** (via script `seed_settings.php`) : SubnetCongo / Goma RDC / academy@subnetcongo.net / logo `/media/lms/logo-subnetcongo.png` / couleurs marque / SMTP actuel (host, user, pass).
+- **Filtrage** : `CheckSystemMaintenance` middleware bloque les visiteurs non-admins pendant `php artisan down`.
+
+## 🧹 Live Sessions — actions condensées en menu (12/11/2026, soir)
+- **Demande Daniel** : trop d'icônes dans ACTIONS (9) → réduire.
+- **Solution** : colonnes ACTIONS avec seulement 3 actions visibles : **Rejoindre** (vidéo), **Modifier** (crayon), **Plus d'options** (⋯) → menu popup PrimeVue (Démarrer, Inviter, Copier le lien, Synchroniser les enregistrements, Voir le rapport, Annuler la session en ambre, Supprimer la session en rouge).
+- Nouvelle i18n : `pages.live_sessions.menu_more / menu_start / out_cancel` dans les 5 locales.
+- **Bonus découvert** : les routes `live-sessions/{live_session}/*` sont liées implicitement par **uuid** (`getRouteKeyName() = 'uuid'`) — les appels frontend en `.id` (nombre) renvoyaient 404. Tous les appels dans LiveSessions.vue + Cohorts.vue + VideoConference.vue corrigés pour utiliser `uuid`.
+
+## 🔁 Live Sessions — cycle de vie automatique + rappels (12/11/2026, soir)
+- **Demande Daniel** : le statut d'une session live doit changer automatiquement quand la date arrive ; et un rappel doit être envoyé automatiquement « le temps qu'il faut » avant le début — configurable.
+- **Nouveau** : `app/Console/Commands/SweepLiveSessions.php` (`live-sessions:sweep`) — (1) Scheduled → Live quand start_at est atteint (transforme + notifie en base/broadcast les élèves actifs + l'instructeur via `LiveSessionStartedNotification`) ; (2) Live/Scheduled → Ended quand start_at + duration est dépassé ; (3) Rappel automatique envoyé (mail + base + broadcast) aux inscrits actifs/terminés + invités sans compte, « remind_before_minutes » avant le début ; marqué `reminder_sent_at` pour éviter les doublons ; reset `reminder_sent_at` quand l'horaire est modifié.
+- **Cron** : `app/Console/Kernel.php::schedule()` — `live-sessions:sweep` chaque minute (`withoutOverlapping`). **Le cron serveur `* * * * * php artisan schedule:run` doit être en place en prod (configuration serveur — à faire sur le go, PAS avant).**
+- **DB** : migration `2026_11_12_000001_add_reminder_to_live_sessions.php` (`remind_before_minutes` nullable + `reminder_sent_at`). Appliquée en local.
+- **UI** : Select « Rappel automatique » (Aucun / 15 min / 30 min / 1 h / 1 jour avant) dans le dialog Planifier/Modifier ; icône cloche ambre dans la colonne Démarrage du tableau quand un rappel est configuré ; le Select affiche le badge « Aucun rappel » par défaut. `*_update()` : quand start_at change, `reminder_sent_at` est réinitialisé (ré-arrime le rappel).
+- **Mail** : nouveau template `resources/views/emails/live-session-reminder.blade.php` (rappel avec lien de rejoindre, même branding rouge SubnetCongo) ; `LiveSessionReminderNotification` (via = mail + database + broadcast).
+- Test CLI (transaction rollback) : création → rappel dû → sweep → Scheduled→Live (+notifs) → Ended après durée simulée. ✅
+- ⚠️ Les 5 sessions de test locales sont dans le passé : elles seront automatiquement passées en Ended au premier sweep en prod. Les e-mails de test sont des placeholders (d.sassou@subnetcongo.net → 550 attendu, normal).
+
+## 🐛 Live Sessions / Visioconférence — 2 bugs (12/11/2026, soir)
+- **Bug étudiant non visible dans « Mes classes virtuelles »** : `studentIndex()` ne montrait que les sessions du cours où l'élève est inscrit. Si l'élève est invité par email à une session sans être inscrit → invisible. **Fix** : `LiveSessionController::studentIndex()` ajoute `->orWhereRaw('JSON_CONTAINS(settings, JSON_QUOTE(?), \'$.invited_emails\')')` pour inclure les emails invités non-enregistrés.
+- **500 sur /system/settings/video** : `SettingController::video()`, `updateVideo()`, `testVideoProvider()` avaient été perdus quand j'ai réécrit le contrôleur (manque des méthodes). **Restaurées** — la page charge bien avec les valeurs LiveKit du settings.
+- **LiveKit non activé malgré .env OK** : VideoProviderConfig::isConfigured('livekit') lisait `settings` table (vide) ; on a seedé `settings` avec `livekit_api_key/api_secret/url/ws_url` depuis `.env` + `default_provider=livekit`. Page `/system/settings/video` OK, LiveKit affiché comme configuré.
+- ⚠️ À faire : refaire le même seed en PROD (ou via le bouton « Enregistrer » de la page Visioconférence une fois connecté en admin) — sur le serveur, les valeurs .env sont déjà présentes, il faut juste les enregistrer via l'interface (une fois, "go prod").
+
+## 🐛 Actions « Aperçu visuel » / live sessions invisibles (cause racine) (12/11/2026, soir)
+- **Symptôme** (Daniel + vérif navigateur via compte temporaire) : la colonne ACTIONS du tableau `/live-sessions` était vide ; console : `Ziggy error: 'live_session' parameter is required for route 'live-sessions.join'`.
+- **Cause racine** : la DB dev a été reconstruite après le wipe (test) du 12/11 matin. La migration `2026_11_10_203000` avait backfillé les uuids uniquement à l'époque → toutes les sessions créées/seedées depuis avaient **`uuid = NULL`** (le modèle `LiveSession` ne générait pas d'uuid à la création, contrairement à Exam/ExamResult). Ziggy plante, Vue ne rend rien dans la cellule.
+- **Fix** : (1) `app/Models/LiveSession.php` — hook `creating()` → `uuid = Str::uuid()` ; (2) nouvelle migration idempotente `2026_11_12_000000_backfill_live_sessions_uuid_again.php` (appliquée en local : 5 sessions → 0 NULL).
+- Vérification navigateur (compte superadmin temporaire, supprimé ensuite) : 0 erreur console sur `/live-sessions`, 9 icônes visibles par ligne (modifier/démarrer/rejoindre/inviter/partager/enregistrer/rapport/annuler/supprimer), dialog « Modifier la session » ouvre correctement.
+- **Modules/Lessons ont aussi des uuid NULL en dev (8/115, 19/344) mais ce n'est pas un bug** : Module et Lesson font un binding par `slug` (`getRouteKeyName() = 'slug'`). Seuls les modèles taggés getRouteKeyName = `'uuid'` étaient affectés (live_sessions). Pas d'action.
+
+## 🕐 Live Sessions — fuseau UTC+2 (Goma) + action modifier (12/11/2026, soir)
+- **Demande Daniel** : la planification/configuration des live sessions utilisait UTC au lieu de UTC+2 ; donner la possibilité de montrer/choisir le fuseau lors de la planification ; aucune action modifier/supprimer pour une session.
+- **Cause** : l'app tourne en `APP_TIMEZONE=UTC` ; le `datetime-local` saisi était interprété en UTC (décalage +2h pour Goma) ; aucun sélecteur ni affichage du fuseau ; l'action « Modifier » n'existait pas (les handlers API `update()`/`destroy()` existaient côté backend).
+- **Fichiers** : nouveau `config/live_sessions.php` (fuseau par défaut **Africa/Lubumbashi = heure de Goma, UTC+2**, 8 fuseaux proposés via `LIVE_SESSION_TIMEZONE` en env) ; `LiveSessionController` — le `start_at` est interprété dans le fuseau choisi (`Carbon::parse($v, $tz)->setTimezone('UTC')` pour store/update), comparaison provider inchangée, `timezone` validée (`timezone:all`) et stockée en `settings.timezone`, **affiché en timezone de session** via `Intl` (isoToLocalInput) ; pages `LiveSessions.vue / PublicIndex / StudentIndex / RequestAccess / Report` — dates formatées avec `timeZone` (prop `timezone` passée depuis les contrôleurs) ; légende « Goma/Lubumbashi — UTC+2 » au-dessus du tableau + sélecteur fuseau dans la planification + bouton **« Modifier »** (crayon, sessions `Scheduled` uniquement) ouvrant le même dialog pré-remplie (PUT `live-sessions.update`) ; invitation email `startAtLabel` en fuseau session avec annotation `(UTC+02:00)`.
+- ⚠️ À vérifier visuellement (Ctrl+F5) : création + modification d'une session (l'heure affichée doit rester celle de Goma), vue apprenant/publique.
+
+## 🔗 SEO + boutons « Aperçu » (branchés) (12/11/2026, soir)
+- **Boutons preview branchés** (avant : cliquer ne faisait rien) :
+  - `Courses.vue` « Aperçu visuel » → `marketplace.show` dans un nouvel onglet (désactivé tant que pas de slug).
+  - `Exams.vue` preview apprenant → `exams.take` (uuid) nouvel onglet (désactivé tant que l'examen n'est pas enregistré).
+  - `LearningPaths.vue` aperçu cours (syllabus onglet) → `marketplace.show` (slug ajouté aux selects `courses` et `availableCourses` dans `LearningPathController`).
+  - `Certificates.vue` « Aperçu HD » → **nouveau composant `Components/CertificateDocument.vue`** (rendu A4 partagé de l'éditeur, mode `interactive` ou lecture seule + props background/selected/dragging) + **modal plein écran téléporté** (scale auto au viewport, bouton fermer `components.confirm_dialog.close`). L'éditeur réutilise le composant (suppression du code dupliqué quantumCanvasStyle/quantumElementStyle/quantumTextStyle/quantumFilterStyle).
+- **SEO du cours** (`seo_metadata` était stockée mais jamais exposée) : `Marketplace\Show.vue` — `<Head>` avec titre (seo.title sinon titre), description (seo sinon strip HTML coupé à 160), `keywords` (seo sinon tags), **og:type=article / og:title / og:description / og:image**, twitter card, et **JSON-LD `Course`** (schema.org, provider SubnetCongo, offers). Image OG absolue (fallback logo). Aperçus SERP/Social de l'éditeur de cours désormais fidèles (domaines corrigés subnetcongo.net, h3 non cliquable).
+- **SEO global** : nouveau `SitemapController` + route `GET /sitemap.xml` (44 URLs au test : statiques + pages dynamiques publiées + cours publiés, cache 1 h, `application/xml`) ; `robots.txt` : disallow des zones privées (`/admin`, `/system`, `/web/`, `/login`…) + `Sitemap: https://subnetcongo.net/sitemap.xml`. Build OK (45,2 s). Local uniquement.
+- ⚠️ Blade statique `<title inertia>` et OG par défaut restent pour les autres pages — ne pas brancher au hasard les sections admin. À vérifier visuellement : aperçus (Ctrl+F5), et test réel de `/sitemap.xml` en prod après go.
+
+## 🎨 Dialogs de confirmation professionnels (12/11/2026, soir)
+- **Demande Daniel** : « arrange ces dialog de confirmation comme [image] en un professionnel » (ex. « Archiver le cours »).
+- **Nouveau composant `resources/js/Components/SncConfirmDialog.vue`** : panneau premium (header avec barre d'accent dégradé bleu/rouge, tuile icône dégradée, eyebrow "Confirmation"/"Action requise", titre, message avec icône info, footer boutons Annuler outline / Confirmer bleu ou Supprimer rouge dégradé, fermeture X avec rotation, mode sombre, prefers-reduced-motion). Utilise le slot `#container` de PrimeVue ConfirmDialog.
+- **Remplacement global** : tous les `<ConfirmDialog>` (Sakai `AppLayout.vue` groupe "app" + ~11 pages `<ConfirmDialog />` du groupe par défaut) remplacés par `<SncConfirmDialog />` via script. Build OK (58,9 s).
+- i18n : clés `components.confirm_dialog.*` (eyebrow_danger/eyebrow_info/fallback_title/close/reject/accept) dans les 5 locales.
+- ⚠️ Gainé en local uniquement — à vérifier visuellement (Ctrl+F5) sur l'archivage de cours, la corbeille email, les suppressions admin.
+
+## 🎨 Scrollbars de marque (12/11/2026, soir)
+- **Demande Daniel** : barres de défilement rouge ou bleu, surtout sidebar et page globale (avant : grises `--snc-text-faint`).
+- **Fix** `resources/css/app.css` : scrollbar globale (Firefox + WebKit) = bleu `--snc-primary` (#2563EB), hover `--snc-primary-hover` ; mode sombre #3B82F6/#60A5FA ; override `.custom-scrollbar` (`!important`, unifie les ~25 pages qui les rendaient grises). Build OK (35,3 s). Local uniquement.
+
+## 📎 Session du 12/11/2026 (soir, opencode) — Pièces jointes emails + sélecteur média
+
+### Pièces jointes emails (fix)
+- **Cause** : `GmailCompose.vue` — le bouton trombone basculait un flag `showAttachments` inutilisé ; le champ `<input type="file">` n'était jamais ouvert (pas de ref). Impossible d'ajouter une PJ. Le backend (`send()`/`reply()`) était déjà prêt (`->attach()`, validation 25 Mo/fichier).
+- **Fix** : ref `fileInput` + `@click="openFilePicker"`, validation client 25 Mo (toast, fichiers ignorés), reset `event.target.value`, liste des PJ déjà présente. **Réponse** (`GmailShow.vue`) : bouton trombone + champ fichier + `sendReply` en FormData (le backend supportait déjà les PJ en réponse, l'UI ne les envoyait pas).
+- Clés i18n `pages.admin_emails_gmail.attach_too_large_title/detail` (5 locales).
+- ⚠️ Encore ouvert : téléchargement des PJ **reçues** (stub `console.log` dans `GmailShow`) ; PJ des « envoyés » = métadonnées seules (pas de fichier persisté).
+
+### Sélecteur de média image/vidéo (appareil OU lien)
+- **Composant `resources/js/Components/MediaPicker.vue`** : dialog (SncDialog) 2 modes — « Appareil » (input file `accept="image/*,video/*"`, upload axios, progression, aperçu, 50 Mo) et « Lien » (URL directe image/vidéo, YouTube/Vimeo convertis en embed, aperçu iframe). Émet `insert { type, url, name }`. Clés `components.media_picker.*` (5 locales, 20 clés).
+- **Backend `UploadController@media`** + route `POST /uploads/media` (`uploads.media`, authentifiés — instructeurs ET étudiants pour les forums) : images+videos, mimes jpg/jpeg/png/gif/webp/avif/svg/mp4/webm/ogg, 50 Mo, disque `media`, retour `{url, path, type, name, size}`. Testé en CLI (200, stockage OK, nettoyé).
+- **Intégrations** : `Courses.vue` (description, bouton « Insérer une image/vidéo » via Quill `insertEmbed`) et `Modules.vue` (contenu de leçon, même bouton).
+- **Leçon : vidéo depuis l'appareil** — `Modules.vue` onglet Contenu : `video_source` += `file`, FileUpload `video/*` → upload → `video_url` = chemin `uploads/...` ; `LessonController` (store/update) : `video_url` `nullable|string` (plus `url`) et `video_source` accepte `file` ; `LessonPlayer.vue` : `videoSrc` = `/media/{path}` si pas d'URL externe (les vidéos YouTube restent en iframe). Clés `pages.modules.video_upload_*` (5 locales).
+- Build OK (32,9 s). **Local uniquement** — à tester visuellement (Ctrl+F5) : compose/réponse email, description de cours, leçon (contenu + onglet vidéo).
+- ⚠️ Non traité ce soir : builder de cours (blocs vidéo = URL uniquement, validation JSON imbriqué), vidéos des modules (`intro_video_url`), téléchargement des PJ reçues.
+
+## 🧪 Session du 12/11/2026 (opencode) — fix 500 LessonPlayer « Tentatives Quiz Module »
+
+### Dialog éditeur de cours — réduction des espaces (12/11/2026, soir)
+- **Retour utilisateur** : trop d'espace vide dans le dialog éditeur de cours (`Courses.vue`, class `course-workspace`, 95vw/1400px) — précision : en **hauteur**.
+- Fix vertical : conteneur de contenu → `px-5 py-4 pb-8 space-y-4` ; blocs champ (label/input/aide) `space-y-2` → `space-y-1.5` (28 occurrences) ; grilles `gap-y-3` ; en-têtes de section `mb-3 pb-2` ; éditeur riche 300px → 240px ; header du dialog 72px → 64px (h-16). Précédente passe (largeur) : sections `p-8` → `p-6`.
+- Build OK. Local uniquement.
+
+### Design des champs de l'éditeur de cours (12/11/2026, après-midi)
+- **CAUSE GLOBALE identifiée** : le plugin Tailwind `@tailwindcss/forms` (activé en base, stratégie par défaut) style tous les `<input>`/`<textarea>` natifs avec une spécificité (0-1-1, ex `input[type='text']`) supérieure aux classes PrimeVue v4 (`.p-inputtext`, 0-1-0) → **tous les InputText/Textarea de l'app sont écrasés** (bordure fine plate), alors que les Select/Dropdown (composants `<div>`) gardent le thème. C'est pour ça que les inputs ne ressemblaient jamais aux selects.
+- **Fix global** : `tailwind.config.js` → `forms({ strategy: 'class' })` : le plugin ne style plus que les éléments marqués explicitement `form-input`/`form-textarea` (aucun dans le codebase). Les tokens du preset PrimeVue (`app.js`, groupe `formField`) s'appliquent enfin aux InputText/Textarea → rendu identique aux selects partout. Vérifié : aucun input natif nu ne dépend du style de base du plugin (tous ont des classes Tailwind, p.ex. footer newsletter, compose emails).
+- Passes précédentes : overrides `:deep(.course-workspace .p-inputtext…)` (bg blanc + bordure fine `!important`) supprimés de `Courses.vue` ; champs de l'éditeur passés au style idiomatique (`fluid`, `size="large"`, `:invalid`, retrait des classes Tailwind bg/border/padding et du `variant="filled"` pour uniformité avec les selects).
+- Builds OK. **À vérifier visuellement par l'utilisateur (Ctrl+F5)** sur l'éditeur de cours et d'autres pages (exams, students…). Local uniquement.
+
+### Retour à la formation après examen (12/11/2026, après-midi)
+- **Comportement demandé par l'utilisateur** : après validation d'un examen/quiz, l'étudiant ne doit PAS être envoyé sur la page résultat — il doit retourner dans sa formation et continuer ; le score s'affiche en bannière + lien vers le détail.
+- **Backend** : `ExamAttemptController::submit` — au lieu de `redirect(exams.results)` : flash session `exam_result` (exam_title, score, pass_percentage, is_passed, needs_review, result_url) puis redirect vers `student.lesson-player` sur la leçon cible = leçon reliée (`lessons.quiz_id`) sinon première leçon non terminée du cours sinon première leçon ; fallback `exams.results` si pas de cours. Imports `Lesson`, `UserProgress` ajoutés.
+- **Middleware** : `HandleInertiaRequests.share` → `flash.exam_result` partagé.
+- **Front** (`LessonPlayer.vue`) : bannière verte/ambre en haut du player (score en gros, détail avec seuil, bouton « Voir le détail » vers `exams.results`, bouton fermer). Clés i18n `pages.lesson_player.examPassedTitle/examNotPassedTitle/examScoreDetail/examReviewPending/viewResultDetail/closeBannerAria` dans les 5 JSON.
+- Testé CLI : exam #32 (course 33) → leçon cible 332, URL OK. `npm run build` OK. Local uniquement.
+
+### Fix 500 à la validation d'examen + calculatrice + i18n take-exam (12/11/2026, après-midi)
+- **i18n `pages.exams-responses.*` manquant** (page `ExamsResponses.vue` — écran de prise d'examen affichait les clés brutes) : groupe créé dans les 5 JSON (82 clés, fr/en/de/sw/ln). Diff = ajouts uniquement.
+- **500 à la validation d'examen** : `ExamResult` ne générait jamais de `uuid` (route `exams.results` = binding uuid → `UrlGenerationException`). Fix : hook `booted()` `creating()` avec `Str::uuid()` dans `App\Models\ExamResult` (pattern identique à Exam/ExamAttempt). Testé en CLI : uuid généré + `route('exams.results', uuid)` OK. Backfill des lignes sans uuid : 0 concernée (transaction rollbackée).
+- **Calculatrice** : résultat arrondi à 10 décimales (évite « 39.66666666666666 » → « 39.6666666667 »).
+- `npm run build` OK (1m12s). Toujours local uniquement.
+- ⚠️ À noter : la base de dev `laravel1` avait été vidée le matin par `php artisan test` (phpunit.xml avait ses variables DB en commentaire → RefreshDatabase sur la DB de dev). Restauration : `migrate:fresh --seed` + `LessonDemoSeeder` + `RealCourseSeeder`. ⚠️ Le cours réel re-seedé a changé d'ID (ex-#38 → **#33**, première leçon **#332**). Le compte genesiskikimba@gmail.com a été recréé (mdp `Test1234!`, rôle student) et inscrit aux cours #1 et #33. **Reste à faire : isoler la DB de test dans phpunit.xml (sqlite :memory:) — à confirmer avec l'utilisateur.**
+
+### Fix 500 LessonPlayer (matin)
+
+- **Erreur 500 signalée par l'utilisateur** (screenshot) sur la page leçon du cours #38 (compte genesiskikimba@gmail.com).
+- **Cause** : `StudentController::lessonPlayer` interrogeait `exam_attempts.score_percentage` — **cette colonne n'existe pas** (colonnes réelles : `score`, `raw_score`, …). Le score officiel vit dans la table **`exam_results.score_percentage`**, liée par `exam_attempt_id`. 3 endroits corrigés dans `lessonPlayer` :
+  1. `quizData.best_score`/`is_passed` → via `ExamResult` filtré sur les tentatives COMPLETED ;
+  2. `finalExam.best_score` → `ExamResult::max('score_percentage')` restreint aux tentatives COMPLETED (sous-requête `whereIn('exam_attempt_id', ...)`) ;
+  3. `moduleQuizAttempts` → score par tentative lu dans `ExamResult` (peut être `null` si pas de résultat — ex. correction manuelle).
+- **Front** (`LessonPlayer.vue`) : affichage sécurisé quand `attempt.score === null` (« Score pas encore disponible », badge « ? »). Nouvelle clé i18n `pages.lesson_player.noScoreYet` ajoutée dans les 5 JSON (fr/en/de/sw/ln).
+- `npm run build` OK (1m13s). Test CLI : lessonPlayer OK sur video/quiz/text du cours 38 (quizData, finalExam, moduleGroups, allLessonsCompleted conformes).
+- `php artisan test` : 24 échecs **préexistants non liés** (LiveSessionAccessTest ×14 QueryException/ModelNotFound, Auth ×10) — aucun sur le player.
+- ⚠️ Toujours **local uniquement** : le déploiement du fix + la migration `add_text_to_lessons_type_enum` restent à faire avec go explicite (rappel Beam avant).
+
 ## 🏠 REPRISE À LA MAISON (arrêt prévu ~16:00, 11/11/2026)
 
 **Branche** : `devin/1792524012-ui-ux-design-system` (remote origin = `github.com/glinux99/subnetcongo`).
@@ -29,10 +182,11 @@
 - Build : `npm run build` OK à 15:09 (inclut locales complétées + menu i18n + CRUD assets). Mirrors prod déjà synchronisés.
 
 **Déployé (go explicite de l'utilisateur, ~15:50)** :
-1. **Fix `/users/students` en prod** : `app/Http/Controllers/User/StudentController.php` uploadé (md5 local=distant `4e04ed418349fb7bf094749a68aacfc2`), backup de l'ancien fichier dans `backups/20261111-153008/StudentController.php.bak`, `php8.3 -l` OK. ⚠️ **À vérifier côté navigateur** : `/users/students?page=2` ne doit plus afficher l'erreur « Attempt to read property created_at on null ». Si un autre log apparaît, l'auteur du site doit vérifier les écrans utilisateurs. Aucun build nécessaire (PHP seul).
+1. **403 page « page blanche » = fichier manquant** : le groupe `Errors/403.vue` n'existait pas (Handler.php Inertia::render('Errors/403') → page d'erreur Laravel brute très discrète ; /courses/{id} réservé aux rôles superadmin/admin/instructor provoquait un 403 pour les élèves). **Corrigé** : création `resources/js/Pages/Errors/403.vue` + `Errors/404.vue` brandés et responsive ; `Handler.php` intercepte 403/404 pour tout GET web (HTML ou Inertia). Emails de confirmation pointent maintenant sur `student.my-courses` au lieu de `/courses/{id}` (course_id admin-only). Build OK. **PAS en ligne** (upload `resources/js/Pages/Errors/*` + `app/Exceptions/Handler.php` + `app/Listeners/SendEnrollmentConfirmationEmail.php` + build Vite).
 2. Vérif navigateur admin en prod : dashboard, Emails, Support, `/web/assets` (CRUD), `/system/languages`, `/academy`, enrollment test.
 3. Migration i18n complète du site (voir « ⏳ À FAIRE CE SOIR » plus bas).
 4. Choix utilisateur : `DemoMarketingBillingDataSeeder` (données fictives MRR) — **NON lancé** (fake revenue). `SeedActivityDemoSeeder` (nouveau, seedé sur comptes FR existants uniquement, achat comptes TEST exclus) = **LANCÉ en prod le 11/11 ~15:55** : 3 certificats + 6 vérifications 127.0.0.1, 3 tentatives+résultats d'examen, 2 tickets + 4 messages, 1 session live seedée terminée + 2 présences + 4 messages de chat, 2 devoirs + 4 soumissions notées, 5 coupons. Idempotent.
+5. BCC global pour tous les emails (Katya + toi) pas encore configuré ; échecs délivrés non vérifiés.
    - **Audit_logs et logins locaux NON portés** (historique perso PII, faux bandeaux) — décision opencode, à confirmer si différent.
    - **`web_settings` clé `enrollment_request_bcc` NON envoyée** (demande MB) — local only.
    - `certificate_verifications` du seed = IP 127.0.0.1 uniquement.
@@ -40,6 +194,35 @@
 6. `/sitemap.xml` = 404 (aucune route sitemap — normal, à créer si souhaité).
 
 Dernière mise à jour :
+
+Dernière mise à jour : **12 novembre 2026 (soir)** — Fix PJ emails (compose + réponse) + sélecteur média image/vidéo (appareil ou lien) dans les éditeurs cours/leçons + upload vidéo de leçon depuis l'appareil.
+
+### Cours réel + fix quiz vides (12/11/2026, 2e passe opencode) — LOCAL UNIQUEMENT
+- **Constat Daniel** (test cours #3 leçon 27) : « Aucun quiz disponible » — cause : 29 leçons legacy de type `quiz` sans `quiz_id` ni contenu (seeders de test historiques, rien à afficher). Le player montre maintenant un état vide expliqué avec CTA « Voir mes examens » + « Poser une question ».
+- **`RealCourseSeeder`** (nouveau, idempotent) : cours réel #38 « Les Fondamentaux des Réseaux Informatiques » (instructeur Marc Tubadi, catégorie Infrastructure & Réseaux, 29,99 €, débutant) — 4 modules, 13 leçons :
+  - 4 **vidéos YouTube réelles vérifiées** : OSI (danscourses `LANW3m7UgWs`), Subnet Mask (PowerCert `s_Ntt6eTn94`), Subnetting CCNA (Jeremy's IT Lab `bQ8sdpGQu8c`), DHCP (PowerCert `S43CFcpOZSI`) ;
+  - 3 **leçons texte rédigées** (couches OSI/encapsulation, subnetting pas à pas avec exemples corrigés, DNS) ;
+  - 2 **PDF générés 2 pages** (fiche révision OSI/TCP-IP + table de subnetting) sur `public/media/demo/cours-reseaux/`, + pièce jointe ;
+  - 2 **quiz de fin de module** (exams #38/#39 : QCM, vrai/faux, réponse courte, explanations, 70 %, 3 tentatives) ;
+  - 1 **devoir** (« requête web couche par couche », 20 pts, échéance +7 j) ;
+  - **examen final** #40 : 10 questions, 60 %, 30 min, 2 tentatives (`has_final_exam=1`).
+  - Inscrit genesiskikimba@gmail.com. Lançable : `php artisan db:seed --class=RealCourseSeeder --force`.
+- **Player** : les leçons vidéo/PDF affichent désormais leur **texte de lecture** en dessous (« À lire : contenu de la leçon ») — une leçon peut combiner vidéo + texte + fichier. i18n : clés `noQuizHelp`, `myExams`, `readingTitle` ajoutées aux 5 locales. Build OK (1m19s). Aucun déploiement, aucun commit.
+
+### Player de leçon — refonte logique (12/11/2026, session opencode) — LOCAL UNIQUEMENT
+- **Demande Daniel** : la page `/student/courses/{c}/lessons/{l}` n'est pas professionnelle, la vidéo plante, quiz bloqués, fichiers absents ; améliorer le code + seeder de test avec tous les types de leçons.
+- **Bugs corrigés backend** (`Student\StudentController::lessonPlayer`) :
+  - Ordre des leçons = **ordre du module puis ordre de la leçon** (avant : tri global `order` → séquence fausse) ; nouvelle prop `moduleGroups` (sidebar groupée par module).
+  - Leçon type `quiz` : charge l'Exam lié (`quiz_id`) → uuid, nb questions, durée, seuil, tentatives restantes/utilisées, meilleur score, tentative en cours (avant : non géré, tombait dans le cas « texte »).
+  - Leçon type `assignment` : charge l'Assignment lié (match par titre) + dernière Submission de l'étudiant (note, feedback, fichier).
+  - Pièces jointes (`attachment_paths`) mappées avec URL disque media ; `content_html`/`content_text` exposés.
+  - **Examen final** : `allLessonsCompleted` + `finalExam` (uuid) envoyés quand `courses.has_final_exam` — bannière « Examen final débloqué » dans le player quand toutes les leçons sont 100 %.
+  - Fix statut tentative `'Completed'` → constante `ExamAttempt::STATUS_COMPLETED` ('completed' en BDD : le panneau « Tentatives Quiz Module » n'affichait jamais rien).
+- **Nouveau endpoint** `POST student/courses/{course}/lessons/{lesson}/assignment` → `submitAssignment` (textarea + fichier ≤ 20 Mo sur disque media `assignments/{course}`) ; crée l'Assignment à la volée si absent. Route `student.lessons.submit-assignment`.
+- **Refonte frontend** `Student/LessonPlayer.vue` : header compact (type badge, durée, module), barre de progression globale, contenu par type (vidéo YouTube-embed + natif ; PDF iframe + bouton télécharger ; texte riche ; carte quiz-examen avec CTA `exams.take` ; devoir avec soumission/note/feedback), pièces jointes, **barre de navigation Précédent / Marquer comme terminé / Suivant** (marquage complet désormais possible sur TOUS les types), sidebar plan du cours groupé par modules, heartbeat corrigé (time_spent réel, plus d'intervalle double).
+- **Migration additive locale** : `2026_11_12_122555_add_text_to_lessons_type_enum` — ENUM lessons.type += 'text' (⚠️ à inclure au prochain déploiement, avec validation explicite).
+- **`LessonDemoSeeder`** (idempotent, local) : ajoute au cours #1 (CCNA) 4 modules démo — vidéos (YouTube Big Buck Bunny + MP4), texte riche OSI/TCP-UDP, PDF généré (public/media/demo/guide-reseau-demo.pdf) + pièce jointe .txt, quiz (Exam #37, 3 questions QCM/VF/réponse-courte, pass 70 %, 3 tentatives) et devoir (max 20 pts, échéance +7 j) ; `has_final_exam=1` (Exam #1 existant). **Inscrit genesiskikimba@gmail.com au cours #1** (enrollment actif). Lançable : `php artisan db:seed --class=LessonDemoSeeder --force`.
+- i18n : 36 nouvelles clés `pages.lesson_player.*` ajoutées aux 5 locales (fr/en/de/sw/ln). `npm run build` OK (1m20s). Aucun déploiement, aucun commit.
 
 ## ⏳ À FAIRE CE SOIR (rappel explicite de l'utilisateur, 11/11/2026)
 

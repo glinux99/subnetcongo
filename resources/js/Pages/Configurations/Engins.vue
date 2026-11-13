@@ -19,7 +19,7 @@ import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import Calendar from 'primevue/calendar';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Tag from 'primevue/tag';
@@ -372,7 +372,7 @@ onMounted(() => loadEnginTypes());
     </template>
 </Dialog>
 
-        <ConfirmDialog />
+        <SncConfirmDialog />
     </AppLayout>
 </template>
 

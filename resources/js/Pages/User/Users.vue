@@ -24,7 +24,7 @@ import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 
 const props = defineProps({
     title: String,
@@ -296,7 +296,7 @@ watch(
 <template>
     <AppLayout :title="props.title">
         <Head :title="props.title" />
-        <ConfirmDialog />
+        <SncConfirmDialog />
 
         <div class="page-bg min-h-screen font-sans pb-20">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">

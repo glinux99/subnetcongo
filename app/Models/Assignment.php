@@ -36,6 +36,11 @@ class Assignment extends Model
         return $this->hasMany(Submission::class);
     }
 
+    public function assignmentSubmissions(): HasMany
+    {
+        return $this->hasMany(AssignmentSubmission::class);
+    }
+
     public function rubrics(): HasMany
     {
         return $this->hasMany(Rubric::class);

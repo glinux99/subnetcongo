@@ -5,10 +5,12 @@ import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
+import { useToast } from 'primevue/usetoast';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const toast = useToast();
 
 const props = defineProps({
     prefill: { type: Object, default: () => ({}) },
@@ -24,7 +26,8 @@ const attachments = ref([]);
 const showCcBcc = ref(false);
 const isSending = ref(false);
 const isSaving = ref(false);
-const showAttachments = ref(false);
+const fileInput = ref(null);
+const maxAttachmentSize = 25 * 1024 * 1024;
 
 const canSend = computed(() => {
     return to.value.trim() && subject.value.trim() && body.value.trim();
@@ -40,7 +43,22 @@ const formatFileSize = (bytes) => {
 
 const addAttachment = (event) => {
     const files = Array.from(event.target.files);
-    attachments.value.push(...files);
+    const tooLarge = files.filter((f) => f.size > maxAttachmentSize);
+    if (tooLarge.length > 0) {
+        toast.add({
+            severity: 'error',
+            summary: t('pages.admin_emails_gmail.attach_too_large_title'),
+            detail: t('pages.admin_emails_gmail.attach_too_large_detail', { names: tooLarge.map((f) => f.name).join(', ') }),
+            life: 5000,
+        });
+    }
+    const ok = files.filter((f) => f.size <= maxAttachmentSize);
+    if (ok.length > 0) attachments.value.push(...ok);
+    event.target.value = '';
+};
+
+const openFilePicker = () => {
+    fileInput.value?.click();
 };
 
 const removeAttachment = (index) => {
@@ -182,7 +200,7 @@ const insertTemplate = (template) => {
                                     icon="pi pi-paperclip"
                                     :label="t('pages.admin_emails_gmail.btn_attach')"
                                     class="text-slate-600 hover:bg-slate-100"
-                                    @click="showAttachments = !showAttachments"
+                                    @click="openFilePicker"
                                     text
                                 />
                                 <div v-if="attachments.length > 0" class="flex items-center gap-2">

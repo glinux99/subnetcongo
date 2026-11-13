@@ -106,6 +106,7 @@ const messageForm = useForm({ cohort_id: null, subject: '', body: '', send_email
 const studentEnrollForm = useForm({ cohort_id: null, student_ids: [], notify_students: true });
 const liveSessionForm = useForm({
     id: null,
+    uuid: null,
     title: '',
     course_id: null,
     instructor_id: null,
@@ -367,6 +368,7 @@ const openLiveSessionDialog = (session = null) => {
     if (currentCohort.value) {
         if (session) {
             liveSessionForm.id = session.id;
+            liveSessionForm.uuid = session.uuid ?? null;
             liveSessionForm.title = session.title;
             liveSessionForm.course_id = session.course_id;
             liveSessionForm.instructor_id = session.instructor_id;
@@ -387,13 +389,13 @@ const saveLiveSession = () => {
         toast.add({ severity: 'error', summary: t('pages.cohorts.requiredFields'), detail: t('pages.cohorts.requiredFieldsDetail') });
         return;
     }
-    const url = liveSessionForm.id
-        ? route('users.cohorts.live-sessions.update', { cohort: currentCohort.value.code, live_session: liveSessionForm.id })
+    const url = liveSessionForm.uuid
+        ? route('users.cohorts.live-sessions.update', { cohort: currentCohort.value.code, live_session: liveSessionForm.uuid })
         : route('users.cohorts.live-sessions.store', currentCohort.value.code);
     liveSessionForm
         .transform((data) => ({
             ...data,
-            _method: liveSessionForm.id ? 'PUT' : 'POST',
+            _method: liveSessionForm.uuid ? 'PUT' : 'POST',
             start_at: data.start_at ? data.start_at.toISOString() : null,
         }))
         .post(url, {
@@ -401,7 +403,7 @@ const saveLiveSession = () => {
             preserveState: true,
             onSuccess: () => {
                 liveSessionDialog.value = false;
-                toast.add({ severity: 'success', summary: liveSessionForm.id ? t('pages.cohorts.updated') : t('pages.cohorts.scheduled'), detail: t('pages.cohorts.liveSessionSaved') });
+                toast.add({ severity: 'success', summary: liveSessionForm.uuid ? t('pages.cohorts.updated') : t('pages.cohorts.scheduled'), detail: t('pages.cohorts.liveSessionSaved') });
                 liveSessionForm.reset();
             },
             onError: () => toast.add({ severity: 'error', summary: t('pages.cohorts.toastError'), detail: t('pages.cohorts.checkInfo') })
@@ -411,7 +413,7 @@ const deleteLiveSession = (session) => {
     confirmAction({
         message: t('pages.cohorts.confirmDeleteSession', { title: session.title }), header: t('pages.cohorts.confirmHeader'), icon: 'pi pi-exclamation-triangle', danger: true,
         accept: () => {
-            router.delete(route('users.cohorts.live-sessions.destroy', { cohort: currentCohort.value.code, live_session: session.id }), {
+            router.delete(route('users.cohorts.live-sessions.destroy', { cohort: currentCohort.value.code, live_session: session.uuid }), {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => toast.add({ severity: 'success', summary: t('pages.cohorts.deleted'), detail: t('pages.cohorts.liveSessionDeleted') })

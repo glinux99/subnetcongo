@@ -1,0 +1,13 @@
+NOTES DE TP — CONFIGURATION ROUTEUR
+===================================
+
+1. Accès à la console : câble console + émulateur terminal (9600 bauds).
+2. Mode privilégié : enable
+3. Configuration globale : configure terminal
+4. Attribution d'une IP : ip address 192.168.1.1 255.255.255.0
+5. Activation de l'interface : no shutdown
+
+Commandes utiles :
+  show ip interface brief
+  show running-config
+  copy running-config startup-config

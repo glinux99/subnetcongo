@@ -56,27 +56,41 @@
     color-scheme: dark;
 }
 
-/* ---------- Scrollbar cohérente & persistante (marque sobre, Firefox + WebKit) ---------- */
+/* ---------- Scrollbar de marque (bleu SubnetCongo, Firefox + WebKit) ---------- */
 * {
     scrollbar-width: thin;
-    scrollbar-color: var(--snc-text-faint) transparent;
+    scrollbar-color: var(--snc-primary) transparent;
 }
 *::-webkit-scrollbar { width: 9px; height: 9px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-    background: var(--snc-text-faint);
+    background: var(--snc-primary);
     border-radius: 20px;
     border: 2px solid transparent;
     background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-    background: var(--snc-text-muted);
+    background: var(--snc-primary-hover);
     border: 2px solid transparent;
     background-clip: padding-box;
 }
-.app-dark * { scrollbar-color: #334155 transparent; }
-.app-dark *::-webkit-scrollbar-thumb { background: #334155; border: 2px solid transparent; background-clip: padding-box; }
-.app-dark *::-webkit-scrollbar-thumb:hover { background: #475569; border: 2px solid transparent; background-clip: padding-box; }
+/* Unifie les scrollbars .custom-scrollbar (souvent grises en scoped) */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--snc-primary) !important;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: var(--snc-primary-hover) !important;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.custom-scrollbar { scrollbar-color: var(--snc-primary) transparent; }
+.app-dark * { scrollbar-color: #3B82F6 transparent; }
+.app-dark *::-webkit-scrollbar-thumb { background: #3B82F6; border: 2px solid transparent; background-clip: padding-box; }
+.app-dark *::-webkit-scrollbar-thumb:hover { background: #60A5FA; border: 2px solid transparent; background-clip: padding-box; }
+.app-dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #3B82F6 !important; border: 2px solid transparent; background-clip: padding-box; }
+.app-dark .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #60A5FA !important; border: 2px solid transparent; background-clip: padding-box; }
 
 /* ---------- Accessibilité : focus visible & mouvement réduit ---------- */
 :focus-visible {

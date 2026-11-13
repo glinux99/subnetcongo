@@ -9,8 +9,11 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
+use App\Models\ExamResult;
+use App\Models\Assignment;
 use App\Models\Lesson;
 use App\Models\Module;
+use App\Models\Submission;
 use App\Models\Resource;
 use App\Models\User;
 use App\Models\UserProgress;
@@ -226,27 +229,37 @@ class StudentController extends Controller
             abort(403, "Vous devez être inscrit à ce cours pour accéder à cette leçon.");
         }
 
-        // Toutes les leçons du cours pour la navigation
-        $lessons = Lesson::whereHas('module', fn ($q) => $q->where('course_id', $course->id))
-            ->with('module:id,title,order')
+        // Modules + leçons dans l'ordre réel du parcours (ordre du module, puis ordre de la leçon)
+        $modules = $course->modules()
             ->orderBy('order')
-            ->get()
-            ->map(fn (Lesson $l) => [
+            ->with(['lessons' => fn ($q) => $q->orderBy('order')])
+            ->get();
+
+        $completedIds = UserProgress::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->where('progress_percent', '>=', 100)
+            ->pluck('lesson_id');
+
+        $flatLessons = collect();
+        $moduleGroups = $modules->map(function (Module $m) use ($completedIds, $flatLessons) {
+            $items = $m->lessons->map(fn (Lesson $l) => [
                 'id' => $l->id,
                 'title' => $l->title,
                 'type' => $l->type,
-                'lesson_type' => $l->lesson_type,
-                'order' => $l->order,
-                'module_title' => $l->module?->title,
                 'duration' => $l->duration_minutes,
-                'video_url' => $l->video_url,
-                'document_url' => $l->document_url ? $this->getMediaUrl($l->document_url) : null,
-                'document_title' => $l->document_title,
-                'is_completed' => UserProgress::where('user_id', $user->id)
-                    ->where('lesson_id', $l->id)
-                    ->where('progress_percent', '>=', 100)
-                    ->exists(),
-            ])->values();
+                'is_completed' => $completedIds->contains($l->id),
+                'is_free_preview' => (bool) $l->is_free_preview,
+            ]);
+            $items->each(fn ($i) => $flatLessons->push($i));
+
+            return [
+                'id' => $m->id,
+                'title' => $m->title,
+                'lessons' => $items->values(),
+            ];
+        });
+        $lessons = $flatLessons->values();
+        $allLessonsCompleted = $lessons->isNotEmpty() && $lessons->every(fn ($l) => $l['is_completed']);
 
         // Progression existante sur cette leçon
         $progress = UserProgress::where('user_id', $user->id)
@@ -276,16 +289,112 @@ class StudentController extends Controller
         if ($module && $module->has_quiz && $module->quiz_id) {
             $moduleQuizAttempts = \App\Models\ExamAttempt::where('user_id', $user->id)
                 ->where('exam_id', $module->quiz_id)
-                ->where('status', 'Completed')
+                ->where('status', ExamAttempt::STATUS_COMPLETED)
                 ->orderByDesc('created_at')
-                ->get(['id', 'score_percentage', 'created_at', 'time_spent_seconds'])
-                ->map(fn ($a) => [
-                    'id' => $a->id,
-                    'score' => $a->score_percentage,
-                    'score_out_of_20' => round(($a->score_percentage / 100) * 20, 2),
-                    'date' => $a->created_at?->toIso8601String(),
-                    'time_spent' => $a->time_spent_seconds,
-                ])->values();
+                ->get(['id', 'created_at', 'time_spent_seconds'])
+                ->map(function ($a) {
+                    $score = \App\Models\ExamResult::where('exam_attempt_id', $a->id)
+                        ->value('score_percentage');
+                    return [
+                        'id' => $a->id,
+                        'score' => $score !== null ? (float) $score : null,
+                        'score_out_of_20' => $score !== null ? round(((float) $score / 100) * 20, 2) : null,
+                        'date' => $a->created_at?->toIso8601String(),
+                        'time_spent' => $a->time_spent_seconds,
+                    ];
+                })->values();
+        }
+
+        // Quiz lié à la leçon (leçon de type quiz -> Exam avec tentative/résultats)
+        $quizData = null;
+        if ($lesson->type === Lesson::TYPE_QUIZ && $lesson->quiz_id) {
+            $quiz = Exam::withCount(['questions'])->find($lesson->quiz_id);
+            if ($quiz && $quiz->is_published) {
+                $attempts = ExamAttempt::where('user_id', $user->id)
+                    ->where('exam_id', $quiz->id)
+                    ->orderByDesc('created_at')
+                    ->get();
+                $results = ExamResult::where('user_id', $user->id)
+                    ->where('exam_id', $quiz->id)
+                    ->get();
+                $completedAttemptIds = $attempts
+                    ->where('status', ExamAttempt::STATUS_COMPLETED)
+                    ->pluck('id');
+                $completedScores = $results
+                    ->whereIn('exam_attempt_id', $completedAttemptIds)
+                    ->pluck('score_percentage')
+                    ->map(fn ($s) => (float) $s);
+                $quizData = [
+                    'id' => $quiz->id,
+                    'uuid' => $quiz->uuid,
+                    'title' => $quiz->title,
+                    'description' => $quiz->description,
+                    'question_count' => $quiz->questions_count,
+                    'pass_percentage' => (float) $quiz->pass_percentage,
+                    'duration_minutes' => $quiz->duration_minutes,
+                    'attempts_allowed' => $quiz->attempts_allowed,
+                    'attempts_used' => $attempts->count(),
+                    'best_score' => $completedScores->max(),
+                    'is_passed' => $completedScores->contains(fn ($s) => $s >= (float) $quiz->pass_percentage),
+                    'has_active_attempt' => $attempts->contains(fn ($a) => $a->status === ExamAttempt::STATUS_IN_PROGRESS),
+                ];
+            }
+        }
+
+        // Devoir lié à la leçon (leçon de type assignment -> Assignment + soumission de l'étudiant)
+        $assignmentData = null;
+        if ($lesson->type === Lesson::TYPE_ASSIGNMENT) {
+            $assignment = Assignment::where('course_id', $course->id)
+                ->where('title', $lesson->title)
+                ->first();
+            if ($assignment) {
+                $submission = Submission::where('user_id', $user->id)
+                    ->where('assignment_id', $assignment->id)
+                    ->orderByDesc('submitted_at')
+                    ->first();
+                $assignmentData = [
+                    'id' => $assignment->id,
+                    'title' => $assignment->title,
+                    'description' => $assignment->description,
+                    'max_points' => (float) $assignment->max_points,
+                    'due_at' => $assignment->due_at?->toIso8601String(),
+                    'submission' => $submission ? [
+                        'id' => $submission->id,
+                        'content' => $submission->content,
+                        'file_name' => $submission->file_path ? basename($submission->file_path) : null,
+                        'file_url' => $submission->file_path ? Storage::disk('media')->url($submission->file_path) : null,
+                        'status' => $submission->status,
+                        'grade' => $submission->grade !== null ? (float) $submission->grade : null,
+                        'feedback' => $submission->feedback_text,
+                        'is_graded' => (bool) $submission->is_graded,
+                        'submitted_at' => $submission->submitted_at?->toIso8601String(),
+                    ] : null,
+                ];
+            }
+        }
+
+        // Examen final du cours (débloqué quand toutes les leçons sont terminées)
+        $finalExam = null;
+        if ($course->has_final_exam && $course->final_exam_id) {
+            $exam = Exam::withCount(['questions'])->find($course->final_exam_id);
+            if ($exam && $exam->is_published) {
+                $bestScore = ExamResult::where('user_id', $user->id)
+                    ->where('exam_id', $exam->id)
+                    ->whereIn('exam_attempt_id', ExamAttempt::where('user_id', $user->id)
+                        ->where('exam_id', $exam->id)
+                        ->where('status', ExamAttempt::STATUS_COMPLETED)
+                        ->select('id'))
+                    ->max('score_percentage');
+                $finalExam = [
+                    'id' => $exam->id,
+                    'uuid' => $exam->uuid,
+                    'title' => $exam->title,
+                    'question_count' => $exam->questions_count,
+                    'pass_percentage' => (float) $exam->pass_percentage,
+                    'duration_minutes' => $exam->duration_minutes,
+                    'best_score' => $bestScore !== null ? (float) $bestScore : null,
+                ];
+            }
         }
 
         // Vidéos du cours (leçons de type vidéo)
@@ -336,12 +445,25 @@ class StudentController extends Controller
                 'type' => $lesson->type,
                 'lesson_type' => $lesson->lesson_type,
                 'content' => $lesson->content,
+                'content_html' => $lesson->content_html,
+                'content_text' => $lesson->content_text,
                 'video_url' => $lesson->video_url,
+                'video_source' => $lesson->video_source,
                 'duration' => $lesson->duration_minutes,
-                'attachments' => $lesson->attachment_paths ?? [],
                 'document_url' => $lesson->document_url ? $this->getMediaUrl($lesson->document_url) : null,
                 'document_title' => $lesson->document_title,
+                'attachments' => collect($lesson->attachment_paths ?? [])
+                    ->filter(fn ($p) => is_string($p) && $p !== '')
+                    ->map(fn ($p) => [
+                        'name' => basename($p),
+                        'url' => Storage::disk('media')->url($p),
+                    ])->values(),
             ],
+            'quiz' => $quizData,
+            'assignment' => $assignmentData,
+            'moduleGroups' => $moduleGroups->values(),
+            'allLessonsCompleted' => $allLessonsCompleted,
+            'finalExam' => $finalExam,
             'module' => $moduleData,
             'moduleQuizAttempts' => $moduleQuizAttempts,
             'lessons' => $lessons,
@@ -364,6 +486,58 @@ class StudentController extends Controller
                     'created_at' => $q->created_at?->toIso8601String(),
                 ])->values(),
         ]);
+    }
+
+    /**
+     * Soumission d'un devoir par l'étudiant depuis le player de leçon.
+     */
+    public function submitAssignment(Request $request, Course $course, Lesson $lesson)
+    {
+        $user = $request->user();
+        abort_unless($user && $user->isEnrolledIn($course), 403, "Vous n'êtes pas inscrit à ce cours.");
+        abort_unless($lesson->type === Lesson::TYPE_ASSIGNMENT, 422, 'Cette leçon n\'est pas un devoir.');
+
+        $data = $request->validate([
+            'content' => ['nullable', 'string', 'max:20000'],
+            'file' => [
+                'nullable', 'file', 'max:20480',
+                'mimes:pdf,doc,docx,txt,zip,rar,7z,ppt,pptx,xls,xlsx,csv,jpg,jpeg,png,webp',
+            ],
+        ]);
+
+        $hasFile = $request->hasFile('file') && $request->file('file')->isValid();
+        if (empty(trim((string) ($data['content'] ?? ''))) && ! $hasFile) {
+            return back()->withErrors(['content' => 'Rédigez une réponse ou joignez un fichier.']);
+        }
+
+        // Le devoir est créé à la volée s'il n'existe pas encore (lié à la leçon par son titre)
+        $assignment = Assignment::firstOrCreate(
+            ['course_id' => $course->id, 'title' => $lesson->title],
+            [
+                'description' => strip_tags((string) ($lesson->content ?: $lesson->content_html ?: '')) ?: $lesson->title,
+                'max_points' => 20,
+                'type' => 'Devoir',
+            ]
+        );
+
+        $filePath = $hasFile
+            ? $request->file('file')->store('assignments/'.$course->id, 'media')
+            : null;
+
+        Submission::create([
+            'user_id' => $user->id,
+            'student_id' => $user->id,
+            'course_id' => $course->id,
+            'assignment_id' => $assignment->id,
+            'instructor_id' => $course->instructor_id,
+            'content' => $data['content'] ?? null,
+            'file_path' => $filePath,
+            'status' => 'submitted',
+            'submitted_at' => now(),
+            'is_graded' => false,
+        ]);
+
+        return back()->with('success', 'Devoir soumis. Votre instructeur le corrigera bientôt.');
     }
 
     /**

@@ -52,6 +52,7 @@ Route::get('livekit-health', [App\Http\Controllers\LiveSessionController::class,
 */
 
 // --- ROUTES PUBLIQUES DU SITE WEB ---
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/', [WebSettingController::class, 'landing'])->name('landing');
 Route::get('/contact', [WebSettingController::class, 'contact'])->name('contact');
 Route::get('/about', [WebSettingController::class, 'about'])->name('about');
@@ -157,7 +158,10 @@ Route::middleware(['auth'])->group(function () {
   Route::get('/users/leave-impersonate', [UserController::class, 'leaveImpersonate'])->name('users.leave-impersonate');
 
   Route::put('/settings/profile', [SettingController::class, 'updateProfile'])->name('settings.updateProfile');
-  Route::put('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.updatePassword');
+    Route::put('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.updatePassword');
+
+    // Upload média (image/vidéo) pour les sélecteurs de médias — utilisateurs authentifiés
+    Route::post('/uploads/media', [App\Http\Controllers\Admin\UploadController::class, 'media'])->name('uploads.media');
   Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     // LiveKit health check (public)
     Route::get('livekit-health', [LiveSessionController::class, 'livekitHealth'])->name('livekit-health');
@@ -305,6 +309,8 @@ Route::middleware(['auth'])->group(function () {
         // Auto-save progression
         Route::post('/courses/{course}/lessons/{lesson}/progress', [App\Http\Controllers\Student\StudentController::class, 'updateProgress'])->name('lessons.update-progress');
         Route::post('/courses/{course}/lessons/{lesson}/complete', [App\Http\Controllers\Student\StudentController::class, 'completeLesson'])->name('lessons.complete');
+        // Soumission d'un devoir (leçon de type assignment)
+        Route::post('/courses/{course}/lessons/{lesson}/assignment', [App\Http\Controllers\Student\StudentController::class, 'submitAssignment'])->name('lessons.submit-assignment');
         // Téléchargement de ressources
         Route::get('/resources/{resource}/download', [App\Http\Controllers\Student\StudentController::class, 'resourceDownload'])->name('resources.download');
         // Q&A (questions sur un cours / une leçon)
@@ -384,6 +390,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('support-export',                  [App\Http\Controllers\Social\SupportTicketController::class, 'export'])->name('support.export');
     });
 
+    // Devoirs & QCM du hub social (étudiants)
+    Route::post('assignments/submit',      [App\Http\Controllers\Social\ForumController::class, 'submitAssignment'])->name('assignments.submit');
+    Route::post('assignments/quiz/submit', [App\Http\Controllers\Social\ForumController::class, 'submitQuiz'])->name('assignments.quiz.submit');
+
+    // Devoirs, QCM & correction (instructeurs)
+    Route::middleware(['has_role:superadmin,admin,instructor'])->group(function () {
+        Route::post('instructor/assignments', [App\Http\Controllers\Social\ForumController::class, 'storeAssignment'])->name('instructor.assignments.store');
+        Route::post('instructor/quizzes',     [App\Http\Controllers\Social\ForumController::class, 'storeQuiz'])->name('instructor.quizzes.store');
+        Route::post('instructor/grade',       [App\Http\Controllers\Social\ForumController::class, 'storeGrade'])->name('instructor.grade.store');
+    });
+
     // 5. Marketing & Ventes
     Route::prefix('marketing')->name('marketing.')->middleware(['has_role:superadmin,admin,finance-manager,marketing-manager'])->group(function () {
         Route::get('emails/duplicate/{email}', [App\Http\Controllers\Marketing\EmailCampaignController::class, 'duplicate'])->name('emails.duplicate');
@@ -449,14 +466,24 @@ Route::prefix('curriculum')->group(function () {
             Route::delete('/tokens/{id}',         'revokeToken')->name('tokens.revoke');
             Route::delete('/users/{userId}/tokens','revokeUserTokens')->name('tokens.flush');
             Route::post('/tokens/prune',          'pruneTokens')->name('tokens.prune');
-            Route::post('/settings',              'updateSettings')->name('settings.update');
+            Route::post('/settings',              'updateSettings')->name('api.settings.update');
         });
 
         Route::get('logs',[App\Http\Controllers\System\AuditLogController::class, 'index'])->name('logs');
         Route::delete('logs/{log}', [App\Http\Controllers\System\AuditLogController::class, 'destroy'])->name('logs.destroy');
         Route::delete('logs/clear', [App\Http\Controllers\System\AuditLogController::class, 'clear'])->name('logs.clear');
-        Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('settings');
+        Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('system.settings');
+        Route::post('settings',[App\Http\Controllers\System\SettingController::class, 'update'])->name('settings.update');
+        Route::post('settings/clear-cache',[App\Http\Controllers\System\SettingController::class, 'clearCache'])->name('settings.cache.clear');
+        Route::post('settings/maintenance-toggle',[App\Http\Controllers\System\SettingController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');
+        Route::post('settings/logo-upload',[App\Http\Controllers\System\SettingController::class, 'uploadLogo'])->name('settings.logo.upload');
+        Route::post('settings/artisan-command',[App\Http\Controllers\System\SettingController::class, 'artisanCommand'])->name('settings.artisan');
         Route::get('settings/video', [App\Http\Controllers\System\SettingController::class, 'video'])->name('settings.video');
+        Route::get('terminal', [App\Http\Controllers\System\TerminalController::class, 'index'])->name('terminal');
+        Route::post('terminal/start', [App\Http\Controllers\System\TerminalController::class, 'start'])->name('terminal.start');
+        Route::get('terminal/{session}/tail', [App\Http\Controllers\System\TerminalController::class, 'tail'])->name('terminal.tail');
+        Route::post('terminal/{session}/kill', [App\Http\Controllers\System\TerminalController::class, 'kill'])->name('terminal.kill');
+        Route::post('terminal/{session}/close', [App\Http\Controllers\System\TerminalController::class, 'close'])->name('terminal.close');
         Route::post('settings/video', [App\Http\Controllers\System\SettingController::class, 'updateVideo'])->name('settings.video.update');
         Route::post('settings/video/test/{provider}', [App\Http\Controllers\System\SettingController::class, 'testVideoProvider'])->name('settings.video.test');
         Route::post('settings/mail/test', [App\Http\Controllers\System\SettingController::class, 'testEmail'])->name('settings.mail.test');

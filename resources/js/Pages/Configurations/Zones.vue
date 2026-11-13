@@ -19,7 +19,7 @@ import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import InputNumber from 'primevue/inputnumber';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import FileUpload from 'primevue/fileupload';
 import Tag from 'primevue/tag';
 import ProgressBar from 'primevue/progressbar';
@@ -444,7 +444,7 @@ const deleteSelectedZones = () => {
             </template>
         </Dialog>
 
-        <ConfirmDialog />
+        <SncConfirmDialog />
     </AppLayout>
 </template>
 

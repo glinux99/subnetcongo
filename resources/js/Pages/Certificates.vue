@@ -45,6 +45,7 @@ import TabPanel from 'primevue/tabpanel';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
 import { useI18n } from 'vue-i18n';
+import CertificateDocument from '@/Components/CertificateDocument.vue';
 
 const { t } = useI18n();
 
@@ -131,6 +132,16 @@ const signaturePreview = ref(null);
 
 // Variables du moteur Drag & Drop
 const canvasZoom = ref(60);
+const hdPreviewOpen = ref(false);
+const hdPreviewScale = computed(() => {
+    const doc = templateForm.orientation === 'landscape' ? { w: 1120, h: 792 } : { w: 792, h: 1120 };
+    const sw = (window.innerWidth - 48) / doc.w;
+    const sh = (window.innerHeight - 96) / doc.h;
+    return Math.min(1, sw, sh);
+});
+const hdPreviewDocSize = computed(() => (templateForm.orientation === 'landscape'
+    ? { w: 1120, h: 792 }
+    : { w: 792, h: 1120 }));
 const selectedElementId = ref(null);
 const draggingElementId = ref(null);
 const dragOffset = reactive({ x: 0, y: 0 });
@@ -267,52 +278,9 @@ const stopGlobalDrag = () => {
 // STYLES COMPUTÉS ET FONCTIONS D'ÉDITION (TEXTE & OPACITÉ)
 // ======================================================================================
 
-const quantumCanvasStyle = computed(() => {
-    const width = templateForm.orientation === 'landscape' ? 1120 : 792;
-    const height = templateForm.orientation === 'landscape' ? 792 : 1120;
-    return {
-        width: `${width}px`,
-        height: `${height}px`,
-        transform: `scale(${canvasZoom.value / 100})`,
-        backgroundColor: templateForm.background_color
-    };
-});
-
-const quantumElementStyle = (el) => {
-    // L'ordre dans le tableau détermine le Z-Index naturel (comme dans Photoshop)
-    const zIndex = templateForm.elements.findIndex(e => e.id === el.id) + 10;
-    return {
-        position: 'absolute',
-        left: `${el.x}px`,
-        top: `${el.y}px`,
-        width: el.width ? `${el.width}px` : 'auto',
-        height: el.height ? `${el.height}px` : 'auto',
-        transform: `rotate(${el.rotation || 0}deg)`,
-        opacity: el.opacity !== undefined ? el.opacity / 100 : 1,
-        zIndex: zIndex,
-        cursor: draggingElementId.value === el.id ? 'grabbing' : 'grab',
-        outline: selectedElementId.value === el.id ? '2px dashed #dc2626' : 'none'
-    };
-};
-
-const quantumTextStyle = (el) => ({
-    fontSize: `${el.style.fontSize}px`,
-    color: el.style.color,
-    fontFamily: el.style.fontFamily,
-    letterSpacing: `${el.style.letterSpacing}px`,
-    fontWeight: el.style.fontWeight,
-    fontStyle: el.style.fontStyle,
-    textDecoration: el.style.textDecoration || 'none',
-    textAlign: el.style.textAlign,
-    lineHeight: el.style.lineHeight || 1.2
-});
-
-const quantumFilterStyle = (filters) => {
-    if (!filters) return {};
-    return {
-        filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) grayscale(${filters.grayscale}%) saturate(${filters.saturate ?? 100}%) hue-rotate(${filters.hueRotate}deg) invert(${filters.invert ? 100 : 0}%) blur(${filters.blur || 0}px)`
-    };
-};
+const quantumCanvasStyle = computed(() => ({
+    transform: `scale(${canvasZoom.value / 100})`
+}));
 
 // Formater le texte (Gras, Italique, Souligné)
 const toggleTextStyle = (el, prop, activeVal, defaultVal) => {
@@ -839,7 +807,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
                 <!-- Right: Actions -->
                 <div class="flex items-center justify-end gap-4 w-1/3">
-                    <Button :label="t('pages.certificates.previewHd')" icon="pi pi-eye" class="p-button-text text-white/70 hover:text-white hover:bg-white/5 font-bold px-4 rounded-xl" />
+                    <Button :label="t('pages.certificates.previewHd')" icon="pi pi-eye" class="p-button-text text-white/70 hover:text-white hover:bg-white/5 font-bold px-4 rounded-xl" @click="hdPreviewOpen = true" />
                     <Button :label="t('pages.certificates.saveTemplate')" icon="pi pi-cloud-upload" class="bg-red-600 hover:bg-red-500 border-none font-bold px-8 py-3 rounded-xl text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-0.5" @click="saveTemplate" :loading="isSaving" />
                 </div>
             </nav>
@@ -996,72 +964,16 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                     </div>
 
                     <!-- THE PHYSICAL DOCUMENT (A4) -->
-                    <div id="snc-quantum-canvas" class="relative bg-white shadow-[0_20px_100px_rgba(0,0,0,0.8)] origin-center ring-1 ring-white/10 transition-transform duration-300 ease-out" :style="quantumCanvasStyle">
-
-                        <!-- Layer 0: Background Generation -->
-                        <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                            <!-- Background Image (Upload) -->
-                            <img v-if="backgroundPreview || templateForm.background_url" :src="backgroundPreview || templateForm.background_url" class="absolute inset-0 w-full h-full object-cover transition-opacity" :style="[quantumFilterStyle(templateForm.bg_filters), { opacity: templateForm.bg_opacity / 100 }]" />
-                            <!-- Base Color -->
-                            <div class="absolute inset-0 mix-blend-multiply" :style="{ backgroundColor: `#${templateForm.background_color.replace('#','')}`, opacity: (100 - (backgroundPreview ? templateForm.bg_opacity : 0)) / 100 }"></div>
-                        </div>
-
-                        <!-- Layer 1: Master Border -->
-                        <div v-if="templateForm.border_width > 0" class="absolute pointer-events-none z-10" :style="{ top: '40px', left: '40px', right: '40px', bottom: '40px', border: `${templateForm.border_width}px solid #${templateForm.border_color.replace('#','')}` }"></div>
-
-                        <!-- Layer 2: Draggable Quantum Elements -->
-                        <div v-for="el in templateForm.elements" :key="el.id"
-                             class="absolute z-20 group quantum-element"
-                             :class="{ 'is-selected': selectedElementId === el.id, 'is-dragging': draggingElementId === el.id }"
-                             :style="quantumElementStyle(el)"
-                             @mousedown.stop="startElementDrag($event, el)">
-
-                            <!-- Bounding Box (Visible on selection) -->
-                            <div v-if="selectedElementId === el.id" class="absolute -inset-1.5 border-2 border-red-500 pointer-events-none z-30">
-                                <!-- Resize Nodes (Visual aesthetics for UI) -->
-                                <div class="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
-                                <div class="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
-                                <div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
-                                <div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-red-500 rounded-full"></div>
-                            </div>
-
-                            <!-- Element Core Wrapper -->
-                            <div class="w-full h-full relative overflow-visible flex items-center justify-center">
-
-                                <!-- Render: TEXT -->
-                                <div v-if="el.type === 'text'" class="w-full h-full outline-none whitespace-pre-wrap select-text break-words" contenteditable="true" @blur="handleTextEdit($event, el)" :style="quantumTextStyle(el)" spellcheck="false" :title="t('pages.certificates.doubleClickEdit')" v-html="el.content"></div>
-
-                                <!-- Render: LOGO -->
-                                <div v-if="el.type === 'logo'" class="w-full h-full pointer-events-none flex items-center justify-center">
-                                    <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
-                                    <div v-else class="w-full h-full bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 rounded-xl">
-                                        <i class="pi pi-shield text-4xl mb-2"></i><span class="text-xs font-bold uppercase tracking-widest text-center px-2">{{ t('pages.certificates.logoSpace') }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Render: SIGNATURE -->
-                                <div v-if="el.type === 'signature'" class="w-full h-full pointer-events-none flex items-center justify-center">
-                                    <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
-                                    <div v-else class="w-full h-full bg-slate-100/50 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 rounded-xl">
-                                        <i class="pi pi-pencil text-3xl mb-2"></i><span class="text-[10px] font-bold uppercase tracking-widest">{{ t('pages.certificates.signatureSpace') }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Render: QR CODE -->
-                                <div v-if="el.type === 'qr'" class="w-full h-full pointer-events-none bg-white p-3 border border-slate-200 flex items-center justify-center shadow-sm">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TrustCenterValidation" class="w-full h-full object-contain opacity-80" />
-                                </div>
-
-                                <!-- Render: CUSTOM IMAGE -->
-                                <div v-if="el.type === 'image'" class="w-full h-full pointer-events-none flex items-center justify-center">
-                                    <img v-if="el.content" :src="el.content" class="w-full h-full object-contain" :style="quantumFilterStyle(el.filters)" />
-                                    <div v-else class="w-full h-full bg-blue-50 border border-blue-100 flex flex-col items-center justify-center text-blue-300">
-                                        <i class="pi pi-image text-3xl mb-1"></i><span class="text-[8px] font-bold uppercase">{{ t('pages.certificates.freeImage') }}</span>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
+                    <div id="snc-quantum-canvas" class="relative origin-center transition-transform duration-300 ease-out" :style="quantumCanvasStyle">
+                        <CertificateDocument
+                            :template-form="templateForm"
+                            :background-preview="backgroundPreview"
+                            :selected-element-id="selectedElementId"
+                            :dragging-element-id="draggingElementId"
+                            interactive
+                            @start-drag="startElementDrag"
+                            @text-blur="handleTextEdit"
+                        />
                     </div>
                 </main>
 
@@ -1567,6 +1479,40 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </div>
             </template>
         </SncDialog>
+
+        <!-- APERÇU HD (lecture seule, plein écran, rendu partagé avec l'éditeur) -->
+        <Teleport to="body">
+            <div
+                v-if="hdPreviewOpen"
+                class="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-6"
+                role="dialog"
+                aria-modal="true"
+                :aria-label="t('pages.certificates.previewHd')"
+                @click.self="hdPreviewOpen = false"
+            >
+                <div class="flex items-center justify-between w-full max-w-[1200px]">
+                    <h2 class="text-white font-black text-lg flex items-center gap-3"><i class="pi pi-eye text-red-400" aria-hidden="true"></i>{{ t('pages.certificates.previewHd') }}</h2>
+                    <button
+                        type="button"
+                        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                        :aria-label="t('components.confirm_dialog.close')"
+                        @click="hdPreviewOpen = false"
+                    >
+                        <i class="pi pi-times" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="overflow-auto max-w-full max-h-full p-2">
+                    <div :style="{ width: `${hdPreviewDocSize.w * hdPreviewScale}px`, height: `${hdPreviewDocSize.h * hdPreviewScale}px` }">
+                        <div :style="{ transform: `scale(${hdPreviewScale})`, transformOrigin: 'top left' }">
+                            <CertificateDocument
+                                :template-form="templateForm"
+                                :background-preview="backgroundPreview"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
 
     </AppLayout>
 </template>

@@ -184,6 +184,7 @@ const model = computed(() => {
                 { label: 'Passerelles de Paiement', icon: 'pi pi-fw pi-dollar', to: r('system.payments') },
                 { label: 'Traductions (i18n)', icon: 'pi pi-fw pi-globe', to: r('system.languages.index') },
                 { label: 'Maintenance Serveur', icon: 'pi pi-fw pi-server', to: r('system.server') },
+                { label: 'Terminal', icon: 'pi pi-fw pi-terminal', to: r('system.terminal') },
             ]
         },
     ];

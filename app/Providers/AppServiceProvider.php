@@ -41,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
             // La base n'est pas encore disponible (installation/migration).
         }
 
+        // Paramètres système (mail, maintenance, certificats, etc.).
+        try {
+            \App\Support\SystemSettings::apply();
+        } catch (\Throwable $e) {
+            // La base n'est pas encore disponible (installation/migration).
+        }
+
         // Liens partageables sans ID : chaque paramètre de route résout le
         // modèle par son identifiant lisible (slug/uuid/code/ticket_number),
         // avec repli sur l'id historique pour compatibilité.

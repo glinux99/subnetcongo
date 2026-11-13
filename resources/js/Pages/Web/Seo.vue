@@ -220,10 +220,10 @@ const descColor = computed(() => descLength.value > 160 ? 'text-red-500' : 'text
                                     </div>
                                     <div>
                                         <div class="text-[12px] text-slate-800">{{ t('pages.web_seo.previewSiteName') }}</div>
-                                        <div class="text-[11px] text-slate-500 leading-none">https://www.votresite.com</div>
+                                        <div class="text-[11px] text-slate-500 leading-none">https://subnetcongo.net</div>
                                     </div>
                                 </div>
-                                <div class="text-[#1a0dab] text-[18px] font-normal leading-tight mb-1 hover:underline cursor-pointer font-serif truncate">
+                                <div class="text-[#1a0dab] text-[18px] font-normal leading-tight mb-1 font-serif truncate">
                                     {{ seoForm.title || t('pages.web_seo.previewTitleFallback') }}
                                 </div>
                                 <div class="text-[#4d5156] text-[13px] leading-snug line-clamp-2">

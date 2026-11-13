@@ -85,7 +85,7 @@ const canJoin = computed(() => {
 });
 
 const fetchToken = async () => {
-    const response = await fetch(route('live-sessions.livekit-token', { live_session: props.session.id }), {
+    const response = await fetch(route('live-sessions.livekit-token', { live_session: props.session.uuid }), {
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
             'Accept': 'application/json',
@@ -467,7 +467,7 @@ const sendChatMessage = async () => {
     const text = chatInput.value.trim();
 
     try {
-        const response = await fetch(route('live-sessions.chat.send', { live_session: props.session.id }), {
+        const response = await fetch(route('live-sessions.chat.send', { live_session: props.session.uuid }), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -493,7 +493,7 @@ const appendEmoji = (emoji) => {
 
 const loadChat = async () => {
     try {
-        const response = await fetch(route('live-sessions.chat.messages', { live_session: props.session.id }), {
+        const response = await fetch(route('live-sessions.chat.messages', { live_session: props.session.uuid }), {
             headers: { 'Accept': 'application/json' },
         });
 
@@ -517,7 +517,7 @@ const uploadDocument = async (event) => {
     formData.append('file', file);
 
     try {
-        const response = await fetch(route('live-sessions.documents.upload', { live_session: props.session.id }), {
+        const response = await fetch(route('live-sessions.documents.upload', { live_session: props.session.uuid }), {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
@@ -550,7 +550,7 @@ const formatBytes = (bytes) => {
 const sendHeartbeat = async () => {
     if (!isConnected.value) return;
     try {
-        await fetch(route('live-sessions.heartbeat', { live_session: props.session.id }), {
+        await fetch(route('live-sessions.heartbeat', { live_session: props.session.uuid }), {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
@@ -578,7 +578,7 @@ const leaveRoom = async () => {
 const submitConfirmation = async () => {
     confirmSubmitting.value = true;
     try {
-        await fetch(route('live-sessions.confirm-info', { live_session: props.session.id }), {
+        await fetch(route('live-sessions.confirm-info', { live_session: props.session.uuid }), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ import InputText from 'primevue/inputtext';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Avatar from 'primevue/avatar';
@@ -150,7 +150,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
-                <ConfirmDialog />
+                <SncConfirmDialog />
 
                 <DataTable ref="dt" :value="unities" dataKey="id"
                     v-model:filters="filters"

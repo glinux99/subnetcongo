@@ -9,7 +9,7 @@ import IconField from 'primevue/iconfield'; // Ajouté
 import InputIcon from 'primevue/inputicon';   // Ajouté
 import Button from 'primevue/button';
 import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { FilterMatchMode } from '@primevue/core/api';
@@ -86,7 +86,7 @@ const isSessionActive = (session) => {
 
 <template>
     <Toast />
-    <ConfirmDialog />
+    <SncConfirmDialog />
     <div class="space-y-6">
         <div class="flex flex-col md:flex-row justify-between items-end gap-4">
             <div class="text-center md:text-left">

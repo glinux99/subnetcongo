@@ -46,6 +46,44 @@ const formatPrice = (price) => {
     return new Intl.NumberFormat(locale.value, { style: 'currency', currency: 'USD' }).format(price);
 };
 
+// --- SEO ---
+const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const seoMeta = computed(() => props.course?.seo_metadata || {});
+const seoTitle = computed(() => (seoMeta.value.title?.trim() || props.course?.title || '').trim());
+const seoDescription = computed(() => {
+    const explicit = seoMeta.value.description?.trim();
+    if (explicit) return explicit;
+    const fromContent = stripHtml(props.course?.description).slice(0, 160);
+    return fromContent || props.course?.short_info || props.course?.title || '';
+});
+const seoKeywords = computed(() => {
+    const explicit = seoMeta.value.keywords?.trim();
+    if (explicit) return explicit;
+    return (props.course?.tags || []).join(', ');
+});
+const absoluteUrl = (url) => {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+const rawImage = computed(() => getImageUrl(props.course?.thumbnail_path || props.course?.image));
+const ogImage = computed(() => absoluteUrl(rawImage.value) || 'https://subnetcongo.net/assets/media/logos/logo.png');
+const courseJsonLd = computed(() => JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: seoTitle.value,
+    description: seoDescription.value,
+    url: window.location.href,
+    image: ogImage.value,
+    provider: { '@type': 'Organization', name: 'Subnet Congo', url: 'https://subnetcongo.net' },
+    offers: {
+        '@type': 'Offer',
+        price: String(Number(props.course?.effective_price ?? props.course?.price ?? 0)),
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+    },
+}));
+
 const addToCart = () => {
     router.post(route('marketplace.cart.add', props.course.slug), {}, { preserveScroll: true });
 };
@@ -98,7 +136,19 @@ const handleImageError = (event) => { event.target.src = '/media/lms/thumbnails/
 
 <template>
     <AppLayout>
-        <Head :title="course.title" />
+        <Head :title="seoTitle">
+            <meta name="description" :content="seoDescription">
+            <meta name="keywords" :content="seoKeywords">
+            <meta property="og:type" content="article">
+            <meta property="og:title" :content="seoTitle">
+            <meta property="og:description" :content="seoDescription">
+            <meta property="og:image" :content="ogImage">
+            <meta name="twitter:card" content="summary_large_image">
+            <meta name="twitter:title" :content="seoTitle">
+            <meta name="twitter:description" :content="seoDescription">
+            <meta name="twitter:image" :content="ogImage">
+            <script type="application/ld+json" v-html="courseJsonLd"></script>
+        </Head>
 
         <div class="page-bg min-h-screen font-sans pb-20">
 

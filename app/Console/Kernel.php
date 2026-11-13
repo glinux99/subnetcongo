@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Cycle de vie automatique des sessions live :
+        // Scheduled → Live → Ended + rappels automatiques.
+        $schedule->command('live-sessions:sweep')
+            ->everyMinute()
+            ->withoutOverlapping();
     }
 
     /**

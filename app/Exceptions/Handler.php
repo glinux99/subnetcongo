@@ -30,20 +30,46 @@ class Handler extends ExceptionHandler
     }
     public function render($request, Throwable $e)
     {
-        $response = parent::render($request, $e);
-
-        // Gérer les erreurs 404 et 403 pour les requêtes Inertia
-        if ($request->wantsJson() && in_array($response->getStatusCode(), [404, 403])) {
-            return Inertia::render('Errors/' . $response->getStatusCode(), [
-                'message' => $e->getMessage(),
-            ])->toResponse($request)->setStatusCode($response->getStatusCode());
+        // Toutes les requêtes web → pages d'erreur Inertia (même HTML)
+        if ($request->isMethod('get')) {
+            $status = $this->statusFor($request, $e);
+            if (in_array($status, [403, 404], true)) {
+                return Inertia::render('Errors/' . $status, [
+                    'message' => $status === 403 ? $e->getMessage() : null,
+                ])->toResponse($request);
+            }
         }
 
-        // Fallback pour d'autres erreurs si nécessaire
-        if ($request->wantsJson() && $response->getStatusCode() == 403) {
-            return Inertia::render('Errors/403')->toResponse($request)->setStatusCode(403);
+        $response = parent::render($request, $e);
+
+        $status = $response->getStatusCode();
+        if (in_array($status, [403, 404], true)) {
+            return Inertia::render('Errors/' . $status, [
+                'message' => $status === 403 ? $e->getMessage() : null,
+            ])->toResponse($request)->setStatusCode($status);
         }
 
         return $response;
+    }
+
+    private function statusFor($request, Throwable $e): ?int
+    {
+        // Abords AJAX/API : on laisse le framework gérer JSON par défaut.
+        if ($request->wantsJson()) {
+            return null;
+        }
+
+        $status = $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
+            ? $e->getStatusCode()
+            : 500;
+
+        if ($status === 403 && $e instanceof \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException) {
+            return 403;
+        }
+        if ($status === 404) {
+            return 404;
+        }
+
+        return $status;
     }
 }

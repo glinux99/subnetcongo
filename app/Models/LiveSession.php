@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class LiveSession extends Model
 {
@@ -13,6 +14,15 @@ class LiveSession extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $session) {
+            if (empty($session->uuid)) {
+                $session->uuid = (string) Str::uuid();
+            }
+        });
     }
     protected $table = 'live_sessions';
 
@@ -24,6 +34,7 @@ class LiveSession extends Model
         'settings', 'metadata', 'provider_response',
         'meeting_id', 'meeting_url', 'host_url',
         'status',
+        'remind_before_minutes',
     ];
 
     protected $casts = [
@@ -34,6 +45,8 @@ class LiveSession extends Model
         'settings' => 'array',
         'metadata' => 'array',
         'provider_response' => 'array',
+        'remind_before_minutes' => 'integer',
+        'reminder_sent_at' => 'datetime',
     ];
 
     public const PROVIDER_ZOOM = 'zoom';

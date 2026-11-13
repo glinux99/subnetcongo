@@ -1,15 +1,15 @@
-<script setup>
+﻿<script setup>
 /**
  * ======================================================================================
  * SUBNETCONGO LMS - ENTERPRISE COURSE ARCHITECT & CATALOG MANAGER v12.0.0
  * ======================================================================================
- * Module de pilotage centralisé pour la création et la gestion du patrimoine
- * pédagogique. Conçu pour une ergonomie maximale (SaaS B2B).
+ * Module de pilotage centralisÃ© pour la crÃ©ation et la gestion du patrimoine
+ * pÃ©dagogique. ConÃ§u pour une ergonomie maximale (SaaS B2B).
  *
- * NOUVEAUTÉS :
- * - UI/UX repensée pour l'éditeur de cours (Validation par étape, Auto-save)
- * - Constructeur de curriculum hiérarchique avancé
- * - Formulaire de catégorie étendu (Parent, Description, Meta)
+ * NOUVEAUTÃ‰S :
+ * - UI/UX repensÃ©e pour l'Ã©diteur de cours (Validation par Ã©tape, Auto-save)
+ * - Constructeur de curriculum hiÃ©rarchique avancÃ©
+ * - Formulaire de catÃ©gorie Ã©tendu (Parent, Description, Meta)
  * - SEO & OpenGraph Live Preview
  *
  * @author  SubnetCongo Framework Division
@@ -45,6 +45,7 @@ import Divider from 'primevue/divider';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import Editor from 'primevue/editor';
+import MediaPicker from '@/Components/MediaPicker.vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Chart from 'primevue/chart';
@@ -84,7 +85,7 @@ const props = defineProps({
 });
 
 // ======================================================================================
-// SERVICES & ÉTATS GLOBAUX
+// SERVICES & Ã‰TATS GLOBAUX
 // ======================================================================================
 const toast = useToast();
 const confirmAction = useConfirmAction();
@@ -103,11 +104,11 @@ const lastSavedAt = ref(null);
 const autoSaveInterval = ref(null);
 
 // ======================================================================================
-// CONFIGURATION DE L'ÉDITEUR DE COURS (COURSE ARCHITECT)
+// CONFIGURATION DE L'Ã‰DITEUR DE COURS (COURSE ARCHITECT)
 // ======================================================================================
 /**
- * Définition du menu latéral du constructeur de cours.
- * Intègre un système d'état pour valider chaque section indépendamment.
+ * DÃ©finition du menu latÃ©ral du constructeur de cours.
+ * IntÃ¨gre un systÃ¨me d'Ã©tat pour valider chaque section indÃ©pendamment.
  */
 const editorMenu = ref([
     { id: 'general', label: t('pages.courses.editorGeneralLabel'), description: t('pages.courses.editorGeneralDesc'), icon: 'pi pi-id-card' },
@@ -118,7 +119,7 @@ const editorMenu = ref([
     { id: 'settings', label: t('pages.courses.editorSettingsLabel'), description: t('pages.courses.editorSettingsDesc'), icon: 'pi pi-cog' }
 ]);
 const activeEditorTab = ref('general');
-// 3. Méthodes pour gérer les ressources
+// 3. MÃ©thodes pour gÃ©rer les ressources
 const addResource = () => {
     courseForm.resources.push({
         id: null,
@@ -146,7 +147,7 @@ const onResourceSelect = (event, index) => {
 
 
 // ======================================================================================
-// FILTRAGE RÉACTIF
+// FILTRAGE RÃ‰ACTIF
 // ======================================================================================
 const serverFilters = reactive({
     search: props.filters?.search || '',
@@ -166,7 +167,7 @@ watch(serverFilters, debounce(() => {
 }, 400));
 
 // ======================================================================================
-// GESTION AVANCÉE DES CATÉGORIES (ENTERPRISE GRADE)
+// GESTION AVANCÃ‰E DES CATÃ‰GORIES (ENTERPRISE GRADE)
 // ======================================================================================
 const categoryForm = useForm({
     name: '',
@@ -252,8 +253,8 @@ const courseForm = useForm({
 // LOGIQUE DE VALIDATION DU FORMULAIRE DE COURS (FRONT-END)
 // ======================================================================================
 /**
- * Calcule dynamiquement si un onglet spécifique contient des erreurs bloquantes.
- * Permet d'afficher des indicateurs visuels dans le menu latéral.
+ * Calcule dynamiquement si un onglet spÃ©cifique contient des erreurs bloquantes.
+ * Permet d'afficher des indicateurs visuels dans le menu latÃ©ral.
  */
 const levelLabelKeys = { beginner: 'levelBeginner', intermediate: 'levelIntermediate', advanced: 'levelAdvanced' };
 const levelOptions = computed(() => props.levels.map(l => ({ ...l, label: l.label || t(`pages.courses.${levelLabelKeys[l.value] || 'levelBeginner'}`) })));
@@ -261,7 +262,7 @@ const levelOptions = computed(() => props.levels.map(l => ({ ...l, label: l.labe
 const tabValidation = computed(() => {
     return {
         general: courseForm.title.length > 3 && courseForm.category_id !== null,
-        media: true, // Optionnel par défaut
+        media: true, // Optionnel par dÃ©faut
         curriculum: courseForm.sections.length > 0 && courseForm.sections.some(s => s.lessons && s.lessons.length > 0),
         seo: true,
         settings: courseForm.instructor_id !== null
@@ -272,8 +273,16 @@ const isEntireFormValid = computed(() => {
     return tabValidation.value.general && tabValidation.value.curriculum && tabValidation.value.settings;
 });
 
+// Progression rÃ©elle du workspace (Ã©tapes obligatoires)
+const requiredTabs = ['general', 'curriculum', 'settings'];
+const validatedTabsCount = computed(() => requiredTabs.filter(k => tabValidation.value[k]).length);
+const completionPercent = computed(() => Math.round((validatedTabsCount.value / requiredTabs.length) * 100));
+const currentStepIndex = computed(() => editorMenu.value.findIndex(i => i.id === activeEditorTab.value));
+const goToPrevStep = () => { const i = currentStepIndex.value; if (i > 0) activeEditorTab.value = editorMenu.value[i - 1].id; };
+const goToNextStep = () => { const i = currentStepIndex.value; if (i >= 0 && i < editorMenu.value.length - 1) activeEditorTab.value = editorMenu.value[i + 1].id; };
+
 // ======================================================================================
-// MÉTHODES DU CYCLE DE VIE DU COURS
+// MÃ‰THODES DU CYCLE DE VIE DU COURS
 // ======================================================================================
 const openNew = () => {
     courseForm.reset();
@@ -292,7 +301,7 @@ const editCourse = (data) => {
     courseForm.clearErrors();
     const courseData = cloneDeep(data);
 
-    // Chargement des données simples
+    // Chargement des donnÃ©es simples
     courseForm.id = courseData.id;
     courseForm.title = courseData.title;
     courseForm.slug = courseData.slug;
@@ -330,7 +339,7 @@ const editCourse = (data) => {
     courseForm.passing_score_20 = courseData.passing_score_20 || 10;
     courseForm.quiz_weight_total = courseData.quiz_weight_total || 80;
 
-    // Normalisation des sections/lessons pour l'édition
+    // Normalisation des sections/lessons pour l'Ã©dition
     courseForm.sections = (courseData.sections || []).map(section => {
         const normalizedSection = {
             ...section,
@@ -403,6 +412,25 @@ const forceEditorLoad = () => {
     });
 };
 
+// Ouvre la présentation publique du cours dans un nouvel onglet (aperçu apprenant)
+const previewCourse = () => {
+    if (!courseForm.slug) return;
+    window.open(route('marketplace.show', courseForm.slug), '_blank', 'noopener');
+};
+
+/**
+ * Sélecteur de média (image/vidéo) pour la description du cours
+ */
+const mediaPickerOpen = ref(false);
+const insertMediaIntoDescription = (media) => {
+    const quill = editorRef.value?.quill;
+    if (!quill) return;
+    const range = quill.getSelection(true);
+    const index = range ? range.index : quill.getLength();
+    quill.insertEmbed(index, media.type === 'image' ? 'image' : 'video', media.url);
+    quill.setSelection(index + 1);
+};
+
 const saveCourse = (action = 'save') => {
     if (!isEntireFormValid.value) {
         toast.add({
@@ -418,7 +446,7 @@ const saveCourse = (action = 'save') => {
         return;
     }
 
-    // Gestion du statut selon le bouton cliqué
+    // Gestion du statut selon le bouton cliquÃ©
     if (action === 'publish') courseForm.status = 'published';
     if (action === 'draft') courseForm.status = 'draft';
 
@@ -426,7 +454,7 @@ const saveCourse = (action = 'save') => {
 
     courseForm.transform((data) => {
         const transformed = { ...data, _method: courseForm.id ? 'PUT' : 'POST' };
-        if (typeof data.thumbnail === 'string') delete transformed.thumbnail; // Évite l'erreur "must be a file"
+        if (typeof data.thumbnail === 'string') delete transformed.thumbnail; // Ã‰vite l'erreur "must be a file"
         return transformed;
     }).post(url, {
         forceFormData: true,
@@ -784,20 +812,20 @@ const onPageChange = (event) => {
 };
 
 // ======================================================================================
-// COMPUTED PROPERTIES (ENRICHISSEMENT DES DONNÉES)
+// COMPUTED PROPERTIES (ENRICHISSEMENT DES DONNÃ‰ES)
 // ======================================================================================
 const enrichedCourses = computed(() => {
     if (!props.courses?.data) return [];
     return props.courses.data.map(course => ({
         ...course,
-        // Utilisation des compteurs réels fournis par le contrôleur via withCount
+        // Utilisation des compteurs rÃ©els fournis par le contrÃ´leur via withCount
         students_count: course.students_count ?? 0,
         revenue_generated: course.revenue_generated ?? 0,
         thumbnail_path: course.thumbnail_path || null
     }));
 });
 
-// Prévisualisation SEO Google
+// PrÃ©visualisation SEO Google
 const seoPreviewTitle = computed(() => {
     const title = courseForm.seo_metadata.title || courseForm.title;
     return title ? (title.length > 60 ? title.substring(0, 60) + '...' : title) : t('pages.courses.seoDefaultTitle');
@@ -851,25 +879,25 @@ const revenueChartData = ref({
 });
 const uploadMockProgress = ref(0)
 
-// Computed pour l'URL d'aperçu (CORRECTION ICI)
+// Computed pour l'URL d'aperÃ§u (CORRECTION ICI)
 const thumbnailUrl = computed(() => {
   const thumb = courseForm.thumbnail
   if (!thumb) return ''
 
-  // Cas 1 : c'est une chaîne (URL HTTP ou chemin storage)
+  // Cas 1 : c'est une chaÃ®ne (URL HTTP ou chemin storage)
   if (typeof thumb === 'string') {
     return thumb.startsWith('http') ? thumb : '/media/' + thumb
   }
 
-  // Cas 2 : c'est un objet File ou Blob - vérification sans instanceof problématique
-  // On teste la présence de propriétés typiques d'un Blob/File
+  // Cas 2 : c'est un objet File ou Blob - vÃ©rification sans instanceof problÃ©matique
+  // On teste la prÃ©sence de propriÃ©tÃ©s typiques d'un Blob/File
   if (thumb && typeof thumb === 'object' && 'size' in thumb && 'type' in thumb) {
-    // Évite de créer des URL en double (nettoie l'ancienne si besoin)
+    // Ã‰vite de crÃ©er des URL en double (nettoie l'ancienne si besoin)
     if (thumb._objectUrl) {
       URL.revokeObjectURL(thumb._objectUrl)
     }
     const url = URL.createObjectURL(thumb)
-    thumb._objectUrl = url // stocke pour nettoyage ultérieur
+    thumb._objectUrl = url // stocke pour nettoyage ultÃ©rieur
     return url
   }
 
@@ -880,19 +908,19 @@ const viewResource = (url) => {
 };
 
 /**
- * Forcer le téléchargement d'une ressource
+ * Forcer le tÃ©lÃ©chargement d'une ressource
  */
 const downloadResource = (url) => {
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', ''); // Force le téléchargement
+    link.setAttribute('download', ''); // Force le tÃ©lÃ©chargement
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 };
 
 /**
- * Remplacer un fichier existant (Reset de l'état pour afficher l'upload)
+ * Remplacer un fichier existant (Reset de l'Ã©tat pour afficher l'upload)
  */
 const replaceFile = (index) => {
     const resource = courseForm.resources[index];
@@ -932,12 +960,12 @@ const getFileIcon = (type) => {
     if (['XLS', 'XLSX', 'CSV'].includes(t)) return 'pi pi-file-excel text-green-600';
     return 'pi pi-file text-slate-400';
 };
-// Gestion de la sélection du fichier
+// Gestion de la sÃ©lection du fichier
 const onThumbnailSelect = (event) => {
   const file = event.files[0]
   if (!file) return
 
-  // Nettoyer l'ancienne URL objet si présente
+  // Nettoyer l'ancienne URL objet si prÃ©sente
   if (courseForm.thumbnail && typeof courseForm.thumbnail === 'object' && courseForm.thumbnail._objectUrl) {
     URL.revokeObjectURL(courseForm.thumbnail._objectUrl)
   }
@@ -956,10 +984,10 @@ const onThumbnailSelect = (event) => {
 onMounted(() => {
     setTimeout(() => loading.value = false, 600);
 
-    // Auto-save conceptuel (Simulé)
+    // Auto-save conceptuel (SimulÃ©)
     autoSaveInterval.value = setInterval(() => {
         if (courseDialog.value && courseForm.isDirty) {
-            // Dans un vrai cas, on ferait un patch silencieux à l'API
+            // Dans un vrai cas, on ferait un patch silencieux Ã  l'API
             lastSavedAt.value = new Date();
         }
     }, 60000); // Check chaque minute
@@ -979,7 +1007,7 @@ onBeforeUnmount(() => {
         <div class="page-bg min-h-screen font-sans pb-20">
 
             <!-- ============================================================================== -->
-            <!-- HEADER DE PAGE (PageHeader — Design System)                                     -->
+            <!-- HEADER DE PAGE (PageHeader â€” Design System)                                     -->
             <!-- ============================================================================== -->
             <PageHeader
                 :title="`${t('pages.courses.headerTitlePart1')} ${t('pages.courses.headerTitlePart2')}`"
@@ -1031,12 +1059,12 @@ onBeforeUnmount(() => {
             <!-- ============================================================================== -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
-                <!-- TOOLBAR DE FILTRAGE AVANCÉ -->
+                <!-- TOOLBAR DE FILTRAGE AVANCÃ‰ -->
                 <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-auto">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" :placeholder="t('pages.courses.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.courses.searchPlaceholder')" class="w-full sm:w-80 font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -1074,7 +1102,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- TABLEAU DE DONNÉES -->
+                <!-- TABLEAU DE DONNÃ‰ES -->
                 <DataTable
                     v-model:selection="selectedCourses"
                     v-model:expandedRows="expandedRows"
@@ -1202,7 +1230,7 @@ onBeforeUnmount(() => {
                             <div class="flex justify-end gap-1">
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.courses.editCurriculumTooltip')" @click="editCourse(data)" />
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.courses.cloneCourseTooltip')" @click="cloneCourse(data)" />
-                                <!-- <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'Aperçu Public du cours'" /> -->
+                                <!-- <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'AperÃ§u Public du cours'" /> -->
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.courses.archiveCourseTooltip')" @click="confirmArchive(data.id)" />
                                 <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="t('pages.courses.restoreCourseTooltip')" @click="restoreCourse(data.id)" >
   <template v-slot:loadingicon="slotProps"></template>
@@ -1233,7 +1261,7 @@ onBeforeUnmount(() => {
                                             </h5>
                                             <Badge :value="section.lessons?.length || 0" severity="secondary" class="text-[10px]" v-tooltip.top="t('pages.courses.lessonsCountTooltip')"></Badge>
                                         </div>
-                                        <ul class="space-y-2">
+                                        <ul class="space-y-1.5">
                                             <li v-for="(lesson, lIdx) in (section.lessons || []).slice(0, 4)" :key="lIdx" class="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-transparent hover:border-slate-200 transition-colors">
                                                 <div class="flex items-center gap-2.5 overflow-hidden">
                                                     <i :class="{
@@ -1275,8 +1303,8 @@ onBeforeUnmount(() => {
 
 
         <!-- ============================================================================== -->
-        <!-- DIALOG ÉDITEUR ULTRA PRO (COURSE ARCHITECT WORKSPACE)                          -->
-        <!-- Layout strict : Full height contraint, Stepper à gauche, Contenu scrollable    -->
+        <!-- DIALOG Ã‰DITEUR ULTRA PRO (COURSE ARCHITECT WORKSPACE)                          -->
+        <!-- Layout strict : Full height contraint, Stepper Ã  gauche, Contenu scrollable    -->
         <!-- ============================================================================== -->
         <Dialog
             v-model:visible="courseDialog"
@@ -1286,21 +1314,24 @@ onBeforeUnmount(() => {
             :style="{ width: '95vw', maxWidth: '1400px' }"
             contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[90vh]"
             headerClass="hidden"
-            class="rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
+            class="course-workspace rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
         >
             <!-- WORKSPACE HEADER (FIXE) -->
-            <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
-                <!-- Ligne de progression simulée en haut -->
-                <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '30%' }"></div>
+            <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
+                <!-- Ligne de progression rÃ©elle en haut -->
+                <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-red-500 to-red-600 transition-all duration-500" :style="{ width: completionPercent + '%' }"></div>
 
                 <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+                    <div class="w-11 h-11 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/30">
                         <i class="pi pi-hammer text-lg"></i>
                     </div>
                     <div>
                         <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
                             {{ courseForm.id ? t('pages.courses.editorTitleEdit') : t('pages.courses.editorTitleNew') }}
                             <Tag v-if="courseForm.status" :severity="getStatusBadgeDef(courseForm.status).severity" :value="getStatusBadgeDef(courseForm.status).label" class="text-[9px] uppercase tracking-wider px-2 py-0.5"></Tag>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                {{ t('pages.courses.stepLabel', { current: currentStepIndex + 1, total: editorMenu.length }) }}
+                            </span>
                         </h2>
                         <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
                             <span class="truncate max-w-[200px] md:max-w-[400px]">{{ courseForm.title || t('pages.courses.untitledCourse') }}</span>
@@ -1311,7 +1342,7 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <Button icon="pi pi-external-link" :label="t('pages.courses.previewVisualButton')" class="p-button-text p-button-secondary p-button-sm hidden lg:flex font-bold" v-tooltip.bottom="t('pages.courses.previewTooltip')" />
+                    <Button icon="pi pi-external-link" :label="t('pages.courses.previewVisualButton')" class="p-button-text p-button-secondary p-button-sm hidden lg:flex font-bold" v-tooltip.bottom="t('pages.courses.previewTooltip')" :disabled="!courseForm.slug" @click="previewCourse" />
                     <div class="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
                     <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="courseDialog = false" v-tooltip.bottom="t('pages.courses.closeWorkspaceTooltip')" />
                 </div>
@@ -1326,23 +1357,29 @@ onBeforeUnmount(() => {
                         {{ t('pages.courses.designPhasesLabel') }}
                     </div>
 
-                    <div class="p-4 flex-1 space-y-2">
+                    <div class="p-4 flex-1 space-y-1.5">
                         <button
                             v-for="(item, index) in editorMenu" :key="item.id"
                             @click="activeEditorTab = item.id"
                             class="w-full group flex items-start gap-4 px-4 py-4 rounded-xl transition-all text-left relative overflow-hidden"
                             :class="[
                                 activeEditorTab === item.id
-                                    ? 'bg-blue-50 border border-blue-100 shadow-sm'
+                                    ? 'bg-red-50 border border-red-100 shadow-sm'
                                     : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'
                             ]"
                         >
                             <!-- Ligne active verticale -->
-                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r-md"></div>
+                            <div v-if="activeEditorTab === item.id" class="absolute left-0 top-0 bottom-0 w-1 bg-red-600 rounded-r-md"></div>
+
+                            <!-- NumÃ©ro d'Ã©tape -->
+                            <span
+                                class="absolute top-3 right-3 text-[10px] font-black tabular-nums px-1.5 py-0.5 rounded"
+                                :class="activeEditorTab === item.id ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'"
+                            >{{ String(index + 1).padStart(2, '0') }}</span>
 
                             <!-- Icon & Validation State -->
                             <div class="relative mt-0.5">
-                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
+                                <i :class="[item.icon, 'text-xl transition-colors', activeEditorTab === item.id ? 'text-red-600' : 'text-slate-400 group-hover:text-slate-600']"></i>
                                 <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white flex items-center justify-center bg-white">
                                     <i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px] bg-white rounded-full"></i>
                                     <i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px] bg-white rounded-full"></i>
@@ -1350,8 +1387,8 @@ onBeforeUnmount(() => {
                             </div>
 
                             <!-- Text content -->
-                            <div class="flex-1">
-                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-blue-800' : 'text-slate-700']">{{ item.label }}</div>
+                            <div class="flex-1 pr-6">
+                                <div :class="['font-bold text-sm mb-0.5', activeEditorTab === item.id ? 'text-red-800' : 'text-slate-700']">{{ item.label }}</div>
                                 <div class="text-[11px] font-medium text-slate-500 leading-tight">{{ item.description }}</div>
                             </div>
                         </button>
@@ -1375,16 +1412,16 @@ onBeforeUnmount(() => {
 
                 <!-- ZONE DE CONTENU PRINCIPALE (SCROLLABLE) -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-slate-50">
-                    <div class="max-w-6xl mx-auto p-6 lg:p-10 pb-24 space-y-8 min-h-full">
+                    <div class="max-w-6xl mx-auto px-5 py-4 pb-8 space-y-4 min-h-full">
 
                         <!-- ========================================== -->
-                        <!-- TAB 1 : INFORMATIONS GÉNÉRALES             -->
+                        <!-- TAB 1 : INFORMATIONS GÃ‰NÃ‰RALES             -->
                         <!-- ========================================== -->
-                        <div v-show="activeEditorTab === 'general'" class="space-y-8" role="tabpanel">
+                        <div v-show="activeEditorTab === 'general'" class="space-y-5" role="tabpanel">
 
-                            <!-- Section: Identité visuelle du cours -->
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                            <!-- Section: IdentitÃ© visuelle du cours -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center gap-3 mb-3 border-b border-slate-100 pb-2">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.courses.identitySectionTitle') }}</h3>
@@ -1392,11 +1429,11 @@ onBeforeUnmount(() => {
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
                                     <!-- Titre -->
-                                    <div class="col-span-1 md:col-span-2 space-y-2">
+                                    <div class="col-span-1 md:col-span-2 space-y-1.5">
                                         <label for="course_title" class="block text-sm font-bold text-slate-700">{{ t('pages.courses.titleLabel') }} <span class="text-red-500" :aria-label="t('pages.courses.requiredAria')">*</span></label>
-                                        <InputText id="course_title" v-model="courseForm.title" @input="generateCourseSlug" class="w-full p-4 text-lg font-bold text-slate-800 bg-slate-50/50 border-slate-300 focus:bg-white transition-colors" :placeholder="t('pages.courses.titleExamplePlaceholder')" :class="{'p-invalid': !courseForm.title || courseForm.title.length < 3}" aria-describedby="title-help" />
+                                        <InputText id="course_title" v-model="courseForm.title" @input="generateCourseSlug" size="large" fluid class="font-bold" :placeholder="t('pages.courses.titleExamplePlaceholder')" :invalid="!courseForm.title || courseForm.title.length < 3" aria-describedby="title-help" />
                                         <div class="flex justify-between mt-1">
                                             <small id="title-help" class="text-slate-500 font-medium text-[11px]"><i class="pi pi-info-circle mr-1"></i>{{ t('pages.courses.titleHelpText') }}</small>
                                             <small class="font-mono text-[10px]" :class="courseForm.title.length > 60 ? 'text-amber-500' : 'text-slate-400'">{{ courseForm.title.length }}/60</small>
@@ -1404,33 +1441,43 @@ onBeforeUnmount(() => {
                                     </div>
 
                                     <!-- Slug -->
-                                    <div class="col-span-1 md:col-span-2 space-y-2">
+                                    <div class="col-span-1 md:col-span-2 space-y-1.5">
                                         <label for="course_slug" class="block text-sm font-bold text-slate-700">{{ t('pages.courses.slugLabel') }}</label>
-                                        <IconField iconPosition="left">
+                                        <IconField iconPosition="left" class="w-full">
                                             <InputIcon class="pi pi-link text-slate-400" />
-                                            <InputText id="course_slug" v-model="courseForm.slug" class="w-full bg-slate-100 text-slate-600 font-mono text-sm border-transparent focus:border-blue-400" placeholder="masterclass-vuejs-3" />
+                                            <InputText id="course_slug" v-model="courseForm.slug" fluid class="font-mono" placeholder="masterclass-vuejs-3" />
                                         </IconField>
-                                        <small class="text-slate-500 text-[11px]">{{ t('pages.courses.slugUrlHelp') }} <code>https://lms.subnetcongo.com/courses/<strong>{{ courseForm.slug || '...' }}</strong></code></small>
+                                         <small class="text-slate-500 text-[11px]">{{ t('pages.courses.slugUrlHelp') }} <code>https://subnetcongo.net/courses/<strong>{{ courseForm.slug || '...' }}</strong></code></small>
                                     </div>
 
-                                    <!-- Résumé Court -->
-                                    <div class="col-span-1 md:col-span-2 space-y-2 mt-2">
+                                    <!-- RÃ©sumÃ© Court -->
+                                    <div class="col-span-1 md:col-span-2 space-y-1.5 mt-2">
                                         <label for="course_short_info" class="block text-sm font-bold text-slate-700">{{ t('pages.courses.shortInfoLabel') }}</label>
-                                        <Textarea id="course_short_info" v-model="courseForm.short_info" rows="3" class="w-full p-3 bg-slate-50 border-slate-300 focus:bg-white" :placeholder="t('pages.courses.shortInfoPlaceholder')" maxlength="250" />
+                                        <Textarea id="course_short_info" v-model="courseForm.short_info" rows="3" fluid :placeholder="t('pages.courses.shortInfoPlaceholder')" maxlength="250" />
                                         <div class="flex justify-end mt-1">
                                             <small class="font-mono text-[10px] text-slate-400">{{ courseForm.short_info.length }}/250</small>
                                         </div>
                                     </div>
 
                                     <!-- Description Longue (Rich Text) -->
-                                    <div class="col-span-1 md:col-span-2 space-y-2 mt-2">
-                                        <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.descriptionLabel') }}</label>
+                                    <div class="col-span-1 md:col-span-2 space-y-1.5 mt-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.descriptionLabel') }}</label>
+                                            <Button
+                                                icon="pi pi-images"
+                                                :label="t('pages.courses.insertMedia')"
+                                                size="small"
+                                                text
+                                                class="!text-blue-600 hover:!bg-blue-50"
+                                                @click="mediaPickerOpen = true"
+                                            />
+                                        </div>
                                         <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm group hover:border-blue-300 transition-colors">
                                             <Editor
                                                 ref="editorRef"
                                                 v-model="courseForm.description"
                                                 @load="forceEditorLoad"
-                                                editorStyle="height: 300px; font-family: 'Inter', sans-serif;"
+                                                editorStyle="height: 240px; font-family: 'Inter', sans-serif;"
                                                 :placeholder="t('pages.courses.descriptionPlaceholder')" />
                                         </div>
                                     </div>
@@ -1438,8 +1485,8 @@ onBeforeUnmount(() => {
                             </div>
 
                             <!-- Section: Classification & Taxonomie -->
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center gap-3 mb-3 border-b border-slate-100 pb-2">
                                     <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-tags"></i></div>
                                     <div>
                                         <h3 class="text-lg font-bold text-slate-800 leading-none">{{ t('pages.courses.taxonomySectionTitle') }}</h3>
@@ -1447,11 +1494,11 @@ onBeforeUnmount(() => {
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div class="space-y-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="space-y-1.5">
                                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.mainCategoryLabel') }} <span class="text-red-500">*</span></label>
                                         <div class="flex items-center gap-2">
-                                            <Dropdown v-model="courseForm.category_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.categorySelectPlaceholder')" class="flex-1 border-slate-300 font-medium" filter :filterPlaceholder="t('pages.courses.categorySearchFilter')" :class="{'p-invalid': !courseForm.category_id}">
+                                            <Dropdown v-model="courseForm.category_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.categorySelectPlaceholder')" fluid class="font-medium" filter :filterPlaceholder="t('pages.courses.categorySearchFilter')" :invalid="!courseForm.category_id">
                                                 <template #value="slotProps">
                                                     <div v-if="slotProps.value" class="flex items-center gap-2">
                                                         <i class="pi pi-folder text-slate-400"></i>
@@ -1464,7 +1511,7 @@ onBeforeUnmount(() => {
                                         </div>
                                     </div>
 
-                                    <div class="space-y-2">
+                                    <div class="space-y-1.5">
                                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.difficultyLabel') }}</label>
                                         <SelectButton v-model="courseForm.level" :options="levelOptions" optionLabel="label" optionValue="value" aria-labelledby="basic" class="w-full flex">
                                             <template #option="slotProps">
@@ -1478,9 +1525,9 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
 
-                            <!-- Section: Stratégie de Pricing -->
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-400">
-                                <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                            <!-- Section: StratÃ©gie de Pricing -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-400">
+                                <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i class="pi pi-money-bill"></i></div>
                                         <div>
@@ -1492,16 +1539,16 @@ onBeforeUnmount(() => {
                                     <Badge v-else :value="t('pages.courses.paidBadgeShort')" severity="warning"></Badge>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
-                                    <div class="space-y-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                                    <div class="space-y-1.5">
                                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.standardPriceLabel') }}</label>
-                                        <InputNumber v-model="courseForm.price" mode="currency" currency="USD" locale="en-US" class="w-full" :min="0" :pt="{ input: { class: 'text-xl font-black text-slate-800 p-4' } }" placeholder="$0.00" />
+                                        <InputNumber v-model="courseForm.price" mode="currency" currency="USD" locale="en-US" fluid :min="0" :pt="{ input: { class: 'text-xl font-black' } }" placeholder="$0.00" />
                                         <small class="text-slate-500 text-[11px] block mt-1">{{ t('pages.courses.freePriceHint') }}</small>
                                     </div>
 
-                                    <div class="space-y-2">
+                                    <div class="space-y-1.5">
                                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.promoPriceLabel') }}</label>
-                                        <InputNumber v-model="courseForm.promo_price" mode="currency" currency="USD" locale="en-US" class="w-full" :min="0" :max="courseForm.price || undefined" :pt="{ input: { class: 'text-xl font-black text-red-600 p-4' } }" placeholder="$0.00" :disabled="!courseForm.price || courseForm.price === 0" />
+                                        <InputNumber v-model="courseForm.promo_price" mode="currency" currency="USD" locale="en-US" fluid :min="0" :max="courseForm.price || undefined" :pt="{ input: { class: 'text-xl font-black text-red-600' } }" placeholder="$0.00" :disabled="!courseForm.price || courseForm.price === 0" />
                                         <small class="text-slate-500 text-[11px] block mt-1">{{ t('pages.courses.promoPriceHint') }}</small>
                                     </div>
                                 </div>
@@ -1509,19 +1556,19 @@ onBeforeUnmount(() => {
                         </div>
 
                         <!-- ========================================== -->
-                        <!-- TAB 2 : MÉDIAS & ASSETS VISUELS            -->
+                        <!-- TAB 2 : MÃ‰DIAS & ASSETS VISUELS            -->
                         <!-- ========================================== -->
-                        <div v-show="activeEditorTab === 'media'" class="space-y-8" role="tabpanel">
+                        <div v-show="activeEditorTab === 'media'" class="space-y-5" role="tabpanel">
 
                             <!-- Vignette -->
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4">{{ t('pages.courses.coverTitle') }}</h3>
 
                                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 mt-6">
     <div class="lg:col-span-2">
       <div class="aspect-video bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden relative group transition-colors hover:border-blue-400 hover:bg-blue-50/30">
 
-        <!-- Aperçu de l'image -->
+        <!-- AperÃ§u de l'image -->
         <img
           v-if="courseForm.thumbnail"
           :src="thumbnailUrl"
@@ -1596,8 +1643,8 @@ onBeforeUnmount(() => {
                             </div>
                             </div>
 
-                            <!-- Vidéo Promo -->
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <!-- VidÃ©o Promo -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2 border-b border-slate-100 pb-4">{{ t('pages.courses.teaserTitle') }}</h3>
                                 <p class="text-sm text-slate-500 mb-6 mt-2">{{ t('pages.courses.teaserDesc') }}</p>
 
@@ -1605,7 +1652,7 @@ onBeforeUnmount(() => {
                                     <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.videoUrlLabel') }}</label>
                                     <IconField iconPosition="left">
                                         <InputIcon class="pi pi-youtube text-red-500" />
-                                        <InputText v-model="courseForm.preview_video_url" class="w-full p-4 font-mono text-sm bg-slate-50 border-slate-300" placeholder="https://www.youtube.com/watch?v=..." />
+                                        <InputText v-model="courseForm.preview_video_url" fluid class="font-mono" placeholder="https://www.youtube.com/watch?v=..." />
                                     </IconField>
 
                                     <div v-if="courseForm.preview_video_url" class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-4">
@@ -1635,7 +1682,7 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
 
-                            <!-- État vide du Curriculum -->
+                            <!-- Ã‰tat vide du Curriculum -->
                             <div v-if="courseForm.sections.length === 0" class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-300 text-center flex flex-col items-center justify-center min-h-[400px] transition-colors hover:border-blue-300 hover:bg-blue-50/30">
                                 <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white">
                                     <i class="pi pi-objects-column text-4xl text-blue-400"></i>
@@ -1651,7 +1698,7 @@ onBeforeUnmount(() => {
 
                                     <!-- MODULE HEADER -->
                                     <div class="bg-slate-50/80 px-4 py-3 flex items-center gap-4 border-b border-slate-200">
-                                        <!-- Actions de réorganisation -->
+                                        <!-- Actions de rÃ©organisation -->
                                         <div class="flex flex-col gap-1 text-slate-300 hover:text-blue-500 transition-colors w-6 items-center flex-shrink-0">
                                             <i class="pi pi-caret-up cursor-pointer hover:scale-125 transition-transform" @click="moveSectionUp(sIdx)" :class="{'opacity-20 cursor-not-allowed': sIdx === 0}"></i>
                                             <i class="pi pi-caret-down cursor-pointer hover:scale-125 transition-transform" @click="moveSectionDown(sIdx)" :class="{'opacity-20 cursor-not-allowed': sIdx === courseForm.sections.length - 1}"></i>
@@ -1679,21 +1726,21 @@ onBeforeUnmount(() => {
                                                 <i class="pi pi-file-edit text-blue-500"></i> {{ t('pages.courses.moduleContentTitle') }}
                                             </h4>
 
-                                            <div class="space-y-2">
+                                            <div class="space-y-1.5">
                                                 <label class="block text-xs font-bold text-slate-600">{{ t('pages.courses.shortDescLabel') }}</label>
                                                 <InputText v-model="section.description" class="w-full bg-white border-slate-200" :placeholder="t('pages.courses.moduleDescPlaceholder')" />
                                             </div>
 
-                                            <div class="space-y-2">
+                                            <div class="space-y-1.5">
                                                 <label class="block text-xs font-bold text-slate-600">{{ t('pages.courses.moduleTextLabel') }} <span class="text-red-500">*</span></label>
                                                 <Textarea v-model="section.text_content" rows="4" class="w-full bg-white border-slate-200 font-mono text-sm" :placeholder="t('pages.courses.moduleTextPlaceholder')"></Textarea>
                                                 <div class="text-[10px] text-slate-400">{{ t('pages.courses.moduleTextHelp') }}</div>
                                             </div>
                                         </div>
 
-                                        <!-- 2. MÉDIAS DU MODULE -->
+                                        <!-- 2. MÃ‰DIAS DU MODULE -->
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <!-- Vidéo d'introduction -->
+                                            <!-- VidÃ©o d'introduction -->
                                             <div class="bg-red-50/30 rounded-xl border border-red-200 p-4 space-y-3">
                                                 <div class="flex items-center justify-between">
                                                     <label class="text-xs font-black text-red-700 uppercase tracking-wider flex items-center gap-2">
@@ -1736,7 +1783,7 @@ onBeforeUnmount(() => {
                                             </div>
                                         </div>
 
-                                        <!-- 3. BLOCS DE CONTENU (VIDÉO, DOCUMENT, QUIZ) -->
+                                        <!-- 3. BLOCS DE CONTENU (VIDÃ‰O, DOCUMENT, QUIZ) -->
                                         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                             <div class="bg-slate-50/80 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
                                                 <h4 class="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
@@ -1848,18 +1895,18 @@ onBeforeUnmount(() => {
                                                                     </button>
                                                                 </div>
 
-                                                                 <!-- Mode: Créer un nouveau quiz -->
+                                                                 <!-- Mode: CrÃ©er un nouveau quiz -->
                                                                  <div v-if="block.quiz_mode === 'new'" class="space-y-3 border border-emerald-100 rounded-xl p-4 bg-emerald-50/30">
                                                                      <div class="space-y-1">
                                                                          <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.quizTitleLabel') }}</label>
                                                                          <InputText v-model="block.new_quiz_title" class="w-full bg-white border-slate-200 text-xs" :placeholder="t('pages.courses.quizTitlePlaceholder')" />
                                                                      </div>
                                                                      
-                                                                     <div class="space-y-2">
+                                                                     <div class="space-y-1.5">
                                                                          <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.questionsLabel') }}</label>
                                                                          
                                                                          <div v-if="block.questions && block.questions.length > 0" class="space-y-3">
-                                                                             <div v-for="(q, qIdx) in block.questions" :key="qIdx" class="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+                                                                             <div v-for="(q, qIdx) in block.questions" :key="qIdx" class="bg-white border border-slate-200 rounded-lg p-3 space-y-1.5">
                                                                                  <div class="flex items-center justify-between">
                                                                                      <span class="text-[10px] font-bold text-slate-500">Q{{ qIdx + 1 }}</span>
                                                                                      <div class="flex items-center gap-2">
@@ -1888,7 +1935,7 @@ onBeforeUnmount(() => {
                                                                                       <SelectButton v-model="q.correct_answer" :options="[{label: t('pages.courses.trueLabel'), value:'true'}, {label: t('pages.courses.falseLabel'), value:'false'}]" optionLabel="label" optionValue="value" class="w-full flex" :pt="{ button: { class: 'flex-1 font-black py-2 bg-white text-xs' } }" />
                                                                                  </div>
                                                                                  
-                                                                                 <!-- Réponse courte -->
+                                                                                 <!-- RÃ©ponse courte -->
                                                                                  <div v-if="q.type === 'short_answer'" class="space-y-1">
                                                                                       <label class="text-[9px] font-bold text-slate-400 uppercase">{{ t('pages.courses.expectedAnswerLabel') }}</label>
                                                                                       <InputText v-model="q.correct_answer" class="w-full bg-slate-50 border-slate-200 text-xs font-mono" :placeholder="t('pages.courses.exactKeywordPlaceholder')" />
@@ -1901,7 +1948,7 @@ onBeforeUnmount(() => {
                                                                  </div>
 
                                                                 <!-- Mode: Choisir un quiz existant -->
-                                                                <div v-if="block.quiz_mode === 'existing'" class="space-y-2">
+                                                                <div v-if="block.quiz_mode === 'existing'" class="space-y-1.5">
                                                                     <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.assignedQuizLabel') }}</label>
                                                                     <Dropdown v-model="block.quiz_id" :options="props.exams || []" optionLabel="title" optionValue="id" :placeholder="t('pages.courses.selectExistingQuizPlaceholder')" class="w-full" showClear>
                                                                         <template #option="slotProps">
@@ -1919,7 +1966,7 @@ onBeforeUnmount(() => {
                                                             </div>
 
                                                             <!-- Text Block -->
-                                                            <div v-if="block.type === 'text'" class="space-y-2">
+                                                            <div v-if="block.type === 'text'" class="space-y-1.5">
                                                                 <label class="text-[10px] font-bold text-slate-500 uppercase">{{ t('pages.courses.textContentLabel') }}</label>
                                                                 <Textarea v-model="block.content_text" rows="4" class="w-full bg-slate-50 border-slate-200 font-mono text-xs" :placeholder="t('pages.courses.textContentPlaceholder')"></Textarea>
                                                             </div>
@@ -1979,12 +2026,12 @@ onBeforeUnmount(() => {
                         </div>
 
                         <!-- ========================================== -->
-                        <!-- TAB 4 : OPTIMISATION SEO & DECOUVERABILITÉ -->
+                        <!-- TAB 4 : OPTIMISATION SEO & DECOUVERABILITÃ‰ -->
                         <!-- ========================================== -->
                          <!-- ========================================== -->
-<!-- TAB 4 : RESSOURCES & DOCUMENTS ATTACHÉS    -->
+<!-- TAB 4 : RESSOURCES & DOCUMENTS ATTACHÃ‰S    -->
 <!-- ========================================== -->
-<div v-show="activeEditorTab === 'resources'" class="space-y-8" role="tabpanel">
+<div v-show="activeEditorTab === 'resources'" class="space-y-5" role="tabpanel">
 
     <!-- HEADER & ACTION -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -2004,13 +2051,13 @@ onBeforeUnmount(() => {
         <div v-for="(res, rIdx) in courseForm.resources" :key="rIdx"
              class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all flex flex-col lg:flex-row items-center gap-6 group relative">
                 
-            <!-- Badge d'état (Nouveau vs Existant) -->
+            <!-- Badge d'Ã©tat (Nouveau vs Existant) -->
             <div class="absolute -top-2 -left-2">
                 <Tag v-if="res.is_new" :value="t('pages.courses.newTag')" severity="success" class="text-[8px] uppercase px-2 shadow-sm" />
                 <Tag v-else :value="t('pages.courses.onlineTag')" severity="info" class="text-[8px] uppercase px-2 shadow-sm" />
             </div>
 
-            <!-- Icone Dynamique basée sur le type -->
+            <!-- Icone Dynamique basÃ©e sur le type -->
             <div class="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 flex-shrink-0 group-hover:bg-blue-50 transition-colors shadow-inner">
                 <i :class="[getFileIcon(res.file_type || res.type), 'text-3xl']"></i>
             </div>
@@ -2027,12 +2074,12 @@ onBeforeUnmount(() => {
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('pages.courses.sourceFileLabel') }}</label>
                     
-                    <!-- Cas 1 : Aucune sélection (Nouveau) -->
+                    <!-- Cas 1 : Aucune sÃ©lection (Nouveau) -->
                     <div v-if="!res.file && !res.full_url" class="w-full">
                         <FileUpload mode="basic" :chooseLabel="t('pages.courses.chooseLocalFileLabel')" @select="onResourceSelect($event, rIdx)" auto class="p-button-sm p-button-secondary w-full border-dashed border-2" />
                     </div>
 
-                    <!-- Cas 2 : Fichier présent (Local ou Serveur) -->
+                    <!-- Cas 2 : Fichier prÃ©sent (Local ou Serveur) -->
                     <div v-else class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <div class="flex flex-col overflow-hidden">
                             <span class="text-xs font-black text-slate-700 truncate max-w-[200px]">
@@ -2048,7 +2095,7 @@ onBeforeUnmount(() => {
                             <!-- Visualiser (Si PDF ou Image) -->
                             <Button v-if="res.full_url" icon="pi pi-eye" class="p-button-text p-button-secondary p-button-sm w-8 h-8" v-tooltip.top="t('pages.courses.viewTooltip')" @click="viewResource(res.full_url)" />
                             
-                            <!-- Télécharger -->
+                            <!-- TÃ©lÃ©charger -->
                             <Button v-if="res.full_url" icon="pi pi-download" class="p-button-text p-button-info p-button-sm w-8 h-8" v-tooltip.top="t('pages.courses.downloadTooltip')" @click="downloadResource(res.full_url)" />
                             
                             <!-- Remplacer -->
@@ -2065,7 +2112,7 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <!-- ÉTAT VIDE -->
+    <!-- Ã‰TAT VIDE -->
     <div v-else class="bg-white p-16 rounded-3xl border-2 border-dashed border-slate-200 text-center flex flex-col items-center justify-center min-h-[400px]">
         <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
             <i class="pi pi-paperclip text-4xl"></i>
@@ -2076,7 +2123,7 @@ onBeforeUnmount(() => {
         <Button :label="t('pages.courses.addFirstResourceButton')" icon="pi pi-plus" class="p-button-primary p-button-lg font-bold shadow-lg" @click="addResource" />
     </div>
 </div>
-                        <div v-show="activeEditorTab === 'seo'" class="space-y-8" role="tabpanel">
+                        <div v-show="activeEditorTab === 'seo'" class="space-y-5" role="tabpanel">
 
                             <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex gap-4 items-start shadow-sm">
                                 <i class="pi pi-lightbulb text-blue-500 text-2xl mt-1"></i>
@@ -2088,30 +2135,30 @@ onBeforeUnmount(() => {
 
                             <div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
                                 <!-- Formulaire SEO (Gauche) -->
-                                <div class="xl:col-span-7 space-y-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                    <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-search text-slate-400"></i> {{ t('pages.courses.metaTagsTitle') }}</h3>
+                                <div class="xl:col-span-7 space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 flex items-center gap-2"><i class="pi pi-search text-slate-400"></i> {{ t('pages.courses.metaTagsTitle') }}</h3>
 
-                                    <div class="space-y-2">
+                                    <div class="space-y-1.5">
                                         <div class="flex justify-between items-end mb-1">
                                             <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.seoTitleLabel') }}</label>
                                             <span class="text-[10px] font-mono" :class="courseForm.seo_metadata.title?.length > 60 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ courseForm.seo_metadata.title?.length || 0 }} / 60 {{ t('pages.courses.seoCharOptimized') }}</span>
                                         </div>
-                                        <InputText v-model="courseForm.seo_metadata.title" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.courses.seoTitlePlaceholder')" />
+                                        <InputText v-model="courseForm.seo_metadata.title" fluid :placeholder="t('pages.courses.seoTitlePlaceholder')" />
                                     </div>
 
-                                    <div class="space-y-2">
+                                    <div class="space-y-1.5">
                                         <div class="flex justify-between items-end mb-1">
                                             <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.metaDescriptionLabel') }}</label>
                                             <span class="text-[10px] font-mono" :class="courseForm.seo_metadata.description?.length > 160 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ courseForm.seo_metadata.description?.length || 0 }} / 160 {{ t('pages.courses.seoCharOptimized') }}</span>
                                         </div>
-                                        <Textarea v-model="courseForm.seo_metadata.description" rows="4" class="w-full bg-slate-50 border-slate-300 leading-relaxed" :placeholder="t('pages.courses.metaDescriptionPlaceholder')" />
+                                        <Textarea v-model="courseForm.seo_metadata.description" rows="4" fluid class="leading-relaxed" :placeholder="t('pages.courses.metaDescriptionPlaceholder')" />
                                     </div>
 
-                                    <div class="space-y-2">
+                                    <div class="space-y-1.5">
                                         <label class="block text-sm font-bold text-slate-700 mb-1">{{ t('pages.courses.focusKeywordsLabel') }}</label>
                                         <IconField iconPosition="left">
                                             <InputIcon class="pi pi-hashtag text-slate-400" />
-                                            <InputText v-model="courseForm.seo_metadata.keywords" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.courses.keywordsPlaceholder')" />
+                                            <InputText v-model="courseForm.seo_metadata.keywords" fluid :placeholder="t('pages.courses.keywordsPlaceholder')" />
                                         </IconField>
                                         <small class="text-slate-400 text-[11px]">{{ t('pages.courses.keywordsHelp') }}</small>
                                     </div>
@@ -2130,11 +2177,11 @@ onBeforeUnmount(() => {
                                                 <div class="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200">SC</div>
                                                 <div>
                                                     <div class="text-[13px] text-slate-800 font-medium leading-none">SubnetCongo LMS</div>
-                                                    <div class="text-[11px] text-slate-500 truncate max-w-[200px] mt-0.5">https://lms.subnetcongo.com/courses/{{ courseForm.slug || t('pages.courses.slugFallback') }}</div>
+                                                    <div class="text-[11px] text-slate-500 truncate max-w-[200px] mt-0.5">https://subnetcongo.net/courses/{{ courseForm.slug || t('pages.courses.slugFallback') }}</div>
                                                 </div>
                                                 <i class="pi pi-ellipsis-v ml-auto text-slate-400 text-xs"></i>
                                             </div>
-                                            <h3 class="text-lg font-medium text-[#1a0dab] hover:underline cursor-pointer truncate mb-1" style="font-family: Arial, sans-serif;">{{ seoPreviewTitle }}</h3>
+                                            <h3 class="text-lg font-medium text-[#1a0dab] truncate mb-1 select-none" style="font-family: Arial, sans-serif;">{{ seoPreviewTitle }}</h3>
                                             <p class="text-sm text-[#4d5156] line-clamp-2 leading-[1.58]" style="font-family: Arial, sans-serif;">{{ seoPreviewDesc }}</p>
                                         </div>
                                     </div>
@@ -2150,7 +2197,7 @@ onBeforeUnmount(() => {
                                                 <div v-else class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest"><i class="pi pi-image mr-2 text-lg"></i> {{ t('pages.courses.openGraphImage') }}</div>
                                             </div>
                                             <div class="p-3 bg-slate-100/50">
-                                                <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">lms.subnetcongo.com</div>
+                                                <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">subnetcongo.net</div>
                                                 <div class="text-sm font-bold text-slate-800 truncate mb-1">{{ seoPreviewTitle }}</div>
                                                 <div class="text-[11px] text-slate-500 truncate">{{ seoPreviewDesc }}</div>
                                             </div>
@@ -2162,13 +2209,13 @@ onBeforeUnmount(() => {
                         </div>
 
                         <!-- ========================================== -->
-                        <!-- TAB 5 : PARAMÈTRES AVANCÉS                 -->
+                        <!-- TAB 5 : PARAMÃˆTRES AVANCÃ‰S                 -->
                         <!-- ========================================== -->
-                        <div v-show="activeEditorTab === 'settings'" class="space-y-8" role="tabpanel">
+                        <div v-show="activeEditorTab === 'settings'" class="space-y-5" role="tabpanel">
 
-                            <!-- Paramètres Globaux -->
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.courses.settingsTitle') }}</h3>
+                            <!-- ParamÃ¨tres Globaux -->
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <h3 class="text-lg font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">{{ t('pages.courses.settingsTitle') }}</h3>
 
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6">
                                     <!-- Options Toggles -->
@@ -2224,19 +2271,19 @@ onBeforeUnmount(() => {
 
                                     <!-- Quiz & Certification Settings -->
                                     <div class="space-y-6 col-span-1" v-if="courseForm.has_final_exam">
-                                        <div class="space-y-2">
+                                        <div class="space-y-1.5">
                                             <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.passingScoreLabel') }}</label>
                                             <InputNumber v-model="courseForm.passing_score_20" :min="0" :max="20" class="w-full" placeholder="Ex: 10" />
                                             <div class="text-[10px] text-slate-500">{{ t('pages.courses.passingScoreHint') }}</div>
                                         </div>
 
-                                        <div class="space-y-2">
+                                        <div class="space-y-1.5">
                                             <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.finalExamWeightLabel') }}</label>
                                             <InputNumber v-model="courseForm.final_exam_weight" :min="0" :max="100" class="w-full" placeholder="Ex: 70" />
                                             <div class="text-[10px] text-slate-500">{{ t('pages.courses.finalExamWeightHint') }}</div>
                                         </div>
 
-                                        <div class="space-y-2">
+                                        <div class="space-y-1.5">
                                             <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.quizTotalWeightLabel') }}</label>
                                             <InputNumber v-model="courseForm.quiz_weight_total" :min="0" :max="100" class="w-full" placeholder="Ex: 80" />
                                             <div class="text-[10px] text-slate-500">{{ t('pages.courses.quizTotalWeightHint') }}</div>
@@ -2245,9 +2292,9 @@ onBeforeUnmount(() => {
 
                                     <!-- Attribution & Infos annexes -->
                                     <div class="space-y-6 col-span-1">
-                                        <div class="space-y-2">
+                                        <div class="space-y-1.5">
                                             <label class="block text-sm font-bold text-slate-700 flex items-center gap-2"><i class="pi pi-user text-blue-500"></i> {{ t('pages.courses.instructorLabel') }} <span class="text-red-500">*</span></label>
-                                            <Dropdown v-model="courseForm.instructor_id" :options="props.instructors" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.instructorPlaceholder')" class="w-full border-slate-300 bg-slate-50 font-medium" filter :class="{'p-invalid': !courseForm.instructor_id}">
+                                            <Dropdown v-model="courseForm.instructor_id" :options="props.instructors" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.instructorPlaceholder')" fluid class="font-medium" filter :invalid="!courseForm.instructor_id">
                                                 <template #value="slotProps">
                                                     <div v-if="slotProps.value" class="flex items-center gap-3">
                                                         <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
@@ -2260,9 +2307,9 @@ onBeforeUnmount(() => {
                                             </Dropdown>
                                         </div>
 
-                                        <div class="space-y-2 mt-4">
+                                        <div class="space-y-1.5 mt-4">
                                             <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.prerequisitesLabel') }}</label>
-                                            <Textarea v-model="courseForm.prerequisites" rows="3" class="w-full bg-slate-50 border-slate-300" :placeholder="t('pages.courses.prerequisitesPlaceholder')" />
+                                            <Textarea v-model="courseForm.prerequisites" rows="3" fluid :placeholder="t('pages.courses.prerequisitesPlaceholder')" />
                                         </div>
                                     </div>
                                 </div>
@@ -2274,17 +2321,38 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- WORKSPACE FOOTER (ACTIONS DE SAUVEGARDE) -->
-            <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <div class="text-xs text-slate-500 flex items-center gap-4">
+            <div class="flex-none bg-white border-t border-slate-200 flex items-center justify-between px-6 py-3 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                <div class="flex items-center gap-4">
                     <Button :label="t('pages.courses.deleteDraftButton')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm hidden md:flex font-medium" @click="courseDialog = false" v-if="!courseForm.id" />
+                    <div class="hidden sm:flex items-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                        <i class="pi pi-chart-bar text-red-500"></i>
+                        <span>{{ completionPercent }}%</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <Button
+                        :label="t('pages.courses.prevStep')"
+                        icon="pi pi-arrow-left"
+                        iconPos="left"
+                        class="p-button-outlined p-button-secondary font-bold bg-white text-slate-600 hover:bg-slate-50 border-slate-300 hidden sm:flex"
+                        :disabled="currentStepIndex <= 0"
+                        @click="goToPrevStep"
+                    />
+                    <Button
+                        :label="t('pages.courses.nextStep')"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        class="p-button-outlined p-button-secondary font-bold bg-white text-slate-600 hover:bg-slate-50 border-slate-300 hidden sm:flex"
+                        :disabled="currentStepIndex < 0 || currentStepIndex >= editorMenu.length - 1"
+                        @click="goToNextStep"
+                    />
+                    <div class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
                     <Button :label="t('pages.courses.saveDraftButton')" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 hover:bg-slate-50 border-slate-300" @click="saveCourse('draft')" :loading="courseForm.processing" />
 
                     <div class="relative group">
-                        <Button :label="t('pages.courses.publishButton')" icon="pi pi-rocket" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveCourse('publish')" :loading="courseForm.processing" :disabled="!isEntireFormValid" />
-                        <!-- Tooltip custom si bloqué -->
+                        <Button :label="t('pages.courses.publishButton')" icon="pi pi-rocket" class="!bg-red-600 hover:!bg-red-700 !border-none shadow-lg shadow-red-500/30 font-bold px-8 text-sm" @click="saveCourse('publish')" :loading="courseForm.processing" :disabled="!isEntireFormValid" />
+                        <!-- Tooltip custom si bloquÃ© -->
                         <div v-if="!isEntireFormValid" class="absolute bottom-full right-0 mb-2 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                             {{ t('pages.courses.publishBlockedHintStart') }} <i class="pi pi-exclamation-circle text-amber-400"></i> {{ t('pages.courses.publishBlockedHintEnd') }}
                             <div class="absolute -bottom-1 right-8 w-2 h-2 bg-slate-800 transform rotate-45"></div>
@@ -2295,7 +2363,7 @@ onBeforeUnmount(() => {
         </Dialog>
 
         <!-- ============================================================================== -->
-        <!-- DIALOG CRÉATION DE CATÉGORIE (TAXONOMIE)                                       -->
+        <!-- DIALOG CRÃ‰ATION DE CATÃ‰GORIE (TAXONOMIE)                                       -->
         <!-- ============================================================================== -->
         <SncDialog v-model:visible="categoryDialog" :title="t('pages.courses.createCategoryHeader')" icon="pi-tags" width="500px">
             <div class="space-y-6">
@@ -2305,22 +2373,22 @@ onBeforeUnmount(() => {
                 </Message>
 
                 <div class="space-y-4">
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.categoryNameLabel') }} <span class="text-red-500">*</span></label>
                         <InputText v-model="categoryForm.name" @input="generateCategorySlug" :placeholder="t('pages.courses.categoryNamePlaceholder')" class="w-full p-3 font-bold text-slate-800 bg-white border-slate-300" autofocus :class="{'p-invalid': categoryForm.errors?.name}" />
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.slugFieldLabel') }}</label>
                         <InputText v-model="categoryForm.slug" placeholder="developpement-web" class="w-full p-2 text-sm font-mono text-slate-500 bg-slate-100 border-transparent" />
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.parentCategoryLabel') }}</label>
                         <Dropdown v-model="categoryForm.parent_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.courses.rootCategoryOption')" class="w-full border-slate-300 bg-white" showClear filter />
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         <label class="block text-sm font-bold text-slate-700">{{ t('pages.courses.categoryDescLabel') }}</label>
                         <Textarea v-model="categoryForm.description" rows="2" class="w-full bg-white border-slate-300" :placeholder="t('pages.courses.categoryDescPlaceholder')" />
                     </div>
@@ -2384,7 +2452,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- Alertes & Qualité -->
+                <!-- Alertes & QualitÃ© -->
                 <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-shield"></i> {{ t('pages.courses.qualityAlertsTitle') }}</h4>
                     <div class="space-y-3">
@@ -2403,6 +2471,7 @@ onBeforeUnmount(() => {
             </template>
         </SncDialog>
 
+        <MediaPicker v-model:visible="mediaPickerOpen" accept="both" @insert="insertMediaIntoDescription" />
     </AppLayout>
 </template>
 
@@ -2418,14 +2487,14 @@ onBeforeUnmount(() => {
 
 /*
  * ASTUCE ULTRA PRO : Forcer la hauteur du Dialog pour qu'il soit absolument fixe (85vh).
- * L'intérieur est géré par Flexbox pour faire scroller uniquement le contenu.
+ * L'intÃ©rieur est gÃ©rÃ© par Flexbox pour faire scroller uniquement le contenu.
  */
 .custom-dialog-height {
     height: 85vh !important;
     max-height: 85vh !important;
 }
 
-/* Scrollbar personnalisée (Style macOS / SaaS moderne) */
+/* Scrollbar personnalisÃ©e (Style macOS / SaaS moderne) */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -2459,7 +2528,7 @@ onBeforeUnmount(() => {
     background-color: #f8fafc !important;
 }
 
-/* Enlève la bordure du Toolbar PrimeVue */
+/* EnlÃ¨ve la bordure du Toolbar PrimeVue */
 :deep(.p-toolbar) {
     background: transparent;
     border: none;
@@ -2477,8 +2546,24 @@ onBeforeUnmount(() => {
     background-color: #f8fafc;
 }
 
-/* Ombre intérieure pour le panel d'expansion */
+/* Ombre intÃ©rieure pour le panel d'expansion */
 .inset-shadow {
     box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.02);
+}
+
+/* ------------------------------------------------------------------
+   Workspace cours : harmonisation des champs de formulaire.
+   La gÃ©omÃ©trie et les couleurs des champs (InputText, Textarea,
+   Select, InputNumberâ€¦) sont portÃ©es par les design tokens du preset
+   PrimeVue (resources/js/app.js, groupe formField) â€” aucune surcharge
+   CSS ici : les inputs et les selects partagent exactement le mÃªme
+   style (variant filled, arrondi, focus, invalide).
+------------------------------------------------------------------- */
+/* Labels : typo homogÃ¨ne dans le dialog */
+:deep(.course-workspace label) {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.01em;
 }
 </style>

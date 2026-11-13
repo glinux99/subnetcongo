@@ -45,51 +45,99 @@ class EmailTemplate extends Model
 
     /**
      * Gabarit HTML professionnel commun à tous les emails transactionnels.
-     * Charte SubnetCongo Academy : bleu institutionnel #003399, accent rouge #EE1C25.
+     * Charte SubnetCongo Academy : bleu #003399, accent rouge #EE1C25.
+     * Responsive : large sur desktop (720px), paddings aérés ; compact sur mobile (100%).
      */
     protected static function wrapTemplate(string $innerHtml): string
     {
-        return '
-<div style="margin:0;padding:0;background-color:#f1f5f9;">
-  <div style="max-width:620px;margin:0 auto;padding:24px 12px;">
+        return '<!DOCTYPE html>
+<html lang="fr" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
+<title>SubnetCongo Academy</title>
+<!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+<style type="text/css">
+  @media only screen and (min-width: 620px) {
+    .container-inner { padding: 36px 40px !important; }
+    .hero { padding: 34px 40px !important; }
+    .footer { padding: 26px 40px !important; }
+    .mail-body { font-size: 16px !important; line-height: 1.75 !important; }
+    .cta-btn { font-size: 15px !important; padding: 16px 40px !important; }
+  }
+  @media only screen and (max-width: 619px) {
+    .container-outer { padding: 12px 8px !important; }
+    .container-inner { padding: 24px 18px !important; }
+    .hero { padding: 22px 18px !important; }
+    .footer { padding: 18px 18px !important; }
+    .mail-body { font-size: 14px !important; line-height: 1.6 !important; }
+    .cta-btn { display: block !important; width: 100% !important; padding: 14px 16px !important; font-size: 14px !important; box-sizing: border-box !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#eef2f7;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eef2f7;">
+    <tr>
+      <td style="padding:24px 12px;" class="container-outer">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="720" align="center" style="width:100%;max-width:720px;margin:0 auto;border-radius:18px;overflow:hidden;box-shadow:0 18px 40px -12px rgba(15,23,42,.18);">
 
-    <!-- En-tête -->
-    <div style="background:linear-gradient(135deg,#003399 0%,#0a4fd6 100%);border-radius:14px 14px 0 0;padding:26px 30px;text-align:center;">
-      <div style="display:inline-block;background:#EE1C25;color:#ffffff;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:10px;">SubnetCongo Academy</div>
-      <h1 style="margin:0;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;">Formation &amp; Certification</h1>
-    </div>
+          <!-- En-tête branded -->
+          <tr>
+            <td class="hero" style="background:linear-gradient(135deg,#003399 0%,#0a4fd6 60%,#1e64ff 100%);padding:34px 40px;text-align:center;">
+              <div style="display:inline-block;background:#EE1C25;color:#ffffff;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:5px 14px;border-radius:999px;margin-bottom:14px;box-shadow:0 4px 14px -4px rgba(238,28,37,.6);">SubnetCongo Academy</div>
+              <h1 style="margin:0;color:#ffffff;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:24px;line-height:1.25;font-weight:800;letter-spacing:-.2px;">Formation &amp; Certification</h1>
+              <p style="margin:8px 0 0;color:#cfe0ff;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:.3px;">Apprenez. Pratiquez. Certifiez-vous.</p>
+            </td>
+          </tr>
 
-    <!-- Corps -->
-    <div style="background:#ffffff;padding:34px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#334155;">
-      ' . $innerHtml . '
-    </div>
+          <!-- Corps -->
+          <tr>
+            <td class="container-inner" style="background:#ffffff;padding:36px 40px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.75;color:#334155;">
+              <div class="mail-body">
+                ' . $innerHtml . '
+              </div>
+            </td>
+          </tr>
 
-    <!-- Pied de page -->
-    <div style="background:#0f172a;border-radius:0 0 14px 14px;padding:22px 30px;text-align:center;">
-      <p style="margin:0 0 6px;color:#94a3b8;font-size:12px;font-family:Arial,Helvetica,sans-serif;">
-        SubnetCongo Academy — Plateforme e-learning
-      </p>
-      <p style="margin:0;color:#64748b;font-size:11px;font-family:Arial,Helvetica,sans-serif;">
-        Cet email a été envoyé automatiquement, merci de ne pas y répondre directement.
-        Pour toute question : <a href="mailto:academy@subnetcongo.net" style="color:#60a5fa;text-decoration:none;">academy@subnetcongo.net</a>
-      </p>
-    </div>
+          <!-- Pied de page -->
+          <tr>
+            <td class="footer" style="background:#0f172a;padding:26px 40px;text-align:center;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+              <p style="margin:0 0 8px;color:#cbd5e1;font-size:13px;font-weight:700;letter-spacing:.4px;">SubnetCongo Academy — Plateforme e-learning</p>
+              <p style="margin:0;color:#64748b;font-size:11px;line-height:1.6;">
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre directement.<br>
+                Pour toute question : <a href="mailto:academy@subnetcongo.net" style="color:#60a5fa;text-decoration:none;font-weight:600;">academy@subnetcongo.net</a>
+              </p>
+              <p style="margin:12px 0 0;color:#475569;font-size:10px;letter-spacing:.5px;text-transform:uppercase;">© ' . date('Y') . ' SubnetCongo Sarl · RD Congo</p>
+            </td>
+          </tr>
 
-  </div>
-</div>';
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>';
     }
 
     /**
      * Bouton d'appel à l'action réutilisable.
+     * Desktop large, centré ; mobile full-width.
      */
     protected static function cta(string $url, string $label): string
     {
         return '
-<div style="text-align:center;margin:28px 0 8px;">
-  <a href="' . e($url) . '" style="display:inline-block;background:#003399;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 32px;border-radius:10px;letter-spacing:0.3px;">
-    ' . e($label) . ' →
-  </a>
-</div>';
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:28px 0 8px;">
+  <tr>
+    <td align="center">
+      <a href="' . e($url) . '" class="cta-btn" style="display:inline-block;background:#003399;color:#ffffff;text-decoration:none;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-weight:800;font-size:15px;letter-spacing:.3px;padding:16px 40px;border-radius:12px;box-shadow:0 10px 24px -10px rgba(0,51,153,.55);box-sizing:border-box;">
+        ' . e($label) . '&nbsp;&nbsp;→
+      </a>
+    </td>
+  </tr>
+</table>';
     }
 
     public static function getDefaultTemplates(): array

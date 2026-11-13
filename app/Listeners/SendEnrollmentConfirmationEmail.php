@@ -44,7 +44,7 @@ class SendEnrollmentConfirmationEmail
         // Send the email
         $this->emailService->sendEnrollmentConfirmed($user, [
             'course_name' => $course->title,
-            'course_url' => url('/courses/' . $course->id),
+            'course_url' => route('student.my-courses'),
             'enrollment_date' => $enrollment->enrolled_at?->format('d/m/Y') ?? now()->format('d/m/Y'),
             'expiry_date' => $enrollment->expires_at?->format('d/m/Y'),
         ]);

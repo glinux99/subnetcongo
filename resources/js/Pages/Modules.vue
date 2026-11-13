@@ -46,6 +46,7 @@ import SelectButton from 'primevue/selectbutton';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import Editor from 'primevue/editor';
+import MediaPicker from '@/Components/MediaPicker.vue';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import ProgressBar from 'primevue/progressbar';
@@ -56,6 +57,7 @@ import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 import Checkbox from 'primevue/checkbox';
 import { useI18n } from 'vue-i18n';
+import axios from 'axios';
 
 const { t } = useI18n();
 
@@ -203,6 +205,41 @@ const lessonForm = useForm({
     quiz_id: null,
     seo_metadata: { title: '', description: '', keywords: '' }
 });
+
+// Sélecteur de média (image/vidéo) pour l'éditeur de contenu de leçon
+const lessonEditorRef = ref(null);
+const mediaPickerOpen = ref(false);
+const insertMediaIntoLesson = (media) => {
+    const quill = lessonEditorRef.value?.quill;
+    if (!quill) return;
+    const range = quill.getSelection(true);
+    const index = range ? range.index : quill.getLength();
+    quill.insertEmbed(index, media.type === 'image' ? 'image' : 'video', media.url);
+    quill.setSelection(index + 1);
+};
+
+// Upload d'une vidéo depuis l'appareil (téléphone/ordinateur) pour la leçon
+const videoUploading = ref(false);
+const onLessonVideoUpload = (event) => {
+    const file = event.files?.[0];
+    if (!file || videoUploading.value) return;
+    videoUploading.value = true;
+    const fd = new FormData();
+    fd.append('file', file);
+    axios.post(route('uploads.media'), fd, {
+        onUploadProgress: (e) => {
+            if (e.total) uploadProgress.value = Math.round((e.loaded / e.total) * 100);
+        },
+    }).then((res) => {
+        lessonForm.video_url = res.data.path;
+        lessonForm.video_source = 'file';
+    }).catch(() => {
+        toast.add({ severity: 'error', summary: t('pages.modules.video_upload_error'), life: 5000 });
+    }).finally(() => {
+        videoUploading.value = false;
+        uploadProgress.value = 0;
+    });
+};
 
 // Formulaire Transfert (Déplacer un module vers un autre cours)
 const transferForm = useForm({
@@ -1031,8 +1068,32 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                                 <div class="bg-red-50 border border-red-100 p-6 rounded-xl">
                                     <h4 class="font-bold text-red-900 mb-4 flex items-center gap-2"><i class="pi pi-youtube"></i> {{ t('pages.modules.videoSource') }}</h4>
                                     <div class="flex flex-col md:flex-row gap-4 mb-4">
-                                        <SelectButton v-model="lessonForm.video_source" :options="['youtube', 'vimeo', 'custom']" class="flex-shrink-0" />
-                                        <InputText v-model="lessonForm.video_url" class="w-full font-mono text-sm" placeholder="https://..." />
+                                        <SelectButton v-model="lessonForm.video_source" :options="['youtube', 'vimeo', 'custom', 'file']" class="flex-shrink-0" />
+                                        <InputText
+                                            v-if="lessonForm.video_source !== 'file'"
+                                            v-model="lessonForm.video_url"
+                                            class="w-full font-mono text-sm"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                    <div v-if="lessonForm.video_source === 'file'" class="mb-4 space-y-3">
+                                        <div class="border-2 border-dashed border-red-200 rounded-xl p-6 text-center bg-white">
+                                            <i class="pi pi-cloud-upload text-4xl text-red-300 mb-3 block"></i>
+                                            <p class="text-sm text-slate-600 mb-3">{{ t('pages.modules.video_upload_hint') }}</p>
+                                            <FileUpload
+                                                mode="basic"
+                                                customUpload
+                                                :accept="'video/*'"
+                                                :maxFileSize="102400000"
+                                                :chooseLabel="t('pages.modules.video_upload_choose')"
+                                                @select="onLessonVideoUpload"
+                                                :disabled="videoUploading"
+                                            />
+                                            <ProgressBar v-if="videoUploading" :value="uploadProgress" class="mt-3 h-2" :showValue="false" />
+                                        </div>
+                                        <div v-if="lessonForm.video_url" class="text-xs text-slate-500 font-mono truncate">
+                                            {{ lessonForm.video_url }}
+                                        </div>
                                     </div>
                                     <div v-if="lessonForm.video_url" class="aspect-video bg-slate-900 rounded-lg overflow-hidden relative shadow-lg border-4 border-white">
                                         <img v-if="lessonForm.video_source === 'youtube' && youtubeThumb" :src="youtubeThumb" class="w-full h-full object-cover opacity-60" />
@@ -1046,11 +1107,21 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
 
                             <!-- Rich Text Section (Toujours visible pour transcipt ou doc) -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-bold text-slate-700">
-                                    {{ lessonForm.type === 'document' ? t('pages.modules.documentContentLabel') : t('pages.modules.videoDescriptionLabel') }}
-                                </label>
+                                <div class="flex items-center justify-between gap-2">
+                                    <label class="block text-sm font-bold text-slate-700">
+                                        {{ lessonForm.type === 'document' ? t('pages.modules.documentContentLabel') : t('pages.modules.videoDescriptionLabel') }}
+                                    </label>
+                                    <Button
+                                        icon="pi pi-images"
+                                        :label="t('pages.modules.insertMedia')"
+                                        size="small"
+                                        text
+                                        class="!text-blue-600 hover:!bg-blue-50"
+                                        @click="mediaPickerOpen = true"
+                                    />
+                                </div>
                                 <div class="border border-slate-200 rounded-xl overflow-hidden">
-                                    <Editor v-model="lessonForm.content" editorStyle="height: 350px" />
+                                    <Editor ref="lessonEditorRef" v-model="lessonForm.content" editorStyle="height: 350px" />
                                 </div>
                             </div>
                         </div>
@@ -1126,6 +1197,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
             </template>
         </SncDialog>
 
+        <MediaPicker v-model:visible="mediaPickerOpen" accept="both" @insert="insertMediaIntoLesson" />
     </AppLayout>
 </template>
 

@@ -116,6 +116,7 @@ class CohortController extends Controller
                 ]),
                 'live_sessions' => $cohort->liveSessions->map(fn($s) => [
                     'id'            => $s->id,
+                    'uuid'          => $s->uuid,
                     'title'         => $s->title,
                     'start_at'  => $s->start_at,
                     'meeting_url'   => $s->meeting_url,
@@ -479,6 +480,7 @@ class CohortController extends Controller
                 ]),
                 'live_sessions' => $cohort->liveSessions->map(fn($s) => [
                     'id'            => $s->id,
+                    'uuid'          => $s->uuid,
                     'title'         => $s->title,
                     'session_date'  => $s->session_date,
                     'platform'      => $s->platform,
@@ -557,6 +559,7 @@ class CohortController extends Controller
     {
         return response()->json(['data' => $cohort->liveSessions->map(fn($s) => [
             'id'           => $s->id,
+            'uuid'         => $s->uuid,
             'title'        => $s->title,
             'session_date' => $s->session_date,
             'platform'     => $s->platform,

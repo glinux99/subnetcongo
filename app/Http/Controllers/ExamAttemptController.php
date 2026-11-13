@@ -8,6 +8,8 @@ use App\Models\Question;
 use App\Models\ExamAttempt;
 use App\Models\Submission;
 use App\Models\ExamResult;
+use App\Models\Lesson;
+use App\Models\UserProgress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -366,6 +368,43 @@ public function index()
                     $eventClass::dispatch($result, $attempt);
                 } catch (\Throwable $e) {
                     \Log::warning('Exam result email dispatch failed: ' . $e->getMessage());
+                }
+            }
+
+            // Retour à la formation : on ramène l'étudiant dans le parcours, pas sur sa copie.
+            // Le score est affiché en bannière sur le player + lien vers le détail du résultat.
+            if ($exam->course_id) {
+                // Leçon reliée à cet examen (quiz de module / leçon de type quiz)
+                $lesson = Lesson::where('quiz_id', $exam->id)
+                    ->whereHas('module', fn ($q) => $q->where('course_id', $exam->course_id))
+                    ->first();
+
+                // Sinon : reprendre à la première leçon non terminée du cours
+                if (! $lesson) {
+                    $completedLessonIds = UserProgress::where('user_id', $attempt->user_id)
+                        ->where('course_id', $exam->course_id)
+                        ->where('progress_percent', '>=', 100)
+                        ->pluck('lesson_id');
+                    $lesson = Lesson::whereHas('module', fn ($q) => $q->where('course_id', $exam->course_id))
+                        ->whereNotIn('id', $completedLessonIds)
+                        ->orderBy('order')
+                        ->first()
+                        // Dernier recours : première leçon du cours
+                        ?: Lesson::whereHas('module', fn ($q) => $q->where('course_id', $exam->course_id))
+                            ->orderBy('order')
+                            ->first();
+                }
+
+                if ($lesson) {
+                    session()->flash('exam_result', [
+                        'exam_title' => $exam->title,
+                        'score' => (float) $scorePercentage,
+                        'pass_percentage' => (float) $exam->pass_percentage,
+                        'is_passed' => $isPassed,
+                        'needs_review' => $hasManualGrading,
+                        'result_url' => route('exams.results', $result->uuid),
+                    ]);
+                    return redirect()->route('student.lesson-player', [$exam->course_id, $lesson->id]);
                 }
             }
 

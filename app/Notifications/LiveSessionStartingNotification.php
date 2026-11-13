@@ -29,7 +29,7 @@ class LiveSessionStartingNotification extends BaseNotification implements Should
             'message' => "« {$this->sessionTitle} » commence bientôt. Rejoignez la salle !",
             'icon' => 'pi-video',
             'severity' => 'info',
-            'url' => $this->joinUrl ?: route('live-sessions.show', $this->sessionId),
+            'url' => $this->joinUrl ?: route('live-sessions.mine'),
             'session_id' => $this->sessionId,
         ];
     }

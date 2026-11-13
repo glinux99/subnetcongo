@@ -6,10 +6,10 @@ import { useI18n } from 'vue-i18n';
 
 const { t, locale } = useI18n();
 
-const props = defineProps({ sessions: Array });
+const props = defineProps({ sessions: Array, timezone: { type: String, default: 'Africa/Lubumbashi' } });
 
 const formatDate = (value) => value
-    ? new Date(value).toLocaleString(locale.value, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    ? new Date(value).toLocaleString(locale.value, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: props.timezone })
     : t('pages.live_sessions_public.date_tbc');
 </script>
 

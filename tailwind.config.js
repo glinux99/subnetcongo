@@ -27,5 +27,5 @@ export default {
         }
     },
 
-    plugins: [forms, require('tailwindcss-primeui')],
+    plugins: [forms({ strategy: 'class' }), require('tailwindcss-primeui')],
 };

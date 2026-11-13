@@ -21,9 +21,7 @@ use App\Models\ChatGroup;
 use App\Models\Message;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\Quiz;
-use App\Models\Question;
-use App\Models\QuestionOption;
+use App\Models\Course;
 
 class ForumController extends Controller
 {
@@ -58,6 +56,13 @@ class ForumController extends Controller
             ->orderByDesc('is_pinned');
 
         // 2. CHAT : Contacts & Groupes
+        $unreadCounts = Message::where('receiver_id', $user->id)
+            ->where('is_read', false)
+            ->whereNotNull('sender_id')
+            ->selectRaw('sender_id, COUNT(*) as aggregate')
+            ->groupBy('sender_id')
+            ->pluck('aggregate', 'sender_id');
+
         $contacts = User::where('id', '!=', $user->id)
             ->whereHas('roles', fn($q) => $q->whereIn('name', ['instructor', 'student']))
             ->select('id', 'name')
@@ -70,6 +75,7 @@ class ForumController extends Controller
                 'avatar_path' => optional($c->profile)->avatar_path ? asset('media/'.$c->profile->avatar_path) : null,
                 'role'        => $c->hasRole('instructor') ? 'instructor' : 'student',
                 'is_online'   => cache()->has('user-is-online-' . $c->id),
+                'unread_count' => (int) ($unreadCounts[$c->id] ?? 0),
             ]);
 
         $chatGroups = $user->chatGroups()->withCount('members')->get()->map(fn($g) => [
@@ -103,31 +109,61 @@ class ForumController extends Controller
         $assignments = [];
         $instructorAssignments = [];
         $activeCourses = [];
+        $formCourses = [];
 
         if ($isInstructor) {
+            // Cours proposables dans les formulaires devoir/quiz
+            $formCourses = Course::query()
+                ->when(! $user->hasRole('admin') && ! $user->hasRole('superadmin'), fn($q) => $q->where('instructor_id', $user->id))
+                ->select('id', 'title')
+                ->latest()
+                ->limit(200)
+                ->get();
+
             $instructorAssignments = Assignment::where('instructor_id', $user->id)
-                ->with('course:id,title')
-                ->withCount(['submissions', 'submissions as needs_grading_count' => fn($q) => $q->where('is_graded', false)])
-                ->latest()->get();
+                ->with(['course:id,title', 'assignmentSubmissions' => fn($q) => $q->where('is_graded', false)->with('student:id,name')])
+                ->withCount(['assignmentSubmissions', 'assignmentSubmissions as needs_grading_count' => fn($q) => $q->where('is_graded', false)])
+                ->latest()->get()
+                ->map(fn($a) => [
+                    'id'           => $a->id,
+                    'title'        => $a->title,
+                    'instructions' => $a->description,
+                    'due_date'     => $a->due_at,
+                    'max_score'    => $a->max_points,
+                    'type'         => $a->type ?? 'file',
+                    'course'       => $a->course,
+                    'needs_grading_count' => $a->needs_grading_count,
+                    'pending_submissions' => $a->assignmentSubmissions->map(fn($s) => [
+                        'id'              => $s->id,
+                        'student'         => $s->student ? ['id' => $s->student->id, 'name' => $s->student->name] : null,
+                        'file_name'       => $s->file_name,
+                        'student_comment' => $s->student_comment,
+                        'submitted_at'    => $s->submitted_at,
+                        'score'           => $s->score,
+                    ])->values(),
+                ]);
         } else {
             $activeCourses = $user->enrolledCourses()->wherePivot('status', 'active')->get();
             $assignments = Assignment::with('course:id,title')
-                ->whereHas('course.students', fn($q) => $q->where('user_id', $user->id))
+                ->whereHas('course.students', fn($q) => $q->where('user_id', $user->id)->where('enrollments.status', 'active'))
+                ->with(['assignmentSubmissions' => fn($q) => $q->where('student_id', $user->id)])
                 ->latest()->get()->map(function ($assignment) use ($user) {
-                    $submission = $assignment->submissions()->where('student_id', $user->id)->first();
+                    $submission = $assignment->assignmentSubmissions->first();
                     $status = 'pending';
                     if ($submission) $status = $submission->is_graded ? 'graded' : 'submitted';
-                    elseif ($assignment->due_date && Carbon::now()->isAfter($assignment->due_date)) $status = 'late';
+                    elseif ($assignment->due_at && Carbon::now()->isAfter($assignment->due_at)) $status = 'late';
 
                     return [
                         'id'           => $assignment->id,
                         'title'        => $assignment->title,
-                        'instructions' => $assignment->instructions,
-                        'due_date'     => $assignment->due_date,
+                        'instructions' => $assignment->description,
+                        'due_date'     => $assignment->due_at,
+                        'max_score'    => $assignment->max_points,
                         'status'       => $status,
                         'type'         => $assignment->type ?? 'file',
                         'course'       => $assignment->course,
                         'score'        => $submission->score ?? null,
+                        'questions'    => $assignment->type === 'quiz' ? (($assignment->settings ?? [])['questions'] ?? []) : [],
                     ];
                 });
         }
@@ -164,6 +200,7 @@ class ForumController extends Controller
             'assignments'         => $assignments,
             'instructorAssignments'=> $instructorAssignments,
             'activeCourses'       => $activeCourses,
+            'formCourses'         => $formCourses,
             'stats'               => $stats,
         ];
     }
@@ -407,10 +444,15 @@ class ForumController extends Controller
             'allow_late'   => 'boolean'
         ]);
 
-        Assignment::create([
-            ...$validated,
+        $assignment = Assignment::create([
+            'title'         => $validated['title'],
+            'course_id'     => $validated['course_id'],
             'instructor_id' => Auth::id(),
-            'type'          => 'file'
+            'description'   => $validated['instructions'],
+            'due_at'        => $validated['due_date'],
+            'max_points'    => $validated['max_score'] ?? 100,
+            'type'          => 'file',
+            'settings'      => ['allow_late' => (bool) ($validated['allow_late'] ?? false)],
         ]);
 
         return Redirect::back()->with('success', 'Devoir publié.');
@@ -434,42 +476,82 @@ class ForumController extends Controller
             'questions.*.options.*.is_correct' => 'required|boolean',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $quiz = Quiz::create([
-                'title'              => $validated['title'],
-                'course_id'          => $validated['course_id'],
-                'instructor_id'      => Auth::id(),
-                'description'        => $validated['description'],
+        // Le QCM est stocké dans settings->questions de l'assignment
+        // (pas de tables dédiées) : ids stables q1/q1o1… pour la notation.
+        $questions = collect($validated['questions'])->values()->map(function ($q, $qi) {
+            return [
+                'id'     => 'q' . ($qi + 1),
+                'text'   => $q['text'],
+                'points' => (int) $q['points'],
+                'options' => collect($q['options'])->values()->map(fn($o, $oi) => [
+                    'id'         => 'q' . ($qi + 1) . 'o' . ($oi + 1),
+                    'text'       => $o['text'],
+                    'is_correct' => (bool) $o['is_correct'],
+                ])->all(),
+            ];
+        })->all();
+
+        Assignment::create([
+            'title'         => $validated['title'],
+            'course_id'     => $validated['course_id'],
+            'instructor_id' => Auth::id(),
+            'description'   => $validated['description'] ?? 'Examen QCM.',
+            'type'          => 'quiz',
+            'max_points'    => 100,
+            'settings'      => [
                 'time_limit_minutes' => $validated['time_limit_minutes'],
                 'passing_score'      => $validated['passing_score'],
-            ]);
-
-            // Lier le Quiz en tant qu'Assignment (Architecture mixte)
-            Assignment::create([
-                'title'         => "[QUIZ] " . $validated['title'],
-                'course_id'     => $validated['course_id'],
-                'instructor_id' => Auth::id(),
-                'instructions'  => $validated['description'] ?? 'Examen QCM.',
-                'type'          => 'quiz',
-                'quiz_id'       => $quiz->id, // Clé étrangère
-            ]);
-
-            foreach ($validated['questions'] as $qData) {
-                $question = $quiz->questions()->create([
-                    'text'   => $qData['text'],
-                    'points' => $qData['points']
-                ]);
-
-                foreach ($qData['options'] as $oData) {
-                    $question->options()->create([
-                        'text'       => $oData['text'],
-                        'is_correct' => $oData['is_correct']
-                    ]);
-                }
-            }
-        });
+                'questions'          => $questions,
+            ],
+        ]);
 
         return Redirect::back()->with('success', 'Interrogation générée.');
+    }
+
+    /**
+     * Soumission d'un QCM : notation automatique côté serveur.
+     */
+    public function submitQuiz(Request $request)
+    {
+        $validated = $request->validate([
+            'assignment_id' => 'required|exists:assignments,id',
+            'answers'       => 'required|array',
+            'answers.*'     => 'nullable|string',
+        ]);
+
+        $assignment = Assignment::where('type', 'quiz')->findOrFail($validated['assignment_id']);
+
+        $isStaff = Auth::user()->hasRole(['instructor', 'admin', 'superadmin']);
+        $enrolled = DB::table('enrollments')
+            ->where('user_id', Auth::id())
+            ->where('course_id', $assignment->course_id)
+            ->where('status', 'active')
+            ->exists();
+        abort_unless($isStaff || $enrolled, 403);
+
+        $questions = ($assignment->settings ?? [])['questions'] ?? [];
+        $totalPoints = collect($questions)->sum('points') ?: 100;
+        $earned = 0;
+
+        foreach ($questions as $q) {
+            $correct = collect($q['options'])->firstWhere('is_correct', true);
+            if ($correct && ($validated['answers'][$q['id']] ?? null) === $correct['id']) {
+                $earned += $q['points'];
+            }
+        }
+
+        AssignmentSubmission::updateOrCreate(
+            ['assignment_id' => $assignment->id, 'student_id' => Auth::id()],
+            [
+                'file_name'    => 'quiz_submission',
+                'score'        => round($earned / $totalPoints * 100, 2),
+                'is_graded'    => true,
+                'submitted_at' => now(),
+                'graded_at'    => now(),
+            ]
+        );
+
+        return Redirect::back()->with('success', 'Quiz soumis.');
     }
 
     public function submitAssignment(Request $request)
@@ -479,6 +561,15 @@ class ForumController extends Controller
             'submitted_file'  => 'required|file|max:20480',
             'student_comment' => 'nullable|string',
         ]);
+
+        $assignment = Assignment::findOrFail($validated['assignment_id']);
+        $isStaff = Auth::user()->hasRole(['instructor', 'admin', 'superadmin']);
+        $enrolled = DB::table('enrollments')
+            ->where('user_id', Auth::id())
+            ->where('course_id', $assignment->course_id)
+            ->where('status', 'active')
+            ->exists();
+        abort_unless($isStaff || $enrolled, 403);
 
         AssignmentSubmission::updateOrCreate(
             ['assignment_id' => $validated['assignment_id'], 'student_id' => Auth::id()],

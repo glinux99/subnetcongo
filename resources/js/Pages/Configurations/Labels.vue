@@ -18,7 +18,7 @@ import Toolbar from 'primevue/toolbar';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import Tag from 'primevue/tag';
 import Divider from 'primevue/divider';
 import Checkbox from 'primevue/checkbox';
@@ -249,7 +249,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
             </div>
 
             <div class="bg-white rounded-[1rem] shadow-xl border border-slate-200 overflow-hidden">
-                <ConfirmDialog />
+                <SncConfirmDialog />
 
                 <DataTable ref="dt"
                     :value="labels.data"

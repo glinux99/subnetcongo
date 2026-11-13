@@ -43,7 +43,7 @@ class LearningPathController extends Controller
         $query = LearningPath::with([
             'category',
             'courses' => function ($q) {
-                $q->select('courses.id', 'title', 'thumbnail_path', 'level', 'category_id', 'estimated_duration')->withCount('students');
+                $q->select('courses.id', 'slug', 'title', 'thumbnail_path', 'level', 'category_id', 'estimated_duration')->withCount('students');
             },
             // On charge les cohortes et leurs étudiants
             'cohorts.students' => function ($studentQuery) {
@@ -89,7 +89,7 @@ class LearningPathController extends Controller
                 ->withCount('students')
                 ->orderBy('title')
 
-                ->get(['id', 'title', 'thumbnail_path', 'level', 'category_id', 'estimated_duration', 'students_count']),
+                ->get(['id', 'slug', 'title', 'thumbnail_path', 'level', 'category_id', 'estimated_duration', 'students_count']),
             'users' => User::role('student')->get(['id', 'name', 'email', 'avatar']),
             'stats' => $this->getGlobalStats(),
             'filters' => $request->only(['search', 'category_id', 'level', 'status']),

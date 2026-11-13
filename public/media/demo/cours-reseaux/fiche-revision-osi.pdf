@@ -1,0 +1,72 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 1381 >>
+stream
+BT 0.1 g /F2 18 Tf 50 752 Td (Fiche de revision - Modele OSI et TCP/IP) Tj ET
+BT 0.35 g /F1 10 Tf 50 724 Td (SubNetCongo e-Learning - Formation Reseaux) Tj ET
+BT 0.05 g /F2 11 Tf 50 705 Td (LES 7 COUCHES \(MODELE OSI\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 689.5 Td (7  Application    HTTP, DNS, SMTP, FTP         -> donnees) Tj ET
+BT 0.15 g /F1 10 Tf 50 674 Td (6  Presentation    TLS/SSL, encodage, JPEG       -> donnees) Tj ET
+BT 0.15 g /F1 10 Tf 50 658.5 Td (5  Session         dialogues, sessions            -> donnees) Tj ET
+BT 0.15 g /F1 10 Tf 50 643 Td (4  Transport       TCP / UDP, ports               -> segments) Tj ET
+BT 0.15 g /F1 10 Tf 50 627.5 Td (3  Reseau          IP, ICMP, routage              -> paquets) Tj ET
+BT 0.15 g /F1 10 Tf 50 612 Td (2  Liaison         Ethernet, MAC, ARP, switch     -> trames) Tj ET
+BT 0.15 g /F1 10 Tf 50 596.5 Td (1  Physique        cables, fibre, radio, bits     -> bits) Tj ET
+BT 0.05 g /F2 11 Tf 50 561.5 Td (MODELE TCP/IP \(4 COUCHES\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 546 Td (Application   = OSI 5 + 6 + 7) Tj ET
+BT 0.15 g /F1 10 Tf 50 530.5 Td (Transport     = OSI 4 \(TCP, UDP\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 515 Td (Internet      = OSI 3 \(IP, ICMP\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 499.5 Td (Acces reseau  = OSI 1 + 2 \(Ethernet, MAC\)) Tj ET
+BT 0.5 g /F1 8 Tf 50 487.5 Td (Page 1/2  -  SubNetCongo e-Learning - usage pedagogique) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 901 >>
+stream
+BT 0.05 g /F2 11 Tf 50 745 Td (PORTS A CONNAITRE) Tj ET
+BT 0.15 g /F1 10 Tf 50 729.5 Td (HTTP 80    HTTPS 443    DNS 53    SSH 22) Tj ET
+BT 0.15 g /F1 10 Tf 50 714 Td (SMTP 25    FTP 21       TELNET 23 DHCP 67/68) Tj ET
+BT 0.05 g /F2 11 Tf 50 679 Td (ENCAPSULATION \(A RETENIR PAR COEUR\)) Tj ET
+BT 0.15 g /F1 10 Tf 50 663.5 Td (Donnees -> Segment -> Paquet -> Trame -> Bits) Tj ET
+BT 0.05 g /F2 11 Tf 50 628.5 Td (QUI FAIT QUOI ?) Tj ET
+BT 0.15 g /F1 10 Tf 50 613 Td (Switch : couche 2, lit les adresses MAC.) Tj ET
+BT 0.15 g /F1 10 Tf 50 597.5 Td (Routeur : couche 3, lit les adresses IP, reecrit les trames.) Tj ET
+BT 0.15 g /F1 10 Tf 50 582 Td (Pare-feu : filtre les flux \(ports, adresses, applications\).) Tj ET
+BT 0.15 g /F1 10 Tf 50 566.5 Td (Access point : pont Wi-Fi vers le reseau filaire.) Tj ET
+BT 0.5 g /F1 8 Tf 50 554.5 Td (Page 2/2  -  SubNetCongo e-Learning - usage pedagogique) Tj ET
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000000402 00000 n 
+0000001835 00000 n 
+0000001971 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+2923
+%%EOF

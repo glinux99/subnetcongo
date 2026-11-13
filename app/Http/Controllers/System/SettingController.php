@@ -4,89 +4,103 @@ namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
-use App\Models\Setting; // Modèle clé-valeur (key, value, group, type)
+use App\Support\SystemSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use DateTimeZone;
-use App\Services\Video\VideoProviderConfig;
-use App\Services\Video\ZoomService;
-use App\Services\Video\GoogleMeetService;
-use App\Services\Video\BbbService;
-use App\Services\Video\JitsiService;
-use App\Services\LiveKit\LiveKitService;
 
 class SettingController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('permission:manage-settings');
-    }
+    /**
+     * Payload keys that are accepted (defence in depth) for the settings form.
+     */
+    private const ALLOWED_KEYS = [
+        'general'  => ['site_name', 'site_slogan', 'site_description', 'contact_email', 'phone', 'address', 'city', 'timezone', 'locale'],
+        'branding' => ['primary_color', 'secondary_color', 'logo_url', 'favicon_url', 'site_logo'],
+        'lms'      => ['enable_certificates', 'certificate_prefix', 'min_pass_score', 'auto_enroll_on_payment', 'allow_course_preview', 'video_watermark'],
+        'localization' => ['default_language', 'timezone', 'currency', 'currency_symbol', 'date_format'],
+        'mail'     => ['driver', 'host', 'port', 'username', 'password', 'encryption', 'from_name', 'from_address', 'mailgun_domain', 'mailgun_secret'],
+        'security' => ['enable_registration', 'force_2fa', 'enable_captcha', 'ip_whitelist', 'session_timeout'],
+        'advanced' => ['maintenance_mode', 'debug_mode'],
+    ];
 
     /**
      * Affiche la page principale des paramètres groupés par catégorie.
-     *
-     * @return \Inertia\Response
      */
     public function index()
     {
-        // Récupérer tous les paramètres et les grouper
-        $settings = Setting::all()->groupBy('group');
+        $all = SystemSettings::all();
 
-        // Structure par défaut si la BDD est vide
-        $defaults = [
+        $settings = [
             'general' => [
-                'site_name' => config('app.name'),
-                'site_description' => 'Plateforme ERP & E-learning',
-                'contact_email' => 'admin@subnetcongo.cd',
-                'support_phone' => '+243000000000',
-                'timezone' => config('app.timezone', 'Africa/Kinshasa'), // Ajouté pour éviter une erreur Vue
-                'language' => config('app.locale', 'fr'), // Ajouté pour éviter une erreur Vue
+                'site_name' => $all['general_site_name'] ?? $all['site_name'] ?? 'SubnetCongo',
+                'site_slogan' => $all['general_site_slogan'] ?? $all['site_tagline'] ?? $all['general_site_slogan'] ?? '',
+                'site_description' => $all['general_site_description'] ?? $all['site_description'] ?? '',
+                'contact_email' => $all['general_contact_email'] ?? $all['contact_email'] ?? 'admin@subnetcongo.net',
+                'site_slogan_hidden' => '',
+                'phone' => $all['general_contact_phone'] ?? $all['contact_phone'] ?? '+243 973 359 648',
+                'address' => $all['general_address_line'] ?? $all['address_line'] ?? 'Goma, République Démocratique du Congo',
+                'city' => $all['city'] ?? 'Goma',
+                'timezone' => $all['timezone'] ?? 'Africa/Lubumbashi',
+                'locale' => $all['locale'] ?? 'fr',
             ],
             'branding' => [
-                'logo_url' => null,
-                'favicon_url' => null,
-                'primary_color' => '#3b82f6',
+                'primary_color' => $all['primary_color'] ?? '#E1251B',
+                'secondary_color' => $all['secondary_color'] ?? '#2563EB',
+                'logo_url' => $all['site_logo'] ?? $all['logo_url'] ?? '/media/lms/logo-subnetcongo.png',
+                'favicon_url' => $all['site_favicon'] ?? '/favicon.ico',
             ],
-            'security' => [
-                'allow_registration' => true,
-                'email_verification' => true,
-                '2fa_required_admins' => false,
+            'lms' => [
+                'enable_certificates' => (bool) ($all['enable_certificates'] ?? '1'),
+                'certificate_prefix' => $all['certificate_prefix'] ?? 'SC',
+                'min_pass_score' => (float) ($all['min_pass_score'] ?? 60),
+                'auto_enroll_on_payment' => (bool) ($all['auto_enroll_on_payment'] ?? '0'),
+                'allow_course_preview' => (bool) ($all['allow_course_preview'] ?? '1'),
+                'video_watermark' => (bool) ($all['video_watermark'] ?? '0'),
+            ],
+            'localization' => [
+                'default_language' => $all['default_language'] ?? ($all['locale'] ?? 'fr'),
+                'timezone' => $all['timezone'] ?? 'Africa/Lubumbashi',
+                'currency' => $all['currency'] ?? 'CDF',
+                'currency_symbol' => $all['currency_symbol'] ?? 'FC',
+                'date_format' => $all['date_format'] ?? 'd/m/Y',
             ],
             'mail' => [
-                'driver' => config('mail.default', 'smtp'),
-                'host' => config('mail.mailers.smtp.host', 'smtp.mailtrap.io'),
-                'port' => config('mail.mailers.smtp.port', 2525),
-                'username' => config('mail.mailers.smtp.username', ''),
-                'from_address' => config('mail.from.address', 'hello@example.com'),
+                'driver' => $all['mail_driver'] ?? 'smtp',
+                'host' => $all['mail_host'] ?? '',
+                'port' => (int) ($all['mail_port'] ?? 587),
+                'username' => $all['mail_username'] ?? 'admin@subnetcongo.net',
+                'password' => $all['mail_password'] ?? '',
+                'encryption' => $all['mail_encryption'] ?? 'tls',
+                'from_name' => $all['mail_from_name'] ?? 'SubnetCongo Academy',
+                'from_address' => $all['mail_from_address'] ?? 'admin@subnetcongo.net',
+                'mailgun_domain' => $all['mailgun_domain'] ?? '',
+                'mailgun_secret' => $all['mailgun_secret'] ?? '',
             ],
-            'payment' => [
-                'currency' => 'CDF',
-                'symbol' => 'FC',
-            ]
+            'security' => [
+                'enable_registration' => (bool) ($all['enable_registration'] ?? '1'),
+                'force_2fa' => (bool) ($all['force_2fa'] ?? '0'),
+                'enable_captcha' => (bool) ($all['enable_captcha'] ?? '0'),
+                'ip_whitelist' => $all['ip_whitelist'] ?? '',
+                'session_timeout' => (int) ($all['session_timeout'] ?? 120),
+            ],
+            'advanced' => [
+                'maintenance_mode' => (bool) ($all['maintenance_mode'] ?? '0'),
+                'debug_mode' => (bool) ($all['debug_mode'] ?? '0'),
+            ],
         ];
 
-        // Fusionner avec les valeurs BDD
-        $mergedSettings = [];
-        foreach ($defaults as $group => $keys) {
-            foreach ($keys as $key => $default) {
-                $dbSetting = $settings->get($group)?->where('key', $key)->first();
-                $mergedSettings[$group][$key] = $dbSetting ? $this->castValue($dbSetting->value, $dbSetting->type) : $default;
-            }
-        }
-
-        // --- CORRECTION ICI : GÉNÉRATION DES LISTES POUR LES DROPDOWNS VUE.JS ---
         $lists = [
             'languages' => [
                 ['value' => 'fr', 'label' => 'Français'],
                 ['value' => 'en', 'label' => 'Anglais (English)'],
             ],
-            // Génère la liste de tous les fuseaux horaires mondiaux
-            'timezones' => array_map(fn($tz) => ['value' => $tz, 'label' => $tz], DateTimeZone::listIdentifiers()),
+            'timezones' => array_map(fn ($tz) => ['value' => $tz, 'label' => $tz], timezone_identifiers_list()),
             'currencies' => [
                 ['value' => 'CDF', 'label' => 'Franc Congolais (CDF)'],
                 ['value' => 'USD', 'label' => 'Dollar Américain (USD)'],
@@ -97,200 +111,169 @@ class SettingController extends Controller
                 ['value' => 'mailgun', 'label' => 'Mailgun'],
                 ['value' => 'sendmail', 'label' => 'Sendmail'],
                 ['value' => 'log', 'label' => 'Log (Développement)'],
-            ]
+            ],
         ];
 
+        $health = 100;
+        if (! $settings['security']['force_2fa']) {
+            $health -= 15;
+        }
+        if ($settings['advanced']['debug_mode']) {
+            $health -= 25;
+        }
+        if (! $settings['security']['enable_captcha']) {
+            $health -= 10;
+        }
+        if (empty($settings['mail']['host'])) {
+            $health -= 10;
+        }
+
         return Inertia::render('System/Settings', [
-            'settings' => $mergedSettings,
+            'settings' => $settings,
             'env_type' => config('app.env'),
-            
-            // On envoie les listes de deux manières pour couvrir toutes les syntaxes possibles de votre fichier Vue.js
-            'dictionaries' => $lists, 
-            'languages' => $lists['languages'],
-            'timezones' => $lists['timezones'],
-            'currencies' => $lists['currencies'],
-            'mailDrivers' => $lists['mailDrivers'],
+            'health_score' => $health,
+            'dictionaries' => $lists,
         ]);
     }
 
     /**
-     * Met à jour un groupe de paramètres.
+     * Enregistre l'ensemble du formulaire (tous les onglets).
+     * Écrit directement dans `web_settings`.
      */
-    public function update(Request $request, string $group)
+    public function update(Request $request)
     {
-        $rules = match ($group) {
-            'general' => [
-                'site_name' => 'required|string|max:50',
-                'contact_email' => 'required|email',
-            ],
-            'mail' => [
-                'host' => 'required|string',
-                'port' => 'required|numeric',
-                'from_address' => 'required|email',
-            ],
-            'security' => [
-                'allow_registration' => 'boolean',
-            ],
-            default => [],
-        };
-
-        if (!empty($rules)) {
-            $request->validate($rules);
-        }
-
-        DB::beginTransaction();
-        try {
-            foreach ($request->all() as $key => $value) {
-                if (in_array($key, ['_method', '_token'])) continue;
-
-                $type = 'string';
-                if (is_bool($value)) $type = 'boolean';
-                elseif (is_numeric($value)) $type = 'integer';
-                elseif (is_array($value)) $type = 'json';
-
-                Setting::updateOrCreate(
-                    ['group' => $group, 'key' => $key],
-                    ['value' => $value, 'type' => $type]
-                );
+        $validatedGroups = [];
+        foreach (self::ALLOWED_KEYS as $group => $keys) {
+            if (! $request->has($group)) {
+                continue;
             }
-
-            Cache::forget('system_settings');
-
-            AuditLog::create([
-                'user_id' => auth()->id(),
-                'event' => 'settings_updated',
-                'auditable_type' => 'System',
-                'auditable_id' => 0,
-                'new_values' => json_encode(['group' => $group]),
-                'ip_address' => $request->ip(),
-            ]);
-
-            DB::commit();
-
-            return back()->with('success', "Paramètres du groupe '$group' mis à jour.");
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Erreur de sauvegarde : ' . $e->getMessage());
+            $data = $request->input($group);
+            $clean = [];
+            foreach ($keys as $key) {
+                if (array_key_exists($key, (array) $data)) {
+                    $clean[$key] = $data[$key];
+                }
+            }
+            if (! empty($clean)) {
+                $validatedGroups[$group] = $clean;
+            }
         }
+
+        if (empty($validatedGroups)) {
+            return back()->with('error', 'Aucun paramètre valide reçu.');
+        }
+
+        // Un minimum de validation métier
+        $mail = $validatedGroups['mail'] ?? [];
+        if (! empty($mail)) {
+            if (isset($mail['host']) && $mail['host'] === '') {
+                // allowed in dev / local
+            }
+            if (isset($mail['port']) && ! is_numeric($mail['port'])) {
+                return back()->withErrors(['mail.port' => 'Le port doit être un nombre.']);
+            }
+        }
+
+        // Assert: valid certificate_prefix is 1-10 uppercase letters/digits
+        if (! empty($validatedGroups['lms']['certificate_prefix'])) {
+            $prefix = trim((string) $validatedGroups['lms']['certificate_prefix']);
+            if (! preg_match('/^[A-Za-z0-9_-]{1,10}$/', $prefix)) {
+                return back()->withErrors(['lms.certificate_prefix' => 'Le préfixe doit être alphanumérique (1-10 caractères).']);
+            }
+            $validatedGroups['lms']['certificate_prefix'] = $prefix;
+        }
+
+        // Persistance
+        $flat = [];
+        foreach ($validatedGroups as $group => $data) {
+            foreach ($data as $key => $value) {
+                $storageKey = match ($key) {
+                    'site_name' => 'general_site_name',
+                    'site_slogan' => 'general_site_slogan',
+                    'site_description' => 'general_site_description',
+                    'contact_email' => 'general_contact_email',
+                    'phone' => 'general_contact_phone',
+                    'address' => 'general_address_line',
+                    'city' => 'city',
+                    'timezone' => 'timezone',
+                    'locale' => 'locale',
+                    'primary_color' => 'primary_color',
+                    'secondary_color' => 'secondary_color',
+                    'logo_url' => 'site_logo',
+                    'favicon_url' => 'site_favicon',
+                    'site_logo' => 'site_logo',
+                    default => $key,
+                };
+                $flat[$storageKey] = $value;
+            }
+        }
+        SystemSettings::setMany($flat);
+
+        Cache::forever('maintenance_mode', (bool) ($validatedGroups['advanced']['maintenance_mode'] ?? false));
+        Cache::forever('lms_settings', $validatedGroups['lms'] ?? []);
+
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'event' => 'settings_updated',
+            'auditable_type' => 'System',
+            'auditable_id' => 0,
+            'new_values' => json_encode($validatedGroups),
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', 'Paramètres système enregistrés.');
     }
 
-    /**
-     * Upload du logo ou favicon.
-     */
     public function uploadLogo(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:logo,favicon',
-            'file' => 'required|image|max:2048|mimes:png,jpg,ico,svg',
+            'logo' => 'required|image|max:2048|mimes:png,jpg,jpeg,svg,webp',
         ]);
 
-        $type = $request->input('type');
-        $path = $request->file('file')->store('branding', 'public');
-        $url = Storage::url($path);
-
-        Setting::updateOrCreate(
-            ['group' => 'branding', 'key' => $type . '_url'],
-            ['value' => $url, 'type' => 'string']
-        );
-
-        return back()->with('success', ucfirst($type) . ' mis à jour avec succès.');
-    }
-
-    /**
-     * Envoie un email de test.
-     */
-    public function testEmail(Request $request)
-    {
-        $request->validate(['email' => 'required|email']);
-
         try {
-            Mail::raw('Ceci est un email de test du système SubnetCongo.', function ($message) use ($request) {
-                $message->to($request->input('email'))
-                        ->subject('Test de configuration SMTP');
-            });
+            $file = $request->file('logo');
+            $name = 'uploads/branding/logo-' . now()->format('Ymd-His') . '.' . strtolower($file->getClientOriginalExtension());
+            $file->storeAs('', $name, 'media');
+            $url = '/media/' . $name;
 
-            return back()->with('success', 'Email de test envoyé à ' . $request->input('email'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Échec de l\'envoi : ' . $e->getMessage());
+            SystemSettings::setMany(['site_logo' => $url, 'logo_url' => $url]);
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'event' => 'logo_uploaded',
+                'auditable_type' => 'System',
+                'auditable_id' => 0,
+                'ip_address' => $request->ip(),
+            ]);
+
+            return back()->with('success', 'Logo mis à jour.');
+        } catch (\Throwable $e) {
+            Log::error('logo_upload_fail', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Échec du téléversement du logo.');
         }
     }
 
-    /**
-     * Exporte la configuration.
-     */
-    public function backupConfig()
+    public function toggleMaintenance(Request $request)
     {
-        $settings = Setting::all()->groupBy('group');
-        $fileName = 'settings_backup_' . date('Y-m-d') . '.json';
+        $toggle = $request->boolean('enable', ! (bool) SystemSettings::get('maintenance_mode', '0'));
+        SystemSettings::setMany(['maintenance_mode' => $toggle ? '1' : '0']);
 
-        return response()->streamDownload(function () use ($settings) {
-            echo $settings->toJson(JSON_PRETTY_PRINT);
-        }, $fileName);
-    }
-
-    /**
-     * Restaure une configuration.
-     */
-    public function restoreConfig(Request $request)
-    {
-        $request->validate(['file' => 'required|mimes:json']);
-
-        try {
-            $json = file_get_contents($request->file('file')->getRealPath());
-            $data = json_decode($json, true);
-
-            if (!is_array($data)) {
-                throw new \Exception("Format JSON invalide.");
-            }
-
-            DB::beginTransaction();
-            foreach ($data as $group => $items) {
-                foreach ($items as $item) {
-                    Setting::updateOrCreate(
-                        ['group' => $group, 'key' => $item['key']],
-                        ['value' => $item['value'], 'type' => $item['type']]
-                    );
-                }
-            }
-            DB::commit();
-            Cache::forget('system_settings');
-
-            return back()->with('success', 'Configuration restaurée avec succès.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Erreur de restauration : ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Affiche les variables d'environnement (masquées).
-     */
-    public function env()
-    {
-        $allowedKeys = [
-            'APP_NAME', 'APP_ENV', 'APP_DEBUG', 'APP_URL',
-            'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE',
-            'MAIL_MAILER', 'MAIL_HOST',
-            'QUEUE_CONNECTION',
-        ];
-
-        $envVars = [];
-        foreach ($allowedKeys as $key) {
-            $val = env($key);
-            if (in_array($key, ['DB_PASSWORD', 'MAIL_PASSWORD'])) {
-                $val = '********';
-            }
-            $envVars[$key] = $val;
+        if ($toggle) {
+            Artisan::call('down', ['--render' => 'errors::503']);
+        } else {
+            Artisan::call('up');
         }
 
-        return Inertia::render('System/Settings', [
-            'env_vars' => $envVars,
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'event' => $toggle ? 'maintenance_on' : 'maintenance_off',
+            'auditable_type' => 'System',
+            'auditable_id' => 0,
+            'ip_address' => $request->ip(),
         ]);
+
+        return back()->with('success', $toggle ? 'Site mis en maintenance.' : 'Site remis en ligne.');
     }
 
-    /**
-     * Vide le cache de l'application.
-     */
     public function clearCache()
     {
         Artisan::call('cache:clear');
@@ -301,9 +284,70 @@ class SettingController extends Controller
         return back()->with('success', 'Tous les caches système ont été vidés.');
     }
 
+    /**
+     * Commandes artisan pré-définies (pré-validées) + allowedText pour un ajout contrôlé.
+     */
+    public function artisanCommand(Request $request)
+    {
+        $request->validate([
+            'command' => 'required|string|in:cache:clear,config:clear,route:clear,view:clear,live-sessions:sweep,schedule:run,down,up,key:generate,migrate:status,storage:link',
+        ]);
+
+        $command = $request->input('command');
+        $start = microtime(true);
+        $output = '';
+        try {
+            Artisan::call($command);
+            $output = Artisan::output();
+        } catch (\Throwable $e) {
+            Log::error('artisan_command_fail', ['command' => $command, 'error' => $e->getMessage()]);
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'event' => 'artisan_command_failed',
+                'auditable_type' => 'System',
+                'auditable_id' => 0,
+                'new_values' => json_encode(['command' => $command, 'error' => $e->getMessage()]),
+                'ip_address' => $request->ip(),
+            ]);
+
+            return back()->with('error', 'Échec : ' . $e->getMessage());
+        }
+
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'event' => 'artisan_command_executed',
+            'auditable_type' => 'System',
+            'auditable_id' => 0,
+            'new_values' => json_encode([
+                'command' => $command,
+                'output' => mb_substr($output, 0, 8000),
+                'duration_ms' => (int) ((microtime(true) - $start) * 1000),
+            ]),
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', "Commande '$command' exécutée.")->with('output', mb_substr($output, 0, 8000));
+    }
+
+    public function testEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw('Ceci est un email de test du système SubnetCongo.', function ($message) use ($request) {
+                $message->to($request->input('email'))
+                        ->subject('Test de configuration SMTP');
+            });
+
+            return back()->with('success', 'Email de test envoyé à ' . $request->input('email'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Échec de l\'envoi : ' . $e->getMessage());
+        }
+    }
+
     public function video()
     {
-        $values = VideoProviderConfig::all();
+        $values = \App\Services\Video\VideoProviderConfig::all();
 
         $secretKeys = [
             'livekit_api_secret',
@@ -325,11 +369,11 @@ class SettingController extends Controller
             'settings' => $masked,
             'has_secret' => $hasSecret,
             'configured' => [
-                'livekit' => VideoProviderConfig::isConfigured('livekit'),
-                'zoom' => VideoProviderConfig::isConfigured('zoom'),
-                'meet' => VideoProviderConfig::isConfigured('meet'),
-                'bbb' => VideoProviderConfig::isConfigured('bbb'),
-                'jitsi' => VideoProviderConfig::isConfigured('jitsi'),
+                'livekit' => \App\Services\Video\VideoProviderConfig::isConfigured('livekit'),
+                'zoom' => \App\Services\Video\VideoProviderConfig::isConfigured('zoom'),
+                'meet' => \App\Services\Video\VideoProviderConfig::isConfigured('meet'),
+                'bbb' => \App\Services\Video\VideoProviderConfig::isConfigured('bbb'),
+                'jitsi' => \App\Services\Video\VideoProviderConfig::isConfigured('jitsi'),
             ],
         ]);
     }
@@ -357,17 +401,17 @@ class SettingController extends Controller
         $payload = [];
         foreach ($data as $key => $value) {
             if ($value === null || $value === '') {
-                continue; // On conserve les secrets déjà enregistrés.
+                continue; // conserve les secrets déjà enregistrés
             }
             $payload[$key] = is_string($value) ? trim($value) : $value;
         }
 
-        VideoProviderConfig::save($payload);
+        \App\Services\Video\VideoProviderConfig::save($payload);
 
-        Cache::forget('zoom_access_token');
-        Cache::forget('google_meet_access_token');
+        \Illuminate\Support\Facades\Cache::forget('zoom_access_token');
+        \Illuminate\Support\Facades\Cache::forget('google_meet_access_token');
 
-        AuditLog::create([
+        \App\Models\AuditLog::create([
             'user_id' => auth()->id(),
             'event' => 'video_providers_updated',
             'auditable_type' => 'System',
@@ -382,12 +426,12 @@ class SettingController extends Controller
     public function testVideoProvider(string $provider)
     {
         $result = match ($provider) {
-            'zoom' => app(ZoomService::class)->testConnection(),
-            'meet' => app(GoogleMeetService::class)->testConnection(),
-            'bbb' => app(BbbService::class)->testConnection(),
-            'jitsi' => app(JitsiService::class)->testConnection(),
+            'zoom' => app(\App\Services\Video\ZoomService::class)->testConnection(),
+            'meet' => app(\App\Services\Video\GoogleMeetService::class)->testConnection(),
+            'bbb' => app(\App\Services\Video\BbbService::class)->testConnection(),
+            'jitsi' => app(\App\Services\Video\JitsiService::class)->testConnection(),
             'livekit' => (function () {
-                $health = app(LiveKitService::class)->healthCheck();
+                $health = app(\App\Services\LiveKit\LiveKitService::class)->healthCheck();
 
                 return ($health['status'] ?? null) === 'ok'
                     ? ['success' => true, 'message' => 'Connexion LiveKit réussie (' . count($health['rooms'] ?? []) . ' salle(s)).']
@@ -397,18 +441,5 @@ class SettingController extends Controller
         };
 
         return response()->json($result);
-    }
-
-    /**
-     * Helper pour caster les valeurs depuis la BDD.
-     */
-    private function castValue($value, $type)
-    {
-        return match ($type) {
-            'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            'integer' => (int) $value,
-            'json' => json_decode($value, true),
-            default => $value,
-        };
     }
 }

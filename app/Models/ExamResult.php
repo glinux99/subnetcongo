@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class ExamResult extends Model
 {
@@ -14,6 +15,15 @@ class ExamResult extends Model
         return 'uuid';
     }
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $result) {
+            if (empty($result->uuid)) {
+                $result->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.

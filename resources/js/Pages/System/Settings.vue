@@ -27,7 +27,7 @@ import Button from 'primevue/button';
 import Divider from 'primevue/divider';
 import ColorPicker from 'primevue/colorpicker';
 import FileUpload from 'primevue/fileupload';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import Textarea from 'primevue/textarea';
 import SelectButton from 'primevue/selectbutton';
 import InlineMessage from 'primevue/inlinemessage';
@@ -73,7 +73,7 @@ const form = useForm({
 // --- MÉTHODES ---
 const submitSettings = () => {
     isSubmitting.value = true;
-    form.post(route('settings.update'), {
+    form.post(route('system.settings.update'), {
         preserveScroll: true,
         onSuccess: () => {
             isSubmitting.value = false;
@@ -107,7 +107,7 @@ const toggleMaintenance = (event) => {
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         accept: () => {
-            router.post(route('settings.maintenance.toggle'), {}, {
+            router.post(route('system.settings.maintenance.toggle'), {}, {
                 onSuccess: () => {
                     form.advanced.maintenance_mode = !form.advanced.maintenance_mode;
                     toast.add({ severity: form.advanced.maintenance_mode ? 'warn' : 'success', summary: t('pages.settings.maintenance_summary'), detail: t('pages.settings.maintenance_detail', { state: form.advanced.maintenance_mode ? t('pages.settings.system_offline') : t('pages.settings.system_online') }), life: 3000 });
@@ -119,7 +119,7 @@ const toggleMaintenance = (event) => {
 
 const clearCache = () => {
     loading.value = true;
-    router.post(route('settings.cache.clear'), {}, {
+    router.post(route('system.settings.cache.clear'), {}, {
         onSuccess: () => { loading.value = false; toast.add({ severity: 'success', summary: t('pages.settings.cache_purged'), detail: t('pages.settings.cache_purged_detail'), life: 3000 }); },
         onFinish: () => loading.value = false
     });
@@ -135,7 +135,7 @@ const sendTestEmail = () => {
 };
 
 const onLogoUpload = (event) => {
-    router.post(route('settings.logo.upload'), { logo: event.files[0] }, {
+    router.post(route('system.settings.logo.upload'), { logo: event.files[0] }, {
         forceFormData: true,
         onSuccess: () => toast.add({ severity: 'success', summary: t('pages.settings.upload_success'), detail: t('pages.settings.logo_updated'), life: 3000 })
     });
@@ -151,12 +151,40 @@ const siteHealth = computed(() => {
 });
 
 const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHealth.value > 50 ? 'warning' : 'danger');
+
+const output = ref('');
+const artisanRunning = ref(false);
+const artisanCommands = [
+    'cache:clear',
+    'config:clear',
+    'route:clear',
+    'view:clear',
+    'live-sessions:sweep',
+    'schedule:run',
+    'migrate:status',
+    'storage:link',
+    'key:generate',
+    'down',
+    'up',
+];
+const runArtisan = (cmd) => {
+    artisanRunning.value = cmd;
+    router.post(route('system.settings.artisan'), { command: cmd }, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            output.value = page.props?.flash?.output ?? '';
+            toast.add({ severity: 'success', summary: t('pages.settings.artisan_ok'), detail: cmd, life: 3000 });
+        },
+        onError: () => toast.add({ severity: 'error', summary: t('errors.error'), detail: t('pages.settings.artisan_failed'), life: 4000 }),
+        onFinish: () => { artisanRunning.value = null; },
+    });
+};
 </script>
 
 <template>
     <AppLayout>
         <Head :title="t('pages.settings.head_title')" />
-        <ConfirmDialog />
+        <SncConfirmDialog />
 
         <!-- DIALOG TEST EMAIL -->
         <Dialog v-model:visible="testEmailDialog" modal :header="t('pages.settings.smtp_test_header')" :style="{ width: '400px' }">
@@ -482,6 +510,19 @@ const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHe
                                             <p class="text-xs text-slate-500 leading-relaxed mb-6">{{ t('pages.settings.purge_cache_desc') }}</p>
                                         </div>
                                         <Button :label="t('pages.settings.clean_cache')" class="p-button-outlined p-button-secondary !rounded-lg w-full font-bold" @click="clearCache" :loading="loading" />
+                                    </div>
+
+                                    <div v-if="output" class="bg-slate-50 border border-slate-200 rounded-2xl p-6 col-span-2">
+                                        <h4 class="font-bold text-slate-900 mb-2"><i class="pi pi-terminal mr-2"></i> {{ t('pages.settings.artisan_output') }}</h4>
+                                        <pre class="text-xs bg-slate-900 text-slate-100 rounded-xl border border-slate-800 p-4 max-h-60 overflow-auto custom-scrollbar font-mono">{{ output }}</pre>
+                                    </div>
+
+                                    <div class="md:col-span-2 bg-slate-50 border border-slate-200 rounded-2xl p-8">
+                                        <h4 class="font-bold text-slate-900 mb-2"><i class="pi pi-command mr-2"></i> {{ t('pages.settings.artisan_commands') }}</h4>
+                                        <p class="text-xs text-slate-500 leading-relaxed mb-6">{{ t('pages.settings.artisan_commands_hint') }}</p>
+                                        <div class="flex flex-wrap gap-3">
+                                            <Button v-for="cmd in artisanCommands" :key="cmd" :label="cmd" class="p-button-outlined p-button-secondary !rounded-lg font-bold" @click="runArtisan(cmd)" :loading="artisanRunning === cmd" />
+                                        </div>
                                     </div>
                                 </div>
                                 

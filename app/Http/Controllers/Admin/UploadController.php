@@ -32,4 +32,37 @@ class UploadController extends Controller
             'url'  => Storage::disk('media')->url($name),
         ]);
     }
+
+    /**
+     * Upload d'image ou de vidéo (téléphone/ordinateur) pour les sélecteurs
+     * de médias (éditeurs riches, forums…). Disque « media » (public/media).
+     */
+    public function media(Request $request)
+    {
+        $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'mimes:jpg,jpeg,png,gif,webp,avif,svg,mp4,webm,ogg',
+                'max:51200',
+            ],
+        ]);
+
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'bin');
+        $slug = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), '_') ?: 'media';
+        $kind = in_array($ext, ['mp4', 'webm', 'ogg']) ? 'video' : 'image';
+        $name = 'uploads/' . now()->format('Ym') . '/' . Str::lower(uniqid()) . '_' . $slug . '.' . $ext;
+
+        $file->storeAs('', $name, 'media');
+        $url = Storage::disk('media')->url($name);
+
+        return response()->json([
+            'url'  => $url,
+            'path' => $name,
+            'type' => $kind,
+            'name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+        ]);
+    }
 }

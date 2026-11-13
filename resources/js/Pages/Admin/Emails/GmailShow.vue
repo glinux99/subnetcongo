@@ -6,7 +6,12 @@ import { useConfirmAction } from '@/composables/useConfirmAction';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
+import { useToast } from 'primevue/usetoast';
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+const toast = useToast();
 const props = defineProps({
     email: { type: Object, default: () => ({}) },
     folders: { type: Array, default: () => [] },
@@ -22,6 +27,33 @@ const cc = ref('');
 const bcc = ref('');
 const showCcBcc = ref(false);
 const isSending = ref(false);
+const replyAttachments = ref([]);
+const replyFileInput = ref(null);
+const maxAttachmentSize = 25 * 1024 * 1024;
+
+const addReplyAttachment = (event) => {
+    const files = Array.from(event.target.files);
+    const tooLarge = files.filter((f) => f.size > maxAttachmentSize);
+    if (tooLarge.length > 0) {
+        toast.add({
+            severity: 'error',
+            summary: t('pages.admin_emails_gmail.attach_too_large_title'),
+            detail: t('pages.admin_emails_gmail.attach_too_large_detail', { names: tooLarge.map((f) => f.name).join(', ') }),
+            life: 5000,
+        });
+    }
+    const ok = files.filter((f) => f.size <= maxAttachmentSize);
+    if (ok.length > 0) replyAttachments.value.push(...ok);
+    event.target.value = '';
+};
+
+const removeReplyAttachment = (index) => {
+    replyAttachments.value.splice(index, 1);
+};
+
+const openReplyFilePicker = () => {
+    replyFileInput.value?.click();
+};
 
 const formatDate = (iso) => {
     if (!iso) return '';
@@ -136,20 +168,24 @@ const forward = () => {
 
 const sendReply = () => {
     if (!replyText.value.trim()) return;
-    
+
     isSending.value = true;
-    router.post(route('admin.emails.reply', props.messageNumber), {
-        reply_message: replyText.value,
-        cc: cc.value || undefined,
-        bcc: bcc.value || undefined,
-        ...folderPayload(),
-    }, {
+    const formData = new FormData();
+    formData.append('reply_message', replyText.value);
+    if (cc.value) formData.append('cc', cc.value);
+    if (bcc.value) formData.append('bcc', bcc.value);
+    if (props.folder) formData.append('folder', props.folder);
+    replyAttachments.value.forEach((file, index) => {
+        formData.append(`attachments[${index}]`, file);
+    });
+    router.post(route('admin.emails.reply', props.messageNumber), formData, {
         preserveScroll: true,
         onSuccess: () => {
             showReplyForm.value = false;
             replyText.value = '';
             cc.value = '';
             bcc.value = '';
+            replyAttachments.value = [];
         },
         onFinish: () => isSending.value = false
     });
@@ -303,8 +339,41 @@ const getAttachmentIcon = (filename) => {
                             rows="8"
                             class="w-full"
                         />
+                        <div v-if="replyAttachments.length > 0" class="space-y-2">
+                            <div
+                                v-for="(file, index) in replyAttachments"
+                                :key="index"
+                                class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg"
+                            >
+                                <i class="pi pi-file text-slate-400"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-slate-900 truncate">{{ file.name }}</p>
+                                    <p class="text-xs text-slate-500">{{ formatSize(file.size) }}</p>
+                                </div>
+                                <Button
+                                    icon="pi pi-times"
+                                    class="p-1 text-slate-400 hover:text-red-600"
+                                    @click="removeReplyAttachment(index)"
+                                    text
+                                    rounded
+                                />
+                            </div>
+                        </div>
+                        <input
+                            type="file"
+                            multiple
+                            @change="addReplyAttachment"
+                            class="hidden"
+                            ref="replyFileInput"
+                        />
                         <div class="flex items-center justify-between pt-2">
                             <div class="flex items-center gap-2">
+                                <Button
+                                    icon="pi pi-paperclip"
+                                    class="text-slate-600 hover:bg-slate-100"
+                                    @click="openReplyFilePicker"
+                                    text
+                                />
                                 <Button
                                     label="Envoyer"
                                     icon="pi pi-send"

@@ -24,7 +24,8 @@ import Menu from 'primevue/menu';
 import Skeleton from 'primevue/skeleton';
 import Paginator from 'primevue/paginator';
 import SelectButton from 'primevue/selectbutton';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
+import SncDialog from '@/Components/SncDialog.vue';
 import ProgressSpinner from 'primevue/progressspinner';
 import ColorPicker from 'primevue/colorpicker';
 import ProgressBar from 'primevue/progressbar';
@@ -349,8 +350,8 @@ const copyLink = (id) => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-6 p-4 md:p-8 animate-fade-in font-sans h-screen max-h-[1000px]">
-        <ConfirmDialog></ConfirmDialog>
+    <div class="w-full flex flex-col md:flex-row gap-4 md:gap-6 animate-fade-in font-sans h-[calc(100vh-15rem)] min-h-[560px]">
+        <SncConfirmDialog />
 
         <!-- SIDEBAR GAUCHE : Filtres et Navigation -->
         <aside class="w-full md:w-80 flex-shrink-0 flex flex-col gap-6">
@@ -436,8 +437,20 @@ const copyLink = (id) => {
             <!-- Liste des Sujets -->
             <div class="flex-1 overflow-y-auto bg-slate-50/30 p-2 scroll-smooth">
 
-                <!-- Empty State -->
-                <div v-if="!props.threads.data?.length && !isLoading" class="flex flex-col items-center justify-center h-full p-10 text-center animate-fade-in">
+                <!-- Empty State : aucune catégorie → on invite à en créer une -->
+                <div v-if="!props.threads.data?.length && !isLoading && categories.length === 0" class="flex flex-col items-center justify-center h-full p-10 text-center animate-fade-in">
+                    <div class="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center mb-6 border-8 border-blue-100/50">
+                        <i class="pi pi-folder-plus text-5xl text-blue-400"></i>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-700 mb-2">{{ t('pages.forum.empty_categories_title') }}</h3>
+                    <p class="text-slate-500 max-w-md mx-auto mb-6">
+                        {{ isInstructor ? t('pages.forum.empty_categories_text_instructor') : t('pages.forum.empty_categories_text_student') }}
+                    </p>
+                    <Button v-if="isInstructor" :label="t('pages.forum.btn_create_category')" icon="pi pi-plus" class="p-button-primary rounded-xl" @click="newCategoryDialog = true" />
+                </div>
+
+                <!-- Empty State : catégories OK mais aucun sujet -->
+                <div v-else-if="!props.threads.data?.length && !isLoading" class="flex flex-col items-center justify-center h-full p-10 text-center animate-fade-in">
                     <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mb-6">
                         <i class="pi pi-comments text-5xl text-slate-300"></i>
                     </div>
@@ -727,19 +740,14 @@ const copyLink = (id) => {
         <!-- ==================================================================================== -->
         <!-- DIALOG : NOUVEAU SUJET (COMPLEX FORM)                                                -->
         <!-- ==================================================================================== -->
-        <Dialog
+        <SncDialog
             v-model:visible="newThreadDialog"
-            modal
-            :header="t('pages.forum.new_thread_title')"
-            :style="{ width: '100%', maxWidth: '800px' }"
-            :pt="{
-                root: { class: 'rounded-xl shadow-2xl' },
-                header: { class: 'bg-slate-50 border-b border-slate-100 px-8 py-5' },
-                title: { class: 'text-xl font-black text-slate-800' },
-                content: { class: 'p-8 space-y-6' },
-                footer: { class: 'p-6 bg-slate-50 border-t border-slate-100' }
-            }"
+            :title="t('pages.forum.new_thread_title')"
+            icon="pi-comments"
+            iconClass="from-blue-500 to-blue-600"
+            width="800px"
         >
+            <div class="space-y-6">
             <!-- Erreurs globales -->
             <div v-if="Object.keys(threadForm.errors).length > 0" class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold border border-red-100 flex items-center gap-3">
                 <i class="pi pi-exclamation-circle text-xl"></i>
@@ -833,20 +841,18 @@ const copyLink = (id) => {
                 </FileUpload>
             </div>
 
+            </div>
             <template #footer>
-                <div class="flex justify-between items-center w-full">
-                    <Button :label="t('pages.forum.btn_cancel')" text severity="secondary" @click="newThreadDialog = false" class="font-bold rounded-xl" />
-                    <Button :label="t('pages.forum.btn_publish_thread')" icon="pi pi-send" class="p-button-primary px-8 py-3 font-black rounded-xl shadow-lg shadow-blue-500/30"
-                            @click="submitThread" :loading="threadForm.processing" />
-                </div>
+                <Button :label="t('pages.forum.btn_cancel')" text class="font-bold text-slate-500" @click="newThreadDialog = false" />
+                <Button :label="t('pages.forum.btn_publish_thread')" icon="pi pi-send" class="font-black" @click="submitThread" :loading="threadForm.processing" />
             </template>
-        </Dialog>
+        </SncDialog>
 
         <!-- ==================================================================================== -->
         <!-- DIALOG : NOUVELLE CATÉGORIE (ADMINISTRATION)                                         -->
         <!-- ==================================================================================== -->
-        <Dialog v-model:visible="newCategoryDialog" modal :header="t('pages.forum.category_dialog_title')" :style="{ width: '450px' }" class="rounded-xl shadow-2xl">
-            <div class="flex flex-col gap-6 py-4">
+        <SncDialog v-model:visible="newCategoryDialog" :title="t('pages.forum.category_dialog_title')" icon="pi-folder" iconClass="from-blue-500 to-indigo-600" width="460px">
+            <div class="flex flex-col gap-5">
                 <div class="space-y-2">
                     <label class="text-xs font-black text-slate-500 uppercase tracking-widest">{{ t('pages.forum.category_name_label') }}</label>
                     <InputText v-model="categoryForm.name" class="w-full rounded-xl border-slate-200 p-3 font-bold" :placeholder="t('pages.forum.category_name_placeholder')" :class="{'p-invalid': categoryForm.errors.name}" />
@@ -883,10 +889,10 @@ const copyLink = (id) => {
                 </div>
             </div>
             <template #footer>
-                <Button :label="t('pages.forum.btn_cancel')" text severity="secondary" @click="newCategoryDialog = false" class="font-bold rounded-xl" />
-                <Button :label="t('pages.forum.btn_create_category')" icon="pi pi-plus-circle" @click="submitCategory" :loading="categoryForm.processing" class="p-button-primary rounded-xl px-6 font-black shadow-lg shadow-blue-200" />
+                <Button :label="t('pages.forum.btn_cancel')" text class="font-bold text-slate-500" @click="newCategoryDialog = false" />
+                <Button :label="t('pages.forum.btn_create_category')" icon="pi pi-plus-circle" @click="submitCategory" :loading="categoryForm.processing" class="font-black" />
             </template>
-        </Dialog>
+        </SncDialog>
     </div>
 </template>
 

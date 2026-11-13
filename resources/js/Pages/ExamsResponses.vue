@@ -36,7 +36,7 @@ import Avatar from 'primevue/avatar';
 import Badge from 'primevue/badge';
 import Sidebar from 'primevue/sidebar';
 import Knob from 'primevue/knob';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 import OrderList from 'primevue/orderlist';
 
 // ======================================================================================
@@ -174,7 +174,8 @@ const handleCalculatorInput = (input) => {
                 result = calculatorMemory.value / currentValue;
                 break;
         }
-        calculatorDisplay.value = String(result);
+        const rounded = Math.round(result * 1e10) / 1e10;
+        calculatorDisplay.value = String(rounded);
         calculatorOperator.value = null;
         calculatorMemory.value = null;
         waitingForOperand.value = false;
@@ -567,7 +568,7 @@ onBeforeUnmount(() => {
 <template>
     <div class="page-bg min-h-screen font-sans pb-20">
         <Head :title="t('pages.exams-responses.headTitle', { title: exam.title })" />
-        <ConfirmDialog />
+        <SncConfirmDialog />
 
         <!-- ========================================================================== -->
         <!-- NAVIGATION SUPÉRIEURE : HUD D'ÉVALUATION                                   -->

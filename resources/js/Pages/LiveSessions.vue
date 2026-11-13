@@ -14,6 +14,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import SncDialog from '@/Components/SncDialog.vue';
 import Select from 'primevue/select';
+import Menu from 'primevue/menu';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 
@@ -35,10 +36,14 @@ const providers = props.meta?.providers ?? [];
 const configuredProviders = props.meta?.configured_providers ?? [];
 const courses = props.meta?.courses ?? [];
 const instructors = props.meta?.instructors ?? [];
+const timezone = props.meta?.timezone ?? 'Africa/Lubumbashi';
+const timezones = props.meta?.timezones ?? [];
+const timezoneLabel = computed(() => timezones.find((tz) => tz.value === timezone)?.label ?? timezone);
 
 const isProviderConfigured = (providerValue) => configuredProviders.includes(providerValue);
 
 const showCreate = ref(false);
+const editingSession = ref(null);
 const form = ref({
     title: '',
     course_id: null,
@@ -51,14 +56,61 @@ const form = ref({
     passcode: '',
     visibility: 'private',
     invited_emails: '',
+    timezone,
+    remind_before_minutes: null,
 });
 const submitting = ref(false);
+
+const reminderOptions = computed(() => [
+    { label: t('pages.live_sessions.reminder_none'), value: null },
+    { label: t('pages.live_sessions.reminder_15'), value: 15 },
+    { label: t('pages.live_sessions.reminder_30'), value: 30 },
+    { label: t('pages.live_sessions.reminder_60'), value: 60 },
+    { label: t('pages.live_sessions.reminder_1day'), value: 1440 },
+]);
 
 const emptyForm = () => ({
     title: '', course_id: null, instructor_id: null, start_at: '', duration: 60,
     provider: configuredProviders[0] || 'livekit', max_participants: 100, is_recorded: true,
-    passcode: '', visibility: 'private', invited_emails: '',
+    passcode: '', visibility: 'private', invited_emails: '', timezone, remind_before_minutes: null,
 });
+
+const isoToLocalInput = (iso, tz = timezone) => {
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return '';
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(dt);
+    const p = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+    return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+};
+
+const openCreate = () => {
+    editingSession.value = null;
+    form.value = emptyForm();
+    showCreate.value = true;
+};
+
+const openEdit = (session) => {
+    editingSession.value = session;
+    form.value = {
+        title: session.title ?? '',
+        course_id: session.course_id ?? session.course?.id ?? null,
+        instructor_id: session.instructor_id ?? session.instructor?.id ?? null,
+        start_at: isoToLocalInput(session.start_at, timezone),
+        duration: session.duration ?? 60,
+        provider: session.provider ?? (configuredProviders[0] || 'livekit'),
+        max_participants: session.max_participants ?? 100,
+        is_recorded: session.is_recorded ?? true,
+        passcode: session.passcode ?? '',
+        visibility: session.settings?.visibility ?? 'private',
+        invited_emails: (session.invited_emails ?? []).join(', '),
+        timezone: timezone,
+        remind_before_minutes: session.remind_before_minutes ?? null,
+    };
+    showCreate.value = true;
+};
 
 const showInvite = ref(false);
 const inviteTarget = ref(null);
@@ -94,7 +146,7 @@ const openRequests = (session) => {
 };
 
 const decideRequest = (session, userId, action) => {
-    router.post(route(`live-sessions.join-requests.${action}`, session.id), { user_id: userId }, {
+    router.post(route(`live-sessions.join-requests.${action}`, session.uuid), { user_id: userId }, {
         preserveScroll: true,
         onSuccess: () => {
             const list = (requestsTarget.value?.join_requests ?? []).map((r) =>
@@ -104,14 +156,42 @@ const decideRequest = (session, userId, action) => {
     });
 };
 
-const copyShareLink = async (id) => {
+const copyShareLink = async (uuid) => {
     try {
-        const { data } = await window.axios.post(route('live-sessions.share-link', id));
+        const { data } = await window.axios.post(route('live-sessions.share-link', uuid));
         await navigator.clipboard.writeText(data.url);
         toast.add({ severity: 'success', summary: t('pages.live_sessions.link_copied'), detail: data.url, life: 3000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: t('pages.live_sessions.error'), detail: t('pages.live_sessions.link_error'), life: 3000 });
     }
+};
+
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const s = rowMenuTarget.value;
+    if (!s) return [];
+    const items = [];
+    if (s.status === 'Scheduled') {
+        items.push({ label: t('pages.live_sessions.menu_start'), icon: 'pi pi-play', command: () => startSession(s.uuid) });
+    }
+    items.push(
+        { label: t('pages.live_sessions.tip_invite'), icon: 'pi pi-envelope', command: () => openInvite(s) },
+        { label: t('pages.live_sessions.tip_copy_link'), icon: 'pi pi-link', command: () => copyShareLink(s.uuid) },
+        { label: t('pages.live_sessions.tip_sync'), icon: 'pi pi-sync', command: () => syncRecordings(s.uuid) },
+        { label: t('pages.live_sessions.tip_report'), icon: 'pi pi-chart-bar', command: () => router.visit(route('live-sessions.report', s.uuid)) },
+    );
+    if (s.status === 'Scheduled') {
+        items.push({ separator: true });
+        items.push({ label: t('pages.live_sessions.out_cancel'), icon: 'pi pi-times', command: () => cancelSession(s.uuid), class: 'text-amber-600' });
+    }
+    items.push({ separator: true });
+    items.push({ label: t('pages.live_sessions.tip_delete'), icon: 'pi pi-trash', command: () => destroySession(s.uuid), class: 'text-red-600' });
+    return items;
+});
+const toggleRowMenu = (event, session) => {
+    rowMenuTarget.value = session;
+    rowMenu.value?.toggle(event);
 };
 
 const providerLabel = (p) => {
@@ -127,7 +207,7 @@ const providerColor = (p) => ({
     zoom: 'bg-blue-500', meet: 'bg-emerald-500', bbb: 'bg-blue-600', jitsi: 'bg-slate-700', livekit: 'bg-red-500'
 }[p] ?? 'bg-slate-500');
 
-const formatDate = (d) => d ? new Date(d).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+const formatDate = (d) => d ? new Date(d).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: timezone }) : '—';
 
 const search_ = () => {
     router.get(route('live-sessions.index'), {
@@ -137,41 +217,55 @@ const search_ = () => {
 
 const submit = () => {
     submitting.value = true;
-    router.post(route('live-sessions.store'), form.value, {
-        onSuccess: () => { showCreate.value = false; submitting.value = false; form.value = emptyForm(); },
+    const payload = { ...form.value };
+    const editing = editingSession.value;
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            showCreate.value = false;
+            submitting.value = false;
+            editingSession.value = null;
+            form.value = emptyForm();
+        },
         onError: () => { submitting.value = false; },
-    });
+    };
+
+    if (editing) {
+        router.put(route('live-sessions.update', editing.uuid), payload, options);
+    } else {
+        router.post(route('live-sessions.store'), payload, options);
+    }
 };
 
-const startSession = async (id) => {
+const startSession = async (uuid) => {
     try {
-        await window.axios.post(route('live-sessions.start', id));
+        await window.axios.post(route('live-sessions.start', uuid));
     } catch (e) {
         /* la session peut déjà être en direct */
     }
-    window.location.href = route('live-sessions.join', id);
+    window.location.href = route('live-sessions.join', uuid);
 };
 const confirmAction = useConfirmAction();
-const cancelSession = (id) => {
+const cancelSession = (uuid) => {
     confirmAction({
         header: t('pages.live_sessions.cancel_header'),
         message: t('pages.live_sessions.cancel_message'),
         acceptLabel: t('pages.live_sessions.cancel_accept'),
         rejectLabel: t('pages.live_sessions.keep'),
         danger: true,
-        accept: () => router.post(route('live-sessions.cancel', id)),
+        accept: () => router.post(route('live-sessions.cancel', uuid)),
     });
 };
-const destroySession = (id) => {
+const destroySession = (uuid) => {
     confirmAction({
         header: t('pages.live_sessions.delete_header'),
         message: t('pages.live_sessions.delete_message'),
         acceptLabel: t('pages.live_sessions.delete_accept'),
         danger: true,
-        accept: () => router.delete(route('live-sessions.destroy', id)),
+        accept: () => router.delete(route('live-sessions.destroy', uuid)),
     });
 };
-const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings', id), {}, { preserveScroll: true });
+const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recordings', uuid), {}, { preserveScroll: true });
 </script>
 
 <template>
@@ -197,7 +291,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                     <Button
                         :label="t('pages.live_sessions.btn_schedule')"
                         icon="pi pi-plus"
-                        @click="showCreate = true"
+                        @click="openCreate"
                         class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !text-white !rounded-xl !text-xs !font-bold shadow-lg shadow-red-900/40"
                     />
                 </template>
@@ -227,6 +321,9 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                         <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" :placeholder="t('pages.live_sessions.filter_provider')" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
                         <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" :placeholder="t('pages.live_sessions.filter_status')" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
                         <Button :label="t('pages.live_sessions.btn_filter')" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
+                        <span class="flex items-center gap-1.5 text-[11px] text-slate-500 ml-auto font-medium" v-tooltip.top="t('pages.live_sessions.timezone_note')">
+                            <i class="pi pi-globe text-slate-400" aria-hidden="true"></i>{{ timezoneLabel }}
+                        </span>
                     </div>
 
                     <!-- DataTable -->
@@ -259,7 +356,15 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                         </Column>
                         <Column field="start_at" :header="t('pages.live_sessions.col_start')" sortable>
                             <template #body="{ data }">
-                                <span class="text-slate-500 font-medium">{{ formatDate(data.start_at) }}</span>
+                                <span class="text-slate-500 font-medium flex items-center gap-1.5">
+                                    {{ formatDate(data.start_at) }}
+                                    <i
+                                        v-if="data.remind_before_minutes"
+                                        class="pi pi-bell text-amber-500"
+                                        v-tooltip.top="t('pages.live_sessions.reminder_set', { minutes: data.remind_before_minutes })"
+                                        aria-hidden="true"
+                                    ></i>
+                                </span>
                             </template>
                         </Column>
                         <Column field="duration" :header="t('pages.live_sessions.col_duration')">
@@ -284,22 +389,40 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                                 </div>
                             </template>
                         </Column>
-                        <Column :header="t('pages.live_sessions.col_actions')" :exportable="false" alignFrozen="right">
+                        <Column :header="t('pages.live_sessions.col_actions')" :exportable="false" style="min-width: 9rem; text-align: right;">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-1 justify-end">
-                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-play" rounded text severity="success" @click="startSession(data.id)" v-tooltip.top="t('pages.live_sessions.tip_start')" />
-                                    <Link v-if="data.status !== 'Ended' && data.status !== 'Cancelled'" :href="route('live-sessions.join', data.uuid)">
-                                        <Button icon="pi pi-video" rounded text severity="danger" v-tooltip.top="t('pages.live_sessions.tip_join')" />
-                                    </Link>
-                                    <Button icon="pi pi-envelope" rounded text severity="help" @click="openInvite(data)" v-tooltip.top="t('pages.live_sessions.tip_invite')" />
-                                    <Button v-if="data.pending_requests" icon="pi pi-user-plus" rounded text severity="warn" @click="openRequests(data)" v-tooltip.top="t('pages.live_sessions.tip_requests')" />
-                                    <Button icon="pi pi-link" rounded text severity="secondary" @click="copyShareLink(data.id)" v-tooltip.top="t('pages.live_sessions.tip_copy_link')" />
-                                    <Button icon="pi pi-sync" rounded text severity="info" @click="syncRecordings(data.id)" v-tooltip.top="t('pages.live_sessions.tip_sync')" />
-                                    <Link :href="route('live-sessions.report', data.uuid)">
-                                        <Button icon="pi pi-chart-bar" rounded text severity="secondary" v-tooltip.top="t('pages.live_sessions.tip_report')" />
-                                    </Link>
-                                    <Button v-if="data.status === 'Scheduled'" icon="pi pi-times" rounded text severity="warn" @click="cancelSession(data.id)" v-tooltip.top="t('pages.live_sessions.tip_cancel')" />
-                                    <Button icon="pi pi-trash" rounded text severity="danger" @click="destroySession(data.id)" v-tooltip.top="t('pages.live_sessions.tip_delete')" />
+                                <div class="flex items-center gap-1 justify-end whitespace-nowrap">
+                                    <Button
+                                        v-if="data.status !== 'Ended' && data.status !== 'Cancelled'"
+                                        icon="pi pi-video"
+                                        rounded
+                                        text
+                                        severity="danger"
+                                        :aria-label="t('pages.live_sessions.tip_join')"
+                                        v-tooltip.top="t('pages.live_sessions.tip_join')"
+                                        @click="window.location.href = route('live-sessions.join', data.uuid)"
+                                    />
+                                    <Button
+                                        v-if="data.status === 'Scheduled'"
+                                        icon="pi pi-pencil"
+                                        rounded
+                                        text
+                                        severity="info"
+                                        :aria-label="t('pages.live_sessions.tip_edit')"
+                                        v-tooltip.top="t('pages.live_sessions.tip_edit')"
+                                        @click="openEdit(data)"
+                                    />
+                                    <Button
+                                        icon="pi pi-ellipsis-v"
+                                        rounded
+                                        text
+                                        severity="secondary"
+                                        :aria-label="t('pages.live_sessions.menu_more')"
+                                        v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                        @click="toggleRowMenu($event, data)"
+                                        aria-haspopup="true"
+                                        aria-controls="live-session-row-menu"
+                                    />
                                 </div>
                             </template>
                         </Column>
@@ -320,7 +443,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
         <!-- ============================================================================== -->
         <!-- MODAL : PLANIFIER UNE SESSION                                                  -->
         <!-- ============================================================================== -->
-        <SncDialog v-model:visible="showCreate" :title="t('pages.live_sessions.modal_create_title')" icon="pi-video" icon-class="from-red-500 to-red-600" width="600px">
+        <SncDialog v-model:visible="showCreate" :title="editingSession ? t('pages.live_sessions.modal_edit_title') : t('pages.live_sessions.modal_create_title')" icon="pi-video" icon-class="from-red-500 to-red-600" width="600px">
             
             <div class="space-y-5">
                 <div>
@@ -349,6 +472,43 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">{{ t('pages.live_sessions.field_duration') }}</label>
                         <InputText v-model="form.duration" type="number" class="w-full !rounded-xl border-slate-300" />
                     </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5" for="live-session-timezone">
+                        <i class="pi pi-globe text-slate-400" aria-hidden="true"></i>{{ t('pages.live_sessions.field_timezone') }}
+                    </label>
+                    <Select
+                        id="live-session-timezone"
+                        v-model="form.timezone"
+                        :options="timezones"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-full !rounded-xl border-slate-300"
+                    />
+                    <p class="text-[10px] text-slate-500 mt-1.5 flex items-start gap-1.5">
+                        <i class="pi pi-info-circle text-slate-400 mt-0.5" aria-hidden="true"></i>
+                        <span>{{ t('pages.live_sessions.timezone_hint') }}</span>
+                    </p>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5" for="live-session-reminder">
+                        <i class="pi pi-bell text-slate-400" aria-hidden="true"></i>{{ t('pages.live_sessions.field_reminder') }}
+                    </label>
+                    <Select
+                        id="live-session-reminder"
+                        v-model="form.remind_before_minutes"
+                        :options="reminderOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :placeholder="t('pages.live_sessions.reminder_none')"
+                        class="w-full !rounded-xl border-slate-300"
+                    />
+                    <p class="text-[10px] text-slate-500 mt-1.5 flex items-start gap-1.5">
+                        <i class="pi pi-info-circle text-slate-400 mt-0.5" aria-hidden="true"></i>
+                        <span>{{ t('pages.live_sessions.reminder_hint') }}</span>
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
@@ -391,7 +551,7 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
             <template #footer>
                 <div class="flex justify-end gap-2 w-full">
                     <Button :label="t('pages.live_sessions.btn_cancel')" text @click="showCreate = false" class="!text-slate-500 font-bold" />
-                    <Button :label="submitting ? t('pages.live_sessions.btn_creating') : t('pages.live_sessions.btn_create')" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
+                    <Button :label="submitting ? t('pages.live_sessions.btn_creating') : (editingSession ? t('pages.live_sessions.btn_save') : t('pages.live_sessions.btn_create'))" icon="pi pi-check" :loading="submitting" @click="submit" class="!bg-[#FF3B3B] hover:!bg-red-600 !border-none !rounded-xl font-bold px-6 shadow-md shadow-red-500/20" />
                 </div>
             </template>
         </SncDialog>
@@ -445,6 +605,15 @@ const syncRecordings = (id) => router.post(route('live-sessions.sync-recordings'
                 <p v-else class="text-sm text-slate-400 text-center py-8">{{ t('pages.live_sessions.no_requests') }}</p>
             </div>
         </SncDialog>
+
+        <Menu
+            id="live-session-row-menu"
+            ref="rowMenu"
+            :model="rowMenuItems"
+            popup
+            class="!rounded-xl !shadow-xl !border-slate-200 !overflow-hidden !py-1"
+            aria-label="live-session-menu"
+        />
     </AppLayout>
 </template>
 

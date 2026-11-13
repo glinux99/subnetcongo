@@ -185,6 +185,11 @@ const openNewPath = () => {
  * Ouvre le workspace pour ÉDITER un parcours existant (délégué à PathEditorDialog)
  * @param {Object} pathData - Les données du parcours
  */
+const previewCourse = (course) => {
+    if (!course?.slug) return;
+    window.open(route('marketplace.show', course.slug), '_blank', 'noopener');
+};
+
 const editPath = (pathData) => {
     pathEditorRef.value?.openEdit(pathData);
 };
@@ -512,7 +517,7 @@ onMounted(() => {
 
                                         <div class="hidden lg:flex flex-col items-end gap-2">
                                             <Tag :value="levelsMap.find(l => l.value === course.level)?.label" :severity="getLevelColor(course.level).split('-')[1]" class="text-[10px] font-bold" />
-                                            <Button icon="pi pi-external-link" :label="t('pages.learning_paths.previewBtn')" class="p-button-text p-button-sm p-button-secondary p-0 m-0 text-[11px]" />
+                                            <Button icon="pi pi-external-link" :label="t('pages.learning_paths.previewBtn')" class="p-button-text p-button-sm p-button-secondary p-0 m-0 text-[11px]" :disabled="!course.slug" @click="previewCourse(course)" />
                                         </div>
                                     </div>
                                 </div>

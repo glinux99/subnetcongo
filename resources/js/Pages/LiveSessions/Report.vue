@@ -17,6 +17,7 @@ const props = defineProps({
     session: Object,
     stats: Object,
     chartData: Object,
+    timezone: { type: String, default: 'Africa/Lubumbashi' },
 });
 
 const chartOptions = ref({
@@ -86,13 +87,13 @@ const engagementRate = computed(() => {
                             </template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_joined_at')">
-                            <template #body="{ data }">{{ data.joined_at ? new Date(data.joined_at).toLocaleTimeString(locale) : '—' }}</template>
+                            <template #body="{ data }">{{ data.joined_at ? new Date(data.joined_at).toLocaleTimeString(locale, { timeZone: props.timezone }) : '—' }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_time_spent')">
                             <template #body="{ data }">{{ formatTime(data.seconds_spent ?? 0) }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_last_ping')">
-                            <template #body="{ data }">{{ data.last_ping_at ? new Date(data.last_ping_at).toLocaleTimeString(locale) : '—' }}</template>
+                            <template #body="{ data }">{{ data.last_ping_at ? new Date(data.last_ping_at).toLocaleTimeString(locale, { timeZone: props.timezone }) : '—' }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_status')">
                             <template #body="{ data }">

@@ -126,7 +126,9 @@ class LiveSessionController extends Controller
                 'providers' => $this->getProvidersMetadata(),
                 'configured_providers' => $this->getConfiguredProviders(),
                 'courses' => Course::select('id', 'title')->get(),
-                'instructors' => User::role('instructor')->select('id', 'name', 'avatar')->get()
+                'instructors' => User::role('instructor')->select('id', 'name', 'avatar')->get(),
+                'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
+                'timezones' => config('live_sessions.timezones', []),
             ]
         ]);
     }
@@ -136,18 +138,40 @@ class LiveSessionController extends Controller
     // --------------------------------------------------------------------------
 
     /**
+     * Fuseau de référence pour la session courante (Africa/Kinshasa par défaut).
+     */
+    private function sessionTimezone(Request $request, ?LiveSession $session = null): string
+    {
+        $tz = $request->input('timezone')
+            ?? ($session?->settings['timezone'] ?? null)
+            ?? config('live_sessions.timezone', 'Africa/Kinshasa');
+
+        return is_string($tz) && $tz !== '' ? $tz : 'Africa/Kinshasa';
+    }
+
+    /**
+     * Interprète la date-heure saisie dans $tz et la convertit en UTC pour le stockage.
+     */
+    private function parseSessionTime(string $value, string $tz): Carbon
+    {
+        return Carbon::parse($value, $tz)->setTimezone('UTC');
+    }
+
+    /**
      * Enregistre une nouvelle session avec synchronisation API vers le fournisseur.
      */
-   public function store(Request $request)
-{
-    $validated = $this->validateSession($request);
+    public function store(Request $request)
+    {
+        $validated = $this->validateSession($request);
+        $timezone = $this->sessionTimezone($request);
+        $validated['start_at'] = $this->parseSessionTime($validated['start_at'], $timezone);
 
     DB::beginTransaction();
     try {
         $apiMeetingData = $this->createMeetingOnProvider($validated);
 
         $session = new LiveSession();
-        $session->fill(collect($validated)->except(['settings', 'visibility', 'invited_emails'])->toArray());
+        $session->fill(collect($validated)->except(['settings', 'visibility', 'invited_emails', 'timezone'])->toArray());
         $session->meeting_id  = $apiMeetingData['id'];
         $session->meeting_url = $apiMeetingData['join_url'];
         $session->host_url    = $apiMeetingData['start_url'] ?? null;
@@ -157,6 +181,7 @@ class LiveSessionController extends Controller
 
         $settings = $this->normalizeSettings($request->input('settings', []));
         $settings['visibility'] = $validated['visibility'] ?? 'private';
+        $settings['timezone'] = $timezone;
         if (! empty($validated['invited_emails'])) {
             $settings['invited_emails'] = $this->parseEmails($validated['invited_emails']);
         }
@@ -193,12 +218,15 @@ class LiveSessionController extends Controller
         }
 
         $validated = $this->validateSession($request);
+        $timezone = $this->sessionTimezone($request, $liveSession);
+        $startAtUtc = $this->parseSessionTime($validated['start_at'], $timezone);
+        $validated['start_at'] = $startAtUtc;
 
         DB::beginTransaction();
         try {
             // Si le provider a changé ou la date, recréer sur le nouveau provider
             if ($validated['provider'] !== $liveSession->provider ||
-                Carbon::parse($validated['start_at'])->ne($liveSession->start_at)) {
+                ! $startAtUtc->equalTo($liveSession->start_at)) {
                 // Supprimer l'ancienne réunion via l'API
                 $this->deleteMeetingOnProvider($liveSession);
                 $apiMeetingData = $this->createMeetingOnProvider($validated);
@@ -206,13 +234,19 @@ class LiveSessionController extends Controller
                 $apiMeetingData = $this->updateMeetingOnProvider($liveSession, $validated);
             }
 
-            $liveSession->fill(collect($validated)->except(['settings', 'visibility', 'invited_emails'])->toArray());
+            $startChanged = ! $startAtUtc->equalTo($liveSession->start_at);
+            $liveSession->fill(collect($validated)->except(['settings', 'visibility', 'invited_emails', 'timezone'])->toArray());
+            if ($startChanged) {
+                // L'horaire a changé : on ré-arrime le rappel automatique.
+                $liveSession->reminder_sent_at = null;
+            }
             $liveSession->meeting_id  = $apiMeetingData['id'] ?? $liveSession->meeting_id;
             $liveSession->meeting_url = $apiMeetingData['join_url'] ?? $liveSession->meeting_url;
             $liveSession->host_url    = $apiMeetingData['start_url'] ?? $liveSession->host_url;
             $liveSession->passcode    = $apiMeetingData['password'] ?? $validated['passcode'] ?? null;
 
             $settings = $this->normalizeSettings($request->input('settings', []));
+            $settings['timezone'] = $timezone;
             $settings['visibility'] = $validated['visibility'] ?? ($liveSession->settings['visibility'] ?? 'private');
             if (! empty($validated['invited_emails'])) {
                 $settings['invited_emails'] = $this->parseEmails($validated['invited_emails']);
@@ -300,6 +334,7 @@ class LiveSessionController extends Controller
                 return Inertia::render('LiveSessions/RequestAccess', [
                     'session' => $liveSession,
                     'requested' => $liveSession->hasPendingAccess($user->id),
+                    'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
                 ]);
             }
 
@@ -340,6 +375,7 @@ class LiveSessionController extends Controller
             'session' => $liveSession,
             'user' => $user->only(['id', 'name', 'avatar', 'profile_photo']),
             'requires_confirmation' => $requiresConfirmation ?? false,
+            'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
         ]);
     }
 
@@ -488,8 +524,13 @@ class LiveSessionController extends Controller
         $session->loadMissing(['course:id,title', 'instructor:id,name']);
 
         $joinUrl = $session->shareUrl();
-        $startAtLabel = $session->start_at
-            ? $session->start_at->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm')
+        $tz = is_string($session->settings['timezone'] ?? null) && $session->settings['timezone'] !== ''
+            ? $session->settings['timezone']
+            : config('live_sessions.timezone', 'Africa/Kinshasa');
+        $localStart = $session->start_at ? $session->start_at->copy()->timezone($tz) : null;
+        $offset = $localStart ? $localStart->format('P') : ''; // ex. +02:00
+        $startAtLabel = $localStart
+            ? $localStart->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm') . ' (UTC' . $offset . ')'
             : 'une date à confirmer';
 
         $sent = 0;
@@ -599,6 +640,7 @@ class LiveSessionController extends Controller
 
         return Inertia::render('LiveSessions/PublicIndex', [
             'sessions' => $sessions,
+            'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
         ]);
     }
 
@@ -639,9 +681,11 @@ class LiveSessionController extends Controller
             ->where('start_at', '>=', now()->subHours(6));
 
         if (! $isPrivileged) {
-            $query->where(function ($q) use ($user, $courseIds) {
+            $invitedEmail = strtolower(trim((string) $user->email));
+            $query->where(function ($q) use ($user, $courseIds, $invitedEmail) {
                 $q->whereIn('course_id', $courseIds)
-                    ->orWhere('instructor_id', $user->id);
+                    ->orWhere('instructor_id', $user->id)
+                    ->orWhereRaw('JSON_CONTAINS(settings, JSON_QUOTE(?), \'$.invited_emails\')', [$invitedEmail]);
             });
         }
 
@@ -655,6 +699,7 @@ class LiveSessionController extends Controller
         return Inertia::render('LiveSessions/StudentIndex', [
             'sessions' => $sessions,
             'courses' => Course::whereIn('id', $courseIds)->select('id', 'title')->get(),
+            'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
         ]);
     }
 
@@ -708,7 +753,8 @@ class LiveSessionController extends Controller
         return Inertia::render('LiveSessions/Report', [
             'session' => $liveSession,
             'stats' => $stats,
-            'chartData' => $engagementData
+            'chartData' => $engagementData,
+            'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
         ]);
     }
 
@@ -758,6 +804,8 @@ class LiveSessionController extends Controller
             'instructor_id'     => 'required|exists:users,id',
             'start_at'          => 'required|date',
             'duration'          => 'required|integer|min:15|max:480',
+            'timezone'          => 'nullable|timezone:all',
+            'remind_before_minutes' => 'nullable|integer|min:0|max:10080',
             'provider'          => [
                 'required',
                 Rule::in([self::PROVIDER_ZOOM, self::PROVIDER_MEET, self::PROVIDER_BBB, self::PROVIDER_JITSI, self::PROVIDER_LIVEKIT])

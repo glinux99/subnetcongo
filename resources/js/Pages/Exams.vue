@@ -293,6 +293,15 @@ const importQuestionFromBank = (q) => {
 };
 
 /**
+ * Aperçu côté apprenant : ouvre l'écran de passage de l'examen dans un nouvel onglet.
+ * (Disponible uniquement une fois l'examen enregistré — l'uuid est généré côté serveur.)
+ */
+const previewLearner = () => {
+    if (!examForm.uuid) return;
+    window.open(route('exams.take', examForm.uuid), '_blank', 'noopener');
+};
+
+/**
  * Gère la sauvegarde (POST pour création, PUT pour mise à jour)
  */
 const saveExam = (status = 'Active') => {
@@ -740,7 +749,7 @@ onMounted(() => {
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Points</span>
                         <span class="text-lg font-black text-blue-600">{{ calculateTotalPoints }} pts</span>
                     </div>
-                    <Button icon="pi pi-external-link" class="p-button-text p-button-secondary p-button-sm hidden md:flex font-bold" v-tooltip.bottom="t('pages.exams.tooltipPreviewLearner')" />
+                    <Button icon="pi pi-external-link" class="p-button-text p-button-secondary p-button-sm hidden md:flex font-bold" v-tooltip.bottom="t('pages.exams.tooltipPreviewLearner')" :disabled="!examForm.uuid" @click="previewLearner" />
                     <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="examDialog = false" v-tooltip.bottom="t('pages.exams.tooltipCloseSpace')" />
                 </div>
             </div>

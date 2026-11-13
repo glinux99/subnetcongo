@@ -26,7 +26,7 @@ import Avatar from 'primevue/avatar';
 import Textarea from 'primevue/textarea';
 import InputSwitch from 'primevue/inputswitch';
 import Divider from 'primevue/divider';
-import ConfirmDialog from 'primevue/confirmdialog';
+import SncConfirmDialog from '@/Components/SncConfirmDialog.vue';
 
 const props = defineProps({
     tickets: { type: Object, default: null },
@@ -201,7 +201,7 @@ const kpis = computed(() => [
 <template>
     <AppLayout>
         <Head :title="isDetail ? t('pages.support.ticket_title', { number: ticket.ticket_number }) : t('pages.support.center_title')" />
-        <ConfirmDialog />
+        <SncConfirmDialog />
 
         <div class="page-bg min-h-screen pb-20">
 
