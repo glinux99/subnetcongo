@@ -21,6 +21,16 @@
 7. **Déploiement build = miroir sur les DEUX dossiers** : `web/build/` ET `web/elearning/public/build/` (laisser vérifier : md5sum identical après extract).
 8. En cas de doute sur une action serveur non-liée au déploiement : demander à l'utilisateur AVANT d'agir.
 
+## 🎥 Live Sessions — feedback, timezone, chat et médias (14/11/2026) — LOCAL UNIQUEMENT
+- **Demandes Daniel** : feedback visible au clic « Rejoindre » et à l'envoi du chat (bouton circulaire + spinner), fuseau UTC+2 faux (06:32 affiché 04:32), micro/caméra inopérants, chat étudiant non rafraîchi (l'admin reçoit mais l'étudiant ne voit pas ses propres messages), message admin envoyé deux fois, icônes manquantes (micro, caméra, émoji/trombone), bouton « recharger les messages ».
+- **Timezone — cause racine** : `config('app.timezone')` vaut `Africa/Lubumbashi` (forcé par `app/Support/SystemSettings.php`), pas UTC. `parseSessionTime()` convertissait en `'UTC'` puis Eloquent relisait la valeur dans le fuseau app → double décalage. Fix : `Carbon::parse($value, $tz)->setTimezone(config('app.timezone'))`. Testé : 06:32 → raw 06:32 → JSON 04:32Z → affichage 06:32.
+  - ⚠️ Les sessions #10 (raw 04:33) et #11 (raw 04:36) créées avant le fix restent décalées : les re-sauvegarder via « Modifier ».
+- **Chat** : `canAccessSession()` inclut maintenant sessions publiques, e-mails invités et accès approuvés (avant : inscription au cours uniquement → l'étudiant invité recevait 403 sur `chat/messages` et ne voyait aucun message). `sendChat` vérifie aussi l'accès. `chatMessages` renvoie `user_id` + `mine`. Front : `mine` serveur prioritaire, message optimiste conservé si le rechargement échoue, bouton « Recharger les messages » (spinner) dans l'en-tête, garde anti-double envoi + input vidé immédiatement (élimine les doublons admin).
+- **LiveKit / médias** : `room` et `previewStream` passés en `shallowRef` (les proxys Vue sur les objets LiveKit sont évités) ; état micro/caméra resynchronisé depuis les publications réelles (`syncLocalMediaState` sur Connected/LocalTrackPublished/Muted…) ; `requestMic`/`requestCamera` ne publient plus : ils demandent la permission (la caméra n'est plus ouverte deux fois, ce qui bloquait `setCameraEnabled`), la publication est faite une seule fois après connexion/toggle ; erreurs de toggle remontées en toast.
+- **Icônes** : PrimeIcons 6.0.1 n'a **pas** `pi-microphone-slash`, `pi-video-slash`, `pi-smile`. Remplacés par `pi-microphone`/`pi-video` + classe `.pi-is-off` (barre diagonale, `app.css`) et par le caractère 🙂 pour l'émoji. **Pas d'upgrade primeicons** (C: était plein ; disque libéré ensuite).
+- **Build** : `npm run build` OK (≈40 s, 2188 modules). `php -l` OK. Aucun déploiement, aucun commit.
+- **Reste à vérifier en réel** (2 navigateurs/comptes, micro+caméra physiques) : publication micro/cam, chat invité/inscrit, absence de doublon, icônes et bouton recharger.
+
 ## 🐛 Correctifs mockups SERP/aperçu (12/11/2026, soir)
 - **Demande Daniel** : dans le dialog de cours et les aperçus visuels, corriger les « liens morts ».
 - Fake domain `lms.subnetcongo.com` → `https://subnetcongo.net` (help url slug, SERP mockup Google, vignette Social OpenGraph dans `Courses.vue`) ; `www.votresite.com` → `https://subnetcongo.net` dans `Web/Seo.vue`. La barre Google/mockup n'est plus cliquable (retrait `hover:underline`/`cursor-pointer`, `select-none`). Build OK. Local uniquement.
@@ -78,6 +88,22 @@
 - **Mail** : nouveau template `resources/views/emails/live-session-reminder.blade.php` (rappel avec lien de rejoindre, même branding rouge SubnetCongo) ; `LiveSessionReminderNotification` (via = mail + database + broadcast).
 - Test CLI (transaction rollback) : création → rappel dû → sweep → Scheduled→Live (+notifs) → Ended après durée simulée. ✅
 - ⚠️ Les 5 sessions de test locales sont dans le passé : elles seront automatiquement passées en Ended au premier sweep en prod. Les e-mails de test sont des placeholders (d.sassou@subnetcongo.net → 550 attendu, normal).
+
+## 🎬 Live Sessions — Player immersif v4 + vérifications (13/11/2026)
+- **Demande Daniel** : player `/live-sessions/{uuid}/join` type studio, sans débordement, en s'appuyant sur le skill `live-classroom-design` et les mockups.
+- **Mode immersif total** : `AppLayout.vue` ajoute la classe `live-immersive-wrapper` sur les routes `/live-sessions/*/join` ; `.layout-topbar`, `.layout-sidebar` et `.layout-mask` sont masqués ; `.layout-main-container` passe à `height: 100dvh`, sans marge/padding, `overflow: hidden` ; `.layout-main` devient une colonne flex `min-h-0`.
+- **Player / VideoConference** : header compact, stage plein espace, salle d'attente en 2 colonnes (aperçu + contrôles), chat fermé par défaut, drawer détails, thème sombre, responsive mobile ; logique LiveKit conservée. Sur `leaveRoom`, les erreurs de permission/connexion sont réinitialisées.
+- **Vérifications navigateur** (agent-browser, compte audit temporaire) : 1440x900 → aucun scroll/débordement (`scrollH = 900`, conteneur 1440x900), topbar/sidebar bien absents ; chat OK ; drawer détails OK ; mobile 390x844 sans débordement ; **connexion LiveKit réelle OK** (1 participant, barre de contrôle affichée). Caméra refusée en headless → message de permission correct.
+- **Build** : OK (48,12 s).
+- **Compte audit** `audit-view@subnetcongo.net` supprimé après vérification (0 restant).
+- **Reste** : validation visuelle finale par Daniel et test avec micro/caméra réels sur navigateur headed. Local uniquement, aucun déploiement.
+
+## 🎬 Live Sessions — Player UI redesign (12/11/2026, soir)
+- **Player v3 plein écran** : le `.page-container` Sakai est court-circuité — contenu sombre sur toute la hauteur (`h-[calc(100vh-3rem)]`), header compact (logo + breadcrumb inline + badge LIVE/ATTENTE + Partager + Retour).
+- **Stage vidéo à gauche + sidebar à droite** : infos session (instructeur, durée, capacité max, sécurité bout-en-bout, agenda mini).
+- **VideoConference.vue non touché** pour la logique LiveKit ; Player v3 respecte le layout Sakai AppLayout lato mais remplace la zone plugin.
+- **Build** : OK. Vérif browser (audit user temporaire) : mise en page sombre propre sur 1440 px, header + stage live + sidebar infos. ✅
+- **Skill créé** : `live-classroom-design` à `~/.agents/skills/live-classroom-design/SKILL.md` — principes UI/UX, patterns, checklist, WCAG 2.2 AA.
 
 ## 🐛 Live Sessions / Visioconférence — 2 bugs (12/11/2026, soir)
 - **Bug étudiant non visible dans « Mes classes virtuelles »** : `studentIndex()` ne montrait que les sessions du cours où l'élève est inscrit. Si l'élève est invité par email à une session sans être inscrit → invisible. **Fix** : `LiveSessionController::studentIndex()` ajoute `->orWhereRaw('JSON_CONTAINS(settings, JSON_QUOTE(?), \'$.invited_emails\')')` pour inclure les emails invités non-enregistrés.

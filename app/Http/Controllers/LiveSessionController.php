@@ -150,11 +150,14 @@ class LiveSessionController extends Controller
     }
 
     /**
-     * Interprète la date-heure saisie dans $tz et la convertit en UTC pour le stockage.
+     * Interprète la date-heure saisie dans $tz puis la convertit dans le fuseau
+     * de l'application pour le stockage. Important : les colonnes datetime sont
+     * lues/écrites par Eloquent dans le fuseau de l'application (et non en UTC),
+     * convertir en UTC ici décalait l'heure de l'offset (ex. 06:32 → 04:32).
      */
     private function parseSessionTime(string $value, string $tz): Carbon
     {
-        return Carbon::parse($value, $tz)->setTimezone('UTC');
+        return Carbon::parse($value, $tz)->setTimezone(config('app.timezone'));
     }
 
     /**
@@ -1229,7 +1232,11 @@ class LiveSessionController extends Controller
 
     public function sendChat(LiveSession $liveSession, Request $request)
     {
-        $request->validate([
+        if (! $this->canAccessSession($liveSession, Auth::user())) {
+            return response()->json(['error' => 'Accès refusé.'], 403);
+        }
+
+        $validated = $request->validate([
             'message' => 'required|string|max:2000',
         ]);
 
@@ -1237,7 +1244,7 @@ class LiveSessionController extends Controller
             'live_session_id' => $liveSession->id,
             'user_id' => Auth::id(),
             'user_name' => Auth::user()->name,
-            'message' => $request->input('message'),
+            'message' => $validated['message'],
         ]);
 
         try {
@@ -1246,7 +1253,19 @@ class LiveSessionController extends Controller
             Log::warning('SNC_LIVE_CHAT_BROADCAST_FAIL: ' . $e->getMessage());
         }
 
-        return response()->json(['success' => true, 'id' => $chatMessage->id]);
+        return response()->json([
+            'success' => true,
+            'id' => $chatMessage->id,
+            'message' => [
+                'id' => $chatMessage->id,
+                'sender' => $chatMessage->user_name,
+                'user_id' => $chatMessage->user_id,
+                'message' => $chatMessage->message,
+                'file' => null,
+                'timestamp' => optional($chatMessage->created_at)->format('H:i'),
+                'mine' => true,
+            ],
+        ]);
     }
 
     /**
@@ -1272,9 +1291,11 @@ class LiveSessionController extends Controller
                 return [
                     'id' => $m->id,
                     'sender' => $m->user_name,
+                    'user_id' => $m->user_id,
                     'message' => $file ? null : $m->message,
                     'file' => $file,
                     'timestamp' => optional($m->created_at)->format('H:i'),
+                    'mine' => (int) $m->user_id === (int) Auth::id(),
                 ];
             });
 
@@ -1366,6 +1387,18 @@ class LiveSessionController extends Controller
         }
 
         if ($user->hasAnyRole(['superadmin', 'admin', 'instructor', 'cohort-assistant'])) {
+            return true;
+        }
+
+        if ($session->isPublicSession()) {
+            return true;
+        }
+
+        if (in_array(strtolower((string) $user->email), $session->invitedEmails(), true)) {
+            return true;
+        }
+
+        if ($session->hasApprovedAccess($user->id)) {
             return true;
         }
 

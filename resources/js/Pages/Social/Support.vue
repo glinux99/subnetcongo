@@ -69,6 +69,18 @@ const priorityLabel = (v) => priorities.value.find(p => p.value === v)?.label ||
 const prioritySeverity = (v) => ({ urgent: 'danger', high: 'warning', medium: 'info', low: 'success' }[v] || 'secondary');
 const categoryColor = (slug) => props.categories.find(c => c.slug === slug)?.color || '#64748b';
 
+// Couleur d'avatar déterministe (bleu ↔ rouge) basée sur l'id/nom de l'utilisateur
+const AVATAR_COLORS = [
+    '#1D4ED8', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD',
+    '#DC2626', '#E11D48', '#EF4444', '#F43F5E', '#B91C1C',
+];
+const avatarColor = (user) => {
+    const key = String(user?.id ?? user?.name ?? '?');
+    let h = 0;
+    for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[h % AVATAR_COLORS.length];
+};
+
 const timeAgo = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -230,7 +242,8 @@ const kpis = computed(() => [
                                         :image="ticket.user?.profile_photo_url"
                                         :label="(ticket.user?.name || '?').charAt(0)"
                                         size="xlarge" shape="circle"
-                                        class="!w-20 !h-20 !text-2xl !mb-3"
+                                        class="!w-20 !h-20 !text-2xl !mb-3 !border-2 !border-white !shadow-md"
+                                        :style="{ backgroundColor: avatarColor(ticket.user), color: '#fff' }"
                                     />
                                     <h3 class="font-black text-slate-800">{{ ticket.user?.name }}</h3>
                                     <p class="text-sm text-slate-500">{{ ticket.user?.email }}</p>
@@ -376,7 +389,7 @@ const kpis = computed(() => [
                 <PageHeader
                     :title="t('pages.support.center_title')"
                     :subtitle="t('pages.support.center_subtitle')"
-                    icon="pi-headphones"
+                    icon="pi-comments"
                     :badge="t('pages.support.tickets_badge', { count: stats.total ?? 0 })"
                     accent="blue"
                     :actions="[
@@ -442,7 +455,7 @@ const kpis = computed(() => [
                                 <Column :header="t('pages.support.col_requester')" style="min-width: 14rem">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-3">
-                                            <Avatar :image="data.user?.profile_photo_url" :label="(data.user?.name || '?').charAt(0)" shape="circle" size="normal" />
+                                            <Avatar :image="data.user?.profile_photo_url" :label="(data.user?.name || '?').charAt(0)" shape="circle" size="normal" :style="{ backgroundColor: avatarColor(data.user), color: '#fff' }" />
                                             <div class="flex flex-col">
                                                 <span class="font-bold text-slate-800 text-sm">{{ data.user?.name || '—' }}</span>
                                                 <span class="text-[10px] text-slate-400">{{ data.user?.email }}</span>

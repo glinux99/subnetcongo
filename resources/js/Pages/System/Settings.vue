@@ -513,7 +513,7 @@ const runArtisan = (cmd) => {
                                     </div>
 
                                     <div v-if="output" class="bg-slate-50 border border-slate-200 rounded-2xl p-6 col-span-2">
-                                        <h4 class="font-bold text-slate-900 mb-2"><i class="pi pi-terminal mr-2"></i> {{ t('pages.settings.artisan_output') }}</h4>
+                                        <h4 class="font-bold text-slate-900 mb-2"><i class="pi pi-bolt mr-2"></i> {{ t('pages.settings.artisan_output') }}</h4>
                                         <pre class="text-xs bg-slate-900 text-slate-100 rounded-xl border border-slate-800 p-4 max-h-60 overflow-auto custom-scrollbar font-mono">{{ output }}</pre>
                                     </div>
 

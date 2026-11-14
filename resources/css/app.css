@@ -601,3 +601,19 @@
     border-color: rgba(51, 65, 85, 0.8);
     background: #0f172a;
 }
+
+.pi-is-off {
+    position: relative;
+}
+
+.pi-is-off::after {
+    content: '';
+    position: absolute;
+    left: -12%;
+    right: -12%;
+    top: 50%;
+    height: 1.5px;
+    border-radius: 999px;
+    background: currentColor;
+    transform: rotate(-45deg);
+}

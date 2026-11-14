@@ -32,6 +32,8 @@ const confirmDialog = ref(false);
 const pendingCommand = ref('');
 const newTitle = ref('');
 const viewTab = ref('terminals'); // 'terminals' | 'history'
+const termMaximized = ref(false);
+const termClosed = ref(false);
 
 // sessions shown in tabs (id + UI state)
 const tabs = reactive([]); // [{ id, title, command, status, exit_code, offset, outputLines, started_at, ended_at }]
@@ -99,6 +101,7 @@ const clearActiveOutput = () => {
 const initFromSessions = () => {
     tabs.splice(0, tabs.length);
     for (const s of props.sessions ?? []) {
+        if (s.status === 'closed') continue;
         tabs.push({
             id: s.id,
             title: s.title,
@@ -131,6 +134,7 @@ watch(
 
         // Add new sessions that were created elsewhere / after reload
         for (const s of incoming) {
+            if (s.status === 'closed') continue;
             if (!currentIds.has(s.id)) {
                 tabs.push({
                     id: s.id,
@@ -217,6 +221,10 @@ const selectTab = (id) => {
     viewTab.value = 'terminals';
 };
 
+const toggleMaximize = () => { termMaximized.value = !termMaximized.value; };
+const closePanel = () => { termMaximized.value = false; termClosed.value = true; };
+const reopenPanel = () => { termClosed.value = false; };
+
 const pollTail = async (tabId) => {
     const tab = tabs.find((x) => x.id === tabId);
     if (!tab) return;
@@ -278,17 +286,17 @@ onUnmounted(() => {
             <PageHeader
                 :title="t('pages.terminal.title')"
                 :subtitle="t('pages.terminal.subtitle')"
-                icon="pi-terminal"
+                icon="pi-desktop"
                 accent="blue"
                 badge="Admin"
             />
 
             <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
                 <!-- Barre de création d'un nouveau terminal -->
-                <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5">
+                <section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-5">
                     <div class="flex flex-col lg:flex-row gap-3 lg:items-center">
                         <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md flex-shrink-0" aria-hidden="true">
-                            <i class="pi pi-terminal text-lg"></i>
+                            <i class="pi pi-desktop text-lg"></i>
                         </div>
                         <div class="flex-1">
                             <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1.5 block">{{ t('pages.terminal.label_command') }}</label>
@@ -335,7 +343,25 @@ onUnmounted(() => {
                 </section>
 
                 <!-- Zone principale : onglets (gauche list) + contenu (droite) -->
-                <section class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <!-- Panneau réduit -->
+                    <div v-if="termClosed" class="flex items-center justify-between gap-3 px-4 py-3">
+                        <span class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                            <i class="pi pi-desktop text-slate-400"></i>
+                            {{ t('pages.terminal.tab_terminal') }}
+                            <span v-if="tabs.length" class="text-[10px] font-mono text-slate-400">({{ tabs.length }})</span>
+                        </span>
+                        <Button
+                            label="Réouvrir"
+                            icon="pi pi-window-maximize"
+                            text
+                            severity="secondary"
+                            class="!text-blue-600 !text-xs !font-bold"
+                            @click="reopenPanel"
+                        />
+                    </div>
+
+                    <template v-else>
                     <!-- Sélecteur de vue -->
                     <div class="flex items-center gap-1 px-4 pt-3 border-b border-slate-100">
                         <button
@@ -366,10 +392,13 @@ onUnmounted(() => {
                     <!-- Vue Terminaux -->
                     <div v-if="viewTab === 'terminals'" class="grid grid-cols-1 lg:grid-cols-12 min-h-[560px]">
                         <!-- Barre latérale / onglets -->
-                        <div class="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col max-h-[300px] lg:max-h-none">
+                        <div
+                            class="border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col max-h-[300px] lg:max-h-none"
+                            :class="termMaximized ? 'hidden' : 'lg:col-span-3'"
+                        >
                             <div class="px-4 py-2.5 border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center justify-between">
                                 <span>{{ t('pages.terminal.tab_terminal') }}</span>
-                                <i class="pi pi-terminal text-slate-300 text-xs"></i>
+                                <i class="pi pi-desktop text-slate-300 text-xs"></i>
                             </div>
                             <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1.5">
                                 <button
@@ -385,7 +414,7 @@ onUnmounted(() => {
                                         :class="activeTabId === tab.id ? 'bg-blue-600 text-white' : (tab.status === 'running' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400')"
                                         aria-hidden="true"
                                     >
-                                        <i :class="['pi', tab.status === 'running' ? 'pi-circle-fill text-[8px]' : 'pi-terminal', 'text-xs']"></i>
+                                        <i :class="['pi', tab.status === 'running' ? 'pi-circle-fill text-[8px]' : 'pi-desktop', 'text-xs']"></i>
                                     </span>
                                     <span class="flex-1 min-w-0">
                                         <span class="flex items-center gap-1.5">
@@ -408,8 +437,8 @@ onUnmounted(() => {
                                 </button>
 
                                 <div v-if="!tabs.length" class="text-center py-10 px-4">
-                                    <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
-                                        <i class="pi pi-terminal text-slate-400 text-xl"></i>
+                                    <div class="w-12 h-12 mx-auto rounded-xl bg-slate-100 flex items-center justify-center mb-3">
+                                        <i class="pi pi-desktop text-slate-400 text-xl"></i>
                                     </div>
                                     <p class="text-xs font-bold text-slate-500">{{ t('pages.terminal.empty_state') }}</p>
                                     <p class="text-[10px] text-slate-400 mt-1">{{ t('pages.terminal.footer_hint') }}</p>
@@ -418,7 +447,10 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Contenu terminal actif -->
-                        <div class="lg:col-span-9 bg-[#0b1220] text-slate-100 flex flex-col min-h-[420px] font-mono text-xs">
+                        <div
+                            class="bg-[#0b1220] text-slate-100 flex flex-col min-h-[420px] font-mono text-xs"
+                            :class="termMaximized ? 'fixed bottom-5 right-5 z-[90] w-[min(980px,calc(100vw-2.5rem))] h-[min(600px,72vh)] rounded-xl shadow-2xl border border-slate-700 lg:col-span-12' : 'lg:col-span-9'"
+                        >
                             <!-- Barre titre façon fenêtre -->
                             <div class="flex items-center justify-between gap-3 px-4 py-2.5 bg-[#0f172a] border-b border-white/10">
                                 <div class="flex items-center gap-3 min-w-0">
@@ -457,6 +489,25 @@ onUnmounted(() => {
                                         v-tooltip.top="t('pages.terminal.btn_clear')"
                                         @click="clearActiveOutput"
                                     />
+                                    <span class="w-px h-5 bg-white/10 mx-1"></span>
+                                    <Button
+                                        :icon="termMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                                        text
+                                        severity="secondary"
+                                        class="!text-slate-400 hover:!text-white !w-8 !h-8"
+                                        :aria-label="termMaximized ? 'Restaurer' : 'Agrandir'"
+                                        v-tooltip.top="termMaximized ? 'Restaurer' : 'Agrandir'"
+                                        @click="toggleMaximize"
+                                    />
+                                    <Button
+                                        icon="pi pi-times"
+                                        text
+                                        severity="secondary"
+                                        class="!text-slate-400 hover:!text-white !w-8 !h-8"
+                                        aria-label="Réduire le panneau"
+                                        v-tooltip.top="'Réduire'"
+                                        @click="closePanel"
+                                    />
                                     <Button
                                         icon="pi pi-stop-circle"
                                         text
@@ -482,7 +533,7 @@ onUnmounted(() => {
                     <!-- Vue Historique -->
                     <div v-else class="p-4 md:p-5">
                         <div v-if="!historyLines.length" class="text-center py-12">
-                            <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
+                            <div class="w-14 h-14 mx-auto rounded-xl bg-slate-100 flex items-center justify-center mb-3">
                                 <i class="pi pi-history text-slate-400 text-2xl"></i>
                             </div>
                             <p class="text-sm font-bold text-slate-500">{{ t('pages.terminal.history_empty') }}</p>
@@ -516,6 +567,7 @@ onUnmounted(() => {
                             </li>
                         </ul>
                     </div>
+                    </template>
                 </section>
             </div>
         </div>

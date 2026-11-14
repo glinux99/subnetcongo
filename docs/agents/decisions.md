@@ -122,15 +122,28 @@ merci de les ajouter au dépôt (ex. `.devin/skills/<nom>/SKILL.md`) pour qu'ils
 Voir la section « Checklist » de la PR (build Vite, `php -l`, Pest comparé à `main`, recherche
 `alert(`/`confirm(`, vérification des routes Ziggy utilisées).
 
-## 2026-11-11 � V�rification email obligatoire + BCC global + Acc�s examens conditionnels
+## 2026-11-14 — Live : timezone, accès chat et icônes PrimeIcons
 
-**Demandes** (Daniel) : ? confirmation par email lors de l''inscription ; ? tout email envoy� par la plateforme copie genesiskikimba@gmail.com ET joackimmuholu@gmail.com (Katya) ; ? un inscrit qui n''a pas suivi le cours ne peut pas prendre l''examen (sinon � 28 examens en attente � pour un nouveau compte).
+**Contexte** : heures de session décalées de −2 h, chat invisible pour les étudiants invités, micro/caméra qui ne publient pas, double envoi de messages, icônes micro/caméra/émoji vides.
 
-**D�cisions**
-- **V�rif email = MustVerifyEmail Laravel standard** (URI sign�e, throttle 6/min, `verified` middleware). Les 24 comptes prod existants sont backfill�s via migration unique (`email_verified_at = now()`). Nouveaux comptes : aucun acc�s app tant que le lien n''est pas cliqu�. Override de `User::sendEmailVerificationNotification()` ? envoi via EmailTemplateService + template `email_verification` (d�j� seed�) � charte SubnetCongo.
-- **BCC global = listener `MessageSending`** (event Laravel 10) qui ajoute `config('mail.default_bcc')` (2 adresses cod�es en clair dans config/mail.php � pas de secret, d�j� publi�es comme emails de contact publiquement). Toute voie d''envoi (Mailable direct, EmailTemplateService, Verifyable) passe par l� ; les BCC explicites par template (EmailTemplate::bcc_emails) sont pr�serv�s.
-- **Acc�s examens conditionn� par progression cours = 100 %** : scope `Exam::eligibleFor($user)` ; utilis� pour : page Mes examens (learner.index), show/start/submit, badge `exams_pending` du menu sidebar. Pas d''acc�s avant la fin du cours = seuls les cours termin�s (progress_percent = 100) d�bloquent leurs examens.
+**Décisions**
+- **Timezone** : les colonnes `datetime` sont lues/écrites par Eloquent dans `config('app.timezone')` (forcé à `Africa/Lubumbashi` par `SystemSettings`), pas en UTC. On convertit donc l'heure saisie dans le fuseau de l'app, et plus en UTC. Conséquence : les anciennes lignes enregistrées avec l'ancien calcul doivent être re-sauvegardées (pas de migration de données automatique).
+- **Accès chat** : on aligne `canAccessSession()` sur les règles d'entrée de `join()` — inscription active/terminée **ou** e-mail invité **ou** accès approuvé **ou** session publique. `sendChat` est protégé par la même règle (avant : envoi possible sans lecture → chat à sens unique pour les invités).
+- **Identité des messages** : `chatMessages` renvoie `user_id` et `mine` (calcul serveur) ; le front ne se base plus uniquement sur l'égalité des noms.
+- **Médias LiveKit** : objets LiveKit stockés en `shallowRef` (pas de proxy Vue), état micro/caméra dérivé des publications, permission demandée sans ouvrir la caméra une seconde fois avant publication (évite le conflit de périphérique).
+- **Icônes** : PrimeIcons 6.0.1 ne fournit pas les variantes `-slash` ni `smile`. On ne change pas de version pour l'instant : variantes « off » via `.pi-is-off` (barre CSS) et émoji natif. Un upgrade PrimeIcons pourra remplacer ces fallbacks plus tard.
 
-**Cons�quences**
-- Les 24 comptes prod gardent l''acc�s (backfill), les nouveaux doivent confirmer.
-- Suppression logique de la liste � 28 examens en attente � fictive ; un compte sans cours termin� voit 0 examen + message d''aide.
+**Conséquences** : comportement identique pour les inscrits ; les invités/approuvés/publics ont enfin un chat bidirectionnel ; les sessions déjà enregistrées avec le mauvais fuseau doivent être éditées.
+
+## 2026-11-11 � V�rification email obligatoire + BCC global + Acc�s examens conditionnels
+
+**Demandes** (Daniel) : ? confirmation par email lors de l''inscription ; ? tout email envoy� par la plateforme copie genesiskikimba@gmail.com ET joackimmuholu@gmail.com (Katya) ; ? un inscrit qui n''a pas suivi le cours ne peut pas prendre l''examen (sinon � 28 examens en attente � pour un nouveau compte).
+
+**D�cisions**
+- **V�rif email = MustVerifyEmail Laravel standard** (URI sign�e, throttle 6/min, `verified` middleware). Les 24 comptes prod existants sont backfill�s via migration unique (`email_verified_at = now()`). Nouveaux comptes : aucun acc�s app tant que le lien n''est pas cliqu�. Override de `User::sendEmailVerificationNotification()` ? envoi via EmailTemplateService + template `email_verification` (d�j� seed�) � charte SubnetCongo.
+- **BCC global = listener `MessageSending`** (event Laravel 10) qui ajoute `config('mail.default_bcc')` (2 adresses cod�es en clair dans config/mail.php � pas de secret, d�j� publi�es comme emails de contact publiquement). Toute voie d''envoi (Mailable direct, EmailTemplateService, Verifyable) passe par l� ; les BCC explicites par template (EmailTemplate::bcc_emails) sont pr�serv�s.
+- **Acc�s examens conditionn� par progression cours = 100 %** : scope `Exam::eligibleFor($user)` ; utilis� pour : page Mes examens (learner.index), show/start/submit, badge `exams_pending` du menu sidebar. Pas d''acc�s avant la fin du cours = seuls les cours termin�s (progress_percent = 100) d�bloquent leurs examens.
+
+**Cons�quences**
+- Les 24 comptes prod gardent l''acc�s (backfill), les nouveaux doivent confirmer.
+- Suppression logique de la liste � 28 examens en attente � fictive ; un compte sans cours termin� voit 0 examen + message d''aide.

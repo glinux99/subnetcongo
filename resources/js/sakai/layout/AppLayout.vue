@@ -16,6 +16,11 @@ import { useI18n } from 'vue-i18n';
 
 const { layoutConfig, layoutState, isSidebarActive, resetMenu } = useLayout();
 const outsideClickListener = ref(null);
+const inertiaPage = usePage();
+const isImmersiveLive = computed(() => {
+    const url = inertiaPage.url || '';
+    return url.startsWith('/live-sessions/') && url.includes('/join');
+});
 
 // --- GESTION DU SCROLL PROFESSIONNELLE ---
 
@@ -58,7 +63,8 @@ const containerClass = computed(() => ({
     'layout-static': layoutConfig.menuMode === 'static',
     'layout-static-inactive': layoutState.staticMenuDesktopInactive && layoutConfig.menuMode === 'static',
     'layout-overlay-active': layoutState.overlayMenuActive,
-    'layout-mobile-active': layoutState.staticMenuMobileActive
+    'layout-mobile-active': layoutState.staticMenuMobileActive,
+    'live-immersive-wrapper': isImmersiveLive.value
 }));
 
 const bindOutsideClickListener = () => {
@@ -126,8 +132,8 @@ watch(dateRange, (newDates) => {
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>
 
-        <div class="layout-main-container">
-            <div class="px-6 py-4 sticky top-20 z-10 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+        <div class="layout-main-container" :class="isImmersiveLive ? 'live-immersive' : ''">
+            <div v-if="!isImmersiveLive" class="px-6 py-4 sticky top-20 z-10 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-center justify-between gap-3 flex-wrap">
                     <AppBreadcrumb />
                     <div class="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
@@ -152,7 +158,7 @@ watch(dateRange, (newDates) => {
                 <slot></slot>
             </div>
 
-            <app-footer></app-footer>
+            <app-footer v-if="!isImmersiveLive"></app-footer>
         </div>
 
         <div class="layout-mask animate-fadein"></div>
@@ -168,6 +174,33 @@ watch(dateRange, (newDates) => {
     overflow-y: auto;
     max-height: 100vh;
     position: fixed;
+}
+
+/* Mode immersif : salle de classe virtuelle plein écran */
+.live-immersive-wrapper .layout-topbar,
+.live-immersive-wrapper .layout-sidebar,
+.live-immersive-wrapper .layout-mask {
+    display: none !important;
+}
+
+.layout-wrapper.live-immersive-wrapper .layout-main-container.live-immersive {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    justify-content: flex-start;
+}
+
+.layout-main-container.live-immersive .layout-main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    width: 100%;
 }
 
 /* Scroll fluide uniquement pour la page */

@@ -1,9 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, shallowRef, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { Room, RoomEvent, Track } from 'livekit-client';
-import Button from 'primevue/button';
-import Tag from 'primevue/tag';
-import InputText from 'primevue/inputtext';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps({
@@ -14,18 +11,23 @@ const props = defineProps({
 
 const toast = useToast();
 
-const room = ref(null);
+const room = shallowRef(null);
 const isConnected = ref(false);
 const isConnecting = ref(false);
+const connectingStatus = ref('');
 const errorMessage = ref('');
 const participants = ref([]);
 const screenShares = ref([]);
 const isAudioEnabled = ref(false);
 const isVideoEnabled = ref(false);
 const isScreenSharing = ref(false);
-const showChat = ref(true);
+const showChat = ref(false);
 const chatMessages = ref([]);
+const pendingMessages = ref([]);
 const chatInput = ref('');
+const chatSending = ref(false);
+const chatRefreshing = ref(false);
+const chatScrollEl = ref(null);
 const showEmojis = ref(false);
 const fileInput = ref(null);
 const chatPoll = ref(null);
@@ -47,7 +49,7 @@ const videoDevices = ref([]);
 const selectedAudioId = ref('');
 const selectedVideoId = ref('');
 const previewEl = ref(null);
-const previewStream = ref(null);
+const previewStream = shallowRef(null);
 const micGranted = ref(false);
 const camGranted = ref(false);
 const permissionError = ref('');
@@ -83,6 +85,30 @@ const canJoin = computed(() => {
 
     return now >= startAt - 15 * 60000 && now <= endAt;
 });
+
+const displayedMessages = computed(() => [...chatMessages.value, ...pendingMessages.value]);
+
+const sessionTimezone = computed(() => props.session?.settings?.timezone || 'Africa/Lubumbashi');
+const sessionStartLabel = computed(() => {
+    if (!props.session?.start_at) return '—';
+    return new Date(props.session.start_at).toLocaleString('fr-FR', { timeZone: sessionTimezone.value });
+});
+
+const scrollChatToBottom = async () => {
+    await nextTick();
+    if (chatScrollEl.value) chatScrollEl.value.scrollTop = chatScrollEl.value.scrollHeight;
+};
+
+const syncLocalMediaState = () => {
+    const participant = room.value?.localParticipant;
+    if (!participant) return;
+
+    const audioPub = participant.getTrackPublication(Track.Source.Microphone);
+    const videoPub = participant.getTrackPublication(Track.Source.Camera);
+
+    isAudioEnabled.value = !!audioPub?.track && !audioPub.isMuted;
+    isVideoEnabled.value = !!videoPub?.track && !videoPub.isMuted;
+};
 
 const fetchToken = async () => {
     const response = await fetch(route('live-sessions.livekit-token', { live_session: props.session.uuid }), {
@@ -165,15 +191,13 @@ const requestMic = async () => {
         });
         stream.getTracks().forEach((t) => t.stop());
         micGranted.value = true;
-        isAudioEnabled.value = true;
         await listDevices();
-
-        if (room.value && isConnected.value) {
-            try { await room.value.localParticipant.setMicrophoneEnabled(true); } catch (e) { isAudioEnabled.value = false; }
-        }
     } catch (error) {
         micGranted.value = false;
         permissionError.value = permissionMessage(error);
+        if (isConnected.value) {
+            toast.add({ severity: 'error', summary: 'Micro', detail: permissionError.value, life: 5000 });
+        }
     } finally {
         requestingMic.value = false;
     }
@@ -185,17 +209,22 @@ const requestCamera = async () => {
     permissionError.value = '';
 
     try {
-        await startPreview();
-        camGranted.value = true;
-        isVideoEnabled.value = true;
-        await listDevices();
-
         if (room.value && isConnected.value) {
-            try { await room.value.localParticipant.setCameraEnabled(true); } catch (e) { isVideoEnabled.value = false; }
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: selectedVideoId.value ? { deviceId: { exact: selectedVideoId.value } } : true,
+            });
+            stream.getTracks().forEach((t) => t.stop());
+        } else {
+            await startPreview();
         }
+        camGranted.value = true;
+        await listDevices();
     } catch (error) {
         camGranted.value = false;
         permissionError.value = permissionMessage(error);
+        if (isConnected.value) {
+            toast.add({ severity: 'error', summary: 'Caméra', detail: permissionError.value, life: 5000 });
+        }
     } finally {
         requestingCamera.value = false;
     }
@@ -272,10 +301,13 @@ const connectToRoom = async () => {
     }
 
     isConnecting.value = true;
+    connectingStatus.value = 'Préparation de la salle…';
     errorMessage.value = '';
+    toast.add({ severity: 'info', summary: 'Connexion en cours', detail: 'Vous allez rejoindre la salle…', life: 2000 });
 
     try {
         await fetchToken();
+        connectingStatus.value = 'Ouverture d\'une connexion sécurisée…';
 
         let livekitUrl = (wsUrl.value || '').trim();
         if (!livekitUrl) throw new Error('URL LiveKit manquante. Vérifiez LIVEKIT_WS_URL dans .env.');
@@ -289,8 +321,10 @@ const connectToRoom = async () => {
             .on(RoomEvent.Connected, () => {
                 isConnected.value = true;
                 isConnecting.value = false;
+                connectingStatus.value = '';
                 toast.add({ severity: 'success', summary: 'Connecté', detail: 'Vous êtes dans la session.', life: 3000 });
                 refreshParticipants();
+                syncLocalMediaState();
 
                 heartbeatInterval = setInterval(sendHeartbeat, 60000);
                 refreshTimer = setInterval(refreshParticipants, 5000);
@@ -317,15 +351,28 @@ const connectToRoom = async () => {
                 track.detach();
                 refreshParticipants();
             })
-            .on(RoomEvent.TrackMuted, refreshParticipants)
-            .on(RoomEvent.TrackUnmuted, refreshParticipants)
-            .on(RoomEvent.LocalTrackPublished, refreshParticipants)
-            .on(RoomEvent.LocalTrackUnpublished, refreshParticipants)
+            .on(RoomEvent.TrackMuted, () => {
+                refreshParticipants();
+                syncLocalMediaState();
+            })
+            .on(RoomEvent.TrackUnmuted, () => {
+                refreshParticipants();
+                syncLocalMediaState();
+            })
+            .on(RoomEvent.LocalTrackPublished, () => {
+                refreshParticipants();
+                syncLocalMediaState();
+            })
+            .on(RoomEvent.LocalTrackUnpublished, () => {
+                refreshParticipants();
+                syncLocalMediaState();
+            })
             .on(RoomEvent.AudioPlaybackStatusChanged, () => {
                 audioBlocked.value = room.value ? !room.value.canPlaybackAudio : false;
             });
 
         await room.value.connect(livekitUrl, accessToken.value);
+        connectingStatus.value = 'Activation de vos périphériques…';
 
         // Autorisations manquantes : on les demande séparément (micro puis caméra)
         if (!micGranted.value) {
@@ -364,10 +411,12 @@ const connectToRoom = async () => {
             }
         }
 
+        syncLocalMediaState();
         refreshParticipants();
     } catch (error) {
         console.error('LiveKit connection error:', error);
         isConnecting.value = false;
+        connectingStatus.value = '';
         errorMessage.value = error?.message || 'Erreur de connexion au serveur LiveKit.';
         toast.add({ severity: 'error', summary: 'Erreur', detail: errorMessage.value, life: 5000 });
     }
@@ -396,25 +445,45 @@ const disconnectFromRoom = async () => {
 const toggleAudio = async () => {
     if (!room.value) return;
 
-    if (!isAudioEnabled.value && !micGranted.value) {
-        await requestMic();
-        if (!micGranted.value) return;
-    }
+    try {
+        if (!isAudioEnabled.value && !micGranted.value) {
+            await requestMic();
+            if (!micGranted.value) return;
+        }
 
-    isAudioEnabled.value = !isAudioEnabled.value;
-    await room.value.localParticipant.setMicrophoneEnabled(isAudioEnabled.value);
+        const enable = !isAudioEnabled.value;
+        await room.value.localParticipant.setMicrophoneEnabled(enable);
+        syncLocalMediaState();
+
+        if (enable && !isAudioEnabled.value) {
+            toast.add({ severity: 'warn', summary: 'Micro', detail: 'Le microphone n’a pas pu être activé.', life: 4000 });
+        }
+    } catch (error) {
+        syncLocalMediaState();
+        toast.add({ severity: 'error', summary: 'Micro', detail: permissionMessage(error), life: 5000 });
+    }
 };
 
 const toggleVideo = async () => {
     if (!room.value) return;
 
-    if (!isVideoEnabled.value && !camGranted.value) {
-        await requestCamera();
-        if (!camGranted.value) return;
-    }
+    try {
+        if (!isVideoEnabled.value && !camGranted.value) {
+            await requestCamera();
+            if (!camGranted.value) return;
+        }
 
-    isVideoEnabled.value = !isVideoEnabled.value;
-    await room.value.localParticipant.setCameraEnabled(isVideoEnabled.value);
+        const enable = !isVideoEnabled.value;
+        await room.value.localParticipant.setCameraEnabled(enable);
+        syncLocalMediaState();
+
+        if (enable && !isVideoEnabled.value) {
+            toast.add({ severity: 'warn', summary: 'Caméra', detail: 'La caméra n’a pas pu être activée.', life: 4000 });
+        }
+    } catch (error) {
+        syncLocalMediaState();
+        toast.add({ severity: 'error', summary: 'Caméra', detail: permissionMessage(error), life: 5000 });
+    }
 };
 
 const toggleScreenShare = async () => {
@@ -462,9 +531,26 @@ const onFullscreenChange = () => {
 };
 
 const sendChatMessage = async () => {
-    if (!chatInput.value.trim()) return;
+    if (chatSending.value) return;
 
     const text = chatInput.value.trim();
+    if (!text) return;
+
+    const tempId = `pending-${Date.now()}`;
+    pendingMessages.value.push({
+        id: tempId,
+        message: text,
+        sender: currentUser.value?.name || 'Vous',
+        timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        mine: true,
+        pending: true,
+        failed: false,
+    });
+
+    chatInput.value = '';
+    showEmojis.value = false;
+    chatSending.value = true;
+    scrollChatToBottom();
 
     try {
         const response = await fetch(route('live-sessions.chat.send', { live_session: props.session.uuid }), {
@@ -479,12 +565,31 @@ const sendChatMessage = async () => {
 
         if (!response.ok) throw new Error('Envoi impossible');
 
-        chatInput.value = '';
-        showEmojis.value = false;
+        const data = await response.json().catch(() => ({}));
+        pendingMessages.value = pendingMessages.value.filter((m) => m.id !== tempId);
+
+        if (data.message) {
+            chatMessages.value.push({ ...data.message, mine: true });
+            scrollChatToBottom();
+        }
+
         await loadChat();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Erreur', detail: "Impossible d'envoyer le message.", life: 4000 });
+        const pending = pendingMessages.value.find((m) => m.id === tempId);
+        if (pending) {
+            pending.pending = false;
+            pending.failed = true;
+        }
+        toast.add({ severity: 'error', summary: 'Erreur', detail: "Impossible d'envoyer le message. Cliquez sur Réessayer.", life: 4000 });
+    } finally {
+        chatSending.value = false;
     }
+};
+
+const retryChatMessage = (msg) => {
+    pendingMessages.value = pendingMessages.value.filter((m) => m.id !== msg.id);
+    chatInput.value = msg.message;
+    sendChatMessage();
 };
 
 const appendEmoji = (emoji) => {
@@ -502,10 +607,22 @@ const loadChat = async () => {
         const data = await response.json();
         chatMessages.value = (data.messages ?? []).map((m) => ({
             ...m,
-            mine: !!currentUser.value && m.sender === currentUser.value.name,
+            mine: m.mine ?? (!!currentUser.value && m.sender === currentUser.value.name),
         }));
+
+        if (showChat.value) scrollChatToBottom();
     } catch (e) {
         /* non bloquant */
+    }
+};
+
+const reloadChat = async () => {
+    if (chatRefreshing.value) return;
+    chatRefreshing.value = true;
+    try {
+        await loadChat();
+    } finally {
+        chatRefreshing.value = false;
     }
 };
 
@@ -564,6 +681,8 @@ const sendHeartbeat = async () => {
 
 const leaveRoom = async () => {
     await disconnectFromRoom();
+    permissionError.value = '';
+    errorMessage.value = '';
 
     if (props.requiresConfirmation) {
         confirmName.value = currentUser.value?.name || '';
@@ -638,238 +757,466 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="livekit-video-conference">
-        <div class="max-w-[1600px] mx-auto p-4 lg:p-6">
-            <!-- En-tête -->
-            <div class="flex items-center justify-between mb-4 gap-4 flex-wrap">
-                <div class="min-w-0">
-                    <div class="flex items-center gap-3 mb-2 flex-wrap">
-                        <Tag :value="isConnected ? 'En direct' : 'Prêt à rejoindre'" :severity="isConnected ? 'danger' : 'info'" :class="isConnected ? 'animate-pulse' : ''" />
-                        <span class="text-xs text-slate-500 font-semibold flex items-center gap-1">
-                            <i class="pi pi-users text-[10px]"></i> {{ participants.length }} participant(s)
+    <div class="livekit-video-conference relative flex min-h-0 w-full flex-1 overflow-hidden bg-slate-950 text-slate-100">
+        <!-- ===== Colonne scène ===== -->
+        <div class="relative flex min-h-0 min-w-0 flex-1 flex-col">
+            <div class="relative flex min-h-0 flex-1 p-2.5 sm:p-3">
+                <div ref="stageEl" class="relative flex min-h-0 w-full flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[#070b11] shadow-inner">
+                    <!-- Statut connecté -->
+                    <div v-if="isConnected" class="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/[0.10] bg-slate-950/75 px-3 py-1.5 backdrop-blur-md">
+                        <span class="relative flex h-2 w-2">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-75"></span>
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
                         </span>
-                        <span v-if="isInstructor" class="text-[10px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-600 px-2 py-1 rounded">Formateur</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-rose-300">En direct</span>
+                        <span class="h-3 w-px bg-white/10"></span>
+                        <span class="text-[10px] font-semibold text-slate-300">{{ participants.length }} participant{{ participants.length > 1 ? 's' : '' }}</span>
                     </div>
-                    <h1 class="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight truncate">{{ session.title }}</h1>
-                    <p class="text-slate-500 mt-1">{{ session.course?.title || 'Session en direct' }}</p>
-                </div>
-                <div class="flex gap-2">
-                    <Button icon="pi pi-link" rounded outlined severity="secondary" v-tooltip.bottom="'Copier le lien de la session'" @click="copyLink" />
-                    <Button icon="pi pi-comments" :severity="showChat ? 'primary' : 'secondary'" :outlined="!showChat" rounded v-tooltip.bottom="showChat ? 'Masquer le chat' : 'Afficher le chat'" @click="showChat = !showChat" />
-                    <Button v-if="!isConnected" label="Rejoindre" icon="pi pi-sign-in" @click="connectToRoom" :loading="isConnecting" :disabled="!canJoin" />
-                    <Button v-else label="Quitter" icon="pi pi-sign-out" severity="danger" @click="leaveRoom" />
-                </div>
-            </div>
 
-            <div v-if="errorMessage" class="mb-4 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-medium">
-                {{ errorMessage }}
-            </div>
+                    <!-- Actions haut droite -->
+                    <div class="absolute right-3 top-3 z-20 flex items-center gap-2">
+                        <span v-if="isInstructor" class="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/15 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-200 backdrop-blur">
+                            <i class="pi pi-star-fill text-[9px]"></i>
+                            Formateur
+                        </span>
+                        <button
+                            v-if="!showChat"
+                            type="button"
+                            class="inline-flex h-9 items-center gap-2 rounded-xl border border-white/[0.10] bg-slate-950/70 px-3 text-[11px] font-semibold text-slate-200 backdrop-blur-md transition-colors hover:bg-white/[0.10] focus-visible:outline-2 focus-visible:outline-red-400"
+                            @click="showChat = true"
+                            aria-label="Ouvrir le chat"
+                        >
+                            <i class="pi pi-comments text-xs"></i>
+                            <span class="hidden sm:inline">Chat</span>
+                        </button>
+                    </div>
 
-            <div v-if="!canJoin && !errorMessage" class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 font-medium">
-                Cette session n'est pas encore active. Début prévu : {{ new Date(session.start_at).toLocaleString('fr-FR') }}.
-            </div>
+                    <!-- Erreur connecté -->
+                    <div v-if="isConnected && errorMessage" class="absolute left-1/2 top-16 z-30 w-[min(92%,460px)] -translate-x-1/2 rounded-xl border border-rose-400/25 bg-rose-950/90 px-4 py-3 text-center text-xs font-medium text-rose-200 shadow-2xl backdrop-blur">
+                        {{ errorMessage }}
+                    </div>
 
-            <div class="flex flex-col xl:flex-row gap-4 items-start">
-                <!-- Scène vidéo -->
-                <div class="flex-1 min-w-0 w-full space-y-3">
-                    <div ref="stageEl" class="relative aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
-                        <!-- Autorisations manquantes une fois connecté -->
-                        <div v-if="isConnected && (!micGranted || !camGranted)" class="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex flex-wrap gap-2 bg-black/75 p-2 rounded-xl">
-                            <Button v-if="!micGranted" label="Autoriser le micro" size="small" severity="warn" icon="pi pi-microphone" :loading="requestingMic" @click="requestMic" />
-                            <Button v-if="!camGranted" label="Autoriser la caméra" size="small" severity="warn" icon="pi pi-video" :loading="requestingCamera" @click="requestCamera" />
-                        </div>
+                    <!-- ===== Pré-salle ===== -->
+                    <div v-if="!isConnected" class="absolute inset-0 overflow-y-auto p-4 sm:p-6">
+                        <div class="mx-auto flex min-h-full w-full max-w-5xl flex-col items-center justify-center gap-5 lg:flex-row lg:items-center">
+                            <!-- Aperçu -->
+                            <div class="w-full max-w-2xl lg:flex-1">
+                                <div class="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/[0.10] bg-slate-900 shadow-2xl">
+                                    <video ref="previewEl" autoplay playsinline muted class="h-full w-full object-cover"></video>
+                                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10"></div>
 
-                        <!-- Pré-salle -->
-                        <div v-if="!isConnected" class="absolute inset-0 flex flex-col lg:flex-row items-center justify-center gap-6 p-4 lg:p-6">
-                            <div class="w-full max-w-xl aspect-video bg-black rounded-xl overflow-hidden relative border border-white/10">
-                                <video ref="previewEl" autoplay playsinline muted class="w-full h-full object-cover"></video>
-                                <div v-if="!camGranted" class="absolute inset-0 flex items-center justify-center p-6 text-center">
-                                    <div>
-                                        <i class="pi pi-video text-4xl text-slate-600 mb-3 block"></i>
-                                        <p class="text-slate-400 text-sm leading-relaxed">
-                                            {{ permissionError || 'Autorisez la caméra pour vous prévisualiser.' }}
-                                        </p>
+                                    <div v-if="!camGranted" class="absolute inset-0 flex items-center justify-center p-6 text-center">
+                                        <div class="max-w-xs">
+                                            <div class="mx-auto mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.10] bg-white/[0.05]">
+                                                <i class="pi pi-video text-2xl text-slate-500"></i>
+                                            </div>
+                                            <p class="text-xs leading-relaxed text-slate-400">
+                                                {{ permissionError || 'Autorisez la caméra pour vous prévisualiser.' }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide backdrop-blur" :class="micGranted ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/25' : 'bg-slate-950/60 text-slate-400 ring-1 ring-white/10'">
+                                            <i :class="micGranted ? 'pi pi-microphone' : 'pi pi-microphone pi-is-off'" class="text-[9px]"></i>
+                                            Micro
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide backdrop-blur" :class="camGranted ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/25' : 'bg-slate-950/60 text-slate-400 ring-1 ring-white/10'">
+                                            <i :class="camGranted ? 'pi pi-video' : 'pi pi-video pi-is-off'" class="text-[9px]"></i>
+                                            Caméra
+                                        </span>
+                                    </div>
+
+                                    <div class="absolute inset-x-3 bottom-3 flex items-end justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Vous allez rejoindre</p>
+                                            <p class="mt-0.5 truncate text-sm font-bold text-white">{{ session.title }}</p>
+                                        </div>
+                                        <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-950/70 px-2.5 py-1 text-[9px] font-semibold text-slate-300 ring-1 ring-white/10">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-slate-500"></span>
+                                            Aperçu
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="w-full max-w-sm space-y-3">
-                                <div>
-                                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Microphone</label>
-                                    <div class="flex gap-2">
-                                        <select v-model="selectedAudioId" @change="onAudioDeviceChange"
-                                                class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                                            <option v-if="!audioDevices.length" value="">Aucun micro détecté</option>
-                                            <option v-for="d in audioDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Microphone' }}</option>
-                                        </select>
-                                        <Button :icon="micGranted ? 'pi pi-check' : 'pi pi-microphone'" :severity="micGranted ? 'success' : 'secondary'"
-                                                :outlined="!micGranted" :loading="requestingMic" v-tooltip.top="micGranted ? 'Micro autorisé' : 'Autoriser le micro'" @click="requestMic" />
-                                    </div>
+                            <!-- Contrôles pré-salle -->
+                            <div class="flex w-full max-w-sm shrink-0 flex-col justify-center lg:w-[330px]">
+                                <div class="mb-4">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-red-400">Salle d'attente</p>
+                                    <h2 class="mt-1 text-xl font-black tracking-tight text-white">Prêt à rejoindre ?</h2>
+                                    <p class="mt-1 break-words text-xs leading-relaxed text-slate-400">{{ session.course?.title || 'Session de classe virtuelle' }}</p>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Caméra</label>
-                                    <div class="flex gap-2">
-                                        <select v-model="selectedVideoId" @change="onVideoDeviceChange"
-                                                class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                                            <option v-if="!videoDevices.length" value="">Aucune caméra détectée</option>
-                                            <option v-for="d in videoDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Caméra' }}</option>
-                                        </select>
-                                        <Button :icon="camGranted ? 'pi pi-check' : 'pi pi-video'" :severity="camGranted ? 'success' : 'secondary'"
-                                                :outlined="!camGranted" :loading="requestingCamera" v-tooltip.top="camGranted ? 'Caméra autorisée' : 'Autoriser la caméra'" @click="requestCamera" />
+
+                                <div class="space-y-2.5">
+                                    <!-- Micro -->
+                                    <div class="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3">
+                                        <div class="mb-2 flex items-center justify-between gap-2">
+                                            <span class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                <i class="pi pi-microphone text-[10px]"></i>
+                                                Microphone
+                                            </span>
+                                            <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase" :class="micGranted ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700/40 text-slate-400'">
+                                                <i :class="micGranted ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'" class="text-[9px]"></i>
+                                                {{ micGranted ? 'Autorisé' : 'Requis' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <select v-model="selectedAudioId" @change="onAudioDeviceChange" class="h-9 min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-slate-950/70 px-2.5 text-[11px] text-slate-200 outline-none transition-colors [color-scheme:dark] focus:border-red-400/60">
+                                                <option v-if="!audioDevices.length" value="">Aucun micro détecté</option>
+                                                <option v-for="d in audioDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Microphone' }}</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-red-400"
+                                                :class="micGranted ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-white/[0.10] bg-white/[0.04] text-slate-300 hover:bg-white/[0.10]'"
+                                                :aria-label="micGranted ? 'Micro autorisé' : 'Autoriser le micro'"
+                                                @click="requestMic"
+                                            >
+                                                <i :class="requestingMic ? 'pi pi-spin pi-spinner' : micGranted ? 'pi pi-check' : 'pi pi-microphone'" class="text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Caméra -->
+                                    <div class="rounded-xl border border-white/[0.08] bg-white/[0.035] p-3">
+                                        <div class="mb-2 flex items-center justify-between gap-2">
+                                            <span class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                <i class="pi pi-video text-[10px]"></i>
+                                                Caméra
+                                            </span>
+                                            <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase" :class="camGranted ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700/40 text-slate-400'">
+                                                <i :class="camGranted ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'" class="text-[9px]"></i>
+                                                {{ camGranted ? 'Autorisée' : 'Requise' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <select v-model="selectedVideoId" @change="onVideoDeviceChange" class="h-9 min-w-0 flex-1 rounded-lg border border-white/[0.10] bg-slate-950/70 px-2.5 text-[11px] text-slate-200 outline-none transition-colors [color-scheme:dark] focus:border-red-400/60">
+                                                <option v-if="!videoDevices.length" value="">Aucune caméra détectée</option>
+                                                <option v-for="d in videoDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Caméra' }}</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-red-400"
+                                                :class="camGranted ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-white/[0.10] bg-white/[0.04] text-slate-300 hover:bg-white/[0.10]'"
+                                                :aria-label="camGranted ? 'Caméra autorisée' : 'Autoriser la caméra'"
+                                                @click="requestCamera"
+                                            >
+                                                <i :class="requestingCamera ? 'pi pi-spin pi-spinner' : camGranted ? 'pi pi-check' : 'pi pi-video'" class="text-xs"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-2 text-[11px] text-slate-500">
-                                    <span :class="micGranted ? 'text-emerald-600' : 'text-slate-400'"><i class="pi pi-microphone text-[10px] mr-1"></i>Micro {{ micGranted ? 'autorisé' : 'non autorisé' }}</span>
-                                    <span class="text-slate-300">•</span>
-                                    <span :class="camGranted ? 'text-emerald-600' : 'text-slate-400'"><i class="pi pi-video text-[10px] mr-1"></i>Caméra {{ camGranted ? 'autorisée' : 'non autorisée' }}</span>
+                                <div v-if="errorMessage" class="mt-3 rounded-xl border border-rose-400/25 bg-rose-500/10 px-3 py-2.5 text-[11px] leading-relaxed text-rose-200">
+                                    {{ errorMessage }}
+                                </div>
+                                <div v-else-if="!canJoin" class="mt-3 flex items-start gap-2 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2.5 text-[11px] leading-relaxed text-amber-200">
+                                    <i class="pi pi-clock mt-0.5 text-[11px]"></i>
+                                    <span>Session inactive. Début prévu le {{ sessionStartLabel }}.</span>
                                 </div>
 
-                                <Button label="Rejoindre la salle" icon="pi pi-video" class="w-full" severity="danger"
-                                        :loading="isConnecting" :disabled="!canJoin" @click="connectToRoom" />
-                                <p class="text-[11px] text-slate-500 leading-relaxed">
-                                    Le navigateur demande l'autorisation du micro et de la caméra séparément.
+                                <button
+                                    type="button"
+                                    class="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-orange-500 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-red-950/40 transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:brightness-100"
+                                    :disabled="!canJoin || isConnecting"
+                                    @click="connectToRoom"
+                                >
+                                    <i :class="isConnecting ? 'pi pi-spin pi-spinner' : 'pi pi-video'" class="text-sm"></i>
+                                    {{ !canJoin ? 'Session non active' : isConnecting ? 'Connexion…' : 'Rejoindre la salle' }}
+                                </button>
+                                <p class="mt-2.5 text-center text-[10px] leading-relaxed text-slate-500">
+                                    Le micro et la caméra sont demandés séparément par le navigateur.
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Partage d'écran -->
-                        <div v-else-if="screenShares.length" class="absolute inset-0 p-2 pb-20 flex flex-col gap-2">
-                            <div v-for="s in screenShares" :key="'screen-' + s.identity" class="flex-1 min-h-0 bg-black rounded-lg overflow-hidden relative">
-                                <video :ref="setScreenEl(s.identity)" autoplay playsinline class="w-full h-full object-contain"></video>
-                                <div class="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-2">
-                                    <i class="pi pi-desktop text-[10px] text-emerald-400"></i>
-                                    <span>Partage d'écran — {{ s.name }}<template v-if="s.isLocal"> (vous)</template></span>
+                    <!-- ===== Partage d'écran ===== -->
+                    <div v-else-if="screenShares.length" class="absolute inset-0 flex flex-col gap-2 p-2.5 pb-24">
+                        <div v-for="s in screenShares" :key="'screen-' + s.identity" class="relative min-h-0 flex-1 overflow-hidden rounded-xl bg-black ring-1 ring-white/[0.10]">
+                            <video :ref="setScreenEl(s.identity)" autoplay playsinline class="h-full w-full object-contain"></video>
+                            <div class="absolute bottom-2 left-2 flex items-center gap-1.5 rounded-lg bg-black/70 px-2 py-1 text-[10px] text-white backdrop-blur">
+                                <i class="pi pi-desktop text-[9px] text-emerald-400"></i>
+                                <span>Partage d'écran — {{ s.name }}<template v-if="s.isLocal"> (vous)</template></span>
+                            </div>
+                        </div>
+                        <div class="flex h-20 shrink-0 gap-2 overflow-x-auto overflow-y-hidden">
+                            <div v-for="p in participants" :key="'thumb-' + p.identity" class="relative w-28 shrink-0 overflow-hidden rounded-lg bg-slate-800 ring-1 ring-white/[0.10]">
+                                <video :ref="setVideoEl(p.identity)" autoplay playsinline :muted="p.isLocal" class="h-full w-full object-cover"></video>
+                                <div class="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/80 to-transparent px-1.5 pb-1 pt-4 text-[9px] text-white">
+                                    {{ p.name }}<template v-if="p.isLocal"> (vous)</template>
                                 </div>
                             </div>
-                            <div class="flex gap-2 h-24 shrink-0 overflow-x-auto">
-                                <div v-for="p in participants" :key="'thumb-' + p.identity" class="relative w-40 shrink-0 bg-slate-800 rounded-lg overflow-hidden">
-                                    <video :ref="setVideoEl(p.identity)" autoplay playsinline :muted="p.isLocal" class="w-full h-full object-cover"></video>
-                                    <div class="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded truncate max-w-[90%]">
-                                        {{ p.name }}<template v-if="p.isLocal"> (vous)</template>
+                        </div>
+                    </div>
+
+                    <!-- ===== Grille participants ===== -->
+                    <div v-else class="absolute inset-0 p-2.5 pb-24">
+                        <div class="grid h-full min-h-0 w-full gap-2" :class="participants.length <= 1 ? 'grid-cols-1' : participants.length <= 4 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 xl:grid-cols-3'">
+                            <div v-for="p in participants" :key="p.identity" class="relative min-h-0 overflow-hidden rounded-xl bg-slate-900 ring-1 ring-white/[0.10]">
+                                <video :ref="setVideoEl(p.identity)" autoplay playsinline :muted="p.isLocal" class="h-full w-full object-cover"></video>
+
+                                <div v-if="!p.hasVideo" class="absolute inset-0 flex items-center justify-center bg-slate-900">
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-red-500/70 to-orange-500/70 text-xl font-black text-white shadow-lg">
+                                        {{ (p.name || '?').charAt(0).toUpperCase() }}
+                                    </div>
+                                </div>
+
+                                <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent px-2.5 pb-2 pt-6">
+                                    <span class="min-w-0 truncate text-[11px] font-semibold text-white">{{ p.name }}<template v-if="p.isLocal"> (vous)</template></span>
+                                    <div class="flex shrink-0 items-center gap-1.5">
+                                        <i :class="p.hasAudio ? 'pi pi-microphone text-emerald-400' : 'pi pi-microphone pi-is-off text-rose-400'" class="text-[10px]"></i>
+                                        <i :class="p.hasVideo ? 'pi pi-video text-slate-200' : 'pi pi-video pi-is-off text-rose-400'" class="text-[10px]"></i>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Grille participants -->
-                        <div v-else class="absolute inset-0 grid gap-2 p-2 pb-20" :class="participants.length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
-                            <div v-for="p in participants" :key="p.identity" class="relative bg-slate-800 rounded-lg overflow-hidden">
-                                <video :ref="setVideoEl(p.identity)" autoplay playsinline :muted="p.isLocal" class="w-full h-full object-cover"></video>
-                                <div class="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded flex items-center gap-2">
-                                    <span>{{ p.name }}<template v-if="p.isLocal"> (vous)</template></span>
-                                    <i v-if="p.hasAudio" class="pi pi-microphone text-[10px] text-emerald-400"></i>
-                                    <i v-if="!p.hasVideo" class="pi pi-video-slash text-[10px] text-rose-400"></i>
+                            <div v-if="!participants.length" class="col-span-full flex h-full min-h-[220px] flex-col items-center justify-center gap-3 text-center">
+                                <i class="pi pi-spin pi-spinner text-2xl text-slate-500"></i>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-300">Connexion à la salle…</p>
+                                    <p class="mt-1 text-[11px] text-slate-500">Les participants apparaîtront ici.</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Barre de contrôle superposée (visible en plein écran) -->
-                        <div v-if="isConnected" class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                            <div v-if="audioBlocked" class="mb-2 flex justify-center">
-                                <Button label="Activer le son" icon="pi pi-volume-up" size="small" severity="warn" @click="enableAudio" />
-                            </div>
-                            <div class="flex items-center justify-center gap-2">
-                                <Button :icon="`pi pi-${isAudioEnabled ? 'microphone' : 'microphone-slash'}`" rounded
-                                        :severity="isAudioEnabled ? 'secondary' : 'danger'"
-                                        v-tooltip.top="isAudioEnabled ? 'Couper le micro' : 'Activer le micro'" @click="toggleAudio" />
-                                <Button :icon="`pi pi-${isVideoEnabled ? 'video' : 'video-slash'}`" rounded
-                                        :severity="isVideoEnabled ? 'secondary' : 'danger'"
-                                        v-tooltip.top="isVideoEnabled ? 'Couper la caméra' : 'Activer la caméra'" @click="toggleVideo" />
-                                <Button :icon="`pi pi-${isScreenSharing ? 'desktop' : 'clone'}`" rounded
-                                        :severity="isScreenSharing ? 'primary' : 'secondary'"
-                                        v-tooltip.top="isScreenSharing ? 'Arrêter le partage' : 'Partager l’écran'" @click="toggleScreenShare" />
-                                <Button :icon="`pi pi-${isFullscreen ? 'window-minimize' : 'window-maximize'}`" rounded severity="secondary"
-                                        v-tooltip.top="isFullscreen ? 'Quitter le plein écran' : 'Plein écran'" @click="toggleFullscreen" />
-                                <Button icon="pi pi-comments" rounded :severity="showChat ? 'primary' : 'secondary'"
-                                        v-tooltip.top="showChat ? 'Masquer le chat' : 'Afficher le chat'" @click="showChat = !showChat" />
-                                <Button icon="pi pi-sign-out" rounded severity="danger" v-tooltip.top="'Quitter'" @click="leaveRoom" />
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Participants -->
-                    <div v-if="participants.length" class="flex gap-2 overflow-x-auto pb-1">
-                        <div v-for="p in participants" :key="'chip-' + p.identity"
-                             class="flex items-center gap-2 bg-white border border-slate-200 rounded-full pl-1 pr-3 py-1 shrink-0">
-                            <span class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 text-xs font-black flex items-center justify-center">
-                                {{ (p.name || '?').charAt(0).toUpperCase() }}
+                    <!-- ===== Overlay de connexion ===== -->
+                    <div v-if="isConnecting" class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-slate-950/90 px-6 text-center backdrop-blur-sm">
+                        <div class="relative flex h-16 w-16 items-center justify-center">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500/25"></span>
+                            <span class="relative inline-flex h-14 w-14 items-center justify-center rounded-full border border-red-400/30 bg-red-500/10">
+                                <i class="pi pi-spin pi-spinner text-xl text-red-300"></i>
                             </span>
-                            <span class="text-xs font-semibold text-slate-700 max-w-[140px] truncate">{{ p.name }}<template v-if="p.isLocal"> (vous)</template></span>
-                            <i class="pi text-[10px]" :class="p.hasAudio ? 'pi-microphone text-emerald-500' : 'pi-microphone-slash text-rose-400'"></i>
-                            <i class="pi text-[10px]" :class="p.hasVideo ? 'pi-video text-indigo-500' : 'pi-video-slash text-rose-400'"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-white">Connexion à la salle…</p>
+                            <p class="mt-1 text-[11px] text-slate-400">{{ connectingStatus }}</p>
+                        </div>
+                        <p class="max-w-xs text-[10px] leading-relaxed text-slate-500">
+                            Autorisez le micro et la caméra si votre navigateur le demande.
+                        </p>
+                    </div>
+
+                    <!-- ===== Barre de contrôle ===== -->
+                    <div v-if="isConnected" class="absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-2 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 pb-3 pt-12">
+                        <button
+                            v-if="audioBlocked"
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/15 px-3 py-1.5 text-[10px] font-bold text-amber-200 backdrop-blur transition-colors hover:bg-amber-500/25"
+                            @click="enableAudio"
+                        >
+                            <i class="pi pi-volume-up text-[10px]"></i>
+                            Activer le son
+                        </button>
+
+                        <div class="flex items-center gap-1.5 rounded-2xl border border-white/[0.10] bg-slate-950/85 p-1.5 shadow-2xl backdrop-blur-xl">
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl transition-all focus-visible:outline-2 focus-visible:outline-red-400"
+                                :class="isAudioEnabled ? 'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12]' : 'bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/25'"
+                                :aria-label="isAudioEnabled ? 'Couper le micro' : 'Activer le micro'"
+                                :aria-pressed="isAudioEnabled"
+                                v-tooltip.top="isAudioEnabled ? 'Couper le micro' : 'Activer le micro'"
+                                @click="toggleAudio"
+                            >
+                                <i :class="isAudioEnabled ? 'pi pi-microphone' : 'pi pi-microphone pi-is-off'" class="text-sm"></i>
+                            </button>
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl transition-all focus-visible:outline-2 focus-visible:outline-red-400"
+                                :class="isVideoEnabled ? 'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12]' : 'bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/25'"
+                                :aria-label="isVideoEnabled ? 'Couper la caméra' : 'Activer la caméra'"
+                                :aria-pressed="isVideoEnabled"
+                                v-tooltip.top="isVideoEnabled ? 'Couper la caméra' : 'Activer la caméra'"
+                                @click="toggleVideo"
+                            >
+                                <i :class="isVideoEnabled ? 'pi pi-video' : 'pi pi-video pi-is-off'" class="text-sm"></i>
+                            </button>
+                            <span class="mx-0.5 h-6 w-px bg-white/[0.08]"></span>
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl transition-all focus-visible:outline-2 focus-visible:outline-red-400"
+                                :class="isScreenSharing ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30 hover:bg-blue-500/30' : 'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12]'"
+                                :aria-label="isScreenSharing ? 'Arrêter le partage' : 'Partager l\'écran'"
+                                :aria-pressed="isScreenSharing"
+                                v-tooltip.top="isScreenSharing ? 'Arrêter le partage' : 'Partager l\'écran'"
+                                @click="toggleScreenShare"
+                            >
+                                <i :class="isScreenSharing ? 'pi pi-desktop' : 'pi pi-clone'" class="text-sm"></i>
+                            </button>
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-slate-200 transition-all hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-red-400"
+                                :aria-label="isFullscreen ? 'Quitter le plein écran' : 'Plein écran'"
+                                v-tooltip.top="isFullscreen ? 'Quitter le plein écran' : 'Plein écran'"
+                                @click="toggleFullscreen"
+                            >
+                                <i :class="isFullscreen ? 'pi pi-window-minimize' : 'pi pi-window-maximize'" class="text-sm"></i>
+                            </button>
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl transition-all focus-visible:outline-2 focus-visible:outline-red-400"
+                                :class="showChat ? 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-400/30 hover:bg-blue-500/30' : 'bg-white/[0.06] text-slate-200 hover:bg-white/[0.12]'"
+                                :aria-label="showChat ? 'Masquer le chat' : 'Afficher le chat'"
+                                :aria-pressed="showChat"
+                                v-tooltip.top="showChat ? 'Masquer le chat' : 'Afficher le chat'"
+                                @click="showChat = !showChat"
+                            >
+                                <i class="pi pi-comments text-sm"></i>
+                            </button>
+                            <span class="mx-0.5 h-6 w-px bg-white/[0.08]"></span>
+                            <button
+                                type="button"
+                                class="flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-3 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-red-400"
+                                aria-label="Quitter la session"
+                                v-tooltip.top="'Quitter la session'"
+                                @click="leaveRoom"
+                            >
+                                <i class="pi pi-sign-out text-sm"></i>
+                                <span class="hidden sm:inline">Quitter</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Panneau chat latéral -->
-                <aside v-if="showChat" class="w-full xl:w-[340px] shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px] xl:h-[calc(100vh-220px)] xl:sticky xl:top-4">
-                    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                        <h2 class="text-sm font-black text-slate-800 flex items-center gap-2"><i class="pi pi-comments text-indigo-500"></i> Chat en direct</h2>
-                        <Button icon="pi pi-times" rounded text severity="secondary" v-tooltip.left="'Fermer le chat'" @click="showChat = false" />
-                    </div>
-
-                    <div class="flex-1 overflow-auto p-3 space-y-2">
-                        <div v-for="msg in chatMessages" :key="msg.id" class="p-2.5 rounded-xl" :class="msg.mine ? 'bg-indigo-50' : 'bg-slate-50'">
-                            <p class="text-[11px] font-bold text-slate-700">{{ msg.sender }}</p>
-
-                            <a v-if="msg.file" :href="msg.file.url" target="_blank" rel="noopener"
-                               class="flex items-center gap-2 mt-1 p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-400">
-                                <i class="pi pi-file text-indigo-600"></i>
-                                <span class="text-xs text-slate-700 truncate">{{ msg.file.name }}</span>
-                                <span class="text-[10px] text-slate-400 shrink-0">{{ formatBytes(msg.file.size) }}</span>
-                                <i class="pi pi-download text-slate-400 text-xs ml-auto"></i>
-                            </a>
-
-                            <p v-else class="text-sm text-slate-700 break-words">{{ msg.message }}</p>
-                            <p class="text-[10px] text-slate-400 mt-1">{{ msg.timestamp }}</p>
-                        </div>
-                        <div v-if="chatMessages.length === 0" class="text-center text-slate-400 py-10">
-                            <i class="pi pi-comment text-3xl mb-2 block text-slate-300"></i>
-                            <p class="text-sm">Aucun message pour le moment.</p>
-                        </div>
-                    </div>
-
-                    <div class="relative border-t border-slate-100 p-3">
-                        <div v-if="showEmojis" class="absolute bottom-full left-3 right-3 mb-1 bg-white border border-slate-200 rounded-xl shadow-lg p-2 grid grid-cols-8 gap-1">
-                            <button v-for="e in emojis" :key="e" type="button" class="text-xl hover:bg-slate-100 rounded p-1" @click="appendEmoji(e)">{{ e }}</button>
-                        </div>
-                        <div class="flex gap-2">
-                            <input ref="fileInput" type="file" class="hidden" @change="uploadDocument"
-                                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip,.png,.jpg,.jpeg,.webp,.gif,.mp4" />
-                            <Button icon="pi pi-paperclip" rounded outlined severity="secondary" v-tooltip.top="'Partager un document'" @click="fileInput?.click()" />
-                            <Button icon="pi pi-smile" rounded outlined severity="secondary" v-tooltip.top="'Émojis'" @click="showEmojis = !showEmojis" />
-                            <InputText v-model="chatInput" placeholder="Écrivez un message..." class="flex-1" @keyup.enter="sendChatMessage" @focus="showEmojis = false" />
-                            <Button icon="pi pi-send" rounded @click="sendChatMessage" v-tooltip.top="'Envoyer'" />
-                        </div>
-                    </div>
-                </aside>
             </div>
         </div>
+
+        <!-- ===== Chat en direct ===== -->
+        <aside v-if="showChat" class="absolute inset-0 z-40 flex min-h-0 flex-col border-l border-white/[0.08] bg-slate-900 md:static md:z-auto md:w-[340px] md:shrink-0 md:bg-slate-900/60 md:backdrop-blur-xl">
+            <div class="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.07] px-4">
+                <div class="flex items-center gap-2">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/15 text-blue-300 ring-1 ring-blue-400/20">
+                        <i class="pi pi-comments text-[11px]"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-[12px] font-bold text-white">Chat en direct</h2>
+                        <p class="text-[9px] font-medium uppercase tracking-widest text-slate-500">{{ displayedMessages.length }} message{{ displayedMessages.length > 1 ? 's' : '' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button
+                        type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="chatRefreshing"
+                        @click="reloadChat"
+                        aria-label="Recharger les messages"
+                        v-tooltip.top="'Recharger les messages'"
+                    >
+                        <i :class="chatRefreshing ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'" class="text-xs"></i>
+                    </button>
+                    <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white" @click="showChat = false" aria-label="Fermer le chat">
+                        <i class="pi pi-times text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div ref="chatScrollEl" class="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-3">
+                <div v-for="msg in displayedMessages" :key="msg.id" class="flex flex-col" :class="msg.mine ? 'items-end' : 'items-start'">
+                    <div
+                        class="max-w-[88%] rounded-2xl px-3 py-2 transition-opacity"
+                        :class="[
+                            msg.mine ? 'rounded-br-md' : 'rounded-bl-md',
+                            msg.failed ? 'bg-rose-500/15 text-rose-100 ring-1 ring-rose-400/30' : msg.mine ? 'bg-blue-600 text-white' : 'bg-white/[0.06] text-slate-200 ring-1 ring-white/[0.05]',
+                            msg.pending ? 'opacity-80' : '',
+                        ]"
+                    >
+                        <p v-if="!msg.mine" class="mb-0.5 text-[10px] font-bold text-slate-400">{{ msg.sender }}</p>
+
+                        <a v-if="msg.file" :href="msg.file.url" target="_blank" rel="noopener" class="mt-1 flex items-center gap-2 rounded-lg border border-white/[0.10] bg-slate-950/40 p-2 transition-colors hover:border-blue-400/50">
+                            <i class="pi pi-file text-xs text-blue-300"></i>
+                            <span class="min-w-0 flex-1 truncate text-[10px] text-slate-200">{{ msg.file.name }}</span>
+                            <span class="shrink-0 text-[9px] text-slate-500">{{ formatBytes(msg.file.size) }}</span>
+                            <i class="pi pi-download text-[10px] text-slate-400"></i>
+                        </a>
+
+                        <p v-else class="break-words text-[12px] leading-relaxed">{{ msg.message }}</p>
+                    </div>
+                    <span class="mt-1 flex items-center gap-1.5 px-1 text-[9px] text-slate-500">
+                        <template v-if="msg.pending">
+                            <i class="pi pi-spin pi-spinner text-[9px] text-blue-300"></i>
+                            <span class="text-blue-300">Envoi…</span>
+                        </template>
+                        <template v-else-if="msg.failed">
+                            <i class="pi pi-exclamation-circle text-[9px] text-rose-400"></i>
+                            <span class="text-rose-300">Non envoyé</span>
+                            <button type="button" class="font-semibold text-blue-300 underline-offset-2 hover:underline" @click="retryChatMessage(msg)">Réessayer</button>
+                        </template>
+                        <template v-else>{{ msg.timestamp }}</template>
+                    </span>
+                </div>
+
+                <div v-if="displayedMessages.length === 0" class="flex h-full flex-col items-center justify-center px-6 text-center">
+                    <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.03]">
+                        <i class="pi pi-comment text-lg text-slate-600"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-400">Aucun message pour le moment.</p>
+                    <p class="mt-1 text-[10px] leading-relaxed text-slate-600">Posez votre première question à l'instructeur.</p>
+                </div>
+            </div>
+
+            <div class="relative shrink-0 border-t border-white/[0.07] p-3">
+                <div v-if="showEmojis" class="absolute bottom-full left-3 right-3 z-10 mb-2 grid grid-cols-8 gap-1 rounded-xl border border-white/[0.10] bg-slate-900 p-2 shadow-2xl">
+                    <button v-for="e in emojis" :key="e" type="button" class="rounded-lg p-1 text-lg transition-colors hover:bg-white/[0.08]" @click="appendEmoji(e)">{{ e }}</button>
+                </div>
+
+                <input ref="fileInput" type="file" class="hidden" @change="uploadDocument" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip,.png,.jpg,.jpeg,.webp,.gif,.mp4" />
+
+                <div class="flex items-center gap-1.5">
+                    <button type="button" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-white" aria-label="Partager un document" v-tooltip.top="'Partager un document'" @click="fileInput?.click()">
+                        <i class="pi pi-paperclip text-xs"></i>
+                    </button>
+                    <button type="button" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-white" aria-label="Insérer un émoji" v-tooltip.top="'Émojis'" @click="showEmojis = !showEmojis">
+                        <span aria-hidden="true" class="text-sm leading-none">🙂</span>
+                    </button>
+                    <input
+                        v-model="chatInput"
+                        type="text"
+                        placeholder="Écrivez un message…"
+                        class="h-9 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.05] px-3 text-[11px] text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-blue-400/60"
+                        @keyup.enter="sendChatMessage"
+                        @focus="showEmojis = false"
+                    />
+                    <button
+                        type="button"
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-blue-400"
+                        :disabled="!chatInput.trim() || chatSending"
+                        :aria-label="chatSending ? 'Envoi en cours' : 'Envoyer le message'"
+                        v-tooltip.top="chatSending ? 'Envoi en cours…' : 'Envoyer'"
+                        @click="sendChatMessage"
+                    >
+                        <i :class="chatSending ? 'pi pi-spin pi-spinner' : 'pi pi-send'" class="text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
 
         <!-- Confirmation des informations en fin de session -->
         <Dialog v-model:visible="showConfirm" modal header="Confirmez vos informations" :style="{ width: '440px', maxWidth: '95vw' }">
             <div class="space-y-3 pt-2">
                 <p class="text-sm text-slate-600">Merci d'avoir suivi cette session. Confirmez vos informations pour votre attestation de présence.</p>
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Nom complet</label>
-                    <InputText v-model="confirmName" class="w-full" />
+                    <label class="mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-400">Nom complet</label>
+                    <input v-model="confirmName" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500" />
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">E-mail</label>
-                    <InputText v-model="confirmEmail" type="email" class="w-full" />
+                    <label class="mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-400">E-mail</label>
+                    <input v-model="confirmEmail" type="email" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500" />
                 </div>
             </div>
             <template #footer>
-                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 w-full">
-                    <Button label="Plus tard" text severity="secondary" @click="skipConfirmation" />
-                    <Button label="Confirmer" icon="pi pi-check" :loading="confirmSubmitting" @click="submitConfirmation" />
+                <div class="flex w-full justify-end gap-2 border-t border-slate-100 pt-3">
+                    <button type="button" class="h-9 rounded-lg px-3 text-xs font-semibold text-slate-500 hover:bg-slate-100" @click="skipConfirmation">Plus tard</button>
+                    <button type="button" class="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50" :disabled="confirmSubmitting" @click="submitConfirmation">
+                        <i :class="confirmSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'" class="text-[11px]"></i>
+                        Confirmer
+                    </button>
                 </div>
             </template>
         </Dialog>
     </div>
 </template>
-
 <style scoped>
 video {
     transform: translateZ(0);
