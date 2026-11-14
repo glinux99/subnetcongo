@@ -584,7 +584,7 @@ onMounted(() => {
                 >
 
                     <template #empty>
-                        <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                        <div class="flex flex-col items-center justify-center p-8 sm:p-12 md:p-20 text-slate-500 bg-white">
                             <div class="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
                                 <i class="pi pi-check-circle text-5xl text-emerald-400"></i>
                             </div>
@@ -648,9 +648,10 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.grading.colActions')" alignFrozen="right" :frozen="true" style="text-align: right min-width: 8rem;">
+                    <Column :header="t('pages.grading.colActions')" style="text-align: right; min-width: 3.5rem;">
                         <template #body="{ data }">
-                            <Button :label="t('pages.grading.openWorkspaceButton')" icon="pi pi-external-link" class="p-button-sm p-button-primary shadow-sm font-bold w-full" @click="openGrading(data)" />
+                            <Button :label="t('pages.grading.openWorkspaceButton')" icon="pi pi-external-link" class="hidden md:inline-flex p-button-sm p-button-primary shadow-sm font-bold w-full" @click="openGrading(data)" />
+                            <Button icon="pi pi-external-link" class="md:hidden p-button-rounded p-button-primary p-button-text w-11 h-11" :aria-label="t('pages.grading.openWorkspaceButton')" v-tooltip.top="t('pages.grading.openWorkspaceButton')" @click="openGrading(data)" />
                         </template>
                     </Column>
 
@@ -1090,6 +1091,4 @@ onMounted(() => {
 :deep(.p-editor-container .p-editor-content) {
     border-bottom-left-radius: 0.75rem;
     border-bottom-right-radius: 0.75rem;
-    border-color: #e2e8f0;
-}
-</style>
+    border-color: #e2e8

@@ -30,6 +30,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import SelectButton from 'primevue/selectbutton';
 import OverlayPanel from 'primevue/overlaypanel';
+import Menu from 'primevue/menu';
 import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 
