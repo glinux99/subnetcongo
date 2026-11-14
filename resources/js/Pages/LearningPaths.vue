@@ -395,9 +395,9 @@ onMounted(() => {
             </template>
 
             <!-- Colonne Expand pour le Syllabus -->
-            <Column expander style="width: 3rem; background-color: #f8fafc;" />
+            <Column expander style="width: 3rem" />
 
-            <Column field="name" :header="t('pages.learning_paths.colPathIdentity')" style="min-width: 25rem; background-color: #f8fafc;">
+            <Column field="name" :header="t('pages.learning_paths.colPathIdentity')" style="min-width: 25rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-4 py-2">
                         <div class="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0 overflow-hidden relative shadow-sm group cursor-pointer" @click="editPath(data)">
@@ -424,7 +424,7 @@ onMounted(() => {
             </Column>
 
             <!-- COLONNE NOUVELLE : LA COHORTE -->
-            <Column field="cohort" :header="t('pages.learning_paths.colCohort')" style="min-width: 14rem; background-color: #f8fafc;">
+            <Column field="cohort" :header="t('pages.learning_paths.colCohort')" style="min-width: 14rem">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center gap-2">
@@ -444,7 +444,7 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="metrics" :header="t('pages.learning_paths.colVolume')" style="min-width: 12rem; background-color: #f8fafc;">
+            <Column field="metrics" :header="t('pages.learning_paths.colVolume')" style="min-width: 12rem">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
                         <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-book text-blue-400"></i> {{ data.courses_count_cache || data.courses?.length || 0 }} {{ t('pages.learning_paths.coursesIncluded') }}</div>
@@ -453,13 +453,13 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="status" :header="t('pages.learning_paths.colStatus')" style="min-width: 8rem; background-color: #f8fafc;">
+            <Column field="status" :header="t('pages.learning_paths.colStatus')" style="min-width: 8rem">
                 <template #body="{ data }">
                     <Tag :severity="getStatusDef(data.status).sev" :icon="`pi ${getStatusDef(data.status).icon}`" :value="getStatusDef(data.status).label" class="text-[10px] uppercase font-bold px-2 py-1" />
                 </template>
             </Column>
 
-            <Column :header="t('pages.learning_paths.colActions')" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right; background-color: #f8fafc;">
+            <Column :header="t('pages.learning_paths.colActions')" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right">
                 <template #body="{ data }">
                     <div class="flex justify-end gap-2">
                         <Button :label="t('pages.learning_paths.btnCohort')" icon="pi pi-users" class="p-button-outlined p-button-sm p-button-info font-bold bg-white hover:bg-blue-50" v-tooltip.top="t('pages.learning_paths.tooltipManageStudents')" @click="openCohortManager(data)" />

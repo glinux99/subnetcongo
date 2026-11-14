@@ -651,10 +651,10 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </div>
             </template>
 
-            <Column expander style="width: 3rem; background-color: #f8fafc;" />
+            <Column expander style="width: 3rem" />
 
             <!-- COLONNE : INFO MODULE -->
-            <Column field="title" :header="t('pages.modules.colModule')" style="min-width: 25rem; background-color: #f8fafc;">
+            <Column field="title" :header="t('pages.modules.colModule')" style="min-width: 25rem">
                 <template #body="{ data }">
                     <div class="flex gap-4 py-1">
 
@@ -680,7 +680,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </template>
             </Column>
 
-            <Column field="stats" :header="t('pages.modules.colContent')" style="min-width: 10rem; background-color: #f8fafc;">
+            <Column field="stats" :header="t('pages.modules.colContent')" style="min-width: 10rem">
                 <template #body="{ data }">
                     <div class="flex flex-col text-xs text-slate-600 space-y-1">
                         <span class="font-bold"><i class="pi pi-file text-slate-400 mr-1 text-[10px]"></i> {{ data.lessons?.length || 0 }} {{ t('pages.modules.lessonsCount') }}</span>
@@ -689,13 +689,13 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </template>
             </Column>
 
-            <Column field="status" :header="t('pages.modules.colStatus')" style="min-width: 8rem; background-color: #f8fafc;">
+            <Column field="status" :header="t('pages.modules.colStatus')" style="min-width: 8rem">
                 <template #body="{ data }">
                     <Tag :severity="data.status === 'published' ? 'success' : 'secondary'" :value="data.status === 'published' ? t('pages.modules.statusPublished') : t('pages.modules.statusDraftTag')" class="text-[10px] uppercase font-bold tracking-wider" />
                 </template>
             </Column>
 
-            <Column :header="t('pages.modules.colActions')" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right; background-color: #f8fafc;">
+            <Column :header="t('pages.modules.colActions')" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right">
                 <template #body="{ data }">
                     <div class="flex justify-end gap-1 whitespace-nowrap">
                         <Button icon="pi pi-plus" class="p-button-text p-button-success p-button-rounded bg-emerald-50 hover:bg-emerald-100 w-8 h-8" v-tooltip.top="t('pages.modules.addLessonTooltip')" @click="openNewLesson(data.id)" />

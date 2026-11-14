@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('live-sessions:sweep')
             ->everyMinute()
             ->withoutOverlapping();
+
+        // Métriques infra du dashboard admin : diffusion WebSocket uniquement.
+        // Le scheduler déclenche la mesure ; le navigateur ne recharge pas la page.
+        $schedule->command('dashboard:broadcast-metrics')
+            ->everyMinute()
+            ->withoutOverlapping();
     }
 
     /**

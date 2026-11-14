@@ -2,7 +2,7 @@
 /**
  * PageHeader — En-tête de page unifié (hero sombre).
  * Usage : <PageHeader title="..." subtitle="..." badge="..." icon="pi-book" accent="blue" :actions="[...]" />
- * actions : [{ label, icon, href?, onClick?, variant: 'primary' | 'secondary', ariaLabel? }]
+ * actions : [{ label, icon, href?, onClick?, variant: 'primary' | 'secondary' | 'danger', ariaLabel?, disabled? }]
  *   - avec `href` : rendu en lien Inertia
  *   - sans `href` : rendu en <button> appelant `onClick`
  */
@@ -16,6 +16,12 @@ defineProps({
     accent:   { type: String, default: 'blue' },
     actions:  { type: Array, default: () => [] },
 });
+
+const variantClass = (variant) => {
+    if (variant === 'primary') return 'btn-header-primary';
+    if (variant === 'danger') return 'btn-header-danger';
+    return 'btn-header-secondary';
+};
 
 const accentMap = {
     blue:    { icon: 'bg-blue-600',    badge: 'bg-blue-500/10 text-blue-300 border-blue-400/30' },
@@ -52,7 +58,7 @@ const accentMap = {
                         v-if="action.href"
                         :href="action.href"
                         :aria-label="action.ariaLabel || undefined"
-                        :class="action.variant === 'primary' ? 'btn-header-primary' : 'btn-header-secondary'"
+                        :class="['flex-1 sm:flex-none', variantClass(action.variant)]"
                     >
                         <i v-if="action.icon" :class="['pi', action.icon]" aria-hidden="true"></i>
                         {{ action.label }}
@@ -62,7 +68,7 @@ const accentMap = {
                         type="button"
                         :aria-label="action.ariaLabel || undefined"
                         :disabled="action.disabled"
-                        :class="[action.variant === 'primary' ? 'btn-header-primary' : 'btn-header-secondary', 'disabled:opacity-50 disabled:cursor-not-allowed']"
+                        :class="['flex-1 sm:flex-none', variantClass(action.variant), 'disabled:opacity-50 disabled:cursor-not-allowed']"
                         @click="action.onClick && action.onClick()"
                     >
                         <i v-if="action.icon" :class="['pi', action.icon]" aria-hidden="true"></i>

@@ -8,7 +8,6 @@ const props = defineProps({
 
 const page = usePage();
 
-// Segments fréquents -> libellés français lisibles (sans IDs ni jargon technique)
 const LABELS = {
     admin: 'Administration',
     dashboard: 'Tableau de bord',
@@ -84,7 +83,6 @@ const LABELS = {
     billing: 'Facturation',
     legal: 'Identité légale',
     questions_answers: 'Réponses',
-    // Verbes usuels -> français métier
     create: 'Créer',
     new: 'Nouveau',
     edit: 'Modifier',
@@ -102,15 +100,13 @@ const LABELS = {
     dashboard_view: 'Tableau de bord',
 };
 
-// Segments techniques à masquer (IDs auto-incrémentés, UUIDs, hashes)
 const isIdSegment = (seg) => {
-    if (/^\d+$/.test(seg)) return true; // 12, 45…
-    if (/^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$/.test(seg)) return true; // uuid
-    if (/^[0-9a-f]{20,}$/i.test(seg)) return true; // hashes
+    if (/^\d+$/.test(seg)) return true;
+    if (/^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$/.test(seg)) return true;
+    if (/^[0-9a-f]{20,}$/i.test(seg)) return true;
     return false;
 };
 
-// Verbes filtrés (pas de crumb « index/update/delete » vide de sens)
 const isSilentSegment = (seg) => ['index', 'update', 'store', 'destroy'].includes(seg);
 
 const labelFor = (seg) => {
@@ -142,19 +138,41 @@ const trail = computed(() => {
     if (crumbs.length > 0) crumbs[crumbs.length - 1] = { ...crumbs[crumbs.length - 1], to: null };
     return crumbs;
 });
+
+const currentCrumb = computed(() => trail.value[trail.value.length - 1] || { label: 'Accueil' });
 </script>
 
 <template>
-    <nav class="flex items-center gap-1.5 text-xs font-bold min-w-0" aria-label="Fil d’Ariane">
-        <template v-for="(item, idx) in trail" :key="idx">
-            <i v-if="item.icon" :class="item.icon" class="text-slate-400 text-xs shrink-0" aria-hidden="true"></i>
-            <Link v-if="item.to && idx < trail.length - 1"
-                  :href="item.to"
-                  class="text-slate-500 hover:text-violet-600 transition-colors truncate">
-                {{ item.label }}
+    <nav class="flex min-w-0 items-center gap-1.5 text-[11px] font-bold sm:text-xs" aria-label="Fil d’Ariane">
+        <!-- Mobile : Accueil + page courante uniquement -->
+        <div class="flex min-w-0 items-center gap-1.5 sm:hidden">
+            <Link
+                :href="homeHref()"
+                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2 text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            >
+                <i class="pi pi-home text-xs" aria-hidden="true"></i>
+                <span class="max-w-20 truncate">Accueil</span>
             </Link>
-            <span v-else class="text-slate-800 truncate" aria-current="page">{{ item.label }}</span>
-            <i v-if="idx < trail.length - 1" class="pi pi-angle-right text-slate-300 text-[10px] mx-1 shrink-0" aria-hidden="true"></i>
-        </template>
+            <i v-if="trail.length > 1" class="pi pi-angle-right shrink-0 text-[10px] text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
+            <span v-if="trail.length > 1" class="min-w-0 truncate text-slate-800 dark:text-slate-100" aria-current="page">
+                {{ currentCrumb.label }}
+            </span>
+        </div>
+
+        <!-- Desktop : fil complet -->
+        <ol class="hidden min-w-0 items-center gap-1.5 sm:flex">
+            <template v-for="(item, idx) in trail" :key="idx">
+                <li class="flex min-w-0 items-center gap-1.5">
+                    <i v-if="item.icon" :class="item.icon" class="shrink-0 text-xs text-slate-400 dark:text-slate-500" aria-hidden="true"></i>
+                    <Link v-if="item.to && idx < trail.length - 1"
+                          :href="item.to"
+                          class="rounded-md px-1 py-0.5 text-slate-500 transition-colors hover:bg-slate-200/60 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100">
+                        {{ item.label }}
+                    </Link>
+                    <span v-else class="truncate rounded-md px-1 py-0.5 text-slate-800 dark:text-slate-100" aria-current="page">{{ item.label }}</span>
+                    <i v-if="idx < trail.length - 1" class="pi pi-angle-right shrink-0 text-[10px] text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
+                </li>
+            </template>
+        </ol>
     </nav>
 </template>

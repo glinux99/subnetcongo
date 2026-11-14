@@ -67,7 +67,8 @@ const form = useForm({
     localization: { ...props.settings.localization },
     mail: { ...props.settings.mail },
     security: { ...props.settings.security },
-    advanced: { ...props.settings.advanced }
+    advanced: { ...props.settings.advanced },
+    ui: { ...(props.settings.ui || { help_hints_enabled: true, help_hints_ttl_days: 3 }) }
 });
 
 // --- MÉTHODES ---
@@ -152,6 +153,8 @@ const siteHealth = computed(() => {
 
 const healthSeverity = computed(() => siteHealth.value > 80 ? 'success' : siteHealth.value > 50 ? 'warning' : 'danger');
 
+const helpPresets = [0, 2, 4, 7, 14, 30];
+
 const output = ref('');
 const artisanRunning = ref(false);
 const artisanCommands = [
@@ -175,7 +178,7 @@ const runArtisan = (cmd) => {
             output.value = page.props?.flash?.output ?? '';
             toast.add({ severity: 'success', summary: t('pages.settings.artisan_ok'), detail: cmd, life: 3000 });
         },
-        onError: () => toast.add({ severity: 'error', summary: t('errors.error'), detail: t('pages.settings.artisan_failed'), life: 4000 }),
+                onError: () => toast.add({ severity: 'error', summary: t('pages.settings.error'), detail: t('pages.settings.artisan_failed'), life: 4000 }),
         onFinish: () => { artisanRunning.value = null; },
     });
 };
@@ -470,6 +473,66 @@ const runArtisan = (cmd) => {
                                             <label class="block text-sm font-bold text-slate-800 w-1/2">{{ t('pages.settings.session_timeout') }}</label>
                                             <InputNumber v-model="form.security.session_timeout" showButtons :min="15" :step="15" class="w-1/2" inputClass="!rounded-lg text-center font-bold" />
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        <!-- --- TAB 6: AIDE CONTEXTUELLE --- -->
+                        <TabPanel>
+                            <template #header><i class="pi pi-info-circle mr-2"></i> {{ t('pages.settings.tab_help') }}</template>
+                            <div class="p-6 sm:p-8 lg:p-12 space-y-8">
+                                <div>
+                                    <h3 class="text-lg font-bold tracking-tight text-slate-900">{{ t('pages.settings.help_hints_title') }}</h3>
+                                    <p class="mt-1 text-sm leading-relaxed text-slate-500">{{ t('pages.settings.help_hints_desc') }}</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                    <div class="flex flex-col justify-between gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <div class="min-w-0">
+                                                <span class="block font-bold text-slate-800">{{ t('pages.settings.help_hints_enabled') }}</span>
+                                                <p class="mt-1 text-xs leading-relaxed text-slate-500">{{ t('pages.settings.help_hints_enabled_desc') }}</p>
+                                            </div>
+                                            <InputSwitch v-model="form.ui.help_hints_enabled" aria-label="Aide contextuelle" />
+                                        </div>
+                                        <InlineMessage v-if="!form.ui.help_hints_enabled" severity="info" :closable="false" class="!mt-0">
+                                            {{ t('pages.settings.help_hints_disabled_note') }}
+                                        </InlineMessage>
+                                    </div>
+
+                                    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                                        <label class="block text-xs font-semibold uppercase text-slate-400" for="help-hints-ttl">{{ t('pages.settings.help_hints_ttl') }}</label>
+                                        <p class="mt-1 text-xs leading-relaxed text-slate-500">{{ t('pages.settings.help_hints_ttl_desc') }}</p>
+
+                                        <div class="mt-5 flex flex-wrap items-center gap-4">
+                                            <InputNumber
+                                                id="help-hints-ttl"
+                                                v-model="form.ui.help_hints_ttl_days"
+                                                :min="0"
+                                                :max="365"
+                                                suffix=" jours"
+                                                class="w-36"
+                                                inputClass="!rounded-lg !p-3 text-center font-bold"
+                                                :disabled="!form.ui.help_hints_enabled"
+                                            />
+                                            <div class="flex flex-wrap gap-2">
+                                                <Button
+                                                    v-for="days in helpPresets"
+                                                    :key="days"
+                                                    type="button"
+                                                    :label="days === 0 ? t('pages.settings.help_hints_unlimited') : `${days}j`"
+                                                    size="small"
+                                                    :outlined="form.ui.help_hints_ttl_days !== days"
+                                                    severity="secondary"
+                                                    class="!rounded-lg !text-xs !font-bold"
+                                                    :disabled="!form.ui.help_hints_enabled"
+                                                    @click="form.ui.help_hints_ttl_days = days"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <p class="mt-5 text-xs leading-relaxed text-slate-500"><i class="pi pi-info-circle mr-1 text-blue-500" aria-hidden="true"></i>{{ t('pages.settings.help_hints_user_close') }}</p>
                                     </div>
                                 </div>
                             </div>

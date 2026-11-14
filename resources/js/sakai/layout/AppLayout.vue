@@ -28,6 +28,9 @@ const isImmersiveLive = computed(() => {
 const isNavigatingToNewPage = ref(false);
 
 router.on('before', (event) => {
+    // Ferme toujours le menu mobile / overlay à la navigation.
+    resetMenu();
+
     // Si l'URL change vraiment (nouvelle page), on autorise la remontée
     // Si c'est juste un paramètre de filtre (?start_date=...), on reste stable
     const isFilter = event.detail.visit.data?.hasOwnProperty('start_date');
@@ -133,10 +136,10 @@ watch(dateRange, (newDates) => {
         <app-sidebar></app-sidebar>
 
         <div class="layout-main-container" :class="isImmersiveLive ? 'live-immersive' : ''">
-            <div v-if="!isImmersiveLive" class="px-6 py-4 sticky top-20 z-10 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div v-if="!isImmersiveLive" class="sticky top-16 z-30 border-b border-slate-200/70 bg-slate-50/90 px-2 py-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90 sm:px-4 sm:py-3 xl:px-6">
+                <div class="flex min-w-0 flex-wrap items-center justify-between gap-2 md:gap-3">
                     <AppBreadcrumb />
-                    <div class="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div class="hidden min-w-0 items-center gap-2 rounded-xl border border-slate-100 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:flex">
                         <Dropdown
                             v-model="filterType"
                             :options="[

@@ -1,8 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { router, usePage, Link } from '@inertiajs/vue3';
 import axios from 'axios';
-import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
 
 const page = usePage();
@@ -11,6 +10,9 @@ const visible = ref(false);
 const notifications = ref([]);
 const unreadCount = ref(0);
 const loading = ref(false);
+const realtime = ref(false);
+let echoChannel = null;
+let pollInterval = null;
 
 const loadNotifications = async () => {
     loading.value = true;
@@ -40,7 +42,7 @@ const markAsRead = async (n) => {
 const markAllAsRead = async () => {
     try {
         await axios.post(route('notifications.read-all'));
-        notifications.value.forEach(n => n.read_at = new Date().toISOString());
+        notifications.value.forEach((n) => { n.read_at = new Date().toISOString(); });
         unreadCount.value = 0;
         toast.add({ severity: 'success', summary: 'Notifications marquées comme lues', life: 2500 });
     } catch (e) {}
@@ -50,92 +52,129 @@ const severityColor = (s) => {
     return { success: 'success', warn: 'warn', error: 'danger', info: 'info' }[s] || 'info';
 };
 
-const toggle = (e) => {
+const toggle = () => {
     visible.value = !visible.value;
     if (visible.value) loadNotifications();
 };
 
-// Polling fallback (toutes les 60s) si pas de WebSocket
-let pollInterval;
 onMounted(() => {
     loadNotifications();
-    pollInterval = setInterval(loadNotifications, 60000);
+
+    const userId = page.props.auth?.user?.id;
+    if (userId && window.Echo) {
+        try {
+            const channelName = `App.Models.User.${userId}`;
+            echoChannel = window.Echo.private(channelName)
+                .notification(() => loadNotifications())
+                .error(() => { realtime.value = false; });
+            echoChannel.subscribed(() => { realtime.value = true; });
+        } catch (e) {
+            realtime.value = false;
+        }
+    }
+
+    pollInterval = window.setInterval(loadNotifications, window.Echo ? 300000 : 60000);
 });
-onBeforeUnmount(() => clearInterval(pollInterval));
+
+onBeforeUnmount(() => {
+    if (pollInterval) window.clearInterval(pollInterval);
+    const userId = page.props.auth?.user?.id;
+    if (userId && window.Echo) {
+        window.Echo.leave(`App.Models.User.${userId}`);
+    }
+});
 </script>
 
 <template>
     <div class="relative">
-        <button @click="toggle"
-                class="layout-topbar-action relative p-2.5 rounded-xl hover:bg-gray-50 border-none bg-transparent cursor-pointer">
-            <i class="pi pi-bell text-gray-600 text-lg"></i>
-            <span v-if="unreadCount > 0"
-                  class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md ring-2 ring-white animate-pulse">
+        <button
+            type="button"
+            @click="toggle"
+            class="relative inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+            :aria-label="`Notifications${unreadCount ? ` (${unreadCount} non lues)` : ''}`"
+            :aria-expanded="visible"
+        >
+            <i class="pi pi-bell text-lg" aria-hidden="true"></i>
+            <span
+                v-if="unreadCount > 0"
+                class="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white shadow-md ring-2 ring-white dark:ring-slate-950"
+            >
                 {{ unreadCount > 99 ? '99+' : unreadCount }}
             </span>
         </button>
 
         <Transition name="dropdown">
-            <div v-if="visible"
-                 class="absolute right-0 mt-3 w-96 bg-white shadow-2xl rounded-xl border border-slate-100 z-[120] overflow-hidden"
-                 @click.stop>
-                <!-- Header -->
-                <div class="px-4 py-3 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100 flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-black text-slate-800">Notifications</p>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-widest">
+            <div
+                v-if="visible"
+                class="absolute right-0 z-[120] mt-3 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-slate-100 bg-white text-left shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+                @click.stop
+            >
+                <div class="flex items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white px-4 py-3 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
+                    <div class="min-w-0">
+                        <p class="text-sm font-black text-slate-800 dark:text-slate-100">Notifications</p>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                             {{ unreadCount > 0 ? `${unreadCount} non-lue(s)` : 'Tout est à jour' }}
                         </p>
                     </div>
-                    <button v-if="unreadCount > 0"
-                            @click="markAllAsRead"
-                            class="text-[10px] font-black text-violet-600 uppercase tracking-widest hover:underline">
+                    <button
+                        v-if="unreadCount > 0"
+                        type="button"
+                        class="shrink-0 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-800"
+                        @click="markAllAsRead"
+                    >
                         Tout marquer
                     </button>
                 </div>
 
-                <!-- List -->
-                <div class="max-h-[480px] overflow-y-auto">
-                    <div v-if="loading && notifications.length === 0" class="p-12 text-center">
-                        <i class="pi pi-spin pi-spinner text-2xl text-violet-400"></i>
+                <div class="max-h-[min(30rem,70dvh)] overflow-y-auto">
+                    <div v-if="loading && notifications.length === 0" class="p-10 text-center">
+                        <i class="pi pi-spin pi-spinner text-2xl text-blue-500" aria-hidden="true"></i>
                     </div>
 
-                    <div v-else-if="notifications.length === 0" class="p-12 text-center text-slate-400">
-                        <i class="pi pi-inbox text-4xl mb-2 block"></i>
+                    <div v-else-if="notifications.length === 0" class="p-10 text-center text-slate-400 dark:text-slate-500">
+                        <i class="pi pi-inbox mb-2 block text-4xl" aria-hidden="true"></i>
                         <p class="text-xs font-bold">Aucune notification</p>
                     </div>
 
-                    <button v-for="n in notifications" :key="n.id"
-                            type="button"
-                            @click="markAsRead(n)"
+                    <button
+                        v-for="n in notifications"
+                        :key="n.id"
+                        type="button"
+                        @click="markAsRead(n)"
+                        :class="[
+                            'flex w-full items-start gap-3 border-b border-slate-50 p-3 text-left transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-slate-800/60',
+                            !n.read_at && 'bg-blue-50/40 dark:bg-blue-950/20',
+                        ]"
+                    >
+                        <span
                             :class="[
-                                'flex items-start gap-3 w-full p-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-50 last:border-0',
-                                !n.read_at && 'bg-violet-50/40'
-                            ]">
-                        <div :class="[
-                            'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
-                            n.severity === 'success' ? 'bg-emerald-100 text-emerald-600' :
-                            n.severity === 'warn' ? 'bg-amber-100 text-amber-600' :
-                            n.severity === 'error' ? 'bg-rose-100 text-rose-600' :
-                            'bg-violet-100 text-violet-600'
-                        ]">
+                                'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                                n.severity === 'success' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400' :
+                                n.severity === 'warn' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400' :
+                                n.severity === 'error' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400' :
+                                'bg-blue-100 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400',
+                            ]"
+                            aria-hidden="true"
+                        >
                             <i :class="`pi ${n.icon} text-sm`"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start gap-2">
-                                <p class="text-xs font-black text-slate-800 line-clamp-1">{{ n.title }}</p>
-                                <span v-if="!n.read_at" class="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0 mt-1"></span>
-                            </div>
-                            <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{{ n.message }}</p>
-                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">{{ n.time_ago }}</p>
-                        </div>
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="flex items-start justify-between gap-2">
+                                <span class="line-clamp-1 text-xs font-black text-slate-800 dark:text-slate-100">{{ n.title }}</span>
+                                <span v-if="!n.read_at" class="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-500" aria-hidden="true"></span>
+                            </span>
+                            <span class="mt-0.5 line-clamp-2 block text-[11px] text-slate-500 dark:text-slate-400">{{ n.message }}</span>
+                            <span class="mt-1 block text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ n.time_ago }}</span>
+                        </span>
                     </button>
                 </div>
 
-                <!-- Footer -->
-                <Link :href="route('notifications.index')"
-                      class="block px-4 py-3 bg-slate-50 border-t border-slate-100 text-center text-[10px] font-black text-violet-600 uppercase tracking-widest hover:bg-violet-50 transition-colors">
-                    Voir toutes les notifications →
+                <Link
+                    :href="route('notifications.index')"
+                    class="block border-t border-slate-100 bg-slate-50 px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-blue-600 transition-colors hover:bg-blue-50 dark:border-slate-800 dark:bg-slate-950/60 dark:text-blue-300 dark:hover:bg-slate-800"
+                    @click="visible = false"
+                >
+                    Voir toutes les notifications
                 </Link>
             </div>
         </Transition>
@@ -143,10 +182,13 @@ onBeforeUnmount(() => clearInterval(pollInterval));
 </template>
 
 <style scoped>
-.dropdown-enter-active, .dropdown-leave-active {
+.dropdown-enter-active,
+.dropdown-leave-active {
     transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-.dropdown-enter-from, .dropdown-leave-to {
+
+.dropdown-enter-from,
+.dropdown-leave-to {
     opacity: 0;
     transform: translateY(-8px) scale(0.96);
 }

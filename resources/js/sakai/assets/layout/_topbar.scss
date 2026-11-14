@@ -5,11 +5,24 @@
     left: 0;
     top: 0;
     width: 100%;
-    padding: 0 2rem;
+    padding: 0 0.75rem;
     background-color: var(--surface-card);
-    transition: left var(--layout-section-transition-duration);
+    border-bottom: 1px solid var(--surface-border);
+    backdrop-filter: blur(12px);
+    transition:
+        background-color var(--element-transition-duration),
+        border-color var(--element-transition-duration),
+        left var(--layout-section-transition-duration);
     display: flex;
     align-items: center;
+
+    @media (min-width: 640px) {
+        padding: 0 1rem;
+    }
+
+    @media (min-width: 1280px) {
+        padding: 0 2rem;
+    }
 
     .layout-topbar-logo-container {
         width: 20rem;
@@ -97,7 +110,7 @@
 
 @media (max-width: 991px) {
     .layout-topbar {
-        padding: 0 2rem;
+        padding: 0 0.75rem;
 
         .layout-topbar-logo-container {
             width: auto;

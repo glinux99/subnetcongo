@@ -3,7 +3,7 @@ import { useLayout } from '@/sakai/layout/composables/layout';
 import { $t, updatePreset, updateSurfacePalette } from '@primevue/themes';
 import Aura from '@primevue/themes/aura';
 import Lara from '@primevue/themes/lara';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
 
@@ -183,6 +183,16 @@ function applyTheme(type, color) {
     }
 }
 
+onMounted(() => {
+    const primary = primaryColors.value.find((c) => c.name === layoutConfig.primary) || primaryColors.value.find((c) => c.name === 'blue');
+    if (primary) applyTheme('primary', primary);
+
+    const surface = surfaces.value.find((s) => s.name === layoutConfig.surface) || surfaces.value.find((s) => s.name === 'slate');
+    if (surface) applyTheme('surface', surface);
+
+    if (layoutConfig.preset && layoutConfig.preset !== 'Aura') onPresetChange();
+});
+
 function onPresetChange() {
     setPreset(preset.value);
     const presetValue = presets[preset.value];
@@ -198,7 +208,7 @@ function onMenuModeChange() {
 
 <template>
     <div
-        class="config-panel hidden absolute top-[3.25rem] right-0 w-64 p-4 bg-surface-0 dark:bg-surface-900 border border-surface rounded-border origin-top shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
+        class="config-panel hidden absolute top-[4.25rem] right-0 w-64 p-4 bg-surface-0 dark:bg-surface-900 border border-surface rounded-border origin-top shadow-[0px_3px_5px_rgba(0,0,0,0.02),0px_0px_2px_rgba(0,0,0,0.05),0px_1px_4px_rgba(0,0,0,0.08)]"
     >
         <div class="flex flex-col gap-4">
             <div>

@@ -26,6 +26,7 @@ namespace App\Http\Controllers;
  * @license     Proprietary - SubnetCongo
  */
 
+use App\Support\InfrastructureMetrics;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\AuditLog;
@@ -485,110 +486,7 @@ class DashboardController extends Controller
      */
     private function getRealTimeInfrastructureStatus(): array
     {
-        return Cache::remember(self::CACHE_KEY_INFRA, 30, function () {
-            return PHP_OS_FAMILY === 'Windows'
-                ? $this->getWindowsMetrics()
-                : $this->getLinuxMetrics();
-        });
-    }
-
-    /**
-     * Métriques pour environnement de développement (Windows)
-     */
-    private function getWindowsMetrics(): array
-    {
-        try {
-            $cpuOutput = shell_exec('wmic cpu get loadpercentage /value');
-            preg_match('/LoadPercentage=(\d+)/', (string) $cpuOutput, $matches);
-            $cpu = isset($matches[1]) ? (int) $matches[1] : rand(10, 30);
-
-            $freeMem = shell_exec('wmic OS get FreePhysicalMemory /Value');
-            $totalMem = shell_exec('wmic OS get TotalVisibleMemorySize /Value');
-            preg_match('/FreePhysicalMemory=(\d+)/', (string) $freeMem, $mFree);
-            preg_match('/TotalVisibleMemorySize=(\d+)/', (string) $totalMem, $mTotal);
-
-            $ram = 0;
-            if (isset($mFree[1], $mTotal[1]) && (int) $mTotal[1] > 0) {
-                $ram = round(100 - (($mFree[1] / $mTotal[1]) * 100));
-            }
-
-            $diskFree = disk_free_space('C:');
-            $diskTotal = disk_total_space('C:');
-            $diskUsage = $diskTotal > 0 ? round(100 - (($diskFree / $diskTotal) * 100)) : 0;
-
-            return [
-                'platform' => 'Windows (Development)',
-                'cpu' => $cpu,
-                'ram' => $ram,
-                'disk' => $diskUsage,
-                'db_latency' => $this->measureDbLatency(),
-                'status' => $cpu < 85 ? 'Optimal' : 'Surchargé',
-                'uptime' => 'N/A sur Windows dev',
-            ];
-        } catch (\Throwable $e) {
-            return $this->getMockMetrics('Erreur Win Metrics: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Métriques pour environnement de production (Linux)
-     */
-    private function getLinuxMetrics(): array
-    {
-        try {
-            $load = sys_getloadavg();
-            $cpu = round($load[0] * 100 / 4); // basé sur 4 coeurs, à adapter si besoin
-
-            $ram = $this->getLinuxRamUsage();
-
-            $diskFree = disk_free_space('/');
-            $diskTotal = disk_total_space('/');
-            $diskUsage = $diskTotal > 0 ? round(100 - (($diskFree / $diskTotal) * 100)) : 0;
-
-            return [
-                'platform' => 'Linux (Production)',
-                'cpu' => $cpu,
-                'ram' => $ram,
-                'disk' => $diskUsage,
-                'db_latency' => $this->measureDbLatency(),
-                'status' => $cpu < 80 ? 'Optimal' : 'Attention',
-                'uptime' => trim((string) shell_exec('uptime -p')),
-            ];
-        } catch (\Throwable $e) {
-            return $this->getMockMetrics('Erreur Linux Metrics: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Utilisation RAM sous Linux via `free`. Extrait dans sa propre méthode pour
-     * être réutilisable (avant : dupliqué en ligne dans getLinuxMetrics() ET dans
-     * une méthode getLinuxRamUsage() jamais appelée).
-     */
-    private function getLinuxRamUsage(): int
-    {
-        $free = trim((string) shell_exec('free'));
-        if (! $free) {
-            return 0;
-        }
-
-        $lines = explode("\n", $free);
-        $mem = array_values(array_filter(explode(' ', $lines[1] ?? '')));
-
-        if (count($mem) < 3 || (float) $mem[1] === 0.0) {
-            return 0;
-        }
-
-        return (int) round(($mem[2] / $mem[1]) * 100);
-    }
-
-    /**
-     * Mesure la latence réelle de la DB (round trip).
-     */
-    private function measureDbLatency(): float
-    {
-        $start = microtime(true);
-        DB::select('SELECT 1');
-        return round((microtime(true) - $start) * 1000, 2);
+        return InfrastructureMetrics::status();
     }
 
     /**
@@ -1027,24 +925,6 @@ class DashboardController extends Controller
             'avg_response_time' => '1.2h',
             'satisfaction_rate' => '94%',
             'recent_tickets' => Ticket::latest()->take(5)->get(['id', 'subject', 'priority', 'status']),
-        ];
-    }
-
-    /**
-     * Système de secours pour les métriques en cas d'erreur fatale.
-     */
-    private function getMockMetrics(string $error): array
-    {
-        Log::critical('Infrastructure Metrics Error: ' . $error);
-
-        return [
-            'platform' => 'Unknown (Error Fallback)',
-            'cpu' => 0,
-            'ram' => 0,
-            'disk' => 0,
-            'db_latency' => 0,
-            'status' => 'Indisponible',
-            'error' => $error,
         ];
     }
 

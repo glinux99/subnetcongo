@@ -122,6 +122,45 @@ merci de les ajouter au dépôt (ex. `.devin/skills/<nom>/SKILL.md`) pour qu'ils
 Voir la section « Checklist » de la PR (build Vite, `php -l`, Pest comparé à `main`, recherche
 `alert(`/`confirm(`, vérification des routes Ziggy utilisées).
 
+## 2026-11-14 (soir) — Mobile : dialogues et navigation
+
+**Contexte** : Daniel montre que les dialogs débordent sur mobile, que le menu latéral reste ouvert après un clic, et demande l'adaptation de toutes les pages + tableaux au mobile.
+
+**Décisions**
+- **Fermeture automatique du menu** dans `AppLayout` (`router.on('before')`) plutôt que de compter sur chaque `MenuItem` : toute navigation, y compris les filtres `?start_date=...`, referme l'overlay/mobile. C'est le comportement attendu d'un drawer.
+- **Dialogues alignés en haut et en plein écran utile** : `.p-dialog-mask` avec padding 0.375rem + `.p-dialog` en `max-height: 100dvh - 0.75rem`, flex column, contenu scrollable interne. `SncDialog` : largeur `min(width, 100vw - 0.75rem)`, header/body compacts, footer wrappable. `Courses.vue` : header tronqué sur une ligne, stepper horizontal sous le header sur mobile, footer actions en `flex-1`.
+- **Tableaux adaptés** : les 8 tableaux HTML natifs sans wrapper reçoivent `overflow-x-auto` et un `min-width` (Exams, Affiliates, Web/Pages) ; DataTable compacte via la surcouche CSS (`font-size .8125rem`, cellules nowrap, wrapper scrollable). Le desktop n'est pas touché.
+- **Tableaux = expérience mobile d'abord** : colonne principale + statut/kebab uniquement sous `md` ; prix/métriques repoussés sous `xl` ; sélection/expansion masquables sous `md` ; actions regroupées en menu ⋮ (même pattern que Live Sessions) ; fonds `#f8fafc/#ffffff` supprimés des `<Column>` au profit des tokens `--snc-*` pour rendre le mode sombre cohérent.
+- **Colonnes `modules` manquantes** : `has_quiz`, `quiz_required`, `document_name` attendues par le modèle mais absentes en base (SQLSTATE 1054 à la sauvegarde). Migration additive locale appliquée ; aucun déploiement sans go.
+
+## 2026-11-14 — Shell mobile/dark : fil visible, tokens et WebSocket dashboard
+
+**Contexte** : Daniel demande l'adaptation mobile de toutes les pages, la réduction des textes, le masquage d'éléments secondaires, la création d'un skill dédié, la correction du sidebar/appbar en dark mode, et l'abandon du rechargement automatique du dashboard au profit du WebSocket.
+
+**Décisions**
+- **Skill spécifique** `subnetcongo-mobile-dark-ux` plutôt qu'un simple « responsive pass » : il capture le shell réel (topbar fixe, sidebar, fil d'Ariane, `.page-container`), les anti-patterns déjà constatés et la checklist de vérification mobile/dark.
+- **Shell unique** : topbar 4rem en tokens (`--surface-card`) au lieu de `bg-white/90` qui écrasait le thème ; `.layout-main-container` reçoit `padding-top: 4rem` ; fil d'Ariane sticky sous la topbar (`top-16 z-30`) ; contenu `.page-container` ramené à `z-index: 1` (avant 20 → il passait devant le fil). Le fil est réduit à 2 segments sur mobile et masqué le filtre date global sous `md`.
+- **Tokens/dark partout où l'app ne couvre pas `.layout-main`** : topbar, sidebar, fil, footer, palette, notifications, dropdowns. La couche de compatibilité `.layout-main` de `app.css` ne suffit pas à ces overlays.
+- **Réduire avant de masquer** : surcouche mobile après Tailwind (typo/padding/grid/dialogs/datatables). Les pages conservent le desktop ; seuls les éléments secondaires sont masqués (métadonnées, colonnes, filtre date global).
+- **Dashboard sans auto-reload** : `router.reload` toutes les 30 s supprimé. Les métriques infra sont poussées par Echo (`admin.dashboard.metrics`, ShouldBroadcastNow) via la commande `dashboard:broadcast-metrics` planifiée chaque minute ; diffusion seulement si le hash des métriques change. Le bouton « Actualiser » reste manuel et l'utilisateur déclenche lui-même une mise à jour complète.
+- **Aides contextuelles pilotées** : `ContextHint` remplace le simple hint des filtres ; `/system/settings` › Aide & messages permet d'activer/désactiver globalement et de fixer un TTL en jours (0=illimité, 2/4/7/14/30 proposés). Le choix utilisateur est aussi enregistré par compte (localStorage).
+
+**Conséquences** : le fil d'Ariane reste lisible, le shell suit dark/thème, le mobile devient la base de la surcouche, le dashboard ne se recharge plus tout seul. Reste à valider visuellement sur 360/768/1280 px et à exécuter Reverb (ou Pusher) en prod — uniquement sur go explicite.
+
+## 2026-11-14 — Dashboard admin : hiérarchie, filtres utiles et accessibilité
+
+**Contexte** : demande de refonte design du dashboard administrateur (`Dashboard.vue`) en s'appuyant sur les skills UI/UX e-learning, avec priorité hiérarchie/hero/KPI + mobile/accessibilité.
+
+**Décisions**
+- **Composants partagés plutôt que styles locaux** : `PageHeader` gagne une variante `danger` (purge) et des actions 44 px pleine largeur sur mobile ; `PageKpi` gagne `trendSuffix`, `trendLabel`, flèches directionnelles et un état neutre. Les autres pages héritent des gains d'accessibilité sans changement de markup.
+- **Filtres honnêtes** : on remplace les tags année/mois décoratifs et la recherche sans effet par une toolbar avec labels visibles. L'année pilote KPI + graphiques ; recherche/catégorie pilotent le tableau des cours (`cohorts`, jusqu'ici passé mais jamais affiché). Le mois est retiré car le contrôleur ne l'utilise pas.
+- **Nouvelle table « Performance des cours »** : exploite `cohorts` (déjà fourni par `DashboardController@adminDashboard`) en tableau desktop et cartes mobile ; aucun changement backend.
+- **Infrastructure accessible** : les Knob sont remplacés par des jauges `role="meter"` avec seuils (75 %/90 %), statut textuel et heure de dernière mesure ; polling 30 s conservé mais sans barre de progression Inertia.
+- **Charts** : options Chart.js theme-agnostiques, tooltip en devise, `aria-label` sur les conteneurs, animation désactivée si `prefers-reduced-motion`.
+- **Chargement réel** : suppression du faux skeleton de 500 ms ; le skeleton ne s'affiche que pendant les requêtes de filtres, avec `aria-live` discret.
+
+**Conséquences** : dashboard plus dense mais hiérarchisé, filtres qui font ce qu'ils annoncent, meilleure lisibilité mobile et clavier. Aucun changement de données ni de routes. Reste à valider visuellement avec un compte admin local.
+
 ## 2026-11-14 — Live : timezone, accès chat et icônes PrimeIcons
 
 **Contexte** : heures de session décalées de −2 h, chat invisible pour les étudiants invités, micro/caméra qui ne publient pas, double envoi de messages, icônes micro/caméra/émoji vides.

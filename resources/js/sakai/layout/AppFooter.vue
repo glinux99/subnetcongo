@@ -1,24 +1,24 @@
-<script setup></script>
+<script setup>
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const appMeta = computed(() => page.props.app_meta || {});
+const identity = computed(() => page.props.identity || {});
+const year = new Date().getFullYear();
+const siteName = computed(() => identity.value.site_name || appMeta.value.name || 'SubnetCongo');
+const version = computed(() => appMeta.value.version || '2.4.2');
+</script>
 
 <template>
-    <div class="">
-          <footer class="mt-12  flex flex-col md:flex-row justify-between items-center text-slate-400 text-[10px] font-bold uppercase tracking-widest bg-white/50 p-6 rounded-[1rem]">
-                <div class="flex items-center gap-4">
-                    <span>© 2026 MAINTX</span>
-                    <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                    <span class="text-primary-500">
-                      Design by   <a href="https://www.linkedin.com/in/daniel-kikimba" target="_blank" rel="noopener noreferrer" class="text-primary font-bold hover:underline">Linux99</a>
-
-
-                    </span>
-                </div>
-                <div class="flex gap-6">
-                    <!-- <a href="#" class="hover:text-primary-500 transition-colors">Documentation API</a>
-                    <a href="#" class="hover:text-primary-500 transition-colors">Support Support</a> -->
-                    <span class="text-slate-300">v2.4.2-STABLE</span>
-                </div>
-            </footer>
-
-
-    </div>
+    <footer class="mt-10 flex flex-col items-center justify-between gap-2 rounded-2xl border border-slate-100 bg-white/60 p-4 text-center text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-500 sm:flex-row sm:text-left md:p-5">
+        <div class="flex min-w-0 flex-wrap items-center justify-center gap-3 sm:justify-start">
+            <span>© {{ year }} {{ siteName }}</span>
+            <span class="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" aria-hidden="true"></span>
+            <span class="text-slate-500 dark:text-slate-400">SubnetCongo Academy</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-slate-400 dark:text-slate-500">v{{ version }}-stable</span>
+        </div>
+    </footer>
 </template>

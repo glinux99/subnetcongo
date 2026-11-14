@@ -593,23 +593,24 @@ onMounted(() => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
+                    <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+                    <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                    <Column field="student.name" :header="t('pages.grading.colStudentSubmission')" style="min-width: 22rem; background-color: #f8fafc;">
+                    <Column field="student.name" :header="t('pages.grading.colStudentSubmission')" style="min-width: 0">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-4 py-2">
-                                <div class="relative">
+                            <div class="flex items-center gap-2 sm:gap-4 py-1 sm:py-2 min-w-0">
+                                <div class="relative flex-shrink-0">
                                     <Avatar :image="data.student.avatar" shape="circle" size="large" class="shadow-sm border border-slate-200" />
                                     <div v-if="data.status === 'in_progress'" class="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-400 border-2 border-white rounded-full flex items-center justify-center" v-tooltip.top="t('pages.grading.draftInProgressTooltip')"><i class="pi pi-pencil text-[8px] text-white"></i></div>
                                 </div>
-                                <div class="flex flex-col justify-center">
-                                    <div class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer flex items-center gap-2" @click="openGrading(data)">
-                                        {{ data.student.name }}
-                                        <Badge :value="data.student.cohort" severity="secondary" class="text-[9px] bg-slate-100 text-slate-600 border border-slate-200"></Badge>
+                                <div class="flex flex-col justify-center min-w-0">
+                                    <div class="font-extrabold text-slate-800 text-sm sm:text-base hover:text-blue-600 cursor-pointer flex items-center gap-2" @click="openGrading(data)">
+                                        <span class="truncate">{{ data.student.name }}</span>
+                                        <Badge :value="data.student.cohort" severity="secondary" class="hidden sm:inline-flex text-[9px] bg-slate-100 text-slate-600 border border-slate-200"></Badge>
                                     </div>
-                                    <div class="text-xs text-slate-500 mt-1 font-medium flex items-center gap-2">
+                                    <div class="text-xs text-slate-500 mt-1 font-medium flex flex-wrap items-center gap-2">
                                         <span class="flex items-center gap-1"><i class="pi pi-calendar text-[10px]"></i> {{ data.submitted_at }}</span>
+                                        <Tag :value="getStatusBadge(data.status).label" :severity="getStatusBadge(data.status).sev" class="md:hidden text-[9px] font-bold px-1.5 py-0.5 border" />
                                         <Tag v-if="data.similarity_score > 15" :severity="getSimilaritySeverity(data.similarity_score)" class="text-[9px] px-1 py-0"><i class="pi pi-shield text-[8px] mr-1"></i> {{ t('pages.grading.plagiarismTag', { score: data.similarity_score }) }}</Tag>
                                     </div>
                                 </div>
@@ -617,7 +618,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="exam" :header="t('pages.grading.colExamProgram')" style="min-width: 18rem; background-color: #f8fafc;">
+                    <Column field="exam" :header="t('pages.grading.colExamProgram')" style="min-width: 18rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1">
                                 <span class="font-bold text-slate-700 text-sm line-clamp-1">{{ data.exam }}</span>
@@ -626,7 +627,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="urgency" :header="t('pages.grading.colPriority')" style="background-color: #f8fafc;">
+                    <Column field="urgency" :header="t('pages.grading.colPriority')" >
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
                                 <div v-if="data.urgency === 'critical'" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
@@ -635,7 +636,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="status" :header="t('pages.grading.colCorrectionStatus')" style="background-color: #f8fafc; min-width: 12rem;">
+                    <Column field="status" :header="t('pages.grading.colCorrectionStatus')" style=" min-width: 12rem;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5 w-full">
                                 <div class="flex justify-between items-center text-[11px] font-bold" :class="`text-${getStatusBadge(data.status).sev}-700`">
@@ -647,7 +648,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.grading.colActions')" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 8rem;">
+                    <Column :header="t('pages.grading.colActions')" alignFrozen="right" :frozen="true" style="text-align: right min-width: 8rem;">
                         <template #body="{ data }">
                             <Button :label="t('pages.grading.openWorkspaceButton')" icon="pi pi-external-link" class="p-button-sm p-button-primary shadow-sm font-bold w-full" @click="openGrading(data)" />
                         </template>

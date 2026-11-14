@@ -1,11 +1,24 @@
 import { computed, reactive, readonly } from 'vue';
 
+const storage = (key, fallback) => {
+    try {
+        return typeof window !== 'undefined' ? (localStorage.getItem(key) ?? fallback) : fallback;
+    } catch (_) {
+        return fallback;
+    }
+};
+const persist = (key, value) => {
+    try {
+        if (typeof window !== 'undefined') localStorage.setItem(key, String(value));
+    } catch (_) { /* stockage indisponible */ }
+};
+
 const layoutConfig = reactive({
-    preset: 'Aura',
-    primary: 'emerald',
-    surface: null,
-    darkTheme: typeof window !== 'undefined' && localStorage.getItem('snc-dark-mode') === '1',
-    menuMode: 'static'
+    preset: storage('snc-preset', 'Aura'),
+    primary: storage('snc-primary', 'blue'),
+    surface: storage('snc-surface', 'slate'),
+    darkTheme: storage('snc-dark-mode', '0') === '1',
+    menuMode: storage('snc-menu-mode', 'static'),
 });
 
 const storedActiveMenuItem = (() => {
@@ -25,14 +38,17 @@ const layoutState = reactive({
 export function useLayout() {
     const setPrimary = (value) => {
         layoutConfig.primary = value;
+        persist('snc-primary', value);
     };
 
     const setSurface = (value) => {
         layoutConfig.surface = value;
+        persist('snc-surface', value);
     };
 
     const setPreset = (value) => {
         layoutConfig.preset = value;
+        persist('snc-preset', value);
     };
 
     const setActiveMenuItem = (item) => {
@@ -49,6 +65,7 @@ export function useLayout() {
 
     const setMenuMode = (mode) => {
         layoutConfig.menuMode = mode;
+        persist('snc-menu-mode', mode);
     };
 
     const toggleDarkMode = () => {
@@ -64,7 +81,7 @@ export function useLayout() {
     const executeDarkModeToggle = () => {
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
         document.documentElement.classList.toggle('app-dark', layoutConfig.darkTheme);
-        localStorage.setItem('snc-dark-mode', layoutConfig.darkTheme ? '1' : '0');
+        persist('snc-dark-mode', layoutConfig.darkTheme ? '1' : '0');
     };
 
     const onMenuToggle = () => {

@@ -81,6 +81,10 @@ class HandleInertiaRequests extends Middleware
                     ? 0 // Mis à jour dynamiquement sur la page email
                     : 0,
             ] : [],
+            'ui' => [
+                'helpHintsEnabled' => (bool) \App\Support\SystemSettings::get('ui_help_hints_enabled', '1'),
+                'helpHintsTtlDays' => (int) \App\Support\SystemSettings::get('ui_help_hints_ttl_days', '3'),
+            ],
             'app_meta' => [
                 'name' => config('app.name'),
                 'env' => config('app.env'),

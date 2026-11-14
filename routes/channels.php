@@ -27,6 +27,13 @@ Broadcast::channel('live-session.{sessionId}', function ($user, $sessionId) {
 });
 
 /**
+ * Métriques d'infrastructure du dashboard administrateur.
+ */
+Broadcast::channel('admin.dashboard.metrics', function ($user) {
+    return $user && method_exists($user, 'hasAnyRole') ? $user->hasAnyRole(['admin', 'superadmin']) : false;
+});
+
+/**
  * Canal de présence pour le chat d'un live.
  */
 Broadcast::channel('presence-live.{sessionId}', function ($user, $sessionId) {

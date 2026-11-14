@@ -543,10 +543,10 @@ onBeforeUnmount(() => {
                     </template>
 
                     <!-- COLONNES -->
-                    <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
+                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
+                    <Column expander style="width: 3rem" />
 
-                    <Column field="name" :header="t('pages.students.colLearnerIdentity')" style="min-width: 22rem; background-color: #f8fafc;">
+                    <Column field="name" :header="t('pages.students.colLearnerIdentity')" style="min-width: 22rem">
                         <template #body="{ data }">
                             <div class="flex items-center gap-4 py-2">
                                 <!-- Avatar cliquable -->
@@ -571,7 +571,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="status" :header="t('pages.students.colAccountState')" style="min-width: 10rem; background-color: #f8fafc;">
+                    <Column field="status" :header="t('pages.students.colAccountState')" style="min-width: 10rem">
                         <template #body="{ data }">
                             <Tag
                                 :value="data.status"
@@ -582,7 +582,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="academic" :header="t('pages.students.colPerformance')" style="min-width: 14rem; background-color: #f8fafc;">
+                    <Column field="academic" :header="t('pages.students.colPerformance')" style="min-width: 14rem">
                         <template #body="{ data }">
                             <div class="flex flex-col w-full gap-1.5">
                                 <div class="flex justify-between text-[11px] font-bold text-slate-500">
@@ -599,7 +599,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="created_at" :header="t('pages.students.colEnrollment')" style="min-width: 10rem; background-color: #f8fafc;">
+                    <Column field="created_at" :header="t('pages.students.colEnrollment')" style="min-width: 10rem">
                         <template #body="{ data }">
                             <span class="text-slate-600 text-sm font-medium flex items-center gap-2">
                                 <!-- {{data.created_at}} -->
@@ -609,7 +609,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.students.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
+                    <Column :header="t('pages.students.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
                                 <Button icon="pi pi-eye" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.students.fullProfile')" @click="viewProfile(data)" />

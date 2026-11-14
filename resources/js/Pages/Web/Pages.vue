@@ -31,11 +31,11 @@ onMounted(async () => {
                 <Link :href="route('web.pages.create')" class="px-6 py-3 bg-[#003399] text-white font-bold rounded"><i class="pi pi-plus mr-2"></i>{{ t('pages.web_pages.newPage') }}</Link>
             </div>
         </section>
-        <section class="py-10 px-6 bg-slate-50 min-h-[60vh]">
+        <section class="py-8 sm:py-10 px-3 sm:px-6 bg-slate-50 min-h-[60vh]">
             <div class="max-w-[1500px] mx-auto">
                 <div v-if="loading" class="text-center py-20 text-slate-500"><i class="pi pi-spin pi-spinner text-3xl"></i></div>
-                <div v-else-if="pages.length" class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="w-full">
+                <div v-else-if="pages.length" class="overflow-x-auto rounded-lg bg-white shadow">
+                    <table class="w-full min-w-[40rem]">
                         <thead class="bg-slate-100">
                             <tr><th class="text-left p-4">{{ t('pages.web_pages.colTitle') }}</th><th class="text-left p-4">Slug</th><th class="text-left p-4">{{ t('pages.web_pages.colStatus') }}</th><th class="p-4"></th></tr>
                         </thead>

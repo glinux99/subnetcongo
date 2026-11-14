@@ -532,7 +532,8 @@ const submitNewAffiliate = () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Derniers referrals</h4>
-                                <table v-if="affiliateDetail.referrals?.length" class="w-full text-xs">
+                                <div v-if="affiliateDetail.referrals?.length" class="overflow-x-auto">
+                                    <table class="w-full min-w-[22rem] text-xs">
                                     <thead>
                                         <tr class="text-left text-slate-400 border-b border-slate-100">
                                             <th class="pb-1">Cours</th><th class="pb-1">Date</th><th class="pb-1 text-right">Comm.</th>
@@ -545,12 +546,14 @@ const submitNewAffiliate = () => {
                                             <td class="py-1.5 text-right font-bold text-orange-600">{{ fmtMoney(ref.commission) }}</td>
                                         </tr>
                                     </tbody>
-                                </table>
+                                    </table>
+                                </div>
                                 <p v-else class="text-xs text-slate-400 py-4 text-center">Aucun referral pour le moment.</p>
                             </div>
                             <div>
                                 <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Derniers paiements</h4>
-                                <table v-if="affiliateDetail.payouts?.length" class="w-full text-xs">
+                                <div v-if="affiliateDetail.payouts?.length" class="overflow-x-auto">
+                                    <table class="w-full min-w-[22rem] text-xs">
                                     <thead>
                                         <tr class="text-left text-slate-400 border-b border-slate-100">
                                             <th class="pb-1">Date</th><th class="pb-1">Montant</th><th class="pb-1 text-right">Statut</th>
@@ -563,7 +566,8 @@ const submitNewAffiliate = () => {
                                             <td class="py-1.5 text-right"><Tag :value="payoutLabel(payout.status)" :severity="payoutSeverity(payout.status)" class="text-[9px]" /></td>
                                         </tr>
                                     </tbody>
-                                </table>
+                                    </table>
+                                </div>
                                 <p v-else class="text-xs text-slate-400 py-4 text-center">Aucun paiement pour le moment.</p>
                             </div>
                         </div>

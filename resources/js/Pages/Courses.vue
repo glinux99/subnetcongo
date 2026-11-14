@@ -60,6 +60,7 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import Tooltip from 'primevue/tooltip';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
+import Menu from 'primevue/menu';
 import { useI18n } from 'vue-i18n';
 const { t, locale } = useI18n();
 
@@ -97,6 +98,8 @@ const courseDialog = ref(false);
 const analyticsDialog = ref(false);
 const categoryDialog = ref(false);
 const expandedRows = ref([]);
+const courseRowMenu = ref(null);
+const courseRowMenuTarget = ref(null);
 const editorRef = ref(null);
 
 // Simulation de sauvegarde automatique
@@ -585,6 +588,31 @@ const confirmPurge = (course) => {
             });
         }
     });
+};
+
+const courseRowMenuItems = computed(() => {
+    const course = courseRowMenuTarget.value;
+    if (!course) return [];
+
+    if (course.status === 'archived') {
+        return [
+            { label: t('pages.courses.restoreCourseTooltip'), icon: 'pi pi-undo', command: () => restoreCourse(course.id) },
+            { separator: true },
+            { label: t('pages.courses.purgeCourseTooltip'), icon: 'pi pi-ban', command: () => confirmPurge(course), class: 'text-red-600' },
+        ];
+    }
+
+    return [
+        { label: t('pages.courses.editCurriculumTooltip'), icon: 'pi pi-pen-to-square', command: () => editCourse(course) },
+        { label: t('pages.courses.cloneCourseTooltip'), icon: 'pi pi-copy', command: () => cloneCourse(course) },
+        { separator: true },
+        { label: t('pages.courses.archiveCourseTooltip'), icon: 'pi pi-box', command: () => confirmArchive(course.id), class: 'text-amber-600' },
+    ];
+});
+
+const toggleCourseRowMenu = (event, course) => {
+    courseRowMenuTarget.value = course;
+    courseRowMenu.value?.toggle(event);
 };
 
 const confirmBulkPurge = () => {
@@ -1116,13 +1144,13 @@ onBeforeUnmount(() => {
                     @page="onPageChange"
                     :loading="loading"
                     responsiveLayout="stack"
-                    class="p-datatable-custom border-none"
+                    class="p-datatable-custom p-datatable-mobile border-none"
                     rowHover
                     stripedRows
                 >
                     <!-- EMPTY STATE -->
                     <template #empty>
-                        <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                        <div class="flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-500 bg-white sm:p-20">
                             <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                                 <i class="pi pi-inbox text-5xl text-slate-300"></i>
                             </div>
@@ -1135,14 +1163,14 @@ onBeforeUnmount(() => {
                     </template>
 
                     <!-- COLONNES -->
-                    <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
+                    <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+                    <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                    <Column field="title" :header="t('pages.courses.columnCourseIdentity')" style="min-width: 25rem; background-color: #f8fafc;">
+                    <Column field="title" :header="t('pages.courses.columnCourseIdentity')" headerClass="!text-left" style="min-width: 0">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-4 py-2">
+                            <div class="flex items-center gap-2 sm:gap-4 px-1 py-1 sm:py-2 min-w-0">
                                 <!-- Thumbnail -->
-                                <div class="w-24 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 relative group cursor-pointer" @click="editCourse(data)">
+                                <div class="w-14 h-10 sm:w-24 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 relative group cursor-pointer" @click="editCourse(data)">
                                     <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" :alt="t('pages.courses.thumbnailAlt')" />
                                     <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
                                         <i class="pi pi-image text-xl mb-1"></i>
@@ -1154,25 +1182,30 @@ onBeforeUnmount(() => {
                                 </div>
 
                                 <!-- Meta -->
-                                <div class="flex flex-col justify-center">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editCourse(data)">
+                                <div class="flex flex-col justify-center min-w-0">
+                                    <div class="flex items-center gap-1.5 sm:gap-2 mb-1 min-w-0">
+                                        <span class="font-extrabold text-slate-800 text-sm sm:text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1 dark:text-slate-100 dark:hover:text-blue-300" @click="editCourse(data)">
                                             {{ data.title }}
                                         </span>
-                                        <i v-if="data.is_featured" class="pi pi-star-fill text-amber-400 text-xs" v-tooltip.top="t('pages.courses.featuredTooltip')"></i>
-                                        <i v-if="data.certificate_enabled" class="pi pi-verified text-blue-500 text-xs" v-tooltip.top="t('pages.courses.certificateTooltip')"></i>
+                                        <i v-if="data.is_featured" class="pi pi-star-fill text-amber-400 text-[10px] sm:text-xs flex-none" v-tooltip.top="t('pages.courses.featuredTooltip')"></i>
+                                        <i v-if="data.certificate_enabled" class="pi pi-verified text-blue-500 text-[10px] sm:text-xs flex-none" v-tooltip.top="t('pages.courses.certificateTooltip')"></i>
                                     </div>
 
-                                    <div class="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                                        <span class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600">
-                                            <i class="pi pi-folder text-[10px]"></i>
-                                            {{ data.category?.name || t('pages.courses.generalCategoryFallback') }}
+                                    <div class="flex flex-wrap items-center gap-1 sm:gap-2 text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
+                                        <span class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-1.5 sm:px-2 py-0.5 rounded-md text-slate-600 max-w-36 sm:max-w-none truncate dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+                                            <i class="pi pi-folder text-[10px] flex-none"></i>
+                                            <span class="truncate">{{ data.category?.name || t('pages.courses.generalCategoryFallback') }}</span>
                                         </span>
-                                        <span class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600">
+                                        <Tag
+                                            :severity="getStatusBadgeDef(data.status).severity"
+                                            :value="getStatusBadgeDef(data.status).label"
+                                            class="md:hidden text-[9px] font-bold px-1.5 py-0.5 border"
+                                        />
+                                        <span class="hidden lg:flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
                                             <i class="pi pi-chart-bar text-[10px]"></i>
                                             {{ levelOptions.find(l => l.value === data.level)?.label || t('pages.courses.levelBeginner') }}
                                         </span>
-                                        <span v-if="data.estimated_duration" class="flex items-center gap-1 text-slate-400">
+                                        <span v-if="data.estimated_duration" class="hidden xl:flex items-center gap-1 text-slate-400">
                                             <i class="pi pi-clock text-[10px]"></i> {{ data.estimated_duration }}h
                                         </span>
                                     </div>
@@ -1181,7 +1214,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="price" :header="t('pages.courses.columnPricing')" style="min-width: 10rem; background-color: #f8fafc;">
+                    <Column field="price" :header="t('pages.courses.columnPricing')" headerClass="hidden xl:table-cell" bodyClass="hidden xl:table-cell" style="min-width: 10rem">
                         <template #body="{ data }">
                             <div v-if="data.price == 0" class="flex items-center">
                                 <Badge :value="t('pages.courses.freeBadge')" severity="success" class="text-[10px] tracking-wider border border-emerald-200 bg-emerald-50 text-emerald-700"></Badge>
@@ -1198,7 +1231,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="metrics" :header="t('pages.courses.columnMetrics')" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="metrics" :header="t('pages.courses.columnMetrics')" headerClass="hidden xl:table-cell" bodyClass="hidden xl:table-cell" style="min-width: 12rem">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-32">
@@ -1213,7 +1246,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="status" :header="t('pages.courses.columnStatus')" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="status" :header="t('pages.courses.columnStatus')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 12rem">
                         <template #body="{ data }">
                             <Tag
                                 :severity="getStatusBadgeDef(data.status).severity"
@@ -1225,18 +1258,22 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.courses.columnActions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
+                    <Column :header="t('pages.courses.columnActions')" headerClass="text-right" bodyClass="text-right" style="width: 3.25rem; min-width: 3.25rem;">
                         <template #body="{ data }">
-                            <div class="flex justify-end gap-1">
+                            <div class="hidden md:flex justify-end gap-1">
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.courses.editCurriculumTooltip')" @click="editCourse(data)" />
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-copy" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.courses.cloneCourseTooltip')" @click="cloneCourse(data)" />
-                                <!-- <Button icon="pi pi-external-link" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="'AperÃ§u Public du cours'" /> -->
                                 <Button v-if="data.status !== 'archived'" icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.courses.archiveCourseTooltip')" @click="confirmArchive(data.id)" />
-                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="t('pages.courses.restoreCourseTooltip')" @click="restoreCourse(data.id)" >
-  <template v-slot:loadingicon="slotProps"></template>
-</Button>
+                                <Button v-if="data.status === 'archived'" icon="pi pi-undo" class="p-button-text p-button-success p-button-rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50" v-tooltip.top="t('pages.courses.restoreCourseTooltip')" @click="restoreCourse(data.id)" />
                                 <Button v-if="data.status === 'archived'" icon="pi pi-ban" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.courses.purgeCourseTooltip')" @click="confirmPurge(data)" />
                             </div>
+                            <Button
+                                icon="pi pi-ellipsis-v"
+                                class="p-button-text p-button-secondary p-button-rounded w-11 h-11 md:hidden text-slate-500"
+                                :aria-label="t('pages.live_sessions.menu_more')"
+                                v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                @click="toggleCourseRowMenu($event, data)"
+                            />
                         </template>
                     </Column>
 
@@ -1296,6 +1333,8 @@ onBeforeUnmount(() => {
                         </div>
                     </template>
                 </DataTable>
+
+                <Menu id="course-actions-menu" ref="courseRowMenu" :model="courseRowMenuItems" popup aria-label="Actions du cours" />
             </div>
 
             </div>
@@ -1311,41 +1350,64 @@ onBeforeUnmount(() => {
             modal
             :closable="false"
             :draggable="false"
-            :style="{ width: '95vw', maxWidth: '1400px' }"
-            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[90vh]"
+            :style="{ width: 'min(calc(100vw - 0.5rem), 1400px)', maxWidth: '100vw' }"
+            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[calc(100dvh-0.5rem)] sm:h-[90vh]"
             headerClass="hidden"
             class="course-workspace rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
         >
             <!-- WORKSPACE HEADER (FIXE) -->
-            <div class="flex-none h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
+            <div class="flex-none min-h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center justify-between gap-2 px-2 py-1.5 sm:px-6 sm:py-0 z-20 shadow-sm relative">
                 <!-- Ligne de progression rÃ©elle en haut -->
                 <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-red-500 to-red-600 transition-all duration-500" :style="{ width: completionPercent + '%' }"></div>
 
-                <div class="flex items-center gap-5">
-                    <div class="w-11 h-11 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/30">
-                        <i class="pi pi-hammer text-lg"></i>
+                <div class="flex items-center gap-2 sm:gap-5 min-w-0 flex-1">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-red-500 to-red-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/30 flex-none">
+                        <i class="pi pi-hammer text-base sm:text-lg" aria-hidden="true"></i>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
-                            {{ courseForm.id ? t('pages.courses.editorTitleEdit') : t('pages.courses.editorTitleNew') }}
-                            <Tag v-if="courseForm.status" :severity="getStatusBadgeDef(courseForm.status).severity" :value="getStatusBadgeDef(courseForm.status).label" class="text-[9px] uppercase tracking-wider px-2 py-0.5"></Tag>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    <div class="min-w-0">
+                        <h2 class="text-[13px] sm:text-lg font-black text-slate-800 leading-tight flex items-center gap-1.5 sm:gap-3 min-w-0">
+                            <span class="truncate max-w-[46vw] sm:max-w-none">{{ courseForm.id ? t('pages.courses.editorTitleEdit') : t('pages.courses.editorTitleNew') }}</span>
+                            <Tag v-if="courseForm.status" :severity="getStatusBadgeDef(courseForm.status).severity" :value="getStatusBadgeDef(courseForm.status).label" class="hidden sm:inline-flex text-[9px] uppercase tracking-wider px-2 py-0.5 flex-none"></Tag>
+                            <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-1.5 sm:px-2.5 py-1 rounded-lg flex-none whitespace-nowrap">
                                 {{ t('pages.courses.stepLabel', { current: currentStepIndex + 1, total: editorMenu.length }) }}
                             </span>
                         </h2>
-                        <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span class="truncate max-w-[200px] md:max-w-[400px]">{{ courseForm.title || t('pages.courses.untitledCourse') }}</span>
-                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.courses.savedAtLabel', { time: formatDate(lastSavedAt) }) }}</span>
-                            <span v-else-if="courseForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.courses.modificationsInProgress') }}</span>
+                        <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-slate-500 mt-0.5 min-w-0">
+                            <span class="truncate max-w-[44vw] sm:max-w-[400px]">{{ courseForm.title || t('pages.courses.untitledCourse') }}</span>
+                            <span v-if="lastSavedAt" class="hidden xl:flex items-center gap-1 text-emerald-600 flex-none"><i class="pi pi-check-circle"></i> {{ t('pages.courses.savedAtLabel', { time: formatDate(lastSavedAt) }) }}</span>
+                            <span v-else-if="courseForm.isDirty" class="hidden sm:flex items-center gap-1 text-amber-500 flex-none"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.courses.modificationsInProgress') }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5 sm:gap-3 flex-none">
                     <Button icon="pi pi-external-link" :label="t('pages.courses.previewVisualButton')" class="p-button-text p-button-secondary p-button-sm hidden lg:flex font-bold" v-tooltip.bottom="t('pages.courses.previewTooltip')" :disabled="!courseForm.slug" @click="previewCourse" />
                     <div class="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
-                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="courseDialog = false" v-tooltip.bottom="t('pages.courses.closeWorkspaceTooltip')" />
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" :aria-label="t('components.confirm_dialog.close')" @click="courseDialog = false" v-tooltip.bottom="t('pages.courses.closeWorkspaceTooltip')" />
                 </div>
+            </div>
+
+            <!-- ÉTAPES — scroll horizontal sur mobile (la sidebar est masquée) -->
+            <div class="flex-none md:hidden flex gap-2 overflow-x-auto border-b border-slate-200 bg-white px-2 py-2 custom-scrollbar" role="tablist" :aria-label="t('pages.courses.designPhasesLabel')">
+                <button
+                    v-for="(item, index) in editorMenu"
+                    :key="item.id"
+                    type="button"
+                    role="tab"
+                    :aria-selected="activeEditorTab === item.id"
+                    @click="activeEditorTab = item.id"
+                    class="flex flex-none items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors min-w-[7.5rem]"
+                    :class="activeEditorTab === item.id ? 'border-red-200 bg-red-50 text-red-800 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600'"
+                >
+                    <span class="flex h-7 w-7 flex-none items-center justify-center rounded-lg" :class="tabValidation[item.id] ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'">
+                        <i v-if="tabValidation[item.id]" class="pi pi-check text-xs" aria-hidden="true"></i>
+                        <i v-else class="pi pi-exclamation-circle text-xs" aria-hidden="true"></i>
+                    </span>
+                    <span class="min-w-0">
+                        <span class="block text-[10px] font-black uppercase tracking-wide text-slate-400">{{ String(index + 1).padStart(2, '0') }}</span>
+                        <span class="block max-w-28 truncate text-[11px] font-bold leading-tight">{{ item.label }}</span>
+                    </span>
+                </button>
             </div>
 
             <!-- WORKSPACE BODY (FLEX ROW) -->
@@ -1412,7 +1474,7 @@ onBeforeUnmount(() => {
 
                 <!-- ZONE DE CONTENU PRINCIPALE (SCROLLABLE) -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-slate-50">
-                    <div class="max-w-6xl mx-auto px-5 py-4 pb-8 space-y-4 min-h-full">
+                    <div class="max-w-6xl mx-auto px-2 sm:px-5 py-3 sm:py-4 pb-6 sm:pb-8 space-y-3 sm:space-y-4 min-h-full">
 
                         <!-- ========================================== -->
                         <!-- TAB 1 : INFORMATIONS GÃ‰NÃ‰RALES             -->
@@ -1909,7 +1971,7 @@ onBeforeUnmount(() => {
                                                                              <div v-for="(q, qIdx) in block.questions" :key="qIdx" class="bg-white border border-slate-200 rounded-lg p-3 space-y-1.5">
                                                                                  <div class="flex items-center justify-between">
                                                                                      <span class="text-[10px] font-bold text-slate-500">Q{{ qIdx + 1 }}</span>
-                                                                                     <div class="flex items-center gap-2">
+                <div class="flex items-center justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
                                                                                           <Dropdown v-model="q.type" :options="[
                                                                                               { label: t('pages.courses.qcmOption'), value: 'multiple_choice' },
                                                                                               { label: t('pages.courses.trueFalseOption'), value: 'true_false' },
@@ -2321,7 +2383,7 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- WORKSPACE FOOTER (ACTIONS DE SAUVEGARDE) -->
-            <div class="flex-none bg-white border-t border-slate-200 flex items-center justify-between px-6 py-3 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+            <div class="flex-none bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 px-2 sm:px-6 py-2 sm:py-3 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
                 <div class="flex items-center gap-4">
                     <Button :label="t('pages.courses.deleteDraftButton')" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm hidden md:flex font-medium" @click="courseDialog = false" v-if="!courseForm.id" />
                     <div class="hidden sm:flex items-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">
@@ -2348,10 +2410,10 @@ onBeforeUnmount(() => {
                         @click="goToNextStep"
                     />
                     <div class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
-                    <Button :label="t('pages.courses.saveDraftButton')" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 hover:bg-slate-50 border-slate-300" @click="saveCourse('draft')" :loading="courseForm.processing" />
+                    <Button :label="t('pages.courses.saveDraftButton')" icon="pi pi-save" class="p-button-outlined p-button-secondary font-bold bg-white text-slate-700 hover:bg-slate-50 border-slate-300 !px-3 sm:!px-5 !text-xs sm:!text-sm flex-1 sm:flex-none min-w-0" @click="saveCourse('draft')" :loading="courseForm.processing" />
 
                     <div class="relative group">
-                        <Button :label="t('pages.courses.publishButton')" icon="pi pi-rocket" class="!bg-red-600 hover:!bg-red-700 !border-none shadow-lg shadow-red-500/30 font-bold px-8 text-sm" @click="saveCourse('publish')" :loading="courseForm.processing" :disabled="!isEntireFormValid" />
+                        <Button :label="t('pages.courses.publishButton')" icon="pi pi-rocket" class="!bg-red-600 hover:!bg-red-700 !border-none shadow-lg shadow-red-500/30 font-bold !px-4 sm:!px-8 !text-xs sm:!text-sm flex-1 sm:flex-none min-w-0" @click="saveCourse('publish')" :loading="courseForm.processing" :disabled="!isEntireFormValid" />
                         <!-- Tooltip custom si bloquÃ© -->
                         <div v-if="!isEntireFormValid" class="absolute bottom-full right-0 mb-2 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                             {{ t('pages.courses.publishBlockedHintStart') }} <i class="pi pi-exclamation-circle text-amber-400"></i> {{ t('pages.courses.publishBlockedHintEnd') }}

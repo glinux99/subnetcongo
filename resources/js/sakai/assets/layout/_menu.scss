@@ -1,18 +1,19 @@
 .layout-sidebar {
     position: fixed;
-    width: 20rem;
-    height: calc(100vh - 8rem);
+    width: min(20rem, 88vw);
+    height: calc(100vh - 6rem);
     z-index: 999;
     overflow-y: auto;
     user-select: none;
-    top: 6rem;
+    top: 5rem;
     left: 2rem;
     transition:
         transform var(--layout-section-transition-duration),
         left var(--layout-section-transition-duration);
     background-color: var(--surface-overlay);
+    border: 1px solid var(--surface-border);
     border-radius: var(--content-border-radius);
-    padding: 0.5rem 1.5rem;
+    padding: 0.5rem 1rem;
 }
 
 .layout-menu {
@@ -155,4 +156,36 @@
 .layout-submenu-enter-active {
     overflow: hidden;
     transition: max-height 1s ease-in-out;
+}
+
+.app-dark .layout-sidebar {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.app-dark .layout-menu .layout-root-menuitem > .layout-menuitem-root-text {
+    color: #94a3b8;
+}
+
+.app-dark .layout-menu a {
+    color: #e2e8f0;
+}
+
+.app-dark .layout-menu a:hover {
+    background-color: rgba(51, 65, 85, 0.45);
+}
+
+.app-dark .layout-menu a.active-route {
+    background: linear-gradient(90deg, rgba(225, 37, 27, 0.18), rgba(225, 37, 27, 0.04));
+    color: #f87171 !important;
+}
+
+.app-dark .layout-close-button {
+    color: #94a3b8;
+
+    &:hover {
+        background-color: #1e293b;
+        color: #f1f5f9;
+    }
 }

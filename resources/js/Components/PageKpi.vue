@@ -1,16 +1,32 @@
 <script setup>
 /**
  * PageKpi — Carte indicateur.
- * Usage : <PageKpi label="..." :value="12" icon="pi-book" color="blue" :trend="12" subtext="..." :loading="false" />
+ * Usage : <PageKpi label="..." :value="12" icon="pi-book" color="blue" :trend="12" trend-suffix="%" subtext="..." :loading="false" />
  */
-defineProps({
-    label:   { type: String, required: true },
-    value:   { type: [String, Number], default: '' },
-    icon:    { type: String, default: 'pi-chart-bar' },
-    color:   { type: String, default: 'blue' },
-    trend:   { type: [Number, String], default: null },
-    subtext: { type: String, default: '' },
-    loading: { type: Boolean, default: false },
+import { computed } from 'vue';
+
+const props = defineProps({
+    label:       { type: String, required: true },
+    value:       { type: [String, Number], default: '' },
+    icon:        { type: String, default: 'pi-chart-bar' },
+    color:       { type: String, default: 'blue' },
+    trend:       { type: [Number, String], default: null },
+    trendSuffix: { type: String, default: '%' },
+    trendLabel:  { type: String, default: '' },
+    subtext:     { type: String, default: '' },
+    loading:     { type: Boolean, default: false },
+});
+
+const numericTrend = computed(() => Number(props.trend));
+const trendTone = computed(() => {
+    if (numericTrend.value > 0) return 'up';
+    if (numericTrend.value < 0) return 'down';
+    return 'flat';
+});
+const trendIcon = computed(() => {
+    if (numericTrend.value > 0) return 'pi-arrow-up-right';
+    if (numericTrend.value < 0) return 'pi-arrow-down-right';
+    return 'pi-minus';
 });
 
 const colorMap = {
@@ -34,15 +50,17 @@ const colorMap = {
             </div>
             <span
                 v-if="!loading && trend !== null && trend !== undefined && trend !== ''"
-                :class="['page-kpi-trend', Number(trend) >= 0 ? 'page-kpi-trend-up' : 'page-kpi-trend-down']"
+                :class="['page-kpi-trend', `page-kpi-trend-${trendTone}`]"
+                :aria-label="trendLabel || undefined"
             >
-                {{ Number(trend) > 0 ? '+' : '' }}{{ trend }}%
+                <i :class="['pi', trendIcon, 'text-[9px]']" aria-hidden="true"></i>
+                <span>{{ numericTrend > 0 ? '+' : '' }}{{ trend }}{{ trendSuffix }}</span>
             </span>
         </div>
         <p class="page-kpi-label">{{ label }}</p>
         <div v-if="loading" class="h-8 w-20 rounded-md bg-slate-100 dark:bg-slate-800 animate-pulse" aria-hidden="true"></div>
         <p v-else class="page-kpi-value">{{ value }}</p>
-        <p v-if="subtext" class="text-xs text-slate-500 dark:text-slate-400 mt-2">{{ subtext }}</p>
-        <slot />
+        <p v-if="subtext && !loading" class="text-xs text-slate-500 dark:text-slate-400 mt-2">{{ subtext }}</p>
+        <slot v-if="!loading" />
     </div>
 </template>

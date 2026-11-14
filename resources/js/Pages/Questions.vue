@@ -406,9 +406,9 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </div>
             </template>
 
-            <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
+            <Column selectionMode="multiple" headerStyle="width: 3rem" />
 
-            <Column field="type" :header="t('pages.questions.colFormat')" style="width: 5rem; background-color: #f8fafc;">
+            <Column field="type" :header="t('pages.questions.colFormat')" style="width: 5rem">
                 <template #body="{ data }">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" :class="getTypeColor(data.type)" v-tooltip.top="getTypeLabel(data.type)">
                         <i :class="['text-lg', getTypeIcon(data.type)]"></i>
@@ -416,7 +416,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column field="question_text" :header="t('pages.questions.colStatement')" style="min-width: 25rem; background-color: #f8fafc;">
+            <Column field="question_text" :header="t('pages.questions.colStatement')" style="min-width: 25rem">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1 py-2">
                         <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || t('pages.questions.undefinedStatement')"></div>
@@ -445,19 +445,19 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column field="difficulty" :header="t('pages.questions.colLevel')" style="background-color: #f8fafc; min-width: 8rem;">
+            <Column field="difficulty" :header="t('pages.questions.colLevel')" style=" min-width: 8rem;">
                 <template #body="{ data }">
                     <Tag :value="data.difficulty" :severity="getDifficultySeverity(data.difficulty)" class="text-[10px] font-bold px-2 py-1 uppercase tracking-wider" />
                 </template>
             </Column>
 
-            <Column field="points" :header="t('pages.questions.colPoints')" style="background-color: #f8fafc; width: 6rem; text-align: center;">
+            <Column field="points" :header="t('pages.questions.colPoints')" style=" width: 6rem; text-align: center;">
                 <template #body="{ data }">
                     <Badge :value="data.points" severity="secondary" class="font-bold bg-slate-100 text-slate-600 border border-slate-200" />
                 </template>
             </Column>
 
-            <Column field="status" :header="t('pages.questions.colStatus')" style="background-color: #f8fafc;">
+            <Column field="status" :header="t('pages.questions.colStatus')" >
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <div :class="['w-2 h-2 rounded-full', data.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300']"></div>
@@ -466,7 +466,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column :header="t('pages.questions.actions')" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+            <Column :header="t('pages.questions.actions')" alignFrozen="right" :frozen="true" style="text-align: right min-width: 10rem;">
                 <template #body="{ data }">
                     <div class="flex justify-end gap-1">
                         <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="t('pages.questions.tooltipAnalytics')" @click="analyticsDialog = true" />

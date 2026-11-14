@@ -39,7 +39,7 @@ const items = [
     { group: 'Système', items: [
         { label: 'Rôles', icon: 'pi pi-lock', to: () => 'system.roles.index' },
         { label: 'Permissions API', icon: 'pi pi-key', to: () => 'system.api.index' },
-        { label: 'Logs d\'audit', icon: 'pi pi-history', to: () => 'system.logs' },
+        { label: 'Logs d’audit', icon: 'pi pi-history', to: () => 'system.logs' },
         { label: 'Paramètres', icon: 'pi pi-cog', to: () => 'system.settings' },
         { label: 'Langues', icon: 'pi pi-globe', to: () => 'system.languages.index' },
     ]},
@@ -48,10 +48,12 @@ const items = [
 const results = computed(() => {
     const q = query.value.trim().toLowerCase();
     if (!q) return items.slice(0, 2);
-    return items.map(g => ({
-        group: g.group,
-        items: g.items.filter(i => i.label.toLowerCase().includes(q)),
-    })).filter(g => g.items.length > 0);
+    return items
+        .map((g) => ({
+            group: g.group,
+            items: g.items.filter((i) => i.label.toLowerCase().includes(q)),
+        }))
+        .filter((g) => g.items.length > 0);
 });
 
 const go = (item) => {
@@ -64,10 +66,12 @@ const go = (item) => {
     }
 };
 
+const openPalette = () => { visible.value = true; };
+
 const handleKey = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        visible.value = true;
+        visible.value = !visible.value;
     }
     if (e.key === 'Escape' && visible.value) {
         visible.value = false;
@@ -80,46 +84,64 @@ watch(visible, (v) => {
     }
 });
 
-onMounted(() => window.addEventListener('keydown', handleKey));
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKey));
+onMounted(() => {
+    window.addEventListener('keydown', handleKey);
+    window.addEventListener('snc:open-command-palette', openPalette);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleKey);
+    window.removeEventListener('snc:open-command-palette', openPalette);
+});
 </script>
 
 <template>
-    <Dialog v-model:visible="visible" modal :showHeader="false"
-            :style="{ width: '640px', maxWidth: '95vw' }"
-            :breakpoints="{ '960px': '90vw' }"
-            :dismissableMask="true"
-            contentClass="p-0 overflow-hidden rounded-xl">
-        <div class="flex flex-col max-h-[70vh]">
-            <div class="flex items-center gap-3 p-4 border-b border-slate-100 bg-slate-50">
-                <i class="pi pi-search text-violet-500 text-lg"></i>
-                <InputText v-model="query" ref="searchInput"
-                           placeholder="Rechercher une page, un cours, un outil..."
-                           class="flex-1 border-none shadow-none focus:ring-0 bg-transparent text-sm font-medium" />
-                <kbd class="hidden md:inline-flex items-center px-2 py-1 bg-white border border-slate-200 rounded text-[10px] font-black text-slate-500 uppercase tracking-tighter shadow-sm">Esc</kbd>
+    <Dialog
+        v-model:visible="visible"
+        modal
+        :showHeader="false"
+        :style="{ width: 'min(640px, calc(100vw - 1rem))', maxWidth: '100vw' }"
+        :breakpoints="{ '960px': '100vw' }"
+        :dismissableMask="true"
+        contentClass="p-0 overflow-hidden rounded-xl dark:bg-slate-900"
+    >
+        <div class="flex max-h-[80dvh] flex-col border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50 p-3 sm:p-4 dark:border-slate-800 dark:bg-slate-950/60">
+                <i class="pi pi-search text-lg text-blue-500 dark:text-blue-400" aria-hidden="true"></i>
+                <InputText
+                    v-model="query"
+                    ref="searchInput"
+                    placeholder="Rechercher une page, un cours, un outil..."
+                    class="min-w-0 flex-1 border-none bg-transparent text-sm font-medium shadow-none focus:ring-0"
+                    inputClass="!bg-transparent !border-none !shadow-none"
+                />
+                <kbd class="hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-tighter text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 md:inline-flex">Esc</kbd>
             </div>
 
             <div class="flex-1 overflow-y-auto p-2">
-                <div v-if="results.length === 0" class="text-center py-12 text-slate-400">
-                    <i class="pi pi-inbox text-4xl block mb-2"></i>
-                    <p class="text-xs font-bold">Aucun résultat pour "{{ query }}"</p>
+                <div v-if="results.length === 0" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                    <i class="pi pi-inbox mb-2 block text-4xl" aria-hidden="true"></i>
+                    <p class="text-xs font-bold">Aucun résultat pour « {{ query }} »</p>
                 </div>
                 <div v-for="group in results" :key="group.group" class="mb-3">
-                    <p class="px-3 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ group.group }}</p>
-                    <button v-for="item in group.items" :key="item.label"
-                            type="button"
-                            @click="go(item)"
-                            class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-violet-50 transition-colors text-left group">
-                        <i :class="item.icon" class="text-violet-400 group-hover:text-violet-600 w-5 text-center"></i>
-                        <span class="text-sm font-bold text-slate-700 group-hover:text-violet-700">{{ item.label }}</span>
-                        <i class="pi pi-arrow-right text-slate-300 group-hover:text-violet-400 ml-auto text-xs"></i>
+                    <p class="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ group.group }}</p>
+                    <button
+                        v-for="item in group.items"
+                        :key="item.label"
+                        type="button"
+                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-800"
+                        @click="go(item)"
+                    >
+                        <i :class="item.icon" class="w-5 text-center text-blue-400 transition-colors group-hover:text-blue-600 dark:text-blue-400 dark:group-hover:text-blue-300" aria-hidden="true"></i>
+                        <span class="text-sm font-bold text-slate-700 transition-colors group-hover:text-blue-800 dark:text-slate-200 dark:group-hover:text-white">{{ item.label }}</span>
+                        <i class="pi pi-arrow-right ml-auto text-xs text-slate-300 transition-colors group-hover:text-blue-400 dark:text-slate-600 dark:group-hover:text-blue-300" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="px-4 py-2 border-t border-slate-100 bg-slate-50 flex items-center gap-3 text-[10px] text-slate-500 font-bold">
-                <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-black">↑↓</kbd> Naviguer</span>
-                <span class="flex items-center gap-1"><kbd class="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-black">↵</kbd> Ouvrir</span>
+            <div class="flex items-center gap-3 border-t border-slate-100 bg-slate-50 px-4 py-2 text-[10px] font-bold text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
+                <span class="flex items-center gap-1"><kbd class="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-black dark:border-slate-700 dark:bg-slate-800">↑↓</kbd> Naviguer</span>
+                <span class="flex items-center gap-1"><kbd class="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-black dark:border-slate-700 dark:bg-slate-800">↵</kbd> Ouvrir</span>
                 <span class="ml-auto text-[9px] uppercase tracking-widest">{{ results.reduce((acc, g) => acc + g.items.length, 0) }} résultats</span>
             </div>
         </div>

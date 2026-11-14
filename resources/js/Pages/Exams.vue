@@ -58,6 +58,7 @@ import Timeline from 'primevue/timeline';
 import Message from 'primevue/message';
 import Tooltip from 'primevue/tooltip';
 import OverlayPanel from 'primevue/overlaypanel';
+import Menu from 'primevue/menu';
 import { useI18n } from 'vue-i18n';
 
 // ======================================================================================
@@ -75,6 +76,8 @@ const expandedRows = ref([]);
 const searchLoading = ref(false);
 const editorRef = ref(null);
 const selectedExams = ref([]);
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
 
 // Simulation de sauvegarde
 const lastSavedAt = ref(null);
@@ -107,6 +110,23 @@ const props = defineProps({
 // ÉTATS RÉACTIFS & FILTRES SERVEUR
 // ======================================================================================
 const examList = computed(() => props.exams?.data || props.exams || []);
+
+const rowMenuItems = computed(() => {
+    const exam = rowMenuTarget.value;
+    if (!exam) return [];
+
+    return [
+        { label: t('pages.exams.tooltipAnalytics'), icon: 'pi pi-chart-bar', command: () => { analyticsDialog.value = true; } },
+        { label: t('pages.exams.tooltipEditSyllabus'), icon: 'pi pi-pen-to-square', command: () => editExam(exam) },
+        { separator: true },
+        { label: t('pages.exams.tooltipDeleteExam'), icon: 'pi pi-trash', command: () => deleteExam(exam.id), class: 'text-red-600' },
+    ];
+});
+
+const toggleRowMenu = (event, exam) => {
+    rowMenuTarget.value = exam;
+    rowMenu.value?.toggle(event);
+};
 
 const serverFilters = reactive({
     search: props.filters?.search || '',
@@ -611,7 +631,7 @@ onMounted(() => {
             stripedRows
         >
             <template #empty>
-                <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                <div class="flex flex-col items-center justify-center p-8 sm:p-12 md:p-20 text-slate-500 bg-white">
                     <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                         <i class="pi pi-file-edit text-5xl text-slate-300"></i>
                     </div>
@@ -621,18 +641,18 @@ onMounted(() => {
                 </div>
             </template>
 
-            <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-            <Column expander style="width: 3rem; background-color: #f8fafc;" />
+            <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+            <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-            <Column field="title" :header="t('pages.exams.colExamProgram')" style="min-width: 25rem; background-color: #f8fafc;">
+            <Column field="title" :header="t('pages.exams.colExamProgram')" style="min-width: 25rem">
                 <template #body="{ data }">
-                    <div class="flex items-center gap-4 py-2">
-                        <div class="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
+                    <div class="flex items-center gap-2 sm:gap-4 py-2 min-w-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
                              :class="data.type === 'Certification' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-50 text-slate-500'">
                             <i :class="data.type === 'Certification' ? 'pi pi-verified' : 'pi pi-clock'" class="text-xl"></i>
                         </div>
-                        <div class="flex flex-col justify-center">
-                            <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors" @click="editExam(data)">
+                        <div class="flex flex-col justify-center min-w-0">
+                            <span class="font-extrabold text-slate-800 text-sm sm:text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editExam(data)">
                                 {{ data.title }}
                                 </span>
                             <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
@@ -644,7 +664,7 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="settings" :header="t('pages.exams.colFormatRules')" style="background-color: #f8fafc; min-width: 12rem;">
+            <Column field="settings" :header="t('pages.exams.colFormatRules')" style=" min-width: 12rem;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
                         <span class="flex items-center gap-2"><i class="pi pi-stopwatch text-slate-400"></i> {{ t('pages.exams.durationLabel') }} <strong class="text-slate-800">{{ data.duration_minutes }} min</strong></span>
@@ -653,19 +673,26 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="status" :header="t('pages.exams.colPublicationStatus')" style="background-color: #f8fafc;">
+            <Column field="status" :header="t('pages.exams.colPublicationStatus')" >
                 <template #body="{ data }">
                     <Tag :severity="getStatusColor(data.status).sev" :icon="getStatusColor(data.status).icon" :value="getStatusColor(data.status).label" class="text-[10px] font-bold px-3 py-1.5 border uppercase tracking-wider" :class="`border-${getStatusColor(data.status).sev}-200 bg-${getStatusColor(data.status).sev}-50 text-${getStatusColor(data.status).sev}-700`" />
                 </template>
             </Column>
 
-            <Column :header="t('pages.exams.colActions')" alignFrozen="right" :frozen="true" style="text-align: right; background-color: #f8fafc; min-width: 10rem;">
+            <Column :header="t('pages.exams.colActions')" style="text-align: right; min-width: 4rem;">
                 <template #body="{ data }">
-                    <div class="flex justify-end gap-1">
+                    <div class="hidden md:flex justify-end gap-1">
                         <Button icon="pi pi-chart-bar" class="p-button-text p-button-success p-button-rounded hover:bg-red-50" v-tooltip.top="t('pages.exams.tooltipAnalytics')" @click="analyticsDialog = true" />
                         <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="t('pages.exams.tooltipEditSyllabus')" @click="editExam(data)" />
                         <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" v-tooltip.top="t('pages.exams.tooltipDeleteExam')" @click="deleteExam(data.id)" />
                     </div>
+                    <Button
+                        icon="pi pi-ellipsis-v"
+                        class="p-button-text p-button-secondary p-button-rounded w-11 h-11 md:hidden text-slate-500"
+                        :aria-label="t('pages.live_sessions.menu_more')"
+                        v-tooltip.top="t('pages.live_sessions.menu_more')"
+                        @click="toggleRowMenu($event, data)"
+                    />
                 </template>
             </Column>
 
@@ -713,6 +740,8 @@ onMounted(() => {
                 </div>
             </template>
         </DataTable>
+
+        <Menu id="exams-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
     </div>
     </div>
 </div>
@@ -1149,14 +1178,14 @@ onMounted(() => {
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
                     <DataTable :value="props.global_question_bank" :paginator="true" :rows="5" class="p-datatable-custom text-sm">
-                        <Column field="id" header="ID" style="width: 4rem"></Column>
+                        <Column field="id" header="ID" style="width: 4rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell"></Column>
                         <Column field="text" :header="t('pages.exams.questionStatementLabel')">
                             <template #body="{ data }">
                                 <div class="font-medium text-slate-800" v-html="data.question_text || data.text"></div>
                                 <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">{{ data.category?.name || t('pages.exams.generalCategory') }}</div>
                             </template>
                         </Column>
-                        <Column field="type" header="Type" style="width: 10rem">
+                        <Column field="type" header="Type" style="width: 10rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <span class="text-xs font-bold text-slate-600 flex items-center gap-1"><i class="pi pi-tag text-[10px]"></i> {{ data.type === 'multiple_choice' ? t('pages.exams.typeQCM') : (data.type === 'true_false' ? t('pages.exams.typeTrueFalseShort') : t('pages.exams.typeTextShort')) }}</span>
                             </template>
@@ -1215,8 +1244,8 @@ onMounted(() => {
                         <h4 class="text-sm font-bold text-slate-800">{{ t('pages.exams.itemAnalysisTitle') }}</h4>
                         <Button icon="pi pi-external-link" class="p-button-text p-button-sm p-button-secondary text-xs font-bold" :label="t('pages.exams.viewAllLink')" />
                     </div>
-                    <div class="p-0">
-                        <table class="w-full text-left text-sm">
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full min-w-[34rem] text-left text-sm">
                             <thead class="bg-slate-50/50 text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                 <tr>
                                     <th class="px-6 py-3 font-bold">{{ t('pages.exams.itemQuestionCol') }}</th>

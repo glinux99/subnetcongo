@@ -27,6 +27,7 @@ class SettingController extends Controller
         'mail'     => ['driver', 'host', 'port', 'username', 'password', 'encryption', 'from_name', 'from_address', 'mailgun_domain', 'mailgun_secret'],
         'security' => ['enable_registration', 'force_2fa', 'enable_captcha', 'ip_whitelist', 'session_timeout'],
         'advanced' => ['maintenance_mode', 'debug_mode'],
+        'ui'       => ['help_hints_enabled', 'help_hints_ttl_days'],
     ];
 
     /**
@@ -92,6 +93,10 @@ class SettingController extends Controller
             'advanced' => [
                 'maintenance_mode' => (bool) ($all['maintenance_mode'] ?? '0'),
                 'debug_mode' => (bool) ($all['debug_mode'] ?? '0'),
+            ],
+            'ui' => [
+                'help_hints_enabled' => (bool) ($all['ui_help_hints_enabled'] ?? '1'),
+                'help_hints_ttl_days' => max(0, (int) ($all['ui_help_hints_ttl_days'] ?? 3)),
             ],
         ];
 
@@ -183,6 +188,26 @@ class SettingController extends Controller
             $validatedGroups['lms']['certificate_prefix'] = $prefix;
         }
 
+        // Contextual help hints: enabled flag + automatic TTL for new accounts.
+        $ui = $validatedGroups['ui'] ?? [];
+        if (! empty($ui)) {
+            $enabled = $ui['help_hints_enabled'] ?? true;
+            $ui['help_hints_enabled'] = filter_var($enabled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? (bool) $enabled;
+
+            if (isset($ui['help_hints_ttl_days'])) {
+                if (! is_numeric($ui['help_hints_ttl_days'])) {
+                    return back()->withErrors(['ui.help_hints_ttl_days' => 'Le délai doit être un nombre de jours.']);
+                }
+                $ttl = (int) $ui['help_hints_ttl_days'];
+                if ($ttl < 0 || $ttl > 365) {
+                    return back()->withErrors(['ui.help_hints_ttl_days' => 'Le délai doit être compris entre 0 et 365 jours.']);
+                }
+                $ui['help_hints_ttl_days'] = $ttl;
+            }
+
+            $validatedGroups['ui'] = $ui;
+        }
+
         // Persistance
         $flat = [];
         foreach ($validatedGroups as $group => $data) {
@@ -202,6 +227,8 @@ class SettingController extends Controller
                     'logo_url' => 'site_logo',
                     'favicon_url' => 'site_favicon',
                     'site_logo' => 'site_logo',
+                    'help_hints_enabled' => 'ui_help_hints_enabled',
+                    'help_hints_ttl_days' => 'ui_help_hints_ttl_days',
                     default => $key,
                 };
                 $flat[$storageKey] = $value;

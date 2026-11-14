@@ -279,9 +279,9 @@ provide(MENU_DEPTH_KEY, readonly(bestMatchLength));
 
 <template>
     <ul class="layout-menu">
-        <li class="flex justify-end p-3 lg:hidden">
-            <button @click="resetMenu" class="flex items-center justify-center w-10 h-10 rounded-full text-gray-400 hover:bg-gray-100 transition-all">
-                <i class="pi pi-times text-xl"></i>
+        <li class="flex justify-end p-2 lg:hidden">
+            <button type="button" aria-label="Fermer le menu" @click="resetMenu" class="layout-close-button inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+                <i class="pi pi-times text-xl" aria-hidden="true"></i>
             </button>
         </li>
 
@@ -291,13 +291,13 @@ provide(MENU_DEPTH_KEY, readonly(bestMatchLength));
         </template>
 
         <!-- Badge indicator: current role -->
-        <li class="mt-auto p-4 hidden lg:block">
-            <div class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-xl p-3">
-                <p class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-1">{{ t('layout.connected_as') }}</p>
-                <p class="text-xs font-black text-slate-800 capitalize truncate">
+        <li class="mt-auto hidden p-3 lg:block">
+            <div class="mt-auto hidden rounded-xl border border-red-200/70 bg-gradient-to-br from-red-50 to-red-100/70 p-3 dark:border-red-900/50 dark:from-red-950/30 dark:to-red-900/10 lg:block">
+                <p class="mb-1 text-[9px] font-black uppercase tracking-widest text-red-600 dark:text-red-300">{{ t('layout.connected_as') }}</p>
+                <p class="truncate text-xs font-black capitalize text-slate-800 dark:text-slate-100">
                     {{ userRoles[0] ?? 'Utilisateur' }}
                 </p>
-                <p v-if="userRoles.length > 1" class="text-[9px] text-slate-500 mt-1">
+                <p v-if="userRoles.length > 1" class="mt-1 text-[9px] text-slate-500 dark:text-slate-400">
                     +{{ userRoles.length - 1 }} rôle(s)
                 </p>
             </div>

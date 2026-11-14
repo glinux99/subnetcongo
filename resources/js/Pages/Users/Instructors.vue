@@ -516,10 +516,10 @@ onMounted(() => {
                     </template>
 
                     <!-- COLONNES -->
-                    <Column selectionMode="multiple" headerStyle="width: 3rem; background-color: #f8fafc;" />
-                    <Column expander style="width: 3rem; background-color: #f8fafc;" />
+                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
+                    <Column expander style="width: 3rem" />
 
-                    <Column field="name" :header="t('pages.instructors.colTrainerIdentity')" style="min-width: 22rem; background-color: #f8fafc;">
+                    <Column field="name" :header="t('pages.instructors.colTrainerIdentity')" style="min-width: 22rem">
                         <template #body="{ data }">
                             <div class="flex items-center gap-4 py-2">
                                 <div class="relative cursor-pointer group" @click="viewProfile(data)">
@@ -546,7 +546,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="status" :header="t('pages.instructors.contractStatus')" style="min-width: 10rem; background-color: #f8fafc;">
+                    <Column field="status" :header="t('pages.instructors.contractStatus')" style="min-width: 10rem">
                         <template #body="{ data }">
                             <Tag
                                 :value="data.status"
@@ -557,7 +557,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="metrics" :header="t('pages.instructors.colEngagementKpi')" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="metrics" :header="t('pages.instructors.colEngagementKpi')" style="min-width: 12rem">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
@@ -572,7 +572,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="finance" :header="t('pages.instructors.colFinanceRating')" style="min-width: 12rem; background-color: #f8fafc;">
+                    <Column field="finance" :header="t('pages.instructors.colFinanceRating')" style="min-width: 12rem">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
@@ -587,7 +587,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.instructors.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right; background-color: #f8fafc;">
+                    <Column :header="t('pages.instructors.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
                                 <Button icon="pi pi-chart-line" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.instructors.fullProfile360')" @click="viewProfile(data)" />

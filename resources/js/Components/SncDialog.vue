@@ -36,8 +36,8 @@ const close = () => emit('update:visible', false);
         modal
         :closable="false"
         :draggable="false"
-        :style="{ width: props.width, maxWidth: '95vw' }"
-        :breakpoints="{ '768px': '96vw' }"
+        :style="{ width: `min(${props.width}, calc(100vw - 0.75rem))` }"
+        :breakpoints="{ '768px': '100vw' }"
         class="snc-dialog snc-dialog-premium"
         contentClass="!p-0 !overflow-hidden bg-slate-50"
         headerClass="!p-0 !border-0"
@@ -47,13 +47,13 @@ const close = () => emit('update:visible', false);
     >
         <!-- HEADER CUSTOM (slot #header → .p-dialog-header, hors zone scrollable) -->
         <template #header>
-            <div class="flex items-center justify-between gap-4 px-6 py-4 bg-white border-b border-slate-200 relative w-full">
+            <div class="flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-white border-b border-slate-200 relative w-full">
                 <!-- barre de statut en haut -->
                 <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-500"></div>
 
                 <div class="flex items-center gap-4 min-w-0">
                     <div
-                        class="w-11 h-11 rounded-xl bg-gradient-to-br text-white flex items-center justify-center shadow-md flex-shrink-0"
+                        class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br text-white flex items-center justify-center shadow-md flex-shrink-0"
                         :class="iconClass"
                         :style="{ boxShadow: '0 8px 20px -6px rgba(37, 99, 235, 0.4)' }"
                         aria-hidden="true"
@@ -80,13 +80,13 @@ const close = () => emit('update:visible', false);
         </template>
 
         <!-- CORPS : seule zone scrollable -->
-        <div class="p-fluid px-6 py-5 max-h-[70vh] overflow-y-auto snc-dialog-body">
+        <div class="p-fluid px-3 sm:px-6 py-4 sm:py-5 max-h-[78dvh] sm:max-h-[70vh] overflow-y-auto snc-dialog-body">
             <slot />
         </div>
 
         <!-- FOOTER (slot #footer → .p-dialog-footer, hors zone scrollable) -->
         <template #footer>
-            <div v-if="$slots.footer" class="flex items-center justify-end gap-3 px-6 py-4 bg-white border-t border-slate-200 w-full">
+            <div v-if="$slots.footer" class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-3 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-200 w-full">
                 <slot name="footer" />
             </div>
         </template>
