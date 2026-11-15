@@ -3,12 +3,14 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
+import { useAppVersion } from '@/composables/useAppVersion';
 import { useToast } from 'primevue/usetoast';
 import Button from 'primevue/button';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { label: appVersion } = useAppVersion();
 const toast = useToast();
 const confirmAction = useConfirmAction();
 
@@ -107,7 +109,7 @@ const isValid = computed(() => form.to && form.subject && form.body);
             <PageHeader
                 :title="`${t('pages.admin_emails_compose.hero_title_1')} ${t('pages.admin_emails_compose.hero_title_2')}`"
                 :subtitle="t('pages.admin_emails_compose.hero_subtitle')"
-                badge="V11.5"
+                :badge="appVersion"
                 icon="pi-pen-to-square"
                 accent="blue"
             >

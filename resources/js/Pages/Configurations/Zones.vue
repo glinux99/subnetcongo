@@ -262,7 +262,7 @@ const deleteSelectedZones = () => {
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="filters['global'].value" :placeholder="t('zones.toolbar.searchPlaceholder')" class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('zones.toolbar.searchPlaceholder')" class="w-full md:w-80 h-11 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
                             </IconField>
                             <div class="flex items-center gap-2">
                                 <label for="rowsPerPage" class="text-sm font-medium text-slate-600">{{ t('zones.rows_per_page') }}</label>
@@ -281,9 +281,9 @@ const deleteSelectedZones = () => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
+                    <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" selectionMode="multiple" headerStyle="width: 3rem" />
 
-                    <Column field="nomenclature" header="Nomenclature" sortable filterField="nomenclature" :showFilterMatchModes="false" v-if="visibleColumns.includes('nomenclature')">
+                    <Column field="nomenclature" header="Nomenclature" sortable filterField="nomenclature" :showFilterMatchModes="false" v-if="visibleColumns.includes('nomenclature')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }" v-if="visibleColumns.includes('nomenclature')">
                             <div class="flex items-center gap-3">
                                 <Avatar :label="data.nomenclature ? data.nomenclature[0] : 'Z'" shape="circle" class="bg-primary-50 text-primary-600 font-bold" />
@@ -303,7 +303,7 @@ const deleteSelectedZones = () => {
                         </template>
                     </Column>
 
-                    <Column field="region.designation" header="Région Parente" sortable filterField="region.designation" :showFilterMatchModes="false" v-if="visibleColumns.includes('region.designation')">
+                    <Column field="region.designation" header="Région Parente" sortable filterField="region.designation" :showFilterMatchModes="false" v-if="visibleColumns.includes('region.designation')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <Tag :value="data.region?.designation || 'N/A'" severity="info" class="rounded-lg px-3 uppercase text-[10px]" />
                         </template>
@@ -312,13 +312,13 @@ const deleteSelectedZones = () => {
                         </template>
                     </Column>
 
-                    <Column field="description" header="Description" v-if="visibleColumns.includes('description')">
+                    <Column field="description" header="Description" v-if="visibleColumns.includes('description')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <span class="text-sm text-slate-600">{{ data.description || 'N/A' }}</span>
                         </template>
                     </Column>
 
-                    <Column :header="t('common.actions')" alignFrozen="right" frozen class="min-w-[120px]">
+                    <Column :header="t('common.actions')" class="min-w-[120px]">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
                                 <Button icon="pi pi-pencil" text rounded severity="info" @click="editZone(data)" />

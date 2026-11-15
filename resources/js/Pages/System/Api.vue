@@ -45,6 +45,7 @@ import InputNumber from 'primevue/inputnumber';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import ScrollPanel from 'primevue/scrollpanel';
+import Menu from 'primevue/menu';
 import { useI18n } from 'vue-i18n';
 
 const { t, locale } = useI18n();
@@ -400,6 +401,27 @@ const exportLogs = () => {
     window.location.href = `/system/api/export-logs?${params}`;
     toast.add({ severity: 'info', summary: t('pages.api.export_summary'), detail: t('pages.api.export_csv_detail'), life: 2000 });
 };
+
+// Menu kebab par ligne (mobile) — unique pour les deux tables (tokens + logs)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null); // { type: 'token' | 'log', row }
+const rowMenuItems = computed(() => {
+    const target = rowMenuTarget.value;
+    if (!target) return [];
+    const row = target.row;
+    if (target.type === 'token') {
+        return [
+            { label: t('pages.api.revoke'), icon: 'pi pi-trash', command: () => revokeToken(row), class: 'text-red-600' },
+        ];
+    }
+    return [
+        { label: t('pages.api.details_json'), icon: 'pi pi-code', command: () => viewLogDetails(row) },
+    ];
+});
+const toggleRowMenu = (event, type, row) => {
+    rowMenuTarget.value = { type, row };
+    rowMenu.value?.toggle(event);
+};
 </script>
 
 <template>
@@ -435,49 +457,49 @@ const exportLogs = () => {
                             <div class="p-6 lg:p-8 space-y-8 bg-slate-50/30">
 
                                 <!-- KPIs -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-blue-300 transition-colors">
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-blue-300 transition-colors">
                                         <div class="flex justify-between items-start mb-4">
-                                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-key text-xl"></i></div>
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-key text-xl"></i></div>
                                             <Badge :value="t('pages.api.tokens_active', { n: stats.active_tokens })" severity="success" class="text-[9px] uppercase tracking-widest" />
                                         </div>
                                         <div>
                                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.tokens_issued') }}</h4>
-                                            <h2 class="text-4xl font-black text-slate-800">{{ stats.total_tokens }}</h2>
+                                            <h2 class="text-2xl sm:text-3xl font-black text-slate-800">{{ stats.total_tokens }}</h2>
                                             <p v-if="stats.expired_tokens" class="text-[10px] text-red-500 font-bold mt-2"><i class="pi pi-clock mr-1"></i>{{ t('pages.api.expired_count', { n: stats.expired_tokens }) }}</p>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-blue-300 transition-colors">
+                                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-blue-300 transition-colors">
                                         <div class="flex justify-between items-start mb-4">
-                                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-sort-alt text-xl"></i></div>
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-sort-alt text-xl"></i></div>
                                             <Tag value="Live" severity="info" class="text-[9px]" />
                                         </div>
                                         <div>
                                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.requests_total') }}</h4>
-                                            <h2 class="text-4xl font-black text-slate-800">{{ stats.total_requests.toLocaleString() }}</h2>
+                                            <h2 class="text-2xl sm:text-3xl font-black text-slate-800">{{ stats.total_requests.toLocaleString() }}</h2>
                                             <p class="text-[10px] text-slate-500 mt-2 font-bold"><i class="pi pi-arrow-up text-emerald-500 mr-1"></i>{{ t('pages.api.requests_today', { n: stats.requests_today }) }}</p>
                                         </div>
                                     </div>
 
-                                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-red-300 transition-colors">
+                                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-red-300 transition-colors">
                                         <div class="flex justify-between items-start mb-4">
-                                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-exclamation-triangle text-xl"></i></div>
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="pi pi-exclamation-triangle text-xl"></i></div>
                                         </div>
                                         <div class="flex items-center gap-6">
                                             <div>
                                                 <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.error_rate') }}</h4>
-                                                <h2 class="text-4xl font-black text-slate-800">{{ stats.error_rate }}%</h2>
+                                                <h2 class="text-2xl sm:text-3xl font-black text-slate-800">{{ stats.error_rate }}%</h2>
                                                 <p class="text-[10px] text-slate-500 font-bold mt-2">{{ t('pages.api.errors_logged', { n: stats.errors_count }) }}</p>
                                             </div>
                                             <Knob :modelValue="stats.error_rate" :size="60" :valueColor="errorRateColor" rangeColor="#f1f5f9" readonly :strokeWidth="8" :showValue="false" />
                                         </div>
                                     </div>
 
-                                    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+                                    <div class="bg-slate-900 p-4 sm:p-6 rounded-xl border border-slate-800 shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
                                         <i class="pi pi-bolt absolute -right-4 -bottom-4 text-6xl text-white/5"></i>
                                         <div class="relative z-10">
-                                            <div class="w-12 h-12 bg-white/10 text-amber-400 backdrop-blur-md rounded-xl flex items-center justify-center mb-4 border border-white/10"><i class="pi pi-clock text-xl"></i></div>
+                                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 text-amber-400 backdrop-blur-md rounded-xl flex items-center justify-center mb-4 border border-white/10"><i class="pi pi-clock text-xl"></i></div>
                                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.api.last_activity') }}</h4>
                                             <h2 class="text-2xl font-black text-white mt-2">{{ stats.last_activity }}</h2>
                                         </div>
@@ -537,10 +559,10 @@ const exportLogs = () => {
                                         <h2 class="text-xl font-black text-slate-800">Personal Access Tokens</h2>
                                         <p class="text-sm text-slate-500 font-medium mt-1">{{ t('pages.api.sanctum_keys') }}</p>
                                     </div>
-                                    <div class="flex gap-2 w-full md:w-auto">
+                                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
                                         <IconField iconPosition="left" class="flex-1 md:w-64">
                                             <InputIcon class="pi pi-search text-slate-400" />
-                                            <InputText v-model="dtTokensFilters['global'].value" :placeholder="t('pages.api.search_token')" class="w-full bg-slate-50 border-slate-200 rounded-xl focus:bg-white" @keyup.enter="loadTokens()" />
+                                            <InputText v-model="dtTokensFilters['global'].value" :placeholder="t('pages.api.search_token')" class="w-full h-11 bg-slate-50 border-slate-200 rounded-xl focus:bg-white" @keyup.enter="loadTokens()" />
                                         </IconField>
                                         <Button icon="pi pi-filter-slash" class="p-button-rounded p-button-secondary p-button-outlined" v-tooltip.top="t('pages.api.clean_expired')" @click="pruneExpiredTokens" />
                                         <Button icon="pi pi-refresh" class="p-button-rounded p-button-secondary p-button-outlined" v-tooltip.top="t('pages.api.reload')" @click="loadTokens()" />
@@ -551,7 +573,7 @@ const exportLogs = () => {
                                     <DataTable :value="tokens" :paginator="true" :rows="tokensPagination.per_page" :totalRecords="tokensPagination.total" :first="(tokensPagination.current_page - 1) * tokensPagination.per_page" :lazy="true" @page="(e) => loadTokens(e.page + 1)" dataKey="id" :filters="dtTokensFilters" class="custom-datatable p-datatable-lg h-full" :loading="isLoading.tokens" responsiveLayout="scroll">
                                         <template #empty><div class="p-10 text-center text-slate-500 font-medium">{{ t('pages.api.no_tokens') }}</div></template>
 
-                                        <Column field="name" :header="t('pages.api.col_token_name')" sortable style="min-width: 18rem">
+                                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="name" :header="t('pages.api.col_token_name')" sortable style="min-width: 18rem">
                                             <template #body="{data}">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200"><i class="pi pi-code text-xs"></i></div>
@@ -563,7 +585,7 @@ const exportLogs = () => {
                                             </template>
                                         </Column>
 
-                                        <Column :header="t('pages.api.col_abilities')">
+                                        <Column :header="t('pages.api.col_abilities')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                             <template #body="{data}">
                                                 <div class="flex flex-wrap gap-1">
                                                     <Tag v-for="ab in data.abilities" :key="ab" :value="ab" class="bg-blue-50 text-blue-700 border border-blue-100 text-[9px] uppercase font-black" />
@@ -578,7 +600,7 @@ const exportLogs = () => {
                                             </template>
                                         </Column>
 
-                                        <Column field="expires_at" :header="t('pages.api.col_status')" sortable align="center">
+                                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="expires_at" :header="t('pages.api.col_status')" sortable align="center">
                                             <template #body="{data}">
                                                 <div v-if="!data.expires_at" class="flex flex-col items-center">
                                                     <Badge :value="t('pages.api.active')" severity="success" class="text-[9px] tracking-widest" />
@@ -591,7 +613,7 @@ const exportLogs = () => {
                                             </template>
                                         </Column>
 
-                                        <Column :header="t('pages.api.col_actions')" alignFrozen="right" frozen style="width: 5rem" align="center">
+                                        <Column :header="t('pages.api.col_actions')" style="width: 5rem" align="center">
                                             <template #body="{data}">
                                                 <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger hover:bg-red-50" v-tooltip.left="t('pages.api.revoke')" @click="revokeToken(data)" />
                                             </template>
@@ -609,7 +631,7 @@ const exportLogs = () => {
                                 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center mb-6 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
                                     <IconField iconPosition="left" class="md:col-span-4">
                                         <InputIcon class="pi pi-search text-slate-400" />
-                                        <InputText v-model="logFilters.search" :placeholder="t('pages.api.search_audit')" class="w-full bg-slate-50 border-none focus:ring-0 text-sm" @keyup.enter="loadLogs()" />
+                                        <InputText v-model="logFilters.search" :placeholder="t('pages.api.search_audit')" class="w-full h-11 bg-slate-50 border-none focus:ring-0 text-sm" @keyup.enter="loadLogs()" />
                                     </IconField>
                                     <Dropdown v-model="logFilters.method" :options="availableMethods" :placeholder="t('pages.api.http_method')" class="md:col-span-2" showClear @change="loadLogs()" />
                                     <Dropdown v-model="logFilters.level" :options="availableLevels" :placeholder="t('pages.api.level')" class="md:col-span-2" showClear @change="loadLogs()" />
@@ -622,15 +644,15 @@ const exportLogs = () => {
                                     <DataTable :value="logs" :paginator="true" :rows="logsPagination.per_page" :totalRecords="logsPagination.total" :first="(logsPagination.current_page - 1) * logsPagination.per_page" :lazy="true" @page="(e) => loadLogs(e.page + 1)" class="custom-datatable p-datatable-sm" stripedRows :loading="isLoading.logs">
                                         <template #empty><div class="p-10 text-center text-slate-500 font-medium">{{ t('pages.api.no_logs') }}</div></template>
 
-                                        <Column field="created_at" :header="t('pages.api.col_timestamp')" sortable style="width: 11rem">
+                                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="created_at" :header="t('pages.api.col_timestamp')" sortable style="width: 11rem">
                                             <template #body="{data}"><span class="text-[11px] font-mono font-bold text-slate-500">{{ new Date(data.created_at).toLocaleString(locale) }}</span></template>
                                         </Column>
 
-                                        <Column field="method" :header="t('pages.api.col_method')" style="width: 6rem">
+                                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="method" :header="t('pages.api.col_method')" style="width: 6rem">
                                             <template #body="{data}"><Tag v-if="data.method" :value="data.method" :severity="getMethodColor(data.method)" class="text-[9px] font-black" /></template>
                                         </Column>
 
-                                        <Column field="event" :header="t('pages.api.col_event')" sortable style="min-width: 14rem">
+                                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="event" :header="t('pages.api.col_event')" sortable style="min-width: 14rem">
                                             <template #body="{data}">
                                                 <div class="flex flex-col">
                                                     <span class="text-xs font-bold text-slate-700">{{ data.event }}</span>
@@ -647,7 +669,7 @@ const exportLogs = () => {
                                             <template #body="{data}"><span class="text-xs text-slate-700 font-mono truncate block" v-tooltip.top="data.url">{{ data.url || '—' }}</span></template>
                                         </Column>
 
-                                        <Column field="ip_address" header="IP" style="width: 9rem">
+                                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="ip_address" header="IP" style="width: 9rem">
                                             <template #body="{data}"><span v-if="data.ip_address" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ data.ip_address }}</span></template>
                                         </Column>
 

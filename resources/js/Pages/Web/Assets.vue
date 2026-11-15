@@ -269,13 +269,13 @@ const kpis = computed(() => [
             <div class="page-container page-section">
 
                 <!-- KPI réels -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div v-for="kpi in kpis" :key="kpi.label" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                    <div v-for="kpi in kpis" :key="kpi.label" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
                             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ kpi.label }}</p>
                             <div class="text-2xl font-black text-slate-900 tracking-tight">{{ kpi.value }}</div>
                         </div>
-                        <div :class="`w-12 h-12 rounded-xl flex items-center justify-center ${kpi.classes}`">
+                        <div :class="`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${kpi.classes}`">
                             <i :class="`pi ${kpi.icon} text-xl`"></i>
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const kpis = computed(() => [
                     <div class="flex flex-col md:flex-row gap-3 items-center">
                         <IconField iconPosition="left" class="flex-1 w-full">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="search" :placeholder="t('pages.web_assets.searchPlaceholder')" class="w-full" />
+                            <InputText v-model="search" :placeholder="t('pages.web_assets.searchPlaceholder')" class="w-full h-11" />
                         </IconField>
                         <Select v-model="disk" :options="diskOptions" optionLabel="label" optionValue="value" class="w-full md:w-56" />
                         <Select v-model="type" :options="typeOptions" optionLabel="label" optionValue="value" class="w-full md:w-48" />

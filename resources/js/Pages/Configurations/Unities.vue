@@ -145,7 +145,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
 
             <div class="page-container page-section">
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <PageKpi :label="t('common.total', { item: 'Unités' })" :value="stats.total" icon="pi-database" color="slate" />
             </div>
 
@@ -164,7 +164,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="filters['global'].value" :placeholder="t('common.search')" class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('common.search')" class="w-full md:w-80 h-11 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
                             </IconField>
                             <Button icon="pi pi-download" text rounded severity="secondary" @click="dt.exportCSV()" />
                         </div>
@@ -182,7 +182,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
                         </template>
                     </Column>
 
-                    <Column field="abreviation" :header="t('unities.fields.symbol')">
+                    <Column field="abreviation" :header="t('unities.fields.symbol')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg font-mono font-bold text-sm">
                                 {{ data.abreviation || '--' }}
@@ -190,7 +190,7 @@ const dialogTitle = computed(() => editing.value ? t('unities.dialog.editTitle')
                         </template>
                     </Column>
 
-                    <Column :header="t('common.actions')" alignFrozen="right" frozen class="min-w-[120px]">
+                    <Column :header="t('common.actions')" class="min-w-[120px]">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
                                 <Button icon="pi pi-pencil" text rounded severity="info" @click="editUnit(data)" />

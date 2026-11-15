@@ -1139,7 +1139,8 @@
         "more": "Mehr",
         "all": "Alle",
         "filter": "Filter",
-        "details": "Details"
+        "details": "Details",
+        "demoData": "Simulierte Daten"
     },
     "payments": {
         "title": "Zahlungsverwaltung",
@@ -4957,6 +4958,8 @@
             "falseLabel": "FALSCH",
             "generalCategory": "Allgemein",
             "attemptsAbbr": "Vers.",
+            "attemptsLabel": "Versuche",
+            "optionsLabel": "Antworten / Optionen",
             "colLevel": "Niveau",
             "colPoints": "Pkt",
             "colStatus": "Status",
@@ -5215,6 +5218,9 @@
             "searchPlaceholder": "Lernenden oder Hash suchen...",
             "statusPlaceholder": "Zertifikatsstatus",
             "exportXls": "XLS exportieren",
+            "emailLabel": "E-Mail",
+            "issuedDateLabel": "Ausstellungsdatum",
+            "certNumberLabel": "Zertifikat-Nr.",
             "refresh": "Aktualisieren",
             "emptyTitle": "Kein Diplom ausgestellt",
             "emptyHint": "Für Ihre Lernenden generierte Zertifikate erscheinen hier mit ihrem kryptografischen Fingerabdruck.",

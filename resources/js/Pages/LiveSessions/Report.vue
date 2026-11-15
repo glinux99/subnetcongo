@@ -86,13 +86,13 @@ const engagementRate = computed(() => {
                                 </div>
                             </template>
                         </Column>
-                        <Column :header="t('pages.live_session_report.col_joined_at')">
+                        <Column :header="t('pages.live_session_report.col_joined_at')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">{{ data.joined_at ? new Date(data.joined_at).toLocaleTimeString(locale, { timeZone: props.timezone }) : '—' }}</template>
                         </Column>
-                        <Column :header="t('pages.live_session_report.col_time_spent')">
+                        <Column :header="t('pages.live_session_report.col_time_spent')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">{{ formatTime(data.seconds_spent ?? 0) }}</template>
                         </Column>
-                        <Column :header="t('pages.live_session_report.col_last_ping')">
+                        <Column :header="t('pages.live_session_report.col_last_ping')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">{{ data.last_ping_at ? new Date(data.last_ping_at).toLocaleTimeString(locale, { timeZone: props.timezone }) : '—' }}</template>
                         </Column>
                         <Column :header="t('pages.live_session_report.col_status')">

@@ -90,6 +90,7 @@ class HandleInertiaRequests extends Middleware
                 'env' => config('app.env'),
                 'locale' => app()->getLocale(),
                 'version' => config('app.version', '1.0.0'),
+                'channel' => config('app.channel', 'stable'),
             ],
             'identity' => fn () => $this->sharedIdentity(),
             'menuPages' => fn () => \App\Models\Page::where('is_published', true)

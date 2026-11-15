@@ -243,7 +243,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
 
             <div class="page-container page-section">
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <PageKpi :label="t('labels.stats.total')" :value="stats.total" icon="pi-tags" color="slate" />
                 <PageKpi :label="t('labels.stats.withChars')" :value="stats.withChars" icon="pi-sitemap" color="indigo" />
             </div>
@@ -277,7 +277,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="lazyParams.filters['global'].value" :placeholder="t('labels.toolbar.searchPlaceholder')" class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
+                                <InputText v-model="lazyParams.filters['global'].value" :placeholder="t('labels.toolbar.searchPlaceholder')" class="w-full md:w-80 h-11 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
                             </IconField>
                             <div class="flex gap-2">
                                 <Button v-if="selectedLabels.length" :label="`Supprimer (${selectedLabels.length})`" icon="pi pi-trash" severity="danger" @click="confirmDeleteSelected" class="rounded-xl" />
@@ -287,7 +287,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+                    <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" selectionMode="multiple" headerStyle="width: 3rem"></Column>
 
                     <Column field="designation" :header="t('labels.fields.name')" sortable>
                         <template #body="{ data }">
@@ -301,15 +301,15 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                         </template>
                     </Column>
 
-                    <Column :header="t('labels.fields.style')">
+                    <Column :header="t('labels.fields.style')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <Tag :value="data.color" :style="{ backgroundColor: data.color, color: '#fff' }" class="rounded-lg px-3 border-none" />
                         </template>
                     </Column>
 
-                    <Column field="description" :header="t('labels.fields.description')" class="text-slate-500 text-sm" />
+                    <Column field="description" :header="t('labels.fields.description')" class="text-slate-500 text-sm" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                    <Column :header="t('labels.fields.characteristics')">
+                    <Column :header="t('labels.fields.characteristics')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-wrap gap-1">
                                 <Tag v-for="char in data.label_characteristics" :key="char.id" :value="char.name" severity="secondary" class="bg-slate-100 text-slate-600 border-none px-2"></Tag>
@@ -318,7 +318,7 @@ const dialogTitle = computed(() => editing.value ? t('labels.dialog.editTitle') 
                         </template>
                     </Column>
 
-                    <Column :header="t('common.actions')" alignFrozen="right" frozen>
+                    <Column :header="t('common.actions')">
                         <template #body="{ data }">
                             <div class="flex gap-1">
                                 <Button icon="pi pi-pencil" text rounded severity="info" @click="editLabel(data)" />

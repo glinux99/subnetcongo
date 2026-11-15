@@ -372,7 +372,7 @@ const copyLink = (id) => {
                         <InputText
                             v-model="forumFilters.search"
                             :placeholder="t('pages.forum.search_placeholder')"
-                            class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500"
+                            class="w-full h-11 bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500"
                         />
                     </IconField>
                 </div>

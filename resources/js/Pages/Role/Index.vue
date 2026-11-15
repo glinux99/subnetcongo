@@ -259,7 +259,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4 bg-white border-b border-slate-100">
                             <IconField iconPosition="left" class="w-full md:w-96">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="data.params.search" :placeholder="t('pages.roles.search_placeholder')" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:bg-white text-sm font-medium" />
+                                <InputText v-model="data.params.search" :placeholder="t('pages.roles.search_placeholder')" class="w-full h-11 rounded-xl border-slate-200 bg-slate-50 focus:bg-white text-sm font-medium" />
                             </IconField>
                             <Button icon="pi pi-sliders-h" class="p-button-rounded p-button-secondary p-button-text bg-slate-50" @click="op.toggle($event)" v-tooltip.left="t('pages.roles.tooltip_columns')" />
                         </div>
@@ -272,7 +272,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                         </div>
                     </template>
 
-                    <Column v-for="col in displayedColumns" :key="col.field" :field="col.field" :header="col.header" :sortable="col.sortable">
+                    <Column v-for="col in displayedColumns" :key="col.field" :field="col.field" :header="col.header" :sortable="col.sortable" :headerClass="col.field === 'name' ? '' : (col.field === 'permissions' ? 'hidden lg:table-cell' : 'hidden md:table-cell')" :bodyClass="col.field === 'name' ? '' : (col.field === 'permissions' ? 'hidden lg:table-cell' : 'hidden md:table-cell')">
                         <template #body="{ data: rowData, field }">
 
                             <!-- NOM -->
@@ -303,7 +303,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.roles.col_actions')" alignFrozen="right" frozen style="width: 8rem" align="center">
+                    <Column :header="t('pages.roles.col_actions')" style="width: 6rem" align="center">
                         <template #body="slotProps">
                             <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                                 <Button v-show="can(['update role'])" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary bg-slate-50 hover:bg-blue-50 hover:text-blue-600" @click="openEdit(slotProps.data)" v-tooltip.top="t('pages.roles.tooltip_edit')" />
@@ -360,7 +360,7 @@ watch(() => cloneDeep(data.params), debounce(() => {
 
                     <IconField iconPosition="left" class="mb-4">
                         <InputIcon class="pi pi-search text-slate-400" />
-                        <InputText v-model="permissionSearch" :placeholder="t('pages.roles.permission_search_placeholder')" class="w-full rounded-xl bg-slate-50 border-transparent focus:bg-white text-sm" />
+                        <InputText v-model="permissionSearch" :placeholder="t('pages.roles.permission_search_placeholder')" class="w-full h-11 rounded-xl bg-slate-50 border-transparent focus:bg-white text-sm" />
                     </IconField>
 
                     <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 p-2 overflow-hidden">

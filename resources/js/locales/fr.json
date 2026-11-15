@@ -1037,7 +1037,8 @@
         "invalidDate": "Date invalide",
         "notSet": "Non renseigné",
         "instructionNotFound": "Instruction ID {id} (Introuvable)",
-        "date_format_placeholder": "JJ/MM/AAAA"
+        "date_format_placeholder": "JJ/MM/AAAA",
+        "demoData": "Données simulées"
     },
     "payments": {
         "title": "Gestion des Paiements",
@@ -4666,6 +4667,8 @@
             "falseLabel": "FAUX",
             "generalCategory": "Général",
             "attemptsAbbr": "pass.",
+            "attemptsLabel": "Tentatives",
+            "optionsLabel": "Réponses / options",
             "colLevel": "Niveau",
             "colPoints": "Pts",
             "colStatus": "État",
@@ -4924,6 +4927,9 @@
             "searchPlaceholder": "Rechercher un apprenant, un Hash...",
             "statusPlaceholder": "État du certificat",
             "exportXls": "Export XLS",
+            "emailLabel": "E-mail",
+            "issuedDateLabel": "Date d'émission",
+            "certNumberLabel": "N° de certificat",
             "refresh": "Actualiser",
             "emptyTitle": "Aucun diplôme délivré",
             "emptyHint": "Les certificats générés pour vos apprenants s'afficheront ici avec leur empreinte cryptographique.",

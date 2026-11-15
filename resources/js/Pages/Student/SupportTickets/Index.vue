@@ -85,7 +85,7 @@ const formatDate = (iso) => {
             <div class="page-container page-section">
 
                 <!-- CARTES KPI -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <PageKpi :label="t('pages.support_tickets.kpiTotal')" :value="stats?.total ?? 0" icon="pi-list" color="blue" />
                     <PageKpi :label="t('pages.support_tickets.kpiOpen')" :value="stats?.open ?? 0" icon="pi-envelope-open" color="sky" />
                     <PageKpi :label="t('pages.support_tickets.kpiPending')" :value="stats?.pending ?? 0" icon="pi-clock" color="amber" />

@@ -161,7 +161,7 @@ const moveToTrash = (messageNumber) => {
             <div class="max-w-[1600px] mx-auto px-4 md:px-6 pt-6">
 
                 <!-- KPI -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <PageKpi label="Total Emails" :value="stats.total ?? 0" icon="pi-inbox" color="blue" />
                     <PageKpi label="Non lus" :value="stats.unread ?? 0" icon="pi-envelope" color="red" />
                     <PageKpi label="Quota serveur" :value="(stats.quota?.percent ?? 0) + '%'" icon="pi-database" color="red">

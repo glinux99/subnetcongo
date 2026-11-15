@@ -187,7 +187,7 @@ const hasHtml = computed(() => {
                 </div>
 
                 <!-- Informations email -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                     <PageKpi label="Expéditeur" :value="getFromName(email.from)" icon="pi-user" color="blue" :subtext="getFromEmail(email.from)" />
                     <PageKpi label="Destinataires" :value="toDisplay || 'Moi'" icon="pi-envelope" color="indigo" />
                     <PageKpi label="Réception" :value="formatDate(email.date)" icon="pi-calendar" color="emerald" :subtext="'Poids du message : ' + formatSize(email.size)" />

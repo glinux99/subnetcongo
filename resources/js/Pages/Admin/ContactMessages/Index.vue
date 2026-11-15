@@ -71,7 +71,7 @@ const formatDate = (iso) => {
             <div class="page-container page-section">
 
                 <!-- CARTES KPI -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <PageKpi :label="t('pages.admin_contact_messages.kpi_total')" :value="stats?.total ?? 0" icon="pi-inbox" color="blue" />
                     <PageKpi :label="t('pages.admin_contact_messages.kpi_new')" :value="stats?.new ?? 0" icon="pi-bell" color="red" />
                     <PageKpi :label="t('pages.admin_contact_messages.kpi_replied')" :value="stats?.replied ?? 0" icon="pi-reply" color="emerald" />
@@ -87,7 +87,7 @@ const formatDate = (iso) => {
                     <div class="flex flex-wrap items-center gap-3 mb-6">
                         <IconField iconPosition="left" class="flex-1 min-w-[250px]">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="search" @keyup.enter="apply" :placeholder="t('pages.admin_contact_messages.search_placeholder')" class="w-full" />
+                            <InputText v-model="search" @keyup.enter="apply" :placeholder="t('pages.admin_contact_messages.search_placeholder')" class="w-full h-11" />
                         </IconField>
                         
                         <Select v-model="status" :options="[

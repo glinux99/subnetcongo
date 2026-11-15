@@ -56,6 +56,7 @@ import Chip from 'primevue/chip';
 import Skeleton from 'primevue/skeleton';
 import Message from 'primevue/message';
 import Checkbox from 'primevue/checkbox';
+import Menu from 'primevue/menu';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 
@@ -82,6 +83,26 @@ const loading = ref(true);
 const selectedModules = ref([]);
 const expandedRows = ref({}); // Pour ouvrir les modules et voir les leçons (PrimeVue DataTable utilise un objet pour les lignes expansées)
 const localModules = ref([]); // Copie locale pour le drag&drop global si nécessaire
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+
+const rowMenuItems = computed(() => {
+    const module = rowMenuTarget.value;
+    if (!module) return [];
+
+    return [
+        { label: t('pages.modules.addLessonTooltip'), icon: 'pi pi-plus', command: () => openNewLesson(module.id) },
+        { label: t('pages.modules.transferTooltip'), icon: 'pi pi-arrow-right-arrow-left', command: () => openTransferDialog(module) },
+        { label: t('pages.modules.configureTooltip'), icon: 'pi pi-cog', command: () => editModule(module) },
+        { separator: true },
+        { label: t('pages.modules.purgeTooltip'), icon: 'pi pi-trash', command: () => confirmDeleteModule(module), class: 'text-red-600' },
+    ];
+});
+
+const toggleRowMenu = (event, module) => {
+    rowMenuTarget.value = module;
+    rowMenu.value?.toggle(event);
+};
 
 // Modales
 const moduleDialog = ref(false);
@@ -604,7 +625,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <IconField iconPosition="left" class="w-full sm:w-auto">
                     <InputIcon class="pi pi-search text-slate-400" />
-                    <InputText v-model="serverFilters.search" :placeholder="t('pages.modules.searchPlaceholder')" class="w-full sm:w-64 bg-white border-slate-200" />
+                    <InputText v-model="serverFilters.search" :placeholder="t('pages.modules.searchPlaceholder')" class="w-full sm:w-64 h-11 bg-white border-slate-200" />
                 </IconField>
 
                 <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -641,7 +662,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
             stripedRows
         >
             <template #empty>
-                <div class="p-16 text-center flex flex-col items-center">
+                <div class="p-8 sm:p-10 md:p-16 text-center flex flex-col items-center">
                     <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center border border-slate-200 mb-4">
                         <i class="pi pi-folder-open text-4xl text-slate-300"></i>
                     </div>
@@ -651,27 +672,27 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </div>
             </template>
 
-            <Column expander style="width: 3rem" />
+            <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
             <!-- COLONNE : INFO MODULE -->
-            <Column field="title" :header="t('pages.modules.colModule')" style="min-width: 25rem">
+            <Column field="title" :header="t('pages.modules.colModule')" style="min-width: 0">
                 <template #body="{ data }">
-                    <div class="flex gap-4 py-1">
+                    <div class="flex gap-2 sm:gap-4 py-1 min-w-0">
 
                         <!-- Thumbnail miniature -->
-                        <div class="w-16 h-12 rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                        <div class="w-12 h-9 sm:w-16 sm:h-12 rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
                             <img v-if="data.thumbnail_path" :src="data.thumbnail_path.startsWith('http') ? data.thumbnail_path : '/media/' + data.thumbnail_path" class="w-full h-full object-cover" />
                             <i v-else class="pi pi-image text-slate-300 text-lg"></i>
                         </div>
 
-                        <div>
-                            <div class="font-extrabold text-slate-800 text-base leading-tight hover:text-blue-600 cursor-pointer" @click="editModule(data)">
+                        <div class="min-w-0">
+                            <div class="font-extrabold text-slate-800 text-sm sm:text-base leading-tight hover:text-blue-600 cursor-pointer line-clamp-1" @click="editModule(data)">
                                 {{ data.title }}
                                 <i v-if="data.is_locked" class="pi pi-lock text-amber-500 text-xs ml-1" v-tooltip.top="t('pages.modules.lockedTooltip')"></i>
                             </div>
                             <div class="flex items-center gap-2 mt-1">
                                 <!-- Badge du cours parent -->
-                                <div class="bg-blue-50 border border-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded font-bold flex items-center gap-1 max-w-[200px] truncate" v-tooltip.top="t('pages.modules.parentCourseTooltip')">
+                                <div class="bg-blue-50 border border-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded font-bold flex items-center gap-1 max-w-[9rem] sm:max-w-[200px] truncate" v-tooltip.top="t('pages.modules.parentCourseTooltip')">
                                     <i class="pi pi-book text-[9px]"></i> {{ getCourseName(data.course_id) }}
                                 </div>
                             </div>
@@ -680,7 +701,7 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </template>
             </Column>
 
-            <Column field="stats" :header="t('pages.modules.colContent')" style="min-width: 10rem">
+            <Column field="stats" :header="t('pages.modules.colContent')" style="min-width: 10rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <div class="flex flex-col text-xs text-slate-600 space-y-1">
                         <span class="font-bold"><i class="pi pi-file text-slate-400 mr-1 text-[10px]"></i> {{ data.lessons?.length || 0 }} {{ t('pages.modules.lessonsCount') }}</span>
@@ -695,15 +716,22 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </template>
             </Column>
 
-            <Column :header="t('pages.modules.colActions')" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right">
+            <Column :header="t('pages.modules.colActions')" style="min-width: 3.5rem; text-align: right">
                 <template #body="{ data }">
-                    <div class="flex justify-end gap-1 whitespace-nowrap">
+                    <div class="hidden md:flex justify-end gap-1 whitespace-nowrap">
                         <Button icon="pi pi-plus" class="p-button-text p-button-success p-button-rounded bg-emerald-50 hover:bg-emerald-100 w-8 h-8" v-tooltip.top="t('pages.modules.addLessonTooltip')" @click="openNewLesson(data.id)" />
                         <div class="w-px h-5 bg-slate-200 self-center mx-1"></div>
                         <Button icon="pi pi-arrow-right-arrow-left" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.modules.transferTooltip')" @click="openTransferDialog(data)" />
                         <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.modules.configureTooltip')" @click="editModule(data)" />
                         <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.modules.purgeTooltip')" @click="confirmDeleteModule(data)" />
                     </div>
+                    <Button
+                        icon="pi pi-ellipsis-v"
+                        class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                        :aria-label="t('pages.live_sessions.menu_more')"
+                        v-tooltip.top="t('pages.live_sessions.menu_more')"
+                        @click="toggleRowMenu($event, data)"
+                    />
                 </template>
             </Column>
 
@@ -774,6 +802,8 @@ const getCourseName = (id) => props.courses.find(c => c.id === id)?.title || t('
                 </div>
             </template>
         </DataTable>
+
+        <Menu id="modules-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
     </div>
     </div>
 </div>

@@ -291,7 +291,7 @@ const firstRow = computed(() => ((props.realizations?.current_page || 1) - 1) * 
                         class="text-sm"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     >
-                        <Column header="Image" style="width: 6.5rem">
+                        <Column header="Image" style="width: 6.5rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <img
                                     v-if="data.image"
@@ -313,19 +313,19 @@ const firstRow = computed(() => ((props.realizations?.current_page || 1) - 1) * 
                             </template>
                         </Column>
 
-                        <Column field="client" header="Client" style="min-width: 10rem">
+                        <Column field="client" header="Client" style="min-width: 10rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <span class="text-slate-600 dark:text-slate-300">{{ data.client || '—' }}</span>
                             </template>
                         </Column>
 
-                        <Column field="location" header="Lieu" style="min-width: 9rem">
+                        <Column field="location" header="Lieu" style="min-width: 9rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <span class="text-slate-600 dark:text-slate-300">{{ data.location || '—' }}</span>
                             </template>
                         </Column>
 
-                        <Column field="completed_at" header="Date" style="min-width: 8rem">
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="completed_at" header="Date" style="min-width: 8rem">
                             <template #body="{ data }">
                                 <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.completed_at) }}</span>
                             </template>
@@ -344,7 +344,7 @@ const firstRow = computed(() => ((props.realizations?.current_page || 1) - 1) * 
                             </template>
                         </Column>
 
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 9rem">
+                        <Column header="Actions" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1 whitespace-nowrap">
                                     <Button icon="pi pi-pencil" text rounded severity="secondary" aria-label="Éditer" v-tooltip.top="'Éditer'" @click="openEdit(data)" />

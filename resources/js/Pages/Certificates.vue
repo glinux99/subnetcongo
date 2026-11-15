@@ -14,6 +14,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
 import { useConfirmAction } from '@/composables/useConfirmAction';
+import { useAppVersion } from '@/composables/useAppVersion';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 
@@ -45,9 +46,11 @@ import TabPanel from 'primevue/tabpanel';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
 import { useI18n } from 'vue-i18n';
+import Menu from 'primevue/menu';
 import CertificateDocument from '@/Components/CertificateDocument.vue';
 
 const { t } = useI18n();
+const { label: appVersion } = useAppVersion();
 
 const props = defineProps({
     certificates: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
@@ -522,6 +525,32 @@ const submitExpiration = () => {
 
 const downloadPdf = (id) => window.open(route('certificates.download', { certificate: id }), '_blank');
 const openVerificationLink = (hash) => window.open(route('certificates.verify.public', { hash: hash }), '_blank');
+
+// Menu kebab par ligne (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const cert = rowMenuTarget.value;
+    if (!cert) return [];
+
+    const items = [
+        { label: t('pages.certificates.downloadPdf'), icon: 'pi pi-download', command: () => downloadPdf(cert.id) },
+        { label: t('pages.certificates.shareLink'), icon: 'pi pi-share-alt', command: () => openVerificationLink(cert.verification_hash) },
+    ];
+    if (cert.status === 'Active') {
+        items.push({ label: t('pages.certificates.setExpiration'), icon: 'pi pi-calendar-times', command: () => openExpirationDialog(cert) });
+    }
+    if (cert.status !== 'Revoked') {
+        items.push({ separator: true });
+        items.push({ label: t('pages.certificates.revokeDiploma'), icon: 'pi pi-shield-slash', command: () => handleRevocation(cert), class: 'text-red-600' });
+    }
+    return items;
+});
+const toggleRowMenu = (event, cert) => {
+    rowMenuTarget.value = cert;
+    rowMenu.value?.toggle(event);
+};
+const expandedRows = ref([]);
 const selectedElement = computed(() => templateForm.elements.find(e => e.id === selectedElementId.value) || null);
 const getStatusSeverity = (status) => ({ Active: { sev: 'success', label: t('pages.certificates.statusValid'), icon: 'pi-verified' }, Revoked: { sev: 'danger', label: t('pages.certificates.statusRevoked'), icon: 'pi-shield-slash' }, Expired: { sev: 'warning', label: t('pages.certificates.statusExpired'), icon: 'pi-clock' } })[status] || { sev: 'info', label: status, icon: 'pi-info-circle' };
 
@@ -560,7 +589,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <div class="page-container page-section">
 
             <!-- ── CARTES KPI ── -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
                 <!-- KPI 1 : Total Délivrés -->
                 <PageKpi
@@ -600,12 +629,12 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
 
             <!-- SYSTÈME D'ONGLETS PRINCIPAL -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="flex border-b border-slate-100 bg-slate-50/80 px-6 pt-4 gap-2">
-                    <button @click="activeMainTab = 'log'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'log' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
-                        <i class="pi pi-list"></i> {{ t('pages.certificates.tabLog') }}
+                <div class="flex border-b border-slate-100 bg-slate-50/80 overflow-x-auto px-1 pt-2 gap-0 custom-scrollbar sm:px-6 sm:pt-4" role="tablist">
+                    <button @click="activeMainTab = 'log'" class="px-3 sm:px-8 py-3 sm:py-4 font-bold text-[11px] sm:text-sm flex items-center gap-2 sm:gap-3 border-b-2 whitespace-nowrap transition-all text-left" :class="activeMainTab === 'log' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
+                        <i class="pi pi-list" aria-hidden="true"></i> {{ t('pages.certificates.tabLog') }}
                     </button>
-                    <button @click="activeMainTab = 'templates'" class="px-8 py-4 font-bold text-sm flex items-center gap-3 border-b-2 transition-all" :class="activeMainTab === 'templates' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
-                        <i class="pi pi-palette"></i> {{ t('pages.certificates.tabStudio') }}
+                    <button @click="activeMainTab = 'templates'" class="px-3 sm:px-8 py-3 sm:py-4 font-bold text-[11px] sm:text-sm flex items-center gap-2 sm:gap-3 border-b-2 whitespace-nowrap transition-all text-left" :class="activeMainTab === 'templates' ? 'border-red-600 text-red-700 bg-white rounded-t-2xl' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 rounded-t-2xl'">
+                        <i class="pi pi-palette" aria-hidden="true"></i> {{ t('pages.certificates.tabStudio') }}
                     </button>
                 </div>
 
@@ -613,13 +642,13 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 <!-- VUE 1 : REGISTRE DES ÉMISSIONS (DATATABLE)                                 -->
                 <!-- ========================================================================== -->
                 <div v-show="activeMainTab === 'log'">
-                    <div class="border-b border-slate-100 p-6 flex flex-col lg:flex-row justify-between items-center gap-4 bg-white">
-                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                            <IconField iconPosition="left">
+                    <div class="border-b border-slate-100 p-3 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-2 sm:gap-4 bg-white">
+                        <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                            <IconField iconPosition="left" class="w-full sm:w-80">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="serverFilters.search" :placeholder="t('pages.certificates.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium bg-slate-50 rounded-xl" />
+                                <InputText v-model="serverFilters.search" :placeholder="t('pages.certificates.searchPlaceholder')" class="w-full border-slate-200 font-medium bg-slate-50 rounded-xl min-h-11" />
                             </IconField>
-                            <Dropdown v-model="serverFilters.status" :options="['Active', 'Revoked', 'Expired']" :placeholder="t('pages.certificates.statusPlaceholder')" class="w-56 border-slate-200 font-medium bg-slate-50 rounded-xl" showClear>
+                            <Dropdown v-model="serverFilters.status" :options="['Active', 'Revoked', 'Expired']" :placeholder="t('pages.certificates.statusPlaceholder')" class="w-full sm:w-56 border-slate-200 font-medium bg-slate-50 rounded-xl min-h-11" showClear>
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-2 font-bold">
                                         <i :class="`pi ${getStatusSeverity(slotProps.option).icon} text-${getStatusSeverity(slotProps.option).sev}-500`"></i>
@@ -628,24 +657,25 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </template>
                             </Dropdown>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <Button icon="pi pi-file-excel" :label="t('pages.certificates.exportXls')" class="p-button-secondary p-button-outlined bg-white shadow-sm font-bold rounded-xl" />
-                            <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.certificates.refresh')" />
+                        <div class="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 w-full lg:w-auto">
+                            <Button icon="pi pi-file-excel" :label="t('pages.certificates.exportXls')" class="p-button-secondary p-button-outlined bg-white shadow-sm font-bold rounded-xl min-h-11 flex-1 sm:flex-none justify-center" />
+                            <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100 w-11 h-11 flex-none" :aria-label="t('pages.certificates.refresh')" @click="router.reload()" v-tooltip.top="t('pages.certificates.refresh')" />
                         </div>
                     </div>
 
-                    <DataTable :value="props.certificates.data" dataKey="id" :paginator="true" :rows="10" :totalRecords="props.certificates.total" lazy class="p-datatable-custom border-none" stripedRows rowHover>
+                    <DataTable :value="props.certificates.data" dataKey="id" v-model:expandedRows="expandedRows" :paginator="true" :rows="10" :totalRecords="props.certificates.total" lazy class="p-datatable-custom border-none snc-fluid-table" stripedRows rowHover>
                         <template #empty>
-                            <div class="flex flex-col items-center justify-center p-24 text-slate-500 bg-white">
-                                <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
-                                    <i class="pi pi-verified text-6xl text-slate-300"></i>
+                            <div class="flex flex-col items-center justify-center gap-2 p-4 sm:p-6 md:p-8 text-center text-slate-500 bg-white overflow-hidden">
+                                <div class="w-14 h-14 sm:w-20 sm:h-20 bg-slate-50 rounded-full flex items-center justify-center mb-1 border border-slate-100 shadow-inner">
+                                    <i class="pi pi-verified text-3xl sm:text-5xl text-slate-300" aria-hidden="true"></i>
                                 </div>
-                                <h3 class="text-2xl font-black text-slate-800 mb-2">{{ t('pages.certificates.emptyTitle') }}</h3>
-                                <p class="text-base text-center text-slate-500">{{ t('pages.certificates.emptyHint') }}</p>
+                                <h3 class="text-base sm:text-2xl font-black text-slate-800 mb-0.5 break-words max-w-full">{{ t('pages.certificates.emptyTitle') }}</h3>
+                                <p class="text-[11px] sm:text-base text-center text-slate-500 max-w-md leading-snug break-words">{{ t('pages.certificates.emptyHint') }}</p>
                             </div>
                         </template>
 
-                        <Column field="certificate_code" :header="t('pages.certificates.colTrustId')">
+                        <Column expander style="width: 3rem" headerClass="md:hidden" bodyClass="md:hidden" />
+                        <Column field="certificate_code" :header="t('pages.certificates.colTrustId')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-1 py-3">
                                     <span class="font-mono text-sm font-black text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-100 w-fit tracking-wider">{{ data.certificate_code }}</span>
@@ -655,44 +685,88 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                                 </div>
                             </template>
                         </Column>
-                        <Column field="user.name" :header="t('pages.certificates.colRecipient')">
+                        <Column field="user.name" :header="t('pages.certificates.colRecipient')" style="min-width: 0">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-4">
-                                    <Avatar :image="data.user.avatar" shape="circle" size="xlarge" class="shadow-sm border-2 border-white ring-1 ring-slate-200" />
-                                    <div>
-                                        <div class="font-black text-slate-800 text-sm mb-0.5">{{ data.user.name }}</div>
-                                        <div class="text-xs text-slate-500 font-medium">{{ data.user.email }}</div>
+                                <div class="flex items-center gap-2 sm:gap-4 min-w-0">
+                                    <Avatar :image="data.user.avatar" shape="circle" size="xlarge" class="shadow-sm border-2 border-white ring-1 ring-slate-200 flex-shrink-0 !w-11 !h-11 sm:!w-16 sm:!h-16" />
+                                    <div class="min-w-0">
+                                        <div class="font-black text-slate-800 dark:text-slate-100 text-sm mb-0.5 line-clamp-1">{{ data.user.name }}</div>
+                                        <div class="hidden sm:block text-xs text-slate-500 dark:text-slate-400 font-medium truncate">{{ data.user.email }}</div>
+                                        <Tag :severity="getStatusSeverity(data.status).sev" :value="getStatusSeverity(data.status).label" class="md:hidden mt-1 text-[9px] font-black px-1.5 py-0.5 uppercase tracking-wider border" />
                                     </div>
                                 </div>
                             </template>
                         </Column>
-                        <Column field="course.title" :header="t('pages.certificates.colCourse')">
+                        <Column field="course.title" :header="t('pages.certificates.colCourse')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 0">
                             <template #body="{ data }">
-                                <div class="flex flex-col gap-2">
-                                    <span class="font-bold text-slate-700 text-sm line-clamp-1">{{ data.course.title }}</span>
-                                    <div class="flex items-center gap-2">
+                                <div class="flex flex-col gap-2 min-w-0">
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 text-sm line-clamp-1">{{ data.course.title }}</span>
+                                    <div class="hidden md:flex items-center gap-2">
                                         <Badge :value="`Score: ${data.score}%`" severity="secondary" class="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5"></Badge>
                                         <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider"><i class="pi pi-calendar text-[10px] mr-1"></i> {{ data.issued_at }}</span>
                                     </div>
                                 </div>
                             </template>
                         </Column>
-                        <Column field="status" :header="t('pages.certificates.colStatus')">
+                        <Column field="status" :header="t('pages.certificates.colStatus')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <Tag :severity="getStatusSeverity(data.status).sev" :icon="getStatusSeverity(data.status).icon" :value="getStatusSeverity(data.status).label" class="text-[10px] font-black px-3 py-1.5 uppercase tracking-widest border rounded-lg" :class="`border-${getStatusSeverity(data.status).sev}-200 bg-${getStatusSeverity(data.status).sev}-50 text-${getStatusSeverity(data.status).sev}-700`" />
                             </template>
                         </Column>
-                        <Column :header="t('pages.certificates.colActions')" alignFrozen="right" style="text-align: right; min-width: 12rem;">
+                        <Column :header="t('pages.certificates.colActions')" style="text-align: right; min-width: 3.5rem;">
                             <template #body="{ data }">
-                                <div class="flex justify-end gap-1 whitespace-nowrap">
+                                <div class="hidden md:flex justify-end gap-1 whitespace-nowrap">
                                     <Button icon="pi pi-download" class="p-button-text p-button-secondary p-button-rounded hover:bg-slate-100 w-10 h-10" v-tooltip.top="t('pages.certificates.downloadPdf')" @click="downloadPdf(data.id)" />
                                     <Button icon="pi pi-share-alt" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50 hover:text-blue-600 w-10 h-10" v-tooltip.top="t('pages.certificates.shareLink')" @click="openVerificationLink(data.verification_hash)" />
                                     <Button v-if="data.status === 'Active'" icon="pi pi-calendar-times" class="p-button-text p-button-warning p-button-rounded hover:bg-amber-50 hover:text-amber-600 w-10 h-10" v-tooltip.top="t('pages.certificates.setExpiration')" @click="openExpirationDialog(data)" />
                                     <Button v-if="data.status !== 'Revoked'" icon="pi pi-shield-slash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50 hover:text-red-600 w-10 h-10" v-tooltip.top="t('pages.certificates.revokeDiploma')" @click="handleRevocation(data)" />
                                 </div>
+                                <Button
+                                    icon="pi pi-ellipsis-v"
+                                    class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                                    :aria-label="t('pages.live_sessions.menu_more')"
+                                    v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                    @click="toggleRowMenu($event, data)"
+                                />
                             </template>
                         </Column>
+                        <template #expansion="{ data }">
+                            <div class="px-4 py-4 sm:px-6 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-700">
+                                <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs min-w-0">
+                                    <div class="min-w-0 col-span-2 sm:col-span-3">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.certificates.emailLabel') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-all">{{ data.user?.email || '—' }}</dd>
+                                    </div>
+                                    <div class="min-w-0 col-span-2 sm:col-span-1">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.certificates.colCourse') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.course?.title || '—' }}</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.certificates.issuedDateLabel') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.issued_at || '—' }}</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Score</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.score ?? '—' }}%</dd>
+                                    </div>
+                                    <div class="min-w-0 col-span-2 sm:col-span-3">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.certificates.certNumberLabel') }}</dt>
+                                        <dd class="mt-0.5 font-mono text-[10px] text-slate-600 dark:text-slate-300 break-anywhere">{{ data.certificate_code || '—' }}</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.certificates.colStatus') }}</dt>
+                                        <dd class="mt-0.5"><Tag :severity="getStatusSeverity(data.status).sev" :icon="getStatusSeverity(data.status).icon" :value="getStatusSeverity(data.status).label" class="text-[9px] font-black uppercase tracking-wider border" /></dd>
+                                    </div>
+                                </dl>
+                                <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-700">
+                                    <Button :label="t('pages.certificates.downloadPdf')" icon="pi pi-download" class="p-button-outlined p-button-secondary p-button-sm" @click="downloadPdf(data.id)" />
+                                    <Button :label="t('pages.certificates.shareLink')" icon="pi pi-share-alt" class="p-button-outlined p-button-info p-button-sm" @click="openVerificationLink(data.verification_hash)" />
+                                </div>
+                            </div>
+                        </template>
                     </DataTable>
+
+                    <Menu id="certificates-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
                 </div>
 
                 <!-- ========================================================================== -->
@@ -786,7 +860,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         </div>
                         <div class="flex items-center gap-2 mt-0.5">
                             <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                            <span class="text-[9px] text-emerald-400/70 font-mono tracking-widest uppercase">SubnetCongo Engine v4.0</span>
+                            <span class="text-[9px] text-emerald-400/70 font-mono tracking-widest uppercase">SubnetCongo Engine {{ appVersion }}</span>
                         </div>
                     </div>
                 </div>

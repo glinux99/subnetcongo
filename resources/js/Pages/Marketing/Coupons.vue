@@ -15,6 +15,8 @@ import SncSection from '@/Components/SncSection.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import Menu from 'primevue/menu';
+import { useI18n } from 'vue-i18n';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
@@ -30,6 +32,7 @@ import Textarea from 'primevue/textarea';
 
 const toast = useToast();
 const confirmAction = useConfirmAction();
+const { t } = useI18n();
 
 const props = defineProps({
     coupons: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10, last_page: 1 }) },
@@ -238,6 +241,25 @@ const usagePercent = (coupon) => {
 
 const couponList = computed(() => props.coupons?.data ?? []);
 const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (props.coupons?.per_page || 10));
+
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+
+const toggleRowMenu = (event, row) => {
+    rowMenuTarget.value = row;
+    rowMenu.value?.toggle(event);
+};
+
+const rowMenuItems = computed(() => {
+    const row = rowMenuTarget.value;
+    if (!row) return [];
+    return [
+        { label: 'Éditer', icon: 'pi pi-pencil', command: () => openEdit(row) },
+        { label: 'Dupliquer', icon: 'pi pi-copy', command: () => duplicateCoupon(row) },
+        { separator: true },
+        { label: 'Supprimer', icon: 'pi pi-trash', command: () => confirmDelete(row), class: 'text-red-600' },
+    ];
+});
 </script>
 
 <template>
@@ -256,7 +278,7 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
 
             <div class="page-container page-section">
             <!-- KPI réels -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 my-6">
+            <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 my-6">
                 <PageKpi label="Coupons au total" :value="stats.total" icon="pi-ticket" color="blue" />
                 <PageKpi label="Coupons actifs" :value="stats.active" icon="pi-check-circle" color="emerald" />
                 <PageKpi label="Utilisations cumulées" :value="stats.total_usage" icon="pi-chart-line" color="violet" />
@@ -265,7 +287,7 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
 
             <PageCard>
                 <!-- Barre de filtres -->
-                <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 sm:gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
                     <IconField iconPosition="left" class="w-full md:flex-1 md:min-w-[220px]">
                         <InputIcon class="pi pi-search text-slate-400" aria-hidden="true" />
                         <InputText
@@ -327,13 +349,13 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                     :loading="searchLoading"
                     stripedRows
                     responsiveLayout="scroll"
-                    class="text-sm"
+                    class="text-sm p-datatable-custom p-datatable-mobile border-none"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                 >
-                    <Column field="code" header="Code" style="min-width: 11rem">
+                    <Column field="code" header="Code" style="min-width: 0">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 border border-dashed border-blue-200 dark:border-blue-500/30 rounded-md tracking-wider">
+                            <div class="flex items-center gap-2 px-1 py-1 min-w-0">
+                                <span class="px-2 sm:px-3 py-1 font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 border border-dashed border-blue-200 dark:border-blue-500/30 rounded-md tracking-wider truncate">
                                     {{ data.code }}
                                 </span>
                                 <Button
@@ -347,10 +369,14 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                                 />
                             </div>
                             <p v-if="data.description" class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{{ data.description }}</p>
+                            <div class="md:hidden flex items-center gap-2 mt-1">
+                                <span class="text-xs font-black text-slate-800 dark:text-slate-100">{{ data.discount_type === 'percent' ? `${Number(data.discount_value)} %` : formatMoney(data.discount_value) }}</span>
+                                <Tag :value="effectiveStatus(data).label" :severity="effectiveStatus(data).severity" class="text-[9px]" />
+                            </div>
                         </template>
                     </Column>
 
-                    <Column field="discount_type" header="Type" style="min-width: 9rem">
+                    <Column field="discount_type" header="Type" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 9rem">
                         <template #body="{ data }">
                             <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200 font-medium">
                                 <i :class="['pi', data.discount_type === 'percent' ? 'pi-percentage' : 'pi-dollar', 'text-slate-400']" aria-hidden="true"></i>
@@ -359,7 +385,7 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         </template>
                     </Column>
 
-                    <Column field="discount_value" header="Valeur" style="min-width: 7rem">
+                    <Column field="discount_value" header="Valeur" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 7rem">
                         <template #body="{ data }">
                             <span class="font-bold text-slate-800 dark:text-slate-100">
                                 {{ data.discount_type === 'percent' ? `${Number(data.discount_value)} %` : formatMoney(data.discount_value) }}
@@ -367,7 +393,7 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         </template>
                     </Column>
 
-                    <Column field="used_count" header="Utilisations" style="min-width: 12rem">
+                    <Column field="used_count" header="Utilisations" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 12rem">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center justify-between text-xs font-semibold">
@@ -386,37 +412,44 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
                         </template>
                     </Column>
 
-                    <Column field="min_amount" header="Min. achat" style="min-width: 8rem">
+                    <Column field="min_amount" header="Min. achat" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 8rem">
                         <template #body="{ data }">
                             <span class="text-slate-600 dark:text-slate-300">{{ data.min_amount ? formatMoney(data.min_amount) : 'Aucun' }}</span>
                         </template>
                     </Column>
 
-                    <Column field="starts_at" header="Début" style="min-width: 8rem">
+                    <Column field="starts_at" header="Début" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 8rem">
                         <template #body="{ data }">
                             <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.starts_at) }}</span>
                         </template>
                     </Column>
 
-                    <Column field="expires_at" header="Fin" style="min-width: 8rem">
+                    <Column field="expires_at" header="Fin" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 8rem">
                         <template #body="{ data }">
                             <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.expires_at) }}</span>
                         </template>
                     </Column>
 
-                    <Column field="status" header="Statut" style="min-width: 7rem">
+                    <Column field="status" header="Statut" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 7rem">
                         <template #body="{ data }">
                             <Tag :value="effectiveStatus(data).label" :severity="effectiveStatus(data).severity" />
                         </template>
                     </Column>
 
-                    <Column header="Actions" alignFrozen="right" frozen style="min-width: 10rem">
+                    <Column header="Actions" style="width: 3.5rem; min-width: 3.5rem">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-1 whitespace-nowrap">
+                            <div class="hidden md:flex items-center gap-1 whitespace-nowrap">
                                 <Button icon="pi pi-pencil" text rounded severity="secondary" aria-label="Éditer" v-tooltip.top="'Éditer'" @click="openEdit(data)" />
                                 <Button icon="pi pi-copy" text rounded severity="secondary" aria-label="Dupliquer" v-tooltip.top="'Dupliquer'" @click="duplicateCoupon(data)" />
                                 <Button icon="pi pi-trash" text rounded severity="danger" aria-label="Supprimer" v-tooltip.top="'Supprimer'" @click="confirmDelete(data)" />
                             </div>
+                            <Button
+                                icon="pi pi-ellipsis-v"
+                                class="p-button-text p-button-secondary p-button-rounded w-10 h-10 md:hidden text-slate-500"
+                                :aria-label="t('pages.live_sessions.menu_more')"
+                                :aria-haspopup="true"
+                                @click="toggleRowMenu($event, data)"
+                            />
                         </template>
                     </Column>
 
@@ -431,6 +464,8 @@ const firstRow = computed(() => ((props.coupons?.current_page || 1) - 1) * (prop
             </PageCard>
             </div>
         </div>
+
+        <Menu id="coupon-row-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
 
         <!-- Dialogue création / édition -->
      <SncDialog

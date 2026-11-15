@@ -144,7 +144,7 @@ const resendEmail = (email) => {
 
             <div class="max-w-[1600px] mx-auto px-4 md:px-6 pt-6">
                 <!-- Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <PageKpi
                         :label="t('pages.admin_emails_sent.kpi_total')"
                         :value="stats.total ?? 0"

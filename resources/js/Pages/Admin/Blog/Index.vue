@@ -287,7 +287,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                         class="text-sm"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     >
-                        <Column :header="t('pages.blog.colImage')" style="width: 6.5rem">
+                        <Column :header="t('pages.blog.colImage')" style="width: 6.5rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <img
                                     v-if="data.featured_image"
@@ -309,7 +309,7 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                             </template>
                         </Column>
 
-                        <Column :header="t('pages.blog.colCategory')" style="min-width: 10rem">
+                        <Column :header="t('pages.blog.colCategory')" style="min-width: 10rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <Tag v-if="data.category" :value="data.category.name" severity="info" />
                                 <span v-else class="text-slate-400">—</span>
@@ -329,13 +329,13 @@ const firstRow = computed(() => ((props.posts?.current_page || 1) - 1) * (props.
                             </template>
                         </Column>
 
-                        <Column field="published_at" :header="t('pages.blog.colPublished')" style="min-width: 8rem">
+                        <Column field="published_at" :header="t('pages.blog.colPublished')" style="min-width: 8rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <span class="text-slate-600 dark:text-slate-300 text-xs">{{ formatDate(data.published_at) }}</span>
                             </template>
                         </Column>
 
-                        <Column :header="t('pages.blog.actions')" alignFrozen="right" frozen style="min-width: 9rem">
+                        <Column :header="t('pages.blog.actions')" style="width: 4rem; min-width: 4rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1 whitespace-nowrap">
                                     <Button icon="pi pi-pencil" text rounded severity="secondary" :aria-label="t('pages.blog.edit')" v-tooltip.top="t('pages.blog.edit')" @click="openEdit(data)" />

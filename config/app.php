@@ -18,6 +18,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
     'disk' => env('APP_DISK', 'media_public'),
+    'version' => env('APP_VERSION', '1.0.0'),
+    'channel' => env('APP_CHANNEL', 'stable'),
 
     /*
     |--------------------------------------------------------------------------

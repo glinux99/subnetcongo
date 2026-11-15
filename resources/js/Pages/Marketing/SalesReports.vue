@@ -5,6 +5,7 @@ import PageKpi from '@/Components/PageKpi.vue';
 import { ref, computed, onMounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
+import { useAppVersion } from '@/composables/useAppVersion';
 import { useToast } from 'primevue/usetoast';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 
@@ -35,6 +36,7 @@ import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 
 const { t, locale } = useI18n();
+const { label: appVersion } = useAppVersion();
 const toast = useToast();
 
 // --- STATE MANAGEMENT ---
@@ -45,6 +47,8 @@ const displayDetailDialog = ref(false);
 const currentTransaction = ref(null);
 const dateRange = ref([new Date(new Date().setDate(new Date().getDate() - 30)), new Date()]);
 const opExport = ref();
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
 
 // --- FILTERS & OPTIONS ---
 const filters = ref({
@@ -176,6 +180,19 @@ const onRowSelect = (event) => {
     displayDetailDialog.value = true;
 };
 
+const toggleRowMenu = (event, row) => {
+    rowMenuTarget.value = row;
+    rowMenu.value?.toggle(event);
+};
+
+const rowMenuItems = computed(() => {
+    const row = rowMenuTarget.value;
+    if (!row) return [];
+    return [
+        { label: 'Détails de la transaction', icon: 'pi pi-eye', command: () => onRowSelect({ data: row }) },
+    ];
+});
+
 const getStatusSeverity = (status) => {
     switch (status) {
         case 'Completed': return 'success';
@@ -237,7 +254,7 @@ onMounted(() => {
             <div class="page-container page-section">
 
             <!-- KPI DASHBOARD -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 <PageKpi v-for="kpi in [
                     { label: 'Chiffre d\'Affaire Brut', val: totalGrossRevenue + ' $', color: 'indigo', icon: 'pi-wallet', trend: 18.4 },
                     { label: 'Panier Moyen (AOV)', val: averageOrderValue + ' $', color: 'emerald', icon: 'pi-shopping-cart', trend: 2.1 },
@@ -247,8 +264,8 @@ onMounted(() => {
                     :label="kpi.label" :value="kpi.val" :icon="kpi.icon" :color="kpi.color" :trend="kpi.trend" />
             </div>
 
-            <!-- ANALYTICS SECTION -->
-            <div class="grid grid-cols-12 gap-8 mb-10">
+             <!-- ANALYTICS SECTION -->
+            <div class="grid grid-cols-12 gap-4 sm:gap-8 mb-6 sm:mb-10">
                 <div class="col-span-12 lg:col-span-8">
                     <Card class="border-none shadow-sm rounded-xl overflow-hidden h-full">
                         <template #title>
@@ -327,47 +344,51 @@ onMounted(() => {
                         v-model:selection="selectedSales"
                         filterDisplay="menu"
                         :globalFilterFields="['invoice_ref', 'student.name', 'course.title']"
-                        class="p-datatable-lg custom-sales-table"
+                        class="p-datatable-lg p-datatable-custom p-datatable-mobile custom-sales-table border-none snc-fluid-table"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Ligne {first} à {last} sur {totalRecords} transactions"
                     >
                         <template #header>
-                            <div class="flex flex-col md:flex-row justify-between items-center gap-6 px-2">
+                            <div class="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4 md:gap-6 px-2">
                                 <div class="flex items-center gap-4">
                                     <h2 class="text-2xl font-black text-slate-800 tracking-tighter">Journal des Transactions</h2>
                                     <Tag :value="sales.length + ' Entrées'" severity="info" class="px-3" />
                                 </div>
-                                <div class="flex gap-3 w-full md:w-auto">
-                                    <IconField iconPosition="left" class="flex-1 md:w-80">
+                                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full md:w-auto">
+                                    <IconField iconPosition="left" class="w-full sm:w-64 md:w-72 xl:w-80">
                                         <InputIcon class="pi pi-search text-slate-400" />
-                                        <InputText v-model="filters['global'].value" placeholder="Recherche transaction..." class="w-full" />
+                                        <InputText v-model="filters['global'].value" placeholder="Recherche transaction..." class="w-full h-11" />
                                     </IconField>
                                     <Button icon="pi pi-filter" class="p-button-outlined p-button-secondary rounded-2xl border-2" v-tooltip="'Filtres avancés'" />
                                 </div>
                             </div>
                         </template>
 
-                        <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+                        <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell"></Column>
 
-                        <Column field="invoice_ref" header="RÉFÉRENCE" sortable style="min-width: 10rem">
+                        <Column field="invoice_ref" header="RÉFÉRENCE" sortable headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 10rem">
                             <template #body="{ data }">
                                 <span class="font-mono font-bold text-slate-500">{{ data.invoice_ref }}</span>
                             </template>
                         </Column>
 
-                        <Column field="student.name" header="CLIENT / ÉLÈVE" sortable style="min-width: 16rem">
+                        <Column field="student.name" header="CLIENT / ÉLÈVE" sortable style="min-width: 0">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-3">
-                                    <Avatar :image="data.student.avatar" shape="circle" size="medium" />
-                                    <div class="flex flex-col">
-                                        <span class="font-bold text-slate-800 leading-none mb-1">{{ data.student.name }}</span>
-                                        <span class="text-xs text-slate-400 font-medium italic">{{ data.student.email }}</span>
+                                <div class="flex items-center gap-2 sm:gap-3 px-1 py-1 min-w-0">
+                                    <Avatar :image="data.student.avatar" shape="circle" size="medium" class="flex-shrink-0" />
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="font-bold text-slate-800 leading-none mb-1 truncate">{{ data.student.name }}</span>
+                                        <span class="text-xs text-slate-400 font-medium italic truncate">{{ data.student.email }}</span>
+                                        <span class="md:hidden flex items-center gap-1.5 mt-0.5 text-xs">
+                                            <span class="font-black text-slate-800">{{ formatCurrency(data.amount) }}</span>
+                                            <Badge :value="data.status" :severity="getStatusSeverity(data.status)" class="px-2 py-0.5 uppercase text-[9px] font-black" />
+                                        </span>
                                     </div>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="course.title" header="FORMATION ACQUISE" style="min-width: 14rem">
+                        <Column field="course.title" header="FORMATION ACQUISE" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 0">
                             <template #body="{ data }">
                                 <div class="flex flex-col">
                                     <span class="font-bold text-slate-700 text-sm truncate max-w-[200px]">{{ data.course.title }}</span>
@@ -376,13 +397,13 @@ onMounted(() => {
                             </template>
                         </Column>
 
-                        <Column field="date" header="DATE" sortable style="min-width: 9rem">
+                        <Column field="date" header="DATE" sortable headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <span class="text-sm font-medium text-slate-600">{{ data.date.toLocaleDateString() }}</span>
                             </template>
                         </Column>
 
-                        <Column field="gateway" header="PAIEMENT" style="min-width: 9rem">
+                        <Column field="gateway" header="PAIEMENT" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <i :class="['pi', data.gateway === 'Wire' ? 'pi-building' : 'pi-credit-card']" class="text-slate-300 text-xs"></i>
@@ -391,7 +412,7 @@ onMounted(() => {
                             </template>
                         </Column>
 
-                        <Column field="amount" header="MONTANT" sortable style="min-width: 9rem">
+                        <Column field="amount" header="MONTANT" sortable headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex flex-col items-end">
                                     <span class="font-black text-slate-800">{{ formatCurrency(data.amount) }}</span>
@@ -400,29 +421,38 @@ onMounted(() => {
                             </template>
                         </Column>
 
-                        <Column field="status" header="STATUT" sortable style="min-width: 9rem">
+                        <Column field="status" header="STATUT" sortable headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <Badge :value="data.status" :severity="getStatusSeverity(data.status)" class="px-4 py-1 uppercase text-[9px] font-black" />
                             </template>
                         </Column>
 
-                        <Column header="ACTION" alignFrozen="right" frozen style="min-width: 6rem">
+                        <Column header="ACTION" style="width: 3.5rem; min-width: 3.5rem">
                             <template #body="{ data }">
-                                <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-secondary" @click="onRowSelect({data})" />
+                                <Button icon="pi pi-eye" class="p-button-rounded p-button-text p-button-secondary hidden md:inline-flex w-10 h-10" aria-label="Détails de la transaction" @click="onRowSelect({data})" />
+                                <Button
+                                    icon="pi pi-ellipsis-v"
+                                    class="p-button-text p-button-secondary p-button-rounded w-10 h-10 md:hidden text-slate-500"
+                                    :aria-label="t('pages.live_sessions.menu_more')"
+                                    :aria-haspopup="true"
+                                    @click="toggleRowMenu($event, data)"
+                                />
                             </template>
                         </Column>
 
                         <ColumnGroup type="footer">
                             <Row>
-                                <Column footer="TOTAUX SÉLECTIONNÉS:" :colspan="5" footerStyle="text-align:right; font-weight: 800; color: #64748b" />
+                                <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" footer="TOTAUX SÉLECTIONNÉS:" :colspan="5" footerStyle="text-align:right; font-weight: 800; color: #64748b" />
                                 <Column :footer="formatCurrency(sales.reduce((acc,s) => acc+s.amount, 0))" footerStyle="font-weight: 900; color: #1e293b; text-align: right" />
-                                <Column footer="" />
-                                <Column footer="" />
+                                <Column footer="" footerClass="hidden md:table-cell" />
+                                <Column footer="" footerClass="hidden md:table-cell" />
                             </Row>
                         </ColumnGroup>
                     </DataTable>
                 </template>
             </Card>
+
+            <Menu id="sale-row-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
 
             <!-- TRANSACTION DETAIL MODAL -->
             <SncDialog v-model:visible="displayDetailDialog" title="Détails de la Transaction" icon="pi-receipt" width="750px" v-if="currentTransaction">
@@ -534,7 +564,7 @@ onMounted(() => {
 
             <!-- FOOTER INFO -->
             <footer class="mt-16 text-center text-slate-400 text-sm pb-10 font-medium">
-                © 2026 SubNetCongo Financial Suite v3.2. Système de rapports sécurisé.
+                © {{ new Date().getFullYear() }} SubNetCongo Financial Suite {{ appVersion }}. Système de rapports sécurisé.
             </footer>
 
             </div>

@@ -10,6 +10,8 @@ import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
+import Menu from 'primevue/menu';
+import { useI18n } from 'vue-i18n';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
@@ -35,6 +37,7 @@ const props = defineProps({
 
 const confirmAction = useConfirmAction();
 const page = usePage();
+const { t } = useI18n();
 
 const activeTabIndex = ref(new URLSearchParams((page.url.split('?')[1] ?? '')).get('tab') === 'plans' ? 1 : 0);
 
@@ -133,6 +136,38 @@ const statusTag = (status) => STATUS[status] ?? { label: status ?? '—', severi
 
 const initials = (name) =>
     (name || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('') || '?';
+
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null); // { type: 'subscription' | 'plan', row }
+const expandedRows = ref([]);
+
+const toggleRowMenu = (event, type, row) => {
+    rowMenuTarget.value = { type, row };
+    rowMenu.value?.toggle(event);
+};
+
+const rowMenuItems = computed(() => {
+    const target = rowMenuTarget.value;
+    if (!target) return [];
+    if (target.type === 'subscription') {
+        const s = target.row;
+        const items = [{ label: 'Voir le détail', icon: 'pi pi-eye', command: () => openDetail(s) }];
+        if (s.status === 'active') {
+            items.push({ label: 'Résilier', icon: 'pi pi-ban', command: () => askCancel(s), class: 'text-red-600' });
+        }
+        if (s.status === 'canceled') {
+            items.push({ label: 'Réactiver', icon: 'pi pi-refresh', command: () => askResume(s) });
+            items.push({ separator: true });
+            items.push({ label: 'Supprimer', icon: 'pi pi-trash', command: () => askDelete(s), class: 'text-red-600' });
+        }
+        return items;
+    }
+    const p = target.row;
+    return [
+        { label: 'Modifier', icon: 'pi pi-pencil', command: () => openEditPlan(p) },
+        { label: 'Supprimer', icon: 'pi pi-trash', command: () => askDeletePlan(p), class: 'text-red-600' },
+    ];
+});
 
 const detailRow = ref(null);
 const detailOpen = ref(false);
@@ -317,56 +352,56 @@ const intervalOptions = [
             <div class="page-container page-section">
             <TabView v-model:activeIndex="activeTabIndex">
                 <TabPanel header="Abonnements">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 pt-2">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 pt-2">
                         <Card class="border-none shadow-sm rounded-xl">
                             <template #content>
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">MRR (actifs)</span>
-                                        <div class="text-3xl font-black text-slate-800">{{ formatCents(stats.mrrCents) }}</div>
+                                <div class="flex justify-between items-start gap-2">
+                                    <div class="min-w-0">
+                                        <span class="block text-slate-500 font-bold text-[10px] sm:text-xs uppercase mb-1 leading-tight">MRR (actifs)</span>
+                                        <div class="text-xl sm:text-2xl xl:text-3xl font-black text-slate-800 truncate">{{ formatCents(stats.mrrCents) }}</div>
                                     </div>
-                                    <div class="bg-emerald-50 p-3 rounded-xl"><i class="pi pi-chart-line text-emerald-600"></i></div>
+                                    <div class="bg-emerald-50 w-10 h-10 flex-none rounded-xl flex items-center justify-center"><i class="pi pi-chart-line text-emerald-600"></i></div>
                                 </div>
-                                <p class="mt-3 text-xs text-slate-400">Total encaissé : <span class="font-semibold text-slate-600">{{ formatCents(stats.totalCollectedCents) }}</span></p>
+                                <p class="mt-2 sm:mt-3 text-[11px] sm:text-xs text-slate-400 leading-snug">Total encaissé : <span class="font-semibold text-slate-600">{{ formatCents(stats.totalCollectedCents) }}</span></p>
                             </template>
                         </Card>
 
                         <Card class="border-none shadow-sm rounded-xl">
                             <template #content>
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Abonnements actifs</span>
-                                        <div class="text-3xl font-black text-slate-800">{{ stats.totalActive ?? 0 }}</div>
+                                <div class="flex justify-between items-start gap-2">
+                                    <div class="min-w-0">
+                                        <span class="block text-slate-500 font-bold text-[10px] sm:text-xs uppercase mb-1 leading-tight">Abonnements actifs</span>
+                                        <div class="text-xl sm:text-2xl xl:text-3xl font-black text-slate-800 truncate">{{ stats.totalActive ?? 0 }}</div>
                                     </div>
-                                    <div class="bg-blue-50 p-3 rounded-xl"><i class="pi pi-users text-blue-600"></i></div>
+                                    <div class="bg-blue-50 w-10 h-10 flex-none rounded-xl flex items-center justify-center"><i class="pi pi-users text-blue-600"></i></div>
                                 </div>
-                                <p class="mt-3 text-xs text-slate-400">{{ stats.total ?? 0 }} au total · {{ stats.totalCanceled ?? 0 }} résiliés · {{ stats.totalExpired ?? 0 }} expirés</p>
+                                <p class="mt-2 sm:mt-3 text-[11px] sm:text-xs text-slate-400 leading-snug">{{ stats.total ?? 0 }} au total · {{ stats.totalCanceled ?? 0 }} résiliés · {{ stats.totalExpired ?? 0 }} expirés</p>
                             </template>
                         </Card>
 
                         <Card class="border-none shadow-sm rounded-xl">
                             <template #content>
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">Churn (résiliés / total)</span>
-                                        <div class="text-3xl font-black text-slate-800">{{ stats.churnNonDispo ? '—' : (stats.churnRate + ' %') }}</div>
+                                <div class="flex justify-between items-start gap-2">
+                                    <div class="min-w-0">
+                                        <span class="block text-slate-500 font-bold text-[10px] sm:text-xs uppercase mb-1 leading-tight">Churn (résiliés / total)</span>
+                                        <div class="text-xl sm:text-2xl xl:text-3xl font-black text-slate-800 truncate">{{ stats.churnNonDispo ? '—' : (stats.churnRate + ' %') }}</div>
                                     </div>
-                                    <div class="bg-rose-50 p-3 rounded-xl"><i class="pi pi-user-minus text-rose-600"></i></div>
+                                    <div class="bg-rose-50 w-10 h-10 flex-none rounded-xl flex items-center justify-center"><i class="pi pi-user-minus text-rose-600"></i></div>
                                 </div>
-                                <p class="mt-3 text-xs text-slate-400">Estimatif simple — pas un taux cohorté mensuel</p>
+                                <p class="mt-2 sm:mt-3 text-[11px] sm:text-xs text-slate-400 leading-snug">Estimatif simple — pas un taux cohorté mensuel</p>
                             </template>
                         </Card>
 
                         <Card class="border-none shadow-sm rounded-xl">
                             <template #content>
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="block text-slate-500 font-bold text-xs uppercase mb-1">ARPU</span>
-                                        <div class="text-3xl font-black text-slate-800">{{ formatCents(stats.arpuCents) }}</div>
+                                <div class="flex justify-between items-start gap-2">
+                                    <div class="min-w-0">
+                                        <span class="block text-slate-500 font-bold text-[10px] sm:text-xs uppercase mb-1 leading-tight">ARPU</span>
+                                        <div class="text-xl sm:text-2xl xl:text-3xl font-black text-slate-800 truncate">{{ formatCents(stats.arpuCents) }}</div>
                                     </div>
-                                    <div class="bg-amber-50 p-3 rounded-xl"><i class="pi pi-wallet text-amber-600"></i></div>
+                                    <div class="bg-amber-50 w-10 h-10 flex-none rounded-xl flex items-center justify-center"><i class="pi pi-wallet text-amber-600"></i></div>
                                 </div>
-                                <p class="mt-3 text-xs text-slate-400">Revenu moyen par abonnement actif / mois</p>
+                                <p class="mt-2 sm:mt-3 text-[11px] sm:text-xs text-slate-400 leading-snug">Revenu moyen par abonnement actif / mois</p>
                             </template>
                         </Card>
                     </div>
@@ -376,6 +411,7 @@ const intervalOptions = [
                             <DataTable
                                 :value="subscriptions.data"
                                 dataKey="id"
+                                v-model:expandedRows="expandedRows"
                                 lazy
                                 :first="(subscriptions.current_page - 1) * subscriptions.per_page"
                                 :rows="subscriptions.per_page"
@@ -383,90 +419,139 @@ const intervalOptions = [
                                 @page="onPage"
                                 stripedRows
                                 responsiveLayout="scroll"
-                                class="p-datatable-sm"
+                                class="p-datatable-sm p-datatable-custom p-datatable-mobile border-none snc-fluid-table"
                             >
                                 <template #header>
-                                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div class="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4">
                                         <div class="flex items-center gap-2">
                                             <h2 class="text-xl font-bold text-slate-800">Liste des abonnés</h2>
                                             <Badge :value="subscriptions.total" severity="info" />
                                         </div>
-                                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                                            <IconField iconPosition="left" class="grow md:grow-0">
+                                        <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+                                            <IconField iconPosition="left" class="w-full sm:w-auto grow md:grow-0 min-w-0">
                                                 <InputIcon class="pi pi-search text-slate-400" />
-                                                <InputText v-model="filterForm.search" placeholder="Utilisateur, email, plan..." class="w-full md:w-64" aria-label="Recherche abonnements" />
+                                                <InputText v-model="filterForm.search" placeholder="Utilisateur, email, plan..." class="w-full sm:w-64 h-11" aria-label="Recherche abonnements" />
                                             </IconField>
-                                            <Select v-model="filterForm.status" :options="statusOptions" optionLabel="label" optionValue="value" class="w-44" aria-label="Filtrer par statut" />
-                                            <Select v-model="filterForm.plan" :options="planOptions" optionLabel="label" optionValue="value" class="w-44" aria-label="Filtrer par plan" />
-                                            <Button v-if="hasActiveFilters" icon="pi pi-filter-slash" text rounded severity="secondary" aria-label="Réinitialiser les filtres" @click="resetFilters" />
+                                            <Select v-model="filterForm.status" :options="statusOptions" optionLabel="label" optionValue="value" class="w-full sm:w-56 h-11" aria-label="Filtrer par statut" />
+                                            <Select v-model="filterForm.plan" :options="planOptions" optionLabel="label" optionValue="value" class="w-full sm:w-56 h-11" aria-label="Filtrer par plan" />
+                                            <Button v-if="hasActiveFilters" icon="pi pi-filter-slash" label="Réinitialiser" text rounded severity="secondary" class="h-11" aria-label="Réinitialiser les filtres" @click="resetFilters" />
                                         </div>
                                     </div>
                                 </template>
 
                                 <template #empty>
-                                    <div class="text-center py-8">
+                                    <div class="text-center py-8 px-4">
                                         <i class="pi pi-inbox text-3xl text-slate-300 mb-2"></i>
-                                        <p class="text-slate-500">Aucun abonnement trouvé.</p>
+                                        <p class="text-slate-500 break-words">Aucun abonnement trouvé.</p>
                                         <Button v-if="hasActiveFilters" label="Réinitialiser les filtres" text class="mt-2" @click="resetFilters" />
                                     </div>
                                 </template>
 
-                                <Column header="Utilisateur" style="min-width: 15rem">
+                                <Column expander style="width: 3rem" headerClass="md:hidden" bodyClass="md:hidden" />
+                                <Column header="Utilisateur" style="min-width: 0">
                                     <template #body="{ data }">
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-2 sm:gap-3 px-1 py-1 min-w-0">
                                             <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0" aria-hidden="true">
                                                 {{ initials(data.user?.name) }}
                                             </div>
                                             <div class="flex flex-col min-w-0">
                                                 <span class="font-bold text-slate-700 leading-tight truncate">{{ data.user?.name ?? 'Utilisateur supprimé' }}</span>
                                                 <span class="text-xs text-slate-400 truncate">{{ data.user?.email ?? '—' }}</span>
+                                                <Tag :value="statusTag(data.status).label" :severity="statusTag(data.status).severity" class="md:hidden w-fit mt-1 text-[9px]" />
                                             </div>
                                         </div>
                                     </template>
                                 </Column>
 
-                                <Column header="Plan" style="min-width: 11rem">
+                                <Column header="Plan" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 11rem">
                                     <template #body="{ data }">
                                         <Tag :value="data.plan_name ?? data.plan?.name ?? '—'" severity="info" class="px-3" />
                                         <div class="text-[11px] text-slate-400 mt-1 font-mono">{{ data.plan_code ?? '' }}</div>
                                     </template>
                                 </Column>
 
-                                <Column header="Prix" style="min-width: 8rem">
+                                <Column header="Prix" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 8rem">
                                     <template #body="{ data }">
                                         <span class="font-bold text-slate-800">{{ formatCents(data.plan_price) }}</span>
                                         <span class="text-[11px] text-slate-400"> / {{ data.interval === 'year' ? 'an' : 'mois' }}</span>
                                     </template>
                                 </Column>
 
-                                <Column header="Intervalle" style="min-width: 7rem">
+                                <Column header="Intervalle" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 7rem">
                                     <template #body="{ data }">{{ intervalLabel(data.interval) }}</template>
                                 </Column>
 
-                                <Column header="Début" style="min-width: 7rem">
+                                <Column header="Début" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 7rem">
                                     <template #body="{ data }">{{ formatDate(data.starts_at ?? data.created_at) }}</template>
                                 </Column>
 
-                                <Column header="Fin" style="min-width: 7rem">
+                                <Column header="Fin" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 7rem">
                                     <template #body="{ data }">{{ formatDate(data.ends_at) }}</template>
                                 </Column>
 
-                                <Column header="Statut" style="min-width: 7rem">
+                                <Column header="Statut" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 7rem">
                                     <template #body="{ data }">
                                         <Tag :value="statusTag(data.status).label" :severity="statusTag(data.status).severity" />
                                     </template>
                                 </Column>
 
-                                <Column header="Actions" alignFrozen="right" frozen style="min-width: 10rem">
+                                <Column header="Actions" style="width: 3.5rem; min-width: 3.5rem">
                                     <template #body="{ data }">
-                                        <div class="flex items-center gap-1 whitespace-nowrap">
+                                        <div class="hidden md:flex items-center gap-1 whitespace-nowrap">
                                             <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="`Voir la fiche de ${data.user?.name ?? 'l’abonné'}`" title="Voir le détail" @click="openDetail(data)" />
                                             <Button v-if="data.status === 'active'" icon="pi pi-ban" text rounded severity="danger" aria-label="Résilier l’abonnement" title="Résilier" @click="askCancel(data)" />
                                             <Button v-if="data.status === 'canceled'" icon="pi pi-refresh" text rounded severity="success" aria-label="Réactiver l’abonnement" title="Réactiver" @click="askResume(data)" />
                                             <Button v-if="data.status === 'canceled'" icon="pi pi-trash" text rounded severity="danger" aria-label="Supprimer l’abonnement" title="Supprimer" @click="askDelete(data)" />
                                         </div>
+                                        <Button
+                                            icon="pi pi-ellipsis-v"
+                                            class="p-button-text p-button-secondary p-button-rounded w-11 h-11 md:hidden text-slate-500"
+                                            :aria-label="t('pages.live_sessions.menu_more')"
+                                            v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                            :aria-haspopup="true"
+                                            @click="toggleRowMenu($event, 'subscription', data)"
+                                        />
                                     </template>
                                 </Column>
+                                <template #expansion="{ data }">
+                                    <div class="px-4 py-3 sm:px-5 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-700">
+                                        <dl class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs min-w-0">
+                                            <div class="min-w-0 col-span-2">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Email</dt>
+                                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-all">{{ data.user?.email ?? '—' }}</dd>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Plan</dt>
+                                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.plan_name ?? data.plan?.name ?? '—' }}</dd>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Montant</dt>
+                                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ formatCents(data.plan_price) }} / {{ data.interval === 'year' ? 'an' : 'mois' }}</dd>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Cycle</dt>
+                                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ intervalLabel(data.interval) }}</dd>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Début</dt>
+                                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ formatDate(data.starts_at ?? data.created_at) }}</dd>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Prochaine échéance</dt>
+                                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ formatDate(data.ends_at) }}</dd>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Statut</dt>
+                                                <dd class="mt-0.5"><Tag :value="statusTag(data.status).label" :severity="statusTag(data.status).severity" /></dd>
+                                            </div>
+                                        </dl>
+                                        <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-700">
+                                            <Button label="Voir le détail" icon="pi pi-eye" class="p-button-outlined p-button-secondary p-button-sm" @click="openDetail(data)" />
+                                            <Button v-if="data.status === 'active'" label="Résilier" icon="pi pi-ban" class="p-button-outlined p-button-danger p-button-sm" @click="askCancel(data)" />
+                                            <Button v-if="data.status === 'canceled'" label="Réactiver" icon="pi pi-refresh" class="p-button-outlined p-button-success p-button-sm" @click="askResume(data)" />
+                                        </div>
+                                    </div>
+                                </template>
                             </DataTable>
                         </template>
                     </Card>
@@ -478,24 +563,31 @@ const intervalOptions = [
                         <Button label="Nouveau plan" icon="pi pi-plus" @click="openNewPlan" />
                     </div>
 
-                    <DataTable :value="plans" dataKey="id" stripedRows responsiveLayout="scroll" class="p-datatable-sm">
+                    <DataTable :value="plans" dataKey="id" stripedRows responsiveLayout="scroll" class="p-datatable-sm p-datatable-custom p-datatable-mobile border-none snc-fluid-table">
                         <template #empty>
                             <div class="text-center py-8 text-slate-500">Aucun plan. Créez le premier plan tarifaire.</div>
                         </template>
-                        <Column header="Code" style="min-width: 8rem">
+                        <Column header="Code" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 8rem">
                             <template #body="{ data }"><span class="font-mono text-xs text-slate-600">{{ data.code }}</span></template>
                         </Column>
-                        <Column field="name" header="Nom" style="min-width: 11rem" />
-                        <Column header="Prix" style="min-width: 8rem">
+                        <Column header="Nom" style="min-width: 0">
+                            <template #body="{ data }">
+                                <div class="flex flex-col min-w-0 px-1 py-1">
+                                    <span class="font-semibold text-slate-700 truncate">{{ data.name }}</span>
+                                    <span class="md:hidden text-[11px] text-slate-400 font-mono truncate">{{ data.code }} · {{ formatCents(data.price) }}/{{ data.interval === 'year' ? 'an' : 'mois' }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column header="Prix" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 8rem">
                             <template #body="{ data }">
                                 <span class="font-bold">{{ formatCents(data.price) }}</span>
                                 <span class="text-[11px] text-slate-400"> / {{ data.interval === 'year' ? 'an' : 'mois' }}</span>
                             </template>
                         </Column>
-                        <Column header="Intervalle" style="min-width: 7rem">
+                        <Column header="Intervalle" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 7rem">
                             <template #body="{ data }">{{ intervalLabel(data.interval) }}</template>
                         </Column>
-                        <Column header="Durée" style="min-width: 7rem">
+                        <Column header="Durée" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 7rem">
                             <template #body="{ data }">{{ data.duration_months }} mois</template>
                         </Column>
                         <Column header="Actif" style="min-width: 6rem">
@@ -503,17 +595,26 @@ const intervalOptions = [
                                 <InputSwitch v-model="data.is_active" :aria-label="`${data.is_active ? 'Désactiver' : 'Activer'} le plan ${data.name}`" @change="togglePlanActive(data)" />
                             </template>
                         </Column>
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 8rem">
+                        <Column header="Actions" style="width: 3.5rem; min-width: 3.5rem">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-1 whitespace-nowrap">
+                                <div class="hidden md:flex items-center gap-1 whitespace-nowrap">
                                     <Button icon="pi pi-pencil" text rounded severity="secondary" :aria-label="`Modifier le plan ${data.name}`" title="Modifier" @click="openEditPlan(data)" />
                                     <Button icon="pi pi-trash" text rounded severity="danger" :aria-label="`Supprimer le plan ${data.name}`" title="Supprimer" @click="askDeletePlan(data)" />
                                 </div>
+                                <Button
+                                    icon="pi pi-ellipsis-v"
+                                    class="p-button-text p-button-secondary p-button-rounded w-11 h-11 md:hidden text-slate-500"
+                                    :aria-label="t('pages.live_sessions.menu_more')"
+                                    v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                    :aria-haspopup="true"
+                                    @click="toggleRowMenu($event, 'plan', data)"
+                                />
                             </template>
                         </Column>
                     </DataTable>
                 </TabPanel>
             </TabView>
+            <Menu id="billing-row-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
             </div>
 
             <SncDialog

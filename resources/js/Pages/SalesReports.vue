@@ -45,6 +45,8 @@ const exportMenu = ref();
 const loadingTable = ref(false);
 const transactionDrawer = ref(false);
 const selectedRow = ref(null);
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
 
 const dateRange = ref([
     props.filters?.start_date ? new Date(props.filters.start_date) : new Date(new Date().setDate(new Date().getDate() - 30)),
@@ -108,6 +110,28 @@ const dynamicColumns = computed(() => {
 const applyGlobalFilters = () => fetchReportData();
 const viewRowDetails = (data) => { selectedRow.value = data; transactionDrawer.value = true; };
 
+// Colonnes dynamiques : la 1re colonne "identité" (student/customer) reste visible sous md,
+// tout le reste est replie derriere md/lg. Si aucun champ identite n'existe, la 1re colonne est gardee.
+const IDENTITY_FIELDS = ['student', 'customer'];
+const MONEY_FIELDS = ['revenue', 'spent', 'amount'];
+const dynamicColumnClass = (field, position) => {
+    const keys = Object.keys(tableData.value[0] ?? {});
+    const hasIdentity = IDENTITY_FIELDS.some((f) => keys.includes(f));
+    if (IDENTITY_FIELDS.includes(field)) return '';
+    if (!hasIdentity && position === 0) return '';
+    if (field === 'status' || MONEY_FIELDS.includes(field)) return 'hidden md:table-cell';
+    return 'hidden lg:table-cell';
+};
+
+const toggleRowMenu = (event, row) => {
+    rowMenuTarget.value = row;
+    rowMenu.value?.toggle(event);
+};
+
+const rowMenuItems = computed(() => [
+    { label: t('pages.sales_reports.auditTooltip'), icon: 'pi pi-shield', command: () => viewRowDetails(rowMenuTarget.value) },
+]);
+
 onMounted(fetchReportData);
 watch(selectedReportType, fetchReportData);
 </script>
@@ -130,13 +154,14 @@ watch(selectedReportType, fetchReportData);
                     <DatePicker v-model="dateRange" selectionMode="range" :placeholder="t('pages.sales_reports.periodPlaceholder')" class="!bg-white/10 !border !border-white/20 !text-white" @date-select="applyGlobalFilters" />
                     <Button :label="t('pages.sales_reports.export')" icon="pi pi-download" @click="exportMenu.toggle($event)" class="!bg-red-600 hover:!bg-red-700 !border-none !rounded-xl !px-6 !py-3 !text-xs !font-black !uppercase !tracking-widest" />
                     <Menu ref="exportMenu" :model="[{label: t('pages.sales_reports.exportCsv'), icon: 'pi pi-file-excel'}, {label: t('pages.sales_reports.exportPdf'), icon: 'pi pi-file-pdf'}]" :popup="true" />
+                    <Menu id="report-row-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
                 </template>
             </PageHeader>
 
             <div class="page-container page-section">
 
                 <!-- ── KPI INSIGHTS ── -->
-                <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     <PageKpi v-for="stat in kpiStats" :key="stat.label"
                         :label="stat.label" :value="stat.val" :icon="stat.i" :color="stat.c" :trend="stat.g" />
                 </section>
@@ -144,7 +169,7 @@ watch(selectedReportType, fetchReportData);
                 <!-- ── ANALYTICS GRID ── -->
                 <section class="grid grid-cols-12 gap-8">
                     <!-- Main Revenue Chart -->
-                    <div class="col-span-12 lg:col-span-8 bg-white p-10 rounded-[1rem] border border-slate-200/50 shadow-sm">
+                    <div class="col-span-12 lg:col-span-8 bg-white p-4 sm:p-10 rounded-[1rem] border border-slate-200/50 shadow-sm">
                         <div class="flex justify-between items-center mb-10">
                             <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em] flex items-center gap-3">
                                 <span class="w-10 h-[2px] bg-red-600"></span> {{ t('pages.sales_reports.transactionalPerformance') }}
@@ -157,7 +182,7 @@ watch(selectedReportType, fetchReportData);
                     </div>
 
                     <!-- Payment Distribution -->
-                    <div class="col-span-12 lg:col-span-4 bg-[#0F172A] p-10 rounded-[1rem] text-white shadow-2xl relative overflow-hidden">
+                    <div class="col-span-12 lg:col-span-4 bg-[#0F172A] p-4 sm:p-10 rounded-[1rem] text-white shadow-2xl relative overflow-hidden">
                         <div class="relative z-10 flex flex-col h-full">
                             <h3 class="text-xs font-black uppercase tracking-[0.3em] mb-10">{{ t('pages.sales_reports.gatewayVolume') }}</h3>
                             <div class="flex-1 flex flex-col justify-center items-center gap-10">
@@ -181,23 +206,24 @@ watch(selectedReportType, fetchReportData);
 
                 <!-- ── DYNAMIC EXPLORER TABLE ── -->
                 <section class="bg-white rounded-[1rem] border border-slate-200/60 shadow-2xl overflow-hidden">
-                    <div class="p-10 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-8 bg-slate-50/30">
+                    <div class="p-4 sm:p-10 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-slate-50/30">
                         <div>
                             <h2 class="text-2xl font-black text-slate-900 tracking-tighter italic uppercase">{{ t('pages.sales_reports.detailedReports') }}</h2>
                             <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">{{ t('pages.sales_reports.reportsSubtitle') }}</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-4">
                             <Select v-model="selectedReportType" :options="reportTypesList" optionLabel="label" optionValue="value" class="!rounded-xl !bg-white !min-w-[250px] !border-slate-200 shadow-sm" />
-                            <IconField iconPosition="left">
+                            <IconField iconPosition="left" class="w-full sm:w-64">
                                 <InputIcon class="pi pi-search" />
-                                <InputText v-model="filters['global'].value" :placeholder="t('pages.sales_reports.searchPlaceholder')" class="!rounded-xl !bg-white border-none shadow-inner !w-64" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('pages.sales_reports.searchPlaceholder')" class="!rounded-xl !bg-white border-none shadow-inner w-full h-11" />
                             </IconField>
                         </div>
                     </div>
 
-                    <DataTable :value="tableData" :paginator="true" :rows="10" :filters="filters" :loading="loadingTable" 
-                               class="p-datatable-v40" responsiveLayout="scroll">
-                        <Column v-for="col of dynamicColumns" :key="col.field" :field="col.field" :header="col.header" sortable>
+                    <DataTable :value="tableData" :paginator="true" :rows="10" :filters="filters" :loading="loadingTable"
+                               class="p-datatable-v40 p-datatable-custom p-datatable-mobile snc-fluid-table" responsiveLayout="scroll">
+                        <Column v-for="(col, index) of dynamicColumns" :key="col.field" :field="col.field" :header="col.header" sortable
+                                :headerClass="dynamicColumnClass(col.field, index)" :bodyClass="dynamicColumnClass(col.field, index)">
                             <template #body="{ data }">
                                 <div v-if="['student', 'customer'].includes(col.field)" class="flex items-center gap-3">
                                     <Avatar icon="pi pi-user" shape="circle" class="!bg-red-50 !text-red-600 font-black border border-red-100" />
@@ -210,9 +236,16 @@ watch(selectedReportType, fetchReportData);
                                 <span v-else class="text-xs font-bold text-slate-600 uppercase">{{ data[col.field] }}</span>
                             </template>
                         </Column>
-                        <Column :header="t('pages.sales_reports.auditColumn')" alignFrozen="right" frozen>
+                        <Column :header="t('pages.sales_reports.auditColumn')" style="width: 3.5rem; min-width: 3.5rem">
                             <template #body="{ data }">
-                                <Button icon="pi pi-shield" text rounded severity="secondary" @click="viewRowDetails(data)" v-tooltip="t('pages.sales_reports.auditTooltip')" />
+                                <Button icon="pi pi-shield" text rounded severity="secondary" class="hidden md:inline-flex w-10 h-10" v-tooltip="t('pages.sales_reports.auditTooltip')" :aria-label="t('pages.sales_reports.auditTooltip')" @click="viewRowDetails(data)" />
+                                <Button
+                                    icon="pi pi-ellipsis-v"
+                                    class="p-button-text p-button-secondary p-button-rounded w-10 h-10 md:hidden text-slate-500"
+                                    :aria-label="t('pages.live_sessions.menu_more')"
+                                    :aria-haspopup="true"
+                                    @click="toggleRowMenu($event, data)"
+                                />
                             </template>
                         </Column>
                     </DataTable>
@@ -221,7 +254,7 @@ watch(selectedReportType, fetchReportData);
         </div>
 
         <!-- ── TRANSACTION INSPECTOR DRAWER ── -->
-        <Drawer v-model:visible="transactionDrawer" position="right" :header="t('pages.sales_reports.drawerTitle')" class="!w-[500px] !rounded-l-[3rem]">
+        <Drawer v-model:visible="transactionDrawer" position="right" :header="t('pages.sales_reports.drawerTitle')" class="!w-full sm:!w-[500px] !rounded-l-[3rem]">
             <div v-if="selectedRow" class="space-y-8 p-4">
                 <div class="bg-[#0F172A] p-10 rounded-[1rem] text-white relative overflow-hidden shadow-2xl">
                     <div class="absolute -top-10 -right-10 w-48 h-48 bg-red-600/10 rounded-full blur-3xl"></div>

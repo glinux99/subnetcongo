@@ -254,7 +254,7 @@ const onFilter = (event) => {
 
             <div class="page-container page-section">
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <PageKpi :label="statLabels.total" :value="stats.total" icon="pi-database" color="slate" />
                 <PageKpi :label="statLabels.totalMW" :value="stats.totalMW" icon="pi-bolt" color="amber" />
                 <PageKpi :label="statLabels.avgPower" :value="stats.avgPower" icon="pi-chart-line" color="blue" />
@@ -287,7 +287,7 @@ const onFilter = (event) => {
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="filters['global'].value" :placeholder="t('regions.toolbar.searchPlaceholder')" class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('regions.toolbar.searchPlaceholder')" class="w-full md:w-80 h-11 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white" />
                             </IconField>
                             <div class="flex items-center gap-2">
                                 <Button icon="pi pi-download" text rounded severity="secondary" @click="dt.exportCSV()" />
@@ -300,7 +300,7 @@ const onFilter = (event) => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
+                    <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" selectionMode="multiple" headerStyle="width: 3rem" />
 
                     <Column field="designation" header="Désignation" sortable filterField="designation">
                         <template #body="{ data }" v-if="visibleColumns.includes('designation')">
@@ -314,7 +314,7 @@ const onFilter = (event) => {
                         </template>
                     </Column>
 
-                    <Column field="type_centrale" header="Source / Region" sortable :showFilterMatchModes="false" v-if="visibleColumns.includes('type_centrale')">
+                    <Column field="type_centrale" header="Source / Region" sortable :showFilterMatchModes="false" v-if="visibleColumns.includes('type_centrale')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <Tag :value="data.type_centrale" :severity="getSeverity(data.type_centrale)" class="rounded-lg px-3 uppercase text-[10px]" />
                         </template>
@@ -323,7 +323,7 @@ const onFilter = (event) => {
                         </template>
                     </Column>
 
-                    <Column field="puissance_centrale" header="Capacité" sortable v-if="visibleColumns.includes('puissance_centrale')" class="w-40">
+                    <Column field="puissance_centrale" header="Capacité" sortable v-if="visibleColumns.includes('puissance_centrale')" class="w-40" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <div v-if="data.type_centrale !== 'reseau Electrique'" class="flex flex-col">
                                 <div class="flex justify-between items-center mb-1 w-full">
@@ -347,7 +347,7 @@ const onFilter = (event) => {
                         </template>
                     </Column>
 
-                    <Column field="description" header="Description" v-if="visibleColumns.includes('description')">
+                    <Column field="description" header="Description" v-if="visibleColumns.includes('description')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <span class="text-sm text-slate-600">{{ data.description || 'N/A' }}</span>
                         </template>
@@ -361,7 +361,7 @@ const onFilter = (event) => {
                         </template>
                     </Column>
 
-                    <Column :header="t('common.actions')" alignFrozen="right" frozen class="min-w-[120px]">
+                    <Column :header="t('common.actions')" class="min-w-[120px]">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-1">
                                 <Button icon="pi pi-pencil" text rounded severity="info" @click="editRegion(data)" />

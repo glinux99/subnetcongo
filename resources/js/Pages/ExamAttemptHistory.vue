@@ -94,7 +94,7 @@ const viewAttempt = (attempt) => {
                     </div>
 
                     <DataTable v-else :value="attempts" stripedRows responsiveLayout="scroll" class="text-sm">
-                        <Column field="created_at" :header="t('pages.exam_attempt_history.col_date')" style="min-width: 180px">
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="created_at" :header="t('pages.exam_attempt_history.col_date')" style="min-width: 180px">
                             <template #body="{ data }">
                                 <div class="flex flex-col">
                                     <span class="text-sm font-bold text-slate-800">{{ formatDate(data.created_at) }}</span>
@@ -102,7 +102,7 @@ const viewAttempt = (attempt) => {
                                 </div>
                             </template>
                         </Column>
-                        <Column field="score_percentage" :header="t('pages.exam_attempt_history.col_score')" style="min-width: 120px">
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="score_percentage" :header="t('pages.exam_attempt_history.col_score')" style="min-width: 120px">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <div class="w-20 h-20 rounded-full flex items-center justify-center text-sm font-black"

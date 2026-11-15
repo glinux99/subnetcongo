@@ -122,13 +122,13 @@ const isSessionActive = (session) => {
                 <div class="p-8 text-center text-slate-500">{{ t('pages.user_login_histories.empty') }}</div>
             </template>
 
-            <Column field="login_at" :header="t('pages.user_login_histories.col_date')" :sortable="true" style="min-width: 12rem">
+            <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="login_at" :header="t('pages.user_login_histories.col_date')" :sortable="true" style="min-width: 12rem">
                 <template #body="{ data }">
                     <span class="font-medium text-slate-700">{{ formatDate(data.login_at) }}</span>
                 </template>
             </Column>
 
-            <Column field="session_duration" :header="t('pages.user_login_histories.col_duration')" style="min-width: 10rem">
+            <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="session_duration" :header="t('pages.user_login_histories.col_duration')" style="min-width: 10rem">
                 <template #body="{ data }">
                     <span v-if="data.session_duration" class="text-slate-600 font-semibold">
                         {{ formatDuration(data.session_duration) }}
@@ -138,7 +138,7 @@ const isSessionActive = (session) => {
                 </template>
             </Column>
 
-            <Column field="ip_address" :header="t('pages.user_login_histories.col_ip')" style="min-width: 10rem">
+            <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="ip_address" :header="t('pages.user_login_histories.col_ip')" style="min-width: 10rem">
                 <template #body="{ data }">
                     <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs border border-slate-200">
                         {{ data.ip_address }}
@@ -146,7 +146,7 @@ const isSessionActive = (session) => {
                 </template>
             </Column>
 
-            <Column :header="t('pages.user_login_histories.col_device')" style="min-width: 12rem">
+                    <Column :header="t('pages.user_login_histories.col_device')" style="min-width: 12rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                 <template #body="{ data }">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
@@ -160,7 +160,7 @@ const isSessionActive = (session) => {
                 </template>
             </Column>
 
-            <Column :header="t('pages.user_login_histories.col_browser')" style="min-width: 12rem">
+                    <Column :header="t('pages.user_login_histories.col_browser')" style="min-width: 12rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                 <template #body="{ data }">
                     <span class="text-sm text-slate-600">
                         {{ data.agent.browser }} <small class="text-slate-400">v{{ data.agent.browser_version }}</small>

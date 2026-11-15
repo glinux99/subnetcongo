@@ -251,7 +251,7 @@ const kpis = computed(() => [
                             </div>
                             <IconField iconPosition="left" class="w-full sm:w-72">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="search" :placeholder="t('pages.languages.search_placeholder')" class="w-full" />
+                                <InputText v-model="search" :placeholder="t('pages.languages.search_placeholder')" class="w-full h-11" />
                             </IconField>
                         </div>
 
@@ -314,13 +314,13 @@ const kpis = computed(() => [
                 <!-- ═══ MODE LISTE ═══ -->
                 <template v-else>
                     <!-- KPI réels -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div v-for="kpi in kpis" :key="kpi.label" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                        <div v-for="kpi in kpis" :key="kpi.label" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div>
                                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ kpi.label }}</p>
                                 <div class="text-2xl font-black text-slate-900 tracking-tight">{{ kpi.value }}</div>
                             </div>
-                            <div :class="`w-12 h-12 rounded-xl bg-${kpi.color}-50 flex items-center justify-center text-${kpi.color}-600`">
+                            <div :class="`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-${kpi.color}-50 flex items-center justify-center text-${kpi.color}-600`">
                                 <i :class="`pi ${kpi.icon} text-xl`"></i>
                             </div>
                         </div>
@@ -351,7 +351,7 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column :header="t('pages.languages.col_completion')" style="min-width: 12rem">
+                                <Column :header="t('pages.languages.col_completion')" style="min-width: 12rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                     <template #body="{ data }">
                                         <div class="flex flex-col gap-1.5 pr-6">
                                             <div class="flex justify-between text-xs font-semibold">
@@ -364,13 +364,13 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column :header="t('pages.languages.col_visible')" style="width: 7rem">
+                                <Column :header="t('pages.languages.col_visible')" style="width: 7rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                     <template #body="{ data }">
                                         <ToggleSwitch :modelValue="data.is_active" :disabled="data.is_default" @update:modelValue="toggleActive(data)" />
                                     </template>
                                 </Column>
 
-                                <Column :header="t('pages.languages.col_actions')" style="width: 14rem">
+                                <Column :header="t('pages.languages.col_actions')" style="width: 7rem">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-1">
                                             <Button icon="pi pi-pencil" text rounded severity="primary" @click="openEditor(data)" v-tooltip.bottom="t('pages.languages.edit_translations')" />

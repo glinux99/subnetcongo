@@ -66,14 +66,14 @@ const severityMap = {
                         <TabPanel :header="t('pages.maintenance.tab_dashboard')">
                             
                             <!-- 4 Cartes de métriques (Widgets) -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4 p-4">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-4 p-4">
                                 
                                 <!-- Disque -->
-                                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
                                             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.disk') }}</p>
-                                            <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.disk?.percent || 0 }}%</p>
+                                            <p class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">{{ system_health?.disk?.percent || 0 }}%</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
                                             <i class="pi pi-database text-xl"></i>
@@ -86,11 +86,11 @@ const severityMap = {
                                 </div>
 
                                 <!-- RAM -->
-                                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
                                             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.memory') }}</p>
-                                            <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.memory?.percent || 0 }}%</p>
+                                            <p class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">{{ system_health?.memory?.percent || 0 }}%</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
                                             <i class="pi pi-microchip text-xl"></i>
@@ -103,11 +103,11 @@ const severityMap = {
                                 </div>
 
                                 <!-- CPU -->
-                                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
                                             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.cpu') }}</p>
-                                            <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.cpu_load?.['1min'] || '0.00' }}</p>
+                                            <p class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">{{ system_health?.cpu_load?.['1min'] || '0.00' }}</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
                                             <i class="pi pi-server text-xl"></i>
@@ -120,11 +120,11 @@ const severityMap = {
                                 </div>
 
                                 <!-- Database -->
-                                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                                <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
                                             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ t('pages.maintenance.database') }}</p>
-                                            <p class="text-3xl font-black text-slate-800 mt-1">{{ system_health?.database?.size || 'N/A' }}</p>
+                                            <p class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">{{ system_health?.database?.size || 'N/A' }}</p>
                                         </div>
                                         <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
                                             <i class="pi pi-table text-xl"></i>

@@ -144,43 +144,43 @@ const getProviderStyle = (provider) => {
 
             <div class="page-container page-section">
                 <!-- --- KPI SECTION (Style Stripe) --- -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
                             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_volume') }}</p>
-                            <div class="text-3xl font-black text-slate-900 tracking-tight">{{ formatCurrency(stats.total_volume) }}</div>
+                            <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ formatCurrency(stats.total_volume) }}</div>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                             <i class="pi pi-wallet text-xl"></i>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
                             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_transactions') }}</p>
-                            <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.total_transactions }}</div>
+                            <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ stats.total_transactions }}</div>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                             <i class="pi pi-arrow-right-arrow-left text-xl"></i>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
                             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_success_rate') }}</p>
                             <div class="flex items-end gap-2">
-                                <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.success_rate }}%</div>
+                                <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ stats.success_rate }}%</div>
                                 <span class="text-xs font-bold text-emerald-500 mb-1.5"><i class="pi pi-arrow-up text-[10px]"></i> 2.4%</span>
                             </div>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                             <i class="pi pi-chart-line text-xl"></i>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
                         <div>
                             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ t('pages.payments.kpi_active_gateways') }}</p>
-                            <div class="text-3xl font-black text-slate-900 tracking-tight">{{ stats.active_gateways }}</div>
+                            <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ stats.active_gateways }}</div>
                         </div>
-                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
                             <i class="pi pi-bolt text-xl"></i>
                         </div>
                     </div>
@@ -216,7 +216,7 @@ const getProviderStyle = (provider) => {
                             </template>
                         </Column>
                         
-                        <Column field="sandbox" :header="t('pages.payments.col_environment')" style="width: 12rem">
+                        <Column field="sandbox" :header="t('pages.payments.col_environment')" style="width: 12rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <span v-if="data.sandbox" class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -226,7 +226,7 @@ const getProviderStyle = (provider) => {
                             </template>
                         </Column>
 
-                        <Column field="enabled" :header="t('pages.payments.col_enabled')" style="width: 10rem">
+                        <Column field="enabled" :header="t('pages.payments.col_enabled')" style="width: 10rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3">
                                     <InputSwitch v-model="data.enabled" @change="toggleStatus(data)" />
@@ -237,7 +237,7 @@ const getProviderStyle = (provider) => {
                             </template>
                         </Column>
 
-                        <Column :header="t('pages.payments.col_actions')" alignFrozen="right" frozen style="width: 16rem">
+                        <Column :header="t('pages.payments.col_actions')" style="width: 8rem">
                             <template #body="{ data }">
                                 <div class="flex gap-1 justify-end">
                                     <Button v-tooltip.top="t('pages.payments.config_api_tooltip')" icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded" @click="configureGateway(data)" />

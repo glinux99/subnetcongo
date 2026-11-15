@@ -109,6 +109,25 @@ const bulkActionsMenu = [
     { label: t('pages.students.bulkSuspend'), icon: 'pi pi-lock', command: () => confirmBulkSuspend() }
 ];
 
+// Menu kebab par ligne (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const student = rowMenuTarget.value;
+    if (!student) return [];
+
+    return [
+        { label: t('pages.students.fullProfile'), icon: 'pi pi-eye', command: () => viewProfile(student) },
+        { label: t('pages.students.manageDossier'), icon: 'pi pi-user-edit', command: () => editStudent(student) },
+        { separator: true },
+        { label: t('pages.students.purgeLearner'), icon: 'pi pi-trash', command: () => confirmDeleteStudent(student), class: 'text-red-600' },
+    ];
+});
+const toggleRowMenu = (event, student) => {
+    rowMenuTarget.value = student;
+    rowMenu.value?.toggle(event);
+};
+
 // ======================================================================================
 // CONFIGURATION DU WORKSPACE ÉDITEUR D'APPRENANT
 // ======================================================================================
@@ -449,7 +468,7 @@ onBeforeUnmount(() => {
         <!-- ============================================================================== -->
         <!-- KPI CARDS                                                                       -->
         <!-- ============================================================================== -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             <PageKpi :label="t('pages.students.kpiTotalHeadcount')" :value="props.stats.total_students || 0" icon="pi-users" color="blue" />
             <PageKpi :label="t('pages.students.kpiActiveAccounts')" :value="props.stats.active_students || 0" icon="pi-bolt" color="emerald">
                 <div class="mt-2 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
@@ -470,7 +489,7 @@ onBeforeUnmount(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-auto">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" :placeholder="t('pages.students.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.students.searchPlaceholder')" class="w-full sm:w-80 h-11 border-slate-200 shadow-sm font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -530,7 +549,7 @@ onBeforeUnmount(() => {
                 >
                     <!-- EMPTY STATE -->
                     <template #empty>
-                        <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                        <div class="flex flex-col items-center justify-center p-8 sm:p-12 md:p-20 text-slate-500 bg-white">
                             <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                                 <i class="pi pi-user text-5xl text-slate-300"></i>
                             </div>
@@ -543,28 +562,28 @@ onBeforeUnmount(() => {
                     </template>
 
                     <!-- COLONNES -->
-                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
-                    <Column expander style="width: 3rem" />
+                    <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+                    <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                    <Column field="name" :header="t('pages.students.colLearnerIdentity')" style="min-width: 22rem">
+                    <Column field="name" :header="t('pages.students.colLearnerIdentity')" style="min-width: 0">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-4 py-2">
+                            <div class="flex items-center gap-2 sm:gap-4 py-1 sm:py-2 min-w-0">
                                 <!-- Avatar cliquable -->
-                                <div class="relative cursor-pointer group" @click="viewProfile(data)">
+                                <div class="relative cursor-pointer group flex-shrink-0" @click="viewProfile(data)">
                                     <Avatar v-if="data.avatar_path" :image="data.avatar_path" shape="circle" size="xlarge" class="border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
                                     <Avatar v-else :label="data.name.charAt(0).toUpperCase()" shape="circle" size="xlarge" class="bg-blue-100 text-blue-700 font-black border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
                                     <span :class="['absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-white', data.status === 'Actif' ? 'bg-emerald-500' : 'bg-slate-300']"></span>
                                 </div>
-                                <div class="flex flex-col justify-center">
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors" @click="editStudent(data)">
+                                <div class="flex flex-col justify-center min-w-0">
+                                    <div class="flex items-center gap-2 mb-0.5 min-w-0">
+                                        <span class="font-extrabold text-slate-800 text-sm sm:text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editStudent(data)">
                                             {{ data.name }}
                                         </span>
                                         <i v-if="data.certificates > 0" class="pi pi-verified text-blue-500 text-xs" v-tooltip.top="t('pages.students.certificatesCount', { count: data.certificates })"></i>
                                     </div>
-                                    <div class="text-xs text-slate-500 flex items-center gap-3">
-                                        <span class="flex items-center gap-1"><i class="pi pi-envelope text-[10px]"></i> {{ data.email }}</span>
-                                        <span v-if="data.phone" class="flex items-center gap-1 border-l border-slate-200 pl-3"><i class="pi pi-phone text-[10px]"></i> {{ data.phone }}</span>
+                                    <div class="text-xs text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-0.5 min-w-0">
+                                        <span class="flex items-center gap-1 min-w-0"><i class="pi pi-envelope text-[10px] flex-none"></i> <span class="truncate">{{ data.email }}</span></span>
+                                        <span v-if="data.phone" class="hidden sm:flex items-center gap-1 border-l border-slate-200 pl-3"><i class="pi pi-phone text-[10px]"></i> {{ data.phone }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -582,7 +601,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="academic" :header="t('pages.students.colPerformance')" style="min-width: 14rem">
+                    <Column field="academic" :header="t('pages.students.colPerformance')" style="min-width: 14rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col w-full gap-1.5">
                                 <div class="flex justify-between text-[11px] font-bold text-slate-500">
@@ -599,7 +618,7 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column field="created_at" :header="t('pages.students.colEnrollment')" style="min-width: 10rem">
+                    <Column field="created_at" :header="t('pages.students.colEnrollment')" style="min-width: 10rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <span class="text-slate-600 text-sm font-medium flex items-center gap-2">
                                 <!-- {{data.created_at}} -->
@@ -609,13 +628,20 @@ onBeforeUnmount(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.students.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right">
+                    <Column :header="t('pages.students.actions')" style="min-width: 3.5rem; text-align: right">
                         <template #body="{ data }">
-                            <div class="flex justify-end gap-1">
+                            <div class="hidden md:flex justify-end gap-1">
                                 <Button icon="pi pi-eye" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.students.fullProfile')" @click="viewProfile(data)" />
                                 <Button icon="pi pi-user-edit" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.students.manageDossier')" @click="editStudent(data)" />
                                 <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.students.purgeLearner')" @click="confirmDeleteStudent(data)" />
                             </div>
+                            <Button
+                                icon="pi pi-ellipsis-v"
+                                class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                                :aria-label="t('pages.live_sessions.menu_more')"
+                                v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                @click="toggleRowMenu($event, data)"
+                            />
                         </template>
                     </Column>
 
@@ -704,6 +730,8 @@ onBeforeUnmount(() => {
                         </div>
                     </template>
                 </DataTable>
+
+                <Menu id="students-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
             </div>
     </div>
         </div>
@@ -718,28 +746,28 @@ onBeforeUnmount(() => {
             :closable="false"
             :draggable="false"
             :style="{ width: '95vw', maxWidth: '1200px' }"
-            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[85vh]"
+            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[100dvh] sm:h-[85vh]"
             headerClass="hidden"
-            class="rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
+            class="rounded-none sm:rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
         >
             <!-- WORKSPACE HEADER (FIXE) -->
-            <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
+            <div class="flex-none h-14 sm:h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-6 z-20 shadow-sm relative gap-2">
                 <!-- Ligne de progression UI -->
                 <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '50%' }"></div>
 
-                <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
-                        <i class="pi pi-user-edit text-lg"></i>
+                <div class="flex items-center gap-2 sm:gap-5 min-w-0">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 flex-none bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+                        <i class="pi pi-user-edit text-sm sm:text-lg"></i>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
-                            {{ studentForm.id ? t('pages.students.dossierTitle') : t('pages.students.integrationTitle') }}
-                            <Tag v-if="studentForm.status" :value="studentForm.status" :class="getSeverity(studentForm.status).bg" class="text-[9px] uppercase tracking-wider px-2 py-0.5 border" />
+                    <div class="min-w-0">
+                        <h2 class="text-sm sm:text-lg font-black text-slate-800 leading-tight flex items-center gap-1.5 sm:gap-3 min-w-0">
+                            <span class="truncate">{{ studentForm.id ? t('pages.students.dossierTitle') : t('pages.students.integrationTitle') }}</span>
+                            <Tag v-if="studentForm.status" :value="studentForm.status" :class="getSeverity(studentForm.status).bg" class="hidden xs:inline-flex sm:inline-flex text-[9px] uppercase tracking-wider px-2 py-0.5 border" />
                         </h2>
-                        <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span class="truncate max-w-[200px]">{{ studentForm.name || t('pages.students.newProfile') }}</span>
-                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.students.syncedAt', { date: formatDate(lastSavedAt) }) }}</span>
-                            <span v-else-if="studentForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.students.unsavedChanges') }}</span>
+                        <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-slate-500 mt-0.5 min-w-0">
+                            <span class="truncate max-w-[140px] sm:max-w-[200px]">{{ studentForm.name || t('pages.students.newProfile') }}</span>
+                            <span v-if="lastSavedAt" class="hidden md:flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.students.syncedAt', { date: formatDate(lastSavedAt) }) }}</span>
+                            <span v-else-if="studentForm.isDirty" class="hidden md:flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.students.unsavedChanges') }}</span>
                         </div>
                     </div>
                 </div>
@@ -747,6 +775,18 @@ onBeforeUnmount(() => {
                 <div class="flex items-center gap-3">
                     <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary bg-slate-100 hover:bg-slate-200 hover:text-slate-800 w-10 h-10" @click="studentDialog = false" v-tooltip.bottom="t('pages.students.closeDossier')" />
                 </div>
+            </div>
+
+            <!-- MOBILE TAB BAR (sections) -->
+            <div class="md:hidden flex-none flex gap-2 overflow-x-auto px-3 py-2 bg-white border-b border-slate-200 scrollbar-thin">
+                <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id"
+                        class="flex-none flex items-center gap-1.5 px-3 h-10 rounded-lg text-xs font-bold whitespace-nowrap border transition-colors"
+                        :class="activeEditorTab === item.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-600'">
+                    <i :class="[item.icon, 'text-sm']"></i>
+                    {{ item.label }}
+                    <i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px]"></i>
+                    <i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px]"></i>
+                </button>
             </div>
 
             <!-- WORKSPACE BODY (FLEX ROW) -->
@@ -803,11 +843,11 @@ onBeforeUnmount(() => {
 
                 <!-- ZONE DE CONTENU PRINCIPALE (SCROLLABLE) -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-slate-50">
-                    <div class="max-w-4xl mx-auto p-6 lg:p-10 pb-24 space-y-8 min-h-full">
+                    <div class="max-w-4xl mx-auto p-3 sm:p-6 lg:p-10 pb-20 sm:pb-24 space-y-6 sm:space-y-8 min-h-full">
 
                         <!-- TAB 1 : INFO GÉNÉRALES -->
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
@@ -893,7 +933,7 @@ onBeforeUnmount(() => {
 
                         <!-- TAB 2 : DOSSIER ACADÉMIQUE -->
                         <div v-show="activeEditorTab === 'academic'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-chart-bar"></i></div>
                                     <div>
@@ -951,7 +991,7 @@ onBeforeUnmount(() => {
 
                         <!-- TAB 3 : MÉDIAS (AVATAR) -->
                         <div v-show="activeEditorTab === 'media'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.students.profilePhotoTitle') }}</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
@@ -981,7 +1021,7 @@ onBeforeUnmount(() => {
 
                         <!-- TAB 4 : PARAMÈTRES (ACCÈS & SÉCURITÉ) -->
                         <div v-show="activeEditorTab === 'settings'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-rose-500">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-rose-500">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-shield text-slate-400"></i> {{ t('pages.students.securityAccessControl') }}</h3>
 
                                 <div class="space-y-4">
@@ -1017,16 +1057,17 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- WORKSPACE FOOTER (ACTIONS) -->
-            <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <div class="text-xs text-slate-500">
-                    <span v-if="!isEntireFormValid" class="text-amber-600 font-bold flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> {{ t('pages.students.completeFormToSave') }}</span>
+            <div class="flex-none min-h-14 sm:h-20 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-3 sm:px-6 py-2 sm:py-0 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                <div class="text-xs text-slate-500 min-w-0 flex-none">
+                    <span v-if="!isEntireFormValid" class="hidden sm:flex text-amber-600 font-bold items-center gap-2 whitespace-nowrap"><i class="pi pi-exclamation-triangle"></i> {{ t('pages.students.completeFormToSave') }}</span>
+                    <span v-if="!isEntireFormValid" class="sm:hidden text-amber-600 text-lg" v-tooltip.top="t('pages.students.completeFormToSave')"><i class="pi pi-exclamation-triangle"></i></span>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <Button :label="t('pages.students.cancelChanges')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50" @click="studentDialog = false" />
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-none justify-end">
+                    <Button :label="t('pages.students.cancelChanges')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50 whitespace-nowrap" @click="studentDialog = false" />
 
-                    <div class="relative group">
-                        <Button :label="t('pages.students.saveDossier')" icon="pi pi-save" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveStudent" :loading="studentForm.processing" :disabled="!isEntireFormValid" />
+                    <div class="relative group flex-1 sm:flex-none">
+                        <Button :label="t('pages.students.saveDossier')" icon="pi pi-save" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold w-full sm:w-auto px-3 sm:px-8 text-xs sm:text-sm whitespace-nowrap" @click="saveStudent" :loading="studentForm.processing" :disabled="!isEntireFormValid" />
                     </div>
                 </div>
             </div>
@@ -1065,7 +1106,7 @@ onBeforeUnmount(() => {
 <Dialog
     v-model:visible="profileSidebar"
     modal
-    :style="{ width: '600px' }"
+    :style="{ width: 'min(600px, 100vw)' }"
     class="p-fluid rounded-[1rem] custom-profile-dialog"
     :pt="{
         header: { class: 'bg-white border-b border-slate-100 p-6' },

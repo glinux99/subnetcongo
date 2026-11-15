@@ -26,6 +26,7 @@ import MultiSelect from 'primevue/multiselect';
 import Tooltip from 'primevue/tooltip';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Menu from 'primevue/menu';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -79,6 +80,23 @@ const getScoreSeverity = (s) => s >= 80 ? 'success' : s >= 50 ? 'warn' : 'danger
 const getScoreColor = (s) => s >= 80 ? '#10B981' : s >= 50 ? '#F59E0B' : '#E11D48';
 const openQuickView = (s) => { selectedStudent.value = s; showQuickView.value = true; };
 
+// Menu kebab par ligne (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const student = rowMenuTarget.value;
+    if (!student) return [];
+
+    return [
+        { label: t('pages.student_reports.quickView'), icon: 'pi pi-eye', command: () => openQuickView(student) },
+        { label: t('pages.student_reports.fullFile'), icon: 'pi pi-arrow-right', command: () => router.visit(route('student-reports.show', student.id)) },
+    ];
+});
+const toggleRowMenu = (event, student) => {
+    rowMenuTarget.value = student;
+    rowMenu.value?.toggle(event);
+};
+
 const headerActions = computed(() => [
     { label: t('pages.student_reports.refresh'), icon: 'pi-refresh', variant: 'secondary', onClick: () => router.reload({ preserveScroll: true }) },
 ]);
@@ -110,15 +128,15 @@ const kpis = computed(() => [
             <div class="page-container page-section space-y-8">
 
                 <!-- KPI INSIGHT CARDS -->
-                <section v-if="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                <section v-if="stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     <div v-for="kpi in kpis" :key="kpi.label"
-                        class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+                        class="bg-white p-3 sm:p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
                         <div class="min-w-0">
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 truncate">{{ kpi.label }}</p>
-                            <div class="text-2xl font-black text-slate-900 tracking-tight">{{ kpi.value }}</div>
+                            <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 truncate">{{ kpi.label }}</p>
+                            <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">{{ kpi.value }}</div>
                         </div>
-                        <div :class="`w-11 h-11 rounded-xl bg-${kpi.color}-50 flex items-center justify-center text-${kpi.color}-600 shrink-0 ml-3`">
-                            <i :class="['pi', kpi.icon, 'text-lg']"></i>
+                        <div :class="`w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-${kpi.color}-50 flex items-center justify-center text-${kpi.color}-600 shrink-0`">
+                            <i :class="['pi', kpi.icon, 'text-base sm:text-lg']"></i>
                         </div>
                     </div>
                 </section>
@@ -179,16 +197,16 @@ const kpis = computed(() => [
                         </div>
 
                         <DataTable :value="students.data" v-model:selection="selectedStudents" dataKey="id"
-                            stripedRows responsiveLayout="scroll" class="p-datatable-sm">
+                            stripedRows responsiveLayout="scroll" class="p-datatable-sm snc-fluid-table">
 
-                            <Column selectionMode="multiple" headerStyle="width: 3.5rem" />
+                            <Column selectionMode="multiple" headerStyle="width: 3.5rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                            <Column :header="t('pages.student_reports.colStudent')" style="min-width: 16rem">
+                            <Column :header="t('pages.student_reports.colStudent')" style="min-width: 0">
                                 <template #body="{ data }">
                                     <div class="flex items-center gap-3 py-1 cursor-pointer" @click="openQuickView(data)">
                                         <div class="relative shrink-0">
-                                            <Avatar :image="data.avatar" :label="data.name?.charAt(0)" shape="circle" size="large"
-                                                class="!bg-blue-50 !text-blue-600 !font-black border border-blue-100" />
+                                             <Avatar :image="data.avatar" :label="data.name?.charAt(0)" shape="circle" size="large"
+                                                 class="!bg-blue-50 !text-blue-600 !font-black border border-blue-100 !w-9 !h-9 sm:!w-12 sm:!h-12 text-xs" />
                                             <span v-if="data.is_online"
                                                 class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
                                         </div>
@@ -200,9 +218,9 @@ const kpis = computed(() => [
                                 </template>
                             </Column>
 
-                            <Column :header="t('pages.student_reports.colPerformance')" style="min-width: 13rem">
+                            <Column :header="t('pages.student_reports.colPerformance')" style="min-width: 0" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                 <template #body="{ data }">
-                                    <div v-if="data.avg_score !== null" class="w-40">
+                                    <div v-if="data.avg_score !== null" class="w-full min-w-[6rem]">
                                         <div class="flex justify-between items-end mb-1.5">
                                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ t('pages.student_reports.avgScore') }}</span>
                                             <span class="text-sm font-black" :class="`text-${getScoreSeverity(data.avg_score)}-600`">{{ data.avg_score }}%</span>
@@ -214,13 +232,13 @@ const kpis = computed(() => [
                                 </template>
                             </Column>
 
-                            <Column field="submissions_count" :header="t('pages.student_reports.colSubmissions')" style="width: 7rem">
+                            <Column field="submissions_count" :header="t('pages.student_reports.colSubmissions')" style="width: 7rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                 <template #body="{ data }">
                                     <span class="text-sm font-bold text-slate-700">{{ data.submissions_count }}</span>
                                 </template>
                             </Column>
 
-                            <Column :header="t('pages.student_reports.colLastActivity')" style="min-width: 11rem">
+                            <Column :header="t('pages.student_reports.colLastActivity')" style="min-width: 11rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                 <template #body="{ data }">
                                     <div class="flex items-center gap-2">
                                         <i class="pi pi-clock text-slate-300 text-xs"></i>
@@ -240,14 +258,23 @@ const kpis = computed(() => [
                                 </template>
                             </Column>
 
-                            <Column :header="t('pages.student_reports.actions')" alignFrozen="right" frozen style="width: 8.5rem">
+                            <Column :header="t('pages.student_reports.actions')" style="min-width: 5rem">
                                 <template #body="{ data }">
-                                    <div class="flex items-center gap-1 justify-end whitespace-nowrap">
+                                    <div class="hidden md:flex items-center gap-1 justify-end whitespace-nowrap">
                                         <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="t('pages.student_reports.quickView')" :title="t('pages.student_reports.quickView')" @click="openQuickView(data)" />
                                         <Link :href="route('student-reports.show', data.id)">
                                             <Button icon="pi pi-arrow-right" text rounded :aria-label="t('pages.student_reports.fullFile')" :title="t('pages.student_reports.fullFile')" />
                                         </Link>
                                     </div>
+                                    <Button
+                                        icon="pi pi-ellipsis-v"
+                                        text
+                                        rounded
+                                        class="md:hidden w-11 h-11 text-slate-500"
+                                        :aria-label="t('pages.live_sessions.menu_more')"
+                                        :title="t('pages.live_sessions.menu_more')"
+                                        @click="toggleRowMenu($event, data)"
+                                    />
                                 </template>
                             </Column>
 
@@ -259,6 +286,8 @@ const kpis = computed(() => [
                                 </div>
                             </template>
                         </DataTable>
+
+                        <Menu id="student-reports-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
 
                         <!-- PAGINATOR -->
                         <div v-if="students.total > 0" class="px-5 py-4 bg-slate-50/60 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">

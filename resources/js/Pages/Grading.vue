@@ -516,7 +516,7 @@ onMounted(() => {
             <!-- ============================================================================== -->
             <!-- KPI DASHBOARD                                                                  -->
             <!-- ============================================================================== -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <PageKpi
                     :label="t('pages.grading.pendingCorrectionLabel')"
                     :value="props.stats?.pending || 12"
@@ -551,7 +551,7 @@ onMounted(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" :placeholder="t('pages.grading.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.grading.searchPlaceholder')" class="w-full sm:w-80 h-11 border-slate-200 font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -578,7 +578,7 @@ onMounted(() => {
                     :paginator="true"
                     :rows="10"
                     :loading="loading || searchLoading"
-                    class="p-datatable-custom border-none"
+                    class="p-datatable-custom border-none snc-fluid-table"
                     rowHover
                     stripedRows
                 >
@@ -618,7 +618,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="exam" :header="t('pages.grading.colExamProgram')" style="min-width: 18rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
+                    <Column field="exam" :header="t('pages.grading.colExamProgram')" style="min-width: 0" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1">
                                 <span class="font-bold text-slate-700 text-sm line-clamp-1">{{ data.exam }}</span>
@@ -659,7 +659,7 @@ onMounted(() => {
                     <template #expansion="{ data }">
                         <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                             <h4 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i class="pi pi-history text-blue-500"></i> {{ t('pages.grading.academicHistoryTitle') }}</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                                     <div>
                                         <div class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">{{ t('pages.grading.generalAverageLabel') }}</div>
@@ -1091,4 +1091,6 @@ onMounted(() => {
 :deep(.p-editor-container .p-editor-content) {
     border-bottom-left-radius: 0.75rem;
     border-bottom-right-radius: 0.75rem;
-    border-color: #e2e8
+    border-color: #e2e8f0;
+}
+</style>

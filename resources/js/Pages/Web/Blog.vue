@@ -1,10 +1,10 @@
-<script setup>
+﻿<script setup>
 /**
  * ============================================================================
  * COMPOSANT : BLOG (Blog.vue)
- * DESCRIPTION : Magazine en ligne — même langage visuel que la Landing
- * (hero sombre, cartes premium, révélations au scroll) avec une identité
- * éditoriale propre : featured article, catégories, newsletter, pagination.
+ * DESCRIPTION : Magazine en ligne â€” mÃªme langage visuel que la Landing
+ * (hero sombre, cartes premium, rÃ©vÃ©lations au scroll) avec une identitÃ©
+ * Ã©ditoriale propre : featured article, catÃ©gories, newsletter, pagination.
  * ============================================================================
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue';
@@ -58,7 +58,7 @@ const readTime = (p) => {
 const featuredMain = computed(() => props.featured[0] || null);
 const featuredSecondary = computed(() => props.featured.slice(1, 3));
 
-// Newsletter (mock — pas de backend dédié)
+// Newsletter (mock â€” pas de backend dÃ©diÃ©)
 const newsletter = useForm({ email: '' });
 const newsletterSent = ref(false);
 const subscribe = () => {
@@ -67,47 +67,12 @@ const subscribe = () => {
 };
 
 // ============================================================================
-// MODAL ARTICLE (lecture complète + partage)
+// NAVIGATION ARTICLE (page dÃ©diÃ©e SEO)
 // ============================================================================
-const selectedPost = ref(null);
-const linkCopied = ref(false);
-
-const openArticle = (post) => { selectedPost.value = post; document.body.style.overflow = 'hidden'; };
-const closeArticle = () => { selectedPost.value = null; linkCopied.value = false; document.body.style.overflow = ''; };
-
-const stripHtml = (html) => {
-    if (!html) return '';
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
-};
-
-const articleText = (p) => stripHtml(p.content || '');
-const articleWords = (text) => text.split(/\s+/).filter(Boolean).length;
-const articleReadTime = (p) => Math.max(1, Math.round(articleWords(articleText(p) || p.excerpt || '') / 200));
-
-const shareUrl = computed(() => {
-    if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/blog`;
-});
-
-const copyLink = async () => {
-    try {
-        await navigator.clipboard.writeText(shareUrl.value);
-        linkCopied.value = true;
-        setTimeout(() => { linkCopied.value = false; }, 2500);
-    } catch (e) { /* clipboard indisponible */ }
-};
-
-const shareTargets = computed(() => [
-    { icon: 'pi-facebook',  label: 'Facebook',  href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl.value)}` },
-    { icon: 'pi-twitter',   label: 'X / Twitter', href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl.value)}&text=${encodeURIComponent(selectedPost.value?.title || '')}` },
-    { icon: 'pi-linkedin',  label: 'LinkedIn',  href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl.value)}` },
-    { icon: 'pi-whatsapp',  label: 'WhatsApp',  href: `https://wa.me/?text=${encodeURIComponent((selectedPost.value?.title || '') + ' ' + shareUrl.value)}` },
-]);
+const openArticle = (post) => { if (post?.slug) router.get(route('blog.show', post.slug)); };
 
 // ============================================================================
-// ANIMATIONS AU SCROLL (Intersection Observer — même que Landing)
+// ANIMATIONS AU SCROLL (Intersection Observer â€” mÃªme que Landing)
 // ============================================================================
 let observer = null;
 
@@ -133,7 +98,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
     <AppLayout>
         <!-- ================================================================== -->
-        <!-- HERO : signature sombre Landing, déclinaison éditoriale -->
+        <!-- HERO : signature sombre Landing, dÃ©clinaison Ã©ditoriale -->
         <!-- ================================================================== -->
         <header class="relative min-h-[60vh] flex items-end pt-20 overflow-hidden bg-[#020617]">
             <div class="absolute inset-0 z-0 bg-[#020617]">
@@ -165,7 +130,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         </header>
 
         <!-- ================================================================== -->
-        <!-- SECTION : ARTICLES À LA UNE (éditorial asymétrique) -->
+        <!-- SECTION : ARTICLES Ã€ LA UNE (Ã©ditorial asymÃ©trique) -->
         <!-- ================================================================== -->
         <section v-if="featuredMain" class="py-20 bg-white">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
@@ -225,7 +190,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
         </section>
 
         <!-- ================================================================== -->
-        <!-- SECTION : RECHERCHE & FILTRES CATÉGORIES -->
+        <!-- SECTION : RECHERCHE & FILTRES CATÃ‰GORIES -->
         <!-- ================================================================== -->
         <section class="py-10 bg-[#F4F6F9] border-b border-slate-100 sticky top-[65px] z-30">
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
@@ -237,7 +202,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
                             class="w-full pl-11 pr-4 py-3 bg-[#F4F6F9] border-none rounded-xl text-sm font-medium text-[#0B1221] focus:ring-2 focus:ring-[#2563EB] outline-none transition-all" />
                     </div>
 
-                    <!-- Pills catégories -->
+                    <!-- Pills catÃ©gories -->
                     <div class="flex flex-nowrap overflow-x-auto hide-scrollbar gap-2 flex-1">
                         <button @click="applyFilters('')"
                             class="relative px-5 py-2.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-300"
@@ -278,7 +243,7 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 
                         <!-- Contenu -->
                         <div class="p-6 md:p-7 flex-1 flex flex-col bg-white">
-                            <!-- Méta -->
+                            <!-- MÃ©ta -->
                             <div class="flex items-center gap-3 mb-3 text-xs font-bold text-slate-400">
                                 <span class="flex items-center gap-1.5"><i class="pi pi-calendar text-[10px]"></i> {{ formatDate(post.published_at) }}</span>
                                 <span class="w-1 h-1 rounded-full bg-slate-300"></span>
@@ -353,64 +318,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
             </div>
         </section>
 
-        <!-- ================================================================== -->
-        <!-- MODAL : LECTURE ARTICLE -->
-        <!-- ================================================================== -->
-        <Teleport to="body">
-            <Transition name="modal-fade">
-                <div v-if="selectedPost" class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-8" @click.self="closeArticle">
-                    <div class="absolute inset-0 bg-[#020617]/80 backdrop-blur-sm"></div>
-
-                    <div class="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-[1.5rem] shadow-2xl overflow-hidden flex flex-col">
-                        <!-- Header image -->
-                        <div class="relative h-56 sm:h-72 shrink-0 overflow-hidden bg-slate-900">
-                            <img :src="postImage(selectedPost)" class="w-full h-full object-cover" :alt="selectedPost.title" />
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                            <button @click="closeArticle" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur text-white flex items-center justify-center transition-colors">
-                                <i class="pi pi-times"></i>
-                            </button>
-                            <div class="absolute bottom-5 left-6 right-6">
-                                <span class="inline-block bg-[#2563EB] text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-md shadow-md mb-3">{{ postCategory(selectedPost) }}</span>
-                                <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">{{ selectedPost.title }}</h2>
-                            </div>
-                        </div>
-
-                        <!-- Contenu scrollable -->
-                        <div class="overflow-y-auto custom-scrollbar p-6 sm:p-8">
-                            <!-- Méta auteur -->
-                            <div class="flex flex-wrap items-center gap-4 pb-6 mb-6 border-b border-slate-100">
-                                <img :src="`${DEFAULT_AVATAR}${selectedPost.author?.name || 'A'}`" class="w-12 h-12 rounded-full object-cover border-2 border-slate-100" :alt="selectedPost.author?.name" />
-                                <div class="flex-1">
-                                    <p class="text-sm font-black text-[#0B1221]">{{ selectedPost.author?.name || t('public.blog.redaction_subnetcongo') }}</p>
-                                    <p class="text-xs text-slate-400 font-bold flex items-center gap-3 mt-0.5">
-                                        <span class="flex items-center gap-1"><i class="pi pi-calendar text-[10px]"></i> {{ formatDate(selectedPost.published_at) }}</span>
-                                        <span class="flex items-center gap-1"><i class="pi pi-clock text-[10px]"></i> {{ articleReadTime(selectedPost) }} {{ t('public.blog.read_time') }}</span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Corps article -->
-                            <div v-if="selectedPost.content" class="prose prose-slate max-w-none article-content" v-html="selectedPost.content"></div>
-                            <p v-else class="text-slate-600 leading-relaxed">{{ selectedPost.excerpt }}</p>
-                        </div>
-
-                        <!-- Footer partage -->
-                        <div class="shrink-0 px-6 sm:px-8 py-5 bg-[#F4F6F9] border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <p class="text-xs text-slate-400 font-medium">{{ t('public.blog.share_article') }}</p>
-                            <div class="flex items-center gap-2">
-                                <button @click="copyLink" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#2563EB] hover:border-[#2563EB] transition-colors" :title="linkCopied ? t('public.blog.link_copied') : t('public.blog.copy_link')">
-                                    <i :class="['pi', linkCopied ? 'pi-check text-emerald-500' : 'pi-link']"></i>
-                                </button>
-                                <a v-for="s in shareTargets" :key="s.label" :href="s.href" target="_blank" rel="noopener"
-                                   class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:bg-[#0B1221] transition-colors" :title="`${t('public.blog.share_on')} ${s.label}`">
-                                    <i :class="['pi', s.icon]"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Transition>
-        </Teleport>
     </AppLayout>
 </template>
 
@@ -424,17 +331,6 @@ onUnmounted(() => { if (observer) observer.disconnect(); });
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Modal transition */
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s ease; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
-.modal-fade-enter-active > div.relative, .modal-fade-leave-active > div.relative { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease; }
-.modal-fade-enter-from > div.relative, .modal-fade-leave-to > div.relative { transform: translateY(24px) scale(0.97); opacity: 0; }
-
-/* Scrollbar modal */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
 /* Typographie article */
 .article-content { font-size: 1rem; line-height: 1.8; color: #475569; }

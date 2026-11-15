@@ -14,7 +14,9 @@ const formatDate = (value) => value
 </script>
 
 <template>
-    <Head :title="t('pages.live_sessions_public.head_title')" />
+    <Head :title="`${t('pages.live_sessions_public.head_title')} - Subnet Congo Academy`">
+        <meta name="description" content="Webinaires et classes virtuelles en direct de Subnet Congo Academy : cours en ligne, démonstrations réseaux et formation certifiée en RDC." />
+    </Head>
 
     <div class="min-h-screen bg-slate-50 font-sans">
         <header class="bg-slate-900 text-white">

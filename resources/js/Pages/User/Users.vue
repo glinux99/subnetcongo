@@ -337,7 +337,7 @@ watch(
                             <div class="flex items-center gap-2">
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search text-slate-400"/>
-                                    <InputText v-model="filters['global'].value" :placeholder="t('users.searchPlaceholder')" class="w-full md:w-80 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white"/>
+                                    <InputText v-model="filters['global'].value" :placeholder="t('users.searchPlaceholder')" class="w-full md:w-80 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white"/>
                                 </IconField>
                                 <Dropdown
                                     v-model="filters['region_name'].value"
@@ -358,9 +358,9 @@ watch(
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+                    <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" selectionMode="multiple" headerStyle="width: 3rem"></Column>
 
-                    <Column v-for="col in displayedColumns" :key="col.field" :field="col.field" :header="col.header" sortable>
+                    <Column v-for="col in displayedColumns" :key="col.field" :field="col.field" :header="col.header" sortable :headerClass="['name', 'role'].includes(col.field) ? '' : 'hidden md:table-cell'" :bodyClass="['name', 'role'].includes(col.field) ? '' : 'hidden md:table-cell'">
                          <template #body="{ data, field }">
                             <template v-if="field === 'name'">
                                 <div class="flex items-center gap-5 group cursor-pointer" @click="openEdit(data)">
@@ -392,7 +392,7 @@ watch(
                         </template>
                     </Column>
 
-                    <Column :header="t('common.actions')" alignFrozen="right" frozen class="text-right">
+                    <Column :header="t('common.actions')" class="text-right">
                         <template #body="{ data }">
                             <div class="flex justify-end gap-2">
                                 <Button icon="pi pi-pencil" text rounded severity="info" @click="openEdit(data)" class="hover:bg-blue-50" />

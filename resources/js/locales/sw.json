@@ -1038,7 +1038,8 @@
         "invalidDate": "Tarehe haiko sawa",
         "notSet": "Haijaandikwa",
         "instructionNotFound": "Instruction ID {id} (Haionekani)",
-        "date_format_placeholder": "JJ/MM/AAAA"
+        "date_format_placeholder": "JJ/MM/AAAA",
+        "demoData": "Data ya mfano"
     },
     "payments": {
         "title": "Gestion ya ma Paiements",
@@ -3984,6 +3985,8 @@
             "falseLabel": "SI KWELI",
             "generalCategory": "Jumla",
             "attemptsAbbr": "jar.",
+            "attemptsLabel": "Majaribio",
+            "optionsLabel": "Majibu / chaguo",
             "colLevel": "Kiwango",
             "colPoints": "Pta",
             "colStatus": "Hali",
@@ -4242,6 +4245,9 @@
             "searchPlaceholder": "Tafuta mwanafunzi, Hash...",
             "statusPlaceholder": "Hali ya cheti",
             "exportXls": "Hamisha XLS",
+            "emailLabel": "Barua pepe",
+            "issuedDateLabel": "Tarehe ya kutolewa",
+            "certNumberLabel": "Namba ya cheti",
             "refresh": "Onyesha upya",
             "emptyTitle": "Hakuna cheti kilichotolewa",
             "emptyHint": "Vyeti vilivyotengenezwa kwa wanafunzi wako vitaonekana hapa na alama yao ya kriptografia.",

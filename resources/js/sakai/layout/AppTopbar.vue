@@ -50,7 +50,7 @@ const openCommandPalette = () => {
             </button>
 
             <NavLink href="/dashboard" class="flex h-11 min-w-0 shrink items-center gap-2 rounded-xl px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" aria-label="SubnetCongo — Tableau de bord">
-                <img src="/assets/media/logos/logo.png" alt="SubNetCongo" class="h-7 w-auto max-w-36 object-contain transition-opacity hover:opacity-80 sm:h-9" />
+                <img src="/assets/media/logos/logo.png" alt="SubNetCongo" class="h-7 w-auto max-w-36 object-contain transition-opacity hover:opacity-80 sm:h-9 dark:rounded-md dark:bg-white dark:p-1" />
             </NavLink>
         </div>
 

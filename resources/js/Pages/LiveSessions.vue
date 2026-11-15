@@ -168,6 +168,7 @@ const copyShareLink = async (uuid) => {
 
 const rowMenu = ref(null);
 const rowMenuTarget = ref(null);
+const expandedRows = ref([]);
 const rowMenuItems = computed(() => {
     const s = rowMenuTarget.value;
     if (!s) return [];
@@ -300,7 +301,7 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
             <div class="page-container page-section">
 
                 <!-- ── CARTES KPI ── -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <PageKpi :label="t('pages.live_sessions.kpi_live')" :value="kpis?.live_now ?? 0" icon="pi-bolt" color="red" />
                     <PageKpi :label="t('pages.live_sessions.kpi_scheduled_today')" :value="kpis?.scheduled_today ?? 0" icon="pi-calendar" color="sky" />
                     <PageKpi :label="t('pages.live_sessions.kpi_avg_attendance')" :value="kpis?.avg_attendance ?? 0" icon="pi-users" color="emerald" />
@@ -313,48 +314,57 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                 <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative z-20">
                     
                     <!-- Zone des filtres -->
-                    <div class="flex flex-wrap items-center gap-3 mb-6">
-                        <IconField iconPosition="left" class="flex-1 min-w-[200px]">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-6">
+                        <IconField iconPosition="left" class="flex-1 min-w-0 basis-full sm:basis-auto sm:min-w-[200px]">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="search" :placeholder="t('pages.live_sessions.search_placeholder')" class="w-full" @keyup.enter="search_" />
+                            <InputText v-model="search" :placeholder="t('pages.live_sessions.search_placeholder')" class="w-full h-11" @keyup.enter="search_" />
                         </IconField>
-                        <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" :placeholder="t('pages.live_sessions.filter_provider')" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
-                        <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" :placeholder="t('pages.live_sessions.filter_status')" class="!rounded-xl border-slate-200 min-w-[150px]" showClear />
-                        <Button :label="t('pages.live_sessions.btn_filter')" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold" />
-                        <span class="flex items-center gap-1.5 text-[11px] text-slate-500 ml-auto font-medium" v-tooltip.top="t('pages.live_sessions.timezone_note')">
+                        <Select v-model="provider" :options="providers" optionLabel="label" optionValue="value" :placeholder="t('pages.live_sessions.filter_provider')" class="!rounded-xl border-slate-200 h-11 w-[calc(50%-0.25rem)] sm:w-auto sm:min-w-[150px]" showClear />
+                        <Select v-model="status" :options="['Scheduled','Live','Ended','Cancelled']" :placeholder="t('pages.live_sessions.filter_status')" class="!rounded-xl border-slate-200 h-11 w-[calc(50%-0.25rem)] sm:w-auto sm:min-w-[150px]" showClear />
+                        <Button :label="t('pages.live_sessions.btn_filter')" icon="pi pi-filter" @click="search_" class="!rounded-xl !bg-slate-100 !text-slate-700 !border-slate-200 hover:!bg-slate-200 font-bold h-11 w-full sm:w-auto justify-center" />
+                        <span class="flex items-center gap-1.5 text-[11px] text-slate-500 w-full sm:w-auto sm:ml-auto font-medium justify-end" v-tooltip.top="t('pages.live_sessions.timezone_note')">
                             <i class="pi pi-globe text-slate-400" aria-hidden="true"></i>{{ timezoneLabel }}
                         </span>
                     </div>
 
                     <!-- DataTable -->
-                    <DataTable :value="sessions?.data ?? []" stripedRows paginator :rows="15" :totalRecords="sessions?.total ?? 0" :lazy="true" responsiveLayout="scroll" class="text-sm p-datatable-custom border-t border-slate-100 pt-4">
-                        <Column field="title" :header="t('pages.live_sessions.col_title')" sortable>
+                    <DataTable :value="sessions?.data ?? []" stripedRows paginator :rows="15" :totalRecords="sessions?.total ?? 0" :lazy="true" responsiveLayout="scroll" v-model:expandedRows="expandedRows" dataKey="uuid" class="text-sm p-datatable-custom border-t border-slate-100 pt-4 snc-fluid-table">
+                        <Column expander style="width: 3rem" headerClass="md:hidden" bodyClass="md:hidden" />
+                        <Column field="title" :header="t('pages.live_sessions.col_title')" sortable style="min-width: 0">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-3">
-                                    <div :class="['w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm shadow-sm', providerColor(data.provider)]">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div :class="['w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm shadow-sm', providerColor(data.provider)]">
                                         <i :class="data.provider === 'zoom' ? 'pi pi-video' : data.provider === 'meet' ? 'pi pi-google' : data.provider === 'bbb' ? 'pi pi-users' : data.provider === 'livekit' ? 'pi pi-camera' : 'pi pi-comments'"></i>
                                     </div>
-                                    <div>
-                                        <div class="font-bold text-slate-800">{{ data.title }}</div>
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-800 dark:text-slate-100 truncate">{{ data.title }}</div>
                                         <div class="text-[10px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
-                                            <span>ID: {{ data.meeting_id ?? '—' }}</span>
-                                            <Tag v-if="!data.meeting_url && data.provider !== 'livekit'" value="Demo" severity="warning" class="!text-[8px] !py-0 !px-1" />
+                                            <span class="truncate">ID: {{ data.meeting_id ?? '—' }}</span>
+                                            <Tag v-if="!data.meeting_url && data.provider !== 'livekit'" value="Demo" severity="warning" class="!text-[8px] !py-0 !px-1 flex-shrink-0" />
+                                        </div>
+                                        <div class="xl:hidden flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                            <span class="flex items-center gap-1.5">
+                                                <i class="pi pi-calendar text-[10px] text-slate-400" aria-hidden="true"></i>
+                                                <span>{{ formatDate(data.start_at) }}</span>
+                                                <i v-if="data.remind_before_minutes" class="pi pi-bell text-amber-500" aria-hidden="true"></i>
+                                            </span>
+                                            <Tag :value="data.status" :severity="statusSeverity(data.status)" class="md:hidden text-[8px] font-bold uppercase tracking-wider !py-0.5 !px-1.5" />
                                         </div>
                                     </div>
                                 </div>
                             </template>
                         </Column>
-                        <Column field="course.title" :header="t('pages.live_sessions.col_course')">
+                        <Column field="course.title" :header="t('pages.live_sessions.col_course')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 0">
                             <template #body="{ data }">
-                                <span class="font-medium text-slate-600">{{ data.course?.title ?? '—' }}</span>
+                                <span class="font-medium text-slate-600 dark:text-slate-300 line-clamp-2">{{ data.course?.title ?? '—' }}</span>
                             </template>
                         </Column>
-                        <Column field="instructor.name" :header="t('pages.live_sessions.col_instructor')">
+                        <Column field="instructor.name" :header="t('pages.live_sessions.col_instructor')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 0">
                             <template #body="{ data }">
-                                <span class="font-bold text-slate-700">{{ data.instructor?.name ?? '—' }}</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 line-clamp-2">{{ data.instructor?.name ?? '—' }}</span>
                             </template>
                         </Column>
-                        <Column field="start_at" :header="t('pages.live_sessions.col_start')" sortable>
+                        <Column field="start_at" :header="t('pages.live_sessions.col_start')" sortable headerClass="hidden xl:table-cell" bodyClass="hidden xl:table-cell">
                             <template #body="{ data }">
                                 <span class="text-slate-500 font-medium flex items-center gap-1.5">
                                     {{ formatDate(data.start_at) }}
@@ -367,12 +377,12 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                                 </span>
                             </template>
                         </Column>
-                        <Column field="duration" :header="t('pages.live_sessions.col_duration')">
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="duration" :header="t('pages.live_sessions.col_duration')">
                             <template #body="{ data }">
                                 <span class="font-mono text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded">{{ data.duration ?? '—' }} min</span>
                             </template>
                         </Column>
-                        <Column :header="t('pages.live_sessions.col_participants')">
+                        <Column :header="t('pages.live_sessions.col_participants')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-1">
                                     <span class="text-xs font-bold text-slate-700"><i class="pi pi-users text-[10px] mr-1"></i>{{ t('pages.live_sessions.attendees_count', { count: data.attendances_count ?? 0 }) }}</span>
@@ -381,7 +391,7 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                                 </div>
                             </template>
                         </Column>
-                        <Column field="status" :header="t('pages.live_sessions.col_status')">
+                        <Column field="status" :header="t('pages.live_sessions.col_status')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <div class="flex flex-col gap-1">
                                     <Tag :value="data.status" :severity="statusSeverity(data.status)" class="text-[10px] font-bold uppercase tracking-wider px-2" />
@@ -389,9 +399,9 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                                 </div>
                             </template>
                         </Column>
-                        <Column :header="t('pages.live_sessions.col_actions')" :exportable="false" style="min-width: 9rem; text-align: right;">
+                        <Column :header="t('pages.live_sessions.col_actions')" :exportable="false" style="min-width: 6rem; text-align: right;">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-1 justify-end whitespace-nowrap">
+                                <div class="hidden md:flex items-center gap-1 justify-end whitespace-nowrap">
                                     <Button
                                         v-if="data.status !== 'Ended' && data.status !== 'Cancelled'"
                                         icon="pi pi-video"
@@ -424,10 +434,71 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                                         aria-controls="live-session-row-menu"
                                     />
                                 </div>
+                                <Button
+                                    icon="pi pi-ellipsis-v"
+                                    rounded
+                                    text
+                                    severity="secondary"
+                                    class="md:hidden w-11 h-11"
+                                    :aria-label="t('pages.live_sessions.menu_more')"
+                                    v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                    @click="toggleRowMenu($event, data)"
+                                    aria-haspopup="true"
+                                    aria-controls="live-session-row-menu"
+                                />
                             </template>
                         </Column>
+                        <template #expansion="{ data }">
+                            <div class="px-4 py-4 sm:px-6 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-700">
+                                <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs min-w-0">
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.filter_provider') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ providerLabel(data.provider) }}</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.field_start') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ formatDate(data.start_at) }} ({{ timezoneLabel }})</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.col_duration') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.duration ?? '—' }} min</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.field_max_participants') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.max_participants ?? '—' }} · {{ t('pages.live_sessions.attendees_count', { count: data.attendances_count ?? 0 }) }}</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.col_status') }}</dt>
+                                        <dd class="mt-0.5 flex flex-wrap items-center gap-1">
+                                            <Tag :value="data.status" :severity="statusSeverity(data.status)" class="text-[9px] font-bold uppercase tracking-wider" />
+                                            <Tag v-if="data.is_public_session" :value="t('pages.live_sessions.tag_public')" severity="info" class="text-[9px]" />
+                                        </dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.field_reminder') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.remind_before_minutes ? t('pages.live_sessions.reminder_minutes_short', { minutes: data.remind_before_minutes }) : t('pages.live_sessions.reminder_none') }}</dd>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">ID</dt>
+                                        <dd class="mt-0.5 font-mono text-[10px] text-slate-600 dark:text-slate-300 break-anywhere">{{ data.meeting_id ?? '—' }}</dd>
+                                    </div>
+                                    <div v-if="data.course" class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.col_course') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.course?.title }}</dd>
+                                    </div>
+                                    <div v-if="data.instructor" class="min-w-0">
+                                        <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.live_sessions.col_instructor') }}</dt>
+                                        <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.instructor?.name }}</dd>
+                                    </div>
+                                </dl>
+                                <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-700">
+                                    <Button v-if="data.status !== 'Ended' && data.status !== 'Cancelled'" :label="t('pages.live_sessions.tip_join')" icon="pi pi-video" class="p-button-outlined p-button-danger p-button-sm" @click="window.location.href = route('live-sessions.join', data.uuid)" />
+                                    <Button v-if="data.status === 'Scheduled'" :label="t('pages.live_sessions.tip_edit')" icon="pi pi-pencil" class="p-button-outlined p-button-info p-button-sm" @click="openEdit(data)" />
+                                </div>
+                            </div>
+                        </template>
                         <template #empty>
-                            <div class="text-center py-16 text-slate-400 flex flex-col items-center">
+                            <div class="text-center py-16 px-4 text-slate-400 flex flex-col items-center break-words">
                                 <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100 mb-4 shadow-inner">
                                     <i class="pi pi-video text-2xl text-slate-300"></i>
                                 </div>

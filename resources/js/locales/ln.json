@@ -1038,7 +1038,8 @@
         "invalidDate": "Mokolo ya mabe",
         "notSet": "Ekomami te",
         "instructionNotFound": "Malako ID {id} (Emonani te)",
-        "date_format_placeholder": "MK/SN/MB"
+        "date_format_placeholder": "MK/SN/MB",
+        "demoData": "Ba donnée ya exemple"
     },
     "payments": {
         "title": "Boyangeli ya Lifuta",
@@ -4070,6 +4071,8 @@
             "falseLabel": "FAUX",
             "generalCategory": "Général",
             "attemptsAbbr": "pass.",
+            "attemptsLabel": "Ba test",
+            "optionsLabel": "Biyano / ba choix",
             "colLevel": "Niveau",
             "colPoints": "Pts",
             "colStatus": "État",
@@ -4328,6 +4331,9 @@
             "searchPlaceholder": "Banda apprenant, Hash...",
             "statusPlaceholder": "État ya certificat",
             "exportXls": "Export XLS",
+            "emailLabel": "Email",
+            "issuedDateLabel": "Mokolo ya kotoma",
+            "certNumberLabel": "N° ya certificat",
             "refresh": "Actualiser",
             "emptyTitle": "Diplôme te edélivré",
             "emptyHint": "Certificats esalemi mpo na apprenants na yo ekobimisa awa na empreinte cryptographique.",

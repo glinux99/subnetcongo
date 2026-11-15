@@ -583,7 +583,7 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- KPI CARDS                                                                       -->
         <!-- ============================================================================== -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             <PageKpi :label="t('pages.exams.kpiActiveExams')" :value="props.stats_overview?.total || 24" icon="pi-verified" color="blue" />
             <PageKpi :label="t('pages.exams.kpiAttemptsMonth')" :value="props.stats_overview?.attempts?.toLocaleString()" icon="pi-users" color="red">
                 <span class="text-[10px] font-bold text-red-500 bg-red-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase tracking-wider">Live</span>
@@ -598,22 +598,20 @@ onMounted(() => {
         <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-200 overflow-hidden">
 
         <!-- Toolbar de filtre -->
-        <div class="bg-slate-50/50 border-b border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                <IconField iconPosition="left">
+        <div class="bg-slate-50/50 border-b border-slate-200 p-3 sm:p-4 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2 sm:gap-4">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                <IconField iconPosition="left" class="w-full sm:w-72">
                     <InputIcon class="pi pi-search text-slate-400" />
-                    <InputText v-model="serverFilters.search" :placeholder="t('pages.exams.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
+                    <InputText v-model="serverFilters.search" :placeholder="t('pages.exams.searchPlaceholder')" class="w-full border-slate-200 font-medium bg-white min-h-11" />
                 </IconField>
 
-                <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
-
-                <Dropdown v-model="serverFilters.status" :options="['Active', 'Draft', 'Archived']" :placeholder="t('pages.exams.statusFilterPlaceholder')" class="w-48 border-slate-200 font-medium bg-white" showClear />
-                <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" :placeholder="t('pages.exams.courseFilterPlaceholder')" class="w-56 border-slate-200 font-medium bg-white" showClear filter />
+                <Dropdown v-model="serverFilters.status" :options="['Active', 'Draft', 'Archived']" :placeholder="t('pages.exams.statusFilterPlaceholder')" class="w-full sm:w-48 border-slate-200 font-medium bg-white min-h-11" showClear />
+                <Dropdown v-model="serverFilters.course_id" :options="props.courses" optionLabel="title" optionValue="id" :placeholder="t('pages.exams.courseFilterPlaceholder')" class="w-full sm:w-56 border-slate-200 font-medium bg-white min-h-11" showClear filter />
             </div>
 
-            <div class="flex items-center gap-2">
-                <Button v-if="selectedExams.length > 0" icon="pi pi-box" :label="t('pages.exams.archiveCount', { count: selectedExams.length })" class="p-button-warning p-button-outlined shadow-sm" @click="confirmBulkArchive" />
-                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100" @click="router.reload()" v-tooltip.top="t('pages.exams.refreshTooltip')" />
+            <div class="flex items-center justify-end gap-1.5 sm:gap-2">
+                <Button v-if="selectedExams.length > 0" icon="pi pi-box" :label="t('pages.exams.archiveCount', { count: selectedExams.length })" class="p-button-warning p-button-outlined shadow-sm min-h-11" @click="confirmBulkArchive" />
+                <Button icon="pi pi-sync" class="p-button-secondary p-button-text p-button-rounded hover:bg-slate-100 w-11 h-11" @click="router.reload()" v-tooltip.top="t('pages.exams.refreshTooltip')" />
             </div>
         </div>
 
@@ -626,7 +624,7 @@ onMounted(() => {
             :paginator="true"
             :rows="10"
             :loading="loading || searchLoading"
-            class="p-datatable-custom border-none"
+            class="p-datatable-custom border-none snc-fluid-table"
             rowHover
             stripedRows
         >
@@ -642,9 +640,9 @@ onMounted(() => {
             </template>
 
             <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
-            <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+            <Column expander style="width: 3rem" />
 
-            <Column field="title" :header="t('pages.exams.colExamProgram')" style="min-width: 25rem">
+            <Column field="title" :header="t('pages.exams.colExamProgram')" style="min-width: 0">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2 sm:gap-4 py-2 min-w-0">
                         <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm"
@@ -652,12 +650,13 @@ onMounted(() => {
                             <i :class="data.type === 'Certification' ? 'pi pi-verified' : 'pi pi-clock'" class="text-xl"></i>
                         </div>
                         <div class="flex flex-col justify-center min-w-0">
-                            <span class="font-extrabold text-slate-800 text-sm sm:text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editExam(data)">
+                            <span class="font-extrabold text-slate-800 dark:text-slate-100 text-sm sm:text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editExam(data)">
                                 {{ data.title }}
                                 </span>
-                            <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mt-1">
-                                <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1"><i class="pi pi-book text-[10px]"></i> {{ data.course?.title || t('pages.exams.commonTrunk') }}</span>
-                                <span class="text-slate-400 flex items-center gap-1"><i class="pi pi-list text-[10px]"></i> {{ data.questions_count || 0 }} items</span>
+                            <div class="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 min-w-0">
+                                <span class="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded flex items-center gap-1 max-w-full truncate"><i class="pi pi-book text-[10px] flex-none"></i> <span class="truncate">{{ data.course?.title || t('pages.exams.commonTrunk') }}</span></span>
+                                <span class="text-slate-400 flex items-center gap-1 flex-none"><i class="pi pi-list text-[10px]"></i> {{ data.questions_count || 0 }} items</span>
+                                <Tag :severity="getStatusColor(data.status).sev" :value="getStatusColor(data.status).label" class="md:hidden text-[9px] font-bold px-1.5 py-0.5 border" />
                             </div>
                         </div>
                     </div>
@@ -673,7 +672,7 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="status" :header="t('pages.exams.colPublicationStatus')" >
+            <Column field="status" :header="t('pages.exams.colPublicationStatus')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <Tag :severity="getStatusColor(data.status).sev" :icon="getStatusColor(data.status).icon" :value="getStatusColor(data.status).label" class="text-[10px] font-bold px-3 py-1.5 border uppercase tracking-wider" :class="`border-${getStatusColor(data.status).sev}-200 bg-${getStatusColor(data.status).sev}-50 text-${getStatusColor(data.status).sev}-700`" />
                 </template>
@@ -696,20 +695,54 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <!-- LIGNE EXPANSIVE (Vue Rapide Analytique) -->
+            <!-- LIGNE EXPANSIVE (Mobile : champs cachés / Desktop : Vue Rapide Analytique) -->
             <template #expansion="{ data }">
-                <div class="p-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                <div class="px-4 py-4 sm:px-6 md:p-8 bg-slate-50/80 border-y border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                     <div class="max-w-6xl mx-auto">
+                        <!-- Mobile : définition compacte des champs cachés -->
+                        <dl class="md:hidden grid grid-cols-2 gap-x-4 gap-y-3 text-xs min-w-0">
+                            <div class="min-w-0">
+                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.exams.linkCourseLabel') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.course?.title || t('pages.exams.commonTrunk') }}</dd>
+                            </div>
+                            <div class="min-w-0">
+                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.exams.passingThresholdLabel') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-emerald-700 dark:text-emerald-400">{{ data.pass_percentage ?? '—' }}%</dd>
+                            </div>
+                            <div class="min-w-0">
+                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.exams.durationLabel') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.duration_minutes ?? '—' }} min</dd>
+                            </div>
+                            <div class="min-w-0">
+                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.exams.avgScore') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.avg_score ?? 0 }}%</dd>
+                            </div>
+                            <div class="min-w-0">
+                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.exams.recentAttempts') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.recent_attempts_users?.length ?? '—' }}</dd>
+                            </div>
+                            <div class="min-w-0">
+                                <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.exams.colPublicationStatus') }}</dt>
+                                <dd class="mt-0.5"><Tag :severity="getStatusColor(data.status).sev" :value="getStatusColor(data.status).label" class="text-[9px] font-bold uppercase tracking-wider" /></dd>
+                            </div>
+                        </dl>
+                        <div class="md:hidden flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-700">
+                            <Button :label="t('pages.exams.tooltipAnalytics')" icon="pi pi-chart-bar" class="p-button-outlined p-button-success p-button-sm" @click="analyticsDialog = true" />
+                            <Button :label="t('common.update')" icon="pi pi-pen-to-square" class="p-button-outlined p-button-secondary p-button-sm" @click="editExam(data)" />
+                            <Button :label="t('common.delete')" icon="pi pi-trash" class="p-button-outlined p-button-danger p-button-sm" @click="deleteExam(data.id)" />
+                        </div>
+                        <!-- Desktop : vue rapide analytique (inchangée) -->
+                        <div class="hidden md:block">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="pi pi-chart-line text-blue-500"></i> {{ t('pages.exams.expansionPerformance') }}</h4>
                             <Button :label="t('pages.exams.generateReport')" icon="pi pi-file-pdf" class="p-button-sm p-button-outlined p-button-secondary bg-white font-bold text-xs" />
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between col-span-1 md:col-span-2">
                                 <div>
                                     <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('pages.exams.avgScore') }}</div>
-                                    <div class="text-3xl font-black text-slate-800 flex items-baseline gap-2">
+                                        <div class="text-2xl sm:text-3xl font-black text-slate-800 flex items-baseline gap-2">
                                         {{ data.avg_score }}%
                                         <span class="text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded border border-emerald-100">+2.4%</span>
                                     </div>
@@ -735,6 +768,7 @@ onMounted(() => {
                                     <Avatar v-if="data.recent_attempts_users.length > 5" :label="`+${data.recent_attempts_users.length - 5}`" shape="circle" class="bg-slate-100 text-slate-600 font-bold border-2 border-white shadow-sm text-xs" />
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -1165,12 +1199,12 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <SncDialog v-model:visible="questionBankDialog" :title="t('pages.exams.globalBankDialogTitle')" icon="pi-database" width="900px">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-3 mb-5">
-                <div class="flex items-center justify-between gap-4">
-                    <IconField iconPosition="left" class="flex-1">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <IconField iconPosition="left" class="flex-1 min-w-0">
                         <InputIcon class="pi pi-search text-slate-400" />
-                        <InputText :placeholder="t('pages.exams.globalBankSearchPlaceholder')" class="w-full bg-slate-50 border-slate-200 font-medium" />
+                        <InputText :placeholder="t('pages.exams.globalBankSearchPlaceholder')" class="w-full h-11 bg-slate-50 border-slate-200 font-medium" />
                     </IconField>
-                    <Dropdown :options="categories" optionLabel="name" optionValue="id" :placeholder="t('pages.exams.businessCategoryPlaceholder')" class="w-48 bg-white border-slate-200 font-medium" />
+                    <Dropdown :options="categories" optionLabel="name" optionValue="id" :placeholder="t('pages.exams.businessCategoryPlaceholder')" class="w-full sm:w-48 bg-white border-slate-200 font-medium" />
                 </div>
             </div>
 
@@ -1179,10 +1213,10 @@ onMounted(() => {
 
                     <DataTable :value="props.global_question_bank" :paginator="true" :rows="5" class="p-datatable-custom text-sm">
                         <Column field="id" header="ID" style="width: 4rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell"></Column>
-                        <Column field="text" :header="t('pages.exams.questionStatementLabel')">
+                        <Column field="text" :header="t('pages.exams.questionStatementLabel')" style="min-width: 0">
                             <template #body="{ data }">
-                                <div class="font-medium text-slate-800" v-html="data.question_text || data.text"></div>
-                                <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">{{ data.category?.name || t('pages.exams.generalCategory') }}</div>
+                                <div class="font-medium text-slate-800 dark:text-slate-200 line-clamp-2 break-anywhere" v-html="data.question_text || data.text"></div>
+                                <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest truncate">{{ data.category?.name || t('pages.exams.generalCategory') }}</div>
                             </template>
                         </Column>
                         <Column field="type" header="Type" style="width: 10rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
@@ -1192,7 +1226,7 @@ onMounted(() => {
                         </Column>
                         <Column :header="t('pages.exams.colActions')" style="width: 6rem; text-align: center;">
                             <template #body="{ data }">
-                                <Button icon="pi pi-download" class="p-button-rounded p-button-sm p-button-text p-button-info" v-tooltip.left="t('pages.exams.importToExamTooltip')" @click="importQuestionFromBank(data)" />
+                                <Button icon="pi pi-download" class="p-button-rounded p-button-sm p-button-text p-button-info" :aria-label="t('pages.exams.importToExamTooltip')" v-tooltip.left="t('pages.exams.importToExamTooltip')" @click="importQuestionFromBank(data)" />
                             </template>
                         </Column>
                     </DataTable>
@@ -1209,21 +1243,26 @@ onMounted(() => {
         <SncDialog v-model:visible="analyticsDialog" :title="t('pages.exams.analyticsDialogTitle')" icon="pi-chart-bar" width="1000px">
             <div class="space-y-8">
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
+                <!-- Données simulées -->
+                <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ t('common.demoData') }}
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity"><i class="pi pi-users text-5xl"></i></div>
                         <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">{{ t('pages.exams.sampleAttempts') }}</div>
-                        <div class="text-4xl font-black text-slate-800 relative z-10">1,245</div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-800 relative z-10">1,245</div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm text-center flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity"><i class="pi pi-chart-pie text-5xl"></i></div>
                         <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">{{ t('pages.exams.globalMedian') }}</div>
-                        <div class="text-4xl font-black text-slate-800 relative z-10">74.2%</div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-800 relative z-10">74.2%</div>
                     </div>
-                    <div class="bg-blue-600 p-6 rounded-xl shadow-lg shadow-blue-500/20 text-center text-white flex flex-col justify-center relative overflow-hidden group">
+                    <div class="bg-blue-600 p-4 sm:p-6 rounded-xl shadow-lg shadow-blue-500/20 text-center text-white flex flex-col justify-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i class="pi pi-bolt text-5xl"></i></div>
                         <div class="text-xs font-bold text-blue-200 uppercase tracking-widest mb-2 relative z-10">{{ t('pages.exams.reliabilityCronbach') }}</div>
-                        <div class="text-4xl font-black relative z-10 flex items-baseline justify-center gap-2">
+                        <div class="text-2xl sm:text-3xl font-black relative z-10 flex items-baseline justify-center gap-2">
                             0.82 <span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded font-bold uppercase tracking-wider">{{ t('pages.exams.excellentReliability') }}</span>
                         </div>
                     </div>

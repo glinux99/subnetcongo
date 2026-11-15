@@ -58,7 +58,6 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
-import Sidebar from 'primevue/sidebar';
 import Badge from 'primevue/badge';
 import Toast from 'primevue/toast';
 import IconField from 'primevue/iconfield';
@@ -68,6 +67,7 @@ import Textarea from 'primevue/textarea';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Tooltip from 'primevue/tooltip';
 import Message from 'primevue/message';
+import Menu from 'primevue/menu';
 import Avatar from 'primevue/avatar';
 
 import AvatarGroup from 'primevue/avatargroup';
@@ -109,8 +109,6 @@ const loading = ref(true);
 // Contrôleurs de Modales / Dialogues
 const pathDialog = ref(false);
 const cohortDialog = ref(false);
-const analyticsDialog = ref(false);
-const historySidebar = ref(false);
 const categoryDialog = ref(false);
 
 // Références vers les composants Dialogs extraits (orchestration)
@@ -119,6 +117,23 @@ const cohortManagerRef = ref(null);
 
 // Variables UI diverses
 const expandedRows = ref([]);
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const path = rowMenuTarget.value;
+    if (!path) return [];
+
+    return [
+        { label: t('pages.learning_paths.tooltipManageStudents'), icon: 'pi pi-users', command: () => openCohortManager(path) },
+        { label: t('pages.learning_paths.tooltipConfigurePath'), icon: 'pi pi-cog', command: () => editPath(path) },
+        { separator: true },
+        { label: t('pages.learning_paths.tooltipArchivePath'), icon: 'pi pi-box', command: () => confirmArchive(path), class: 'text-amber-600' },
+    ];
+});
+const toggleRowMenu = (event, path) => {
+    rowMenuTarget.value = path;
+    rowMenu.value?.toggle(event);
+};
 
 // ======================================================================================
 // DICTIONNAIRES & MAPPINGS (NIVEAUX, STATUTS)
@@ -334,8 +349,6 @@ onMounted(() => {
         icon="pi-map"
         accent="red"
         :actions="[
-            { label: t('pages.learning_paths.btnAuditLog'), icon: 'pi-history', variant: 'secondary', onClick: () => historySidebar = true },
-            { label: t('pages.learning_paths.btnAnalytics'), icon: 'pi-chart-pie', variant: 'secondary', onClick: () => analyticsDialog = true },
             { label: t('pages.learning_paths.btnNewPath'), icon: 'pi-map', variant: 'primary', onClick: openNewPath },
         ]"
     />
@@ -345,7 +358,7 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- KPI CARDS                                                                       -->
         <!-- ============================================================================== -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <PageKpi :label="t('pages.learning_paths.kpiActivePaths')" :value="stats.total_paths" icon="pi-map" color="blue" />
             <PageKpi :label="t('pages.learning_paths.kpiEnrolledStudents')" :value="stats.active_students" icon="pi-users" color="emerald" />
             <PageKpi :label="t('pages.learning_paths.kpiCompletionRate')" :value="`${stats.avg_completion}%`" icon="pi-chart-line" color="amber" />
@@ -362,7 +375,7 @@ onMounted(() => {
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <IconField iconPosition="left" class="w-full sm:w-auto shadow-sm rounded-lg overflow-hidden">
                     <InputIcon class="pi pi-search text-slate-400" />
-                    <InputText v-model="serverFilters.search" :placeholder="t('pages.learning_paths.searchPlaceholder')" class="w-full sm:w-64 bg-white border-slate-200 font-medium" />
+                    <InputText v-model="serverFilters.search" :placeholder="t('pages.learning_paths.searchPlaceholder')" class="w-full sm:w-64 h-11 bg-white border-slate-200 font-medium" />
                 </IconField>
                 <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
                 <Dropdown v-model="serverFilters.category_id" :options="props.categories" optionLabel="name" optionValue="id" :placeholder="t('pages.learning_paths.filterCategory')" class="w-full sm:w-48 bg-white border-slate-200 shadow-sm" showClear filter />
@@ -383,7 +396,7 @@ onMounted(() => {
             responsiveLayout="scroll"
         >
             <template #empty>
-                <div class="p-20 text-center flex flex-col items-center justify-center animate-fade-in">
+                <div class="p-8 sm:p-12 md:p-20 text-center flex flex-col items-center justify-center animate-fade-in">
                     <div class="w-28 h-28 bg-slate-50 rounded-full flex items-center justify-center border border-slate-200 mb-6 shadow-inner relative">
                         <i class="pi pi-map text-6xl text-slate-300"></i>
                         <div class="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm border border-slate-100"><i class="pi pi-search text-slate-400"></i></div>
@@ -395,12 +408,12 @@ onMounted(() => {
             </template>
 
             <!-- Colonne Expand pour le Syllabus -->
-            <Column expander style="width: 3rem" />
+            <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-            <Column field="name" :header="t('pages.learning_paths.colPathIdentity')" style="min-width: 25rem">
+            <Column field="name" :header="t('pages.learning_paths.colPathIdentity')" style="min-width: 0">
                 <template #body="{ data }">
-                    <div class="flex items-center gap-4 py-2">
-                        <div class="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0 overflow-hidden relative shadow-sm group cursor-pointer" @click="editPath(data)">
+                    <div class="flex items-center gap-2 sm:gap-4 py-1 sm:py-2 min-w-0">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0 overflow-hidden relative shadow-sm group cursor-pointer" @click="editPath(data)">
                             <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                 <i class="pi pi-pencil text-white text-xl"></i>
                             </div>
@@ -424,7 +437,7 @@ onMounted(() => {
             </Column>
 
             <!-- COLONNE NOUVELLE : LA COHORTE -->
-            <Column field="cohort" :header="t('pages.learning_paths.colCohort')" style="min-width: 14rem">
+            <Column field="cohort" :header="t('pages.learning_paths.colCohort')" style="min-width: 14rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center gap-2">
@@ -444,7 +457,7 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column field="metrics" :header="t('pages.learning_paths.colVolume')" style="min-width: 12rem">
+            <Column field="metrics" :header="t('pages.learning_paths.colVolume')" style="min-width: 12rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <div class="flex flex-col gap-1.5 text-xs text-slate-600 font-medium">
                         <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max"><i class="pi pi-book text-blue-400"></i> {{ data.courses_count_cache || data.courses?.length || 0 }} {{ t('pages.learning_paths.coursesIncluded') }}</div>
@@ -459,13 +472,20 @@ onMounted(() => {
                 </template>
             </Column>
 
-            <Column :header="t('pages.learning_paths.colActions')" alignFrozen="right" :frozen="true" style="min-width: 12rem; text-align: right">
+            <Column :header="t('pages.learning_paths.colActions')" style="min-width: 3.5rem; text-align: right">
                 <template #body="{ data }">
-                    <div class="flex justify-end gap-2">
+                    <div class="hidden md:flex justify-end gap-2">
                         <Button :label="t('pages.learning_paths.btnCohort')" icon="pi pi-users" class="p-button-outlined p-button-sm p-button-info font-bold bg-white hover:bg-blue-50" v-tooltip.top="t('pages.learning_paths.tooltipManageStudents')" @click="openCohortManager(data)" />
                         <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors" v-tooltip.top="t('pages.learning_paths.tooltipConfigurePath')" @click="editPath(data)" />
                         <Button icon="pi pi-box" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors" v-tooltip.top="t('pages.learning_paths.tooltipArchivePath')" @click="confirmArchive(data)" />
                     </div>
+                    <Button
+                        icon="pi pi-ellipsis-v"
+                        class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                        :aria-label="t('pages.live_sessions.menu_more')"
+                        v-tooltip.top="t('pages.live_sessions.menu_more')"
+                        @click="toggleRowMenu($event, data)"
+                    />
                 </template>
             </Column>
 
@@ -534,6 +554,8 @@ onMounted(() => {
             </template>
         </DataTable>
 
+        <Menu id="learning-paths-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
+
         <!-- Pagination DataTable -->
         <div class="p-4 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-4">
             <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.learning_paths.totalPaths', { count: props.learningPaths.total }) }}</span>
@@ -566,9 +588,6 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- AUTRES DIALOGUES SECONDAIRES (Catégories, Analytics, Historique)               -->
         <!-- ============================================================================== -->
-        <Sidebar v-model:visible="analyticsDialog" position="right" class="w-full md:w-[700px] bg-slate-50 border-l border-slate-200 p-sidebar-custom">
-            <!-- Analytics Sidebar intacte -->
-        </Sidebar>
 
 
         <SncDialog v-model:visible="categoryDialog" :title="t('pages.learning_paths.createCategoryHeader')" icon="pi-tags" width="500px">

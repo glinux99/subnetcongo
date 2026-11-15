@@ -427,7 +427,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                 </div>
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search text-slate-400" />
-                                    <InputText v-model="chatSearchQuery" :placeholder="t('pages.forums.search_contact_placeholder')" class="w-full rounded-2xl bg-slate-50 border-slate-200 focus:border-blue-500 transition-colors font-medium" />
+                                    <InputText v-model="chatSearchQuery" :placeholder="t('pages.forums.search_contact_placeholder')" class="w-full h-11 rounded-2xl bg-slate-50 border-slate-200 focus:border-blue-500 transition-colors font-medium" />
                                 </IconField>
                             </div>
 
@@ -603,7 +603,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                             <p class="text-sm font-medium mt-2 max-w-sm">{{ t('pages.forums.eval_empty_text') }}</p>
                                         </div>
                                     </template>
-                                    <Column field="title" :header="t('pages.forums.col_evaluation')" style="min-width: 25rem">
+                                    <Column field="title" :header="t('pages.forums.col_evaluation')" style="min-width: 25rem" headerClass="!text-left">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-5 py-3">
                                                 <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100" :class="data.type === 'quiz' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'">
@@ -616,7 +616,7 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column :header="t('pages.forums.col_due')" style="min-width: 14rem">
+                                    <Column :header="t('pages.forums.col_due')" style="min-width: 14rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-2 text-[13px] font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg w-max border border-slate-100">
                                                 <i class="pi pi-calendar text-blue-400"></i>
@@ -624,12 +624,12 @@ watch(activeHubSection, (newVal) => { if (newVal === 'chat') scrollToBottom(); }
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column :header="t('pages.forums.col_pending_copies')" align="center" style="min-width: 12rem">
+                                    <Column :header="t('pages.forums.col_pending_copies')" align="center" style="min-width: 12rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                         <template #body="{ data }">
                                             <Badge :value="data.needs_grading_count" size="large" :severity="data.needs_grading_count > 0 ? 'danger' : 'secondary'" class="font-black shadow-sm text-sm px-3" />
                                         </template>
                                     </Column>
-                                    <Column :header="t('pages.forums.col_actions')" alignFrozen="right" :frozen="true">
+                                    <Column :header="t('pages.forums.col_actions')">
                                         <template #body="{ data }">
                                             <Button :label="t('pages.forums.btn_grade')" icon="pi pi-check-square" class="p-button-outlined p-button-primary font-black rounded-xl px-5" @click="openGradeDialog(data)" :disabled="data.needs_grading_count === 0" />
                                         </template>

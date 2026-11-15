@@ -315,7 +315,7 @@ defineExpose({
                         <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4">
                             <IconField iconPosition="left" class="w-full sm:w-72">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="cohortSearchQuery" :placeholder="t('pages.learning_paths.searchStudentPlaceholder')" class="w-full bg-white border-slate-200" />
+                                <InputText v-model="cohortSearchQuery" :placeholder="t('pages.learning_paths.searchStudentPlaceholder')" class="w-full h-11 bg-white border-slate-200" />
                             </IconField>
                             <Button :label="t('pages.learning_paths.btnEnrollStudent')" icon="pi pi-plus" class="p-button-outlined p-button-sm p-button-info font-bold bg-white" @click="cohortActiveTab = 'ajouter'" />
                         </div>
@@ -363,13 +363,13 @@ defineExpose({
                                     </template>
                                 </Column>
 
-                                <Column :header="t('pages.learning_paths.colEnrollDate')" style="min-width: 10rem">
+                                <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" :header="t('pages.learning_paths.colEnrollDate')" style="min-width: 10rem">
                                     <template #body="{ data }">
                                         <span class="text-xs text-slate-600 font-medium flex items-center gap-1.5"><i class="pi pi-calendar text-slate-400"></i> {{ data.enrolled_at }}</span>
                                     </template>
                                 </Column>
 
-                                <Column alignFrozen="right" :frozen="true" style="width: 4rem; text-align: center">
+                                <Column style="width: 4rem; text-align: center">
                                     <template #body="{ data }">
                                         <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger p-button-sm opacity-50 hover:opacity-100 hover:bg-red-50" v-tooltip.left="t('pages.learning_paths.tooltipRemoveAccess')" @click="stageUserForRemoval(data)" />
                                     </template>
@@ -400,7 +400,7 @@ defineExpose({
                             <div class="p-3 border-b border-slate-100">
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search text-slate-400" />
-                                    <InputText v-model="globalUserSearchQuery" :placeholder="t('pages.learning_paths.searchUserPlaceholder')" class="w-full text-sm bg-slate-50 border-slate-200" />
+                                    <InputText v-model="globalUserSearchQuery" :placeholder="t('pages.learning_paths.searchUserPlaceholder')" class="w-full h-11 text-sm bg-slate-50 border-slate-200" />
                                 </IconField>
                             </div>
                             <div class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/30 custom-scrollbar">
@@ -442,19 +442,19 @@ defineExpose({
                 <!-- TAB 3: ANALYTICS (Vue simplifiée pour le volume de lignes) -->
                 <div v-show="cohortActiveTab === 'analytics' && !loadingCohort" class="h-full overflow-y-auto p-6 bg-slate-50 custom-scrollbar">
                     <div class="max-w-4xl mx-auto space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-                                <div class="text-4xl font-black text-blue-600 mb-1">{{ cohortEnrolledUsers.length }}</div>
+                                <div class="text-2xl sm:text-3xl font-black text-blue-600 mb-1">{{ cohortEnrolledUsers.length }}</div>
                                 <div class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.learning_paths.analyticsTotalStudents') }}</div>
                             </div>
                             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-                                <div class="text-4xl font-black text-emerald-500 mb-1">
+                                <div class="text-2xl sm:text-3xl font-black text-emerald-500 mb-1">
                                     {{ Math.round(cohortEnrolledUsers.filter(u => u.progress === 100).length / (cohortEnrolledUsers.length || 1) * 100) }}%
                                 </div>
                                 <div class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.learning_paths.analyticsGraduatesRate') }}</div>
                             </div>
                             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-                                <div class="text-4xl font-black text-amber-500 mb-1">45h</div>
+                                <div class="text-2xl sm:text-3xl font-black text-amber-500 mb-1">45h</div>
                                 <div class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.learning_paths.analyticsAvgTime') }}</div>
                             </div>
                         </div>

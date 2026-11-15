@@ -112,6 +112,24 @@ const bulkActionsMenu = [
     { separator: true },
     { label: t('pages.instructors.bulkSuspend'), icon: 'pi pi-lock', command: () => confirmBulkSuspend() }
 ];
+// Menu kebab par ligne (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const instructor = rowMenuTarget.value;
+    if (!instructor) return [];
+
+    return [
+        { label: t('pages.instructors.fullProfile360'), icon: 'pi pi-chart-line', command: () => viewProfile(instructor) },
+        { label: t('pages.instructors.editHrDossier'), icon: 'pi pi-user-edit', command: () => editInstructor(instructor) },
+        { separator: true },
+        { label: t('pages.instructors.archiveContract'), icon: 'pi pi-trash', command: () => confirmDeleteInstructor(instructor), class: 'text-red-600' },
+    ];
+});
+const toggleRowMenu = (event, instructor) => {
+    rowMenuTarget.value = instructor;
+    rowMenu.value?.toggle(event);
+};
 
 // ======================================================================================
 // CONFIGURATION DU WORKSPACE ÉDITEUR (STEPPER)
@@ -440,7 +458,7 @@ onMounted(() => {
                 <!-- ============================================================================== -->
                 <!-- KPI CARDS                                                                       -->
                 <!-- ============================================================================== -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     <PageKpi :label="t('pages.instructors.kpiTotalExperts')" :value="props.stats.total_instructors || 0" icon="pi-briefcase" color="blue" />
                     <PageKpi :label="t('pages.instructors.kpiActiveCourses')" :value="props.stats.active_courses || 0" icon="pi-book" color="emerald" />
                     <PageKpi :label="t('pages.instructors.kpiQualityRating')" :value="props.stats.avg_rating || '0.0'" icon="pi-star-fill" color="amber" subtext="/ 5.0" />
@@ -457,7 +475,7 @@ onMounted(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-auto">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" :placeholder="t('pages.instructors.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 shadow-sm font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.instructors.searchPlaceholder')" class="w-full sm:w-80 h-11 border-slate-200 shadow-sm font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -503,7 +521,7 @@ onMounted(() => {
                 >
                     <!-- EMPTY STATE -->
                     <template #empty>
-                        <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                        <div class="flex flex-col items-center justify-center p-8 sm:p-12 md:p-20 text-slate-500 bg-white">
                             <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                                 <i class="pi pi-briefcase text-5xl text-slate-300"></i>
                             </div>
@@ -516,26 +534,26 @@ onMounted(() => {
                     </template>
 
                     <!-- COLONNES -->
-                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
-                    <Column expander style="width: 3rem" />
+                    <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+                    <Column expander style="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                    <Column field="name" :header="t('pages.instructors.colTrainerIdentity')" style="min-width: 22rem">
+                    <Column field="name" :header="t('pages.instructors.colTrainerIdentity')" style="min-width: 0">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-4 py-2">
-                                <div class="relative cursor-pointer group" @click="viewProfile(data)">
+                            <div class="flex items-center gap-2 sm:gap-4 py-1 sm:py-2 min-w-0">
+                                <div class="relative cursor-pointer group flex-shrink-0" @click="viewProfile(data)">
                                     <Avatar v-if="data.avatar_path" :image="data.avatar_path" shape="circle" size="xlarge" class="border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
                                     <Avatar v-else :label="data.name.charAt(0).toUpperCase()" shape="circle" size="xlarge" class="bg-blue-100 text-blue-700 font-black border-2 border-white shadow-sm transition-transform group-hover:scale-105" />
                                     <span :class="['absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-white', data.status === 'Actif' ? 'bg-emerald-500' : 'bg-slate-300']"></span>
                                 </div>
-                                <div class="flex flex-col justify-center">
-                                    <span class="font-extrabold text-slate-800 text-base hover:text-blue-600 cursor-pointer transition-colors" @click="editInstructor(data)">
+                                <div class="flex flex-col justify-center min-w-0">
+                                    <span class="font-extrabold text-slate-800 text-sm sm:text-base hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="editInstructor(data)">
                                         {{ data.name }}
                                     </span>
-                                    <div class="text-xs text-slate-500 flex items-center gap-3 mt-0.5">
-                                        <span class="flex items-center gap-1"><i class="pi pi-envelope text-[10px]"></i> {{ data.email }}</span>
+                                    <div class="text-xs text-slate-500 flex items-center gap-3 mt-0.5 min-w-0">
+                                        <span class="flex items-center gap-1 min-w-0"><i class="pi pi-envelope text-[10px] flex-none"></i> <span class="truncate">{{ data.email }}</span></span>
                                     </div>
                                     <!-- Badges Spécialités -->
-                                    <div class="flex flex-wrap gap-1 mt-1.5" v-if="parseJSON(data.specialties).length">
+                                    <div class="hidden sm:flex flex-wrap gap-1 mt-1.5" v-if="parseJSON(data.specialties).length">
                                         <span v-for="(spec, idx) in parseJSON(data.specialties).slice(0, 2)" :key="idx" class="text-[9px] bg-slate-100 border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                                             {{ spec.name || spec }}
                                         </span>
@@ -557,7 +575,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="metrics" :header="t('pages.instructors.colEngagementKpi')" style="min-width: 12rem">
+                    <Column field="metrics" :header="t('pages.instructors.colEngagementKpi')" style="min-width: 12rem" headerClass="hidden xl:table-cell" bodyClass="hidden xl:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
@@ -572,7 +590,7 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column field="finance" :header="t('pages.instructors.colFinanceRating')" style="min-width: 12rem">
+                    <Column field="finance" :header="t('pages.instructors.colFinanceRating')" style="min-width: 12rem" headerClass="hidden xl:table-cell" bodyClass="hidden xl:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between text-xs w-36">
@@ -587,13 +605,20 @@ onMounted(() => {
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.instructors.actions')" alignFrozen="right" :frozen="true" style="min-width: 8rem; text-align: right">
+                    <Column :header="t('pages.instructors.actions')" style="min-width: 3.5rem; text-align: right">
                         <template #body="{ data }">
-                            <div class="flex justify-end gap-1">
+                            <div class="hidden md:flex justify-end gap-1">
                                 <Button icon="pi pi-chart-line" class="p-button-text p-button-secondary p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.instructors.fullProfile360')" @click="viewProfile(data)" />
                                 <Button icon="pi pi-user-edit" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50" v-tooltip.top="t('pages.instructors.editHrDossier')" @click="editInstructor(data)" />
                                 <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded text-slate-500 hover:text-red-600 hover:bg-red-50" v-tooltip.top="t('pages.instructors.archiveContract')" @click="confirmDeleteInstructor(data)" />
                             </div>
+                            <Button
+                                icon="pi pi-ellipsis-v"
+                                class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                                :aria-label="t('pages.live_sessions.menu_more')"
+                                v-tooltip.top="t('pages.live_sessions.menu_more')"
+                                @click="toggleRowMenu($event, data)"
+                            />
                         </template>
                     </Column>
 
@@ -657,6 +682,8 @@ onMounted(() => {
                         </div>
                     </template>
                 </DataTable>
+
+                <Menu id="instructors-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
             </div>
         </div>
     </div>
@@ -671,28 +698,28 @@ onMounted(() => {
             :closable="false"
             :draggable="false"
             :style="{ width: '95vw', maxWidth: '1200px' }"
-            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[85vh]"
+            contentClass="p-0 flex flex-col overflow-hidden bg-slate-50 h-[100dvh] sm:h-[85vh]"
             headerClass="hidden"
-            class="rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
+            class="rounded-none sm:rounded-2xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] overflow-hidden border border-slate-200"
         >
             <!-- WORKSPACE HEADER (FIXE) -->
-            <div class="flex-none h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-6 z-20 shadow-sm relative">
+            <div class="flex-none h-14 sm:h-[72px] bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-6 z-20 shadow-sm relative gap-2">
                 <!-- Ligne de progression UI -->
                 <div class="absolute top-0 left-0 h-0.5 bg-blue-600 transition-all duration-500" :style="{ width: isEntireFormValid ? '100%' : '33%' }"></div>
 
-                <div class="flex items-center gap-5">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
-                        <i class="pi pi-user-edit text-lg"></i>
+                <div class="flex items-center gap-2 sm:gap-5 min-w-0">
+                    <div class="flex-none w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30">
+                        <i class="pi pi-user-edit text-sm sm:text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-black text-slate-800 leading-tight flex items-center gap-3">
-                            {{ instructorForm.id ? t('pages.instructors.dossierTitle') : t('pages.instructors.integrationTitle') }}
-                            <Tag v-if="instructorForm.status" :value="instructorForm.status" :class="getSeverity(instructorForm.status).bg" class="text-[9px] uppercase tracking-wider px-2 py-0.5 border" />
+                        <h2 class="text-sm sm:text-lg font-black text-slate-800 leading-tight flex items-center gap-1.5 sm:gap-3 min-w-0"><span class="truncate">
+                            {{ instructorForm.id ? t('pages.instructors.dossierTitle') : t('pages.instructors.integrationTitle') }}</span>
+                            <Tag v-if="instructorForm.status" :value="instructorForm.status" :class="getSeverity(instructorForm.status).bg" class="hidden sm:inline-flex text-[9px] uppercase tracking-wider px-2 py-0.5 border" />
                         </h2>
-                        <div class="flex items-center gap-3 text-[11px] font-medium text-slate-500 mt-0.5">
-                            <span class="truncate max-w-[200px]">{{ instructorForm.name || t('pages.instructors.newProfile') }}</span>
-                            <span v-if="lastSavedAt" class="flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.instructors.savedAt', { date: formatDate(lastSavedAt) }) }}</span>
-                            <span v-else-if="instructorForm.isDirty" class="flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.instructors.unsavedChanges') }}</span>
+                        <div class="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium text-slate-500 mt-0.5 min-w-0">
+                            <span class="truncate max-w-[140px] sm:max-w-[200px]">{{ instructorForm.name || t('pages.instructors.newProfile') }}</span>
+                            <span v-if="lastSavedAt" class="hidden md:flex items-center gap-1 text-emerald-600"><i class="pi pi-check-circle"></i> {{ t('pages.instructors.savedAt', { date: formatDate(lastSavedAt) }) }}</span>
+                            <span v-else-if="instructorForm.isDirty" class="hidden md:flex items-center gap-1 text-amber-500"><i class="pi pi-spin pi-spinner"></i> {{ t('pages.instructors.unsavedChanges') }}</span>
                         </div>
                     </div>
                 </div>
@@ -702,6 +729,18 @@ onMounted(() => {
                 </div>
             </div>
 
+
+            <!-- MOBILE TAB BAR (sections) -->
+            <div class="md:hidden flex-none flex gap-2 overflow-x-auto px-3 py-2 bg-white border-b border-slate-200 scrollbar-thin">
+                <button v-for="item in editorMenu" :key="item.id" @click="activeEditorTab = item.id"
+                        class="flex-none flex items-center gap-1.5 px-3 h-10 rounded-lg text-xs font-bold whitespace-nowrap border transition-colors"
+                        :class="activeEditorTab === item.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-600'">
+                    <i :class="[item.icon, 'text-sm']"></i>
+                    {{ item.label }}
+                    <i v-if="tabValidation[item.id]" class="pi pi-check-circle text-emerald-500 text-[10px]"></i>
+                    <i v-else class="pi pi-exclamation-circle text-amber-500 text-[10px]"></i>
+                </button>
+            </div>
             <!-- WORKSPACE BODY (FLEX ROW) -->
             <div class="flex-1 flex overflow-hidden relative">
 
@@ -756,11 +795,11 @@ onMounted(() => {
 
                 <!-- ZONE DE CONTENU PRINCIPALE (SCROLLABLE) -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar relative scroll-smooth bg-slate-50">
-                    <div class="max-w-4xl mx-auto p-6 lg:p-10 pb-24 space-y-8 min-h-full">
+                    <div class="max-w-4xl mx-auto p-3 sm:p-6 lg:p-10 pb-20 sm:pb-24 space-y-6 sm:space-y-8 min-h-full">
 
                         <!-- TAB 1 : INFO GÉNÉRALES -->
                         <div v-show="activeEditorTab === 'general'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-id-card"></i></div>
                                     <div>
@@ -805,7 +844,7 @@ onMounted(() => {
 
                         <!-- TAB 2 : EXPERTISE & BIO -->
                         <div v-show="activeEditorTab === 'expertise'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i class="pi pi-briefcase"></i></div>
                                     <div>
@@ -851,7 +890,7 @@ onMounted(() => {
 
                         <!-- TAB 3 : MÉDIAS (AVATAR) -->
                         <div v-show="activeEditorTab === 'media'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">{{ t('pages.instructors.officialProfilePhoto') }}</h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
@@ -882,7 +921,7 @@ onMounted(() => {
 
                         <!-- TAB 4 : FINANCE & CONTRAT -->
                         <div v-show="activeEditorTab === 'finance'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
                                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                                     <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="pi pi-percentage"></i></div>
                                     <div>
@@ -933,7 +972,7 @@ onMounted(() => {
 
                         <!-- TAB 5 : SÉCURITÉ -->
                         <div v-show="activeEditorTab === 'security'" class="space-y-8 animate-fade-in" role="tabpanel">
-                            <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-rose-500">
+                            <div class="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-rose-500">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2"><i class="pi pi-shield text-slate-400"></i> {{ t('pages.instructors.trainerPanelAccess') }}</h3>
 
                                 <div class="space-y-4">
@@ -969,16 +1008,17 @@ onMounted(() => {
             </div>
 
             <!-- WORKSPACE FOOTER (ACTIONS) -->
-            <div class="flex-none h-20 bg-white border-t border-slate-200 flex items-center justify-between px-6 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <div class="text-xs text-slate-500">
-                    <span v-if="!isEntireFormValid" class="text-amber-600 font-bold flex items-center gap-2"><i class="pi pi-exclamation-triangle"></i> {{ t('pages.instructors.completeAllSections') }}</span>
+            <div class="flex-none min-h-14 sm:h-20 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-3 sm:px-6 py-2 sm:py-0 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                <div class="text-xs text-slate-500 min-w-0 flex-none">
+                    <span v-if="!isEntireFormValid" class="hidden sm:flex text-amber-600 font-bold items-center gap-2 whitespace-nowrap"><i class="pi pi-exclamation-triangle"></i> {{ t('pages.instructors.completeAllSections') }}</span>
+                    <span v-if="!isEntireFormValid" class="sm:hidden text-amber-600 text-lg" v-tooltip.top="t('pages.instructors.completeAllSections')"><i class="pi pi-exclamation-triangle"></i></span>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <Button :label="t('pages.instructors.close')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50" @click="instructorDialog = false" />
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-none justify-end">
+                    <Button :label="t('pages.instructors.close')" class="p-button-text p-button-secondary font-bold text-slate-600 hover:bg-slate-50 whitespace-nowrap" @click="instructorDialog = false" />
 
-                    <div class="relative group">
-                        <Button :label="t('pages.instructors.saveProfile')" icon="pi pi-check-circle" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold px-8 text-sm" @click="saveInstructor" :loading="instructorForm.processing" :disabled="!isEntireFormValid" />
+                    <div class="relative group flex-1 sm:flex-none">
+                        <Button :label="t('pages.instructors.saveProfile')" icon="pi pi-check-circle" class="p-button-primary shadow-lg shadow-blue-500/30 font-bold w-full sm:w-auto px-3 sm:px-8 text-xs sm:text-sm whitespace-nowrap" @click="saveInstructor" :loading="instructorForm.processing" :disabled="!isEntireFormValid" />
                     </div>
                 </div>
             </div>
@@ -990,7 +1030,7 @@ onMounted(() => {
         <Dialog
             v-model:visible="profileSidebar"
             modal
-            :style="{ width: '600px' }"
+            :style="{ width: 'min(600px, 100vw)' }"
             class="p-fluid rounded-[1rem] custom-profile-dialog"
             :pt="{
                 header: { class: 'bg-white border-b border-slate-100 p-6' },

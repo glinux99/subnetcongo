@@ -183,12 +183,12 @@ onMounted(() => loadEnginTypes());
                         <div class="flex justify-between items-center p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-primary-500" />
-                                <InputText v-model="filters['global'].value" :placeholder="t('engins.toolbar.searchPlaceholder')" class="w-full md:w-96 rounded-2xl border-none bg-slate-100" />
+                                <InputText v-model="filters['global'].value" :placeholder="t('engins.toolbar.searchPlaceholder')" class="w-full md:w-96 h-11 rounded-2xl border-none bg-slate-100" />
                             </IconField>
                         </div>
                     </template>
 
-                    <Column field="designation" :header="t('engins.table.designation')" sortable filterField="designation" frozen class="min-w-[280px]">
+                    <Column field="designation" :header="t('engins.table.designation')" sortable filterField="designation" class="min-w-[280px]">
                         <template #body="{ data }">
                             <div class="flex items-center gap-4">
                                 <div :style="{ backgroundColor: getMeta(data.type).bg }" class="w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110">
@@ -205,7 +205,7 @@ onMounted(() => loadEnginTypes());
                         </template>
                     </Column>
 
-                    <Column field="type" :header="t('engins.table.category')" sortable filterField="type" :showFilterMatchModes="false">
+                    <Column field="type" :header="t('engins.table.category')" sortable filterField="type" :showFilterMatchModes="false" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <Tag :value="data.type" :style="{ backgroundColor: getMeta(data.type).bg, color: getMeta(data.type).color }" class="rounded-lg px-3 font-black text-[10px] uppercase border-none" />
                         </template>
@@ -214,7 +214,7 @@ onMounted(() => loadEnginTypes());
                         </template>
                     </Column>
 
-                    <Column field="region_id" :header="t('engins.table.assignment')" sortable filterField="region_id">
+                    <Column field="region_id" :header="t('engins.table.assignment')" sortable filterField="region_id" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <div class="flex items-center gap-2">
                                 <i class="pi pi-map-marker text-primary-400 text-xs"></i>
@@ -226,7 +226,7 @@ onMounted(() => loadEnginTypes());
                         </template>
                     </Column>
 
-                    <Column field="date_mise_en_service" :header="t('engins.form.dateAcquisition')" sortable filterField="date_mise_en_service" dataType="date">
+                    <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="date_mise_en_service" :header="t('engins.form.dateAcquisition')" sortable filterField="date_mise_en_service" dataType="date">
                         <template #body="{ data }">
                             <span class="text-xs font-medium text-slate-500">
                                 {{ data.date_mise_en_service ? new Date(data.date_mise_en_service).toLocaleDateString(locale, { month: 'long', year: 'numeric' }) : '--' }}
@@ -237,7 +237,7 @@ onMounted(() => loadEnginTypes());
                         </template>
                     </Column>
 
-                    <Column :header="t('engins.table.actions')" alignFrozen="right" frozen>
+                    <Column :header="t('engins.table.actions')">
                         <template #body="{ data }">
                             <div class="flex gap-2 justify-end">
                                 <Button icon="pi pi-pencil" text rounded severity="info" @click="editEngin(data)" />

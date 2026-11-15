@@ -151,7 +151,7 @@ const onPageChange = (event) => {
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <IconField iconPosition="left">
                                 <InputIcon class="pi pi-search text-slate-400" />
-                                <InputText v-model="filters['global'].value" placeholder="Rechercher une règle..." class="w-full md:w-80 rounded-2xl border-slate-200 bg-slate-50/50" />
+                                <InputText v-model="filters['global'].value" placeholder="Rechercher une règle..." class="w-full md:w-80 h-11 rounded-2xl border-slate-200 bg-slate-50/50" />
                             </IconField>
                             <div class="flex items-center gap-2">
                                 <Button icon="pi pi-download" text rounded severity="secondary" />
@@ -160,9 +160,9 @@ const onPageChange = (event) => {
                         </div>
                     </template>
 
-                    <Column selectionMode="multiple" headerStyle="width: 3rem" />
+                    <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" selectionMode="multiple" headerStyle="width: 3rem" />
 
-                    <Column v-for="col in displayedColumns" :key="col.field" :field="col.field" :header="col.header" :sortable="col.sortable">
+                    <Column v-for="col in displayedColumns" :key="col.field" :field="col.field" :header="col.header" :sortable="col.sortable" :headerClass="col.field === 'name' ? '' : 'hidden md:table-cell'" :bodyClass="col.field === 'name' ? '' : 'hidden md:table-cell'">
                         <template #body="{ data, field }">
                             <span v-if="field === 'name'" class="font-bold text-slate-800 tracking-tight">{{ data.name }}</span>
                             <Tag v-else-if="field === 'guard_name'" :value="data.guard_name" severity="secondary" class="text-[9px] px-2" />
@@ -172,7 +172,7 @@ const onPageChange = (event) => {
                         </template>
                     </Column>
 
-                    <Column header="Actions" headerStyle="width: 5rem">
+                    <Column header="Actions" headerStyle="width: 4rem">
                         <template #body="{ data }">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary" @click="openEdit(data)" />
                         </template>

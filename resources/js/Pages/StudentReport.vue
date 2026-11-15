@@ -138,18 +138,18 @@ const headerActions = computed(() => [
             <main class="page-container page-section space-y-8">
                 
                 <!-- ETAT DE CHARGEMENT -->
-                <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     <Skeleton height="120px" borderRadius="32px" v-for="i in 4" :key="i" />
                 </div>
 
                 <!-- 1. KPI CARDS V40 -->
-                <section v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <section v-else class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     <div v-for="kpi in [
                         { l: t('pages.student_report_detail.kpiAvg'), v: globalStats.average_score + '%', t: globalStats.score_trend, i: 'pi-percentage', c: 'text-red-600', bg: 'bg-red-50' },
                         { l: t('pages.student_report_detail.kpiSuccess'), v: globalStats.success_rate + '%', t: globalStats.success_trend, i: 'pi-verified', c: 'text-emerald-600', bg: 'bg-emerald-50' },
                         { l: t('pages.student_report_detail.kpiCompleted'), v: globalStats.completed_exams, t: globalStats.success_trend, i: 'pi-book', c: 'text-blue-600', bg: 'bg-blue-50' },
                         { l: t('pages.student_report_detail.kpiAttempts'), v: globalStats.total_attempts, t: globalStats.success_trend, i: 'pi-sync', c: 'text-slate-900', bg: 'bg-slate-100' }
-                    ]" :key="kpi.l" class="bg-white p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-xl transition-all group">
+                    ]" :key="kpi.l" class="bg-white p-4 sm:p-6 rounded-[1rem] border border-slate-200/50 shadow-sm hover:shadow-xl transition-all group">
                         <div class="flex justify-between items-start mb-4">
                             <div :class="kpi.bg" class="w-10 h-10 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
                                 <i :class="['pi', kpi.i, kpi.c, 'text-lg']"></i>
@@ -162,7 +162,7 @@ const headerActions = computed(() => [
 />
                         </div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ kpi.l }}</p>
-                        <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">{{ kpi.v }}</h2>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter italic">{{ kpi.v }}</h2>
                     </div>
                 </section>
 
@@ -207,7 +207,7 @@ const headerActions = computed(() => [
                                     </div>
 
                                     <div v-for="course in filteredCourses" :key="course.id" class="rounded-[1rem] border border-slate-100 overflow-hidden mb-8 shadow-sm">
-                                        <div class="bg-[#0F172A] px-8 py-5 flex justify-between items-center">
+                                        <div class="bg-[#0F172A] px-4 sm:px-8 py-4 sm:py-5 flex justify-between items-center gap-3 flex-wrap">
                                             <h4 class="font-black text-white text-sm tracking-tight italic uppercase">{{ course.title }}</h4>
                                             <span class="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">{{ t('pages.student_report_detail.assessmentsCount', { count: course.exams.length }) }}</span>
                                         </div>
@@ -218,7 +218,7 @@ const headerActions = computed(() => [
                                                     <span class="font-black text-slate-800 tracking-tight italic">{{ data.title }}</span>
                                                 </template>
                                             </Column>
-                                            <Column :header="t('pages.student_report_detail.colScore')">
+                                            <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" :header="t('pages.student_report_detail.colScore')">
                                                 <template #body="{ data }">
                                                     <div v-if="data.score !== null" class="w-32">
                                                         <div class="flex justify-between mb-1">
@@ -237,7 +237,7 @@ const headerActions = computed(() => [
                                                          class="!text-[9px] !font-black !uppercase !px-3 !rounded-lg" />
                                                 </template>
                                             </Column>
-                                            <Column :header="t('pages.student_report_detail.colDate')">
+                                            <Column :header="t('pages.student_report_detail.colDate')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                                 <template #body="{ data }">
                                                     <span class="text-xs font-bold text-slate-500 italic">{{ data.attempted_at || '---' }}</span>
                                                 </template>

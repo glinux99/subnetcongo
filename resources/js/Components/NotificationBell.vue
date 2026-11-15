@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
         <Transition name="dropdown">
             <div
                 v-if="visible"
-                class="absolute right-0 z-[120] mt-3 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-slate-100 bg-white text-left shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+                class="fixed left-2 right-2 top-[4.5rem] z-[120] w-auto overflow-hidden rounded-xl border border-slate-100 bg-white text-left shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-[min(22rem,calc(100vw-2rem))]"
                 @click.stop
             >
                 <div class="flex items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white px-4 py-3 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">

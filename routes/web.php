@@ -58,6 +58,7 @@ Route::get('/contact', [WebSettingController::class, 'contact'])->name('contact'
 Route::get('/about', [WebSettingController::class, 'about'])->name('about');
 Route::get('/academy', [WebSettingController::class, 'academy'])->name('academy');
 Route::get('/blog', [WebSettingController::class, 'blog'])->name('blog');
+Route::get('/blog/{post}', [WebSettingController::class, 'blogShow'])->name('blog.show');
 Route::get('/testimonials', [WebSettingController::class, 'testimonials'])->name('testimonials');
 Route::get('realizations', [WebSettingController::class, 'realizations'])->name('realizations');
 Route::get('/page/{slug}', [WebSettingController::class, 'pages'])->name('web.page');
@@ -472,7 +473,7 @@ Route::prefix('curriculum')->group(function () {
         Route::get('logs',[App\Http\Controllers\System\AuditLogController::class, 'index'])->name('logs');
         Route::delete('logs/{log}', [App\Http\Controllers\System\AuditLogController::class, 'destroy'])->name('logs.destroy');
         Route::delete('logs/clear', [App\Http\Controllers\System\AuditLogController::class, 'clear'])->name('logs.clear');
-        Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('system.settings');
+        Route::get('settings',[App\Http\Controllers\System\SettingController::class, 'index'])->name('settings');
         Route::post('settings',[App\Http\Controllers\System\SettingController::class, 'update'])->name('settings.update');
         Route::post('settings/clear-cache',[App\Http\Controllers\System\SettingController::class, 'clearCache'])->name('settings.cache.clear');
         Route::post('settings/maintenance-toggle',[App\Http\Controllers\System\SettingController::class, 'toggleMaintenance'])->name('settings.maintenance.toggle');

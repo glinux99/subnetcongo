@@ -75,18 +75,18 @@ const getCorrectOptionTexts = (options) => {
 
             <div class="page-container page-section">
                 <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 lg:p-8 min-h-[400px] max-w-[900px] w-full mx-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 text-center">
                             <Knob v-model="score" :size="140" :strokeWidth="10" :readonly="true"
                                   :valueColor="passed ? '#059669' : '#DC2626'" rangeColor="#F1F5F9" />
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">{{ t('pages.exam_result.final_score') }}</p>
                         </div>
-                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 flex flex-col justify-center">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exam_result.grade') }}</p>
                             <p class="text-5xl font-black text-slate-800 font-mono">{{ grade }}</p>
                             <p class="text-sm text-slate-500 mt-2">{{ result?.feedback }}</p>
                         </div>
-                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-center">
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 flex flex-col justify-center">
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exam_result.points') }}</p>
                             <p class="text-5xl font-black text-slate-800 font-mono">{{ result?.total_points ?? 0 }}</p>
                             <p class="text-sm text-slate-500 mt-2">{{ t('pages.exam_result.time_spent') }} : {{ attempt?.formatted_time_spent ?? '—' }}</p>

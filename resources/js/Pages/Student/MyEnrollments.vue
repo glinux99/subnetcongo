@@ -129,7 +129,7 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                                 </div>
                             </template>
                         </Column>
-                        <Column field="status" header="Statut" :exportable="false">
+                        <Column field="status" header="Statut" :exportable="false" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
                             </template>
@@ -147,12 +147,12 @@ const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321
                                 </div>
                             </template>
                         </Column>
-                        <Column header="Demande">
+                        <Column header="Demande" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <p class="text-xs text-slate-500 font-mono">{{ formatDate(data.created_at) }}</p>
                             </template>
                         </Column>
-                        <Column header="Notes admin" :exportable="false">
+                        <Column header="Notes admin" :exportable="false" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <p v-if="data.revoked_reason" class="text-xs text-red-600 italic truncate" v-tooltip.bottom="data.revoked_reason">🚫 {{ data.revoked_reason }}</p>
                                 <p v-else-if="data.admin_notes" class="text-xs text-slate-500 italic truncate" v-tooltip.bottom="data.admin_notes">💬 {{ data.admin_notes }}</p>

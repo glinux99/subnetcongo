@@ -418,7 +418,7 @@ const kpis = computed(() => [
                             <div class="flex flex-col md:flex-row gap-3 items-center">
                                 <IconField iconPosition="left" class="flex-1 w-full">
                                     <InputIcon class="pi pi-search text-slate-400" />
-                                    <InputText v-model="filterState.search" :placeholder="t('pages.support.search_placeholder')" class="w-full" />
+                                    <InputText v-model="filterState.search" :placeholder="t('pages.support.search_placeholder')" class="w-full h-11" />
                                 </IconField>
                                 <Select v-model="filterState.status" :options="statuses" optionLabel="label" optionValue="value" :placeholder="t('pages.support.filter_status')" class="w-full md:w-44" showClear />
                                 <Select v-model="filterState.priority" :options="priorities" optionLabel="label" optionValue="value" :placeholder="t('pages.support.filter_priority')" class="w-full md:w-40" showClear />
@@ -446,13 +446,13 @@ const kpis = computed(() => [
                                 stripedRows
                                 class="p-datatable-lg"
                             >
-                                <Column field="ticket_number" :header="t('pages.support.col_number')" style="width: 8rem">
+                                <Column field="ticket_number" :header="t('pages.support.col_number')" style="width: 8rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                     <template #body="{ data }">
                                         <span class="font-mono font-bold text-slate-500 text-xs">{{ data.ticket_number }}</span>
                                     </template>
                                 </Column>
 
-                                <Column :header="t('pages.support.col_requester')" style="min-width: 14rem">
+                                <Column :header="t('pages.support.col_requester')" style="min-width: 14rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                     <template #body="{ data }">
                                         <div class="flex items-center gap-3">
                                             <Avatar :image="data.user?.profile_photo_url" :label="(data.user?.name || '?').charAt(0)" shape="circle" size="normal" :style="{ backgroundColor: avatarColor(data.user), color: '#fff' }" />
@@ -481,7 +481,7 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column field="priority" :header="t('pages.support.col_priority')" style="width: 7rem">
+                                <Column field="priority" :header="t('pages.support.col_priority')" style="width: 7rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                     <template #body="{ data }">
                                         <Tag :value="priorityLabel(data.priority)" :severity="prioritySeverity(data.priority)" class="!text-[9px] !font-black uppercase" />
                                     </template>
@@ -493,7 +493,7 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column :header="t('pages.support.col_agent')" style="min-width: 10rem">
+                                <Column :header="t('pages.support.col_agent')" style="min-width: 10rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                     <template #body="{ data }">
                                         <span class="text-sm font-semibold" :class="data.assigned_agent ? 'text-slate-700' : 'text-slate-300 italic'">
                                             {{ data.assigned_agent?.name || t('pages.support.unassigned') }}
@@ -501,7 +501,7 @@ const kpis = computed(() => [
                                     </template>
                                 </Column>
 
-                                <Column header="" style="width: 4rem" alignFrozen="right" frozen>
+                                <Column header="" style="width: 4rem">
                                     <template #body="{ data }">
                                         <Button icon="pi pi-chevron-right" text rounded severity="secondary" @click="openTicket(data)" />
                                     </template>

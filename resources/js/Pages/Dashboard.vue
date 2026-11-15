@@ -367,11 +367,20 @@ const radarOptions = computed(() => ({
             beginAtZero: true,
             grid: { color: 'rgba(148, 163, 184, 0.18)' },
             angleLines: { color: 'rgba(148, 163, 184, 0.18)' },
-            pointLabels: { color: '#94a3b8', font: { size: 10, weight: '600' } },
+            pointLabels: { color: '#94a3b8', font: { size: 9, weight: '600' }, padding: 2 },
             ticks: { display: false },
         },
     },
 }));
+
+const skillsRadarShort = computed(() => {
+    const radar = props.chartData?.skills_radar;
+    if (!radar || !Array.isArray(radar.labels)) return radar;
+    return {
+        ...radar,
+        labels: radar.labels.map((label) => (typeof label === 'string' && label.length > 17 ? `${label.slice(0, 15).trimEnd()}…` : label)),
+    };
+});
 
 const revenueChartAria = computed(() => t('pages.dashboard.chartRevenueAria', {
     year: Number(activeFilters.year),
@@ -531,9 +540,9 @@ onBeforeUnmount(() => {
                             <i class="pi pi-clock text-[10px]" aria-hidden="true"></i>
                             {{ t('pages.dashboard.lastUpdated', { time: lastUpdatedLabel }) }}
                         </span>
-                        <span v-if="props.meta?.version" class="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-[11px] font-medium text-slate-400">
-                            v{{ props.meta.version }}
-                        </span>
+                        <!-- <span v-if="props.meta?.version" class="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-[11px] font-medium text-slate-400">
+                            v{{ props.meta.version }}-{{ props.meta.channel || 'stable' }}
+                        </span> -->
                     </div>
                 </template>
             </PageHeader>
@@ -613,7 +622,7 @@ onBeforeUnmount(() => {
                 </p>
 
                 <!-- KPI -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
+                <div class="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 xl:grid-cols-4">
                     <PageKpi
                         :label="t('pages.dashboard.kpiRevenue')"
                         :value="formatCurrency(revenueTotal)"
@@ -688,7 +697,7 @@ onBeforeUnmount(() => {
 
                 <!-- Analytique -->
                 <PageSection :title="t('pages.dashboard.analyticsTitle')" :subtitle="t('pages.dashboard.analyticsSubtitle')">
-                    <div class="grid grid-cols-1 gap-4 transition-opacity duration-200 md:gap-6 xl:grid-cols-3" :class="isLoading ? 'opacity-60' : ''">
+                    <div class="grid grid-cols-1 gap-4 transition-opacity duration-200 md:gap-6 md:grid-cols-2 xl:grid-cols-3" :class="isLoading ? 'opacity-60' : ''">
                         <PageCard class="min-w-0 xl:col-span-2" :title="t('pages.dashboard.chartRevenueTitle')" :subtitle="t('pages.dashboard.chartRevenueSubtitle')">
                             <div class="flex flex-wrap items-end justify-between gap-4">
                                 <div>
@@ -729,8 +738,8 @@ onBeforeUnmount(() => {
                                 <Chart
                                     v-if="props.chartData?.skills_radar"
                                     type="radar"
-                                    :data="props.chartData.skills_radar"
-                                    :options="radarOptions"
+                                     :data="skillsRadarShort"
+                                     :options="radarOptions"
                                     class="h-full w-full"
                                     aria-hidden="true"
                                 />

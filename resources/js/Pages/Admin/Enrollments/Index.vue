@@ -137,10 +137,10 @@ const quickReject = (id) => {
                     <!-- TOOLBAR PRO -->
                     <div class="p-8 border-b border-slate-100 space-y-6">
                         <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
-                            <div class="flex flex-1 items-center gap-3 w-full">
-                                <IconField iconPosition="left" class="flex-1 max-w-md">
+                            <div class="flex flex-1 flex-wrap items-center gap-3 w-full">
+                                <IconField iconPosition="left" class="flex-1 min-w-0">
                                     <InputIcon class="pi pi-search" />
-                                    <InputText v-model="search" placeholder="Rechercher un étudiant ou un cours..." class="w-full !rounded-xl !bg-slate-50 border-none !py-3" @keyup.enter="applyFilter" />
+                                    <InputText v-model="search" placeholder="Rechercher un étudiant ou un cours..." class="w-full h-11 !rounded-xl !bg-slate-50 border-none !py-3" @keyup.enter="applyFilter" />
                                 </IconField>
                                 <Select v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" class="!rounded-xl !bg-slate-50 border-none !min-w-[180px]" @change="applyFilter" />
                                 <Select v-model="courseFilter" :options="courses" optionLabel="title" optionValue="id" placeholder="Filtrer par cours" class="!rounded-xl !bg-slate-50 border-none !flex-1 lg:max-w-xs" showClear @change="applyFilter" >
@@ -168,7 +168,7 @@ const quickReject = (id) => {
                     <DataTable :value="enrollments?.data ?? []" v-model:selection="selected" dataKey="id" 
                                paginator :rows="15" responsiveLayout="scroll" class="text-sm">
                         
-                        <Column selectionMode="multiple" headerStyle="width: 4rem; padding-left: 2rem" />
+                        <Column selectionMode="multiple" headerStyle="width: 4rem; padding-left: 2rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
                         
                         <Column header="Profil Étudiant">
                             <template #body="{ data }">
@@ -183,7 +183,7 @@ const quickReject = (id) => {
                             </template>
                         </Column>
 
-                        <Column header="Parcours de Formation">
+                        <Column header="Parcours de Formation" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <div class="max-w-[250px]">
                                     <p class="font-bold text-slate-700 truncate tracking-tight italic">{{ data.course?.title }}</p>
@@ -201,7 +201,7 @@ const quickReject = (id) => {
                             </template>
                         </Column>
 
-                        <Column header="Référence Commande">
+                        <Column header="Référence Commande" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <div v-if="data.order" class="space-y-1">
                                     <p class="text-[10px] font-mono font-bold text-slate-600">#{{ data.order.order_number }}</p>
@@ -211,7 +211,7 @@ const quickReject = (id) => {
                             </template>
                         </Column>
 
-                        <Column header="Date d'Inscription">
+                        <Column header="Date d'Inscription" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <div class="text-center md:text-left">
                                     <p class="text-xs font-bold text-slate-700">{{ formatDate(data.created_at) }}</p>
@@ -220,7 +220,7 @@ const quickReject = (id) => {
                             </template>
                         </Column>
 
-                        <Column header="Actions" alignFrozen="right" frozen>
+                        <Column header="Actions">
                             <template #body="{ data }">
                                 <div class="flex gap-1">
                                     <Link :href="route('admin.enrollments.show', data.id)">

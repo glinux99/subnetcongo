@@ -87,6 +87,22 @@ const currentCohort = ref(null);
 const lastSavedAt = ref(null);
 const studentActionMenu = ref();
 const selectedStudentForAction = ref(null);
+// Menu kebab par ligne cohorte (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const cohort = rowMenuTarget.value;
+    if (!cohort) return [];
+
+    return [
+        { label: t('pages.cohorts.tooltipView360'), icon: 'pi pi-chart-pie', command: () => openProfileDialog(cohort) },
+        { label: t('pages.cohorts.tooltipConfig'), icon: 'pi pi-cog', command: () => editCohort(cohort) },
+    ];
+});
+const toggleRowMenu = (event, cohort) => {
+    rowMenuTarget.value = cohort;
+    rowMenu.value?.toggle(event);
+};
 // Données réactives pour le profil 360°
 const cohortMembers = ref([]);
 const cohortDocuments = ref([]);
@@ -471,7 +487,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
         <!-- ============================================================================== -->
         <!-- KPI CARDS                                                                       -->
         <!-- ============================================================================== -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             <PageKpi :label="t('pages.cohorts.kpiTotalGroups')" :value="props.stats.total_cohorts || 0" icon="pi-objects-column" color="blue" />
             <PageKpi :label="t('pages.cohorts.kpiStudentsGrouped')" :value="props.stats.total_enrolled_students || 0" icon="pi-users" color="emerald" />
             <PageKpi :label="t('pages.cohorts.kpiCoursesAssigned')" :value="props.stats.active_courses_in_cohorts || 0" icon="pi-book" color="amber" />
@@ -485,7 +501,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 <div class="bg-slate-50/50 border-b border-slate-200 p-6 flex flex-wrap justify-between items-center gap-4">
                     <IconField iconPosition="left" class="w-full md:w-80">
                         <InputIcon class="pi pi-search text-slate-400" />
-                        <InputText v-model="serverFilters.search" :placeholder="t('pages.cohorts.searchPlaceholder')" class="w-full border-slate-200 shadow-sm" />
+                        <InputText v-model="serverFilters.search" :placeholder="t('pages.cohorts.searchPlaceholder')" class="w-full h-11 border-slate-200 shadow-sm" />
                     </IconField>
                     <div class="flex gap-3">
                         <Dropdown v-model="serverFilters.status" :options="props.statuses" :placeholder="t('pages.cohorts.status')" showClear class="w-40 border-slate-200 shadow-sm" />
@@ -494,14 +510,14 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                 </div>
 
                 <DataTable v-model:selection="selectedCohorts" v-model:expandedRows="expandedRows" :value="props.cohorts.data" dataKey="id" :loading="loading" class="p-datatable-custom border-none" stripedRows rowHover>
-                    <template #empty><div class="p-20 text-center text-slate-500"><i class="pi pi-users text-5xl mb-4 text-slate-300"></i><h3 class="text-xl font-bold text-slate-800">{{ t('pages.cohorts.emptyCohorts') }}</h3></div></template>
-                    <Column selectionMode="multiple" headerStyle="width: 3rem;" />
-                    <Column expander style="width: 3rem;" />
+                    <template #empty><div class="p-8 sm:p-12 md:p-20 text-center text-slate-500"><i class="pi pi-users text-5xl mb-4 text-slate-300"></i><h3 class="text-xl font-bold text-slate-800">{{ t('pages.cohorts.emptyCohorts') }}</h3></div></template>
+                    <Column selectionMode="multiple" headerStyle="width: 3rem;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
+                    <Column expander style="width: 3rem;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                    <Column field="name" :header="t('pages.cohorts.colIdentity')" style="min-width: 20rem;">
+                    <Column field="name" :header="t('pages.cohorts.colIdentity')" style="min-width: 0;">
                         <template #body="{ data }">
-                            <div class="flex flex-col gap-1 py-2">
-                                <span class="font-black text-slate-800 text-lg hover:text-blue-600 cursor-pointer" @click="openProfileDialog(data)">{{ data.name }}</span>
+                            <div class="flex flex-col gap-1 py-1 sm:py-2 min-w-0">
+                                <span class="font-black text-slate-800 text-base sm:text-lg hover:text-blue-600 cursor-pointer line-clamp-1" @click="openProfileDialog(data)">{{ data.name }}</span>
                                 <div class="flex items-center gap-2">
                                     <Tag :value="data.status" :class="getSeverity(data.status).bg" class="text-[9px] uppercase font-bold border px-2 py-0.5" />
                                     <span v-if="data.is_private" class="text-[10px] text-amber-500 font-bold"><i class="pi pi-lock text-[9px]"></i> {{ t('pages.cohorts.private') }}</span>
@@ -510,7 +526,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         </template>
                     </Column>
 
-                    <Column field="instructor" :header="t('pages.cohorts.pedagogyTeam')" style="min-width: 15rem;">
+                    <Column field="instructor" :header="t('pages.cohorts.pedagogyTeam')" style="min-width: 15rem;" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                         <template #body="{ data }">
                             <div v-if="data.instructor" class="flex items-center gap-3">
                                 <Avatar :image="data.instructor.avatar_path" :label="data.instructor.name.charAt(0)" shape="circle" class="bg-blue-50 text-blue-700" />
@@ -520,7 +536,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         </template>
                     </Column>
 
-                    <Column field="metrics" :header="t('pages.cohorts.colEngagement')" style="min-width: 12rem;">
+                    <Column field="metrics" :header="t('pages.cohorts.colEngagement')" style="min-width: 12rem;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                         <template #body="{ data }">
                             <div class="flex flex-col w-full gap-1">
                                 <div class="flex justify-between text-[10px] font-bold"><span class="text-slate-500">{{ t('pages.cohorts.membersLabel') }} {{ data.members_count || 0 }}/{{ data.max_students }}</span><span class="text-emerald-500">{{ t('pages.cohorts.scoreLabel') }} {{ data.avg_score || 0 }}%</span></div>
@@ -529,10 +545,19 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         </template>
                     </Column>
 
-                    <Column :header="t('pages.cohorts.actions')" alignFrozen="right" :frozen="true" style="width: 10rem; text-align: right;">
+                    <Column :header="t('pages.cohorts.actions')" style="min-width: 5.5rem; text-align: right;">
                         <template #body="{ data }">
-                            <Button icon="pi pi-chart-pie" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600" v-tooltip="t('pages.cohorts.tooltipView360')" @click="openProfileDialog(data)" />
-                            <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500" v-tooltip="t('pages.cohorts.tooltipConfig')" @click="editCohort(data)" />
+                            <div class="hidden md:flex justify-end gap-1">
+                                <Button icon="pi pi-chart-pie" class="p-button-text p-button-info p-button-rounded text-slate-500 hover:text-blue-600" v-tooltip="t('pages.cohorts.tooltipView360')" @click="openProfileDialog(data)" />
+                                <Button icon="pi pi-cog" class="p-button-text p-button-secondary p-button-rounded text-slate-500" v-tooltip="t('pages.cohorts.tooltipConfig')" @click="editCohort(data)" />
+                            </div>
+                            <Button
+                                icon="pi pi-ellipsis-v"
+                                class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                                :aria-label="t('pages.live_sessions.menu_more')"
+                                v-tooltip="t('pages.live_sessions.menu_more')"
+                                @click="toggleRowMenu($event, data)"
+                            />
                         </template>
                     </Column>
 
@@ -550,6 +575,8 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                         </div>
                     </template>
                 </DataTable>
+
+                <Menu id="cohorts-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
             </div>
         </div>
         </div>
@@ -685,10 +712,10 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                     <TabPanel>
                         <template #header><i class="pi pi-chart-pie mr-2"></i> {{ t('pages.cohorts.tabDashboard') }}</template>
                         <div class="p-8 h-[calc(98vh-160px)] overflow-y-auto custom-scrollbar">
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-users"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.currentHeadcount') }}</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.members_count || cohortMembers.length }} / {{ currentCohort.max_students }}</h3></div></div>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-check-circle"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.avgCompletionShort') }}</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.avg_completion || 0 }}%</h3></div></div>
-                                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-calendar-clock"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.officialStart') }}</p><h3 class="text-xl font-black text-slate-800">{{ formatDate(currentCohort.start_date) }}</h3></div></div>
+                            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8">
+                                <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-users"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.currentHeadcount') }}</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.members_count || cohortMembers.length }} / {{ currentCohort.max_students }}</h3></div></div>
+                                <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-check-circle"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.avgCompletionShort') }}</p><h3 class="text-2xl font-black text-slate-800">{{ currentCohort.avg_completion || 0 }}%</h3></div></div>
+                                <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"><div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0"><i class="pi pi-calendar-clock"></i></div><div><p class="text-xs font-bold text-slate-500 uppercase">{{ t('pages.cohorts.officialStart') }}</p><h3 class="text-xl font-black text-slate-800">{{ formatDate(currentCohort.start_date) }}</h3></div></div>
                             </div>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 class="font-bold text-slate-700 mb-4">{{ t('pages.cohorts.progressOverTime') }}</h4><Chart type="line" :data="profileCharts.line" class="h-64" /></div>
@@ -707,14 +734,14 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
 
         <!-- Barre d'outils -->
         <div
-            class="flex justify-between items-center bg-white p-4 rounded-t-2xl border border-b-0 border-slate-200 shadow-sm"
+            class="flex flex-wrap justify-between items-center gap-3 bg-white p-4 rounded-t-2xl border border-b-0 border-slate-200 shadow-sm"
         >
             <IconField iconPosition="left">
                 <InputIcon class="pi pi-search text-slate-400" />
                 <InputText
                     v-model="studentSearchQuery"
                     :placeholder="t('pages.cohorts.searchStudentPlaceholder')"
-                    class="p-inputtext-sm border-slate-200 w-64"
+                    class="p-inputtext-sm border-slate-200 w-full sm:w-64 h-11"
                 />
             </IconField>
 
@@ -747,9 +774,9 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
                             shape="circle"
                             class="bg-slate-100 text-slate-600 border border-slate-200"
                         />
-                        <div>
-                            <div class="font-bold text-slate-800">{{ data.name }}</div>
-                            <div class="text-xs text-slate-500">{{ data.email }}</div>
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-800 truncate">{{ data.name }}</div>
+                            <div class="text-xs text-slate-500 truncate">{{ data.email }}</div>
                         </div>
                     </div>
                 </template>
@@ -770,7 +797,7 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </Column>
 
             <!-- Date -->
-            <Column field="pivot.enrolled_at" :header="t('pages.cohorts.enrolledOn')" style="width:10rem">
+            <Column field="pivot.enrolled_at" :header="t('pages.cohorts.enrolledOn')" style="width:10rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <span class="text-xs text-slate-500">
                         <!-- {{ formatDate(data.pivot?.enrolled_at) }} -->
@@ -787,9 +814,9 @@ onMounted(() => { setTimeout(() => loading.value = false, 400); });
             </Column>
 
             <!-- Actions -->
-            <Column :header="t('pages.cohorts.actions')" style="width:70px" alignFrozen="right" frozen>
+            <Column :header="t('pages.cohorts.actions')" style="width:70px">
                 <template #body="{ data }">
-                    <Button icon="pi pi-ellipsis-v" text rounded @click="toggleStudentMenu($event, data)" />
+                    <Button icon="pi pi-ellipsis-v" text rounded class="w-11 h-11" :aria-label="t('pages.live_sessions.menu_more')" @click="toggleStudentMenu($event, data)" />
                 </template>
             </Column>
 

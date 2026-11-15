@@ -21,6 +21,12 @@ const layoutConfig = reactive({
     menuMode: storage('snc-menu-mode', 'static'),
 });
 
+try {
+    if (typeof document !== 'undefined') {
+        document.documentElement.classList.toggle('app-dark', layoutConfig.darkTheme);
+    }
+} catch (_) { /* environnement sans document */ }
+
 const storedActiveMenuItem = (() => {
     try { return typeof window !== 'undefined' ? sessionStorage.getItem('snc-active-menu') : null; } catch (_) { return null; }
 })();
@@ -69,13 +75,7 @@ export function useLayout() {
     };
 
     const toggleDarkMode = () => {
-        if (!document.startViewTransition) {
-            executeDarkModeToggle();
-
-            return;
-        }
-
-        document.startViewTransition(() => executeDarkModeToggle());
+        executeDarkModeToggle();
     };
 
     const executeDarkModeToggle = () => {

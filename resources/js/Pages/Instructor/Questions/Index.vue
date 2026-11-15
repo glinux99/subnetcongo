@@ -144,7 +144,7 @@ const submitAnswer = () => {
                     </div>
 
                     <DataTable :value="questions?.data ?? []" stripedRows paginator :rows="15" :totalRecords="questions?.total ?? 0" responsiveLayout="scroll" class="text-sm">
-                        <Column :header="t('pages.instructor_questions.col_student')">
+                        <Column :header="t('pages.instructor_questions.col_student')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <Avatar :label="data.user?.name?.charAt(0)" shape="circle" size="normal" class="!bg-blue-100 !text-blue-700 !font-black shrink-0" />
@@ -163,7 +163,7 @@ const submitAnswer = () => {
                                 </div>
                             </template>
                         </Column>
-                        <Column :header="t('pages.instructor_questions.col_attachments')" :exportable="false">
+                        <Column :header="t('pages.instructor_questions.col_attachments')" :exportable="false" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <span v-if="data.attachments?.length" class="inline-flex items-center gap-1 text-[10px] font-black text-blue-600 uppercase tracking-widest" v-tooltip.bottom="t('pages.instructor_questions.attachments_count', { count: data.attachments.length })">
                                     <i class="pi pi-paperclip"></i> {{ data.attachments.length }}
@@ -171,7 +171,7 @@ const submitAnswer = () => {
                                 <span v-else class="text-slate-300">—</span>
                             </template>
                         </Column>
-                        <Column field="priority" :header="t('pages.instructor_questions.col_priority')" :exportable="false">
+                        <Column field="priority" :header="t('pages.instructor_questions.col_priority')" :exportable="false" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <Tag :value="priorityLabel(data.priority)" :severity="prioritySeverity(data.priority)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
                             </template>
@@ -181,7 +181,7 @@ const submitAnswer = () => {
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
                             </template>
                         </Column>
-                        <Column field="created_at" :header="t('pages.instructor_questions.col_received')" sortable>
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="created_at" :header="t('pages.instructor_questions.col_received')" sortable>
                             <template #body="{ data }"><span class="font-mono text-xs text-slate-500">{{ formatDate(data.created_at) }}</span></template>
                         </Column>
                         <Column :header="t('pages.instructor_questions.col_action')" :exportable="false">

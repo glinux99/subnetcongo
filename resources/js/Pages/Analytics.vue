@@ -244,7 +244,7 @@ onMounted(() => {
             <div class="page-container page-section">
 
             <!-- --- SECTION 1: GLOBAL KPIs --- -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 <PageKpi v-for="kpi in kpis" :key="kpi.label"
                     :label="kpi.label" :value="kpi.val" :icon="kpi.icon" :color="kpi.color"
                     :trend="kpi.trend" :subtext="t('pages.analytics.vsLastMonth')" :loading="loading" />
@@ -322,17 +322,17 @@ onMounted(() => {
                                 </div>
                             </template>
                         </Column>
-                        <Column field="students" :header="t('pages.analytics.colStudents')" sortable>
+                        <Column field="students" :header="t('pages.analytics.colStudents')" sortable headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <span class="font-mono font-bold">{{ data.students.toLocaleString() }}</span>
                             </template>
                         </Column>
-                        <Column field="revenue" header="CA ($)" sortable>
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="revenue" header="CA ($)" sortable>
                             <template #body="{ data }">
                                 <span class="text-slate-900 font-black">${{ data.revenue.toLocaleString() }}</span>
                             </template>
                         </Column>
-                        <Column field="growth" :header="t('pages.analytics.colTrend')">
+                        <Column field="growth" :header="t('pages.analytics.colTrend')" headerClass="hidden xl:table-cell" bodyClass="hidden xl:table-cell">
                             <template #body="{ data }">
                                 <span :class="data.growth >= 0 ? 'text-red-500' : 'text-red-500'" class="font-bold">
                                     <i :class="data.growth >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" class="text-[10px] mr-1"></i>
@@ -406,18 +406,18 @@ onMounted(() => {
                             </div>
                         </template>
                         <div class="p-10">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8">
+                                <div class="p-4 sm:p-6 bg-blue-50 rounded-xl border border-blue-100">
                                     <p class="text-xs font-bold text-blue-400 uppercase mb-2">{{ t('pages.analytics.successRate') }}</p>
-                                    <h4 class="text-3xl font-black text-blue-900">88.4%</h4>
+                                    <h4 class="text-2xl sm:text-3xl font-black text-blue-900">88.4%</h4>
                                 </div>
-                                <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100">
+                                <div class="p-4 sm:p-6 bg-emerald-50 rounded-xl border border-emerald-100">
                                     <p class="text-xs font-bold text-emerald-400 uppercase mb-2">{{ t('pages.analytics.diplomasIssued') }}</p>
-                                    <h4 class="text-3xl font-black text-emerald-900">142</h4>
+                                    <h4 class="text-2xl sm:text-3xl font-black text-emerald-900">142</h4>
                                 </div>
-                                <div class="p-6 bg-amber-50 rounded-xl border border-amber-100">
+                                <div class="p-4 sm:p-6 bg-amber-50 rounded-xl border border-amber-100">
                                     <p class="text-xs font-bold text-amber-400 uppercase mb-2">{{ t('pages.analytics.avgCorrectionTime') }}</p>
-                                    <h4 class="text-3xl font-black text-amber-900">4.2h</h4>
+                                    <h4 class="text-2xl sm:text-3xl font-black text-amber-900">4.2h</h4>
                                 </div>
                             </div>
                             <div class="bg-slate-50 p-8 rounded-[1rem] border border-slate-100">

@@ -21,6 +21,7 @@ import PageHeader from '@/Components/PageHeader.vue';
 import PageKpi from '@/Components/PageKpi.vue';
 import SncDialog from '@/Components/SncDialog.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
+import { useAppVersion } from '@/composables/useAppVersion';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
@@ -51,9 +52,11 @@ import InputIcon from 'primevue/inputicon';
 import Avatar from 'primevue/avatar';
 import Tooltip from 'primevue/tooltip';
 import Timeline from 'primevue/timeline';
+import Menu from 'primevue/menu';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const { label: appVersion } = useAppVersion();
 
 // ======================================================================================
 // PROPS DEPUIS LE CONTROLLER (LARAVEL/INERTIA)
@@ -81,6 +84,27 @@ const editorRef = ref(null);
 const selectedQuestions = ref([]);
 const lastSavedAt = ref(null);
 const isSaving = ref(false);
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const expandedRows = ref([]);
+
+const rowMenuItems = computed(() => {
+    const question = rowMenuTarget.value;
+    if (!question) return [];
+
+    return [
+        { label: t('pages.questions.tooltipAnalytics'), icon: 'pi pi-chart-pie', command: () => { analyticsDialog.value = true; } },
+        { label: t('pages.questions.tooltipClone'), icon: 'pi pi-copy', command: () => duplicateQuestion(question.id) },
+        { label: t('common.update'), icon: 'pi pi-pen-to-square', command: () => editQuestion(question) },
+        { separator: true },
+        { label: t('common.delete'), icon: 'pi pi-trash', command: () => confirmDelete(question.id), class: 'text-red-600' },
+    ];
+});
+
+const toggleRowMenu = (event, question) => {
+    rowMenuTarget.value = question;
+    rowMenu.value?.toggle(event);
+};
 
 // ======================================================================================
 // CONFIGURATION DU WORKSPACE (MENU ÉDITEUR)
@@ -323,7 +347,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
     <PageHeader
         :title="`${t('pages.questions.titlePart1')} ${t('pages.questions.titlePart2')}`"
         :subtitle="t('pages.questions.subtitle')"
-        badge="v11.5"
+        :badge="appVersion"
         icon="pi pi-question-circle"
         accent="red"
     >
@@ -365,7 +389,7 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 <IconField iconPosition="left">
                     <InputIcon class="pi pi-search text-slate-400" />
-                    <InputText v-model="serverFilters.search" :placeholder="t('pages.questions.searchPlaceholder')" class="w-full sm:w-80 border-slate-200 font-medium bg-white" />
+                    <InputText v-model="serverFilters.search" :placeholder="t('pages.questions.searchPlaceholder')" class="w-full sm:w-80 h-11 border-slate-200 font-medium bg-white" />
                 </IconField>
 
                 <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -389,14 +413,15 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
             :totalRecords="props.questions?.total || 0"
             @page="onPage"
             v-model:selection="selectedQuestions"
-            dataKey="id"
+            v-model:expandedRows="expandedRows"
+            dataKey="uuid"
             :loading="loading || searchLoading"
-            class="p-datatable-custom border-none"
+            class="p-datatable-custom border-none snc-fluid-table"
             rowHover
             stripedRows
         >
             <template #empty>
-                <div class="flex flex-col items-center justify-center p-20 text-slate-500 bg-white">
+                <div class="flex flex-col items-center justify-center p-8 sm:p-12 md:p-20 text-slate-500 bg-white">
                     <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
                         <i class="pi pi-database text-5xl text-slate-300"></i>
                     </div>
@@ -406,7 +431,9 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </div>
             </template>
 
-            <Column selectionMode="multiple" headerStyle="width: 3rem" />
+            <Column expander style="width: 3rem" headerClass="md:hidden" bodyClass="md:hidden" />
+
+            <Column selectionMode="multiple" headerStyle="width: 3rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
             <Column field="type" :header="t('pages.questions.colFormat')" style="width: 5rem">
                 <template #body="{ data }">
@@ -416,16 +443,16 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column field="question_text" :header="t('pages.questions.colStatement')" style="min-width: 25rem">
+            <Column field="question_text" :header="t('pages.questions.colStatement')" style="min-width: 0">
                 <template #body="{ data }">
-                    <div class="flex flex-col gap-1 py-2">
+                    <div class="flex flex-col gap-1 py-2 min-w-0 break-anywhere">
                         <div class="font-extrabold text-slate-800 text-sm line-clamp-2 hover:text-blue-600 cursor-pointer transition-colors" @click="editQuestion(data)" v-html="data.question_text || t('pages.questions.undefinedStatement')"></div>
 
                         <!-- Aperçu des options / réponses en ligne -->
-                        <div v-if="data.options && data.options.length" class="flex flex-wrap gap-1 mt-1">
+                        <div v-if="data.options && data.options.length" class="flex flex-wrap gap-1 mt-1 max-w-full">
                             <template v-for="(opt, idx) in data.options" :key="idx">
                                 <span v-if="opt.option_text"
-                                      :class="['text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1',
+                                      :class="['text-[9px] px-1.5 py-0.5 rounded border flex items-center gap-1 max-w-full break-anywhere',
                                                opt.is_correct ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold' : 'bg-slate-50 text-slate-400 border-slate-200']">
                                     <i v-if="opt.is_correct" class="pi pi-check text-[8px]"></i>
                                     {{ opt.option_text }}
@@ -438,26 +465,26 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                         </div>
 
                         <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{{ data.category?.name || t('pages.questions.generalCategory') }}</span>
+                            <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 truncate max-w-full">{{ data.category?.name || t('pages.questions.generalCategory') }}</span>
                             <span v-if="data.attempts_count"><i class="pi pi-chart-bar mr-1"></i>{{ data.attempts_count }} {{ t('pages.questions.attemptsAbbr') }}</span>
                         </div>
                     </div>
                 </template>
             </Column>
 
-            <Column field="difficulty" :header="t('pages.questions.colLevel')" style=" min-width: 8rem;">
+            <Column field="difficulty" :header="t('pages.questions.colLevel')" style=" min-width: 8rem;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <Tag :value="data.difficulty" :severity="getDifficultySeverity(data.difficulty)" class="text-[10px] font-bold px-2 py-1 uppercase tracking-wider" />
                 </template>
             </Column>
 
-            <Column field="points" :header="t('pages.questions.colPoints')" style=" width: 6rem; text-align: center;">
+            <Column field="points" :header="t('pages.questions.colPoints')" style=" width: 6rem; text-align: center;" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <Badge :value="data.points" severity="secondary" class="font-bold bg-slate-100 text-slate-600 border border-slate-200" />
                 </template>
             </Column>
 
-            <Column field="status" :header="t('pages.questions.colStatus')" >
+            <Column field="status" :header="t('pages.questions.colStatus')" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <div :class="['w-2 h-2 rounded-full', data.status === 'published' ? 'bg-emerald-500' : 'bg-slate-300']"></div>
@@ -466,17 +493,77 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
                 </template>
             </Column>
 
-            <Column :header="t('pages.questions.actions')" alignFrozen="right" :frozen="true" style="text-align: right min-width: 10rem;">
+            <Column :header="t('pages.questions.actions')" style="text-align: right; min-width: 3.5rem;">
                 <template #body="{ data }">
-                    <div class="flex justify-end gap-1">
+                    <div class="hidden md:flex justify-end gap-1">
                         <Button icon="pi pi-chart-pie" class="p-button-text p-button-success p-button-rounded hover:bg-emerald-50" v-tooltip.top="t('pages.questions.tooltipAnalytics')" @click="analyticsDialog = true" />
                         <Button icon="pi pi-copy" class="p-button-text p-button-info p-button-rounded hover:bg-blue-50" v-tooltip.top="t('pages.questions.tooltipClone')" @click="duplicateQuestion(data.id)" />
-                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" @click="editQuestion(data)" />
-                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" @click="confirmDelete(data.id)" />
+                        <Button icon="pi pi-pen-to-square" class="p-button-text p-button-secondary p-button-rounded hover:bg-blue-50 hover:text-blue-600" v-tooltip.top="t('common.update')" @click="editQuestion(data)" />
+                        <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-rounded hover:bg-red-50" v-tooltip.top="t('common.delete')" @click="confirmDelete(data.id)" />
                     </div>
+                    <Button
+                        icon="pi pi-ellipsis-v"
+                        class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                        :aria-label="t('pages.live_sessions.menu_more')"
+                        v-tooltip.top="t('pages.live_sessions.menu_more')"
+                        @click="toggleRowMenu($event, data)"
+                    />
                 </template>
             </Column>
+            <!-- LIGNE EXPANSIVE (MOBILE UNIQUEMENT : champs détail) -->
+            <template #expansion="{ data }">
+                <div class="px-4 py-4 sm:px-6 bg-slate-50/70 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-700">
+                    <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs min-w-0">
+                        <div class="min-w-0">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.colFormat') }}</dt>
+                            <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ getTypeLabel(data.type) }}</dd>
+                        </div>
+                        <div class="min-w-0">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.colLevel') }}</dt>
+                            <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.difficulty }}</dd>
+                        </div>
+                        <div class="min-w-0">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.colPoints') }}</dt>
+                            <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.points }} {{ t('pages.questions.colPoints') }}</dd>
+                        </div>
+                        <div class="min-w-0">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.colStatus') }}</dt>
+                            <dd class="mt-0.5"><Tag :value="data.status" :severity="getStatusSeverity(data.status)" class="text-[9px] uppercase tracking-wider" /></dd>
+                        </div>
+                        <div class="min-w-0">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.businessCategory') }}</dt>
+                            <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200 break-anywhere">{{ data.category?.name || t('pages.questions.generalCategory') }}</dd>
+                        </div>
+                        <div class="min-w-0">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.attemptsLabel') }}</dt>
+                            <dd class="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">{{ data.attempts_count || 0 }}</dd>
+                        </div>
+                    </dl>
+
+                    <div v-if="data.options && data.options.length" class="mt-3 min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.optionsLabel') }}</p>
+                        <ul class="mt-1 space-y-1">
+                            <li v-for="(opt, idx) in data.options" :key="idx"
+                                class="flex items-start gap-1.5 text-[11px] leading-snug text-slate-600 dark:text-slate-300 break-anywhere">
+                                <i :class="['mt-0.5 text-[9px] flex-none', opt.is_correct ? 'pi pi-check-circle text-emerald-500' : 'pi pi-circle text-slate-300 dark:text-slate-600']"></i>
+                                <span>{{ opt.option_text }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div v-else-if="data.correct_answer" class="mt-3 min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ t('pages.questions.optionsLabel') }}</p>
+                        <p class="mt-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 break-anywhere">{{ data.correct_answer === 'true' ? t('pages.questions.trueLabel') : (data.correct_answer === 'false' ? t('pages.questions.falseLabel') : data.correct_answer) }}</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-700">
+                        <Button :label="t('common.update')" icon="pi pi-pen-to-square" class="p-button-outlined p-button-secondary p-button-sm" @click="editQuestion(data)" />
+                        <Button :label="t('common.delete')" icon="pi pi-trash" class="p-button-outlined p-button-danger p-button-sm" @click="confirmDelete(data.id)" />
+                    </div>
+                </div>
+            </template>
         </DataTable>
+
+        <Menu id="questions-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
     </div>
 
     <!-- ============================================================================== -->
@@ -710,6 +797,11 @@ onMounted(() => setTimeout(() => loading.value = false, 800));
         <!-- ============================================================================== -->
         <SncDialog v-model:visible="analyticsDialog" :title="t('pages.questions.analyticsTitle')" icon="pi-chart-pie" width="700px">
             <div class="space-y-6">
+                <!-- Données simulées -->
+                <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ t('common.demoData') }}
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-blue-600 text-white p-6 rounded-xl shadow-md text-center">
                         <div class="text-[10px] font-bold uppercase tracking-widest text-blue-200 mb-1">{{ t('pages.questions.difficultyIndex') }}</div>

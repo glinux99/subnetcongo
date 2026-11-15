@@ -13,6 +13,7 @@
 import { ref, reactive, computed, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from "primevue/usetoast";
+import { useI18n } from 'vue-i18n';
 import debounce from 'lodash/debounce';
 
 // --- COMPOSANTS DE LAYOUT ---
@@ -38,10 +39,13 @@ import Textarea from 'primevue/textarea';
 import Paginator from 'primevue/paginator';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Menu from 'primevue/menu';
 
 // Déclaration de directive (utile si non enregistrée globalement dans app.js)
 import Tooltip from 'primevue/tooltip';
 const vTooltip = Tooltip;
+
+const { t } = useI18n();
 
 // --- PROPS DÉFINIES PAR LE MEDIA_LIBRARY_CONTROLLER ---
 const props = defineProps({
@@ -203,6 +207,26 @@ const downloadMedia = (id) => {
     window.location.href = route('media.download', id);
 };
 
+// Menu kebab par ligne (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const file = rowMenuTarget.value;
+    if (!file) return [];
+
+    return [
+        { label: 'Lien Public', icon: 'pi pi-external-link', command: () => copyCdnUrl(file) },
+        { label: 'Inspecter', icon: 'pi pi-pencil', command: () => openInspector(file) },
+        { label: 'Télécharger', icon: 'pi pi-download', command: () => downloadMedia(file.id) },
+        { separator: true },
+        { label: 'Supprimer', icon: 'pi pi-trash', command: () => deleteMedia(file.id), class: 'text-red-600' },
+    ];
+});
+const toggleRowMenu = (event, file) => {
+    rowMenuTarget.value = file;
+    rowMenu.value?.toggle(event);
+};
+
 // --- LOGIQUE VISUELLE ---
 
 const getFileIcon = (type) => {
@@ -329,9 +353,9 @@ const getFileIcon = (type) => {
                                 <Button icon="pi pi-list" @click="layout = 'list'" :class="['p-button-sm p-button-text px-4', layout === 'list' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400']" />
                             </div>
                             <Divider layout="vertical" class="hidden md:block h-8" />
-                            <IconField iconPosition="left" class="flex-1 md:w-[400px]">
+                            <IconField iconPosition="left" class="flex-1 md:w-96 min-w-0">
                                 <InputIcon class="pi pi-search" />
-                                <InputText v-model="serverFilters.search" placeholder="Rechercher par nom, tag ou description..." class="w-full border-none ring-1 ring-slate-100 rounded-2xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all p-4" />
+                                <InputText v-model="serverFilters.search" placeholder="Rechercher par nom, tag ou description..." class="w-full h-11 border-none ring-1 ring-slate-100 rounded-2xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all p-4" />
                             </IconField>
                         </div>
 
@@ -407,47 +431,55 @@ const getFileIcon = (type) => {
 
                     <!-- LIST VIEW --- -->
                     <div v-else class="bg-white rounded-[4rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-                        <DataTable :value="props.assets?.data" class="p-datatable-custom" responsiveLayout="stack">
-                            <Column field="name" header="Fichier Asset" style="min-width: 25rem">
+                        <DataTable :value="props.assets?.data" class="p-datatable-custom snc-fluid-table" responsiveLayout="stack">
+                            <Column field="name" header="Fichier Asset" style="min-width: 0">
                                 <template #body="{ data }">
-                                    <div class="flex items-center gap-6 py-2">
-                                        <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm relative group">
+                                    <div class="flex items-center gap-2 sm:gap-6 py-1 sm:py-2 min-w-0">
+                                        <div class="w-11 h-11 sm:w-14 sm:h-14 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm relative group flex-shrink-0">
                                             <img v-if="data.type === 'image'" :src="data.thumbnail" class="w-full h-full object-cover rounded-2xl" />
                                             <i v-else :class="getFileIcon(data.type)" class="text-xl"></i>
                                         </div>
-                                        <div class="flex flex-col">
-                                            <span class="text-base font-black text-slate-700 hover:text-blue-600 cursor-pointer transition-colors" @click="openInspector(data)">{{ data.name }}</span>
-                                            <div class="flex items-center gap-3 mt-1">
-                                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ data.mime_type }}</span>
-                                                <Divider layout="vertical" class="h-2 m-0" />
-                                                <span class="text-[9px] font-bold text-blue-400 uppercase">{{ data.author || 'Système' }}</span>
+                                        <div class="flex flex-col min-w-0">
+                                            <span class="text-sm sm:text-base font-black text-slate-700 hover:text-blue-600 cursor-pointer transition-colors line-clamp-1" @click="openInspector(data)">{{ data.name }}</span>
+                                            <div class="flex items-center gap-3 mt-1 min-w-0">
+                                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{{ data.mime_type }}</span>
+                                                <Divider layout="vertical" class="h-2 m-0 hidden sm:flex" />
+                                                <span class="hidden sm:inline text-[9px] font-bold text-blue-400 uppercase">{{ data.author || 'Système' }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </template>
                             </Column>
 
-                            <Column field="size" header="Poids" sortable class="text-xs font-bold text-slate-500" />
+                            <Column field="size" header="Poids" sortable class="text-xs font-bold text-slate-500" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" />
 
-                            <Column field="folder" header="Dossier">
+                            <Column field="folder" header="Dossier" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                 <template #body="{ data }">
                                     <Chip :label="data.folder || '/'" icon="pi pi-folder" class="text-[9px] font-black uppercase bg-slate-50" />
                                 </template>
                             </Column>
 
-                            <Column field="created_at" header="Synchronisé" sortable class="text-xs text-slate-400 italic" />
+                            <Column field="created_at" header="Synchronisé" sortable class="text-xs text-slate-400 italic" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" />
 
-                            <Column header="Actions" class="text-right" alignFrozen="right" :frozen="true">
+                            <Column header="Actions" class="text-right" style="min-width: 3.5rem">
                                 <template #body="{ data }">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="hidden md:flex justify-end gap-2">
                                         <Button icon="pi pi-external-link" class="p-button-rounded p-button-text p-button-secondary" v-tooltip.top="'Lien Public'" @click="copyCdnUrl(data)" />
                                         <Button icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-secondary" @click="openInspector(data)" />
                                         <Button icon="pi pi-download" class="p-button-rounded p-button-text p-button-info" @click="downloadMedia(data.id)" />
                                         <Button icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" @click="deleteMedia(data.id)" />
                                     </div>
+                                    <Button
+                                        icon="pi pi-ellipsis-v"
+                                        class="md:hidden p-button-text p-button-secondary p-button-rounded w-11 h-11 text-slate-500"
+                                        :aria-label="t('pages.live_sessions.menu_more')"
+                                        @click="toggleRowMenu($event, data)"
+                                    />
                                 </template>
                             </Column>
                         </DataTable>
+
+                        <Menu id="media-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
                     </div>
 
                     <!-- EMPTY STATE --- -->

@@ -1038,7 +1038,8 @@
         "invalidDate": "Invalid date",
         "notSet": "Not specified",
         "instructionNotFound": "Instruction ID {id} (Not Found)",
-        "date_format_placeholder": "DD/MM/YYYY"
+        "date_format_placeholder": "DD/MM/YYYY",
+        "demoData": "Simulated data"
     },
     "maintenances": {
         "title": "Maintenance Management",
@@ -4906,6 +4907,8 @@
             "falseLabel": "FALSE",
             "generalCategory": "General",
             "attemptsAbbr": "att.",
+            "attemptsLabel": "Attempts",
+            "optionsLabel": "Answers / options",
             "colLevel": "Level",
             "colPoints": "Pts",
             "colStatus": "Status",
@@ -5164,6 +5167,9 @@
             "searchPlaceholder": "Search for a learner, a Hash...",
             "statusPlaceholder": "Certificate status",
             "exportXls": "Export XLS",
+            "emailLabel": "Email",
+            "issuedDateLabel": "Issue date",
+            "certNumberLabel": "Certificate no.",
             "refresh": "Refresh",
             "emptyTitle": "No diploma issued",
             "emptyHint": "Certificates generated for your learners will appear here with their cryptographic fingerprint.",

@@ -274,6 +274,27 @@ class WebSettingController extends Controller
         ]));
     }
 
+    public function blogShow(BlogPost $post)
+    {
+        abort_unless($post->is_published, 404);
+
+        $props = $this->sharedProps();
+        $post->load(['author:id,name', 'category:id,name,slug']);
+
+        $related = BlogPost::query()
+            ->where('is_published', true)
+            ->where('id', '!=', $post->id)
+            ->when($post->category_id, fn ($q) => $q->where('category_id', $post->category_id))
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get(['id', 'title', 'slug', 'excerpt', 'thumbnail', 'featured_image', 'published_at']);
+
+        return Inertia::render('Web/BlogArticle', array_merge($props, [
+            'post'    => $post,
+            'related' => $related,
+        ]));
+    }
+
     public function contact()
     {
         $props = $this->sharedProps();

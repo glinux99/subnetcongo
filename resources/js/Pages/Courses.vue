@@ -1092,7 +1092,7 @@ onBeforeUnmount(() => {
                     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-auto">
                             <InputIcon class="pi pi-search text-slate-400" />
-                            <InputText v-model="serverFilters.search" :placeholder="t('pages.courses.searchPlaceholder')" class="w-full sm:w-80 font-medium" />
+                            <InputText v-model="serverFilters.search" :placeholder="t('pages.courses.searchPlaceholder')" class="w-full sm:w-80 h-11 font-medium" />
                         </IconField>
 
                         <div class="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
@@ -2477,6 +2477,11 @@ onBeforeUnmount(() => {
         <SncDialog v-model:visible="analyticsDialog" :title="t('pages.courses.analyticsTitle')" icon="pi-chart-line" width="600px">
 
             <div class="space-y-8">
+
+                <!-- Données simulées -->
+                <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ t('common.demoData') }}
+                </div>
 
                 <!-- Graphe de revenus -->
                 <div>

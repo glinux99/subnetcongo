@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import Button from 'primevue/button';
@@ -90,13 +90,10 @@ const severity = (provider) => (props.configured?.[provider] ? 'success' : 'warn
                 :badge="t('pages.video_providers.config_system')"
                 icon="pi-video"
                 accent="blue"
-            >
-                <template #actions>
-                    <Link :href="route('system.settings')">
-                        <Button :label="t('pages.video_providers.general_settings')" icon="pi pi-arrow-left" outlined class="!text-white !border-white/30" />
-                    </Link>
-                </template>
-            </PageHeader>
+                :actions="[
+                    { label: t('pages.video_providers.general_settings'), icon: 'pi-arrow-left', href: route('system.settings'), variant: 'secondary' },
+                ]"
+            />
 
             <div class="page-container page-section">
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">

@@ -15,6 +15,8 @@ import SncSection from '@/Components/SncSection.vue';
 import Editor from 'primevue/editor';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Menu from 'primevue/menu';
+import { useI18n } from 'vue-i18n';
 import SncEmailChips from '@/Components/EmailChipsInput.vue';
 import { useConfirmAction } from '@/composables/useConfirmAction';
 
@@ -36,6 +38,7 @@ const props = defineProps({
 });
 
 const confirmAction = useConfirmAction();
+const { t } = useI18n();
 
 // --- Filtres (recherche + statut) via route Inertia ---
 const search = ref(props.filters?.search ?? '');
@@ -340,6 +343,32 @@ const kpis = computed(() => [
     { label: 'Envoyées', value: props.stats?.sent ?? 0, icon: 'pi pi-send', color: 'bg-emerald-50 text-emerald-600' },
     { label: 'Emails délivrés', value: props.stats?.sent_total ?? 0, icon: 'pi pi-envelope', color: 'bg-sky-50 text-sky-600' },
 ]);
+
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+
+const toggleRowMenu = (event, row) => {
+    rowMenuTarget.value = row;
+    rowMenu.value?.toggle(event);
+};
+
+const rowMenuItems = computed(() => {
+    const row = rowMenuTarget.value;
+    if (!row) return [];
+    const items = [
+        { label: 'Voir', icon: 'pi pi-eye', command: () => viewCampaign(row) },
+        { label: 'Dupliquer', icon: 'pi pi-copy', command: () => duplicateCampaign(row) },
+        { label: 'Envoyer un test', icon: 'pi pi-send', command: () => openTest(row) },
+    ];
+    if (row.status !== 'sent') {
+        items.push({ label: 'Modifier', icon: 'pi pi-pencil', command: () => openEdit(row) });
+    }
+    if (['draft', 'scheduled'].includes(row.status)) {
+        items.push({ separator: true });
+        items.push({ label: 'Supprimer', icon: 'pi pi-trash', command: () => removeCampaign(row), class: 'text-red-600' });
+    }
+    return items;
+});
 </script>
 
 <template>
@@ -375,12 +404,12 @@ const kpis = computed(() => [
 
             <!-- TABLE DES CAMPAGNES -->
             <div class="page-card">
-                <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
+                <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-2 sm:gap-4 mb-4">
                         <h2 class="text-lg font-black text-slate-800">Vos campagnes</h2>
                     <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                         <IconField iconPosition="left" class="w-full sm:w-72">
                             <InputIcon class="pi pi-search" />
-                            <InputText v-model="search" placeholder="Rechercher un nom ou un objet…" class="w-full" aria-label="Rechercher une campagne" @keyup.enter="applyFilters" />
+                            <InputText v-model="search" placeholder="Rechercher un nom ou un objet…" class="w-full h-11" aria-label="Rechercher une campagne" @keyup.enter="applyFilters" />
                         </IconField>
                         <Select v-model="statusFilter" :options="statusOptions" optionLabel="label" optionValue="value" class="w-full sm:w-48" aria-label="Filtrer par statut" @change="applyFilters" />
                         <Button icon="pi pi-search" aria-label="Lancer la recherche" @click="applyFilters" />
@@ -390,46 +419,57 @@ const kpis = computed(() => [
                 <DataTable :value="campaigns?.data ?? []" dataKey="id" :lazy="true" :paginator="true"
                            :rows="campaigns?.per_page ?? 15" :totalRecords="campaigns?.total ?? 0"
                            :first="((campaigns?.current_page ?? 1) - 1) * (campaigns?.per_page ?? 15)"
-                           @page="onPage" responsiveLayout="scroll" class="p-datatable-sm">
-                    <Column header="Nom" style="min-width: 12rem">
+                           @page="onPage" responsiveLayout="scroll" class="p-datatable-sm p-datatable-custom p-datatable-mobile border-none">
+                    <Column header="Nom" style="min-width: 0">
                         <template #body="{ data }">
-                            <span class="font-bold text-slate-800">{{ data.name || '(Sans nom)' }}</span>
+                            <div class="flex flex-col min-w-0 px-1 py-1">
+                                <span class="font-bold text-slate-800 truncate">{{ data.name || '(Sans nom)' }}</span>
+                                <span class="md:hidden text-[10px] text-slate-400 line-clamp-1">{{ data.subject }}</span>
+                                <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" class="md:hidden w-fit mt-0.5 text-[9px]" />
+                            </div>
                         </template>
                     </Column>
-                    <Column field="subject" header="Objet" style="min-width: 16rem">
+                    <Column field="subject" header="Objet" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 16rem">
                         <template #body="{ data }">
                             <span class="text-slate-600 line-clamp-1">{{ data.subject }}</span>
                         </template>
                     </Column>
-                    <Column header="Audience" style="width: 9rem">
+                    <Column header="Audience" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="width: 9rem">
                         <template #body="{ data }">
                             <span class="text-sm text-slate-600">{{ audienceLabel(data.target_audience, data) }}</span>
                         </template>
                     </Column>
-                    <Column header="Statut" style="width: 9rem">
+                    <Column header="Statut" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="width: 9rem">
                         <template #body="{ data }">
                             <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                         </template>
                     </Column>
-                    <Column header="Envoyés" style="width: 7rem">
+                    <Column header="Envoyés" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="width: 7rem">
                         <template #body="{ data }">
                             <span class="tabular-nums font-bold text-slate-800">{{ data.sent_count ?? 0 }}</span>
                         </template>
                     </Column>
-                    <Column header="Créée le" style="width: 11rem">
+                    <Column header="Créée le" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="width: 11rem">
                         <template #body="{ data }">
                             <span class="text-sm text-slate-500">{{ formatDate(data.created_at) }}</span>
                         </template>
                     </Column>
-                    <Column header="Actions" style="width: 11.5rem">
+                    <Column header="Actions" style="width: 3.5rem; min-width: 3.5rem">
                         <template #body="{ data }">
-                            <div class="flex items-center gap-1 whitespace-nowrap">
+                            <div class="hidden md:flex items-center gap-1 whitespace-nowrap">
                                 <Button icon="pi pi-eye" text rounded severity="secondary" v-tooltip.top="'Voir'" aria-label="Voir la campagne" @click="viewCampaign(data)" />
                                 <Button icon="pi pi-copy" text rounded severity="secondary" v-tooltip.top="'Dupliquer'" aria-label="Dupliquer la campagne" @click="duplicateCampaign(data)" />
                                 <Button icon="pi pi-send" text rounded severity="info" v-tooltip.top="'Envoyer un test'" aria-label="Envoyer un email de test" @click="openTest(data)" />
                                 <Button v-if="data.status !== 'sent'" icon="pi pi-pencil" text rounded severity="secondary" v-tooltip.top="'Modifier'" aria-label="Modifier la campagne" @click="openEdit(data)" />
                                 <Button v-if="['draft', 'scheduled'].includes(data.status)" icon="pi pi-trash" text rounded severity="danger" v-tooltip.top="'Supprimer'" aria-label="Supprimer la campagne" @click="removeCampaign(data)" />
                             </div>
+                            <Button
+                                icon="pi pi-ellipsis-v"
+                                class="p-button-text p-button-secondary p-button-rounded w-10 h-10 md:hidden text-slate-500"
+                                :aria-label="t('pages.live_sessions.menu_more')"
+                                :aria-haspopup="true"
+                                @click="toggleRowMenu($event, data)"
+                            />
                         </template>
                     </Column>
 
@@ -444,6 +484,8 @@ const kpis = computed(() => [
             </div>
             </div>
         </div>
+
+        <Menu id="campaign-row-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
 
         <!-- DIALOGUE : CRÉATION / ÉDITION (même page) -->
         <SncDialog

@@ -24,6 +24,10 @@ import Avatar from 'primevue/avatar';
 import InputNumber from 'primevue/inputnumber';
 import Divider from 'primevue/divider';
 import Tooltip from 'primevue/tooltip';
+import Menu from 'primevue/menu';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     affiliates: { type: Object, default: () => ({ data: [], total: 0, current_page: 1, per_page: 10 }) },
@@ -97,6 +101,8 @@ const exportCsv = () => {
 
 // --- CHARGEMENT / TABLE ---
 const tableLoading = ref(false);
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
 let stopStart = null;
 let stopFinish = null;
 onMounted(() => {
@@ -196,6 +202,28 @@ const copyCode = async (code) => {
         toast.add({ severity: 'warn', summary: 'Copie impossible', detail: `Code : ${code}`, life: 4000 });
     }
 };
+
+const toggleRowMenu = (event, row) => {
+    rowMenuTarget.value = row;
+    rowMenu.value?.toggle(event);
+};
+
+const rowMenuItems = computed(() => {
+    const row = rowMenuTarget.value;
+    if (!row) return [];
+    const items = [
+        { label: 'Voir le détail', icon: 'pi pi-eye', command: () => showDetail(row) },
+    ];
+    if (row.status === 'pending') {
+        items.push({ label: 'Approuver', icon: 'pi pi-check', command: () => approveAffiliate(row) });
+    }
+    if (Number(row.unpaid_earnings) > 0) {
+        items.push({ label: 'Générer un paiement', icon: 'pi pi-wallet', command: () => generatePayout(row) });
+    }
+    items.push({ separator: true });
+    items.push({ label: 'Supprimer', icon: 'pi pi-trash', command: () => destroyAffiliate(row), class: 'text-red-600' });
+    return items;
+});
 
 // --- NOUVEL AFFILIÉ ---
 const showNewDialog = ref(false);
@@ -373,10 +401,10 @@ const submitNewAffiliate = () => {
                         dataKey="id"
                         responsiveLayout="scroll"
                         @page="onPage"
-                        class="p-datatable-lg"
+                        class="p-datatable-lg p-datatable-custom p-datatable-mobile border-none"
                     >
                         <template #header>
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-2 py-2">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 px-2 py-2">
                                 <div class="flex items-center gap-3 shrink-0">
                                     <h2 class="text-xl font-black text-slate-800">Annuaire des partenaires</h2>
                                     <Badge :value="affiliates?.total ?? 0" severity="warning" />
@@ -400,7 +428,7 @@ const submitNewAffiliate = () => {
                             </div>
                         </template>
 
-                        <Column field="referral_code" header="Code" style="min-width: 9rem">
+                        <Column field="referral_code" header="Code" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-1">
                                     <span class="px-2 py-1 bg-slate-100 border border-slate-200 rounded font-mono text-xs font-bold text-blue-700">{{ data.referral_code }}</span>
@@ -409,25 +437,26 @@ const submitNewAffiliate = () => {
                             </template>
                         </Column>
 
-                        <Column field="name" header="Nom" style="min-width: 14rem">
+                        <Column field="name" header="Nom" style="min-width: 0">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-3">
-                                    <Avatar :label="initials(data.name)" shape="circle" class="bg-blue-100 text-blue-700 font-bold" />
-                                    <div class="flex flex-col">
-                                        <span class="font-bold text-slate-800 leading-tight">{{ data.name }}</span>
-                                        <span class="text-[10px] text-slate-400">depuis {{ fmtDate(data.joined_at) }}</span>
+                                <div class="flex items-center gap-2 sm:gap-3 px-1 min-w-0">
+                                    <Avatar :label="initials(data.name)" shape="circle" class="bg-blue-100 text-blue-700 font-bold flex-shrink-0" />
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="font-bold text-slate-800 leading-tight truncate">{{ data.name }}</span>
+                                        <span class="text-[10px] text-slate-400 truncate">depuis {{ fmtDate(data.joined_at) }}</span>
+                                        <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" class="md:hidden w-fit mt-0.5 text-[9px]" />
                                     </div>
                                 </div>
                             </template>
                         </Column>
 
-                        <Column field="email" header="Email" style="min-width: 12rem">
+                        <Column field="email" header="Email" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 12rem">
                             <template #body="{ data }">
                                 <span class="text-sm text-slate-600">{{ data.email }}</span>
                             </template>
                         </Column>
 
-                        <Column field="tier" header="Tier" style="min-width: 9rem">
+                        <Column field="tier" header="Tier" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 9rem">
                             <template #body="{ data }">
                                 <div class="flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: tierColor(data.tier) }"></span>
@@ -436,42 +465,51 @@ const submitNewAffiliate = () => {
                             </template>
                         </Column>
 
-                        <Column field="clicks" header="Clics" style="min-width: 6rem">
+                        <Column field="clicks" header="Clics" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 6rem">
                             <template #body="{ data }"><span class="font-bold text-slate-700">{{ fmtNumber(data.clicks) }}</span></template>
                         </Column>
 
-                        <Column field="conversions" header="Conversions" style="min-width: 7rem">
+                        <Column field="conversions" header="Conversions" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell" style="min-width: 7rem">
                             <template #body="{ data }">
                                 <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded font-black text-sm">{{ fmtNumber(data.conversions) }}</span>
                             </template>
                         </Column>
 
-                        <Column field="unpaid_earnings" header="À payer" style="min-width: 8rem">
+                        <Column field="unpaid_earnings" header="À payer" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 8rem">
                             <template #body="{ data }">
                                 <span :class="Number(data.unpaid_earnings) > 0 ? 'font-black text-rose-600' : 'text-slate-400'">{{ fmtMoney(data.unpaid_earnings) }}</span>
                             </template>
                         </Column>
 
-                        <Column field="status" header="Statut" style="min-width: 8rem">
+                        <Column field="status" header="Statut" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" style="min-width: 8rem">
                             <template #body="{ data }">
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" />
                             </template>
                         </Column>
 
-                        <Column header="Actions" alignFrozen="right" frozen style="min-width: 12rem">
+                        <Column header="Actions" style="width: 3.5rem; min-width: 3.5rem">
                             <template #body="{ data }">
-                                <div class="flex items-center gap-1 whitespace-nowrap">
+                                <div class="hidden md:flex items-center gap-1 whitespace-nowrap">
                                     <Button icon="pi pi-eye" text rounded severity="secondary" v-tooltip.top="'Voir le détail'" @click="showDetail(data)" aria-label="Voir le détail" />
                                     <Button v-if="data.status === 'pending'" icon="pi pi-check" text rounded severity="success" v-tooltip.top="'Approuver'" @click="approveAffiliate(data)" aria-label="Approuver" />
                                     <Button v-if="Number(data.unpaid_earnings) > 0" icon="pi pi-wallet" text rounded severity="warning" v-tooltip.top="'Générer le paiement'" @click="generatePayout(data)" aria-label="Générer un paiement" />
                                     <Button v-else icon="pi pi-wallet" text rounded severity="warning" disabled v-tooltip.top="'Rien à payer'" aria-label="Rien à payer" />
                                     <Button icon="pi pi-trash" text rounded severity="danger" v-tooltip.top="'Supprimer'" @click="destroyAffiliate(data)" aria-label="Supprimer" />
                                 </div>
+                                <Button
+                                    icon="pi pi-ellipsis-v"
+                                    class="p-button-text p-button-secondary p-button-rounded w-10 h-10 md:hidden text-slate-500"
+                                    :aria-label="t('pages.live_sessions.menu_more')"
+                                    :aria-haspopup="true"
+                                    @click="toggleRowMenu($event, data)"
+                                />
                             </template>
                         </Column>
                     </DataTable>
                 </template>
             </Card>
+
+            <Menu id="affiliate-row-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
 
             <!-- DIALOG : DÉTAIL AFFILIÉ -->
             <SncDialog

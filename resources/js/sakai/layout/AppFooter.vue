@@ -1,13 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { useAppVersion } from '@/composables/useAppVersion';
 
 const page = usePage();
 const appMeta = computed(() => page.props.app_meta || {});
 const identity = computed(() => page.props.identity || {});
 const year = new Date().getFullYear();
 const siteName = computed(() => identity.value.site_name || appMeta.value.name || 'SubnetCongo');
-const version = computed(() => appMeta.value.version || '2.4.2');
+const { label: versionLabel } = useAppVersion();
 </script>
 
 <template>
@@ -18,7 +19,7 @@ const version = computed(() => appMeta.value.version || '2.4.2');
             <span class="text-slate-500 dark:text-slate-400">SubnetCongo Academy</span>
         </div>
         <div class="flex items-center gap-3">
-            <span class="text-slate-400 dark:text-slate-500">v{{ version }}-stable</span>
+            <span class="text-slate-400 dark:text-slate-500">{{ versionLabel }}</span>
         </div>
     </footer>
 </template>

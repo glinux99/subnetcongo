@@ -79,7 +79,7 @@ const formatDate = (iso) => {
             <div class="page-container page-section">
 
                 <!-- CARTES KPI / EXPÉDITEUR -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <PageKpi :label="t('pages.admin_contact_message.kpi_sender')" :value="message.name" icon="pi-user" color="blue" />
                     <a :href="`mailto:${message.email}`" class="block hover:no-underline">
                         <PageKpi :label="t('pages.admin_contact_message.kpi_email')" :value="message.email" icon="pi-envelope" color="sky" />

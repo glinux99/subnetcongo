@@ -2,10 +2,11 @@
 import AppLayout from '@/sakai/layout/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
 import SncDialog from '@/Components/SncDialog.vue';
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
+import Menu from 'primevue/menu';
 
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
@@ -113,6 +114,22 @@ const formatDate = (date) => {
     if (!date) return 'N/A';
     return new Date(date).toLocaleString(locale.value);
 };
+
+// Menu kebab par ligne (mobile)
+const rowMenu = ref(null);
+const rowMenuTarget = ref(null);
+const rowMenuItems = computed(() => {
+    const log = rowMenuTarget.value;
+    if (!log) return [];
+    return [
+        { label: t('pages.logs.view_detail'), icon: 'pi pi-eye', command: () => viewLogDetail(log) },
+        { label: t('pages.logs.delete'), icon: 'pi pi-trash', command: () => deleteLog(log), class: 'text-red-600' },
+    ];
+});
+const toggleRowMenu = (event, log) => {
+    rowMenuTarget.value = log;
+    rowMenu.value?.toggle(event);
+};
 </script>
 
 <template>
@@ -180,7 +197,7 @@ const formatDate = (date) => {
                             class="p-datatable-sm"
                             :pt="{ table: { class: 'w-full' } }"
                         >
-                            <Column field="created_at" :header="t('pages.logs.col_date')" style="min-width: 11rem">
+                            <Column field="created_at" :header="t('pages.logs.col_date')" style="min-width: 11rem" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                                 <template #body="{ data }">
                                     <span class="text-xs text-slate-500 whitespace-nowrap">{{ formatDate(data.created_at) }}</span>
                                 </template>
@@ -193,7 +210,7 @@ const formatDate = (date) => {
                                     </div>
                                 </template>
                             </Column>
-                            <Column field="event" :header="t('pages.logs.col_event')" style="min-width: 17rem">
+                            <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="event" :header="t('pages.logs.col_event')" style="min-width: 17rem">
                                 <template #body="{ data }">
                                     <div class="flex flex-col gap-1">
                                         <Tag :value="data.event_title || data.event" :severity="getLevelSeverity(data.event_type || data.event)" class="text-[10px] font-black w-fit" />
@@ -201,22 +218,28 @@ const formatDate = (date) => {
                                     </div>
                                 </template>
                             </Column>
-                            <Column field="auditable_type" :header="t('pages.logs.col_type')" style="min-width: 11rem">
+                            <Column field="auditable_type" :header="t('pages.logs.col_type')" style="min-width: 11rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                 <template #body="{ data }">
                                     <span class="text-xs font-mono text-slate-500">{{ data.auditable_type?.split('\\').pop() || '—' }}</span>
                                 </template>
                             </Column>
-                            <Column field="ip_address" :header="t('pages.logs.col_ip')" style="min-width: 9rem">
+                            <Column field="ip_address" :header="t('pages.logs.col_ip')" style="min-width: 9rem" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                                 <template #body="{ data }">
                                     <span class="text-xs font-mono text-slate-500">{{ data.ip_address || '—' }}</span>
                                 </template>
                             </Column>
                             <Column :header="t('pages.logs.col_actions')" style="width: 8rem">
                                 <template #body="{ data }">
-                                    <div class="flex items-center gap-1 whitespace-nowrap">
+                                    <div class="hidden md:flex items-center gap-1 whitespace-nowrap">
                                         <Button icon="pi pi-eye" text rounded severity="secondary" :aria-label="t('pages.logs.view_detail')" :title="t('pages.logs.view_detail')" @click="viewLogDetail(data)" />
                                         <Button icon="pi pi-trash" text rounded severity="danger" :aria-label="t('pages.logs.delete_log')" :title="t('pages.logs.delete')" @click="deleteLog(data)" />
                                     </div>
+                                    <Button
+                                        icon="pi pi-ellipsis-v"
+                                        class="p-button-text p-button-secondary p-button-rounded w-11 h-11 md:hidden text-slate-500"
+                                        :aria-label="t('pages.live_sessions.menu_more')"
+                                        @click="toggleRowMenu($event, data)"
+                                    />
                                 </template>
                             </Column>
 
@@ -231,6 +254,8 @@ const formatDate = (date) => {
                 </Card>
             </div>
         </div>
+
+        <Menu id="logs-actions-menu" ref="rowMenu" :model="rowMenuItems" popup :aria-label="t('pages.live_sessions.menu_more')" />
 
         <SncDialog
             v-model:visible="displayLogDialog"

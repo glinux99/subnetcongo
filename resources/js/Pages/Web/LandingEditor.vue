@@ -265,14 +265,14 @@ const handleMainPick = (e) => { const file = e.target.files?.[0]; if (!file) ret
                         <p class="text-sm text-slate-400 mt-1">{{ t('pages.web_landing_editor.noStatsHint') }}</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div v-for="s in stats" :key="s.id" class="p-8 bg-slate-900 rounded-[1rem] border border-white/5 relative overflow-hidden group shadow-2xl">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                        <div v-for="s in stats" :key="s.id" class="p-4 sm:p-6 bg-slate-900 rounded-[1rem] border border-white/5 relative overflow-hidden group shadow-2xl">
                             <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
                             <div class="relative z-10 flex flex-col items-center text-center">
                                 <div class="w-14 h-14 rounded-xl bg-white/5 flex items-center justify-center mb-4 border border-white/10" :style="{ color: s.color }">
                                     <i :class="`pi ${s.icon} text-2xl`"></i>
                                 </div>
-                                <h2 class="text-4xl font-black mb-1 italic tracking-tighter" :style="{ color: s.color }">{{ s.value }}</h2>
+                                <h2 class="text-2xl sm:text-3xl font-black mb-1 italic tracking-tighter" :style="{ color: s.color }">{{ s.value }}</h2>
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6">{{ s.label }}</p>
                                 
                                 <div class="flex gap-3 pt-4 border-t border-white/5 w-full justify-center items-center">

@@ -854,7 +854,8 @@ class DashboardController extends Controller
     {
         $meta = [
             'app_name' => 'SubnetCongo Enterprise LMS',
-            'version' => '13.6.0-Gold',
+            'version' => config('app.version', '1.0.0'),
+            'channel' => config('app.channel', 'stable'),
             'environment' => app()->environment(),
             'php_version' => PHP_VERSION,
             'server_time' => now()->toDateTimeString(),

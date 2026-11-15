@@ -186,7 +186,7 @@ const submitAsk = () => {
                                 </div>
                             </template>
                         </Column>
-                        <Column :header="t('pages.student_questions.colAttachments')" :exportable="false">
+                        <Column :header="t('pages.student_questions.colAttachments')" :exportable="false" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <span v-if="data.attachments?.length" class="inline-flex items-center gap-1 text-[10px] font-black text-blue-600 uppercase tracking-widest">
                                     <i class="pi pi-paperclip"></i> {{ data.attachments.length }}
@@ -194,7 +194,7 @@ const submitAsk = () => {
                                 <span v-else class="text-slate-300">—</span>
                             </template>
                         </Column>
-                        <Column field="priority" :header="t('pages.student_questions.colPriority')" :exportable="false">
+                        <Column field="priority" :header="t('pages.student_questions.colPriority')" :exportable="false" headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell">
                             <template #body="{ data }">
                                 <Tag :value="priorityLabel(data.priority)" :severity="prioritySeverity(data.priority)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
                             </template>
@@ -204,13 +204,13 @@ const submitAsk = () => {
                                 <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" class="!text-[10px] !font-black !uppercase !tracking-widest" />
                             </template>
                         </Column>
-                        <Column field="instructor.name" :header="t('pages.student_questions.colInstructor')">
+                        <Column field="instructor.name" :header="t('pages.student_questions.colInstructor')" headerClass="hidden lg:table-cell" bodyClass="hidden lg:table-cell">
                             <template #body="{ data }">
                                 <span v-if="data.instructor" class="font-medium text-slate-700">{{ data.instructor.name }}</span>
                                 <span v-else class="text-slate-400">—</span>
                             </template>
                         </Column>
-                        <Column field="created_at" :header="t('pages.student_questions.colDate')" sortable>
+                        <Column headerClass="hidden md:table-cell" bodyClass="hidden md:table-cell" field="created_at" :header="t('pages.student_questions.colDate')" sortable>
                             <template #body="{ data }"><span class="font-mono text-xs text-slate-500">{{ formatDate(data.created_at) }}</span></template>
                         </Column>
                         <Column :header="t('pages.student_questions.colAction')" :exportable="false">

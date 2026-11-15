@@ -74,7 +74,7 @@ const formatDuration = (min) => min ? (min < 60 ? `${min} min` : `${Math.floor(m
                         <IconField iconPosition="left">
                             <InputIcon class="pi pi-search text-slate-500" />
                             <InputText v-model="search" :placeholder="t('pages.exams_index.search_placeholder')"
-                                class="w-full !rounded-xl" />
+                                class="w-full h-11 !rounded-xl" />
                         </IconField>
                     </div>
                 </template>

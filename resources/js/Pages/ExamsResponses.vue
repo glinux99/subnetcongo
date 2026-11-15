@@ -633,23 +633,23 @@ onBeforeUnmount(() => {
                     </template>
                     <template #content>
                         <div class="p-6 md:p-10">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
-                                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-12">
+                                <div class="p-4 sm:p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-list text-xl"></i>
                                     </div>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams-responses.itemsLabel') }}</p>
                                     <p class="text-2xl font-black text-slate-800">{{ t('pages.exams-responses.questionsCount', { count: questions.length }) }}</p>
                                 </div>
-                                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
-                                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <div class="p-4 sm:p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-stopwatch text-xl"></i>
                                     </div>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams-responses.durationLabel') }}</p>
                                     <p class="text-2xl font-black text-slate-800">{{ t('pages.exams-responses.minutesCount', { count: exam.duration_minutes }) }}</p>
                                 </div>
-                                <div class="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
-                                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <div class="p-4 sm:p-6 bg-slate-50 rounded-xl border border-slate-100 text-center transition-transform hover:scale-105">
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <i class="pi pi-shield-check text-xl"></i>
                                     </div>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ t('pages.exams-responses.passThresholdLabel') }}</p>

@@ -37,27 +37,69 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.cdnfonts.com/css/lato" rel="stylesheet">
 
-        <!-- Données Structurées JSON-LD (Essentiel pour le référencement de 200+ pages) -->
+        <!-- Données Structurées JSON-LD (Organization + LocalBusiness + WebSite) -->
         <script type="application/ld+json">
         {
             "@context": "https://schema.org",
-            "@type": "Organization",
+            "@type": ["Organization", "LocalBusiness"],
             "name": "Subnet Congo Sarl",
+            "legalName": "SubNet Congo Sarl",
             "url": "https://subnetcongo.net",
             "logo": "https://subnetcongo.net/assets/media/logos/logo.png",
-            "contactPoint": {
-                "@type": "ContactPoint",
-                "telephone": "+243 973 359 648",
-                "contactType": "customer service",
-                "areaServed": "CD",
-                "availableLanguage": ["French", "English"]
+            "image": "https://subnetcongo.net/assets/media/logos/logo.png",
+            "founder": {
+                "@type": "Person",
+                "name": "Daniel Kikimba",
+                "url": "https://danielkikimba.site",
+                "email": "infos@danielkikimba.site"
             },
+            "telephone": "+243 973 359 648",
+            "email": "academy@subnetcongo.net",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Av. du Touriste 001, Quartier Les Volcans",
+                "addressLocality": "Goma",
+                "addressRegion": "Nord-Kivu",
+                "addressCountry": "CD"
+            },
+            "areaServed": [
+                { "@type": "Country", "name": "République Démocratique du Congo" },
+                { "@type": "City", "name": "Goma" },
+                { "@type": "City", "name": "Kinshasa" }
+            ],
+            "contactPoint": [
+                {
+                    "@type": "ContactPoint",
+                    "telephone": "+243 973 359 648",
+                    "email": "academy@subnetcongo.net",
+                    "contactType": "customer service",
+                    "availableLanguage": ["French", "English"]
+                },
+                {
+                    "@type": "ContactPoint",
+                    "contactType": "sales",
+                    "availableLanguage": ["French", "English"]
+                }
+            ],
             "sameAs": [
                 "https://facebook.com/subnetcongo",
                 "https://twitter.com/subnetcongo",
                 "https://linkedin.com/company/subnet-congo"
             ],
-            "description": "Fournisseur de services Internet et expert en infrastructures réseaux en RDC."
+            "description": "Fournisseur d'accès Internet (Fibre, VSAT, Radio), maintenance réseau, cybersécurité et formation certifiée en République Démocratique du Congo."
+        }
+        </script>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Subnet Congo",
+            "url": "https://subnetcongo.net",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://subnetcongo.net/marketplace?search={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
         }
         </script>
 
@@ -74,17 +116,5 @@
     </head>
     <body class="font-sans antialiased bg-gray-50">
         @inertia
-
-        <!-- Pied de page SEO (Invisible mais lu par les robots pour l'indexation) -->
-        <footer style="display:none">
-            <h2>Nos Services en RDC</h2>
-            <ul>
-                <li>Internet par Satellite VSAT</li>
-                <li>Fibre Optique et Liaisons Radio</li>
-                <li>Maintenance d'Infrastructures IT</li>
-                <li>Formation Professionnelle en Réseaux</li>
-                <li>Vente de Matériel Informatique (Cisco, Mikrotik, Ubiquiti)</li>
-            </ul>
-        </footer>
     </body>
 </html>
