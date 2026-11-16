@@ -693,7 +693,7 @@ onBeforeUnmount(() => {
                                                 <!-- Header Cours -->
                                                 <div class="flex items-center gap-4 mb-4">
                                                     <div class="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0">
-                                                        <img v-if="course.thumbnail_path" :src="course.thumbnail_path" class="w-full h-full object-cover" />
+                                                        <img v-if="course.thumbnail_path" :src="String(course.thumbnail_path).match(/^(http|\/)/) ? course.thumbnail_path : (`/media/${course.thumbnail_path}`)" class="w-full h-full object-cover" />
                                                         <div v-else class="w-full h-full flex items-center justify-center text-slate-400"><i class="pi pi-image text-xl"></i></div>
                                                     </div>
                                                     <div class="flex-1 min-w-0">

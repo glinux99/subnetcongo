@@ -3000,7 +3000,9 @@
             "link_copied": "Link copied!",
             "share_on": "Share on",
             "redaction_subnetcongo": "SubnetCongo Editorial Team",
-            "article": "article"
+            "article": "article",
+            "back_to_blog": "Back to the journal",
+            "related_read": "Read next"
         },
         "landing": {
             "head_desc": "Propel your IT career: certified training in networks, cybersecurity and cloud in the DRC.",
@@ -6629,6 +6631,8 @@
             "field_permissions": "Permissions"
         },
         "live_sessions": {
+            "joining_title": "Connecting…",
+            "joining_hint": "Opening your virtual classroom…",
             "head_title": "Live sessions",
             "subtitle": "Schedule and manage your Zoom, Meet, BBB or Jitsi virtual classrooms. Stream your courses in real time and centralize all your replays.",
             "btn_refresh": "Refresh",

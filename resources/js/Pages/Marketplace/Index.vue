@@ -77,7 +77,7 @@ const toggleWishlist = (course) => router.post(route('marketplace.wishlist.toggl
 // Gestionnaire d'affichage d'image
 const getImageUrl = (path) => {
     if (!path) return PLACEHOLDER_IMAGE;
-    return path.startsWith('http') ? path : `/storage/${path}`;
+    return path.startsWith('http') ? path : `/media/${path}`;
 };
 
 // Fonction pour gérer l'erreur de chargement d'image

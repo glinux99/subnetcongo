@@ -64,7 +64,12 @@ const isNew = (course) => {
     if (!course.published_at) return false;
     return (Date.now() - new Date(course.published_at).getTime()) < 30 * 24 * 3600 * 1000;
 };
-const courseImage = (course) => course.image || course.thumbnail_path || DEFAULT_COURSE_IMAGE;
+const imageUrl = (path) => {
+    if (!path) return DEFAULT_COURSE_IMAGE;
+    if (path.startsWith('http') || path.startsWith('/')) return path;
+    return `/media/${path}`;
+};
+const courseImage = (course) => imageUrl(course.image || course.thumbnail_path);
 const courseDuration = (course) => {
     const mins = Number(course.duration_minutes || 0);
     if (!mins) return null;

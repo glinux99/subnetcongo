@@ -33,7 +33,7 @@ const formatLocal = (amount) => {
     }
 };
 
-const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storage/${path}` : '/media/lms/thumbnails/course-1.jpg');
+const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/media/${path}` : '/media/lms/thumbnails/course-1.jpg');
 
 const freeItems  = computed(() => props.cart?.free ?? []);
 const paidItems  = computed(() => props.cart?.paid ?? []);

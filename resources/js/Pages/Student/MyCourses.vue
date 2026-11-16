@@ -32,7 +32,7 @@ const matches = (c, id) => ({
 const counts = computed(() => Object.fromEntries(filters.value.map(f => [f.id, (props.courses ?? []).filter(c => matches(c, f.id)).length])));
 const filteredCourses = computed(() => (props.courses ?? []).filter(c => matches(c, filter.value)));
 
-const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600' : (path.startsWith('http') ? path : `/storage/${path}`);
+const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600' : (path.startsWith('http') ? path : `/media/${path}`);
 const getLevelLabel = (level) => ({ beginner: t('pages.my_courses.levelBeginner'), intermediate: t('pages.my_courses.levelIntermediate'), advanced: t('pages.my_courses.levelAdvanced') }[level] || level);
 const progressTone = (p) => p >= 80 ? { bar: '#10B981', text: 'text-emerald-600 dark:text-emerald-400' } : p >= 50 ? { bar: '#F59E0B', text: 'text-amber-600 dark:text-amber-400' } : { bar: '#2563EB', text: 'text-blue-600 dark:text-blue-400' };
 const ctaLabel = (c) => c.progress >= 100 ? t('pages.my_courses.ctaReview') : c.progress > 0 ? t('pages.my_courses.ctaResume') : t('pages.my_courses.ctaStart');

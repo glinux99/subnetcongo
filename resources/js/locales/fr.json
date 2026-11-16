@@ -2760,7 +2760,9 @@
             "link_copied": "Lien copié !",
             "share_on": "Partager sur",
             "redaction_subnetcongo": "Rédaction SubnetCongo",
-            "article": "article"
+            "article": "article",
+            "back_to_blog": "Retour au journal",
+            "related_read": "À lire ensuite"
         },
         "landing": {
             "head_desc": "Propulsez votre carrière IT : formations certifiantes en réseaux, cybersécurité et cloud en RDC.",
@@ -6389,6 +6391,8 @@
             "field_permissions": "Permissions"
         },
         "live_sessions": {
+            "joining_title": "Connexion en cours…",
+            "joining_hint": "Ouverture de ta salle de classe virtuelle…",
             "head_title": "Sessions en direct",
             "subtitle": "Planifiez et gérez vos classes virtuelles Zoom, Meet, BBB ou Jitsi. Diffusez vos cours en temps réel et centralisez l'ensemble de vos replays.",
             "btn_refresh": "Actualiser",

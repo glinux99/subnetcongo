@@ -122,7 +122,7 @@ const getLessonPlayerUrl = (course) => {
 
 const getImageUrl = (path) => {
     if (!path) return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600';
-    return path.startsWith('http') ? path : `/storage/${path}`;
+    return path.startsWith('http') ? path : `/media/${path}`;
 };
 
 const getProgressColor = (p) => {

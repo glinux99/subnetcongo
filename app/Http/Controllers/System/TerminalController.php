@@ -221,11 +221,23 @@ class TerminalController extends Controller
     private function launchDetached(string $artisanCommand, array $args, string $logPath, string $exitPath): int
     {
         // Commande complète (php artisan)
-        $commandParts = array_merge([PHP_BINARY, base_path('artisan'), $artisanCommand], $args);
+        $commandParts = array_merge([$this->phpCliBinary(), base_path('artisan'), $artisanCommand], $args);
         $isWindows = PHP_OS_FAMILY === 'Windows';
         $cmdString = implode(' ', array_map('escapeshellarg', $commandParts));
 
         if (PHP_OS_FAMILY === 'Windows') {
+            // Sur Windows (dev), les commandes longues bloqueraient la requête HTTP
+            // (le serveur de dev local est mono-processus en pratique) → refus clair.
+            $longRunning = ['queue:work', 'queue:listen', 'queue:monitor', 'schedule:work', 'horizon', 'pail', 'serve', 'tinker', 'db:monitor', 'reverb:start'];
+            $cmdLc = strtolower($artisanCommand);
+            foreach ($longRunning as $pat) {
+                if ($cmdLc === $pat || str_starts_with($cmdLc, $pat)) {
+                    throw new \RuntimeException(
+                        'Commande longue refusée sur Windows : elle bloquerait le serveur local. ' .
+                        'Ajoute --once si la commande le supporte, ou lance-la dans une console séparée (php artisan ' . $artisanCommand . ').'
+                    );
+                }
+            }
             // Fallback Windows (dev) : synchrone, stdout/stderr → fichier log via redirect shell
             $logDir = dirname($logPath);
             if (! is_dir($logDir)) { @mkdir($logDir, 0755, true); }
@@ -265,6 +277,47 @@ class TerminalController extends Controller
         }
 
         return $pid;
+    }
+
+    /**
+     * Choisit un vrai binaire PHP CLI (≥ 8.2).
+     * Sous php-fpm, PHP_BINARY pointe sur php-fpm (qui ne sait pas lancer artisan) —
+     * on ne l'utilise donc que si le SAPI courant est CLI. Sinon on teste php8.3 → php8.2
+     * (la prod Plesk a `php` = 8.1, trop vieux). `TERMINAL_PHP_BINARY` (env) force le choix.
+     */
+    private function phpCliBinary(): string
+    {
+        $forced = env('TERMINAL_PHP_BINARY');
+        if (is_string($forced) && $forced !== '') {
+            return $forced;
+        }
+
+        if (PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server') {
+            return PHP_BINARY;
+        }
+
+        foreach (['php8.3', 'php8.2', 'php8.1', 'php'] as $name) {
+            $resolved = $this->resolveBinary($name);
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
+        return 'php';
+    }
+
+    private function resolveBinary(string $name): ?string
+    {
+        $path = $name;
+        if (PHP_OS_FAMILY !== 'Windows' && ! is_executable($name)) {
+            $found = trim((string) @shell_exec('command -v ' . escapeshellarg($name) . ' 2>/dev/null'));
+            if ($found === '') {
+                return null;
+            }
+            $path = $found;
+        }
+        $versionId = trim((string) @shell_exec(escapeshellarg($path) . ' -r "echo PHP_VERSION_ID;" 2>/dev/null'));
+        return ctype_digit($versionId) && (int) $versionId >= 80200 ? $path : null;
     }
 
     private function isDangerous(string $bare): bool

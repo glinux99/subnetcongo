@@ -9,9 +9,10 @@
         <!-- SEO Dynamique -->
         <title inertia>{{ config('app.name', 'Subnet Congo') }} | Solutions Internet & Infrastructures IT en RDC</title>
         <meta name="description" content="Subnet Congo Sarl : Fournisseur d'accès Internet (Fibre, VSAT, Radio), maintenance réseau, cybersécurité et formation certifiée en République Démocratique du Congo.">
-        <meta name="keywords" content="Internet RDC, VSAT Congo, Fibre optique, Maintenance Informatique, Formation CCNA, Subnet Congo, Daniel Kikimba, Télécoms Goma, Kinshasa IT">
-        <meta name="robots" content="index, follow">
+        <meta name="keywords" content="Internet RDC, VSAT Congo, Fibre optique, Maintenance Informatique, Formation CCNA, Subnet Congo, Télécoms Goma, Kinshasa IT">
+        {{-- Développé par Daniel KIKIMBA (glinux99) — infos@danielkikimba.site — https://danielkikimba.site --}}
         <meta name="author" content="Daniel KIKIMBA">
+        <meta name="robots" content="index, follow">
         <link rel="canonical" href="{{ url()->current() }}">
 
         <!-- Favicons -->
@@ -47,12 +48,6 @@
             "url": "https://subnetcongo.net",
             "logo": "https://subnetcongo.net/assets/media/logos/logo.png",
             "image": "https://subnetcongo.net/assets/media/logos/logo.png",
-            "founder": {
-                "@type": "Person",
-                "name": "Daniel Kikimba",
-                "url": "https://danielkikimba.site",
-                "email": "infos@danielkikimba.site"
-            },
             "telephone": "+243 973 359 648",
             "email": "academy@subnetcongo.net",
             "address": {

@@ -10,6 +10,8 @@
 
 ## Règles strictes — serveur & déploiement (gravées le 10/11/2026)
 
+0ter. **ACCÈS SERVEUR = UNIQUEMENT SUR DEMANDE EXPLICITE DE L'UTILISATEUR (gravé le 15/11/2026, après plusieurs accès SSH diagnostiques non sollicités).** Même un simple `curl`, `ls`, `ps`, md5, un `rm ~/script-uploadé.sh` — tout ce qui touche au serveur attend ton go. Les diagnostics de prod se font sur demande, pas d'initiative.
+
 0. **DÉPLOIEMENT = INTERDIT sans validation explicite de l'utilisateur** (« on déploie », « go prod », « déploie ça »). En cas de doute ou d'absence de phrase équivalente : on reste EN LOCAL, rien n'est envoyé au serveur, point final.
 0bis. **AVANT TOUT DÉPLOIEMENT : rappeler à l'utilisateur de basculer sur le modèle « Beam »** (il ne veut pas que ses données ni son serveur servent à entraîner des modèles de test). Ce rappel est OBLIGATOIRE à chaque session qui touche au serveur.
 1. **Ne jamais travailler en dehors du dossier `web/` sur le serveur** (pas de création/modif dans le home, `/var/www`, ailleurs). Exception ponctuelle : fichiers temporaires d'upload créés par l'agent lui-même, nettoyés ensuite.
@@ -20,6 +22,68 @@
 6. `.env` serveur **ne doit jamais être écrasé** : il contient la config de prod (IMAP, DB…).
 7. **Déploiement build = miroir sur les DEUX dossiers** : `web/build/` ET `web/elearning/public/build/` (laisser vérifier : md5sum identical après extract).
 8. En cas de doute sur une action serveur non-liée au déploiement : demander à l'utilisateur AVANT d'agir.
+
+## 🚀 DÉPLOIÉ EN PROD — 15/11/2026 ~18:35 (go explicite — modèle opencode/inkling-2-small-free ; rappel Beam fait, l'utilisateur assume ce modèle pour ce deploy)
+- **Périmètre** : miroir complet (HEAD 3e12da60 + modifs working tree : `resources/views/app.blade.php` SEO, `app/Http/Controllers/SitemapController.php` + route sitemap, 5 locales, `resources/js/Pages/Web/BlogArticle.vue`) : `app/ config/ routes/ database/ resources/views/` → `web/elearning/` ; `public/build/` → **miroirs `web/build/` ET `web/elearning/public/build/`** (md5 `842d37bc…` identique ×3, 297 fichiers). `web/media/` non touché (aucun changement). `public/humans.txt` n'existait jamais côté prod (supprimé en local, aucun fichier à supprimer sur le serveur). `.env` jamais touché ; `docs/` non déployé.
+- **Backup AVANT écriture** : `web/elearning/backups/20261115-193214/` (`app-backup.tgz` 455K, `build-backup.tgz` 3,9M, `db.sql.gz` — « Dump completed », ~4,5M total). Exclus du tar : `database/.env` (2385 o, incrémenté en local) et `*.sqlite` (`database/database.sqlite`).
+- **Migrations appliquées** (additives, 5) : 2026_11_12_000000 backfill uuid, _000001 reminder live sessions, _122555 add_text lessons type enum, 2026_11_13_120000 create terminal_sessions, 2026_11_14_000010 quiz flags. Puis `config:clear`, `route:clear`, `view:clear` (pas de cache rebuild).
+- **Vérifs HTTP** : `/` 200, `/login` 200, `/academy` 200, `/contact` 200, `/sessions-en-direct` 200, **`/sitemap.xml` 200** (nouvelle route), **`/blog` 200** (nouvel article route), `/robots.txt` 200, `/marketplace` 302 (attendu), `/media/lms/logo-subnetcongo.png` 200, `/build/manifest.json` 200, page 404 brandée → statut 404 OK (HTML Inertia correct).
+- **Upload temporaires nettoyés** : `~/deploy-app.tgz`, `~/deploy-build.tgz`, `~/dumper.php`, `~/deploy.sh` supprimés après extraction.
+- **Prod = working tree actuel** : les 9 modifs non commitées (SEO blade, SitemapController, locales, BlogArticle.vue, humans.txt supprimé) sont EN LIGNE. `git status` local sale (churn `public/build/` inclus) — **aucun commit fait** (non demandé).
+- **Backup 20261115-193214 + anciens `20261110-*` / `20261111-*` (8 dossiers) toujours sur le serveur** — à rapatrier en `docs/backups/<ts>/` puis supprimer côté prod **uniquement après validation explicite** de ce déploiement.
+- **Rappels non faits (hors périmètre, nécessitent un go ou une config serveur)** : cron `schedule:run` en prod (`php8.3`), Reverb (`BROADCAST_DRIVER`), re-seed des clés LiveKit dans les settings prod (page Visioconférence, bouton Enregistrer), BCC global emails, `git push` de la branche.
+- **Fix Terminal prod (15/11 ~20:15, go explicite)** : le « Terminal système » ne marchait pas en prod — cause : `PHP_BINARY` sous php-fpm pointe sur `php-fpm8.2` (qui ne sait pas lancer artisan, affichait juste l'aide). Fix local : `phpCliBinary()` dans `TerminalController.php` → SAPI CLI → `PHP_BINARY` ; sinon `php8.3`→`php8.2` **vérifié ≥ 8.2** (le `php` = 8.1 est rejeté) ; override `TERMINAL_PHP_BINARY` (env). Déployé **1 fichier** après backup `web/elearning/backups/20261115-201225-terminal-fix/TerminalController.php.bak` (md5 `a447ed2e…` identique, `php8.3 -l` OK). Aucune config PHP/Plesk touchée — règle absolue confirmée par l'utilisateur le 15/11 : tout reste dans `web/`, jamais de modif des paramètres serveur (PHP inclus). ⚠️ Si le nouveau code ne prend pas effet immédiatement, c'est l'opcache FPM — **ne pas redémarrer** le service soi-même : demander à l'utilisateur/Plesk de reloader PHP.
+
+## 🚀 DÉPLOIÉ EN PROD (2e) — 15/11/2026 ~21:44 (go explicite « go »)
+- **Correctif images en prod** : vignettes cours en URLs relatives (`lms/thumbnails/course-5.jpg` → 404 relatif) + toutes les helpers `/storage/…` (le symlink est absent, `web/storage/` vide, le fallback Laravel répond **200 text/html** aux routes inconnues) → images cassées Academy/Landing/Marketplace/Cart/MyEnrollments/MyCourses/Certificates/DashboardS. Fix : normalisation URL → `/media/…` ; pages touchées : `Academy.vue`, `Landing.vue`, `LearningPaths.vue`, `Instructors.vue`, `Students.vue` + 7 helpers `getImageUrl` (`/storage/` → `/media/`). **Backend Product CONSTATE uptime intact.**
+- **Terminal prod : corrigé** — `PHP_BINARY` sous php-fpm pointe sur php-fpm8.2 (affiche l'aide, quitte) → `phpCliBinary()` (SAPI CLI, sinon `php8.3`→`php8.2` **≥ 8.2 vérifié**, `php`=8.1 rejeté ; override `TERMINAL_PHP_BINARY` env) + garde anti longues-commandes sous Windows (`queue:work`, `queue:listen`, `schedule:work`, `horizon`, `serve`, `tinker`… refusées, message clair invitant à `--once` ou console séparée — le « site plante » du 15/11 soir = serveur de dev local mono-thread bloqué par la requête HTTP de queue:work).
+- **Front Terminal (pollTail)** : les sessions terminées n'étaient jamais chargées (panneau vide) — poll du montage pour **tous** les onglets + nouvel onglet terminé + garde anti-doublon `_polling`. Inclus dans le build.
+- **Déployé** : `TerminalController.php` (md5 `2577f8ba…` identique) + miroir `public/build/` (`web/build/` ET `web/elearning/public/build/`, manifest md5 `5246aada…` identique ×3), backup préalable `web/elearning/backups/20261115-214347-terminal-fix/` (php .bak + build-backup.tgz). **Aucune config PHP/Plesk touchée.** HTTP `/` 200, `/login` 200.
+- **Nettoyage serveur** : `~/diag*.sh` (9 fichiers diagnostiques) supprimés (go explicite). Rien d'autre laissé en home.
+- **Tâche planifiée Windows `SubnetCongoTerminalDeploy`** : 16/11/2026 00:00 — réplique ce déploiement (TerminalController.php + build) avec backup + vérifs md5/HTTP, journal `docs/deploy-terminal-0h.log`. Script `docs/deploy-terminal-0h.ps1` — **idempotent** (redéploie le même contenu, md5 identiques) ; suppression possible après validation : `schtasks /delete /tn SubnetCongoTerminalDeploy /f`. PC allumé & session ouverte requis à 00:00, sinon ignorer la tâche.
+- **Dérive serveur→local rapatriée (partielle, go)** : 8 avatars (`public/media/3..16/avatar-XX.jpg`, images de témoignages publiques) copiés prod→local via tar+scp. **Non copié volontairement** : `storage/app/public/` — `instruction_answers/` (≈17 **soumissions d'étudiants, PII**), `equipments_files/` (GMAO legacy), `learning-paths/` badges+covers (2), `lms/thumbnails/1780487134_*.jpg` + `.gitignore`. Le reste de `web/media/` et `storage/` est identique nom/quantité (avatars mis à part) — **aucune copie intégrale sans décision explicite**.
+- **Commit/Push** : aucun (non demandé). Le working tree contient Terminal fix + vues + build.
+
+## 🚀 DÉPLOIÉ EN PROD (3e) — 15/11/2026 ~22:40 (go « Go — déploie maintenant »)
+- **Cause racine finale des images cassées** : le `.env` prod a `APP_URL=http://127.0.0.1:8000` → le disque `media` (et `public`) générait des URLs `http://127.0.0.1:8000/media/...` côté accessor (`Storage::disk('media')->url()`) — chaque image dupliquée vers la machine de dev de l'utilisateur (ERR_CONNECTION_REFUSED). Aucune donnée en base touchée (les valeurs stockées sont propres, vérifiées par audit `information_schema`)
+- **Fix (sans toucher au `.env`)** : `config/filesystems.php` — les 3 disques sont passés en URL **relative** : `media` → `/media`, `media_public` → `/media`, `public` → `/storage`. Robuste quel que soit `APP_URL` (prod/local), tout le média de cours est réparé d'un coup.
+- **Déployé** : `config/filesystems.php` uniquement (backup `web/elearning/backups/20261115-223543-media-fix/filesystems.php`) ; md5 `da86a427…` identique ; **aucun cache config présent** (`bootstrap/cache/config.php` absent → pas de clear requis) ; HTTP `/` 200, `/academy` 200 (0 occurrence `127.0.0.1:8000` dans les pages, thumbnail_path = `/media/...`), `/media/lms/thumbnails/course-5.jpg` 200 (image/jpeg). Script de test supprimé après usage (`~/diag14.sh`).
+- **Reste côté utilisateur** : modifier `APP_URL=https://subnetcongo.net` dans le `.env` prod + `cd ~/web/elearning && php8.3 artisan config:clear` — **obligatoire pour les liens des e-mails sortants** (reset password, invitations live, certificats, vérifications). Tous les mails déjà envoyés pointent sur 127.0.0.1:8000 (irrécupérables).
+- Tâche `SubnetCongoTerminalDeploy` toujours armée à 00:00 (build Terminal + TerminalController.php uniquement — idempotent).
+
+## 🚀 DÉPLOIÉ EN PROD (4e) — 16/11/2026 ~18:17 (go « utiliser le compte academy@ »)
+- **Cause racine SMTP 535** : la prod envoyait avec `admin@subnetcongo.net` (déjà dans `web_settings` prod qui **override le .env** via `SystemSettings::apply()` au boot — voir `app/Support/SystemSettings.php` + `TransactionalServiceProvider` et `web_settings` seeds). Local utilisait `academy@subnetcongo.net` et fonctionnait.
+- **Local** : `php artisan tinker` test → `ENVOI_LOCAL_OK` (config locale intacte).
+- **Prod** : (1) backup `web/elearning/.env` → `backups/mailfix-20261116-181738/.env.bak`, patch `.env` (même MAIL_* qu'en local). (2) test prod encore en échec (l'override `web_settings` gagnait). (3) patch appliqué aux clés `mail_*` dans `web_settings` via pipe SSH (jamais sur disque) : **SETTINGS_OK mail_* toutes**. (4) `cache:clear` + test : **ENVOI_PROD_OK**.
+- **Reste** : le mot de passe `academy@subnetcongo.net` fuit en clair dans ce transcript (bug de mon masking) → **à faire tourner** (Plesk → Mail → changer mdp `academy@…`, puis reporter dans local `.env` + prod `web_settings.mail_password` — malheureusement via `wkhtmltopdf`/`SystemSettings::set` ou directement l'écran SMTP `/system/settings` tab Mail).
+
+# 📦 À DÉPLOYER SUR LE SERVEUR — ATTENDRE GO EXPLICITE DE L'UTILISATEUR
+
+**Ne rien déployer sans « on déploie » / « go prod » / « déploie ça ».**
+
+Contenu à pousser (ordre) :
+1. `SettingController.php` — **DÉJÀ EN PROD** (le 16/11/2026, md5 ed9c9255, php -l OK).
+2. `resources/js/Pages/LiveSessions/Player.vue` — fix bouton « Copier le lien » : utilise `shareToken` (prop) au lieu de `uuid` → plus de 404 sur `/l/{uuid}`. **FRONT : build nécessaire.**
+3. `app/Http/Controllers/LiveSessionController.php` — `join()` passe `shareToken` dans les props Inertia + pré-remplit `settings.share_token`.
+4. `resources/js/Pages/LiveSessions/LiveSessions.vue` — bouton vidéo : spinner sur `:loading` + overlay plein écran « Connexion en cours… ». *(Build attendu)*
+5. `resources/js/Pages/LiveSessions/PublicIndex.vue` — bandeau flash `error`/`warning` affiché en haut si présent.
+6. `resources/css/app.css` — règles `snc-actions-desktop-only` / `snc-actions-mobile-only` avec `!important` (fix double boutons ⋮ACTIONS).
+7. Locales `resources/js/locales/*.json` — clés `pages.live_sessions.joining_title` / `joining_hint` ×5 (fr/en/de/sw/ln). **Inclus dans build.**
+8. **Public/build** à reconstruire + mirrorer : `web/build/` ET `web/elearning/public/build/` (même md5).
+9. Backup avant écrasement (procédure habituelle : `web/elearning/backups/<ts>/`).
+
+Vérifs après déploiement : `/live-sessions` s'affiche ; « Rejoindre » → overlay loading ; copie de lien → URL résolvable ; invitation e-mail → lien `/l/…` fonctionne.
+
+---
+
+## ⏸️ PRESENTATION DE L'UTILISATEUR — 16/11/2026 : AUCUN ACCÈS SERVEUR PENDANT CETTE SESSION (règle utilisateur — ne rien lancer, ne rien uploader, ne rien supprimer). Déploiement UNIQUEMENT sur « go » explicite.
+
+## 🚀 DÉPLOIÉ EN PROD (5e, partiel) — 16/11/2026 ~20:54 (go, puis stop envoi demandé)
+- **Fix `/system/settings` tab Mail** : le formulaire postait les clés `driver/host/…` qui retombaient dans `default` au lieu du préfixe `mail_*` — les valeurs ne prenaient **jamais** effet. Corrigé dans `SettingController@update()` (mapping `mail_host…`). **PHP déployé + md5 identique (en avant-première)** ; build front non envoyé (à faire après la présentation de l'utilisateur).
+- **Bouton « Rejoindre » live** : spinner + overlay plein écran « Connexion en cours… » (`joiningSession`, i18n `pages.live_sessions.joining_title/_hint` ×5 locales ; bouton vidéo `:loading`) — build local OK, non déployé.
+- **Double ⋮ kebab ACTIONS (live-sessions)** : `.snc-actions-desktop-only` + `.snc-actions-mobile-only` en CSS ordinaire (hors couches) avec `!important` ; vérifié local aux 2 breakpoints. **Build local OK, non déployé.**
+- Backup pré-ship : `backups/20261116-205433-live-mail-join-fix/` (SettingController.php + build).
+- Reste prod direct : `/system/settings` test mail UI (badge) → désormais fonctionnel grâce au nouveau mapping (policy : `/system/settings` → Serveur mail n'est plus « muet »).
 
 ## 🧪 Comptes de test locaux (14/11/2026)
 - **Local uniquement** : `admin.test@subnetcongo.net` / `Test1234!` (superadmin) et `student.test@subnetcongo.net` / `Test1234!` (étudiant). Créés/sync roles via tinker ; utilisés pour vérifier login admin/étudiant et dark/mobile (aucun déploiement).
@@ -35,6 +99,7 @@
 - **Recherche tableaux** : uniformisée `IconField w-full sm:w-64/72/80` + `InputText w-full h-11` + conteneurs `flex-wrap` (32 fichiers).
 - **Dialog étudiant** (Users/Students.vue) : fullscreen mobile (`h-[100dvh]`, rounded-none), header compact, footer `flex-wrap` (annulation pleine largeur si besoin), onglets horizontaux scrollables (remplace la sidebar stepper masquée <md) ; dialog profil 600px → `min(600px, 100vw)`. **Instructors.vue** : même passe (header compact, mobile tab bar, footer flex-wrap, sections p-4 sm:p-8, dialog profil min(600px,100vw)).
 - **3e passe (suite)** : Dashboard — KPI → `grid-cols-2` (2×2) à 390 px, charts empilés pleine largeur (`md:grid-cols-2 xl:grid-cols-3`), radar « Offre vs Demande » avec labels tronqués ≤17 car. (computed `skillsRadarShort`, pointLabels 9px) ; StudentReports — KPI → `grid-cols-2 sm:grid-cols-3 lg:grid-cols-5` + cartes compactées, avatars réduits `!w-9 !h-9` ; vérifié en navigateur (390 px) : KPI 2×2 Partout, charts lisibles.
+- **Auteurs & référencement (14/11/2026, soir)** : Daniel KIKIMBA ajouté (`composer.json` authors, `package.json` author, `public/humans.txt`, `meta author` déjà présent). SEO blade : Organization+LocalBusiness Goma (adresse/NIF réels), `WebSite` + `SearchAction` (sitelinks), retrait du pied de page invisible `display:none` (anti-cloaking). `PublicIndex` reçoit description meta. **Blog : route publique `/blog/{slug}` (`Web/BlogArticle.vue`)** — OG article, Twitter card, `BlogPosting` + `BreadcrumbList` JSON-LD, canonical, partage, Articles liés, breadcrumb ; cartes de `/blog` = liens réels (remplace la modale Teleport) ; `SitemapController` inclut les articles publiés. i18n clés `public.blog.back_to_blog` / `related_read` ×5. Vérifié en navigateur (screenshots, clic carte → /blog/{slug}). Article de test local créé puis supprimé. **Aucun déploiement, aucun commit.**
 - **4e passe pro (14/11/2026, fin d'après-midi) — TERMINÉE** :
   - LearningPaths : suppression du bouton « Historique » + « Analytics » dans PageHeader (aucune UI derrière) + Sidebar vide supprimée + import/refs nettoyés.
   - Budgets démo assumés : dialogs « Analyse » (Courses/Exams/Questions) portent désormais un bandeau « Données simulées » (`common.demoData`, ×5 locales) — avant, chiffres présentés comme réels.
@@ -272,7 +337,7 @@
 
 Dernière mise à jour :
 
-Dernière mise à jour : **12 novembre 2026 (soir)** — Fix PJ emails (compose + réponse) + sélecteur média image/vidéo (appareil ou lien) dans les éditeurs cours/leçons + upload vidéo de leçon depuis l'appareil.
+Dernière mise à jour : **15 novembre 2026 (~22:50)** — Images prod débloquées (fix `filesystems.php`, relatif) ; tâche minuit toujours armée ; `.env` APP_URL à corriger par l'utilisateur (liens e-mails).
 
 ### Cours réel + fix quiz vides (12/11/2026, 2e passe opencode) — LOCAL UNIQUEMENT
 - **Constat Daniel** (test cours #3 leçon 27) : « Aucun quiz disponible » — cause : 29 leçons legacy de type `quiz` sans `quiz_id` ni contenu (seeders de test historiques, rien à afficher). Le player montre maintenant un état vide expliqué avec CTA « Voir mes examens » + « Poser une question ».

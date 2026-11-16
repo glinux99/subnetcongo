@@ -130,7 +130,7 @@ const statusSeverity = (s) => ({
     suspended: 'danger', rejected: 'danger', cancelled: 'secondary', expired: 'secondary',
 }[s] ?? 'secondary');
 
-const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/storage/${path}` : '/media/lms/thumbnails/course-1.jpg');
+const getImageUrl = (path) => path?.startsWith('http') ? path : (path ? `/media/${path}` : '/media/lms/thumbnails/course-1.jpg');
 const handleImageError = (event) => { event.target.src = '/media/lms/thumbnails/course-1.jpg'; };
 </script>
 

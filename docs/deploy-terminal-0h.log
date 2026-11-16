@@ -1,0 +1,41 @@
+﻿**********************
+Début de la transcription Windows PowerShell
+Heure de début : 20261115214347
+Nom d'utilisateur : VE-IT-00507\Daniel
+Utilisateur runAs :  VE-IT-00507\Daniel
+Nom de la configuration : 
+Ordinateur : VE-IT-00507 (Microsoft Windows NT 10.0.26200.0)
+Application hôte : C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\docs\deploy-terminal-0h.ps1
+ID de processus : 68412
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcription démarrée, le fichier de sortie est C:\Users\Daniel\Documents\2025 - Personnel\Projets\SUBNETCONGO\elearning\docs\deploy-terminal-0h.log
+== 11/15/2026 21:43:47 BACKUP 20261115-214347-terminal-fix (php + build mirrors) ==
+
+== UPLOAD TerminalController.php ==
+
+md5 local=2577f8baf00d788eaee48eb3a7ef6d13 remote=2577f8baf00d788eaee48eb3a7ef6d13
+== CREATE build tar ==
+
+== UPLOAD build ==
+
+== EXTRACT mirrors ==
+
+local manifest md5=5246aada03c382595007ab494d442efe
+== HTTP CHECKS ==
+
+
+
+
+== DONE 11/15/2026 21:44:21 ==
+**********************
+Fin de la transcription Windows PowerShell
+Heure de fin : 20261115214421
+**********************

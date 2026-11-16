@@ -2847,7 +2847,9 @@
             "link_copied": "Lien copié !",
             "share_on": "Partager sur",
             "redaction_subnetcongo": "Rédaction SubnetCongo",
-            "article": "article"
+            "article": "article",
+            "back_to_blog": "Zonga na blog",
+            "related_read": "Soma lisusu"
         },
         "landing": {
             "head_desc": "Propulsez votre carrière IT : formations certifiantes ya réseaux, cybersécurité mpe cloud na RDC.",
@@ -6476,6 +6478,8 @@
             "field_permissions": "Moyɔkɔ"
         },
         "live_sessions": {
+            "joining_title": "Connexion en cours…",
+            "joining_hint": "Ouverture de ta salle de classe virtuelle…",
             "head_title": "Sessions en direct",
             "subtitle": "Planiffé mpe bosali madarasa na yo ya solo ya Zoom, Meet, BBB to zali Jitsi. Diffusé masolo na yo na ntango ya solo mpe ya kouta replay SOLDÉ.",
             "btn_refresh": "Actualizar",

@@ -42,6 +42,11 @@ const props = defineProps({
 // ============================================================================
 const THUMB_FILES = [1, 3, 4, 5, 7, 8, 9, 10]; // fichiers présents dans public/media/lms/thumbnails
 const localCourseThumb = (course) => `/media/lms/thumbnails/course-${THUMB_FILES[Math.abs(course?.id ?? 0) % THUMB_FILES.length]}.jpg`;
+const imageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http') || path.startsWith('/')) return path;
+  return `/media/${path}`;
+};
 
 const AVATAR_COLORS = ['#2563EB', '#EE1C25', '#10B981', '#F59E0B', '#6366F1', '#0EA5E9'];
 const avatarColor = (name) => {
@@ -578,7 +583,7 @@ const schemaOrgData = computed(() => {
                         >
                             <!-- Header Image -->
                             <div class="relative h-[220px] sm:h-[240px] w-full shrink-0 overflow-hidden bg-slate-900">
-                                <img :src="course.image || localCourseThumb(course)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100" :alt="`Couverture du cours : ${course.title}`" />
+                                <img :src="imageUrl(course.image) || localCourseThumb(course)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100" :alt="`Couverture du cours : ${course.title}`" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
 
                                 <!-- Badges (Haut Gauche et Bas Gauche) -->

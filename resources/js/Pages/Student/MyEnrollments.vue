@@ -68,7 +68,7 @@ const cancelEnrollment = (id) => {
     });
 };
 
-const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=400' : (path.startsWith('http') ? path : `/storage/${path}`);
+const getImageUrl = (path) => !path ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=400' : (path.startsWith('http') ? path : `/media/${path}`);
 </script>
 
 <template>

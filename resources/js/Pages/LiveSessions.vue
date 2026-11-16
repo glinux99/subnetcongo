@@ -28,6 +28,12 @@ const props = defineProps({
 });
 
 const toast = useToast();
+const joiningSession = ref(null);
+const joinSession = (uuid) => {
+    if (joiningSession.value) return;
+    joiningSession.value = uuid;
+    window.location.href = route('live-sessions.join', uuid);
+};
 const search = ref(props.filters?.search ?? '');
 const provider = ref(props.filters?.provider ?? null);
 const status = ref(props.filters?.status ?? null);
@@ -239,6 +245,8 @@ const submit = () => {
 };
 
 const startSession = async (uuid) => {
+    if (joiningSession.value) return;
+    joiningSession.value = uuid;
     try {
         await window.axios.post(route('live-sessions.start', uuid));
     } catch (e) {
@@ -401,16 +409,17 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                         </Column>
                         <Column :header="t('pages.live_sessions.col_actions')" :exportable="false" style="min-width: 6rem; text-align: right;">
                             <template #body="{ data }">
-                                <div class="hidden md:flex items-center gap-1 justify-end whitespace-nowrap">
+                                <div class="hidden md:flex snc-actions-desktop-only items-center gap-1 justify-end whitespace-nowrap">
                                     <Button
                                         v-if="data.status !== 'Ended' && data.status !== 'Cancelled'"
                                         icon="pi pi-video"
                                         rounded
                                         text
                                         severity="danger"
+                                        :loading="joiningSession === data.uuid"
                                         :aria-label="t('pages.live_sessions.tip_join')"
                                         v-tooltip.top="t('pages.live_sessions.tip_join')"
-                                        @click="window.location.href = route('live-sessions.join', data.uuid)"
+                                        @click="joinSession(data.uuid)"
                                     />
                                     <Button
                                         v-if="data.status === 'Scheduled'"
@@ -439,7 +448,7 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                                     rounded
                                     text
                                     severity="secondary"
-                                    class="md:hidden w-11 h-11"
+                                    class="md:hidden w-11 h-11 snc-actions-mobile-only"
                                     :aria-label="t('pages.live_sessions.menu_more')"
                                     v-tooltip.top="t('pages.live_sessions.menu_more')"
                                     @click="toggleRowMenu($event, data)"
@@ -492,7 +501,7 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
                                     </div>
                                 </dl>
                                 <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-700">
-                                    <Button v-if="data.status !== 'Ended' && data.status !== 'Cancelled'" :label="t('pages.live_sessions.tip_join')" icon="pi pi-video" class="p-button-outlined p-button-danger p-button-sm" @click="window.location.href = route('live-sessions.join', data.uuid)" />
+                                    <Button v-if="data.status !== 'Ended' && data.status !== 'Cancelled'" :label="t('pages.live_sessions.tip_join')" icon="pi pi-video" class="p-button-outlined p-button-danger p-button-sm" :loading="joiningSession === data.uuid" @click="joinSession(data.uuid)" />
                                     <Button v-if="data.status === 'Scheduled'" :label="t('pages.live_sessions.tip_edit')" icon="pi pi-pencil" class="p-button-outlined p-button-info p-button-sm" @click="openEdit(data)" />
                                 </div>
                             </div>
@@ -685,6 +694,15 @@ const syncRecordings = (uuid) => router.post(route('live-sessions.sync-recording
             class="!rounded-xl !shadow-xl !border-slate-200 !overflow-hidden !py-1"
             aria-label="live-session-menu"
         />
+        <Teleport to="body">
+            <div v-if="joiningSession" class="fixed inset-0 z-[1000] flex flex-col items-center justify-center gap-6 bg-slate-950/80 backdrop-blur-sm text-white" role="alert" aria-live="assertive">
+                <div class="w-16 h-16 rounded-full border-4 border-white/15 border-t-white animate-spin motion-reduce:animate-none" aria-hidden="true"></div>
+                <div class="text-center space-y-1.5 px-6">
+                    <p class="text-lg font-black tracking-tight">{{ t('pages.live_sessions.joining_title') }}</p>
+                    <p class="text-sm text-slate-300">{{ t('pages.live_sessions.joining_hint') }}</p>
+                </div>
+            </div>
+        </Teleport>
     </AppLayout>
 </template>
 

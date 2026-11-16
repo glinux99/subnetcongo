@@ -11,6 +11,7 @@ const { t } = useI18n();
 
 const props = defineProps({
     session: Object,
+    shareToken: { type: String, default: null },
     user: Object,
     requires_confirmation: { type: Boolean, default: false },
     timezone: { type: String, default: 'Africa/Lubumbashi' },
@@ -54,7 +55,7 @@ const showDetails = ref(false);
 const copyShare = async () => {
     try {
         await navigator.clipboard?.writeText(
-            `${window.location.origin}/l/${props.session?.share_token ?? props.session?.uuid}`
+            `${window.location.origin}/l/${props.shareToken ?? props.session?.uuid}`
         );
         copied.value = true;
         toast.add({ severity: 'info', summary: 'Lien copié', life: 1500 });

@@ -3051,7 +3051,9 @@
             "link_copied": "Link kopiert!",
             "share_on": "Teilen auf",
             "redaction_subnetcongo": "SubnetCongo-Redaktion",
-            "article": "Artikel"
+            "article": "Artikel",
+            "back_to_blog": "Zurück zum Blog",
+            "related_read": "Zum Weiterlesen"
         },
         "landing": {
             "head_desc": "Starten Sie Ihre IT-Karriere: zertifizierte Kurse in Netzwerken, Cybersicherheit und Cloud in der DRC.",
@@ -6680,6 +6682,8 @@
             "field_permissions": "Berechtigungen"
         },
         "live_sessions": {
+            "joining_title": "Verbindung läuft…",
+            "joining_hint": "Dein virtueller Klassenraum wird geöffnet…",
             "head_title": "Live-Sitzungen",
             "subtitle": "Planen und verwalten Sie Ihre virtuellen Zoom-, Meet-, BBB- oder Jitsi-Klassenzimmer. Übertragen Sie Ihre Kurse in Echtzeit und zentralisieren Sie alle Aufzeichnungen.",
             "btn_refresh": "Aktualisieren",

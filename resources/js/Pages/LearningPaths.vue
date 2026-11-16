@@ -521,7 +521,7 @@ onMounted(() => {
                                         <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-blue-400 transition-colors"></div>
 
                                         <div class="w-24 h-16 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0 relative">
-                                            <img v-if="course.thumbnail_path" :src="course.thumbnail_path" class="w-full h-full object-cover" />
+                                            <img v-if="course.thumbnail_path" :src="String(course.thumbnail_path).match(/^(http|\/)/) ? course.thumbnail_path : (`/media/${course.thumbnail_path}`)" class="w-full h-full object-cover" />
                                             <div v-else class="w-full h-full flex items-center justify-center text-slate-300"><i class="pi pi-image text-2xl"></i></div>
                                             <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">{{ course.estimated_duration }} min</div>
                                         </div>

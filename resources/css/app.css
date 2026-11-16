@@ -928,3 +928,9 @@
 .snc-fluid-table .p-datatable-tbody > tr > td {
     overflow: hidden;
 }
+
+/* Live-sessions actions : kebab mobile vs desktop (hors couches Tailwind/PrimeVue) */
+.snc-actions-mobile-only { display: none !important; }
+.snc-actions-desktop-only { display: none !important; }
+@media (min-width: 768px) { .snc-actions-desktop-only { display: flex !important; } }
+@media (max-width: 767px) { .snc-actions-mobile-only { display: inline-flex !important; } }

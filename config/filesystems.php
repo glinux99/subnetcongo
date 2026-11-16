@@ -36,25 +36,25 @@ return [
             'throw' => false,
         ],
          'media' => [
-            'driver' => 'local',
-            'root'   => public_path('media'),
-            'url'    => env('APP_URL').'/media',
-            'visibility' => 'public',
-            'throw' => false,
-        ],
-        'media_public' => [
-            'driver' => 'local',
-            'root' => base_path('../media'), // Ajustez le chemin vers public_html
-            'url' => env('APP_URL').'/media',
-            'visibility' => 'public',
-        ],
-        'public' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
-            'visibility' => 'public',
-            'throw' => false,
-        ],
+             'driver' => 'local',
+             'root'   => public_path('media'),
+             'url'    => '/media',
+             'visibility' => 'public',
+             'throw' => false,
+         ],
+         'media_public' => [
+             'driver' => 'local',
+             'root' => base_path('../media'), // Ajustez le chemin vers public_html
+             'url' => '/media',
+             'visibility' => 'public',
+         ],
+         'public' => [
+             'driver' => 'local',
+             'root' => storage_path('app/public'),
+             'url' => '/storage',
+             'visibility' => 'public',
+             'throw' => false,
+         ],
 
         's3' => [
             'driver' => 's3',

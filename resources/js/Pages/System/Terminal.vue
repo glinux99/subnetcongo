@@ -121,7 +121,7 @@ const initFromSessions = () => {
     }
 
     nextTick(() => {
-        tabs.forEach((tab) => { if (tab.status === 'running' && tab.offset === 0) pollTail(tab.id); });
+        tabs.forEach((tab) => pollTail(tab.id));
     });
 };
 
@@ -148,7 +148,7 @@ watch(
                     outputLines: [],
                     partial: '',
                 });
-                if (s.status === 'running') pollTail(s.id);
+                pollTail(s.id);
             }
         }
 
@@ -161,9 +161,6 @@ watch(
                 tab.ended_at = s.ended_at;
             }
         }
-
-        // Refresh polling for running tabs
-        tabs.forEach((tab) => { if (tab.status === 'running') pollTail(tab.id); });
     },
     { deep: true }
 );
@@ -227,8 +224,9 @@ const reopenPanel = () => { termClosed.value = false; };
 
 const pollTail = async (tabId) => {
     const tab = tabs.find((x) => x.id === tabId);
-    if (!tab) return;
+    if (!tab || tab._polling) return;
 
+    tab._polling = true;
     try {
         const res = await window.axios.get(`/system/terminal/${tabId}/tail`, { params: { offset: tab.offset ?? 0 } });
         const data = res?.data ?? {};
@@ -254,6 +252,8 @@ const pollTail = async (tabId) => {
     } catch (e) {
         // silencieux : réseau peut échouer brièvement
         setTimeout(() => pollTail(tabId), 2000);
+    } finally {
+        tab._polling = false;
     }
 };
 

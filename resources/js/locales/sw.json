@@ -2761,7 +2761,9 @@
             "link_copied": "Kiungo kimenakiliwa!",
             "share_on": "Shiriki kwenye",
             "redaction_subnetcongo": "Timu ya uhariri ya SubnetCongo",
-            "article": "makala"
+            "article": "makala",
+            "back_to_blog": "Rudi kwenye blogu",
+            "related_read": "Soma zaidi"
         },
         "landing": {
             "head_desc": "Panga kazi yako ya IT: mafunzo yaliyoidhinishwa ya mitandao, usalama wa mtandao na wingu nchini DRC.",
@@ -6390,6 +6392,8 @@
             "field_permissions": "Ruhusa"
         },
         "live_sessions": {
+            "joining_title": "Inaendelea kuingia…",
+            "joining_hint": "Tunafungua darasa lako la mtandao…",
             "head_title": "Vipindi vya moja kwa moja",
             "subtitle": "Panga na usimamia madarasa yako ya mtandaoni za Zoom, Meet, BBB au Jitsi. Tuma kozi zako moja kwa moja na uunganishe replay zote.",
             "btn_refresh": "Onyesha upya",

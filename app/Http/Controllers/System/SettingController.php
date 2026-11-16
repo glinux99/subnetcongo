@@ -229,6 +229,14 @@ class SettingController extends Controller
                     'site_logo' => 'site_logo',
                     'help_hints_enabled' => 'ui_help_hints_enabled',
                     'help_hints_ttl_days' => 'ui_help_hints_ttl_days',
+                    'driver' => 'mail_driver',
+                    'host' => 'mail_host',
+                    'port' => 'mail_port',
+                    'username' => 'mail_username',
+                    'password' => 'mail_password',
+                    'encryption' => 'mail_encryption',
+                    'from_name' => 'mail_from_name',
+                    'from_address' => 'mail_from_address',
                     default => $key,
                 };
                 $flat[$storageKey] = $value;

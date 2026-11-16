@@ -1,10 +1,14 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import { useI18n } from 'vue-i18n';
+import { computed } from 'vue';
 
 const { t, locale } = useI18n();
+const page = usePage();
+const flashError = computed(() => page.props.flash?.error || null);
+const flashWarning = computed(() => page.props.flash?.warning || null);
 
 const props = defineProps({ sessions: Array, timezone: { type: String, default: 'Africa/Lubumbashi' } });
 
@@ -36,6 +40,10 @@ const formatDate = (value) => value
         </header>
 
         <main class="max-w-6xl mx-auto px-4 py-10">
+            <div v-if="flashError || flashWarning" class="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4" role="alert">
+                <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5"></i>
+                <p class="text-sm text-amber-900">{{ flashError || flashWarning }}</p>
+            </div>
             <div v-if="sessions?.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <article v-for="s in sessions" :key="s.id" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
                     <div class="flex items-center justify-between gap-2 mb-2">

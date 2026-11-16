@@ -374,8 +374,12 @@ class LiveSessionController extends Controller
 
         $liveSession->load(['course:id,title', 'instructor:id,name,avatar']);
 
+        // Garantit qu'un jeton de partage existe (utile pour le bouton "Copier le lien")
+        $liveSession->shareToken();
+
         return Inertia::render('LiveSessions/Player', [
             'session' => $liveSession,
+            'shareToken' => $liveSession->shareToken(),
             'user' => $user->only(['id', 'name', 'avatar', 'profile_photo']),
             'requires_confirmation' => $requiresConfirmation ?? false,
             'timezone' => config('live_sessions.timezone', 'Africa/Kinshasa'),
@@ -587,7 +591,11 @@ class LiveSessionController extends Controller
     {
         $session = LiveSession::where('settings->share_token', $token)->first();
 
-        abort_if(! $session, 404);
+        if (! $session) {
+            // Lien périmé / session supprimée : on redirige proprement avec un message.
+            return redirect()->route('live-sessions.public')
+                ->with('error', 'Ce lien n\'est plus valide. La session est terminée, annulée ou a été supprimée.');
+        }
 
         if (! Auth::check()) {
             return redirect()->guest(route('login'));

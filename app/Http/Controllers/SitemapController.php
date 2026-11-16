@@ -52,7 +52,18 @@ class SitemapController extends Controller
                 ])
                 ->all();
 
-            return array_merge($static, $dynamicPages, $courses);
+            $blogPosts = \App\Models\BlogPost::query()
+                ->where('is_published', true)
+                ->get(['slug', 'updated_at'])
+                ->map(fn ($post) => [
+                    'loc' => route('blog.show', $post->slug),
+                    'lastmod' => optional($post->updated_at)->toW3cString(),
+                    'priority' => '0.7',
+                    'changefreq' => 'weekly',
+                ])
+                ->all();
+
+            return array_merge($static, $dynamicPages, $courses, $blogPosts);
         });
 
         $xml = $this->render($urls);

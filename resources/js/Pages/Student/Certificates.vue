@@ -22,7 +22,7 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b
 
 const getImageUrl = (path) => {
     if (!path) return PLACEHOLDER;
-    return path.startsWith('http') ? path : `/storage/${path}`;
+    return path.startsWith('http') ? path : `/media/${path}`;
 };
 
 const handleImageError = (e) => { e.target.src = PLACEHOLDER; };
