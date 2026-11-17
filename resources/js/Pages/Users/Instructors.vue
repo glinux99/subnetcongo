@@ -39,6 +39,7 @@ import Textarea from 'primevue/textarea';
 import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
+import SncDialog from '@/Components/SncDialog.vue';
 import FileUpload from 'primevue/fileupload';
 import SelectButton from 'primevue/selectbutton';
 import Divider from 'primevue/divider';
@@ -1027,32 +1028,16 @@ onMounted(() => {
         <!-- ============================================================================== -->
         <!-- SIDEBAR PROFIL 360° (ANALYTICS & DETAILS)                                      -->
         <!-- ============================================================================== -->
-        <Dialog
+        <SncDialog
             v-model:visible="profileSidebar"
-            modal
-            :style="{ width: 'min(600px, 100vw)' }"
-            class="p-fluid rounded-[1rem] custom-profile-dialog"
-            :pt="{
-                header: { class: 'bg-white border-b border-slate-100 p-6' },
-                content: { class: 'p-0 bg-slate-50' },
-                footer: { class: 'bg-white border-t border-slate-100 p-4' }
-            }"
+            :title="t('pages.instructors.expertProfileTitle')"
+            :subtitle="t('pages.instructors.hrDossierSubtitle')"
+            icon="pi-id-card"
+            width="600px"
         >
-            <template #header>
-                <div class="flex items-center gap-4 w-full">
-                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
-                        <i class="pi pi-id-card text-xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h2 class="font-black text-xl text-slate-800 leading-tight">{{ t('pages.instructors.expertProfileTitle') }}</h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ t('pages.instructors.hrDossierSubtitle') }}</p>
-                    </div>
-                </div>
-            </template>
-
-            <div v-if="currentInstructor" class="flex flex-col h-full relative">
+            <div v-if="currentInstructor">
                 <!-- Hero Header -->
-                <div class="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-700 p-8 text-white rounded-b-[2rem] shadow-lg relative overflow-hidden flex-shrink-0">
+                <div class="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-700 p-8 text-white rounded-2xl shadow-lg relative overflow-hidden">
                     <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
                     <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
 
@@ -1084,7 +1069,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Tabs Content -->
-                <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div class="pt-6">
                     <TabView class="custom-tabview">
 
                         <!-- TAB: APERÇU -->
@@ -1166,12 +1151,10 @@ onMounted(() => {
             </div>
 
             <template #footer>
-                <div class="flex justify-between items-center w-full px-2 mt-1">
-                    <Button :label="t('pages.instructors.close')" class="p-button-text p-button-secondary font-bold" @click="profileSidebar = false" />
-                    <Button :label="t('pages.instructors.editProfile')" icon="pi pi-pencil" class="p-button-primary px-8 font-black shadow-lg shadow-blue-500/30 rounded-xl" @click="editInstructor(currentInstructor); profileSidebar = false" />
-                </div>
+                <Button :label="t('pages.instructors.close')" class="p-button-text p-button-secondary font-bold" @click="profileSidebar = false" />
+                <Button :label="t('pages.instructors.editProfile')" icon="pi pi-pencil" class="p-button-primary px-8 font-black" @click="editInstructor(currentInstructor); profileSidebar = false" />
             </template>
-        </Dialog>
+        </SncDialog>
 
     </AppLayout>
 </template>
